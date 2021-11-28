@@ -1,3 +1,9 @@
+#IntelliJ files
+.idea
+*.iml
+
+target
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
