@@ -113,7 +113,8 @@
               <filereports>TestSuiteReport.txt</filereports>
               <!-- Comma separated list of JUnit test class names to execute -->
               <!-- <jUnitClasses>com.databricks.mosaic.expresions.format.TestHexToWKT</jUnitClasses> -->
-              <suites>com.databricks.mosaic.expresions.format.TestHexToWKT</suites>
+              <!-- <suites>com.databricks.mosaic.expresions.format.TestHexToWKT</suites> -->
+              <wildcardSuites>com.databricks.mosaic</wildcardSuites>
             </configuration>
             <executions>
               <execution>
