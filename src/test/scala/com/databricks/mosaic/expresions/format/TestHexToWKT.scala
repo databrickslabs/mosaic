@@ -8,10 +8,10 @@ import org.apache.spark.sql.functions._
 import org.scalatest.{FunSuite, Matchers}
 
 
-class HexToWKT extends FunSuite with SparkTest with Matchers {
+class TestHexToWKT extends FunSuite with SparkTest with Matchers {
   test("Conversion from Hex to WKT") {
     val spark = SparkSession.builder().getOrCreate()
-    val df = getHexRowsDf(spark)
+    val df = getHexRowsDf
     register(spark)
 
     val wkt_results = df.withColumn("wkt", hex_to_wkt(col("hex"))).select("wkt").collect().map(_.toSeq)

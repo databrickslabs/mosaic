@@ -10,10 +10,10 @@ import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.{FunSuite, Matchers}
 
 
-class WKTToHex extends FunSuite with SparkTest with Matchers {
-  test("Conversion from Hex to WKT") {
+class TestWKTToHex extends FunSuite with SparkTest with Matchers {
+  test("Conversion from WKT to WKB Hex") {
     val spark = SparkSession.builder().getOrCreate()
-    val df = getWKTRowsDf(spark)
+    val df = getWKTRowsDf
     register(spark)
 
     val results1 = df.withColumn("hex", wkt_to_hex(col("wkt"))).select("hex").collect().map(_.toSeq.head)

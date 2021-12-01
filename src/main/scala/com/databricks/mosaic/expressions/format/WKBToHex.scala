@@ -4,8 +4,6 @@ import com.databricks.mosaic.expressions.format.Conversions.wkb2hex
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
-import org.apache.spark.unsafe.types.UTF8String
-import org.locationtech.jts.io.WKBWriter
 
 @ExpressionDescription(
   usage = "_FUNC_(expr1) - Returns the wkb hex string representation.",
@@ -15,14 +13,14 @@ import org.locationtech.jts.io.WKBWriter
       > SELECT _FUNC_(a);
        "00001005FA...00A" // random hex content provided for illustration only
   """,
-  since = "3.1.0")
+  since = "1.0")
 case class WKBToHex(wkb_bytes: Expression) extends UnaryExpression with ExpectsInputTypes with NullIntolerant with CodegenFallback {
 
   override def inputTypes: Seq[DataType] = Seq(BinaryType)
 
   override def dataType: DataType = StringType
 
-  override def toString: String = s"hex_from_wkb($wkb_bytes)"
+  override def toString: String = s"wkb_to_hex($wkb_bytes)"
 
   override def nullSafeEval(input1: Any): Any = {
     val hex = wkb2hex(input1)

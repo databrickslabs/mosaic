@@ -19,7 +19,7 @@ package object format {
         List("MULTIPOLYGON (((0 0, 0 1, 2 2, 0 0)))")
       )
 
-      def getHexRowsDf(spark: SparkSession): DataFrame = {
+      def getHexRowsDf: DataFrame = {
         val spark = SparkSession.builder().getOrCreate()
         val rows = hex_rows.map { x => Row(x: _*) }
         val rdd = spark.sparkContext.makeRDD(rows)
@@ -30,7 +30,7 @@ package object format {
         df
       }
 
-      def getWKTRowsDf(spark: SparkSession): DataFrame = {
+      def getWKTRowsDf: DataFrame = {
         val spark = SparkSession.builder().getOrCreate()
         val rows = wkt_rows.map { x => Row(x: _*) }
         val rdd = spark.sparkContext.makeRDD(rows)

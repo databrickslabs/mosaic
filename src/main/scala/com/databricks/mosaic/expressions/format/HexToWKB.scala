@@ -15,7 +15,7 @@ import org.locationtech.jts.io.{WKBReader, WKBWriter}
       > SELECT _FUNC_(a);
        [FE 00 05 ... AA] // random byte content provided for illustration purpose only.
   """,
-  since = "3.1.0")
+  since = "1.0")
 case class HexToWKB(wkb_hex: Expression) extends UnaryExpression with ExpectsInputTypes with NullIntolerant with CodegenFallback {
 
   override def inputTypes: Seq[DataType] = Seq(StringType)

@@ -3,19 +3,17 @@ package com.databricks.mosaic.expresions.format
 import com.databricks.mosaic.expresions.format.mocks.expressions.{getHexRowsDf, getWKTRowsDf}
 import com.databricks.mosaic.functions._
 import com.databricks.mosaic.test.SparkTest
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import org.scalatest.{FunSuite, Matchers}
 
 
-class HexAndWKTToWKB extends FunSuite with SparkTest with Matchers {
+class TestHexAndWKTToWKB extends FunSuite with SparkTest with Matchers {
   test("Conversion from Hex and WKT to WKB") {
-    //To ensure we will be using same WKB representation
+    // To ensure we will be using same WKB representation
     // we convert hex to wkb and wkt to wkb and compare the outputs.
 
-    val spark = SparkSession.builder().getOrCreate()
-    val hexDf = getHexRowsDf(spark)
-    val wktDf = getWKTRowsDf(spark)
+    val hexDf = getHexRowsDf
+    val wktDf = getWKTRowsDf
     register(spark)
 
     val left = hexDf.withColumn("wkb", hex_to_wkb(col("hex"))).select("wkb").collect().map(_.toSeq.head)
