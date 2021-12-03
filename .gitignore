@@ -4,6 +4,7 @@
 
 #VSCode files
 .vscode
+.scalafmt.conf
 
 #jenv def
 .java-version
