@@ -1,6 +1,5 @@
-package com.databricks.mosaic.expresions.format
+package com.databricks.mosaic.expressions.format
 
-import com.databricks.mosaic.expressions.format.Conversions
 import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.{FunSuite, Matchers}
 

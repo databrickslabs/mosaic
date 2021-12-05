@@ -1,7 +1,6 @@
-package com.databricks.mosaic.expresions.format
+package com.databricks.mosaic.expressions.format
 
-import com.databricks.mosaic.expresions.format.mocks.expressions.{getWKTRowsDf, hex_rows}
-import com.databricks.mosaic.expressions.format.Conversions
+import com.databricks.mosaic.expressions.mocks.{getWKTRowsDf, hex_rows}
 import com.databricks.mosaic.functions._
 import com.databricks.mosaic.test.SparkTest
 import org.apache.spark.sql.SparkSession
