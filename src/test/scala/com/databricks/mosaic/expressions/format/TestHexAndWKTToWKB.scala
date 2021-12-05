@@ -1,6 +1,6 @@
 package com.databricks.mosaic.expressions.format
 
-import com.databricks.mosaic.expressions.format.mocks.expressions.{getHexRowsDf, getWKTRowsDf}
+import com.databricks.mosaic.expressions.mocks.{getHexRowsDf, getWKTRowsDf}
 import com.databricks.mosaic.functions._
 import com.databricks.mosaic.test.SparkTest
 import org.apache.spark.sql.functions._
