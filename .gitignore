@@ -2,6 +2,13 @@
 .idea
 *.iml
 
+#VSCode files
+.vscode
+.scalafmt.conf
+
+#jenv def
+.java-version
+
 target
 
 # Byte-compiled / optimized / DLL files
@@ -133,3 +140,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Metals
+.metals
+.bloop
