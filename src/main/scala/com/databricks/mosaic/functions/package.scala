@@ -1,7 +1,7 @@
 package com.databricks.mosaic
 
 import com.databricks.mosaic.expressions.format._
-import com.databricks.mosaic.expressions.geometry.{FlattenPolygons, _}
+import com.databricks.mosaic.expressions.geometry._
 import com.databricks.mosaic.expressions.helper.TrySql
 import com.databricks.mosaic.index.h3.{H3_MosaicExplode, H3_MosaicFill, H3_PointIndex, H3_Polyfill}
 import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
@@ -49,6 +49,7 @@ package object functions {
     registry.registerFunction(FunctionIdentifier("st_ymax", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "Y", "MAX"))
     registry.registerFunction(FunctionIdentifier("st_ymin", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "Y", "MIN"))
     registry.registerFunction(FunctionIdentifier("st_isvalid", database), (exprs: Seq[Expression]) => ST_IsValid(exprs(0)))
+    registry.registerFunction(FunctionIdentifier("st_geometrytype", database), (exprs: Seq[Expression]) => ST_GeometryType(exprs(0)))
     //Not specific to Mosaic
     registry.registerFunction(FunctionIdentifier("try_sql", database), (exprs: Seq[Expression]) => TrySql(exprs(0)))
   }
@@ -69,6 +70,7 @@ package object functions {
   def st_ymax(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "Y", "MAX"))
   def st_ymin(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "Y", "MIN"))
   def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr))
+  def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr))
   //Not specific to Mosaic
   def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
 }
