@@ -1,0 +1,73 @@
+package com.databricks.mosaic.core
+
+import com.databricks.mosaic.types.model.MosaicChip
+import org.locationtech.jts.geom.Geometry
+
+import java.util
+
+/**
+ * Defines the API that all index systems need to respect for Mosaic to support them.
+ */
+trait IndexSystem {
+
+  /**
+   * Returns the resolution value based on the nullSafeEval method inputs of type Any.
+   * Each Index System should ensure that only valid values of resolution are accepted.
+   * @param res Any type input to be parsed into the Int representation of resolution.
+   * @return Int value representing the resolution.
+   */
+  @throws[IllegalStateException]
+  def getResolution(res: Any): Int
+
+  /**
+   * Computes the radius of minimum enclosing circle of the polygon corresponding to
+   * the centroid index of the provided geometry.
+   * @param geometry An instance of [[Geometry]] for which we are computing the optimal
+   *                 buffer radius.
+   * @param resolution  A resolution to be used to get the centroid index geometry.
+   * @return An optimal radius to buffer the geometry in order to avoid blind spots
+   *         when performing polyfill.
+   */
+  def getBufferRadius(geometry: Geometry, resolution: Int): Double
+
+  /**
+   * Returns a set of indices that represent the input geometry. Depending on the
+   * index system this set may include only indices whose centroids fall inside
+   * the input geometry or any index that intersects the input geometry.
+   * When extending make sure which is the guaranteed behavior of the index system.
+   * @param geometry Input geometry to be represented.
+   * @param resolution A resolution of the indices.
+   * @return A set of indices representing the input geometry.
+   */
+  def polyfill(geometry: Geometry, resolution: Int): util.List[java.lang.Long]
+
+  /**
+   * Return a set of [[MosaicChip]] instances computed based on the geometry and
+   * border indices. Each chip is computed via intersection between the input
+   * geometry and individual index geometry.
+   * @param geometry Input geometry whose border is being represented.
+   * @param borderIndices Indices corresponding to the border area of the
+   *                      input geometry.
+   * @return A border area representation via [[MosaicChip]] set.
+   */
+  def getBorderChips(geometry: Geometry, borderIndices: util.List[java.lang.Long]): Seq[MosaicChip]
+
+  /**
+   * Return a set of [[MosaicChip]] instances computed based on the core
+   * indices. Each index is converted to an instance of [[MosaicChip]].
+   * These chips do not contain chip geometry since they are full contained
+   * by the geometry whose core they represent.
+   * @param coreIndices Indices corresponding to the core area of the
+   *                    input geometry.
+   * @return A core area representation via [[MosaicChip]] set.
+   */
+  def getCoreChips(coreIndices: util.List[java.lang.Long]): Seq[MosaicChip]
+
+  /**
+   * Get the geometry corresponding to the index with the input id.
+   * @param index Id of the index whose geometry should be returned.
+   * @return An instance of [[Geometry]] corresponding to index.
+   */
+  def index2geometry(index: Long): Geometry
+
+}

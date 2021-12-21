@@ -1,5 +1,6 @@
 package com.databricks.mosaic.expressions.format
 
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.io.{WKBReader, WKBWriter, WKTReader, WKTWriter}
@@ -13,6 +14,56 @@ import org.locationtech.jts.io.{WKBReader, WKBWriter, WKTReader, WKTWriter}
 object Conversions {
 
   /**
+   * Typed object is in charge of conversion between strongly typed instances.
+   * This API is leveraged to deliver the untyped (Any => Any) API.
+   */
+  object typed {
+
+    /**
+     * Converts [[String]] to a [[Geometry]] instance.
+     * @param input WKT string to be parsed into a [[Geometry]].
+     * @return An instance of [[Geometry]].
+     */
+    def wkt2geom(input: String): Geometry = {
+      val geom = new WKTReader().read(input)
+      geom
+    }
+
+    /**
+     * Converts [[String]] containing hex encoding to a [[Geometry]] instance.
+     * @param input Hex encoding to be parsed into a [[Geometry]].
+     * @return An instance of [[Geometry]].
+     */
+    def hex2geom(input: String): Geometry = {
+      val bytes = WKBReader.hexToBytes(input)
+      val geom = new WKBReader().read(bytes)
+      geom
+    }
+
+    /**
+     * Converts [[Array]] of [[Byte]] containing wkb bytes to a [[Geometry]] instance.
+     * @param input WKB encoding to be parsed into a [[Geometry]].
+     * @return An instance of [[Geometry]].
+     */
+    def wkb2geom(input: Array[Byte]): Geometry = {
+      val geom = new WKBReader().read(input)
+      geom
+    }
+  }
+
+  /**
+   * Converts an instance of [[Geometry]] to the internal Hex encoding.
+   * @see [[com.databricks.mosaic.types.HexType]] and [[AsHex]] for the hex encoding API.
+   * @param input An instance of [[Geometry]] to be converted.
+   * @return  An instance of [[InternalRow]] containing the hex encoding.
+   */
+  def geom2hex(input: Geometry): InternalRow = {
+    val wkb = geom2wkb(input)
+    val hexPayload = WKBWriter.toHex(wkb)
+    InternalRow.fromSeq(Seq(UTF8String.fromString(hexPayload)))
+  }
+
+  /**
    * Converts a WKT representation to a JTS [[Geometry]] instance.
    * @see [[Geometry]] provides more details on the Geometry API.
    * @param input is of [[Any]] type due to type erasure.
@@ -22,8 +73,7 @@ object Conversions {
    */
   def wkt2geom(input: Any): Geometry = {
     val wkt = input.asInstanceOf[UTF8String].toString
-    val geom = new WKTReader().read(wkt)
-    geom
+    typed.wkt2geom(wkt)
   }
 
   /**
@@ -35,10 +85,9 @@ object Conversions {
    * @return An instance of [[Geometry]].
    */
   def hex2geom(input: Any): Geometry = {
-    val hex = input.asInstanceOf[UTF8String].toString
-    val bytes = WKBReader.hexToBytes(hex)
-    val geom = new WKBReader().read(bytes)
-    geom
+    val hexWrapper = input.asInstanceOf[InternalRow]
+    val hex = hexWrapper.getString(0)
+    typed.hex2geom(hex)
   }
 
   /**
@@ -66,12 +115,12 @@ object Conversions {
    * Converts a WKB representation in [[Array]] of [[Byte]] to a WKB Hex [[UTF8String]] instance.
    * @see [[Geometry]] provides more details on the Geometry API.
    * @param input An instance of [[Array]] of [[Byte]] to be converted.
-   * @return An instance of [[UTF8String]] corresponding to a WKB Hex encoding of said geometry.
+   * @return An instance of [[InternalRow]] containing a filed with a WKB Hex encoding of said geometry.
    */
-  def wkb2hex(input: Any): UTF8String = {
+  def wkb2hex(input: Any): InternalRow = {
     val bytes = input.asInstanceOf[Array[Byte]]
-    val hex_payload = WKBWriter.toHex(bytes)
-    UTF8String.fromString(hex_payload)
+    val hexPayload = WKBWriter.toHex(bytes)
+    InternalRow.fromSeq(Seq(UTF8String.fromString(hexPayload)))
   }
 
   /**
@@ -82,7 +131,6 @@ object Conversions {
    */
   def wkb2geom(input: Any): Geometry = {
     val bytes = input.asInstanceOf[Array[Byte]]
-    val geom = new WKBReader().read(bytes)
-    geom
+    typed.wkb2geom(bytes)
   }
 }
