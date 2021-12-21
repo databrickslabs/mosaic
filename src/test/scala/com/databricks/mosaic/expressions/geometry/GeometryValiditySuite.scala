@@ -1,7 +1,6 @@
 package com.databricks.mosaic.expressions.geometry
 
 import com.databricks.mosaic.mocks.getWKTRowsDf
-import org.apache.log4j.Logger
 import com.databricks.mosaic.functions.{
   st_xmin,
   st_xmax,
