@@ -49,6 +49,7 @@ package object functions {
     registry.registerFunction(FunctionIdentifier("st_ymax", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "Y", "MAX"))
     registry.registerFunction(FunctionIdentifier("st_ymin", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "Y", "MIN"))
     registry.registerFunction(FunctionIdentifier("st_isvalid", database), (exprs: Seq[Expression]) => ST_IsValid(exprs(0)))
+    registry.registerFunction(FunctionIdentifier("st_geometrytype", database), (exprs: Seq[Expression]) => ST_GeometryType(exprs(0)))
   }
 
   def convert_to(inGeom: Column, outDataType: String): Column = ColumnAdapter(ConvertTo(inGeom.expr, outDataType))
@@ -67,4 +68,5 @@ package object functions {
   def st_ymax(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "Y", "MAX"))
   def st_ymin(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "Y", "MIN"))
   def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr))
+  def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr))
 }

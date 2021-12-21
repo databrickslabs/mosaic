@@ -9,7 +9,7 @@ import com.databricks.mosaic.functions.{
   st_isvalid
 }
 import com.databricks.mosaic.test.SparkTest
-import org.apache.spark.sql.{SparkSession, Row}
+import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.col
 import org.scalatest.{FunSuite, Matchers}
 import org.apache.spark.sql.types.{StructType, StructField, StringType}
