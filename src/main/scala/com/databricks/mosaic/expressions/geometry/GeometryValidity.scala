@@ -3,11 +3,10 @@ package com.databricks.mosaic.expressions.geometry
 import org.apache.spark.sql.catalyst.expressions.{
   Expression,
   UnaryExpression,
-  ExpectsInputTypes,
   NullIntolerant
 }
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.types.{BooleanType, BinaryType, DataType, DoubleType}
+import org.apache.spark.sql.types.{BooleanType, DataType, DoubleType}
 import com.databricks.mosaic.types.any2geometry
 import org.locationtech.jts.io.ParseException
 
@@ -56,7 +55,7 @@ case class ST_IsValid(inputGeom: Expression)
       val geom = any2geometry(input1, inputGeom.dataType)
       return geom.isValid
     } catch {
-      case e: ParseException => return false
+      case e: ParseException           => return false
       case e: IllegalArgumentException => return false
     }
     false
