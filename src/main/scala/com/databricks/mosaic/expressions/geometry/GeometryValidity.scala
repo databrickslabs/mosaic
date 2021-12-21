@@ -57,6 +57,7 @@ case class ST_IsValid(inputGeom: Expression)
       return geom.isValid
     } catch {
       case e: ParseException => return false
+      case e: IllegalArgumentException => return false
     }
     false
   }

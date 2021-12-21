@@ -2,18 +2,24 @@ package com.databricks.mosaic.expressions.geometry
 
 import com.databricks.mosaic.mocks.getWKTRowsDf
 import org.apache.log4j.Logger
-import com.databricks.mosaic.functions.{st_xmin, st_xmax, st_ymin, st_ymax, st_isvalid}
+import com.databricks.mosaic.functions.{
+  st_xmin,
+  st_xmax,
+  st_ymin,
+  st_ymax,
+  st_isvalid
+}
 import com.databricks.mosaic.test.SparkTest
-// import org.apache.spark.unsafe.types.UTF8String
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{col}
+import org.apache.spark.sql.{SparkSession, Row}
+import org.apache.spark.sql.functions.col
 import org.scalatest.{FunSuite, Matchers}
+import org.apache.spark.sql.types.{StructType, StructField, StringType}
 
-class GeometryValiditySuite extends FunSuite with SparkTest with Matchers {  
+class GeometryValiditySuite extends FunSuite with SparkTest with Matchers {
 
-  test("Calling st_xmin() should return the minimum x value from all coordinates in the geometry") {
-    val spark = SparkSession.builder().getOrCreate()
-
+  test(
+    "Calling st_xmin() should return the minimum x value from all coordinates in the geometry"
+  ) {
     val df = getWKTRowsDf.withColumn("result", st_xmin(col("wkt")))
     val results = df.collect().map(_.getDouble(1)).toList
     val expected = List(10, 0, 10, 10).map(_.asInstanceOf[Double])
@@ -21,59 +27,84 @@ class GeometryValiditySuite extends FunSuite with SparkTest with Matchers {
     results should contain theSameElementsAs expected
   }
 
-  test("Calling st_xmax() should return the maximum x value from all coordinates in the geometry") {
-    val spark = SparkSession.builder().getOrCreate()
-    
+  test(
+    "Calling st_xmax() should return the maximum x value from all coordinates in the geometry"
+  ) {
     val df = getWKTRowsDf.withColumn("result", st_xmax(col("wkt")))
     val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(40, 2, 110, 111).map(_.asInstanceOf[Double])
+    val expected = List(40, 2, 110, 45).map(_.asInstanceOf[Double])
 
     results should contain theSameElementsAs expected
   }
 
-  test("Calling st_ymin() should return the minimum y value from all coordinates in the geometry") {
-    val spark = SparkSession.builder().getOrCreate()
-    
+  test(
+    "Calling st_ymin() should return the minimum y value from all coordinates in the geometry"
+  ) {
     val df = getWKTRowsDf.withColumn("result", st_ymin(col("wkt")))
     val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(10, 0, 10, 10).map(_.asInstanceOf[Double])
+    val expected = List(10, 0, 10, 5).map(_.asInstanceOf[Double])
 
     results should contain theSameElementsAs expected
   }
 
-  test("Calling st_ymax() should return the maximum y value from all coordinates in the geometry") {
-    val spark = SparkSession.builder().getOrCreate()
-    
+  test(
+    "Calling st_ymax() should return the maximum y value from all coordinates in the geometry"
+  ) {
     val df = getWKTRowsDf.withColumn("result", st_ymax(col("wkt")))
     val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(40, 2, 110, 111).map(_.asInstanceOf[Double])
+    val expected = List(40, 2, 110, 60).map(_.asInstanceOf[Double])
 
     results should contain theSameElementsAs expected
   }
 
-
   test("Calling st_isvalid() on a valid geometry should return true.") {
-    // create df with a selection of valid and invalid geometries expressed as WKT
-    // use hex_from_wkt method to convert into WKB representation
-    // apply st_isvalid to each row and collect results to Seq
 
     val df = getWKTRowsDf.withColumn("result", st_isvalid(col("wkt")))
     val results = df.collect().map(_.getBoolean(1)).toList
 
-    all (results) should be (true)
+    all(results) should be(true)
   }
 
   test("Calling st_isvalid() on an invalid geometry should return false.") {
-    // create df with a selection of valid and invalid geometries expressed as WKT
-    // use hex_from_wkt method to convert into WKB representation
-    // apply st_isvalid to each row and collect results to Seq
+    // create df with a selection of invalid geometries expressed as WKT
 
-    
+    val invalidGeometries = List(
+      List(
+        "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))"
+      ), // Hole Outside Shell
+      List(
+        "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 2 8, 8 8, 8 2, 2 2), (3 3, 3 7, 7 7, 7 3, 3 3))"
+      ), // Nested Holes,
+      List(
+        "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (5 0, 10 5, 5 10, 0 5, 5 0))"
+      ), // Disconnected Interior
+      List("POLYGON((0 0, 10 10, 0 10, 10 0, 0 0))"), // Self Intersection
+      List(
+        "POLYGON((5 0, 10 0, 10 10, 0 10, 0 0, 5 0, 3 3, 5 6, 7 3, 5 0))"
+      ), // Ring Self Intersection
+      List(
+        "MULTIPOLYGON(((0 0, 10 0, 10 10, 0 10, 0 0)),(( 2 2, 8 2, 8 8, 2 8, 2 2)))"
+      ), // Nested Shells
+      List(
+        "MULTIPOLYGON(((0 0, 10 0, 10 10, 0 10, 0 0)),((0 0, 10 0, 10 10, 0 10, 0 0)))"
+      ), // Duplicated Rings
+      List("POLYGON((2 2, 8 2))"), // Too Few Points
+      List("POLYGON((NaN 3, 3 4, 4 4, 4 3, 3 3))"), // Invalid Coordinate
+      List("POLYGON((0 0, 0 10, 10 10, 10 0))") // Ring Not Closed
+    )
+    val rows = invalidGeometries.map { x => Row(x: _*) }
+    val rdd = spark.sparkContext.makeRDD(rows)
+    val schema = StructType(
+      List(
+        StructField("wkt", StringType)
+      )
+    )
+    val invalidGeometriesDf = spark.createDataFrame(rdd, schema)
 
-    val df = getWKTRowsDf.withColumn("result", st_isvalid(col("wkt")))
+    val df = invalidGeometriesDf.withColumn("result", st_isvalid(col("wkt")))
     val results = df.collect().map(_.getBoolean(1)).toList
 
-    all (results) should be (true)
+    all(results) should be(false)
   }
 
 }
