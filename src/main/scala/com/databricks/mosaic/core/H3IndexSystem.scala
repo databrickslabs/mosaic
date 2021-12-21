@@ -48,18 +48,15 @@ object H3IndexSystem extends IndexSystem {
     val centroid = geometry.getCentroid
     val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
     val indexGeom = index2geometry(centroidIndex)
-
     val boundary = indexGeom.getCoordinates
-    val (radius, _) = boundary.tail.foldLeft((0.0, boundary.head)){
-      case ((max, previous), next) =>
-        val current = next.distance(previous)
-        if(current > max) {
-          (current, next)
-        } else {
-          (max, next)
-        }
-    }
-    radius
+
+    // Hexagons have only 3 diameters.
+    // Computing them manually and selecting the maximum.
+    Seq(
+      boundary(0).distance(boundary(3)),
+      boundary(1).distance(boundary(4)),
+      boundary(2).distance(boundary(5))
+    ).max/2
   }
 
   /**
@@ -70,11 +67,14 @@ object H3IndexSystem extends IndexSystem {
    * @return A set of indices representing the input geometry.
    */
   override def polyfill(geometry: Geometry, resolution: Int): util.List[java.lang.Long] = {
-    val boundary = GeoCoordsUtils.getBoundary(geometry)
-    val holes = GeoCoordsUtils.getHoles(geometry)
+    if (geometry.isEmpty) Seq.empty[java.lang.Long].asJava
+    else {
+      val boundary = GeoCoordsUtils.getBoundary(geometry)
+      val holes = GeoCoordsUtils.getHoles(geometry)
 
-    val indices = h3.polyfill(boundary, holes.asJava, resolution)
-    indices
+      val indices = h3.polyfill(boundary, holes.asJava, resolution)
+      indices
+    }
   }
 
   /**
