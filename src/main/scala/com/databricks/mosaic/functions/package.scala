@@ -8,8 +8,7 @@ import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.functions.{lit, struct, col}
 import org.apache.spark.sql.{Column, SparkSession}
-import com.databricks.mosaic.expressions.geometry.ST_MinMaxXY
-import com.databricks.mosaic.expressions.geometry.ST_IsValid
+import com.databricks.mosaic.expressions.geometry._
 
 /**
  * Object defining column functions and registering SQL parsers for Mosaic functionality.
