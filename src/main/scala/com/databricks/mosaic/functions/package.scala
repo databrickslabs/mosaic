@@ -6,8 +6,9 @@ import com.databricks.mosaic.index.h3.{H3_MosaicExplode, H3_MosaicFill, H3_Point
 import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.functions.{lit, struct}
+import org.apache.spark.sql.functions.{lit, struct, col}
 import org.apache.spark.sql.{Column, SparkSession}
+import com.databricks.mosaic.expressions.geometry._
 
 /**
  * Object defining column functions and registering SQL parsers for Mosaic functionality.
@@ -43,6 +44,11 @@ package object functions {
     registry.registerFunction(FunctionIdentifier("convert_to_wkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))
     registry.registerFunction(FunctionIdentifier("convert_to_wkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb"))
     registry.registerFunction(FunctionIdentifier("convert_to_coords", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords"))
+    registry.registerFunction(FunctionIdentifier("st_xmax", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "X", "MAX"))
+    registry.registerFunction(FunctionIdentifier("st_xmin", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "X", "MIN"))
+    registry.registerFunction(FunctionIdentifier("st_ymax", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "Y", "MAX"))
+    registry.registerFunction(FunctionIdentifier("st_ymin", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "Y", "MIN"))
+    registry.registerFunction(FunctionIdentifier("st_isvalid", database), (exprs: Seq[Expression]) => ST_IsValid(exprs(0)))
   }
 
   def convert_to(inGeom: Column, outDataType: String): Column = ColumnAdapter(ConvertTo(inGeom.expr, outDataType))
@@ -56,4 +62,9 @@ package object functions {
   def h3_polyfill(geom: Column, resolution: Column): Column = ColumnAdapter(H3_Polyfill(geom.expr, resolution.expr))
   def h3_polyfill(geom: Column, resolution: Int): Column = ColumnAdapter(H3_Polyfill(geom.expr, lit(resolution).expr))
   def flatten_polygons(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr))
+  def st_xmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "X", "MAX"))
+  def st_xmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "X", "MIN"))
+  def st_ymax(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "Y", "MAX"))
+  def st_ymin(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "Y", "MIN"))
+  def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr))
 }
