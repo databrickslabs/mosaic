@@ -1,7 +1,7 @@
 package com.databricks.mosaic
 
 import com.databricks.mosaic.expressions.format._
-import com.databricks.mosaic.expressions.geometry.{FlattenPolygons, _}
+import com.databricks.mosaic.expressions.geometry._
 import com.databricks.mosaic.expressions.helper.TrySql
 import com.databricks.mosaic.index.h3.{H3_MosaicExplode, H3_MosaicFill, H3_PointIndex, H3_Polyfill}
 import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
