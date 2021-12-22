@@ -27,6 +27,7 @@ package object functions {
     val registry = spark.sessionState.functionRegistry
 
     registry.registerFunction(FunctionIdentifier("as_hex", database), (exprs: Seq[Expression]) => AsHex(exprs(0)))
+    registry.registerFunction(FunctionIdentifier("as_json", database), (exprs: Seq[Expression]) => AsJSON(exprs(0)))
     registry.registerFunction(FunctionIdentifier("flatten_polygons", database), (exprs: Seq[Expression]) => FlattenPolygons(exprs(0)))
     registry.registerFunction(
       FunctionIdentifier("h3_mosaic_explode", database),
@@ -44,6 +45,7 @@ package object functions {
     registry.registerFunction(FunctionIdentifier("convert_to_wkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))
     registry.registerFunction(FunctionIdentifier("convert_to_wkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb"))
     registry.registerFunction(FunctionIdentifier("convert_to_coords", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords"))
+    registry.registerFunction(FunctionIdentifier("convert_to_geojson", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson"))
     registry.registerFunction(FunctionIdentifier("st_xmax", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "X", "MAX"))
     registry.registerFunction(FunctionIdentifier("st_xmin", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "X", "MIN"))
     registry.registerFunction(FunctionIdentifier("st_ymax", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "Y", "MAX"))
@@ -56,6 +58,7 @@ package object functions {
 
   def convert_to(inGeom: Column, outDataType: String): Column = ColumnAdapter(ConvertTo(inGeom.expr, outDataType))
   def as_hex(inGeom: Column): Column = ColumnAdapter(AsHex(inGeom.expr))
+  def as_json(inGeom: Column): Column = ColumnAdapter(AsJSON(inGeom.expr))
   def h3_mosaic_explode(geom: Column, resolution: Column): Column = ColumnAdapter(H3_MosaicExplode(struct(geom, resolution).expr))
   def h3_mosaic_explode(geom: Column, resolution: Int): Column = ColumnAdapter(H3_MosaicExplode(struct(geom, lit(resolution)).expr))
   def h3_mosaicfill(geom: Column, resolution: Column): Column = ColumnAdapter(H3_MosaicFill(geom.expr, resolution.expr))
