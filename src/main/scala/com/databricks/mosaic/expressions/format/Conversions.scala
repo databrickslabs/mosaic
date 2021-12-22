@@ -164,7 +164,8 @@ object Conversions {
    * @return An instance of [[Geometry]].
    */
   def geojson2geom(input: Any): Geometry = {
-    val geoJSON = input.asInstanceOf[UTF8String].toString
+    val jsonWrapper = input.asInstanceOf[InternalRow]
+    val geoJSON = jsonWrapper.getString(0)
     typed.geojson2geom(geoJSON)
   }
 }

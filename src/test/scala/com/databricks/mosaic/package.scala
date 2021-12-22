@@ -1,6 +1,7 @@
 package com.databricks
 
 import org.apache.spark.sql.types.StringType
+import javax.xml.crypto.Data
 
 package object mosaic {
   object mocks {
@@ -10,7 +11,7 @@ package object mosaic {
 
     val hex_rows = List(
       List("00000000030000000100000005403E0000000000004024000000000000404400000000000040440000000000004034000000000000404400000000000040240000000000004034000000000000403E0000000000004024000000000000"),
-      List("0106000020620D00000100000001030000000100000004000000000000000000000000000000000000000000000000000000000000000000F03F0000000000000040000000000000004000000000000000000000000000000000")
+      List("01060000000100000001030000000100000004000000000000000000000000000000000000000000000000000000000000000000f03f0000000000000040000000000000004000000000000000000000000000000000")
     )
 
     val wkt_rows = List(
@@ -22,6 +23,13 @@ package object mosaic {
       List("""MULTIPOLYGON (((40 60, 20 45, 45 30, 40 60)),
           |((20 35, 10 30, 10 10, 30 5, 45 20, 20 35),
           |(30 20, 20 15, 20 25, 30 20)))""".stripMargin)
+    )
+
+    val geoJSON_rows = List(
+      List("""{"type":"Polygon","coordinates":[[[30,10],[40,40],[20,40],[10,20],[30,10]]],"crs":{"type":"name","properties":{"name":"EPSG:0"}}}"""),
+      List("""{"type":"MultiPolygon","coordinates":[[[[0,0],[0,1],[2,2],[0,0]]]],"crs":{"type":"name","properties":{"name":"EPSG:0"}}}"""),
+      List("""{"type":"Polygon","coordinates":[[[10,10],[110,10],[110,110],[10,110],[10,10]],[[20,20],[20,30],[30,30],[30,20],[20,20]],[[40,20],[40,30],[50,30],[50,20],[40,20]]],"crs":{"type":"name","properties":{"name":"EPSG:0"}}}"""),
+      List("""{"type":"MultiPolygon","coordinates":[[[[40,60],[20,45],[45,30],[40,60]]],[[[20,35],[10,30],[10,10],[30,5],[45,20],[20,35]],[[30,20],[20,15],[20,25],[30,20]]]],"crs":{"type":"name","properties":{"name":"EPSG:0"}}}""")
     )
 
     val wkt_rows_boroughs = List(
@@ -63,6 +71,19 @@ package object mosaic {
       val schema = StructType(
         List(
           StructField("wkt", StringType)
+        )
+      )
+      val df = spark.createDataFrame(rdd, schema)
+      df
+    }
+
+    def getGeoJSONDf: DataFrame = {
+      val spark = SparkSession.builder().getOrCreate()
+      val rows = geoJSON_rows.map { x => Row(x: _*)}
+      val rdd =spark.sparkContext.makeRDD(rows)
+      val schema = StructType(
+        List(
+          StructField("geojson", StringType)
         )
       )
       val df = spark.createDataFrame(rdd, schema)

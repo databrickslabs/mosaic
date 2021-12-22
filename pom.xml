@@ -48,6 +48,18 @@
             <version>${spec2.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.skyscreamer</groupId>
+            <artifactId>jsonassert</artifactId>
+            <version>1.5.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.stephenn</groupId>
+            <artifactId>scalatest-json-jsonassert_${scala.compat.version}</artifactId>
+            <version>0.2.5</version>
+            <scope>test</scope>
+        </dependency>
         <!-- spark -->
         <dependency>
             <groupId>org.apache.spark</groupId>

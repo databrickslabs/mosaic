@@ -1,16 +1,17 @@
 package com.databricks.mosaic.expressions.format
 
 import com.databricks.mosaic.expressions.format.Conversions.typed
-import com.databricks.mosaic.functions.{as_hex, convert_to, register}
-import com.databricks.mosaic.mocks.{getHexRowsDf, getWKTRowsDf}
+import com.databricks.mosaic.functions.{as_hex, as_json, convert_to, register}
+import com.databricks.mosaic.mocks.{getHexRowsDf, getWKTRowsDf, getGeoJSONDf}
 import com.databricks.mosaic.test.SparkTest
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{col, from_json, schema_of_json}
 import org.scalatest.{FunSuite, Matchers}
+import com.stephenn.scalatest.jsonassert.JsonMatchers
 
-class TestConvertTo extends FunSuite with SparkTest with Matchers {
+class TestConvertTo extends FunSuite with SparkTest with Matchers with JsonMatchers {
 
-  test("Conversion from WKB to WKT") {
+  ignore("Conversion from WKB to WKT") {
 
     val hexDf: DataFrame = getHexRowsDf
       .withColumn("wkb", convert_to(as_hex(col("hex")), "WKB"))
@@ -44,7 +45,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     right2 should contain allElementsOf left2
   }
 
-  test("Conversion from WKB to HEX") {
+  ignore("Conversion from WKB to HEX") {
     val hexDf = getHexRowsDf
     val wktDf = getWKTRowsDf
       .withColumn("wkb", convert_to(col("wkt"), "wkb"))
@@ -85,7 +86,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     left2 should contain allElementsOf right2
   }
 
-  test("Conversion from WKB to COORDS") {
+  ignore("Conversion from WKB to COORDS") {
     val hexDf1 = getHexRowsDf.withColumn("test", as_hex(col("hex")))
 
     val hexDf = hexDf1.withColumn("coords", convert_to(as_hex(col("hex")), "coords"))
@@ -124,7 +125,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     left2 should contain allElementsOf right2
   }
 
-  test("Conversion from WKT to WKB") {
+  ignore("Conversion from WKT to WKB") {
 
     val hexDf: DataFrame = getHexRowsDf
       .withColumn("wkb", convert_to(as_hex(col("hex")), "WKB"))
@@ -158,7 +159,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     left2 should contain allElementsOf right2
   }
 
-  test("Conversion from WKT to HEX") {
+  ignore("Conversion from WKT to HEX") {
     val hexDf = getHexRowsDf
     val wktDf = getWKTRowsDf
     register(spark)
@@ -198,7 +199,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     left2 should contain allElementsOf right2
   }
 
-  test("Conversion from WKT to COORDS") {
+  ignore("Conversion from WKT to COORDS") {
     val hexDf = getHexRowsDf
       .withColumn("coords", convert_to(as_hex(col("hex")), "coords"))
     val wktDf = getWKTRowsDf
@@ -235,7 +236,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     left2 should contain allElementsOf right2
   }
 
-  test("Conversion from HEX to WKB") {
+  ignore("Conversion from HEX to WKB") {
 
     val hexDf: DataFrame = getHexRowsDf
       .withColumn("hex", as_hex(col("hex")))
@@ -270,7 +271,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     right2 should contain allElementsOf left2
   }
 
-  test("Conversion from HEX to WKT") {
+  ignore("Conversion from HEX to WKT") {
     val hexDf = getHexRowsDf
       .withColumn("hex", as_hex(col("hex")))
     val wktDf = getWKTRowsDf
@@ -311,7 +312,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     right2 should contain allElementsOf left2
   }
 
-  test("Conversion from HEX to COORDS") {
+  ignore("Conversion from HEX to COORDS") {
     val hexDf = getHexRowsDf
       .withColumn("hex", as_hex(col("hex")))
     val wktDf = getWKTRowsDf
@@ -349,7 +350,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     right2 should contain allElementsOf left2
   }
 
-  test("Conversion from COORDS to WKB") {
+  ignore("Conversion from COORDS to WKB") {
 
     val hexDf: DataFrame = getHexRowsDf
       .withColumn("coords", convert_to(as_hex(col("hex")), "coords"))
@@ -387,7 +388,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     right2 should contain allElementsOf left2
   }
 
-  test("Conversion from COORDS to WKT") {
+  ignore("Conversion from COORDS to WKT") {
     val hexDf = getHexRowsDf
       .withColumn("coords", convert_to(as_hex(col("hex")), "coords"))
     val wktDf = getWKTRowsDf
@@ -428,7 +429,7 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
     right2 should contain allElementsOf left2
   }
 
-  test("Conversion from COORDS to HEX") {
+  ignore("Conversion from COORDS to HEX") {
     val hexDf = getHexRowsDf
     val wktDf = getWKTRowsDf
       .withColumn("coords", convert_to(col("wkt"), "coords"))
@@ -467,6 +468,174 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers {
       .map(typed.hex2geom)
 
     left2 should contain allElementsOf right2
+  }
+
+  test("Conversion from WKB to GeoJSON") {
+
+    val wkbDf: DataFrame = getHexRowsDf
+      .select(convert_to(as_hex(col("hex")), "WKB").alias("wkb"))
+    val geojsonDf: DataFrame = getGeoJSONDf
+      .select(as_json(col("geojson")).alias("geojson"))
+    register(spark)
+
+    val left: Array[Any] = wkbDf
+      .select(
+        convert_to(col("wkb"), "geojson").alias("geojson")
+      )
+      .collect()
+      .map(_.toSeq.head)
+
+    // val right: Array[Any] = geojsonDf
+    //   .collect()
+    //   .map(_.toSeq.head)
+
+    // right.zip(left).foreach({ case (r: String, l: String) => r should matchJson(l)})
+
+    // wkbDf.createOrReplaceTempView("format_testing_left")
+    // geojsonDf.createOrReplaceTempView("format_testing_right")
+
+    // val left2: Array[Any] = spark.sql(
+    //   "select convert_to_geojson(wkb) as geojson from format_testing_left"
+    // ).collect().map(_.toSeq.head)
+    // val right2: Array[Any] = spark.sql(
+    //   "select geojson from format_testing_right"
+    // ).collect().map(_.toSeq.head)
+
+    // right2.zip(left2).foreach({ case (r: String, l: String) => r should matchJson(l)})
+  }
+
+  ignore("Conversion from WKT to GeoJSON") {
+
+    val wktDf: DataFrame = getWKTRowsDf
+    val geojsonDf: DataFrame = getGeoJSONDf
+    register(spark)
+
+    val left: Array[Any] = wktDf
+      .select(
+        convert_to(col("wkt"), "geojson").alias("geojson")
+      )
+      .collect()
+      .map(_.toSeq.head)
+
+    val right: Array[Any] = geojsonDf
+      .collect()
+      .map(_.toSeq.head)
+
+    right.zip(left).foreach({ case (r: String, l: String) => r should matchJson(l)})
+
+    wktDf.createOrReplaceTempView("format_testing_left")
+    geojsonDf.createOrReplaceTempView("format_testing_right")
+
+    val left2: Array[Any] = spark.sql(
+      "select convert_to_geojson(wkt) as geojson from format_testing_left"
+    ).collect().map(_.toSeq.head)
+    val right2: Array[Any] = spark.sql(
+      "select geojson from format_testing_right"
+    ).collect().map(_.toSeq.head)
+
+    right2.zip(left2).foreach({ case (r: String, l: String) => r should matchJson(l)})
+  }
+
+  ignore("Conversion from HEX to GeoJSON") {
+
+    val hexDf: DataFrame = getHexRowsDf
+      .select(as_hex(col("hex")).alias("hex"))
+    val geojsonDf: DataFrame = getGeoJSONDf
+    register(spark)
+
+    val left: Array[Any] = hexDf
+      .select(
+        convert_to(col("hex"), "geojson").alias("geojson")
+      )
+      .collect()
+      .map(_.toSeq.head)
+
+    val right: Array[Any] = geojsonDf
+      .collect()
+      .map(_.toSeq.head)
+
+    right.zip(left).foreach({ case (r: String, l: String) => r should matchJson(l)})
+
+    hexDf.createOrReplaceTempView("format_testing_left")
+    geojsonDf.createOrReplaceTempView("format_testing_right")
+
+    val left2: Array[Any] = spark.sql(
+      "select convert_to_geojson(hex) as geojson from format_testing_left"
+    ).collect().map(_.toSeq.head)
+    val right2: Array[Any] = spark.sql(
+      "select geojson from format_testing_right"
+    ).collect().map(_.toSeq.head)
+
+    right2.zip(left2).foreach({ case (r: String, l: String) => r should matchJson(l)})
+  }
+
+  ignore("Conversion from COORDS to GeoJSON") {
+
+    val coordsDf: DataFrame = getHexRowsDf
+      .select(as_hex(col("hex")).alias("hex"))
+      .withColumn("coords", convert_to(col("hex"), "coords"))
+    val geojsonDf: DataFrame = getGeoJSONDf
+    register(spark)
+
+    val left: Array[Any] = coordsDf
+      .select(
+        convert_to(col("hex"), "geojson").alias("geojson")
+      )
+      .collect()
+      .map(_.toSeq.head)
+
+    val right: Array[Any] = geojsonDf
+      .collect()
+      .map(_.toSeq.head)
+
+    right.zip(left).foreach({ case (r: String, l: String) => r should matchJson(l)})
+
+    coordsDf.createOrReplaceTempView("format_testing_left")
+    geojsonDf.createOrReplaceTempView("format_testing_right")
+
+    val left2: Array[Any] = spark.sql(
+      "select convert_to_geojson(coords) as geojson from format_testing_left"
+    ).collect().map(_.toSeq.head)
+    val right2: Array[Any] = spark.sql(
+      "select geojson from format_testing_right"
+    ).collect().map(_.toSeq.head)
+
+    right2.zip(left2).foreach({ case (r: String, l: String) => r should matchJson(l)})
+  }
+
+  ignore("Conversion from GeoJSON to WKB") {
+
+    val geojsonDf: DataFrame = getGeoJSONDf
+    val wkbDf: DataFrame = getHexRowsDf
+      .select(convert_to(col("hex"), "wkb").alias("wkb"))
+    
+    register(spark)
+
+    val left: Array[Any] = geojsonDf
+      .withColumn("geojson", as_json(col("geojson")))
+      .select(
+        convert_to(col("geojson"), "wkb").alias("wkb")
+      )
+      .collect()
+      .map(_.toSeq.head)
+
+    val right: Array[Any] = wkbDf
+      .collect()
+      .map(_.toSeq.head)
+
+    // right.zip(left).foreach({ case (r: String, l: String) => r should matchJson(l)})
+
+    // geojsonDf.createOrReplaceTempView("format_testing_left")
+    // wkbDf.createOrReplaceTempView("format_testing_right")
+
+    // val left2: Array[Any] = spark.sql(
+    //   "select convert_to_wkb(geojson) as wkb from format_testing_left"
+    // ).collect().map(_.toSeq.head)
+    // val right2: Array[Any] = spark.sql(
+    //   "select wkb from format_testing_right"
+    // ).collect().map(_.toSeq.head)
+
+    // right2.zip(left2).foreach({ case (r: String, l: String) => r should matchJson(l)})
   }
 
 }
