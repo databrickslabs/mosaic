@@ -5,7 +5,7 @@ import com.databricks.mosaic.functions.{as_hex, as_json, convert_to, register, t
 import com.databricks.mosaic.mocks.{getHexRowsDf, getWKTRowsDf, getGeoJSONDf}
 import com.databricks.mosaic.test.SparkTest
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions.{col, from_json, schema_of_json}
+import org.apache.spark.sql.functions.col
 import org.scalatest.{FunSuite, Matchers, BeforeAndAfterEach}
 import com.stephenn.scalatest.jsonassert.JsonMatchers
 import org.apache.spark.sql.Row
