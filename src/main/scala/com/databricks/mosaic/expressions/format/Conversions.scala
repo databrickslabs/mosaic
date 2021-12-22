@@ -150,9 +150,9 @@ object Conversions {
    * @param input A [[Geometry]] instance to be converted.
    * @return An [[UTF8String]] corresponding to a GeoJSON encoding of said geometry.
    */
-  def geom2geojson(input: Geometry): UTF8String = {
+  def geom2geojson(input: Geometry): InternalRow = {
     val geoJSONPayload = new GeoJsonWriter().write(input)
-    UTF8String.fromString(geoJSONPayload)
+    InternalRow.fromSeq(Seq(UTF8String.fromString(geoJSONPayload)))
   }
 
   /**
