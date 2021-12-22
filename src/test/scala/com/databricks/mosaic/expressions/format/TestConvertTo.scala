@@ -32,17 +32,17 @@ class TestConvertTo extends FunSuite with SparkTest with Matchers with JsonMatch
 
     right should contain allElementsOf left
 
-    // hexDf.createOrReplaceTempView("format_testing_left")
-    // wktDf.createOrReplaceTempView("format_testing_right")
+    hexDf.createOrReplaceTempView("format_testing_left")
+    wktDf.createOrReplaceTempView("format_testing_right")
 
-    // val left2: Array[Any] = spark.sql(
-    //   "select convert_to_wkt(wkb) as wkt from format_testing_left"
-    // ).collect().map(_.toSeq.head)
-    // val right2: Array[Any] = spark.sql(
-    //   "select wkt from format_testing_right"
-    // ).collect().map(_.toSeq.head)
+    val left2: Array[Any] = spark.sql(
+      "select convert_to_wkt(wkb) as wkt from format_testing_left"
+    ).collect().map(_.toSeq.head)
+    val right2: Array[Any] = spark.sql(
+      "select wkt from format_testing_right"
+    ).collect().map(_.toSeq.head)
 
-    // right2 should contain allElementsOf left2
+    right2 should contain allElementsOf left2
   }
 
   test("Conversion from WKB to HEX") {
