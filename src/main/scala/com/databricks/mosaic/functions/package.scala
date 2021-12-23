@@ -10,6 +10,8 @@ import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.functions.{lit, struct}
 import org.apache.spark.sql.{Column, SparkSession}
+import com.databricks.mosaic.index.MosaicExplodeESRI
+
 
 /**
  * Object defining column functions and registering SQL parsers for Mosaic functionality.
@@ -81,6 +83,7 @@ package object functions {
   def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr))
   def st_centroid2D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr))
   def st_centroid3D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, 3))
+  def h3_mosaic_explode_esri(geom: Column, resolution: Column): Column = ColumnAdapter(MosaicExplodeESRI(struct(geom, resolution).expr, H3.name))
 
   //Not specific to Mosaic
   def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))

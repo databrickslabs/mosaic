@@ -1,6 +1,7 @@
 package com.databricks.mosaic.core
 
-import com.databricks.mosaic.types.model.MosaicChip
+import com.databricks.mosaic.types.model.{MosaicChip, MosaicChipESRI}
+import com.esri.core.geometry.ogc.OGCGeometry
 import org.locationtech.jts.geom.Geometry
 
 import java.util
@@ -48,6 +49,8 @@ trait IndexSystem {
    */
   def polyfill(geometry: Geometry, resolution: Int): util.List[java.lang.Long]
 
+  def polyfill(geometry: OGCGeometry, resolution: Int): util.List[java.lang.Long]
+
   /**
    * Return a set of [[MosaicChip]] instances computed based on the geometry and
    * border indices. Each chip is computed via intersection between the input
@@ -59,6 +62,8 @@ trait IndexSystem {
    */
   def getBorderChips(geometry: Geometry, borderIndices: util.List[java.lang.Long]): Seq[MosaicChip]
 
+  def getBorderChips(geometry: OGCGeometry, borderIndices: util.List[java.lang.Long]): Seq[MosaicChipESRI]
+
   /**
    * Return a set of [[MosaicChip]] instances computed based on the core
    * indices. Each index is converted to an instance of [[MosaicChip]].
@@ -69,6 +74,9 @@ trait IndexSystem {
    * @return A core area representation via [[MosaicChip]] set.
    */
   def getCoreChips(coreIndices: util.List[java.lang.Long]): Seq[MosaicChip]
+
+  def getCoreChipsESRI(coreIndices: util.List[java.lang.Long]): Seq[MosaicChipESRI]
+
 
   /**
    * Get the geometry corresponding to the index with the input id.

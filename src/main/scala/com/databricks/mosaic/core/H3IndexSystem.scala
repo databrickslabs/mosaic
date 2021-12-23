@@ -1,7 +1,9 @@
 package com.databricks.mosaic.core
 import com.databricks.mosaic.types.model
-import com.databricks.mosaic.types.model.MosaicChip
+import com.databricks.mosaic.types.model.{MosaicChip, MosaicChipESRI}
 import com.databricks.mosaic.utils.GeoCoordsUtils
+import com.esri.core.geometry.{SpatialReference, Point => ESRIPoint, Polygon => ESRIPolygon}
+import com.esri.core.geometry.ogc.{OGCGeometry, OGCPolygon}
 import com.uber.h3core.H3Core
 import org.locationtech.jts.geom.{Coordinate, Geometry, GeometryFactory}
 
@@ -77,6 +79,17 @@ object H3IndexSystem extends IndexSystem {
     }
   }
 
+  override def polyfill(geometry: OGCGeometry, resolution: Int): util.List[java.lang.Long] = {
+    if (geometry.isEmpty) Seq.empty[java.lang.Long].asJava
+    else {
+      val boundary = GeoCoordsUtils.getBoundary(geometry)
+      val holes = GeoCoordsUtils.getHoles(geometry)
+
+      val indices = h3.polyfill(boundary, holes.asJava, resolution)
+      indices
+    }
+  }
+
   /**
    * @see [[IndexSystem.getBorderChips()]]
    * @param geometry Input geometry whose border is being represented.
@@ -103,6 +116,10 @@ object H3IndexSystem extends IndexSystem {
     coreIndices.asScala.map(MosaicChip(true,_,null))
   }
 
+  override def getCoreChipsESRI(coreIndices: util.List[lang.Long]): Seq[MosaicChipESRI] = {
+    coreIndices.asScala.map(MosaicChipESRI(true,_,null))
+  }
+
   /**
    * Boundary that is returned by H3 isn't valid from JTS perspective since
    * it does not form a LinearRing (ie first point == last point).
@@ -117,5 +134,48 @@ object H3IndexSystem extends IndexSystem {
     val geometryFactory = new GeometryFactory
     val geom = geometryFactory.createPolygon(extended.toArray)
     geom
+  }
+
+  /**
+   * Returns the index system ID instance that uniquely identifies an index system.
+   * This instance is used to select appropriate Mosaic expressions.
+   *
+   * @return An instance of [[IndexSystemID]]
+   */
+  override def getIndexSystemID: IndexSystemID = H3
+
+  /**
+   * Get the index ID corresponding to the provided coordinates.
+   *
+   * @param x          X coordinate of the point.
+   * @param y          Y cooordinate of the point.
+   * @param resolution Resolution of the index.
+   * @return Index ID in this index system.
+   */
+  override def geoToIndex(x: Double, y: Double, resolution: Int): Long = {
+    h3.geoToH3(x, y, resolution)
+  }
+
+  override def getBorderChips(geometry: OGCGeometry, borderIndices: util.List[lang.Long]): Seq[MosaicChipESRI] = {
+
+    def index2geom(index: Long): OGCPolygon = {
+      val spatialRef = SpatialReference.create(4326)
+
+      val boundary = h3.h3ToGeoBoundary(index)
+        .asScala //.map(cur => new Coordinate(cur.lng, cur.lat)).toList
+        .map(cur => new ESRIPoint(cur.lng, cur.lat))
+      val indexPolygon = new ESRIPolygon()
+      indexPolygon.startPath(boundary.head)
+      for (i <- 1 until boundary.length) indexPolygon.lineTo(boundary(i))
+      // no need to repeat head in ESRI API
+      new OGCPolygon(indexPolygon, spatialRef)
+    }
+
+    val intersections = for (index <- borderIndices.asScala) yield {
+      val indexGeom = index2geom(index)
+      val chip = model.MosaicChipESRI(isCore = false, index, indexGeom)
+      chip.intersection(geometry)
+    }
+    intersections.filterNot(_.isEmpty)
   }
 }

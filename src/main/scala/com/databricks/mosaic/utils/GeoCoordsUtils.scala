@@ -1,5 +1,6 @@
 package com.databricks.mosaic.utils
 
+import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString, OGCMultiPolygon, OGCPolygon}
 import com.uber.h3core.util.GeoCoord
 import org.locationtech.jts.geom.Geometry
 
@@ -9,6 +10,14 @@ import scala.collection.immutable
 object GeoCoordsUtils {
 
   import scala.collection.JavaConverters._
+
+
+  def lineStringToPoints(lineString: OGCLineString): immutable.Seq[GeoCoord] = {
+    for(i <- 0 until lineString.numPoints()) yield {
+      val ogcPoint = lineString.pointN(i)
+      new GeoCoord(ogcPoint.Y(), ogcPoint.X())
+    }
+  }
 
   /**
    * Extracts the boundary of the geometry.
@@ -26,6 +35,30 @@ object GeoCoordsUtils {
         val n = geom.getNumGeometries
         val boundaries = for (i <- 0 until n)
           yield getPolygonBoundary(geom.getGeometryN(i))
+        boundaries.reduce(_ ++ _).asJava
+    }
+  }
+
+  /**
+   * Extracts the boundary of the geometry.
+   * @param geom An instance of [[Geometry]].
+   * @return A collection of [[GeoCoord]] representing the boundary.
+   */
+  def getBoundary(geom: OGCGeometry): util.List[GeoCoord] = {
+
+    def getBoundaryPoints(polygon: OGCPolygon): immutable.Seq[GeoCoord] = {
+      val exteriorRing = polygon.exteriorRing()
+      lineStringToPoints(exteriorRing)
+    }
+
+    geom.geometryType() match {
+      case "Polygon" =>
+        getBoundaryPoints(geom.asInstanceOf[OGCPolygon]).asJava
+      case "MultiPolygon" =>
+        val multiPolygon = geom.asInstanceOf[OGCMultiPolygon]
+        val n = multiPolygon.numGeometries()
+        val boundaries = for (i <- 0 until n)
+          yield getBoundaryPoints(multiPolygon.geometryN(i).asInstanceOf[OGCPolygon])
         boundaries.reduce(_ ++ _).asJava
     }
   }
@@ -56,6 +89,33 @@ object GeoCoordsUtils {
       case "MultiPolygon" =>
         val n = geom.getNumGeometries
         val holeGroups = for(i <- 0 until n) yield getPolygonHoles(geom.getGeometryN(i))
+        holeGroups.reduce(_ ++ _)
+    }
+
+  }
+
+  /**
+   * Get holes from a geometry.
+   * @param geom An instance of [[OGCGeometry]].
+   * @return A collection of hole boundaries.
+   */
+  def getHoles(geom: OGCGeometry): immutable.Seq[util.List[GeoCoord]] = {
+
+    def getPolygonHoles(polygon: OGCPolygon): immutable.Seq[util.List[GeoCoord]] = {
+      val m = polygon.numInteriorRing()
+      for(i <- 0 until m) yield {
+        val ring = polygon.interiorRingN(i)
+        lineStringToPoints(ring).asJava
+      }
+    }
+
+    geom.geometryType() match {
+      case "Polygon" =>
+        getPolygonHoles(geom.asInstanceOf[OGCPolygon])
+      case "MultiPolygon" =>
+        val multiPolygon = geom.asInstanceOf[OGCMultiPolygon]
+        val n = multiPolygon.numGeometries()
+        val holeGroups = for(i <- 0 until n) yield getPolygonHoles(multiPolygon.geometryN(i).asInstanceOf[OGCPolygon])
         holeGroups.reduce(_ ++ _)
     }
 
