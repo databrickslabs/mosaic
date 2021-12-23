@@ -4,6 +4,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.io.{WKBReader, WKBWriter, WKTReader, WKTWriter}
+import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
 
 /**
  * Provides methods that convert JTS geometries between different storage formats.
@@ -48,6 +49,15 @@ object Conversions {
     def wkb2geom(input: Array[Byte]): Geometry = {
       val geom = new WKBReader().read(input)
       geom
+    }
+
+    /**
+     * Converts GeoJSON encoded [[String]] to a [[Geometry]] instance.
+     * @param input GeoJSON string to be parsed into a [[Geometry]].
+     * @return An instance of [[Geometry]].
+     */
+    def geojson2geom(input: String): Geometry = {
+      new GeoJsonReader().read(input)
     }
   }
 
@@ -132,5 +142,30 @@ object Conversions {
   def wkb2geom(input: Any): Geometry = {
     val bytes = input.asInstanceOf[Array[Byte]]
     typed.wkb2geom(bytes)
+  }
+
+   /**
+   * Converts a JTS [[Geometry]] instance to a GeoJSON [[UTF8String]].
+   * @see [[Geometry]] provides more details on the Geometry API.
+   * @param input A [[Geometry]] instance to be converted.
+   * @return An [[UTF8String]] corresponding to a GeoJSON encoding of said geometry.
+   */
+  def geom2geojson(input: Geometry): InternalRow = {
+    val geoJSONPayload = new GeoJsonWriter().write(input)
+    InternalRow.fromSeq(Seq(UTF8String.fromString(geoJSONPayload)))
+  }
+
+  /**
+   * Converts a GeoJSON representation to a JTS [[Geometry]] instance.
+   * @see [[Geometry]] provides more details on the Geometry API.
+   * @param input is of [[Any]] type due to type erasure.
+   *              The expected type is [[UTF8String]] and
+   *              if that is not the case the call will fail.
+   * @return An instance of [[Geometry]].
+   */
+  def geojson2geom(input: Any): Geometry = {
+    val jsonWrapper = input.asInstanceOf[InternalRow]
+    val geoJSON = jsonWrapper.getString(0)
+    typed.geojson2geom(geoJSON)
   }
 }

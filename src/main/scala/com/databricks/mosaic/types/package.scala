@@ -14,6 +14,7 @@ package object types {
   val ChipType: DataType = new ChipType()
   val MosaicType: DataType = new MosaicType()
   val HexType: DataType = new HexType()
+  val JSONType: DataType = new JSONType()
   // Note InternalGeometryType depends on InternalCoordType
   // They have to be declared in this order.
   val InternalCoordType: DataType = ArrayType.apply(DoubleType)
@@ -31,6 +32,7 @@ package object types {
       case _: BinaryType => Conversions.typed.wkb2geom(inputData.getBinary(0))
       case _: StringType => Conversions.typed.wkt2geom(inputData.getString(0))
       case _: HexType => Conversions.hex2geom(inputData.get(0, HexType))
+      case _: JSONType => Conversions.geojson2geom(inputData.get(0, JSONType))
       case _: InternalGeometryType => InternalGeometry.apply(
         inputData.get(0, InternalGeometryType).asInstanceOf[InternalRow]
       ).toGeom
@@ -49,6 +51,7 @@ package object types {
       case _: BinaryType => Conversions.wkb2geom(inputData)
       case _: StringType => Conversions.wkt2geom(inputData)
       case _: HexType => Conversions.hex2geom(inputData)
+      case _: JSONType => Conversions.geojson2geom(inputData)
       case _: InternalGeometryType => InternalGeometry(inputData.asInstanceOf[InternalRow]).toGeom
     }
   }
