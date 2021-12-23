@@ -29,8 +29,7 @@ case class ST_MinMaxXY(inputGeom: Expression, dimension: String, func: String)
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val geomArg = newArgs.head.asInstanceOf[Expression]
-    val otherArgs = newArgs.tail.map(_.asInstanceOf[String])
-    val res = ST_MinMaxXY(geomArg, otherArgs(0), otherArgs(1))
+    val res = ST_MinMaxXY(geomArg, dimension, func)
     res.copyTagsFrom(this)
     res
   }

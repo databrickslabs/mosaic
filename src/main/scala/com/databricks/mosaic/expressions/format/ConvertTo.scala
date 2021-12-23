@@ -93,7 +93,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String)
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val res = ConvertTo(
       newArgs(0).asInstanceOf[Expression],
-      newArgs(1).asInstanceOf[String]
+      outDataType
     )
     res.copyTagsFrom(this)
     res
