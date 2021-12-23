@@ -1,4 +1,4 @@
-package com.databricks.mosaic.types.model
+package com.databricks.mosaic.core.types.model
 
 import com.databricks.mosaic.core.geometry.MosaicGeometry
 import org.apache.spark.sql.catalyst.InternalRow

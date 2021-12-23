@@ -1,6 +1,6 @@
-package com.databricks.mosaic.types.model
+package com.databricks.mosaic.core.types.model
 
-import com.databricks.mosaic.types.InternalCoordType
+import com.databricks.mosaic.core.types.InternalCoordType
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._

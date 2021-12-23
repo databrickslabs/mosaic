@@ -1,4 +1,4 @@
-package com.databricks.mosaic.index
+package com.databricks.mosaic.expressions.index
 
 import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback

@@ -1,8 +1,8 @@
-package com.databricks.mosaic.index
+package com.databricks.mosaic.expressions.index
 
 import com.databricks.mosaic.core.geometry.GeometryAPI
 import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
-import com.databricks.mosaic.types.{HexType, InternalGeometryType}
+import com.databricks.mosaic.core.types.{HexType, InternalGeometryType}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData

@@ -1,4 +1,4 @@
-package com.databricks.mosaic.types.model
+package com.databricks.mosaic.core.types.model
 
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.locationtech.jts.geom.Coordinate

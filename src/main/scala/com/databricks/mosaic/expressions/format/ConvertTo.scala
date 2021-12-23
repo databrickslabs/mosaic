@@ -1,8 +1,8 @@
 package com.databricks.mosaic.expressions.format
 
-import com.databricks.mosaic.expressions.format.Conversions._
-import com.databricks.mosaic.types.{HexType, InternalGeometryType, JSONType}
-import com.databricks.mosaic.types.model.InternalGeometry
+import com.databricks.mosaic.expressions.format.Conversions.{geojson2geom, geom2geojson, geom2hex, geom2wkb, geom2wkt, hex2geom, wkb2geom, wkb2hex, wkt2geom}
+import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
+import com.databricks.mosaic.core.types.model.InternalGeometry
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback

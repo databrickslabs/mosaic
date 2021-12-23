@@ -1,4 +1,4 @@
-package com.databricks.mosaic.expressions.geometry
+package com.databricks.mosaic.jts.h3.expressions.geometry
 
 import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
@@ -10,7 +10,7 @@ import org.apache.spark.sql.functions.col
 import org.scalatest.{FunSuite, Matchers}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
-class TestGeometryValidity extends FunSuite with SparkTest with Matchers {
+class TestGeometryValidity_JTS_H3 extends FunSuite with SparkTest with Matchers {
 
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
   import mosaicContext.functions._

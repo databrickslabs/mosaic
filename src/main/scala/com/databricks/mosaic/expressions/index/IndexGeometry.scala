@@ -1,7 +1,6 @@
-package com.databricks.mosaic.index
+package com.databricks.mosaic.expressions.index
 
 import com.databricks.mosaic.core.index.IndexSystemID
-import com.databricks.mosaic.expressions.format.Conversions.geom2wkb
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.types._

@@ -1,6 +1,6 @@
 package com.databricks.mosaic.expressions.geometry
 
-import com.databricks.mosaic.types.any2geometry
+import com.databricks.mosaic.core.types.any2geometry
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback

@@ -1,6 +1,6 @@
 package com.databricks.mosaic.core.geometry
 
-import com.databricks.mosaic.types
+import com.databricks.mosaic.core.types
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.DataType
 import org.locationtech.jts.geom.{Geometry => GeometryJTS}

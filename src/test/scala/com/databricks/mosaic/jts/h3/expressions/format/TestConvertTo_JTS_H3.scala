@@ -1,18 +1,16 @@
-package com.databricks.mosaic.expressions.format
+package com.databricks.mosaic.jts.h3.expressions.format
 
 import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.expressions.format.Conversions.typed
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.{getGeoJSONDf, getHexRowsDf, getWKTRowsDf}
-import com.databricks.mosaic.functions._
-import com.databricks.mosaic.mocks.{getHexRowsDf, getWKTRowsDf, getGeoJSONDf}
 import com.databricks.mosaic.test.SparkTest
+import com.stephenn.scalatest.jsonassert.JsonMatchers
 import org.apache.spark.sql.DataFrame
 import org.scalatest.{FunSuite, Matchers}
-import com.stephenn.scalatest.jsonassert.JsonMatchers
 
-class TestConvertTo extends FunSuite with SparkTest with Matchers with JsonMatchers {
+class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with JsonMatchers {
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
   import mosaicContext.functions._
 

@@ -1,7 +1,7 @@
-package com.databricks.mosaic
+package com.databricks.mosaic.core
 
 import com.databricks.mosaic.expressions.format.Conversions
-import com.databricks.mosaic.types.model.InternalGeometry
+import com.databricks.mosaic.core.types.model.InternalGeometry
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 import org.locationtech.jts.geom.Geometry

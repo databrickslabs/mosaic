@@ -2,7 +2,7 @@ package com.databricks.mosaic.core
 
 import com.databricks.mosaic.core.geometry.MosaicGeometry
 import com.databricks.mosaic.core.index.IndexSystem
-import com.databricks.mosaic.types.model.MosaicChip
+import com.databricks.mosaic.core.types.model.MosaicChip
 
 /**
  * Single abstracted logic for mosaic fill via [[IndexSystem]].

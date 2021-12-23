@@ -1,9 +1,9 @@
-package com.databricks.mosaic.index
+package com.databricks.mosaic.expressions.index
 
 import com.databricks.mosaic.core.Mosaic
 import com.databricks.mosaic.core.geometry.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystemID
-import com.databricks.mosaic.types.{ChipType, HexType, InternalGeometryType}
+import com.databricks.mosaic.core.types.{ChipType, HexType, InternalGeometryType}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -96,7 +96,7 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
    * [[Geometry]] and a set of border indices that are partially
    * contained by the input [[Geometry]].
    * @param input Struct containing a geometry and a resolution.
-   * @return A set of serialized [[com.databricks.mosaic.types.model.MosaicChip]].
+   * @return A set of serialized [[com.databricks.mosaic.core.types.model.MosaicChip]].
    *         This set will be used to generate new rows of data.
    */
   override def eval(input: InternalRow): TraversableOnce[InternalRow] = {

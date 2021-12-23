@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.{
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.{DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
-import com.databricks.mosaic.types.any2geometry
+import com.databricks.mosaic.core.types.any2geometry
 
 @ExpressionDescription(
   usage =

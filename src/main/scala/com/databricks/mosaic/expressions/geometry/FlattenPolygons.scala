@@ -1,8 +1,8 @@
 package com.databricks.mosaic.expressions.geometry
 
 import com.databricks.mosaic.expressions.format.Conversions
-import com.databricks.mosaic.types.{HexType, InternalGeometryType}
-import com.databricks.mosaic.types.model.InternalGeometry
+import com.databricks.mosaic.core.types.{HexType, InternalGeometryType}
+import com.databricks.mosaic.core.types.model.InternalGeometry
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback

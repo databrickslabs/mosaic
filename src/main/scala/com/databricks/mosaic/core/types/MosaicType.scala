@@ -1,4 +1,4 @@
-package com.databricks.mosaic.types
+package com.databricks.mosaic.core.types
 
 import org.apache.spark.sql.types.{ArrayType, StructField, StructType}
 

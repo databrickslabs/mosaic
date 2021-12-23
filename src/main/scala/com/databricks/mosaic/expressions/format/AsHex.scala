@@ -1,6 +1,6 @@
 package com.databricks.mosaic.expressions.format
 
-import com.databricks.mosaic.types.HexType
+import com.databricks.mosaic.core.types.HexType
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback

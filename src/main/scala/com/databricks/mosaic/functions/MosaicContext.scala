@@ -1,11 +1,11 @@
 package com.databricks.mosaic.functions
 
 import com.databricks.mosaic.core.geometry.GeometryAPI
-import com.databricks.mosaic.core.index.{H3, IndexSystem}
+import com.databricks.mosaic.core.index.IndexSystem
 import com.databricks.mosaic.expressions.format.{AsHex, AsJSON, ConvertTo}
 import com.databricks.mosaic.expressions.geometry._
 import com.databricks.mosaic.expressions.helper.TrySql
-import com.databricks.mosaic.index._
+import com.databricks.mosaic.expressions.index.{IndexGeometry, MosaicExplode, MosaicFill, PointIndex, Polyfill}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.functions.{lit, struct}
@@ -51,6 +51,9 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     //They cant be passed as Expressions to ConvertTo Expression.
     //Instead they are passed as String instances and for SQL
     //parser purposes separate method names are defined.
+    registry.registerFunction(FunctionIdentifier("st_geomfromwkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords"))
+    registry.registerFunction(FunctionIdentifier("st_geomfromwkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords"))
+    registry.registerFunction(FunctionIdentifier("st_geomfromgeojson", database), (exprs: Seq[Expression]) => ConvertTo(AsJSON(exprs(0)), "coords"))
     registry.registerFunction(FunctionIdentifier("convert_to_hex", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "hex"))
     registry.registerFunction(FunctionIdentifier("convert_to_wkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))
     registry.registerFunction(FunctionIdentifier("convert_to_wkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb"))
@@ -65,7 +68,11 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     registry.registerFunction(FunctionIdentifier("st_area", database), (exprs: Seq[Expression]) => ST_Area(exprs(0)))
     registry.registerFunction(FunctionIdentifier("st_centroid2D", database), (exprs: Seq[Expression]) => ST_Centroid(exprs(0)))
     registry.registerFunction(FunctionIdentifier("st_centroid3D", database), (exprs: Seq[Expression]) => ST_Centroid(exprs(0), 3))
-    registry.registerFunction(FunctionIdentifier("h3_index_geometry", database), (exprs: Seq[Expression]) => IndexGeometry(exprs(0), H3.name))
+    registry.registerFunction(FunctionIdentifier("st_aswkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))
+    registry.registerFunction(FunctionIdentifier("st_astext", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))
+    registry.registerFunction(FunctionIdentifier("st_aswkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb"))
+    registry.registerFunction(FunctionIdentifier("st_asbinary", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb"))
+    registry.registerFunction(FunctionIdentifier("st_asgeojson", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson"))
 
     //Not specific to Mosaic
     registry.registerFunction(FunctionIdentifier("try_sql", database), (exprs: Seq[Expression]) => TrySql(exprs(0)))
@@ -103,6 +110,16 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr))
     def st_centroid2D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr))
     def st_centroid3D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, 3))
+
+    def st_geomfromwkt(inGeom: Column): Column = ColumnAdapter(ConvertTo(inGeom.expr, "coords"))
+    def st_geomfromwkb(inGeom: Column): Column = ColumnAdapter(ConvertTo(inGeom.expr, "coords"))
+    def st_geomfromgeojson(inGeom: Column): Column = ColumnAdapter(ConvertTo(AsJSON(inGeom.expr), "coords"))
+    def st_aswkt(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt"))
+    def st_astext(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt"))
+    def st_aswkb(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb"))
+    def st_asbinary(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb"))
+    def st_asgeojson(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "geojson"))
+
 
     //Not specific to Mosaic
     def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))

@@ -1,8 +1,7 @@
 package com.databricks.mosaic.core.index
 
 import com.databricks.mosaic.core.geometry.MosaicGeometry
-import com.databricks.mosaic.types.model
-import com.databricks.mosaic.types.model.MosaicChip
+import com.databricks.mosaic.core.types.model.MosaicChip
 import com.uber.h3core.H3Core
 import org.locationtech.jts.geom.{Coordinate, Geometry}
 
@@ -92,7 +91,7 @@ object H3IndexSystem extends IndexSystem {
   override def getBorderChips(geometry: MosaicGeometry, borderIndices: util.List[java.lang.Long]): Seq[MosaicChip] = {
     val intersections = for (index <- borderIndices.asScala) yield {
       val indexGeom = indexToGeometry(index)
-      val chip = model.MosaicChip(isCore = false, index, indexGeom)
+      val chip = MosaicChip(isCore = false, index, indexGeom)
       chip.intersection(geometry)
     }
     intersections.filterNot(_.isEmpty)

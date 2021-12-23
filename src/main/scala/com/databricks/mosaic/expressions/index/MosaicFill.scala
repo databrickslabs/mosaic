@@ -1,9 +1,9 @@
-package com.databricks.mosaic.index
+package com.databricks.mosaic.expressions.index
 
 import com.databricks.mosaic.core.Mosaic
 import com.databricks.mosaic.core.geometry.GeometryAPI
 import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
-import com.databricks.mosaic.types.{HexType, InternalGeometryType, MosaicType}
+import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, MosaicType}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant}
@@ -50,7 +50,7 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
    * contained by the input [[Geometry]].
    * @param input1 Any instance containing the geometry.
    * @param input2 Any instance containing the resolution
-   * @return A set of serialized [[com.databricks.mosaic.types.model.MosaicChip]].
+   * @return A set of serialized [[com.databricks.mosaic.core.types.model.MosaicChip]].
    */
   //noinspection DuplicatedCode
   override def nullSafeEval(input1: Any, input2: Any): Any = {
