@@ -3,7 +3,6 @@ package com.databricks.mosaic.jts.h3.expressions.geometry
 import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.functions.{convert_to, flatten_polygons, st_dump, register}
 import com.databricks.mosaic.mocks.getWKTRowsDf
 import com.databricks.mosaic.test.SparkTest
 import org.apache.spark.sql.functions.col

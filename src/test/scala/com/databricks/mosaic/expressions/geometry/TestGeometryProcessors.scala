@@ -1,19 +1,24 @@
 package com.databricks.mosaic.expressions.geometry
+import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
+import com.databricks.mosaic.core.index.H3IndexSystem
+import com.databricks.mosaic.functions.MosaicContext
 import org.scalatest._
 import com.databricks.mosaic.test.SparkTest
 import org.locationtech.jts.io.WKTReader
 import com.databricks.mosaic.mocks
-import com.databricks.mosaic.functions.{register, st_area, st_centroid2D}
 
 class TestGeometryProcessors extends FunSuite with Matchers with SparkTest {
+
+  val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
+  import mosaicContext.functions._
 
   val wktReader = new WKTReader()
   val referenceGeoms = mocks.wkt_rows.map(g => wktReader.read(g.head))
 
   test("Test area calculation") {
+    mosaicContext.register(spark)
     val ss = spark
     import ss.implicits._
-    register(spark)
 
     val expected = referenceGeoms.map(_.getArea)
     val result = mocks.getWKTRowsDf
@@ -34,9 +39,9 @@ class TestGeometryProcessors extends FunSuite with Matchers with SparkTest {
   }
 
   test("Test centroid calculation (2-dimensional)") {
+    mosaicContext.register(spark)
     val ss = spark
     import ss.implicits._
-    register(spark)
 
     val expected = referenceGeoms.map(_.getCentroid.getCoordinate).map(c => (c.x, c.y))
     val result = mocks.getWKTRowsDf
