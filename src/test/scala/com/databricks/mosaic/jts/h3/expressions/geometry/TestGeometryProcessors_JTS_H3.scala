@@ -6,6 +6,7 @@ import org.scalatest._
 import com.databricks.mosaic.test.SparkTest
 import org.locationtech.jts.io.WKTReader
 import com.databricks.mosaic.mocks
+import com.databricks.mosaic.functions.{register, st_area, st_centroid2D, st_length, st_perimeter}
 
 class TestGeometryProcessors extends FunSuite with Matchers with SparkTest {
 
@@ -14,6 +15,42 @@ class TestGeometryProcessors extends FunSuite with Matchers with SparkTest {
 
   val wktReader = new WKTReader()
   val referenceGeoms = mocks.wkt_rows.map(g => wktReader.read(g.head))
+
+  test("Test length (or perimeter) calculation") {
+    // TODO break into two for line segment vs. polygons
+    val ss = spark
+    import ss.implicits._
+    register(spark)
+
+    val expected = referenceGeoms.map(_.getLength)
+    val result = mocks.getWKTRowsDf
+      .select(st_length($"wkt"))
+      .as[Double]
+      .collect()
+    
+    result should contain theSameElementsAs expected
+
+    val result2 = mocks.getWKTRowsDf
+      .select(st_perimeter($"wkt"))
+      .as[Double]
+      .collect()
+    
+    result2 should contain theSameElementsAs expected
+
+    mocks.getWKTRowsDf.createOrReplaceTempView("source")
+
+    val sqlResult = spark.sql("select st_length(wkt) from source")
+      .as[Double]
+      .collect()
+
+    sqlResult should contain theSameElementsAs expected
+
+    val sqlResult2 = spark.sql("select st_perimeter(wkt) from source")
+      .as[Double]
+      .collect()
+
+    sqlResult2 should contain theSameElementsAs expected
+  }
 
   test("Test area calculation") {
     mosaicContext.register(spark)
@@ -62,6 +99,10 @@ class TestGeometryProcessors extends FunSuite with Matchers with SparkTest {
       .collect()
 
     sqlResult should contain theSameElementsAs expected
+  }
+
+  test("Test distance calculation") {
+
   }
   
 }
