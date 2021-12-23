@@ -1,8 +1,7 @@
 package com.databricks.mosaic.types.model
 
-import com.databricks.mosaic.expressions.format.Conversions
+import com.databricks.mosaic.core.geometry.MosaicGeometry
 import org.apache.spark.sql.catalyst.InternalRow
-import org.locationtech.jts.geom.Geometry
 
 /**
  * A case class modeling an instance of a mosaic chip.
@@ -11,7 +10,7 @@ import org.locationtech.jts.geom.Geometry
  * @param index Index ID.
  * @param geom Geometry instance if the chip is a border chip.
  */
-case class MosaicChip(isCore: Boolean, index: Long, geom: Geometry) {
+case class MosaicChip(isCore: Boolean, index: Long, geom: MosaicGeometry) {
 
   /**
    * Perform an intersection with a geometry, and if
@@ -20,7 +19,7 @@ case class MosaicChip(isCore: Boolean, index: Long, geom: Geometry) {
    * @param other Geometry instance.
    * @return A Mosaic Chip instance.
    */
-  def intersection(other: Geometry): MosaicChip = {
+  def intersection(other: MosaicGeometry): MosaicChip = {
     val intersect = other.intersection(geom)
     val isCore = intersect.equals(geom)
     if (isCore) {
@@ -38,7 +37,7 @@ case class MosaicChip(isCore: Boolean, index: Long, geom: Geometry) {
    * Encodes the chip geometry as WKB.
    * @return An instance of [[Array]] of [[Byte]] representing WKB.
    */
-  private def encodeGeom: Array[Byte] = Option(geom).map(Conversions.geom2wkb).orNull
+  private def encodeGeom: Array[Byte] = Option(geom).map(_.toWKB).orNull
 
   /**
    * Serialise to spark internal representation.

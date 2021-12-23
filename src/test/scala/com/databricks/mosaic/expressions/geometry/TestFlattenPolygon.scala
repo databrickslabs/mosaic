@@ -1,18 +1,21 @@
 package com.databricks.mosaic.expressions.geometry
 
+import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
+import com.databricks.mosaic.core.index.H3IndexSystem
+import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.functions.{convert_to, flatten_polygons, st_dump, register}
 import com.databricks.mosaic.mocks.getWKTRowsDf
 import com.databricks.mosaic.test.SparkTest
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
 import org.locationtech.jts.io.{WKBReader, WKTReader}
 import org.scalatest.{FunSuite, Matchers}
 
 class TestFlattenPolygon extends FunSuite with SparkTest with Matchers {
+  val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
+  import mosaicContext.functions._
 
   test("Flattening of WKB Polygons") {
-
-    register(spark)
+    mosaicContext.register(spark)
     // we ensure that we have WKB test data by converting WKT testing data to WKB
 
     val df = getWKTRowsDf.withColumn("wkb", convert_to(col("wkt"), "wkb"))
@@ -54,9 +57,8 @@ class TestFlattenPolygon extends FunSuite with SparkTest with Matchers {
   }
 
   test("Flattening of WKT Polygons") {
+    mosaicContext.register(spark)
 
-    register(spark)
-    
     val df = getWKTRowsDf
 
     val flattened = df.withColumn(
@@ -95,12 +97,11 @@ class TestFlattenPolygon extends FunSuite with SparkTest with Matchers {
   }
 
   test("Flattening of Coords Polygons") {
-
-    register(spark)
+    mosaicContext.register(spark)
 
     val df = getWKTRowsDf
       .withColumn("coords", convert_to(col("wkt"), "coords"))
-    
+
     val flattened = df.withColumn(
       "coords", flatten_polygons(col("coords"))
     ).select("coords")
@@ -150,8 +151,7 @@ class TestFlattenPolygon extends FunSuite with SparkTest with Matchers {
   }
 
   test("Flattening of Hex Polygons") {
-
-    register(spark)
+    mosaicContext.register(spark)
 
     val df = getWKTRowsDf
       .withColumn("hex", convert_to(col("wkt"), "hex"))

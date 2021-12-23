@@ -1,7 +1,8 @@
 package com.databricks.mosaic.index
 
-import com.databricks.mosaic.core.{IndexSystemID, Mosaic}
-import com.databricks.mosaic.types
+import com.databricks.mosaic.core.Mosaic
+import com.databricks.mosaic.core.geometry.GeometryAPI
+import com.databricks.mosaic.core.index.IndexSystemID
 import com.databricks.mosaic.types.{ChipType, HexType, InternalGeometryType}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
@@ -27,7 +28,7 @@ import scala.collection.TraversableOnce
         {index_id, is_border, chip_geom}
   """,
   since = "1.0")
-case class MosaicExplode(pair: Expression, indexSystemName: String)
+case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIName: String)
   extends UnaryExpression with CollectionGenerator with Serializable with CodegenFallback {
 
   override val inline: Boolean = false
@@ -103,17 +104,18 @@ case class MosaicExplode(pair: Expression, indexSystemName: String)
     val geomType = child.dataType.asInstanceOf[StructType].fields.head.dataType
 
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+    val geometryAPI  = GeometryAPI(geometryAPIName)
+    val geometry = geometryAPI.geometry(inputData, geomType)
 
     val resolution = inputData.getInt(1)
-    val geom = types.struct2geom(inputData, geomType)
 
-    val chips =  Mosaic.mosaicFill(geom, resolution, indexSystem)
+    val chips =  Mosaic.mosaicFill(geometry, resolution, indexSystem)
     chips.map(_.serialize)
   }
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val arg1 = newArgs.head.asInstanceOf[Expression]
-    val res = MosaicExplode(arg1, indexSystemName)
+    val res = MosaicExplode(arg1, indexSystemName, geometryAPIName)
     res.copyTagsFrom(this)
     res
   }

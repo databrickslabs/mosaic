@@ -53,7 +53,7 @@ package object functions {
     registry.registerFunction(FunctionIdentifier("convert_to_coords", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords"))
     registry.registerFunction(FunctionIdentifier("convert_to_geojson", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson"))
     registry.registerFunction(FunctionIdentifier("st_aswkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))
-    registry.registerFunction(FunctionIdentifier("st_astext", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))    
+    registry.registerFunction(FunctionIdentifier("st_astext", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))
     registry.registerFunction(FunctionIdentifier("st_aswkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb"))
     registry.registerFunction(FunctionIdentifier("st_asbinary", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb"))
     registry.registerFunction(FunctionIdentifier("st_asgeojson", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson"))

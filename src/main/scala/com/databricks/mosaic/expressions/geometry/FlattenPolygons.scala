@@ -28,69 +28,35 @@ import scala.collection.TraversableOnce
         Polygon ((...))
   """,
   since = "1.0")
-case class FlattenPolygons(pair: Expression) extends UnaryExpression with CollectionGenerator with CodegenFallback {
+case class FlattenPolygons(pair: Expression, geometryAPIName: String)
+  extends UnaryExpression with CollectionGenerator with CodegenFallback {
 
+  /** Fixed definitions. */
   override val inline: Boolean = false
+  override def collectionType: DataType = child.dataType
+  override def child: Expression = pair
+  override def position: Boolean = false
 
-  /**
-   * [[FlattenPolygons]] expression can only be called on supported data types.
-   * The supported data types are [[BinaryType]] for WKB encoding, [[StringType]]
-   * for WKT encoding, [[HexType]] ([[StringType]] wrapper) for HEX encoding
-   * and [[InternalGeometryType]] for primitive types encoding via [[ArrayType]].
-   * @return An instance of [[TypeCheckResult]] indicating success or a failure.
-   */
-  override def checkInputDataTypes(): TypeCheckResult = child.dataType match {
-    case _: BinaryType => TypeCheckResult.TypeCheckSuccess
-    case _: StringType => TypeCheckResult.TypeCheckSuccess
-    case _: HexType => TypeCheckResult.TypeCheckSuccess
-    case _: InternalGeometryType => TypeCheckResult.TypeCheckSuccess
-    case _ =>
-      TypeCheckResult.TypeCheckFailure(
-        "input to function explode should be array or map type, " +
-          s"not ${child.dataType.catalogString}")
-  }
+  /** @see [[FlattenPolygons()]] companion object for implementations. */
+  override def checkInputDataTypes(): TypeCheckResult = FlattenPolygons.checkInputDataTypesImpl(child)
+  override def elementSchema: StructType = FlattenPolygons.elementSchemaImpl(child)
+  override def eval(input: InternalRow): TraversableOnce[InternalRow] = FlattenPolygons.evalImpl(input, child)
+  override def makeCopy(newArgs: Array[AnyRef]): Expression = FlattenPolygons.makeCopyImpl(newArgs, geometryAPIName, this)
+}
 
-  /**
-   * [[FlattenPolygons]] is a generator expression. All generator
-   * expressions require the element schema to be provided.
-   * Since we are flattening the geometries the element type is the
-   * same type of the input data.
-   * @see [[CollectionGenerator]] for the API of generator expressions.
-   * @return The schema of the child element. Has to be provided as
-   *         a [[StructType]].
-   */
-  override def elementSchema: StructType = child.dataType match {
-    case _: BinaryType => StructType(Seq(StructField("element", BinaryType)))
-    case _: StringType => StructType(Seq(StructField("element", StringType)))
-    case _: HexType => StructType(Seq(StructField("element", HexType)))
-    case _: InternalGeometryType => StructType(Seq(StructField("element", InternalGeometryType)))
-  }
-
-  /**
-   * The actual flattening performed on an instance of [[Geometry]] that
-   * is either a Polygon or a MultiPolygon.
-   * This method assumes only a single level of nesting.
-   * @param geom An instance of [[Geometry]] to be flattened.
-   * @return A collection of piece-wise geometries.
-   */
-  private def flattenGeom(geom: Geometry): Seq[Geometry] = geom.getGeometryType match {
-    case "Polygon" => List(geom)
-    case "MultiPolygon" => for (
-      i <- 0 until geom.getNumGeometries
-    ) yield geom.getGeometryN(i)
-  }
+object FlattenPolygons {
 
   /**
    * Flattens an input into a collection of outputs.
    * Each output instance should be wrapped into an [[InternalRow]] wrapper.
-   * For the generator expression [[eval()]] call requires that
+   * For the generator expression [[evalImpl()]] call requires that
    * input is evaluated before the evaluation of this expression can occur.
    * @param input An instance of a row before the child expression has
    *              been evaluated.
    * @return  A collection of [[InternalRow]] instances. This collection
    *          has to implement [[TraversableOnce]] API.
    */
-  override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
+  def evalImpl(input: InternalRow, child: Expression): TraversableOnce[InternalRow] = {
     child.dataType match {
       case _: BinaryType => //WKB case
         val wkb = child.eval(input).asInstanceOf[Array[Byte]]
@@ -117,17 +83,60 @@ case class FlattenPolygons(pair: Expression) extends UnaryExpression with Collec
     }
   }
 
-  override def makeCopy(newArgs: Array[AnyRef]): Expression = {
+  /**
+   * [[FlattenPolygons]] expression can only be called on supported data types.
+   * The supported data types are [[BinaryType]] for WKB encoding, [[StringType]]
+   * for WKT encoding, [[HexType]] ([[StringType]] wrapper) for HEX encoding
+   * and [[InternalGeometryType]] for primitive types encoding via [[ArrayType]].
+   * @return An instance of [[TypeCheckResult]] indicating success or a failure.
+   */
+  def checkInputDataTypesImpl(child: Expression): TypeCheckResult = child.dataType match {
+    case _: BinaryType => TypeCheckResult.TypeCheckSuccess
+    case _: StringType => TypeCheckResult.TypeCheckSuccess
+    case _: HexType => TypeCheckResult.TypeCheckSuccess
+    case _: InternalGeometryType => TypeCheckResult.TypeCheckSuccess
+    case _ =>
+      TypeCheckResult.TypeCheckFailure(
+        "input to function explode should be array or map type, " +
+          s"not ${child.dataType.catalogString}")
+  }
+
+  /**
+   * [[FlattenPolygons]] is a generator expression. All generator
+   * expressions require the element schema to be provided.
+   * Since we are flattening the geometries the element type is the
+   * same type of the input data.
+   * @see [[CollectionGenerator]] for the API of generator expressions.
+   * @return The schema of the child element. Has to be provided as
+   *         a [[StructType]].
+   */
+  def elementSchemaImpl(child: Expression): StructType = child.dataType match {
+    case _: BinaryType => StructType(Seq(StructField("element", BinaryType)))
+    case _: StringType => StructType(Seq(StructField("element", StringType)))
+    case _: HexType => StructType(Seq(StructField("element", HexType)))
+    case _: InternalGeometryType => StructType(Seq(StructField("element", InternalGeometryType)))
+  }
+
+  /**
+   * The actual flattening performed on an instance of [[Geometry]] that
+   * is either a Polygon or a MultiPolygon.
+   * This method assumes only a single level of nesting.
+   * @param geom An instance of [[Geometry]] to be flattened.
+   * @return A collection of piece-wise geometries.
+   */
+  private def flattenGeom(geom: Geometry): Seq[Geometry] = geom.getGeometryType match {
+    case "Polygon" => List(geom)
+    case "MultiPolygon" => for (
+      i <- 0 until geom.getNumGeometries
+    ) yield geom.getGeometryN(i)
+  }
+
+  def makeCopyImpl(newArgs: Array[AnyRef], geometryAPIName: String, instance: FlattenPolygons): Expression = {
     val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-    val res = FlattenPolygons(asArray(0))
-    res.copyTagsFrom(this)
+    val res = FlattenPolygons(asArray(0), geometryAPIName)
+    res.copyTagsFrom(instance)
     res
   }
 
-  override def collectionType: DataType = child.dataType
-
-  override def child: Expression = pair
-
-  override def position: Boolean = false
 }
 

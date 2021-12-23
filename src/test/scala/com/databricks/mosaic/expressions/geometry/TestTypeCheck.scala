@@ -1,17 +1,23 @@
 package com.databricks.mosaic.expressions.geometry
 
-import org.scalatest.{FunSuite, Matchers}
-import com.databricks.mosaic.test.SparkTest
+import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
+import com.databricks.mosaic.core.index.H3IndexSystem
+import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.{getHexRowsDf, getWKTRowsDf}
-import com.databricks.mosaic.functions.{register, as_hex, st_geometrytype}
+import com.databricks.mosaic.test.SparkTest
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.{col, rand}
+import org.scalatest.{FunSuite, Matchers}
 
 class TestTypeCheck extends FunSuite with Matchers with SparkTest {
 
+  val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
+  import mosaicContext.functions._
+
   test("ST_GeometryType returns the correct geometry type string for WKT geometries") {
+    mosaicContext.register(spark)
     val ss: SparkSession = spark
     import ss.implicits._
-    register(spark)
 
     val df = getWKTRowsDf
 
@@ -30,9 +36,9 @@ class TestTypeCheck extends FunSuite with Matchers with SparkTest {
   }
 
   test("ST_GeometryType returns the correct geometry type string for hex-encoded WKB geometries") {
+    mosaicContext.register(spark)
     val ss: SparkSession = spark
     import ss.implicits._
-    register(spark)
 
     val df = getHexRowsDf.select(as_hex($"hex").alias("hex"))
 

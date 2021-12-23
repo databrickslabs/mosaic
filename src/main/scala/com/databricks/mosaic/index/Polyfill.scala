@@ -1,9 +1,8 @@
 package com.databricks.mosaic.index
 
-import com.databricks.mosaic.core.{H3IndexSystem, IndexSystemID}
-import com.databricks.mosaic.types
+import com.databricks.mosaic.core.geometry.GeometryAPI
+import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 import com.databricks.mosaic.types.{HexType, InternalGeometryType}
-import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -18,7 +17,7 @@ import org.apache.spark.sql.types._
        [622236721348804607, 622236721274716159, ...]
   """,
   since = "1.0")
-case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: String)
+case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
   extends BinaryExpression with ExpectsInputTypes with NullIntolerant with CodegenFallback {
 
   //noinspection DuplicatedCode
@@ -49,19 +48,19 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
   //noinspection DuplicatedCode
   override def nullSafeEval(input1: Any, input2: Any): Any = {
     val resolution: Int = H3IndexSystem.getResolution(input2)
-    val geom = types.any2geometry(input1, left.dataType)
 
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-    val indices  = indexSystem.polyfill(geom, resolution)
+    val geometryAPI  = GeometryAPI(geometryAPIName)
+    val geometry = geometryAPI.geometry(input1, left.dataType)
+    val indices  = indexSystem.polyfill(geometry, resolution)
 
     val serialized = ArrayData.toArrayData(indices.toArray)
-
     serialized
   }
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-    val res = Polyfill(asArray(0), asArray(1), indexSystemName)
+    val res = Polyfill(asArray(0), asArray(1), indexSystemName, geometryAPIName)
     res.copyTagsFrom(this)
     res
   }

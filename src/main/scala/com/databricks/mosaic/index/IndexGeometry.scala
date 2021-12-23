@@ -1,6 +1,6 @@
 package com.databricks.mosaic.index
 
-import com.databricks.mosaic.core.IndexSystemID
+import com.databricks.mosaic.core.index.IndexSystemID
 import com.databricks.mosaic.expressions.format.Conversions.geom2wkb
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
@@ -33,9 +33,8 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String)
    */
   override def nullSafeEval(input1: Any): Any = {
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-    val indexGeometry = indexSystem.index2geometry(input1.asInstanceOf[Long])
-    val wkb = geom2wkb(indexGeometry)
-    wkb
+    val indexGeometry = indexSystem.indexToGeometry(input1.asInstanceOf[Long])
+    indexGeometry.toWKB
   }
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {

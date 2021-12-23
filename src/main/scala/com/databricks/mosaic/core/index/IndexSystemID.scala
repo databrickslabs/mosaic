@@ -1,4 +1,4 @@
-package com.databricks.mosaic.core
+package com.databricks.mosaic.core.index
 
 sealed trait IndexSystemID {
   def name: String

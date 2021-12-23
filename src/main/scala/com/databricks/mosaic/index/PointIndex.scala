@@ -1,6 +1,6 @@
 package com.databricks.mosaic.index
 
-import com.databricks.mosaic.core.{H3IndexSystem, IndexSystemID}
+import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.types._
@@ -41,7 +41,7 @@ case class PointIndex(lat: Expression, lng: Expression, resolution: Expression, 
 
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
 
-    indexSystem.geoToIndex(x, y, resolution)
+    indexSystem.pointToIndex(x, y, resolution)
   }
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {

@@ -1,7 +1,8 @@
 package com.databricks.mosaic.index
 
-import com.databricks.mosaic.core.{H3IndexSystem, IndexSystemID, Mosaic}
-import com.databricks.mosaic.types
+import com.databricks.mosaic.core.Mosaic
+import com.databricks.mosaic.core.geometry.GeometryAPI
+import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 import com.databricks.mosaic.types.{HexType, InternalGeometryType, MosaicType}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -20,7 +21,7 @@ import org.locationtech.jts.geom.Geometry
        [{index_id, is_border, chip_geom}, {index_id, is_border, chip_geom}, ..., {index_id, is_border, chip_geom}]
   """,
   since = "1.0")
-case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName: String)
+case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
   extends BinaryExpression with ExpectsInputTypes with NullIntolerant with CodegenFallback {
 
   //noinspection DuplicatedCode
@@ -54,10 +55,11 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
   //noinspection DuplicatedCode
   override def nullSafeEval(input1: Any, input2: Any): Any = {
     val resolution: Int = H3IndexSystem.getResolution(input2)
-    val geom = types.any2geometry(input1, left.dataType)
 
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-    val chips =  Mosaic.mosaicFill(geom, resolution, indexSystem)
+    val geometryAPI = GeometryAPI(geometryAPIName)
+    val geometry = geometryAPI.geometry(input1, left.dataType)
+    val chips =  Mosaic.mosaicFill(geometry, resolution, indexSystem)
 
     val serialized = InternalRow.fromSeq(Seq(
       ArrayData.toArrayData(chips.map(_.serialize)),
@@ -68,7 +70,7 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-    val res = MosaicFill(asArray(0), asArray(1), indexSystemName)
+    val res = MosaicFill(asArray(0), asArray(1), indexSystemName, geometryAPIName)
     res.copyTagsFrom(this)
     res
   }

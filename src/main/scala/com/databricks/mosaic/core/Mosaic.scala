@@ -1,8 +1,8 @@
 package com.databricks.mosaic.core
 
+import com.databricks.mosaic.core.geometry.MosaicGeometry
+import com.databricks.mosaic.core.index.IndexSystem
 import com.databricks.mosaic.types.model.MosaicChip
-import org.locationtech.jts.geom.Geometry
-import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
 
 /**
  * Single abstracted logic for mosaic fill via [[IndexSystem]].
@@ -11,19 +11,17 @@ import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
  */
 object Mosaic {
 
-  def mosaicFill(geometry: Geometry, resolution: Int, indexSystem: IndexSystem): Seq[MosaicChip] = {
+  def mosaicFill(geometry: MosaicGeometry, resolution: Int, indexSystem: IndexSystem): Seq[MosaicChip] = {
 
     val radius = indexSystem.getBufferRadius(geometry, resolution)
-
-    val simplify = DouglasPeuckerSimplifier.simplify _
 
     // do not modify the radius
     val carvedGeometry = geometry.buffer(-radius)
     // add 1% to the radius to ensure union of carved and border geometries does not have holes inside the original geometry areas
     val borderGeometry = if(carvedGeometry.isEmpty) {
-      simplify(geometry.buffer(radius*1.01), 0.01*radius)
+      geometry.buffer(radius*1.01).simplify(0.01*radius)
     } else {
-      simplify(geometry.getBoundary.buffer(radius*1.01), 0.01*radius)
+      geometry.boundary.buffer(radius*1.01).simplify(0.01*radius)
     }
 
     val coreIndices = indexSystem.polyfill(carvedGeometry, resolution)
