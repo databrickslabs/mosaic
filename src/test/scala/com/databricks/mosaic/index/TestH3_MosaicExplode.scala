@@ -1,4 +1,4 @@
-package com.databricks.mosaic.index.h3
+package com.databricks.mosaic.index
 
 import com.databricks.mosaic.functions._
 import com.databricks.mosaic.mocks.getBoroughs

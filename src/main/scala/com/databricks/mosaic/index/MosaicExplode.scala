@@ -1,6 +1,6 @@
-package com.databricks.mosaic.index.h3
+package com.databricks.mosaic.index
 
-import com.databricks.mosaic.core.{H3IndexSystem, Mosaic}
+import com.databricks.mosaic.core.{IndexSystemID, Mosaic}
 import com.databricks.mosaic.types
 import com.databricks.mosaic.types.{ChipType, HexType, InternalGeometryType}
 import org.apache.spark.sql.catalyst.InternalRow
@@ -27,15 +27,17 @@ import scala.collection.TraversableOnce
         {index_id, is_border, chip_geom}
   """,
   since = "1.0")
-case class H3_MosaicExplode(pair: Expression) extends UnaryExpression with CollectionGenerator with Serializable with CodegenFallback {
+case class MosaicExplode(pair: Expression, indexSystemName: String)
+  extends UnaryExpression with CollectionGenerator with Serializable with CodegenFallback {
 
   override val inline: Boolean = false
 
   /**
-   * [[H3_MosaicExplode]] expression can only be called on supported data types.
+   * [[MosaicExplode]] expression can only be called on supported data types.
    * The supported data types are [[BinaryType]] for WKB encoding, [[StringType]]
    * for WKT encoding, [[HexType]] ([[StringType]] wrapper) for HEX encoding
    * and [[InternalGeometryType]] for primitive types encoding via [[ArrayType]].
+   *
    * @return An instance of [[TypeCheckResult]] indicating success or a failure.
    */
   override def checkInputDataTypes(): TypeCheckResult = {
@@ -57,11 +59,12 @@ case class H3_MosaicExplode(pair: Expression) extends UnaryExpression with Colle
   }
 
   /**
-   * [[H3_MosaicExplode]] is a generator expression. All generator
+   * [[MosaicExplode]] is a generator expression. All generator
    * expressions require the element schema to be provided.
-   * Chip type is fixed for [[H3_MosaicExplode]], all border chip
+   * Chip type is fixed for [[MosaicExplode]], all border chip
    * geometries will be generated as [[BinaryType]] columns
    * encoded as WKBs.
+   *
    * @see [[CollectionGenerator]] for the API of generator expressions.
    *      [[ChipType]] for output type definition.
    * @return The schema of the child element. Has to be provided as
@@ -99,16 +102,18 @@ case class H3_MosaicExplode(pair: Expression) extends UnaryExpression with Colle
     val inputData = child.eval(input).asInstanceOf[InternalRow]
     val geomType = child.dataType.asInstanceOf[StructType].fields.head.dataType
 
+    val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+
     val resolution = inputData.getInt(1)
     val geom = types.struct2geom(inputData, geomType)
 
-    val chips =  Mosaic.mosaicFill(geom, resolution, H3IndexSystem)
+    val chips =  Mosaic.mosaicFill(geom, resolution, indexSystem)
     chips.map(_.serialize)
   }
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-    val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-    val res = H3_MosaicExplode(asArray(0))
+    val arg1 = newArgs.head.asInstanceOf[Expression]
+    val res = MosaicExplode(arg1, indexSystemName)
     res.copyTagsFrom(this)
     res
   }

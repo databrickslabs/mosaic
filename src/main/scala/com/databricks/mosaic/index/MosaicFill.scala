@@ -1,6 +1,6 @@
-package com.databricks.mosaic.index.h3
+package com.databricks.mosaic.index
 
-import com.databricks.mosaic.core.{H3IndexSystem, Mosaic}
+import com.databricks.mosaic.core.{H3IndexSystem, IndexSystemID, Mosaic}
 import com.databricks.mosaic.types
 import com.databricks.mosaic.types.{HexType, InternalGeometryType, MosaicType}
 import org.apache.spark.sql.catalyst.InternalRow
@@ -20,7 +20,7 @@ import org.locationtech.jts.geom.Geometry
        [{index_id, is_border, chip_geom}, {index_id, is_border, chip_geom}, ..., {index_id, is_border, chip_geom}]
   """,
   since = "1.0")
-case class H3_MosaicFill(geom: Expression, resolution: Expression)
+case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName: String)
   extends BinaryExpression with ExpectsInputTypes with NullIntolerant with CodegenFallback {
 
   //noinspection DuplicatedCode
@@ -51,11 +51,13 @@ case class H3_MosaicFill(geom: Expression, resolution: Expression)
    * @param input2 Any instance containing the resolution
    * @return A set of serialized [[com.databricks.mosaic.types.model.MosaicChip]].
    */
+  //noinspection DuplicatedCode
   override def nullSafeEval(input1: Any, input2: Any): Any = {
     val resolution: Int = H3IndexSystem.getResolution(input2)
     val geom = types.any2geometry(input1, left.dataType)
 
-    val chips =  Mosaic.mosaicFill(geom, resolution, H3IndexSystem)
+    val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+    val chips =  Mosaic.mosaicFill(geom, resolution, indexSystem)
 
     val serialized = InternalRow.fromSeq(Seq(
       ArrayData.toArrayData(chips.map(_.serialize)),
@@ -66,7 +68,7 @@ case class H3_MosaicFill(geom: Expression, resolution: Expression)
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-    val res = H3_MosaicFill(asArray(0), asArray(1))
+    val res = MosaicFill(asArray(0), asArray(1), indexSystemName)
     res.copyTagsFrom(this)
     res
   }

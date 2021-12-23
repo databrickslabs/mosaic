@@ -1,6 +1,6 @@
-package com.databricks.mosaic.index.h3
+package com.databricks.mosaic.index
 
-import com.databricks.mosaic.core.H3IndexSystem
+import com.databricks.mosaic.core.{H3IndexSystem, IndexSystemID}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.types._
@@ -14,7 +14,7 @@ import org.apache.spark.sql.types._
       622236721348804607
   """,
   since = "1.0")
-case class H3_PointIndex(lat: Expression, lng: Expression, resolution: Expression)
+case class PointIndex(lat: Expression, lng: Expression, resolution: Expression, indexSystemName: String)
   extends TernaryExpression with ExpectsInputTypes with NullIntolerant with CodegenFallback {
 
   override def inputTypes: Seq[DataType] = Seq(DoubleType, DoubleType, IntegerType)
@@ -36,15 +36,17 @@ case class H3_PointIndex(lat: Expression, lng: Expression, resolution: Expressio
    */
   override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
     val resolution: Int = H3IndexSystem.getResolution(input3)
-    val latitude: Double = input1.asInstanceOf[Double]
-    val longitude: Double = input2.asInstanceOf[Double]
+    val x: Double = input1.asInstanceOf[Double]
+    val y: Double = input2.asInstanceOf[Double]
 
-    H3IndexSystem.h3.geoToH3(latitude, longitude, resolution)
+    val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+
+    indexSystem.geoToIndex(x, y, resolution)
   }
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-    val res = H3_PointIndex(asArray(0), asArray(1), asArray(2))
+    val res = PointIndex(asArray(0), asArray(1), asArray(2), indexSystemName)
     res.copyTagsFrom(this)
     res
   }

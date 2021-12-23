@@ -1,9 +1,10 @@
 package com.databricks.mosaic
 
+import com.databricks.mosaic.core.{BNG, H3, IndexSystemID, S2}
 import com.databricks.mosaic.expressions.format._
 import com.databricks.mosaic.expressions.geometry._
 import com.databricks.mosaic.expressions.helper.TrySql
-import com.databricks.mosaic.index.h3.{H3_MosaicExplode, H3_MosaicFill, H3_PointIndex, H3_Polyfill}
+import com.databricks.mosaic.index.{IndexGeometry, MosaicExplode, MosaicFill, PointIndex, Polyfill}
 import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -30,11 +31,11 @@ package object functions {
     registry.registerFunction(FunctionIdentifier("flatten_polygons", database), (exprs: Seq[Expression]) => FlattenPolygons(exprs(0)))
     registry.registerFunction(
       FunctionIdentifier("h3_mosaic_explode", database),
-      (exprs: Seq[Expression]) => H3_MosaicExplode(struct(ColumnAdapter(exprs(0)), ColumnAdapter(exprs(1))).expr)
+      (exprs: Seq[Expression]) => MosaicExplode(struct(ColumnAdapter(exprs(0)), ColumnAdapter(exprs(1))).expr, H3.name)
     )
-    registry.registerFunction(FunctionIdentifier("h3_mosaicfill", database), (exprs: Seq[Expression]) => H3_MosaicFill(exprs(0), exprs(1)))
-    registry.registerFunction(FunctionIdentifier("h3_point_index", database), (exprs: Seq[Expression]) => H3_PointIndex(exprs(0), exprs(1), exprs(2)))
-    registry.registerFunction(FunctionIdentifier("h3_polyfill", database), (exprs: Seq[Expression]) => H3_Polyfill(exprs(0), exprs(1)))
+    registry.registerFunction(FunctionIdentifier("h3_mosaicfill", database), (exprs: Seq[Expression]) => MosaicFill(exprs(0), exprs(1), H3.name))
+    registry.registerFunction(FunctionIdentifier("h3_point_index", database), (exprs: Seq[Expression]) => PointIndex(exprs(0), exprs(1), exprs(2), H3.name))
+    registry.registerFunction(FunctionIdentifier("h3_polyfill", database), (exprs: Seq[Expression]) => Polyfill(exprs(0), exprs(1), H3.name))
 
     //DataType keywords are needed at checkInput execution time.
     //They cant be passed as Expressions to ConvertTo Expression.

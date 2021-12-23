@@ -1,6 +1,6 @@
-package com.databricks.mosaic.index.h3
+package com.databricks.mosaic.index
 
-import com.databricks.mosaic.core.H3IndexSystem
+import com.databricks.mosaic.core.{H3IndexSystem, IndexSystemID}
 import com.databricks.mosaic.types
 import com.databricks.mosaic.types.{HexType, InternalGeometryType}
 import org.apache.spark.sql.catalyst.InternalRow
@@ -18,7 +18,8 @@ import org.apache.spark.sql.types._
        [622236721348804607, 622236721274716159, ...]
   """,
   since = "1.0")
-case class H3_Polyfill(geom: Expression, resolution: Expression) extends BinaryExpression with ExpectsInputTypes with NullIntolerant with CodegenFallback {
+case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: String)
+  extends BinaryExpression with ExpectsInputTypes with NullIntolerant with CodegenFallback {
 
   //noinspection DuplicatedCode
   override def inputTypes: Seq[DataType] = (left.dataType, right.dataType) match {
@@ -40,15 +41,18 @@ case class H3_Polyfill(geom: Expression, resolution: Expression) extends BinaryE
   /**
    * Generates a set of indices corresponding to H3 polyfill call over
    * the input geometry.
+   *
    * @param input1 Any instance containing the geometry.
    * @param input2 Any instance containing the resolution.
    * @return A set of H3 indices.
    */
+  //noinspection DuplicatedCode
   override def nullSafeEval(input1: Any, input2: Any): Any = {
     val resolution: Int = H3IndexSystem.getResolution(input2)
     val geom = types.any2geometry(input1, left.dataType)
 
-    val indices  = H3IndexSystem.polyfill(geom, resolution)
+    val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+    val indices  = indexSystem.polyfill(geom, resolution)
 
     val serialized = ArrayData.toArrayData(indices.toArray)
 
@@ -57,7 +61,7 @@ case class H3_Polyfill(geom: Expression, resolution: Expression) extends BinaryE
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-    val res = H3_Polyfill(asArray(0), asArray(1))
+    val res = Polyfill(asArray(0), asArray(1), indexSystemName)
     res.copyTagsFrom(this)
     res
   }
