@@ -2,6 +2,7 @@ package com.databricks.mosaic.expressions.geometry
 
 import com.databricks.mosaic.mocks.getWKTRowsDf
 import com.databricks.mosaic.functions.{
+  register,
   st_xmin,
   st_xmax,
   st_ymin,
@@ -19,41 +20,74 @@ class TestGeometryValidity extends FunSuite with SparkTest with Matchers {
   test(
     "Calling st_xmin() should return the minimum x value from all coordinates in the geometry"
   ) {
+    register(spark)
+
     val df = getWKTRowsDf.withColumn("result", st_xmin(col("wkt")))
     val results = df.collect().map(_.getDouble(1)).toList
     val expected = List(10, 0, 10, 10).map(_.asInstanceOf[Double])
 
     results should contain theSameElementsAs expected
+
+    df.createOrReplaceTempView("source")
+    val sqlResults = spark.sql("select st_xmin(wkt) from source")
+      .collect().map(_.getDouble(0)).toList
+    
+    sqlResults should contain theSameElementsAs expected
+
   }
 
   test(
     "Calling st_xmax() should return the maximum x value from all coordinates in the geometry"
   ) {
+    register(spark)
+
     val df = getWKTRowsDf.withColumn("result", st_xmax(col("wkt")))
     val results = df.collect().map(_.getDouble(1)).toList
     val expected = List(40, 2, 110, 45).map(_.asInstanceOf[Double])
 
     results should contain theSameElementsAs expected
+
+    df.createOrReplaceTempView("source")
+    val sqlResults = spark.sql("select st_xmax(wkt) from source")
+      .collect().map(_.getDouble(0)).toList
+    
+    sqlResults should contain theSameElementsAs expected
   }
 
   test(
     "Calling st_ymin() should return the minimum y value from all coordinates in the geometry"
   ) {
+    register(spark)
+
     val df = getWKTRowsDf.withColumn("result", st_ymin(col("wkt")))
     val results = df.collect().map(_.getDouble(1)).toList
     val expected = List(10, 0, 10, 5).map(_.asInstanceOf[Double])
 
     results should contain theSameElementsAs expected
+
+    df.createOrReplaceTempView("source")
+    val sqlResults = spark.sql("select st_ymin(wkt) from source")
+      .collect().map(_.getDouble(0)).toList
+    
+    sqlResults should contain theSameElementsAs expected
   }
 
   test(
     "Calling st_ymax() should return the maximum y value from all coordinates in the geometry"
   ) {
+    register(spark)
+
     val df = getWKTRowsDf.withColumn("result", st_ymax(col("wkt")))
     val results = df.collect().map(_.getDouble(1)).toList
     val expected = List(40, 2, 110, 60).map(_.asInstanceOf[Double])
 
     results should contain theSameElementsAs expected
+
+    df.createOrReplaceTempView("source")
+    val sqlResults = spark.sql("select st_ymax(wkt) from source")
+      .collect().map(_.getDouble(0)).toList
+    
+    sqlResults should contain theSameElementsAs expected
   }
 
   test("Calling st_isvalid() on a valid geometry should return true.") {
@@ -62,6 +96,12 @@ class TestGeometryValidity extends FunSuite with SparkTest with Matchers {
     val results = df.collect().map(_.getBoolean(1)).toList
 
     all(results) should be(true)
+
+    df.createOrReplaceTempView("source")
+    val sqlResults = spark.sql("select st_isvalid(wkt) from source")
+      .collect.map(_.getBoolean(0)).toList
+    
+    all(sqlResults) should be(true)
   }
 
   test("Calling st_isvalid() on an invalid geometry should return false.") {
@@ -104,6 +144,12 @@ class TestGeometryValidity extends FunSuite with SparkTest with Matchers {
     val results = df.collect().map(_.getBoolean(1)).toList
 
     all(results) should be(false)
+
+    df.createOrReplaceTempView("source")
+    val sqlResults = spark.sql("select st_isvalid(wkt) from source")
+      .collect.map(_.getBoolean(0)).toList
+    
+    all(sqlResults) should be(false)
   }
 
 }

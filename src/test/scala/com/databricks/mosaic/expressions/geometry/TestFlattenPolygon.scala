@@ -1,6 +1,6 @@
 package com.databricks.mosaic.expressions.geometry
 
-import com.databricks.mosaic.functions.{convert_to, flatten_polygons, register}
+import com.databricks.mosaic.functions.{convert_to, flatten_polygons, st_dump, register}
 import com.databricks.mosaic.mocks.getWKTRowsDf
 import com.databricks.mosaic.test.SparkTest
 import org.apache.spark.sql.SparkSession
@@ -11,11 +11,11 @@ import org.scalatest.{FunSuite, Matchers}
 class TestFlattenPolygon extends FunSuite with SparkTest with Matchers {
 
   test("Flattening of WKB Polygons") {
+
+    register(spark)
     // we ensure that we have WKB test data by converting WKT testing data to WKB
 
-    val spark = SparkSession.builder().getOrCreate()
     val df = getWKTRowsDf.withColumn("wkb", convert_to(col("wkt"), "wkb"))
-    register(spark)
 
     val flattened = df.withColumn(
       "wkb", flatten_polygons(col("wkb"))
@@ -31,13 +31,33 @@ class TestFlattenPolygon extends FunSuite with SparkTest with Matchers {
       .map(g => new WKBReader().read(g.get(0).asInstanceOf[Array[Byte]]))
 
     flattenedGeoms should contain theSameElementsAs geoms
+
+    val flattenedGeoms2 = df.select(st_dump(col("wkb")))
+      .collect()
+      .map(g => new WKBReader().read(g.get(0).asInstanceOf[Array[Byte]]))
+
+    flattenedGeoms2 should contain theSameElementsAs geoms
+
+    df.createOrReplaceTempView("source")
+    val sqlFlattenedGeoms = spark.sql("select flatten_polygons(wkb) from source")
+      .collect()
+      .map(g => new WKBReader().read(g.get(0).asInstanceOf[Array[Byte]]))
+
+    sqlFlattenedGeoms should contain theSameElementsAs geoms
+
+    val sqlFlattenedGeoms2 = spark.sql("select st_dump(wkb) from source")
+      .collect()
+      .map(g => new WKBReader().read(g.get(0).asInstanceOf[Array[Byte]]))
+
+    sqlFlattenedGeoms2 should contain theSameElementsAs geoms
+
   }
 
   test("Flattening of WKT Polygons") {
 
-    val spark = SparkSession.builder().getOrCreate()
-    val df = getWKTRowsDf
     register(spark)
+    
+    val df = getWKTRowsDf
 
     val flattened = df.withColumn(
       "wkt", flatten_polygons(col("wkt"))
@@ -53,15 +73,34 @@ class TestFlattenPolygon extends FunSuite with SparkTest with Matchers {
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
     flattenedGeoms should contain theSameElementsAs geoms
+
+    val flattenedGeoms2 = df.select(st_dump(col("wkt")))
+      .collect()
+      .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+
+    flattenedGeoms2 should contain theSameElementsAs geoms
+
+    df.createOrReplaceTempView("source")
+    val sqlFlattenedGeoms = spark.sql("select flatten_polygons(wkt) from source")
+      .collect()
+      .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+
+    sqlFlattenedGeoms should contain theSameElementsAs geoms
+
+    val sqlFlattenedGeoms2 = spark.sql("select st_dump(wkt) from source")
+      .collect()
+      .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+
+    sqlFlattenedGeoms2 should contain theSameElementsAs geoms
   }
 
   test("Flattening of Coords Polygons") {
 
-    val spark = SparkSession.builder().getOrCreate()
-    val df = getWKTRowsDf
-      .withColumn("coords", convert_to(col("wkt"), "coords"))
     register(spark)
 
+    val df = getWKTRowsDf
+      .withColumn("coords", convert_to(col("wkt"), "coords"))
+    
     val flattened = df.withColumn(
       "coords", flatten_polygons(col("coords"))
     ).select("coords")
@@ -80,14 +119,42 @@ class TestFlattenPolygon extends FunSuite with SparkTest with Matchers {
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
     flattenedGeoms should contain theSameElementsAs geoms
+
+    val flattenedGeoms2 = df.select(st_dump(col("coords")).alias("coords"))
+      .select(convert_to(col("coords"), "wkt"))
+      .collect()
+      .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+
+    flattenedGeoms2 should contain theSameElementsAs geoms
+
+    df.createOrReplaceTempView("source")
+    val sqlFlattenedGeoms = spark
+    .sql("""with subquery (
+          |  select flatten_polygons(coords) as coords
+          |  from source
+          |) select convert_to_wkt(coords) from subquery""".stripMargin)
+      .collect()
+      .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+
+    sqlFlattenedGeoms should contain theSameElementsAs geoms
+
+    val sqlFlattenedGeoms2 = spark
+      .sql("""with subquery (
+            |  select st_dump(coords) as coords
+            |  from source
+            |) select convert_to_wkt(coords) from subquery""".stripMargin)
+      .collect()
+      .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+
+    sqlFlattenedGeoms2 should contain theSameElementsAs geoms
   }
 
   test("Flattening of Hex Polygons") {
 
-    val spark = SparkSession.builder().getOrCreate()
+    register(spark)
+
     val df = getWKTRowsDf
       .withColumn("hex", convert_to(col("wkt"), "hex"))
-    register(spark)
 
     val flattened = df.withColumn(
       "hex", flatten_polygons(col("hex"))
@@ -107,6 +174,34 @@ class TestFlattenPolygon extends FunSuite with SparkTest with Matchers {
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
     flattenedGeoms should contain theSameElementsAs geoms
+
+    val flattenedGeoms2 = df.select(st_dump(col("hex")).alias("hex"))
+      .select(convert_to(col("hex"), "wkt"))
+      .collect()
+      .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+
+    flattenedGeoms2 should contain theSameElementsAs geoms
+
+    df.createOrReplaceTempView("source")
+    val sqlFlattenedGeoms = spark
+    .sql("""with subquery (
+          |  select flatten_polygons(hex) as hex
+          |  from source
+          |) select convert_to_wkt(hex) from subquery""".stripMargin)
+      .collect()
+      .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+
+    sqlFlattenedGeoms should contain theSameElementsAs geoms
+
+    val sqlFlattenedGeoms2 = spark
+      .sql("""with subquery (
+            |  select st_dump(hex) as hex
+            |  from source
+            |) select convert_to_wkt(hex) from subquery""".stripMargin)
+      .collect()
+      .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+
+    sqlFlattenedGeoms2 should contain theSameElementsAs geoms
   }
 
 }
