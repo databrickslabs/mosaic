@@ -1,5 +1,6 @@
 package com.databricks.mosaic.expressions.format
 
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.{FunSuite, Matchers}
 
@@ -10,14 +11,14 @@ class TestConversions() extends FunSuite with Matchers {
 
   test("Conversion from hex and wkt to Geom") {
     val wkt_geom = Conversions.wkt2geom(UTF8String.fromString(wkt))
-    val hex_geom = Conversions.hex2geom(UTF8String.fromString(hex))
+    val hex_geom = Conversions.hex2geom(InternalRow.fromSeq(Seq(UTF8String.fromString(hex))))
     wkt_geom shouldEqual hex_geom
   }
 
   test("Conversion from hex and wkt to wkb") {
     val wkt_geom = Conversions.wkt2geom(UTF8String.fromString(wkt))
     val wkt_wkb = Conversions.geom2wkb(wkt_geom)
-    val hex_geom = Conversions.hex2geom(UTF8String.fromString(hex))
+    val hex_geom = Conversions.hex2geom(InternalRow.fromSeq(Seq(UTF8String.fromString(hex))))
     val hex_wkb = Conversions.geom2wkb(hex_geom)
     //note that wkb encoding is system dependant
     //little endian vs big endian considerations are relevant for any WKB representation
@@ -25,9 +26,9 @@ class TestConversions() extends FunSuite with Matchers {
   }
 
   test("Conversion from hex to wkb to hex") {
-    val hex_geom = Conversions.hex2geom(UTF8String.fromString(hex))
+    val hex_geom = Conversions.hex2geom(InternalRow.fromSeq(Seq(UTF8String.fromString(hex))))
     val hex_wkb = Conversions.geom2wkb(hex_geom)
-    val new_hex = Conversions.wkb2hex(hex_wkb).toString
+    val new_hex = Conversions.wkb2hex(hex_wkb).getString(0)
     val wkb_geom = Conversions.wkb2geom(hex_wkb)
     wkb_geom shouldEqual hex_geom
     //note that wkb encoding is system dependant
