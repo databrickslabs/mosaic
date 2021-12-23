@@ -1,10 +1,7 @@
 package com.databricks.mosaic.expressions.geometry
 
-import org.apache.spark.sql.catalyst.expressions.BinaryExpression
-import org.apache.spark.sql.catalyst.expressions.NullIntolerant
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, NullIntolerant, ExpressionDescription, Expression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.ExpressionDescription
-import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types.DoubleType
 import com.databricks.mosaic.core.types.any2geometry
 

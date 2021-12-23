@@ -4,23 +4,27 @@ import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import org.scalatest._
 import com.databricks.mosaic.test.SparkTest
-import org.locationtech.jts.io.WKTReader
+import org.locationtech.jts.io.{WKTReader, WKTWriter}
 import com.databricks.mosaic.mocks
-import com.databricks.mosaic.functions.{register, st_area, st_centroid2D, st_length, st_perimeter}
+import org.locationtech.jts.geom.{Coordinate, GeometryFactory}
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.types.{StructType, StructField, StringType}
 
-class TestGeometryProcessors extends FunSuite with Matchers with SparkTest {
+class TestGeometryProcessors_JTS_H3 extends FunSuite with Matchers with SparkTest {
 
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
   import mosaicContext.functions._
 
   val wktReader = new WKTReader()
+  val wktWriter = new WKTWriter()
+  val geomFactory = new GeometryFactory()
   val referenceGeoms = mocks.wkt_rows.map(g => wktReader.read(g.head))
 
   test("Test length (or perimeter) calculation") {
+    mosaicContext.register(spark)
     // TODO break into two for line segment vs. polygons
     val ss = spark
     import ss.implicits._
-    register(spark)
 
     val expected = referenceGeoms.map(_.getLength)
     val result = mocks.getWKTRowsDf
@@ -102,6 +106,25 @@ class TestGeometryProcessors extends FunSuite with Matchers with SparkTest {
   }
 
   test("Test distance calculation") {
+    mosaicContext.register(spark)
+    val ss = spark
+    import ss.implicits._
+
+    val coords = referenceGeoms.head.getCoordinates()
+    val pointsWKT = coords.map(geomFactory.createPoint).map(wktWriter.write)
+    val pointWKTCompared = pointsWKT.zip(pointsWKT.tail).toSeq
+    val expected = coords.zip(coords.tail).map({ case (a: Coordinate, b: Coordinate) => a.distance(b)})
+
+    val df = pointWKTCompared.toDF("leftGeom", "rightGeom")
+
+    val result = df.select(st_distance($"leftGeom", $"rightGeom")).as[Double].collect()
+    
+    result should contain allElementsOf expected
+
+    df.createOrReplaceTempView("source")
+    val sqlResult = spark.sql("select st_distance(leftGeom, rightGeom) from source").as[Double].collect()
+
+    sqlResult should contain allElementsOf expected
 
   }
   
