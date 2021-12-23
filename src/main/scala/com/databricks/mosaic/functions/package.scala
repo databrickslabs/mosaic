@@ -51,20 +51,26 @@ package object functions {
     registry.registerFunction(FunctionIdentifier("st_ymin", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "Y", "MIN"))
     registry.registerFunction(FunctionIdentifier("st_isvalid", database), (exprs: Seq[Expression]) => ST_IsValid(exprs(0)))
     registry.registerFunction(FunctionIdentifier("st_geometrytype", database), (exprs: Seq[Expression]) => ST_GeometryType(exprs(0)))
+    registry.registerFunction(FunctionIdentifier("st_area", database), (exprs: Seq[Expression]) => ST_Area(exprs(0)))
+    registry.registerFunction(FunctionIdentifier("st_centroid2D", database), (exprs: Seq[Expression]) => ST_Centroid(exprs(0)))
+    registry.registerFunction(FunctionIdentifier("st_centroid3D", database), (exprs: Seq[Expression]) => ST_Centroid(exprs(0), 3))
+    registry.registerFunction(FunctionIdentifier("h3_index_geometry", database), (exprs: Seq[Expression]) => IndexGeometry(exprs(0), H3.name))
+
     //Not specific to Mosaic
     registry.registerFunction(FunctionIdentifier("try_sql", database), (exprs: Seq[Expression]) => TrySql(exprs(0)))
   }
 
   def convert_to(inGeom: Column, outDataType: String): Column = ColumnAdapter(ConvertTo(inGeom.expr, outDataType))
   def as_hex(inGeom: Column): Column = ColumnAdapter(AsHex(inGeom.expr))
-  def h3_mosaic_explode(geom: Column, resolution: Column): Column = ColumnAdapter(H3_MosaicExplode(struct(geom, resolution).expr))
-  def h3_mosaic_explode(geom: Column, resolution: Int): Column = ColumnAdapter(H3_MosaicExplode(struct(geom, lit(resolution)).expr))
-  def h3_mosaicfill(geom: Column, resolution: Column): Column = ColumnAdapter(H3_MosaicFill(geom.expr, resolution.expr))
-  def h3_mosaicfill(geom: Column, resolution: Int): Column = ColumnAdapter(H3_MosaicFill(geom.expr, lit(resolution).expr))
-  def h3_point_index(lat: Column, lng: Column, resolution: Column): Column = ColumnAdapter(H3_PointIndex(lat.expr, lng.expr, resolution.expr))
-  def h3_point_index(lat: Column, lng: Column, resolution: Int): Column = ColumnAdapter(H3_PointIndex(lat.expr, lng.expr, lit(resolution).expr))
-  def h3_polyfill(geom: Column, resolution: Column): Column = ColumnAdapter(H3_Polyfill(geom.expr, resolution.expr))
-  def h3_polyfill(geom: Column, resolution: Int): Column = ColumnAdapter(H3_Polyfill(geom.expr, lit(resolution).expr))
+  def h3_mosaic_explode(geom: Column, resolution: Column): Column = ColumnAdapter(MosaicExplode(struct(geom, resolution).expr, H3.name))
+  def h3_mosaic_explode(geom: Column, resolution: Int): Column = ColumnAdapter(MosaicExplode(struct(geom, lit(resolution)).expr, H3.name))
+  def h3_mosaicfill(geom: Column, resolution: Column): Column = ColumnAdapter(MosaicFill(geom.expr, resolution.expr, H3.name))
+  def h3_mosaicfill(geom: Column, resolution: Int): Column = ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, H3.name))
+  def h3_point_index(lat: Column, lng: Column, resolution: Column): Column = ColumnAdapter(PointIndex(lat.expr, lng.expr, resolution.expr, H3.name))
+  def h3_point_index(lat: Column, lng: Column, resolution: Int): Column = ColumnAdapter(PointIndex(lat.expr, lng.expr, lit(resolution).expr, H3.name))
+  def h3_polyfill(geom: Column, resolution: Column): Column = ColumnAdapter(Polyfill(geom.expr, resolution.expr, H3.name))
+  def h3_polyfill(geom: Column, resolution: Int): Column = ColumnAdapter(Polyfill(geom.expr, lit(resolution).expr, H3.name))
+  def h3_index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, H3.name))
   def flatten_polygons(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr))
   def st_xmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "X", "MAX"))
   def st_xmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "X", "MIN"))
@@ -72,6 +78,37 @@ package object functions {
   def st_ymin(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "Y", "MIN"))
   def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr))
   def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr))
+  def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr))
+  def st_centroid2D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr))
+  def st_centroid3D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, 3))
+
   //Not specific to Mosaic
   def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
+
+  //With IndexSystemID matching
+  def point_index(lat: Column, lng: Column, resolution: Column, indexSystemID: IndexSystemID): Column = indexSystemID match {
+    case H3 => h3_point_index(lat, lng, resolution)
+    case S2 => throw new NotImplementedError("S2 has not yet been implemented!")
+    case BNG => throw new NotImplementedError("BNG has not yet been implemented!")
+  }
+  def mosaic_explode(geom: Column, resolution: Column, indexSystemID: IndexSystemID): Column = indexSystemID match {
+    case H3 => h3_mosaic_explode(geom, resolution)
+    case S2 => throw new NotImplementedError("S2 has not yet been implemented!")
+    case BNG => throw new NotImplementedError("BNG has not yet been implemented!")
+  }
+  def mosaicfill(geom: Column, resolution: Column, indexSystemID: IndexSystemID): Column = indexSystemID match {
+    case H3 => h3_mosaicfill(geom, resolution)
+    case S2 => throw new NotImplementedError("S2 has not yet been implemented!")
+    case BNG => throw new NotImplementedError("BNG has not yet been implemented!")
+  }
+  def polyfill(geom: Column, resolution: Column, indexSystemID: IndexSystemID): Column = indexSystemID match {
+    case H3 => h3_polyfill(geom, resolution)
+    case S2 => throw new NotImplementedError("S2 has not yet been implemented!")
+    case BNG => throw new NotImplementedError("BNG has not yet been implemented!")
+  }
+  def index_geometry(geom: Column, indexSystemID: IndexSystemID): Column = indexSystemID match {
+    case H3 => h3_index_geometry(geom)
+    case S2 => throw new NotImplementedError("S2 has not yet been implemented!")
+    case BNG => throw new NotImplementedError("BNG has not yet been implemented!")
+  }
 }

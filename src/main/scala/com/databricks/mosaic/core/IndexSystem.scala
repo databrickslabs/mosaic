@@ -11,6 +11,13 @@ import java.util
 trait IndexSystem {
 
   /**
+   * Returns the index system ID instance that uniquely identifies an index system.
+   * This instance is used to select appropriate Mosaic expressions.
+   * @return An instance of [[IndexSystemID]]
+   */
+  def getIndexSystemID: IndexSystemID
+
+  /**
    * Returns the resolution value based on the nullSafeEval method inputs of type Any.
    * Each Index System should ensure that only valid values of resolution are accepted.
    * @param res Any type input to be parsed into the Int representation of resolution.
@@ -69,5 +76,14 @@ trait IndexSystem {
    * @return An instance of [[Geometry]] corresponding to index.
    */
   def index2geometry(index: Long): Geometry
+
+  /**
+   * Get the index ID corresponding to the provided coordinates.
+   * @param x X coordinate of the point.
+   * @param y Y cooordinate of the point.
+   * @param resolution Resolution of the index.
+   * @return Index ID in this index system.
+   */
+  def geoToIndex(x: Double, y: Double, resolution: Int): Long
 
 }
