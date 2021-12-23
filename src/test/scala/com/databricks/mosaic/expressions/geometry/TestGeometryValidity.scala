@@ -14,7 +14,7 @@ import org.apache.spark.sql.functions.col
 import org.scalatest.{FunSuite, Matchers}
 import org.apache.spark.sql.types.{StructType, StructField, StringType}
 
-class GeometryValiditySuite extends FunSuite with SparkTest with Matchers {
+class TestGeometryValidity extends FunSuite with SparkTest with Matchers {
 
   test(
     "Calling st_xmin() should return the minimum x value from all coordinates in the geometry"
