@@ -1,5 +1,6 @@
 package com.databricks.mosaic.core.geometry
 
+import com.uber.h3core.util.GeoCoord
 import org.locationtech.jts.geom.{Coordinate, GeometryFactory}
 
 trait MosaicGeometry {
@@ -31,10 +32,15 @@ trait MosaicGeometry {
 
 object MosaicGeometry {
 
-  def apply(coordinates: Seq[Coordinate]): MosaicGeometry = {
+  def fromCoordinates(coordinates: Seq[Coordinate]): MosaicGeometry = {
     val geometryFactory = new GeometryFactory
     val geom = geometryFactory.createPolygon(coordinates.toArray)
     MosaicGeometryJTS(geom)
+  }
+
+  def fromGeoCoords(geoCoords: Seq[GeoCoord]): MosaicGeometry = {
+    val coords = geoCoords.map(c => new Coordinate(c.lng, c.lat))
+    this.fromCoordinates(coords)
   }
 
 }

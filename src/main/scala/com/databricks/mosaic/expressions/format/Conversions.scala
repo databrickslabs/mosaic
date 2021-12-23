@@ -3,8 +3,8 @@ package com.databricks.mosaic.expressions.format
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
-import org.locationtech.jts.io.{WKBReader, WKBWriter, WKTReader, WKTWriter}
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
+import org.locationtech.jts.io.{WKBReader, WKBWriter, WKTReader, WKTWriter}
 
 /**
  * Provides methods that convert JTS geometries between different storage formats.
@@ -19,6 +19,11 @@ object Conversions {
    * This API is leveraged to deliver the untyped (Any => Any) API.
    */
   object typed {
+
+    def hex2wkb(hex: String): Array[Byte] = {
+      val bytes = WKBReader.hexToBytes(hex)
+      bytes
+    }
 
     /**
      * Converts [[String]] to a [[Geometry]] instance.
@@ -63,7 +68,7 @@ object Conversions {
 
   /**
    * Converts an instance of [[Geometry]] to the internal Hex encoding.
-   * @see [[com.databricks.mosaic.types.HexType]] and [[AsHex]] for the hex encoding API.
+   * @see [[com.databricks.mosaic.core.types.HexType]] and [[AsHex]] for the hex encoding API.
    * @param input An instance of [[Geometry]] to be converted.
    * @return  An instance of [[InternalRow]] containing the hex encoding.
    */

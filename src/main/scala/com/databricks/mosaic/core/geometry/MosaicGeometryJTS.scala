@@ -1,7 +1,7 @@
 package com.databricks.mosaic.core.geometry
 
 import com.databricks.mosaic.expressions.format.Conversions
-import org.locationtech.jts.geom.{Geometry, LinearRing, MultiPolygon, Polygon}
+import org.locationtech.jts.geom.{Geometry, GeometryFactory, LinearRing, MultiPolygon, Polygon}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
 
 case class MosaicGeometryJTS(geom: Geometry)
@@ -52,6 +52,16 @@ case class MosaicGeometryJTS(geom: Geometry)
   override def equals(other: MosaicGeometry): Boolean = {
     val otherGeom = other.asInstanceOf[MosaicGeometryJTS].geom
     this.geom.equalsExact(otherGeom)
+  }
+
+}
+
+object MosaicGeometryJTS {
+
+  def fromPoints(points: Seq[MosaicPoint]): MosaicGeometryJTS = {
+    val gf = new GeometryFactory()
+    val polygon = gf.createPolygon(points.map(_.coord).toArray)
+    new MosaicGeometryJTS(polygon)
   }
 
 }

@@ -88,7 +88,7 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     def flatten_polygons(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
 
     /** IndexSystem Specific */
-    def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name))
+    def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
 
     /** IndexSystem and GeometryAPI Specific methods */
     def mosaic_explode(geom: Column, resolution: Column): Column = ColumnAdapter(MosaicExplode(struct(geom, resolution).expr, indexSystem.name, geometryAPI.name))

@@ -1,6 +1,10 @@
 package com.databricks.mosaic.core.geometry
 
-import com.esri.core.geometry.ogc.{OGCGeometry, OGCLinearRing}
+import com.databricks.mosaic.expressions.format.Conversions
+import com.esri.core.geometry.{Polygon, SpatialReference}
+import com.esri.core.geometry.ogc.{OGCGeometry, OGCLinearRing, OGCPolygon}
+
+import java.nio.ByteBuffer
 
 case class MosaicGeometryOGC(geom: OGCGeometry)
   extends MosaicGeometry {
@@ -51,4 +55,27 @@ case class MosaicGeometryOGC(geom: OGCGeometry)
     this.geom.equals(otherGeom.asInstanceOf[Object])
   }
 
+}
+
+object MosaicGeometryOGC extends GeometryReaders {
+
+  override def fromWKB(wkb: Array[Byte]): MosaicGeometryOGC = MosaicGeometryOGC(OGCGeometry.fromBinary(ByteBuffer.wrap(wkb)))
+
+  override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryOGC(OGCGeometry.fromText(wkt))
+
+  override def fromHEX(hex: String): MosaicGeometry = {
+    val wkb = Conversions.typed.hex2wkb(hex)
+    fromWKB(wkb)
+  }
+
+  override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC(OGCGeometry.fromGeoJson(geoJson))
+
+  override def fromPoints(points: Seq[MosaicPoint]): MosaicGeometry = {
+    val polygon = new Polygon()
+    val start = points.head
+    polygon.startPath(start.getX, start.getY)
+    for (i <- 1 until points.size)
+      yield polygon.lineTo(points(i).getX, points(i).getY)
+    MosaicGeometryOGC(new OGCPolygon(polygon, SpatialReference.create(4326)))
+  }
 }

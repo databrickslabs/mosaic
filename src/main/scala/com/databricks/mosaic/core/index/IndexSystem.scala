@@ -1,6 +1,6 @@
 package com.databricks.mosaic.core.index
 
-import com.databricks.mosaic.core.geometry.MosaicGeometry
+import com.databricks.mosaic.core.geometry.{GeometryAPI, MosaicGeometry}
 import com.databricks.mosaic.core.types.model.MosaicChip
 
 import java.util
@@ -44,7 +44,7 @@ trait IndexSystem {
    * @return An optimal radius to buffer the geometry in order to avoid blind spots
    *         when performing polyfill.
    */
-  def getBufferRadius(geometry: MosaicGeometry, resolution: Int): Double
+  def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double
 
   /**
    * Returns a set of indices that represent the input geometry. Depending on the
@@ -68,7 +68,7 @@ trait IndexSystem {
    *                      input geometry.
    * @return A border area representation via [[MosaicChip]] set.
    */
-  def getBorderChips(geometry: MosaicGeometry, borderIndices: util.List[java.lang.Long]): Seq[MosaicChip]
+  def getBorderChips(geometry: MosaicGeometry, borderIndices: util.List[java.lang.Long], geometryAPI: GeometryAPI): Seq[MosaicChip]
 
   /**
    * Return a set of [[MosaicChip]] instances computed based on the core
@@ -88,7 +88,7 @@ trait IndexSystem {
    * @param index Id of the index whose geometry should be returned.
    * @return An instance of [[MosaicGeometry]] corresponding to index.
    */
-  def indexToGeometry(index: Long): MosaicGeometry
+  def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry
 
   /**
    * Get the index ID corresponding to the provided coordinates.

@@ -1,6 +1,6 @@
 package com.databricks.mosaic.core.index
 
-import com.databricks.mosaic.core.geometry.MosaicGeometry
+import com.databricks.mosaic.core.geometry.{GeometryAPI, MosaicGeometry, MosaicPointOGC}
 import com.databricks.mosaic.core.types.model.MosaicChip
 import com.uber.h3core.H3Core
 import org.locationtech.jts.geom.{Coordinate, Geometry}
@@ -46,10 +46,10 @@ object H3IndexSystem extends IndexSystem {
    * @return An optimal radius to buffer the geometry in order to avoid blind spots
    *         when performing polyfill.
    */
-  override def getBufferRadius(geometry: MosaicGeometry, resolution: Int): Double = {
+  override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = {
     val centroid = geometry.getCentroid
     val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
-    val indexGeom = indexToGeometry(centroidIndex)
+    val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
     val boundary = indexGeom.getCoordinates
 
     // Hexagons have only 3 diameters.
@@ -88,9 +88,9 @@ object H3IndexSystem extends IndexSystem {
    *                      input geometry.
    * @return A border area representation via [[MosaicChip]] set.
    */
-  override def getBorderChips(geometry: MosaicGeometry, borderIndices: util.List[java.lang.Long]): Seq[MosaicChip] = {
+  override def getBorderChips(geometry: MosaicGeometry, borderIndices: util.List[java.lang.Long], geometryAPI: GeometryAPI): Seq[MosaicChip] = {
     val intersections = for (index <- borderIndices.asScala) yield {
-      val indexGeom = indexToGeometry(index)
+      val indexGeom = indexToGeometry(index, geometryAPI)
       val chip = MosaicChip(isCore = false, index, indexGeom)
       chip.intersection(geometry)
     }
@@ -116,10 +116,10 @@ object H3IndexSystem extends IndexSystem {
    * @param index Id of the index whose geometry should be returned.
    * @return An instance of [[Geometry]] corresponding to index.
    */
-  override def indexToGeometry(index: Long): MosaicGeometry = {
-    val boundary = h3.h3ToGeoBoundary(index).asScala.map(cur => new Coordinate(cur.lng, cur.lat)).toList
+  override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
+    val boundary = h3.h3ToGeoBoundary(index).asScala
     val extended = boundary ++ List(boundary.head)
-    MosaicGeometry(extended)
+    geometryAPI.geometry(extended.map(geometryAPI.fromGeoGoord))
   }
 
   /**

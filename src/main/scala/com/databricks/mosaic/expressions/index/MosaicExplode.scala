@@ -109,7 +109,7 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
 
     val resolution = inputData.getInt(1)
 
-    val chips =  Mosaic.mosaicFill(geometry, resolution, indexSystem)
+    val chips =  Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
     chips.map(_.serialize)
   }
 

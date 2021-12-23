@@ -18,9 +18,14 @@ case class MosaicPointJTS(point: Point) extends MosaicPoint {
 
   override def geoCoord: GeoCoord = new GeoCoord(point.getY, point.getX)
 
+  override def coord: Coordinate = new Coordinate(point.getX, point.getY)
 }
 
 object MosaicPointJTS {
+
+  def apply(geoCoord: GeoCoord): MosaicPointJTS = {
+    this.apply(new Coordinate(geoCoord.lng, geoCoord.lat))
+  }
 
   def apply(coord: Coordinate): MosaicPointJTS = {
     val gf = new GeometryFactory()

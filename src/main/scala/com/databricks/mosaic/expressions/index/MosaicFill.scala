@@ -59,7 +59,7 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
     val geometryAPI = GeometryAPI(geometryAPIName)
     val geometry = geometryAPI.geometry(input1, left.dataType)
-    val chips =  Mosaic.mosaicFill(geometry, resolution, indexSystem)
+    val chips =  Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
 
     val serialized = InternalRow.fromSeq(Seq(
       ArrayData.toArrayData(chips.map(_.serialize)),

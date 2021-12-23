@@ -1,6 +1,6 @@
 package com.databricks.mosaic.core
 
-import com.databricks.mosaic.core.geometry.MosaicGeometry
+import com.databricks.mosaic.core.geometry.{GeometryAPI, MosaicGeometry}
 import com.databricks.mosaic.core.index.IndexSystem
 import com.databricks.mosaic.core.types.model.MosaicChip
 
@@ -11,9 +11,9 @@ import com.databricks.mosaic.core.types.model.MosaicChip
  */
 object Mosaic {
 
-  def mosaicFill(geometry: MosaicGeometry, resolution: Int, indexSystem: IndexSystem): Seq[MosaicChip] = {
+  def mosaicFill(geometry: MosaicGeometry, resolution: Int, indexSystem: IndexSystem, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
 
-    val radius = indexSystem.getBufferRadius(geometry, resolution)
+    val radius = indexSystem.getBufferRadius(geometry, resolution, geometryAPI)
 
     // do not modify the radius
     val carvedGeometry = geometry.buffer(-radius)
@@ -28,7 +28,7 @@ object Mosaic {
     val borderIndices = indexSystem.polyfill(borderGeometry, resolution)
 
     val coreChips = indexSystem.getCoreChips(coreIndices)
-    val borderChips = indexSystem.getBorderChips(geometry, borderIndices)
+    val borderChips = indexSystem.getBorderChips(geometry, borderIndices, geometryAPI)
 
     coreChips ++ borderChips
   }

@@ -1,5 +1,6 @@
 package com.databricks.mosaic.expressions.index
 
+import com.databricks.mosaic.core.geometry.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystemID
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
@@ -14,7 +15,7 @@ import org.apache.spark.sql.types._
       0001100100100.....001010 // WKB
   """,
   since = "1.0")
-case class IndexGeometry(indexID: Expression, indexSystemName: String)
+case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryAPIName: String)
   extends UnaryExpression with NullIntolerant with CodegenFallback {
 
   /** Expression output DataType. */
@@ -32,13 +33,14 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String)
    */
   override def nullSafeEval(input1: Any): Any = {
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-    val indexGeometry = indexSystem.indexToGeometry(input1.asInstanceOf[Long])
+    val geometryAPI = GeometryAPI(geometryAPIName)
+    val indexGeometry = indexSystem.indexToGeometry(input1.asInstanceOf[Long], geometryAPI)
     indexGeometry.toWKB
   }
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val arg1 = newArgs.head.asInstanceOf[Expression]
-    val res = IndexGeometry(arg1, indexSystemName)
+    val res = IndexGeometry(arg1, indexSystemName, geometryAPIName)
     res.copyTagsFrom(this)
     res
   }
