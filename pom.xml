@@ -139,6 +139,7 @@
                             <goal>testCompile</goal>
                         </goals>
                         <configuration>
+                            <recompileMode>incremental</recompileMode>
                             <args>
                                 <arg>-dependencyfile</arg>
                                 <arg>${project.build.directory}/.scala_dependencies</arg>
