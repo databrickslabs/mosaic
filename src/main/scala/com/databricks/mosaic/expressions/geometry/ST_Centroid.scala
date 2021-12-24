@@ -1,10 +1,11 @@
 package com.databricks.mosaic.expressions.geometry
 
-import com.databricks.mosaic.core.types.any2geometry
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.{DataType, DoubleType, StructField, StructType}
+
+import com.databricks.mosaic.core.types.any2geometry
 
 case class ST_Centroid(inputGeom: Expression, nDim: Int = 2)
   extends UnaryExpression
@@ -20,11 +21,14 @@ case class ST_Centroid(inputGeom: Expression, nDim: Int = 2)
   override def child: Expression = inputGeom
 
   /** Output Data Type */
+  // scalastyle:off throwerror
   override def dataType: DataType = nDim match {
     case 2 => StructType(Seq(StructField("x", DoubleType), StructField("y", DoubleType)))
-    case 3 => StructType(Seq(StructField("x", DoubleType), StructField("y", DoubleType), StructField("z", DoubleType)))
+    case 3 => StructType(Seq(StructField("x", DoubleType), StructField("y", DoubleType),
+      StructField("z", DoubleType)))
     case _ => throw new NotImplementedError("Only 2D and 3D centroid supported!")
   }
+  // scalastyle:on throwerror
 
   override def nullSafeEval(input1: Any): Any = {
     val geom = any2geometry(input1, inputGeom.dataType)

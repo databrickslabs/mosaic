@@ -8,7 +8,7 @@ case class MosaicPolygonOGC(polygon: OGCPolygon)
   override def getBoundaryPoints: Seq[MosaicPoint] = MosaicPolygonOGC.getPoints(polygon.exteriorRing())
 
   override def getHolePoints: Seq[Seq[MosaicPoint]] = {
-    for(i <- 0 until polygon.numInteriorRing())
+    for (i <- 0 until polygon.numInteriorRing())
       yield MosaicPolygonOGC.getPoints(polygon.interiorRingN(i))
   }
 
@@ -21,7 +21,7 @@ object MosaicPolygonOGC {
   }
 
   def getPoints(lineString: OGCLineString): Seq[MosaicPoint] = {
-    for(i <- 0 until lineString.numPoints())
+    for (i <- 0 until lineString.numPoints())
       yield MosaicPointOGC(lineString.pointN(i))
   }
 

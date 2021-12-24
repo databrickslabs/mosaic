@@ -28,6 +28,10 @@ trait MosaicGeometry {
   def intersection(other: MosaicGeometry): MosaicGeometry
 
   def equals(other: MosaicGeometry): Boolean
+
+  def equals(other: java.lang.Object): Boolean
+
+  override def hashCode: Int
 }
 
 object MosaicGeometry {

@@ -1,15 +1,17 @@
 package com.databricks.mosaic.expressions.index
 
+import org.locationtech.jts.geom.Geometry
+
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.util.ArrayData
+import org.apache.spark.sql.types.{BinaryType, DataType, IntegerType, StringType}
+
 import com.databricks.mosaic.core.Mosaic
 import com.databricks.mosaic.core.geometry.GeometryAPI
 import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, MosaicType}
-import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant}
-import org.apache.spark.sql.catalyst.util.ArrayData
-import org.apache.spark.sql.types.{BinaryType, DataType, IntegerType, StringType}
-import org.locationtech.jts.geom.Geometry
 
 
 @ExpressionDescription(
@@ -59,10 +61,10 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
     val geometryAPI = GeometryAPI(geometryAPIName)
     val geometry = geometryAPI.geometry(input1, left.dataType)
-    val chips =  Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
+    val chips = Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
 
     val serialized = InternalRow.fromSeq(Seq(
-      ArrayData.toArrayData(chips.map(_.serialize)),
+      ArrayData.toArrayData(chips.map(_.serialize))
     ))
 
     serialized

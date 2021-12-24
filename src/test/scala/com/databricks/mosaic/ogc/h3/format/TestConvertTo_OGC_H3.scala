@@ -2,7 +2,7 @@ package com.databricks.mosaic.ogc.h3.format
 
 import com.databricks.mosaic.core.geometry.GeometryAPI.OGC
 import com.databricks.mosaic.core.index.H3IndexSystem
-import com.databricks.mosaic.expressions.format.Conversions.typed
+import com.databricks.mosaic.expressions.format.Conversions.Typed
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.{getGeoJSONDf, getHexRowsDf, getWKTRowsDf}
 import com.databricks.mosaic.test.SparkTest
@@ -76,13 +76,13 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     val right = hexDf
       .select("hex")
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     left should contain allElementsOf right
 
@@ -94,14 +94,14 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     val right2 = spark.sql(
         "select hex from format_testing_right"
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     left2 should contain allElementsOf right2
   }
@@ -280,13 +280,13 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     val right = hexDf
       .select("hex")
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     left should contain allElementsOf right
 
@@ -298,14 +298,14 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     val right2 = spark.sql(
       "select hex from format_testing_right"
     )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     left2 should contain allElementsOf right2
   }
@@ -462,13 +462,13 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(Typed.wkt2geom)
 
     val right = wktDf
       .select("wkt")
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(Typed.wkt2geom)
 
     right should contain allElementsOf left
 
@@ -480,14 +480,14 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(Typed.wkt2geom)
 
     val right2 = spark.sql(
         "select wkt from format_testing_right"
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(Typed.wkt2geom)
 
     right2 should contain allElementsOf left2
   }
@@ -592,13 +592,13 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[Array[Byte]])
-      .map(typed.wkb2geom)
+      .map(Typed.wkb2geom)
 
     val right: Array[Any] = wkbDf
       .select("wkb")
       .collect()
       .map(_.toSeq.head.asInstanceOf[Array[Byte]])
-      .map(typed.wkb2geom)
+      .map(Typed.wkb2geom)
 
 
     right should contain allElementsOf left
@@ -619,7 +619,7 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .select(st_asbinary($"coords").alias("wkb"))
       .collect()
       .map(_.toSeq.head.asInstanceOf[Array[Byte]])
-      .map(typed.wkb2geom)
+      .map(Typed.wkb2geom)
 
     left3 should contain allElementsOf right
 
@@ -627,7 +627,7 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .select(st_aswkb($"coords").alias("wkb"))
       .collect()
       .map(_.toSeq.head.asInstanceOf[Array[Byte]])
-      .map(typed.wkb2geom)
+      .map(Typed.wkb2geom)
 
     left4 should contain allElementsOf right
 
@@ -648,13 +648,13 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(Typed.wkt2geom)
 
     val right = wktDf
       .select("wkt")
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(Typed.wkt2geom)
 
     right should contain allElementsOf left
 
@@ -666,14 +666,14 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(Typed.wkt2geom)
 
     val right2 = spark.sql(
         "select wkt from format_testing_right"
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(Typed.wkt2geom)
 
     right2 should contain allElementsOf left2
 
@@ -682,7 +682,7 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(Typed.wkt2geom)
 
     left3 should contain allElementsOf right
 
@@ -691,7 +691,7 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(Typed.wkt2geom)
 
     left4 should contain allElementsOf right
   }
@@ -710,13 +710,13 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     val right = hexDf
       .select("hex")
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     left should contain allElementsOf right
 
@@ -728,14 +728,14 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     val right2 = spark.sql(
         "select hex from format_testing_right"
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(Typed.hex2geom)
 
     left2 should contain allElementsOf right2
   }

@@ -16,7 +16,7 @@ case class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicMulti
 
   override def getHolePoints: Seq[Seq[MosaicPoint]] = {
     val n = multiPolygon.getNumGeometries
-    val holeGroups = for(i <- 0 until n)
+    val holeGroups = for (i <- 0 until n)
       yield {
         val polygon = MosaicPolygonJTS(multiPolygon.getGeometryN(i).asInstanceOf[Polygon])
         polygon.getHolePoints

@@ -1,12 +1,13 @@
 package com.databricks.mosaic.expressions.index
 
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.util.ArrayData
+import org.apache.spark.sql.types._
+
 import com.databricks.mosaic.core.geometry.GeometryAPI
 import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 import com.databricks.mosaic.core.types.{HexType, InternalGeometryType}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant}
-import org.apache.spark.sql.catalyst.util.ArrayData
-import org.apache.spark.sql.types._
 
 @ExpressionDescription(
   usage = "_FUNC_(geometry, resolution) - Returns the 1 set representation of geometry at resolution.",
@@ -50,9 +51,9 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
     val resolution: Int = H3IndexSystem.getResolution(input2)
 
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-    val geometryAPI  = GeometryAPI(geometryAPIName)
+    val geometryAPI = GeometryAPI(geometryAPIName)
     val geometry = geometryAPI.geometry(input1, left.dataType)
-    val indices  = indexSystem.polyfill(geometry, resolution)
+    val indices = indexSystem.polyfill(geometry, resolution)
 
     val serialized = ArrayData.toArrayData(indices.toArray)
     serialized

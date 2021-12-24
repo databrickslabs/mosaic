@@ -1,11 +1,13 @@
 package com.databricks.mosaic.core.types.model
 
-import com.databricks.mosaic.core.types.InternalCoordType
+import org.locationtech.jts.geom.{Geometry, GeometryFactory, Polygon}
+
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.locationtech.jts.geom.{Geometry, GeometryFactory, Polygon}
+
+import com.databricks.mosaic.core.types.InternalCoordType
 
 /**
  * A case class modeling Polygons and MultiPolygons.
@@ -21,7 +23,7 @@ case class InternalGeometry(
    typeName: String,
    boundaries: Array[Array[InternalCoord]],
    holes: Array[Array[Array[InternalCoord]]]
-){
+) {
 
   /**
    * Convert to JTS [[Geometry]] instance.
@@ -38,7 +40,7 @@ case class InternalGeometry(
       case "Polygon" =>
         createPolygon(0)
       case "MultiPolygon" =>
-        val polygons = for(i <- boundaries.indices) yield createPolygon(i)
+        val polygons = for (i <- boundaries.indices) yield createPolygon(i)
         gf.createMultiPolygon(polygons.toArray)
     }
   }
@@ -59,8 +61,8 @@ case class InternalGeometry(
           )
         )
       )
-    ))
-
+    )
+  )
 }
 
 /** Companion object. */
@@ -76,7 +78,8 @@ object InternalGeometry {
   private def fromPolygon(g: Polygon, typeName: String): InternalGeometry = {
     val boundary = g.getBoundary
     val shell = boundary.getGeometryN(0).getCoordinates.map(InternalCoord(_))
-    val holes = for (i <- 1 until boundary.getNumGeometries) yield boundary.getGeometryN(i).getCoordinates.map(InternalCoord(_))
+    val holes = for (i <- 1 until boundary.getNumGeometries)
+      yield boundary.getGeometryN(i).getCoordinates.map(InternalCoord(_))
     new InternalGeometry(typeName, Array(shell), Array(holes.toArray))
   }
 
@@ -105,7 +108,8 @@ object InternalGeometry {
       case "Polygon" =>
         fromPolygon(g.asInstanceOf[Polygon], "Polygon")
       case "MultiPolygon" =>
-        val geoms = for (i <- 0 until g.getNumGeometries) yield fromPolygon(g.getGeometryN(i).asInstanceOf[Polygon], "MultiPolygon")
+        val geoms = for (i <- 0 until g.getNumGeometries)
+          yield fromPolygon(g.getGeometryN(i).asInstanceOf[Polygon], "MultiPolygon")
         geoms.reduce(merge)
     }
   }

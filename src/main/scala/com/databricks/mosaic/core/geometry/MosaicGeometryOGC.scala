@@ -1,10 +1,11 @@
 package com.databricks.mosaic.core.geometry
 
-import com.databricks.mosaic.expressions.format.Conversions
+import java.nio.ByteBuffer
+
 import com.esri.core.geometry.{Polygon, SpatialReference}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLinearRing, OGCPolygon}
 
-import java.nio.ByteBuffer
+import com.databricks.mosaic.expressions.format.Conversions
 
 case class MosaicGeometryOGC(geom: OGCGeometry)
   extends MosaicGeometry {
@@ -18,7 +19,7 @@ case class MosaicGeometryOGC(geom: OGCGeometry)
   override def getCoordinates: Seq[MosaicPoint] = geom.geometryType() match {
     case "Polygon" => MosaicPolygonOGC(geom).getBoundaryPoints
     case "MultiPolygon" => MosaicMultiPolygonOGC(geom).getBoundaryPoints
-    case _ => throw new NotImplementedError("Geometry type not implemented yet!")
+    case _ => throw new NotImplementedError("Geometry type not implemented yet!") // scalastyle:ignore
   }
 
   override def isEmpty: Boolean = geom.isEmpty
@@ -50,10 +51,14 @@ case class MosaicGeometryOGC(geom: OGCGeometry)
 
   override def equals(other: MosaicGeometry): Boolean = {
     val otherGeom = other.asInstanceOf[MosaicGeometryOGC].geom
-    //required to use object equals to perform exact equals
+    // required to use object equals to perform exact equals
     //noinspection ComparingUnrelatedTypes
     this.geom.equals(otherGeom.asInstanceOf[Object])
   }
+
+  override def equals(other: java.lang.Object): Boolean = false
+
+  override def hashCode: Int = geom.hashCode()
 
 }
 
@@ -64,7 +69,7 @@ object MosaicGeometryOGC extends GeometryReaders {
   override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryOGC(OGCGeometry.fromText(wkt))
 
   override def fromHEX(hex: String): MosaicGeometry = {
-    val wkb = Conversions.typed.hex2wkb(hex)
+    val wkb = Conversions.Typed.hex2wkb(hex)
     fromWKB(wkb)
   }
 

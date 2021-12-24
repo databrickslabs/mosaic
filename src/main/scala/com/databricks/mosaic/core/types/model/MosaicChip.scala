@@ -1,7 +1,8 @@
 package com.databricks.mosaic.core.types.model
 
-import com.databricks.mosaic.core.geometry.MosaicGeometry
 import org.apache.spark.sql.catalyst.InternalRow
+
+import com.databricks.mosaic.core.geometry.MosaicGeometry
 
 /**
  * A case class modeling an instance of a mosaic chip.

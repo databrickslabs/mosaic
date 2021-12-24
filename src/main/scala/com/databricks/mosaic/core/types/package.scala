@@ -1,10 +1,12 @@
 package com.databricks.mosaic.core
 
-import com.databricks.mosaic.expressions.format.Conversions
-import com.databricks.mosaic.core.types.model.InternalGeometry
+import org.locationtech.jts.geom.Geometry
+
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
-import org.locationtech.jts.geom.Geometry
+
+import com.databricks.mosaic.core.types.model.InternalGeometry
+import com.databricks.mosaic.expressions.format.Conversions
 
 /**
  * Contains definition of all Mosaic specific data types.
@@ -29,8 +31,8 @@ package object types {
    */
   def struct2geom(inputData: InternalRow, geomType: DataType): Geometry = {
     geomType match {
-      case _: BinaryType => Conversions.typed.wkb2geom(inputData.getBinary(0))
-      case _: StringType => Conversions.typed.wkt2geom(inputData.getString(0))
+      case _: BinaryType => Conversions.Typed.wkb2geom(inputData.getBinary(0))
+      case _: StringType => Conversions.Typed.wkt2geom(inputData.getString(0))
       case _: HexType => Conversions.hex2geom(inputData.get(0, HexType))
       case _: JSONType => Conversions.geojson2geom(inputData.get(0, JSONType))
       case _: InternalGeometryType => InternalGeometry.apply(

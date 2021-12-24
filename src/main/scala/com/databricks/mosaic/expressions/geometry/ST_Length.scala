@@ -6,9 +6,10 @@ import org.apache.spark.sql.catalyst.expressions.{
   NullIntolerant,
   UnaryExpression
 }
-import com.databricks.mosaic.core.types.any2geometry
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.types.DoubleType
+import org.apache.spark.sql.types.{DataType, DoubleType}
+
+import com.databricks.mosaic.core.types.any2geometry
 
 @ExpressionDescription(
   usage = "_FUNC_(expr1) - Returns the length measurement of the geometry.",
@@ -23,8 +24,8 @@ case class ST_Length(inputGeom: Expression)
     extends UnaryExpression
     with NullIntolerant
     with CodegenFallback {
-  def dataType = DoubleType
-  def child = inputGeom
+  def dataType: DataType = DoubleType
+  def child: Expression = inputGeom
   override def nullSafeEval(input1: Any): Any = {
     val geom = any2geometry(input1, inputGeom.dataType)
     geom.getLength

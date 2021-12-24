@@ -1,10 +1,11 @@
 package com.databricks.mosaic.expressions.index
 
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.types._
+
 import com.databricks.mosaic.core.geometry.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystemID
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.types._
 
 @ExpressionDescription(
   usage = "_FUNC_(indexID, indexSystem) - Returns the geometry representing the index.",
@@ -19,7 +20,8 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
   extends UnaryExpression with NullIntolerant with CodegenFallback {
 
   /** Expression output DataType. */
-  override def dataType: DataType = BinaryType // Return WKB, if other type is required call ConvertTO
+  // Return WKB, if other type is required call ConvertTO
+  override def dataType: DataType = BinaryType
 
   override def toString: String = s"index_geometry($indexID)"
 

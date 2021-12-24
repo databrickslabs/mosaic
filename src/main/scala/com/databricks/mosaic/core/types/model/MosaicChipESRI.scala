@@ -1,6 +1,7 @@
 package com.databricks.mosaic.core.types.model
 
 import com.esri.core.geometry.ogc.OGCGeometry
+
 import org.apache.spark.sql.catalyst.InternalRow
 
 /**

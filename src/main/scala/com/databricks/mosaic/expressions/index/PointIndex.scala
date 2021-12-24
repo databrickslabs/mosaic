@@ -1,9 +1,10 @@
 package com.databricks.mosaic.expressions.index
 
-import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant, TernaryExpression}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
+
+import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 
 @ExpressionDescription(
   usage = "_FUNC_(lat, lng, resolution) - Returns the h3 index of a point(lat, lng) at resolution.",

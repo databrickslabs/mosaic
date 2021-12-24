@@ -1,13 +1,16 @@
 package com.databricks.mosaic.expressions.format
 
-import com.databricks.mosaic.expressions.format.Conversions.{geojson2geom, geom2geojson, geom2hex, geom2wkb, geom2wkt, hex2geom, wkb2geom, wkb2hex, wkt2geom}
-import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
-import com.databricks.mosaic.core.types.model.InternalGeometry
+import java.util.Locale
+
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
+
+import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
+import com.databricks.mosaic.core.types.model.InternalGeometry
+import com.databricks.mosaic.expressions.format.Conversions.{geojson2geom, geom2geojson, geom2hex, geom2wkb, geom2wkt, hex2geom, wkb2geom, wkb2hex, wkt2geom}
 
 @ExpressionDescription(
   usage = "_FUNC_(expr1, dataType) - Converts expr1 to the specified data type.",
@@ -31,7 +34,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String)
    * @return An instance of [[TypeCheckResult]] indicating success or a failure.
    */
   override def checkInputDataTypes(): TypeCheckResult =
-    (inGeometry.dataType, outDataType.toUpperCase) match {
+    (inGeometry.dataType, outDataType.toUpperCase(Locale.ROOT)) match {
       case (BinaryType, "WKT") => TypeCheckResult.TypeCheckSuccess
       case (BinaryType, "COORDS") => TypeCheckResult.TypeCheckSuccess
       case (BinaryType, "HEX") => TypeCheckResult.TypeCheckSuccess
@@ -59,7 +62,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String)
     }
 
   /** Expression output DataType. */
-  override def dataType: DataType = outDataType.toUpperCase match {
+  override def dataType: DataType = outDataType.toUpperCase(Locale.ROOT) match {
     case "WKT" => StringType
     case "WKB" => BinaryType
     case "HEX" => HexType
@@ -80,7 +83,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String)
    * @return  A converted representation of the input geometry.
    */
   override def nullSafeEval(input: Any): Any =
-    (inGeometry.dataType, outDataType.toUpperCase) match {
+    (inGeometry.dataType, outDataType.toUpperCase(Locale.ROOT)) match {
       case (BinaryType, "WKT") => geom2wkt(wkb2geom(input))
       case (BinaryType, "HEX") => wkb2hex(input)
       case (BinaryType, "COORDS") => InternalGeometry(wkb2geom(input)).serialize

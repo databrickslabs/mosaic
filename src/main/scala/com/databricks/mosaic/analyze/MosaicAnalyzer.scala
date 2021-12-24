@@ -1,14 +1,15 @@
 package com.databricks.mosaic.analyze
 
-import com.databricks.mosaic.functions.MosaicContext
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.{col, lit, mean, percentile_approx}
+
+import com.databricks.mosaic.functions.MosaicContext
 
 object MosaicAnalyzer {
 
   implicit class AnalyzerImpl(df: DataFrame) {
 
-    private def getMeanIndexArea(columnName: String, resolution: Int, mosaicContext: MosaicContext,  fraction: Double): Double = {
+    private def getMeanIndexArea(columnName: String, resolution: Int, mosaicContext: MosaicContext, fraction: Double): Double = {
 
       import mosaicContext.functions._
 
@@ -47,7 +48,8 @@ object MosaicAnalyzer {
         .collect()
         .head
 
-      val meanIndexArea = for(i <- 0 until 16) yield getMeanIndexArea(columnName, i, mosaicContext, fraction/10)
+      val meanIndexArea = for (i <- 0 until 16)
+        yield getMeanIndexArea(columnName, i, mosaicContext, fraction/10)
 
       ResolutionMetrics(percentiles, meanIndexArea)
     }

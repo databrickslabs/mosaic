@@ -1,12 +1,14 @@
 package com.databricks.mosaic.core.geometry
 
-import com.databricks.mosaic.core.types
-import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
 import com.uber.h3core.util.GeoCoord
+import org.locationtech.jts.geom.{Geometry => GeometryJTS}
+
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
-import org.locationtech.jts.geom.{Geometry => GeometryJTS}
+
+import com.databricks.mosaic.core.types
+import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
 
 sealed trait GeometryAPI {
   def name: String
@@ -28,7 +30,8 @@ object GeometryAPI {
 
     override def name: String = "JTS"
 
-    override def geometry(geom: Any): MosaicGeometry = MosaicGeometryJTS(geom.asInstanceOf[GeometryJTS])
+    override def geometry(geom: Any): MosaicGeometry =
+      MosaicGeometryJTS(geom.asInstanceOf[GeometryJTS])
 
     override def geometry(inputData: InternalRow, dataType: DataType): MosaicGeometry = {
       val geom = types.struct2geom(inputData, dataType)
@@ -40,24 +43,30 @@ object GeometryAPI {
       MosaicGeometryJTS(geom)
     }
 
-    override def geometry(points: Seq[MosaicPoint]): MosaicGeometry = MosaicGeometryJTS.fromPoints(points)
+    override def geometry(points: Seq[MosaicPoint]): MosaicGeometry =
+      MosaicGeometryJTS.fromPoints(points)
 
-    override def fromGeoGoord(geoCoord: GeoCoord): MosaicPoint = MosaicPointJTS(geoCoord)
+    override def fromGeoGoord(geoCoord: GeoCoord): MosaicPoint =
+      MosaicPointJTS(geoCoord)
   }
 
   case object OGC extends GeometryAPI {
 
     override def name: String = "OGC"
 
-    override def geometry(geom: Any): MosaicGeometry = ???
+    override def geometry(geom: Any): MosaicGeometry = ??? // scalastyle:ignore
 
     override def geometry(inputData: InternalRow, dataType: DataType): MosaicGeometry = {
       dataType match {
           case _: BinaryType => MosaicGeometryOGC.fromWKB(inputData.getBinary(0))
           case _: StringType => MosaicGeometryOGC.fromWKT(inputData.getString(0))
-          case _: HexType => MosaicGeometryOGC.fromHEX(inputData.get(0, HexType).asInstanceOf[InternalRow].getString(0))
-          case _: JSONType => MosaicGeometryOGC.fromJSON(inputData.get(0, JSONType).asInstanceOf[InternalRow].getString(0))
-          case _: InternalGeometryType => ??? // Implementation missing
+          case _: HexType => MosaicGeometryOGC
+            .fromHEX(inputData.get(0, HexType)
+            .asInstanceOf[InternalRow].getString(0))
+          case _: JSONType => MosaicGeometryOGC
+            .fromJSON(inputData.get(0, JSONType)
+            .asInstanceOf[InternalRow].getString(0))
+          case _: InternalGeometryType => ??? // scalastyle:ignore
         }
     }
 
@@ -67,7 +76,7 @@ object GeometryAPI {
         case _: StringType => MosaicGeometryOGC.fromWKT(inputData.asInstanceOf[UTF8String].toString)
         case _: HexType => MosaicGeometryOGC.fromHEX(inputData.asInstanceOf[InternalRow].getString(0))
         case _: JSONType => MosaicGeometryOGC.fromJSON(inputData.asInstanceOf[InternalRow].getString(0))
-        case _: InternalGeometryType => ??? // Implementation missing
+        case _: InternalGeometryType => ??? // scalastyle:ignore
       }
 
     override def geometry(points: Seq[MosaicPoint]): MosaicGeometry = MosaicGeometryOGC.fromPoints(points)

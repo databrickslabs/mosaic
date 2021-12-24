@@ -18,7 +18,7 @@ object Mosaic {
     // do not modify the radius
     val carvedGeometry = geometry.buffer(-radius)
     // add 1% to the radius to ensure union of carved and border geometries does not have holes inside the original geometry areas
-    val borderGeometry = if(carvedGeometry.isEmpty) {
+    val borderGeometry = if (carvedGeometry.isEmpty) {
       geometry.buffer(radius*1.01).simplify(0.01*radius)
     } else {
       geometry.boundary.buffer(radius*1.01).simplify(0.01*radius)

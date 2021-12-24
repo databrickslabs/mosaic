@@ -1,10 +1,11 @@
 package com.databricks.mosaic.expressions.format
 
+import org.locationtech.jts.geom.Geometry
+import org.locationtech.jts.io.{WKBReader, WKBWriter, WKTReader, WKTWriter}
+import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
+
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.unsafe.types.UTF8String
-import org.locationtech.jts.geom.Geometry
-import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
-import org.locationtech.jts.io.{WKBReader, WKBWriter, WKTReader, WKTWriter}
 
 /**
  * Provides methods that convert JTS geometries between different storage formats.
@@ -18,7 +19,7 @@ object Conversions {
    * Typed object is in charge of conversion between strongly typed instances.
    * This API is leveraged to deliver the untyped (Any => Any) API.
    */
-  object typed {
+  object Typed {
 
     def hex2wkb(hex: String): Array[Byte] = {
       val bytes = WKBReader.hexToBytes(hex)
@@ -88,7 +89,7 @@ object Conversions {
    */
   def wkt2geom(input: Any): Geometry = {
     val wkt = input.asInstanceOf[UTF8String].toString
-    typed.wkt2geom(wkt)
+    Typed.wkt2geom(wkt)
   }
 
   /**
@@ -102,7 +103,7 @@ object Conversions {
   def hex2geom(input: Any): Geometry = {
     val hexWrapper = input.asInstanceOf[InternalRow]
     val hex = hexWrapper.getString(0)
-    typed.hex2geom(hex)
+    Typed.hex2geom(hex)
   }
 
   /**
@@ -146,7 +147,7 @@ object Conversions {
    */
   def wkb2geom(input: Any): Geometry = {
     val bytes = input.asInstanceOf[Array[Byte]]
-    typed.wkb2geom(bytes)
+    Typed.wkb2geom(bytes)
   }
 
    /**
@@ -171,6 +172,6 @@ object Conversions {
   def geojson2geom(input: Any): Geometry = {
     val jsonWrapper = input.asInstanceOf[InternalRow]
     val geoJSON = jsonWrapper.getString(0)
-    typed.geojson2geom(geoJSON)
+    Typed.geojson2geom(geoJSON)
   }
 }

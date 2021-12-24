@@ -1,15 +1,17 @@
 package com.databricks.mosaic.functions
 
+import org.apache.spark.sql.{Column, SparkSession}
+import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.functions.{lit, struct}
+
 import com.databricks.mosaic.core.geometry.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystem
 import com.databricks.mosaic.expressions.format.{AsHex, AsJSON, ConvertTo}
 import com.databricks.mosaic.expressions.geometry._
 import com.databricks.mosaic.expressions.helper.TrySql
 import com.databricks.mosaic.expressions.index.{IndexGeometry, MosaicExplode, MosaicFill, PointIndex, Polyfill}
-import org.apache.spark.sql.catalyst.FunctionIdentifier
-import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.functions.{lit, struct}
-import org.apache.spark.sql.{Column, SparkSession}
+
 
 case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
   import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
@@ -22,7 +24,8 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
    *                 By default none is passed resulting in functions
    *                 being registered in default database.
    */
-  //noinspection ZeroIndexToHead
+  // noinspection ZeroIndexToHead
+  // scalastyle:off line.size.limit
   def register(
     spark: SparkSession,
     database: Option[String] = None
@@ -47,10 +50,10 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     registry.registerFunction(FunctionIdentifier("point_index", database), (exprs: Seq[Expression]) => PointIndex(exprs(0), exprs(1), exprs(2), indexSystem.name))
     registry.registerFunction(FunctionIdentifier("polyfill", database), (exprs: Seq[Expression]) => Polyfill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name))
 
-    //DataType keywords are needed at checkInput execution time.
-    //They cant be passed as Expressions to ConvertTo Expression.
-    //Instead they are passed as String instances and for SQL
-    //parser purposes separate method names are defined.
+    // DataType keywords are needed at checkInput execution time.
+    // They cant be passed as Expressions to ConvertTo Expression.
+    // Instead they are passed as String instances and for SQL
+    // parser purposes separate method names are defined.
     registry.registerFunction(FunctionIdentifier("st_geomfromwkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords"))
     registry.registerFunction(FunctionIdentifier("st_geomfromwkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords"))
     registry.registerFunction(FunctionIdentifier("st_geomfromgeojson", database), (exprs: Seq[Expression]) => ConvertTo(AsJSON(exprs(0)), "coords"))
@@ -78,10 +81,11 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     registry.registerFunction(FunctionIdentifier("st_asgeojson", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson"))
     registry.registerFunction(FunctionIdentifier("st_dump", database), (exprs: Seq[Expression]) => FlattenPolygons(exprs(0), geometryAPI.name))
 
-    //Not specific to Mosaic
+    // Not specific to Mosaic
     registry.registerFunction(FunctionIdentifier("try_sql", database), (exprs: Seq[Expression]) => TrySql(exprs(0)))
   }
 
+  // scalastyle:off object.name
   object functions {
     /** IndexSystem and GeometryAPI Agnostic methods */
     def convert_to(inGeom: Column, outDataType: String): Column = ColumnAdapter(ConvertTo(inGeom.expr, outDataType))
@@ -128,7 +132,9 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     def st_asgeojson(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "geojson"))
     def st_dump(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
 
-    //Not specific to Mosaic
+    // Not specific to Mosaic
     def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
   }
 }
+// scalastyle:on object.name
+// scalastyle:on line.size.limit

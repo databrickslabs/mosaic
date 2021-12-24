@@ -15,7 +15,7 @@ case class MosaicPolygonJTS(polygon: Polygon)
   override def getHolePoints: Seq[Seq[MosaicPoint]] = {
     val boundary = polygon.getBoundary
     val m = boundary.getNumGeometries
-    val holes = for(i <- 1 until m) yield boundary.getGeometryN(i)
+    val holes = for (i <- 1 until m) yield boundary.getGeometryN(i)
     holes.map(MosaicGeometryJTS(_).getBoundary)
   }
 

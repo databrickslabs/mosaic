@@ -1,8 +1,14 @@
 package com.databricks.mosaic.expressions.geometry
 
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, NullIntolerant, ExpressionDescription, Expression}
+import org.apache.spark.sql.catalyst.expressions.{
+  BinaryExpression,
+  Expression,
+  ExpressionDescription,
+  NullIntolerant
+}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.DoubleType
+
 import com.databricks.mosaic.core.types.any2geometry
 
 @ExpressionDescription(
@@ -21,7 +27,7 @@ case class ST_Distance(leftGeom: Expression, rightGeom: Expression)
   override def left: org.apache.spark.sql.catalyst.expressions.Expression = leftGeom
   override def right: org.apache.spark.sql.catalyst.expressions.Expression = rightGeom
   override def dataType: org.apache.spark.sql.types.DataType = DoubleType
-  override def nullSafeEval(input1: Any, input2: Any) = {
+  override def nullSafeEval(input1: Any, input2: Any): Any = {
     val geom1 = any2geometry(input1, leftGeom.dataType)
     val geom2 = any2geometry(input2, rightGeom.dataType)
     geom1.distance(geom2)

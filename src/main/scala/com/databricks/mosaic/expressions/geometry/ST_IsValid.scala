@@ -1,10 +1,12 @@
 package com.databricks.mosaic.expressions.geometry
 
-import com.databricks.mosaic.core.types.any2geometry
+import org.locationtech.jts.io.ParseException
+
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.{BooleanType, DataType}
-import org.locationtech.jts.io.ParseException
+
+import com.databricks.mosaic.core.types.any2geometry
 
 case class ST_IsValid(inputGeom: Expression)
   extends UnaryExpression
@@ -20,7 +22,7 @@ case class ST_IsValid(inputGeom: Expression)
       val geom = any2geometry(input1, inputGeom.dataType)
       return geom.isValid
     } catch {
-      case _: ParseException           => return false
+      case _: ParseException => return false
       case _: IllegalArgumentException => return false
     }
     false

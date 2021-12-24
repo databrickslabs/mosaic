@@ -1,9 +1,10 @@
 package com.databricks.mosaic.expressions.geometry
 
-import com.databricks.mosaic.core.types.any2geometry
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.{DataType, DoubleType}
+
+import com.databricks.mosaic.core.types.any2geometry
 
 case class ST_MinMaxXY(inputGeom: Expression, dimension: String, func: String)
     extends UnaryExpression
