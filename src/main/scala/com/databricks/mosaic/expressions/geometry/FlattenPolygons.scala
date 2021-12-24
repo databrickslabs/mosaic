@@ -131,6 +131,9 @@ object FlattenPolygons {
    */
   private def flattenGeom(geom: Geometry): Seq[Geometry] = geom.getGeometryType match {
     case "Point" => List(geom)
+    case "MultiPoint" => for (
+      i <- 0 until geom.getNumGeometries
+    ) yield geom.getGeometryN(i)
     case "Polygon" => List(geom)
     case "MultiPolygon" => for (
       i <- 0 until geom.getNumGeometries

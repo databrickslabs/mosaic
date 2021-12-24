@@ -1,6 +1,6 @@
 package com.databricks.mosaic.core.types.model
 
-import org.locationtech.jts.geom.{Geometry, GeometryFactory, Polygon}
+import org.locationtech.jts.geom.{Geometry, GeometryFactory, MultiPoint, Point, Polygon}
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -8,7 +8,6 @@ import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
 import com.databricks.mosaic.core.types.InternalCoordType
-import org.locationtech.jts.geom.Point
 
 /**
  * A case class modeling Polygons and MultiPolygons.
@@ -40,6 +39,8 @@ case class InternalGeometry(
     typeName match {
       case "Point" =>
         gf.createPoint(boundaries.head.map(_.toCoordinate).head)
+      case "MultiPoint" =>
+        gf.createMultiPointFromCoords(boundaries.map(p => p.head.toCoordinate))
       case "Polygon" =>
         createPolygon(0)
       case "MultiPolygon" =>
@@ -91,10 +92,20 @@ object InternalGeometry {
    * @param g An instance of Point to be converted.
    * @return An instance of [[InternalGeometry]].
    */
-  private def fromPoint(g: Point): InternalGeometry = {
+  private def fromPoint(g: Point, typeName: String): InternalGeometry = {
     val shell = Array(InternalCoord(g.getCoordinate()))
-    new InternalGeometry("Point", Array(shell), Array(Array(Array())))
+    new InternalGeometry(typeName, Array(shell), Array(Array(Array())))
   }
+
+  /**
+   * Converts a MultiPoint to an instance of [[InternalGeometry]].
+   * @param g An instance of MultiPoint to be converted.
+   * @return An instance of [[InternalGeometry]].
+   */
+  // private def fromMultiPoint(g: MultiPoint): InternalGeometry = {
+  //   val shell = g.getCoordinates.map(p => Array(InternalCoord(p)))
+  //   new InternalGeometry("Point", shell, Array(Array(Array())))
+  // }
 
   /**
    * Used for constructing a MultiPolygon instance by merging Polygon/MultiPolygon instances.
@@ -104,7 +115,7 @@ object InternalGeometry {
    */
   private def merge(left: InternalGeometry, right: InternalGeometry): InternalGeometry = {
     InternalGeometry(
-      "MultiPolygon",
+      right.typeName, // this is a fudge -> it should be the more general of left or right
       left.boundaries ++ right.boundaries,
       left.holes ++ right.holes
     )
@@ -119,7 +130,11 @@ object InternalGeometry {
   def apply(g: Geometry): InternalGeometry = {
     g.getGeometryType match {
       case "Point" =>
-        fromPoint(g.asInstanceOf[Point])
+        fromPoint(g.asInstanceOf[Point], "Point")
+      case "MultiPoint" =>
+        val geoms = for (i <- 0 until g.getNumGeometries)
+          yield fromPoint(g.getGeometryN(i).asInstanceOf[Point], "MultiPoint")
+        geoms.reduce(merge)
       case "Polygon" =>
         fromPolygon(g.asInstanceOf[Polygon], "Polygon")
       case "MultiPolygon" =>
