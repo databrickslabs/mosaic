@@ -24,7 +24,7 @@ class TestTypeCheck_OGC_H3 extends FunSuite with Matchers with SparkTest {
       .select("result")
 
     val results = df.as[String].collect().toList
-    val expected = List("POLYGON", "MULTIPOLYGON", "MULTIPOLYGON", "POLYGON")
+    val expected = List("POLYGON", "MULTIPOLYGON", "MULTIPOLYGON", "POLYGON", "POINT")
 
     results should contain theSameElementsAs expected
   }
@@ -40,7 +40,7 @@ class TestTypeCheck_OGC_H3 extends FunSuite with Matchers with SparkTest {
 
     val results = df.as[String].collect().toList
 
-    val expected = List("POLYGON", "MULTIPOLYGON", "MULTIPOLYGON", "POLYGON")
+    val expected = List("POLYGON", "MULTIPOLYGON", "MULTIPOLYGON", "POLYGON", "POINT")
     results should contain theSameElementsAs expected
   }
 }

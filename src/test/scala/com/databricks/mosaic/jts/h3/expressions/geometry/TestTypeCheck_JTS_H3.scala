@@ -24,7 +24,7 @@ class TestTypeCheck_JTS_H3 extends FunSuite with Matchers with SparkTest {
     val results = df.select(st_geometrytype($"wkt").alias("result"))
       .orderBy("result")
       .as[String].collect().toList
-    val expected = List("POLYGON", "MULTIPOLYGON", "MULTIPOLYGON", "POLYGON")
+    val expected = List("POINT", "POLYGON", "MULTIPOLYGON", "MULTIPOLYGON", "POLYGON")
 
     results should contain theSameElementsAs expected
 
@@ -46,7 +46,7 @@ class TestTypeCheck_JTS_H3 extends FunSuite with Matchers with SparkTest {
       .orderBy("result")
       .as[String].collect().toList
 
-    val expected = List("POLYGON", "MULTIPOLYGON", "MULTIPOLYGON", "POLYGON")
+    val expected = List("POINT", "POLYGON", "MULTIPOLYGON", "MULTIPOLYGON", "POLYGON")
     results should contain theSameElementsAs expected
 
     df.createOrReplaceTempView("source")

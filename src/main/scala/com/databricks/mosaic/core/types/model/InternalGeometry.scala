@@ -8,6 +8,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
 import com.databricks.mosaic.core.types.InternalCoordType
+import org.locationtech.jts.geom.Point
 
 /**
  * A case class modeling Polygons and MultiPolygons.
@@ -37,6 +38,8 @@ case class InternalGeometry(
       gf.createPolygon(boundaryRing, holesRings)
     }
     typeName match {
+      case "Point" =>
+        gf.createPoint(boundaries.head.map(_.toCoordinate).head)
       case "Polygon" =>
         createPolygon(0)
       case "MultiPolygon" =>
@@ -84,6 +87,16 @@ object InternalGeometry {
   }
 
   /**
+   * Converts a Point to an instance of [[InternalGeometry]].
+   * @param g An instance of Point to be converted.
+   * @return An instance of [[InternalGeometry]].
+   */
+  private def fromPoint(g: Point): InternalGeometry = {
+    val shell = Array(InternalCoord(g.getCoordinate()))
+    new InternalGeometry("Point", Array(shell), Array(Array(Array())))
+  }
+
+  /**
    * Used for constructing a MultiPolygon instance by merging Polygon/MultiPolygon instances.
    * @param left An instance of a Polygon/MultiPolygon.
    * @param right An instance of a Polygon/MultiPolygon.
@@ -105,6 +118,8 @@ object InternalGeometry {
    */
   def apply(g: Geometry): InternalGeometry = {
     g.getGeometryType match {
+      case "Point" =>
+        fromPoint(g.asInstanceOf[Point])
       case "Polygon" =>
         fromPolygon(g.asInstanceOf[Polygon], "Polygon")
       case "MultiPolygon" =>
