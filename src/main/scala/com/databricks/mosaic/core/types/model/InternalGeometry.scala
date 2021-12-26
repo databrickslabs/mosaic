@@ -1,6 +1,6 @@
 package com.databricks.mosaic.core.types.model
 
-import org.locationtech.jts.geom.{Geometry, GeometryFactory, MultiPoint, Point, Polygon}
+import org.locationtech.jts.geom.{Geometry, GeometryFactory, LineString, MultiPoint, Point, Polygon}
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -43,9 +43,14 @@ case class InternalGeometry(
       case MULTIPOINT =>
         gf.createMultiPointFromCoords(boundaries.map(p => p.head.toCoordinate))
       case LINESTRING =>
-        throw new NotImplementedError("LINESTRING not yet implemented in InternalGeometry")
+        // throw new NotImplementedError("LINESTRING not yet implemented in InternalGeometry")
+        gf.createLineString(boundaries.head.map(_.toCoordinate))
       case MULTILINESTRING =>
-        throw new NotImplementedError("MULTILINESTRING not yet implemented in InternalGeometry")
+        val lineStrings = boundaries.map(
+          b => gf.createLineString(b.map(_.toCoordinate))
+        )
+        gf.createMultiLineString(lineStrings)
+        // throw new NotImplementedError("MULTILINESTRING not yet implemented in InternalGeometry")
       case POLYGON =>
         createPolygon(0)
       case MULTIPOLYGON =>
@@ -87,6 +92,16 @@ object InternalGeometry {
     val shell = Array(InternalCoord(g.getCoordinate()))
     new InternalGeometry(typeId, Array(shell), Array(Array(Array())))
   }
+
+  /**
+   * Converts a LineString to an instance of [[InternalGeometry]].
+   * @param g An instance of LineString to be converted.
+   * @return An instance of [[InternalGeometry]].
+   */
+  private def fromLineString(g: LineString, typeId: Int): InternalGeometry = {
+    val shell = g.getCoordinates.map(c => InternalCoord(c))
+    new InternalGeometry(typeId, Array(shell), Array(Array(Array())))
+  } 
 
   /**
    * Converts a Polygon to an instance of [[InternalGeometry]].
@@ -131,6 +146,12 @@ object InternalGeometry {
       case "MultiPoint" =>
         val geoms = for (i <- 0 until g.getNumGeometries)
           yield fromPoint(g.getGeometryN(i).asInstanceOf[Point], MULTIPOINT)
+        geoms.reduce(merge)
+      case "LineString" =>
+        fromLineString(g.asInstanceOf[LineString], LINESTRING)
+      case "MultiLineString" =>
+        val geoms = for (i <- 0 until g.getNumGeometries)
+          yield fromLineString(g.getGeometryN(i).asInstanceOf[LineString], MULTILINESTRING)
         geoms.reduce(merge)
       case "Polygon" =>
         fromPolygon(g.asInstanceOf[Polygon], POLYGON)

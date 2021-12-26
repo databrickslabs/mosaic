@@ -134,6 +134,10 @@ object FlattenPolygons {
     case "MultiPoint" => for (
       i <- 0 until geom.getNumGeometries
     ) yield geom.getGeometryN(i)
+    case "LineString" => List(geom)
+    case "MultiLineString" => for (
+      i <- 0 until geom.getNumGeometries
+    ) yield geom.getGeometryN(i)
     case "Polygon" => List(geom)
     case "MultiPolygon" => for (
       i <- 0 until geom.getNumGeometries
