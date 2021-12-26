@@ -54,18 +54,6 @@ case class InternalGeometry(
         gf.createMultiPolygon(polygons.toArray)
 
     }
-
-  //   typeName match {
-  //     case "Point" =>
-  //       gf.createPoint(boundaries.head.map(_.toCoordinate).head)
-  //     case "MultiPoint" =>
-  //       gf.createMultiPointFromCoords(boundaries.map(p => p.head.toCoordinate))
-  //     case "Polygon" =>
-  //       createPolygon(0)
-  //     case "MultiPolygon" =>
-  //       val polygons = for (i <- boundaries.indices) yield createPolygon(i)
-  //       gf.createMultiPolygon(polygons.toArray)
-  //   }
   }
 
   /**
@@ -73,7 +61,6 @@ case class InternalGeometry(
    * @return An instance of [[InternalRow]].
    */
   def serialize: Any = InternalRow.fromSeq(Seq(
-      // UTF8String.fromString(typeName),
       typeId,
       ArrayData.toArrayData(
         boundaries.map(boundary => ArrayData.toArrayData(boundary.map(_.serialize)))
@@ -121,25 +108,15 @@ object InternalGeometry {
   }
 
   /**
-   * Converts a MultiPoint to an instance of [[InternalGeometry]].
-   * @param g An instance of MultiPoint to be converted.
-   * @return An instance of [[InternalGeometry]].
-   */
-  // private def fromMultiPoint(g: MultiPoint): InternalGeometry = {
-  //   val shell = g.getCoordinates.map(p => Array(InternalCoord(p)))
-  //   new InternalGeometry("Point", shell, Array(Array(Array())))
-  // }
-
-  /**
-   * Used for constructing a MultiPolygon instance by merging Polygon/MultiPolygon instances.
-   * @param left An instance of a Polygon/MultiPolygon.
-   * @param right An instance of a Polygon/MultiPolygon.
-   * @return An instance of a MultiPolygon created by combining left and right instances.
+   * Used for constructing a geometry collection by merging Point/MultiPoint,
+   * LineString/MultiLineString or Polygon/MultiPolygon instances.
+   * @param left An InternalGeometry instance.
+   * @param right An InternalGeometry instance.
+   * @return An InternalGeometry geometry collection created by combining left and right instances.
    */
   private def merge(left: InternalGeometry, right: InternalGeometry): InternalGeometry = {
     InternalGeometry(
       left.typeId max right.typeId,
-      // right.typeId, // this is a fudge -> it should be the more general of left or right
       left.boundaries ++ right.boundaries,
       left.holes ++ right.holes
     )
@@ -194,7 +171,6 @@ object InternalGeometry {
             .map(c => InternalCoord(c.asInstanceOf[ArrayData])))
       )
 
-    // new InternalGeometry(typeName, boundaries, holeGroups)
     new InternalGeometry(typeId, boundaries, holeGroups)
   }
 
