@@ -79,6 +79,16 @@ case class InternalGeometry(
 object InternalGeometry {
 
   /**
+   * Converts a Point to an instance of [[InternalGeometry]].
+   * @param g An instance of Point to be converted.
+   * @return An instance of [[InternalGeometry]].
+   */
+  private def fromPoint(g: Point, typeId: Int): InternalGeometry = {
+    val shell = Array(InternalCoord(g.getCoordinate()))
+    new InternalGeometry(typeId, Array(shell), Array(Array(Array())))
+  }
+
+  /**
    * Converts a Polygon to an instance of [[InternalGeometry]].
    * @param g An instance of Polygon to be converted.
    * @param typeName Type name to used to construct the instance
@@ -91,18 +101,6 @@ object InternalGeometry {
     val holes = for (i <- 1 until boundary.getNumGeometries)
       yield boundary.getGeometryN(i).getCoordinates.map(InternalCoord(_))
     new InternalGeometry(typeId, Array(shell), Array(holes.toArray))
-  }
-
-
-
-  /**
-   * Converts a Point to an instance of [[InternalGeometry]].
-   * @param g An instance of Point to be converted.
-   * @return An instance of [[InternalGeometry]].
-   */
-  private def fromPoint(g: Point, typeId: Int): InternalGeometry = {
-    val shell = Array(InternalCoord(g.getCoordinate()))
-    new InternalGeometry(typeId, Array(shell), Array(Array(Array())))
   }
 
   /**
