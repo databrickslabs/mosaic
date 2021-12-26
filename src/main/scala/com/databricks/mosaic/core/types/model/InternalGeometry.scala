@@ -8,6 +8,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
 import com.databricks.mosaic.core.types.InternalCoordType
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
 
 /**
  * A case class modeling Polygons and MultiPolygons.
@@ -20,7 +21,8 @@ import com.databricks.mosaic.core.types.InternalCoordType
  *              sub Polygon.
  */
 case class InternalGeometry(
-   typeName: String,
+  //  typeName: String,
+   typeId: Int,
    boundaries: Array[Array[InternalCoord]],
    holes: Array[Array[Array[InternalCoord]]]
 ) {
@@ -36,17 +38,34 @@ case class InternalGeometry(
       val holesRings = holes(ind).map(hole => gf.createLinearRing(hole.map(_.toCoordinate)))
       gf.createPolygon(boundaryRing, holesRings)
     }
-    typeName match {
-      case "Point" =>
+    typeId match {
+      case POINT =>
         gf.createPoint(boundaries.head.map(_.toCoordinate).head)
-      case "MultiPoint" =>
+      case MULTIPOINT =>
         gf.createMultiPointFromCoords(boundaries.map(p => p.head.toCoordinate))
-      case "Polygon" =>
+      case LINESTRING =>
+        throw new NotImplementedError("LINESTRING not yet implemented in InternalGeometry")
+      case MULTILINESTRING =>
+        throw new NotImplementedError("MULTILINESTRING not yet implemented in InternalGeometry")
+      case POLYGON =>
         createPolygon(0)
-      case "MultiPolygon" =>
+      case MULTIPOLYGON =>
         val polygons = for (i <- boundaries.indices) yield createPolygon(i)
         gf.createMultiPolygon(polygons.toArray)
+
     }
+
+  //   typeName match {
+  //     case "Point" =>
+  //       gf.createPoint(boundaries.head.map(_.toCoordinate).head)
+  //     case "MultiPoint" =>
+  //       gf.createMultiPointFromCoords(boundaries.map(p => p.head.toCoordinate))
+  //     case "Polygon" =>
+  //       createPolygon(0)
+  //     case "MultiPolygon" =>
+  //       val polygons = for (i <- boundaries.indices) yield createPolygon(i)
+  //       gf.createMultiPolygon(polygons.toArray)
+  //   }
   }
 
   /**
@@ -54,7 +73,8 @@ case class InternalGeometry(
    * @return An instance of [[InternalRow]].
    */
   def serialize: Any = InternalRow.fromSeq(Seq(
-      UTF8String.fromString(typeName),
+      // UTF8String.fromString(typeName),
+      typeId,
       ArrayData.toArrayData(
         boundaries.map(boundary => ArrayData.toArrayData(boundary.map(_.serialize)))
       ),
@@ -79,22 +99,25 @@ object InternalGeometry {
    *                 of [[InternalGeometry]].
    * @return An instance of [[InternalGeometry]].
    */
-  private def fromPolygon(g: Polygon, typeName: String): InternalGeometry = {
+  private def fromPolygon(g: Polygon, typeId: Int): InternalGeometry = {
     val boundary = g.getBoundary
     val shell = boundary.getGeometryN(0).getCoordinates.map(InternalCoord(_))
     val holes = for (i <- 1 until boundary.getNumGeometries)
       yield boundary.getGeometryN(i).getCoordinates.map(InternalCoord(_))
-    new InternalGeometry(typeName, Array(shell), Array(holes.toArray))
+    new InternalGeometry(typeId, Array(shell), Array(holes.toArray))
+    // new InternalGeometry(typeName, Array(shell), Array(holes.toArray))
   }
+  // }
+
 
   /**
    * Converts a Point to an instance of [[InternalGeometry]].
    * @param g An instance of Point to be converted.
    * @return An instance of [[InternalGeometry]].
    */
-  private def fromPoint(g: Point, typeName: String): InternalGeometry = {
+  private def fromPoint(g: Point, typeId: Int): InternalGeometry = {
     val shell = Array(InternalCoord(g.getCoordinate()))
-    new InternalGeometry(typeName, Array(shell), Array(Array(Array())))
+    new InternalGeometry(typeId, Array(shell), Array(Array(Array())))
   }
 
   /**
@@ -115,7 +138,8 @@ object InternalGeometry {
    */
   private def merge(left: InternalGeometry, right: InternalGeometry): InternalGeometry = {
     InternalGeometry(
-      right.typeName, // this is a fudge -> it should be the more general of left or right
+      left.typeId max right.typeId,
+      // right.typeId, // this is a fudge -> it should be the more general of left or right
       left.boundaries ++ right.boundaries,
       left.holes ++ right.holes
     )
@@ -130,16 +154,16 @@ object InternalGeometry {
   def apply(g: Geometry): InternalGeometry = {
     g.getGeometryType match {
       case "Point" =>
-        fromPoint(g.asInstanceOf[Point], "Point")
+        fromPoint(g.asInstanceOf[Point], POINT)
       case "MultiPoint" =>
         val geoms = for (i <- 0 until g.getNumGeometries)
-          yield fromPoint(g.getGeometryN(i).asInstanceOf[Point], "MultiPoint")
+          yield fromPoint(g.getGeometryN(i).asInstanceOf[Point], MULTIPOINT)
         geoms.reduce(merge)
       case "Polygon" =>
-        fromPolygon(g.asInstanceOf[Polygon], "Polygon")
+        fromPolygon(g.asInstanceOf[Polygon], POLYGON)
       case "MultiPolygon" =>
         val geoms = for (i <- 0 until g.getNumGeometries)
-          yield fromPolygon(g.getGeometryN(i).asInstanceOf[Polygon], "MultiPolygon")
+          yield fromPolygon(g.getGeometryN(i).asInstanceOf[Polygon], MULTIPOLYGON)
         geoms.reduce(merge)
     }
   }
@@ -151,7 +175,8 @@ object InternalGeometry {
    * @return An instance of [[InternalGeometry]].
    */
   def apply(input: InternalRow): InternalGeometry = {
-    val typeName = input.get(0, StringType).asInstanceOf[UTF8String].toString
+    // val typeName = input.get(0, StringType).asInstanceOf[UTF8String].toString
+    val typeId = input.getInt(0)
 
     val boundaries = input.getArray(1)
       .toObjectArray(ArrayType(ArrayType(InternalCoordType)))
@@ -169,7 +194,8 @@ object InternalGeometry {
             .map(c => InternalCoord(c.asInstanceOf[ArrayData])))
       )
 
-    new InternalGeometry(typeName, boundaries, holeGroups)
+    // new InternalGeometry(typeName, boundaries, holeGroups)
+    new InternalGeometry(typeId, boundaries, holeGroups)
   }
 
 }
