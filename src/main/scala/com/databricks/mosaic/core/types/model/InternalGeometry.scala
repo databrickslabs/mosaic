@@ -21,7 +21,6 @@ import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
  *              sub Polygon.
  */
 case class InternalGeometry(
-  //  typeName: String,
    typeId: Int,
    boundaries: Array[Array[InternalCoord]],
    holes: Array[Array[Array[InternalCoord]]]
@@ -92,9 +91,8 @@ object InternalGeometry {
     val holes = for (i <- 1 until boundary.getNumGeometries)
       yield boundary.getGeometryN(i).getCoordinates.map(InternalCoord(_))
     new InternalGeometry(typeId, Array(shell), Array(holes.toArray))
-    // new InternalGeometry(typeName, Array(shell), Array(holes.toArray))
   }
-  // }
+
 
 
   /**
@@ -152,7 +150,6 @@ object InternalGeometry {
    * @return An instance of [[InternalGeometry]].
    */
   def apply(input: InternalRow): InternalGeometry = {
-    // val typeName = input.get(0, StringType).asInstanceOf[UTF8String].toString
     val typeId = input.getInt(0)
 
     val boundaries = input.getArray(1)
