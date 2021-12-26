@@ -14,6 +14,7 @@ class TestGeometryProcessors_JTS_H3 extends FunSuite with Matchers with SparkTes
 
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
   import mosaicContext.functions._
+  import testImplicits._
 
   val wktReader = new WKTReader()
   val wktWriter = new WKTWriter()
@@ -23,8 +24,6 @@ class TestGeometryProcessors_JTS_H3 extends FunSuite with Matchers with SparkTes
   test("Test length (or perimeter) calculation") {
     mosaicContext.register(spark)
     // TODO break into two for line segment vs. polygons
-    val ss = spark
-    import ss.implicits._
 
     val expected = referenceGeoms.map(_.getLength)
     val result = mocks.getWKTRowsDf
@@ -58,8 +57,6 @@ class TestGeometryProcessors_JTS_H3 extends FunSuite with Matchers with SparkTes
 
   test("Test area calculation") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val expected = referenceGeoms.map(_.getArea)
     val result = mocks.getWKTRowsDf
@@ -81,8 +78,6 @@ class TestGeometryProcessors_JTS_H3 extends FunSuite with Matchers with SparkTes
 
   test("Test centroid calculation (2-dimensional)") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val expected = referenceGeoms.map(_.getCentroid.getCoordinate).map(c => (c.x, c.y))
     val result = mocks.getWKTRowsDf
@@ -107,8 +102,6 @@ class TestGeometryProcessors_JTS_H3 extends FunSuite with Matchers with SparkTes
 
   test("Test distance calculation") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val coords = referenceGeoms.head.getCoordinates()
     val pointsWKT = coords.map(geomFactory.createPoint).map(wktWriter.write)

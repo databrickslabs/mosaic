@@ -13,11 +13,10 @@ import org.scalatest.{FunSuite, Matchers}
 class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with JsonMatchers {
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, OGC)
   import mosaicContext.functions._
+  import testImplicits._
 
   test("Conversion from WKB to WKT") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf: DataFrame = getHexRowsDf
       .withColumn("wkb", convert_to(as_hex($"hex"), "WKB"))
@@ -64,8 +63,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from WKB to HEX") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf = getHexRowsDf
     val wktDf = getWKTRowsDf
@@ -108,8 +105,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from WKB to COORDS") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf1 = getHexRowsDf.withColumn("test", as_hex($"hex"))
     val hexDf = hexDf1.withColumn("coords", convert_to(as_hex($"hex"), "coords"))
@@ -167,8 +162,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from WKB to GeoJSON") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val wkbDf: DataFrame = getHexRowsDf
       .select(convert_to(as_hex($"hex"), "WKB").alias("wkb"))
@@ -221,8 +214,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from WKT to WKB") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf: DataFrame = getHexRowsDf
       .withColumn("wkb", convert_to(as_hex($"hex"), "WKB"))
@@ -269,8 +260,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from WKT to HEX") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf = getHexRowsDf
     val wktDf = getWKTRowsDf
@@ -312,8 +301,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from WKT to COORDS") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf = getHexRowsDf
       .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
@@ -369,8 +356,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from WKT to GeoJSON") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val wktDf: DataFrame = getWKTRowsDf
     val geojsonDf: DataFrame = getGeoJSONDf
@@ -413,8 +398,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from HEX to WKB") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf: DataFrame = getHexRowsDf
       .withColumn("hex", as_hex($"hex"))
@@ -450,8 +433,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from HEX to WKT") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf = getHexRowsDf
       .withColumn("hex", as_hex($"hex"))
@@ -494,8 +475,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from HEX to COORDS") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf = getHexRowsDf
       .withColumn("hex", as_hex($"hex"))
@@ -535,8 +514,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from HEX to GeoJSON") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf: DataFrame = getHexRowsDf
       .select(as_hex($"hex").alias("hex"))
@@ -578,8 +555,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from COORDS to WKB") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf: DataFrame = getHexRowsDf
       .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
@@ -636,8 +611,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from COORDS to WKT") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf = getHexRowsDf
       .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
@@ -698,8 +671,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from COORDS to HEX") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val hexDf = getHexRowsDf
     val wktDf = getWKTRowsDf
@@ -742,8 +713,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from COORDS to GeoJSON") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val coordsDf: DataFrame = getHexRowsDf
       .select(as_hex($"hex").alias("hex"))
@@ -797,8 +766,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from GeoJSON to WKB") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val geojsonDf: DataFrame = getGeoJSONDf
     val wkbDf: DataFrame = getHexRowsDf
@@ -838,8 +805,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from GeoJSON to WKT") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val geojsonDf: DataFrame = getGeoJSONDf
     val wktDf: DataFrame = getWKTRowsDf
@@ -877,8 +842,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from GeoJSON to HEX") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val geojsonDf: DataFrame = getGeoJSONDf
     val hexDf: DataFrame = getHexRowsDf
@@ -916,8 +879,6 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
 
   test("Conversion from GeoJSON to COORDS") {
     mosaicContext.register(spark)
-    val ss = spark
-    import ss.implicits._
 
     val geojsonDf: DataFrame = getGeoJSONDf
     val coordsDf: DataFrame = getHexRowsDf
