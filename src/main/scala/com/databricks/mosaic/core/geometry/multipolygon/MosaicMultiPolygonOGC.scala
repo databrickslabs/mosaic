@@ -1,5 +1,7 @@
-package com.databricks.mosaic.core.geometry
+package com.databricks.mosaic.core.geometry.multipolygon
 
+import com.databricks.mosaic.core.geometry.point.MosaicPoint
+import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonOGC
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPolygon}
 
 case class MosaicMultiPolygonOGC(multiPolygon: OGCMultiPolygon) extends MosaicMultiPolygon {

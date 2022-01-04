@@ -1,14 +1,14 @@
 package com.databricks.mosaic.jts.h3.expressions.geometry
 
-import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getWKTRowsDf
 import com.databricks.mosaic.test.SparkTest
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.col
-import org.scalatest.{FunSuite, Matchers}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.scalatest.{FunSuite, Matchers}
 
 class TestGeometryValidity_JTS_H3 extends FunSuite with SparkTest with Matchers {
 
@@ -17,16 +17,22 @@ class TestGeometryValidity_JTS_H3 extends FunSuite with SparkTest with Matchers 
 
   test("Calling st_xmin() should return the minimum x value from all coordinates in the geometry") {
     mosaicContext.register(spark)
+    val ss = spark
+    import ss.implicits._
 
-    val df = getWKTRowsDf.withColumn("result", st_xmin(col("wkt")))
-    val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(10, 0, 10, 10).map(_.asInstanceOf[Double])
+    val df = getWKTRowsDf.orderBy("id")
+    val results = df.select(st_xmin(col("wkt")))
+      .as[Double]
+      .collect()
+
+    val expected = List(10.0, 0.0, 10.0, 10.0)
 
     results should contain theSameElementsAs expected
 
     df.createOrReplaceTempView("source")
     val sqlResults = spark.sql("select st_xmin(wkt) from source")
-      .collect().map(_.getDouble(0)).toList
+      .as[Double]
+      .collect()
 
     sqlResults should contain theSameElementsAs expected
 
@@ -34,63 +40,76 @@ class TestGeometryValidity_JTS_H3 extends FunSuite with SparkTest with Matchers 
 
   test("Calling st_xmax() should return the maximum x value from all coordinates in the geometry") {
     mosaicContext.register(spark)
+    val ss = spark
+    import ss.implicits._
 
-    val df = getWKTRowsDf.withColumn("result", st_xmax(col("wkt")))
-    val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(40, 2, 110, 45).map(_.asInstanceOf[Double])
+    val df = getWKTRowsDf.orderBy("id")
+    val results = df.select(st_xmax(col("wkt"))).as[Double].collect()
+    val expected = List(40.0, 2.0, 110.0, 45.0)
 
     results should contain theSameElementsAs expected
 
     df.createOrReplaceTempView("source")
     val sqlResults = spark.sql("select st_xmax(wkt) from source")
-      .collect().map(_.getDouble(0)).toList
+      .as[Double]
+      .collect()
 
     sqlResults should contain theSameElementsAs expected
   }
 
   test("Calling st_ymin() should return the minimum y value from all coordinates in the geometry") {
     mosaicContext.register(spark)
+    val ss = spark
+    import ss.implicits._
 
-    val df = getWKTRowsDf.withColumn("result", st_ymin(col("wkt")))
-    val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(10, 0, 10, 5).map(_.asInstanceOf[Double])
+    val df = getWKTRowsDf.orderBy("id")
+    val results = df.select(st_ymin(col("wkt"))).as[Double].collect()
+    val expected = List(10.0, 0.0, 10.0, 5.0)
 
     results should contain theSameElementsAs expected
 
     df.createOrReplaceTempView("source")
     val sqlResults = spark.sql("select st_ymin(wkt) from source")
-      .collect().map(_.getDouble(0)).toList
+      .as[Double]
+      .collect()
 
     sqlResults should contain theSameElementsAs expected
   }
 
   test("Calling st_ymax() should return the maximum y value from all coordinates in the geometry") {
     mosaicContext.register(spark)
+    val ss = spark
+    import ss.implicits._
 
-    val df = getWKTRowsDf.withColumn("result", st_ymax(col("wkt")))
-    val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(40, 2, 110, 60).map(_.asInstanceOf[Double])
+    val df = getWKTRowsDf.orderBy("id")
+    val results = df.select(st_ymax(col("wkt"))).as[Double].collect()
+    val expected = List(40.0, 2.0, 110.0, 60.0)
 
     results should contain theSameElementsAs expected
 
     df.createOrReplaceTempView("source")
     val sqlResults = spark.sql("select st_ymax(wkt) from source")
-      .collect().map(_.getDouble(0)).toList
+      .as[Double]
+      .collect()
 
     sqlResults should contain theSameElementsAs expected
   }
 
   test("Calling st_isvalid() on a valid geometry should return true.") {
     mosaicContext.register(spark)
+    val ss = spark
+    import ss.implicits._
 
-    val df = getWKTRowsDf.withColumn("result", st_isvalid(col("wkt")))
-    val results = df.collect().map(_.getBoolean(1)).toList
+    val df = getWKTRowsDf.orderBy("id")
+    val results = df.select(st_isvalid(col("wkt"))).as[Boolean].collect().toSeq
 
     all(results) should be(true)
 
     df.createOrReplaceTempView("source")
     val sqlResults = spark.sql("select st_isvalid(wkt) from source")
-      .collect.map(_.getBoolean(0)).toList
+      .as[Boolean]
+      .collect
+      .toSeq
 
     all(sqlResults) should be(true)
   }

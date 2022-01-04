@@ -1,6 +1,6 @@
 package com.databricks.mosaic.expressions.index
 
-import com.databricks.mosaic.core.geometry.GeometryAPI
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystemID
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}

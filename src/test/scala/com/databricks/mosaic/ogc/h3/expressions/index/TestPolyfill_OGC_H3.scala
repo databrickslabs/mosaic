@@ -1,6 +1,6 @@
-package com.databricks.mosaic.ogc.h3.index
+package com.databricks.mosaic.ogc.h3.expressions.index
 
-import com.databricks.mosaic.core.geometry.GeometryAPI.OGC
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.OGC
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getBoroughs
@@ -78,7 +78,7 @@ case class TestPolyfill_OGC_H3() extends FunSuite with SparkTest with Matchers {
     boroughs.collect().length shouldEqual mosaics2.length
   }
 
-  ignore("Polyfill of a COORDS polygon") {
+  test("Polyfill of a COORDS polygon") {
     mosaicContext.register(spark)
 
     val boroughs: DataFrame = getBoroughs

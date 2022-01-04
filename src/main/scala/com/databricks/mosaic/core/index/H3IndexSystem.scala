@@ -1,9 +1,10 @@
 package com.databricks.mosaic.core.index
 
-import com.databricks.mosaic.core.geometry.{GeometryAPI, MosaicGeometry, MosaicPointOGC}
+import com.databricks.mosaic.core.geometry.MosaicGeometry
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.types.model.MosaicChip
 import com.uber.h3core.H3Core
-import org.locationtech.jts.geom.{Coordinate, Geometry}
+import org.locationtech.jts.geom.Geometry
 
 import java.{lang, util}
 import scala.collection.JavaConverters._
@@ -119,7 +120,7 @@ object H3IndexSystem extends IndexSystem {
   override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
     val boundary = h3.h3ToGeoBoundary(index).asScala
     val extended = boundary ++ List(boundary.head)
-    geometryAPI.geometry(extended.map(geometryAPI.fromGeoGoord))
+    geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord))
   }
 
   /**

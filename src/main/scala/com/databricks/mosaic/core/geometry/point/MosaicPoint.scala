@@ -1,4 +1,4 @@
-package com.databricks.mosaic.core.geometry
+package com.databricks.mosaic.core.geometry.point
 
 import com.uber.h3core.util.GeoCoord
 import org.locationtech.jts.geom.Coordinate
@@ -17,4 +17,5 @@ trait MosaicPoint {
 
   def coord: Coordinate
 
+  def asSeq: Seq[Double]
 }

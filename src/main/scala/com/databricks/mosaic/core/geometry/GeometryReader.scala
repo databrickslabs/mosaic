@@ -1,7 +1,12 @@
 package com.databricks.mosaic.core.geometry
 
+import com.databricks.mosaic.core.geometry.point.MosaicPoint
+import org.apache.spark.sql.catalyst.InternalRow
 
-trait GeometryReaders {
+trait GeometryReader {
+
+  def fromInternal(row: InternalRow): MosaicGeometry
+
   def fromWKB(wkb: Array[Byte]): MosaicGeometry
 
   def fromWKT(wkt: String): MosaicGeometry
@@ -11,4 +16,5 @@ trait GeometryReaders {
   def fromHEX(hex: String): MosaicGeometry
 
   def fromPoints(points: Seq[MosaicPoint]): MosaicGeometry
+
 }

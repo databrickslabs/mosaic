@@ -1,12 +1,11 @@
 package com.databricks.mosaic.jts.h3.expressions.geometry
 
-import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.{getHexRowsDf, getWKTRowsDf}
 import com.databricks.mosaic.test.SparkTest
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{col, rand}
 import org.scalatest.{FunSuite, Matchers}
 
 class TestTypeCheck_JTS_H3 extends FunSuite with Matchers with SparkTest {

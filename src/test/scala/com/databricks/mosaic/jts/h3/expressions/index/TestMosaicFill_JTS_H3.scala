@@ -1,6 +1,6 @@
 package com.databricks.mosaic.jts.h3.expressions.index
 
-import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getBoroughs

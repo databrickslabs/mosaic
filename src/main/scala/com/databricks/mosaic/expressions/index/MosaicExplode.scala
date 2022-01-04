@@ -1,7 +1,7 @@
 package com.databricks.mosaic.expressions.index
 
 import com.databricks.mosaic.core.Mosaic
-import com.databricks.mosaic.core.geometry.GeometryAPI
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystemID
 import com.databricks.mosaic.core.types.{ChipType, HexType, InternalGeometryType}
 import org.apache.spark.sql.catalyst.InternalRow

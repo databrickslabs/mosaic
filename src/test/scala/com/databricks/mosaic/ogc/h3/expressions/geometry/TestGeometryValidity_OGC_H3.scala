@@ -1,6 +1,6 @@
-package com.databricks.mosaic.ogc.h3.geometry
+package com.databricks.mosaic.ogc.h3.expressions.geometry
 
-import com.databricks.mosaic.core.geometry.GeometryAPI.OGC
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.OGC
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getWKTRowsDf
@@ -16,41 +16,55 @@ class TestGeometryValidity_OGC_H3 extends FunSuite with SparkTest with Matchers 
   import mosaicContext.functions._
 
   test("Calling st_xmin() should return the minimum x value from all coordinates in the geometry") {
-    val df = getWKTRowsDf.withColumn("result", st_xmin(col("wkt")))
-    val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(10, 0, 10, 10).map(_.asInstanceOf[Double])
+    val ss = spark
+    import ss.implicits._
+
+    val df = getWKTRowsDf.select(st_xmin(col("wkt")))
+    val results = df.as[Double].collect()
+    val expected = List(10.0, 0.0, 10.0, 10.0)
 
     results should contain theSameElementsAs expected
   }
 
   test("Calling st_xmax() should return the maximum x value from all coordinates in the geometry") {
-    val df = getWKTRowsDf.withColumn("result", st_xmax(col("wkt")))
-    val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(40, 2, 110, 45).map(_.asInstanceOf[Double])
+    val ss = spark
+    import ss.implicits._
+
+    val df = getWKTRowsDf.select(st_xmax(col("wkt")))
+    val results = df.as[Double].collect()
+    val expected = List(40.0, 2.0, 110.0, 45.0)
 
     results should contain theSameElementsAs expected
   }
 
   test("Calling st_ymin() should return the minimum y value from all coordinates in the geometry") {
-    val df = getWKTRowsDf.withColumn("result", st_ymin(col("wkt")))
-    val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(10, 0, 10, 5).map(_.asInstanceOf[Double])
+    val ss = spark
+    import ss.implicits._
+
+    val df = getWKTRowsDf.select(st_ymin(col("wkt")))
+    val results = df.as[Double].collect()
+    val expected = List(10.0, 0.0, 10.0, 5.0)
 
     results should contain theSameElementsAs expected
   }
 
   test("Calling st_ymax() should return the maximum y value from all coordinates in the geometry") {
-    val df = getWKTRowsDf.withColumn("result", st_ymax(col("wkt")))
-    val results = df.collect().map(_.getDouble(1)).toList
-    val expected = List(40, 2, 110, 60).map(_.asInstanceOf[Double])
+    val ss = spark
+    import ss.implicits._
+
+    val df = getWKTRowsDf.select(st_ymax(col("wkt")))
+    val results = df.as[Double].collect()
+    val expected = List(40.0, 2.0, 110.0, 60.0)
 
     results should contain theSameElementsAs expected
   }
 
   test("Calling st_isvalid() on a valid geometry should return true.") {
+    val ss = spark
+    import ss.implicits._
 
-    val df = getWKTRowsDf.withColumn("result", st_isvalid(col("wkt")))
-    val results = df.collect().map(_.getBoolean(1)).toList
+    val df = getWKTRowsDf.select(st_isvalid(col("wkt")))
+    val results = df.as[Boolean].collect().toSeq
 
     all(results) should be(true)
   }
@@ -80,7 +94,8 @@ class TestGeometryValidity_OGC_H3 extends FunSuite with SparkTest with Matchers 
       ), // Duplicated Rings
       List("POLYGON((2 2, 8 2))"), // Too Few Points
       List("POLYGON((NaN 3, 3 4, 4 4, 4 3, 3 3))"), // Invalid Coordinate
-      List("POLYGON((0 0, 0 10, 10 10, 10 0))") // Ring Not Closed
+      // List("POLYGON((0 0, 0 10, 10 10, 10 0))") // Ring Not Closed
+      // OGC API closes not closed geometries automatically
     )
     val rows = invalidGeometries.map { x => Row(x: _*) }
     val rdd = spark.sparkContext.makeRDD(rows)

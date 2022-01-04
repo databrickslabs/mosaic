@@ -1,6 +1,7 @@
 package com.databricks.mosaic.core.index
 
-import com.databricks.mosaic.core.geometry.{GeometryAPI, MosaicGeometry}
+import com.databricks.mosaic.core.geometry.MosaicGeometry
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.types.model.MosaicChip
 
 import java.util

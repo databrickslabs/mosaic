@@ -5,7 +5,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.locationtech.jts.geom.{Geometry, GeometryFactory, Polygon}
+import org.locationtech.jts.geom.{Geometry, GeometryFactory}
 
 /**
  * A case class modeling Polygons and MultiPolygons.
@@ -24,23 +24,16 @@ case class InternalGeometry(
 ){
 
   /**
-   * Convert to JTS [[Geometry]] instance.
-   * @return An instance of [[Geometry]].
+   * Used for constructing a MultiPolygon instance by merging Polygon/MultiPolygon instances.
+   * @param other An instance of a Polygon/MultiPolygon.
+   * @return An instance of a MultiPolygon created by combining left and right instances.
    */
-  def toGeom: Geometry = {
-    val gf = new GeometryFactory()
-    def createPolygon(ind: Int) = {
-      val boundaryRing = gf.createLinearRing(boundaries(ind).map(_.toCoordinate))
-      val holesRings = holes(ind).map(hole => gf.createLinearRing(hole.map(_.toCoordinate)))
-      gf.createPolygon(boundaryRing, holesRings)
-    }
-    typeName match {
-      case "Polygon" =>
-        createPolygon(0)
-      case "MultiPolygon" =>
-        val polygons = for(i <- boundaries.indices) yield createPolygon(i)
-        gf.createMultiPolygon(polygons.toArray)
-    }
+  def merge(other: InternalGeometry): InternalGeometry = {
+    InternalGeometry(
+      "MultiPolygon",
+      this.boundaries ++ other.boundaries,
+      this.holes ++ other.holes
+    )
   }
 
   /**
@@ -65,50 +58,6 @@ case class InternalGeometry(
 
 /** Companion object. */
 object InternalGeometry {
-
-  /**
-   * Converts a Polygon to an instance of [[InternalGeometry]].
-   * @param g An instance of Polygon to be converted.
-   * @param typeName Type name to used to construct the instance
-   *                 of [[InternalGeometry]].
-   * @return An instance of [[InternalGeometry]].
-   */
-  private def fromPolygon(g: Polygon, typeName: String): InternalGeometry = {
-    val boundary = g.getBoundary
-    val shell = boundary.getGeometryN(0).getCoordinates.map(InternalCoord(_))
-    val holes = for (i <- 1 until boundary.getNumGeometries) yield boundary.getGeometryN(i).getCoordinates.map(InternalCoord(_))
-    new InternalGeometry(typeName, Array(shell), Array(holes.toArray))
-  }
-
-  /**
-   * Used for constructing a MultiPolygon instance by merging Polygon/MultiPolygon instances.
-   * @param left An instance of a Polygon/MultiPolygon.
-   * @param right An instance of a Polygon/MultiPolygon.
-   * @return An instance of a MultiPolygon created by combining left and right instances.
-   */
-  private def merge(left: InternalGeometry, right: InternalGeometry): InternalGeometry = {
-    InternalGeometry(
-      "MultiPolygon",
-      left.boundaries ++ right.boundaries,
-      left.holes ++ right.holes
-    )
-  }
-
-  /**
-   * A smart constructor that construct an instance of [[InternalGeometry]]
-   * based on an instance of [[Geometry]] corresponding to a Polygon or MultiPolygon.
-   * @param g An instance of [[Geometry]].
-   * @return An instance of [[InternalGeometry]].
-   */
-  def apply(g: Geometry): InternalGeometry = {
-    g.getGeometryType match {
-      case "Polygon" =>
-        fromPolygon(g.asInstanceOf[Polygon], "Polygon")
-      case "MultiPolygon" =>
-        val geoms = for (i <- 0 until g.getNumGeometries) yield fromPolygon(g.getGeometryN(i).asInstanceOf[Polygon], "MultiPolygon")
-        geoms.reduce(merge)
-    }
-  }
 
   /**
    * A smart constructor that construct an instance of [[InternalGeometry]]

@@ -1,6 +1,6 @@
-package com.databricks.mosaic.ogc.h3.geometry
+package com.databricks.mosaic.ogc.h3.expressions.geometry
 
-import com.databricks.mosaic.core.geometry.GeometryAPI.OGC
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.OGC
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getWKTRowsDf
@@ -48,10 +48,12 @@ class TestFlattenPolygon_OGC_H3 extends FunSuite with SparkTest with Matchers {
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
       .flatMap(g => for(i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
+      .map(_.getCentroid) // proxy to avoid clockwise vs anti-clockwise
 
     val flattenedGeoms = flattened
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+      .map(_.getCentroid)
 
     flattenedGeoms should contain theSameElementsAs geoms
   }
@@ -72,12 +74,14 @@ class TestFlattenPolygon_OGC_H3 extends FunSuite with SparkTest with Matchers {
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
       .flatMap(g => for(i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
+      .map(_.getCentroid) // proxy to avoid clockwise vs anti-clockwise
 
     val flattenedGeoms = flattened
       .withColumn("wkt", convert_to(col("coords"), "wkt"))
       .select("wkt")
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
+      .map(_.getCentroid)
 
     flattenedGeoms should contain theSameElementsAs geoms
   }

@@ -1,6 +1,8 @@
-package com.databricks.mosaic.core.geometry
+package com.databricks.mosaic.core.geometry.multipolygon
 
-import org.locationtech.jts.geom.{MultiPolygon, Polygon}
+import com.databricks.mosaic.core.geometry.point.MosaicPoint
+import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonJTS
+import org.locationtech.jts.geom.{Geometry, MultiPolygon, Polygon}
 
 case class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicMultiPolygon {
 
@@ -16,7 +18,7 @@ case class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicMulti
 
   override def getHolePoints: Seq[Seq[MosaicPoint]] = {
     val n = multiPolygon.getNumGeometries
-    val holeGroups = for(i <- 0 until n)
+    val holeGroups = for (i <- 0 until n)
       yield {
         val polygon = MosaicPolygonJTS(multiPolygon.getGeometryN(i).asInstanceOf[Polygon])
         polygon.getHolePoints
@@ -24,5 +26,11 @@ case class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicMulti
     val holePoints = holeGroups.reduce(_ ++ _)
     holePoints
   }
+
+}
+
+object MosaicMultiPolygonJTS {
+
+  def apply(multiPolygon: Geometry) = new MosaicMultiPolygonJTS(multiPolygon.asInstanceOf[MultiPolygon])
 
 }

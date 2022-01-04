@@ -1,8 +1,8 @@
 package com.databricks.mosaic.jts.h3.expressions.format
 
-import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
+import com.databricks.mosaic.core.geometry.MosaicGeometryJTS
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
-import com.databricks.mosaic.expressions.format.Conversions.typed
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.{getGeoJSONDf, getHexRowsDf, getWKTRowsDf}
 import com.databricks.mosaic.test.SparkTest
@@ -76,13 +76,15 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     val right = hexDf
       .select("hex")
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     left should contain allElementsOf right
 
@@ -94,14 +96,16 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     val right2 = spark.sql(
         "select hex from format_testing_right"
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     left2 should contain allElementsOf right2
   }
@@ -280,13 +284,15 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     val right = hexDf
       .select("hex")
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     left should contain allElementsOf right
 
@@ -298,14 +304,16 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     val right2 = spark.sql(
       "select hex from format_testing_right"
     )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     left2 should contain allElementsOf right2
   }
@@ -462,13 +470,15 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(MosaicGeometryJTS.fromWKT)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     val right = wktDf
       .select("wkt")
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(MosaicGeometryJTS.fromWKT)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     right should contain allElementsOf left
 
@@ -480,14 +490,16 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(MosaicGeometryJTS.fromWKT)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     val right2 = spark.sql(
         "select wkt from format_testing_right"
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(MosaicGeometryJTS.fromWKT)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     right2 should contain allElementsOf left2
   }
@@ -538,20 +550,19 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     val ss = spark
     import ss.implicits._
 
-    val hexDf: DataFrame = getHexRowsDf
+    val hexDf: DataFrame = getHexRowsDf.orderBy("id")
       .select(as_hex($"hex").alias("hex"))
-    val geojsonDf: DataFrame = getGeoJSONDf
+    val geojsonDf: DataFrame = getGeoJSONDf.orderBy("id")
 
     val left: Array[String] = hexDf
       .select(
         convert_to($"hex", "geojson").getItem("json").alias("geojson")
       )
-      .orderBy("geojson")
       .as[String]
       .collect()
 
     val right: Array[String] = geojsonDf
-      .orderBy("geojson")
+      .select("geojson")
       .as[String]
       .collect()
 
@@ -561,15 +572,14 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     geojsonDf.createOrReplaceTempView("format_testing_right")
 
     val left2: Array[String] = spark.sql(
-      "select convert_to_geojson(hex)['json'] as geojson from format_testing_left"
-    )
-      .orderBy("geojson")
+        "select convert_to_geojson(hex)['json'] as geojson from format_testing_left"
+      )
       .as[String]
       .collect()
+
     val right2: Array[String] = spark.sql(
-      "select geojson from format_testing_right"
-    )
-      .orderBy("geojson")
+        "select geojson from format_testing_right"
+      )
       .as[String]
       .collect()
 
@@ -581,56 +591,61 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     val ss = spark
     import ss.implicits._
 
-    val hexDf: DataFrame = getHexRowsDf
+    val hexDf: DataFrame = getHexRowsDf.orderBy("id")
       .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
-    val wkbDf: DataFrame = getWKTRowsDf
+    val wkbDf: DataFrame = getWKTRowsDf.orderBy("id")
       .withColumn("wkb", convert_to($"wkt", "WKB"))
 
-    val left: Array[Any] = hexDf
+    val left = hexDf
       .select(
         convert_to($"coords", "WKB").alias("wkb")
       )
+      .as[Array[Byte]]
       .collect()
-      .map(_.toSeq.head.asInstanceOf[Array[Byte]])
-      .map(typed.wkb2geom)
+      .map(MosaicGeometryJTS.fromWKB)
 
-    val right: Array[Any] = wkbDf
+    val right = wkbDf
       .select("wkb")
+      .as[Array[Byte]]
       .collect()
-      .map(_.toSeq.head.asInstanceOf[Array[Byte]])
-      .map(typed.wkb2geom)
+      .map(MosaicGeometryJTS.fromWKB)
 
-
-    right should contain allElementsOf left
+    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
 
     hexDf.createOrReplaceTempView("format_testing_left")
     wkbDf.createOrReplaceTempView("format_testing_right")
 
-    val left2: Array[Any] = spark.sql(
-      "select convert_to_wkb(coords) as wkb from format_testing_left"
-    ).collect().map(_.toSeq.head)
-    val right2: Array[Any] = spark.sql(
-      "select wkb from format_testing_right"
-    ).collect().map(_.toSeq.head)
+    val left2 = spark.sql(
+        "select convert_to_wkb(coords) as wkb from format_testing_left"
+      )
+      .as[Array[Byte]]
+      .collect()
+      .map(MosaicGeometryJTS.fromWKB)
 
-    right2 should contain allElementsOf left2
+    val right2 = spark.sql(
+        "select wkb from format_testing_right"
+      )
+      .as[Array[Byte]]
+      .collect()
+      .map(MosaicGeometryJTS.fromWKB)
+
+    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
 
     val left3  = hexDf
       .select(st_asbinary($"coords").alias("wkb"))
+      .as[Array[Byte]]
       .collect()
-      .map(_.toSeq.head.asInstanceOf[Array[Byte]])
-      .map(typed.wkb2geom)
+      .map(MosaicGeometryJTS.fromWKB)
 
-    left3 should contain allElementsOf right
+    right.zip(left3).foreach{ case (l, r) => l.equals(r) shouldEqual true }
 
     val left4  = hexDf
       .select(st_aswkb($"coords").alias("wkb"))
+      .as[Array[Byte]]
       .collect()
-      .map(_.toSeq.head.asInstanceOf[Array[Byte]])
-      .map(typed.wkb2geom)
+      .map(MosaicGeometryJTS.fromWKB)
 
-    left4 should contain allElementsOf right
-
+    right.zip(left4).foreach{ case (l, r) => l.equals(r) shouldEqual true }
 
   }
 
@@ -639,24 +654,24 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     val ss = spark
     import ss.implicits._
 
-    val hexDf = getHexRowsDf
+    val hexDf = getHexRowsDf.orderBy("id")
       .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
-    val wktDf = getWKTRowsDf
+    val wktDf = getWKTRowsDf.orderBy("id")
 
     val left = hexDf.select(
         convert_to($"coords", "wkt").alias("wkt").cast("string")
       )
+      .as[String]
       .collect()
-      .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(MosaicGeometryJTS.fromWKT)
 
     val right = wktDf
       .select("wkt")
+      .as[String]
       .collect()
-      .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(MosaicGeometryJTS.fromWKT)
 
-    right should contain allElementsOf left
+    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
 
     hexDf.createOrReplaceTempView("format_testing_left")
     wktDf.createOrReplaceTempView("format_testing_right")
@@ -664,36 +679,36 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     val left2 = spark.sql(
         "select convert_to_wkt(coords) as wkt from format_testing_left"
       )
+      .as[String]
       .collect()
-      .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(MosaicGeometryJTS.fromWKT)
 
     val right2 = spark.sql(
         "select wkt from format_testing_right"
       )
+      .as[String]
       .collect()
-      .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(MosaicGeometryJTS.fromWKT)
 
-    right2 should contain allElementsOf left2
+    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
 
     val left3 = hexDf.select(
         st_astext($"coords").alias("wkt")
       )
+      .as[String]
       .collect()
-      .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(MosaicGeometryJTS.fromWKT)
 
-    left3 should contain allElementsOf right
+    right.zip(left3).foreach{ case (l, r) => l.equals(r) shouldEqual true }
 
     val left4 = hexDf.select(
         st_aswkt($"coords").alias("wkt")
       )
+      .as[String]
       .collect()
-      .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.wkt2geom)
+      .map(MosaicGeometryJTS.fromWKT)
 
-    left4 should contain allElementsOf right
+    right.zip(left4).foreach{ case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from COORDS to HEX") {
@@ -710,13 +725,15 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     val right = hexDf
       .select("hex")
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     left should contain allElementsOf right
 
@@ -728,14 +745,16 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     val right2 = spark.sql(
         "select hex from format_testing_right"
       )
       .collect()
       .map(_.toSeq.head.asInstanceOf[String])
-      .map(typed.hex2geom)
+      .map(MosaicGeometryJTS.fromHEX)
+      .map(_.asInstanceOf[MosaicGeometryJTS].geom)
 
     left2 should contain allElementsOf right2
   }
@@ -745,21 +764,20 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     val ss = spark
     import ss.implicits._
 
-    val coordsDf: DataFrame = getHexRowsDf
+    val coordsDf: DataFrame = getHexRowsDf.orderBy("id")
       .select(as_hex($"hex").alias("hex"))
       .withColumn("coords", convert_to($"hex", "coords"))
-    val geojsonDf: DataFrame = getGeoJSONDf
+    val geojsonDf: DataFrame = getGeoJSONDf.orderBy("id")
 
-    val left: Array[String] = coordsDf
+    val left = coordsDf
       .select(
         convert_to($"coords", "geojson").getItem("json").alias("geojson")
       )
-      .orderBy("geojson")
       .as[String]
       .collect()
 
     val right: Array[String] = geojsonDf
-      .orderBy("geojson")
+      .select("geojson")
       .as[String]
       .collect()
 
@@ -769,15 +787,14 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     geojsonDf.createOrReplaceTempView("format_testing_right")
 
     val left2: Array[String] = spark.sql(
-      "select convert_to_geojson(coords)['json'] as geojson from format_testing_left"
-    )
-      .orderBy("geojson")
+        "select convert_to_geojson(coords)['json'] as geojson from format_testing_left"
+      )
       .as[String]
       .collect()
+
     val right2: Array[String] = spark.sql(
-      "select geojson from format_testing_right"
-    )
-      .orderBy("geojson")
+        "select geojson from format_testing_right"
+      )
       .as[String]
       .collect()
 
@@ -787,7 +804,6 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       .select(
         st_asgeojson($"coords").getItem("json").alias("geojson")
       )
-      .orderBy("geojson")
       .as[String]
       .collect()
 
@@ -841,8 +857,8 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     val ss = spark
     import ss.implicits._
 
-    val geojsonDf: DataFrame = getGeoJSONDf
-    val wktDf: DataFrame = getWKTRowsDf
+    val geojsonDf: DataFrame = getGeoJSONDf.orderBy("id")
+    val wktDf: DataFrame = getWKTRowsDf.orderBy("id")
 
     val left: Array[String] = geojsonDf
       .withColumn("geojson", as_json($"geojson"))
@@ -853,6 +869,7 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
 
     val right: Array[String] = wktDf
+      .select("wkt")
       .as[String]
       .collect()
 
@@ -862,13 +879,14 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     wktDf.createOrReplaceTempView("format_testing_right")
 
     val left2: Array[String] = spark.sql(
-      "select convert_to_wkt(as_json(geojson)) as wkt from format_testing_left"
-    )
+        "select convert_to_wkt(as_json(geojson)) as wkt from format_testing_left"
+      )
       .as[String]
       .collect()
+
     val right2: Array[String] = spark.sql(
-      "select wkt from format_testing_right"
-    )
+        "select wkt from format_testing_right"
+      )
       .as[String]
       .collect()
 
@@ -880,8 +898,8 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     val ss = spark
     import ss.implicits._
 
-    val geojsonDf: DataFrame = getGeoJSONDf
-    val hexDf: DataFrame = getHexRowsDf
+    val geojsonDf: DataFrame = getGeoJSONDf.orderBy("id")
+    val hexDf: DataFrame = getHexRowsDf.orderBy("id")
 
     val left: Array[String] = geojsonDf
       .withColumn("geojson", as_json($"geojson"))
@@ -892,6 +910,7 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
 
     val right: Array[String] = hexDf
+      .select("hex")
       .as[String]
       .collect()
 
@@ -901,13 +920,14 @@ class TestConvertTo_JTS_H3 extends FunSuite with SparkTest with Matchers with Js
     hexDf.createOrReplaceTempView("format_testing_right")
 
     val left2: Array[String] = spark.sql(
-      "select convert_to_hex(as_json(geojson))['hex'] as hex from format_testing_left"
-    )
+        "select convert_to_hex(as_json(geojson))['hex'] as hex from format_testing_left"
+      )
       .as[String]
       .collect()
+
     val right2: Array[String] = spark.sql(
-      "select hex from format_testing_right"
-    )
+        "select hex from format_testing_right"
+      )
       .as[String]
       .collect()
 

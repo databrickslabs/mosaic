@@ -1,11 +1,14 @@
 package com.databricks.mosaic.expressions.geometry
-import com.databricks.mosaic.core.geometry.GeometryAPI.JTS
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
-import org.scalatest._
-import com.databricks.mosaic.test.SparkTest
-import org.locationtech.jts.io.WKTReader
 import com.databricks.mosaic.mocks
+import com.databricks.mosaic.test.SparkTest
+import org.locationtech.jts.geom.Geometry
+import org.locationtech.jts.io.WKTReader
+import org.scalatest._
+
+import scala.collection.immutable
 
 class TestGeometryProcessors extends FunSuite with Matchers with SparkTest {
 
@@ -13,7 +16,7 @@ class TestGeometryProcessors extends FunSuite with Matchers with SparkTest {
   import mosaicContext.functions._
 
   val wktReader = new WKTReader()
-  val referenceGeoms = mocks.wkt_rows.map(g => wktReader.read(g.head))
+  val referenceGeoms: immutable.Seq[Geometry] = mocks.wkt_rows.map(_.last.asInstanceOf[String]).map(wktReader.read)
 
   test("Test area calculation") {
     mosaicContext.register(spark)

@@ -1,6 +1,6 @@
 package com.databricks.mosaic.functions
 
-import com.databricks.mosaic.core.geometry.GeometryAPI
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystem
 import com.databricks.mosaic.expressions.format.{AsHex, AsJSON, ConvertTo}
 import com.databricks.mosaic.expressions.geometry._
@@ -35,6 +35,30 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
 
     /** GeometryAPI Specific */
     registry.registerFunction(FunctionIdentifier("flatten_polygons", database), (exprs: Seq[Expression]) => FlattenPolygons(exprs(0), geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_xmax", database), (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "X", "MAX"))
+    registry.registerFunction(FunctionIdentifier("st_xmin", database), (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "X", "MIN"))
+    registry.registerFunction(FunctionIdentifier("st_ymax", database), (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "Y", "MAX"))
+    registry.registerFunction(FunctionIdentifier("st_ymin", database), (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "Y", "MIN"))
+    registry.registerFunction(FunctionIdentifier("st_zmax", database), (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "Z", "MAX"))
+    registry.registerFunction(FunctionIdentifier("st_zmin", database), (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "Z", "MIN"))
+    registry.registerFunction(FunctionIdentifier("st_isvalid", database), (exprs: Seq[Expression]) => ST_IsValid(exprs(0), geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_geometrytype", database), (exprs: Seq[Expression]) => ST_GeometryType(exprs(0), geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_area", database), (exprs: Seq[Expression]) => ST_Area(exprs(0), geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_centroid2D", database), (exprs: Seq[Expression]) => ST_Centroid(exprs(0), geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_centroid3D", database), (exprs: Seq[Expression]) => ST_Centroid(exprs(0), geometryAPI.name, 3))
+    registry.registerFunction(FunctionIdentifier("st_geomfromwkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_geomfromwkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_geomfromgeojson", database), (exprs: Seq[Expression]) => ConvertTo(AsJSON(exprs(0)), "coords", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("convert_to_hex", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "hex", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("convert_to_wkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("convert_to_wkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("convert_to_coords", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("convert_to_geojson", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_aswkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_astext", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_aswkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_asbinary", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_asgeojson", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson", geometryAPI.name))
 
     /** IndexSystem Specific */
 
@@ -51,28 +75,7 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     //They cant be passed as Expressions to ConvertTo Expression.
     //Instead they are passed as String instances and for SQL
     //parser purposes separate method names are defined.
-    registry.registerFunction(FunctionIdentifier("st_geomfromwkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords"))
-    registry.registerFunction(FunctionIdentifier("st_geomfromwkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords"))
-    registry.registerFunction(FunctionIdentifier("st_geomfromgeojson", database), (exprs: Seq[Expression]) => ConvertTo(AsJSON(exprs(0)), "coords"))
-    registry.registerFunction(FunctionIdentifier("convert_to_hex", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "hex"))
-    registry.registerFunction(FunctionIdentifier("convert_to_wkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))
-    registry.registerFunction(FunctionIdentifier("convert_to_wkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb"))
-    registry.registerFunction(FunctionIdentifier("convert_to_coords", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords"))
-    registry.registerFunction(FunctionIdentifier("convert_to_geojson", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson"))
-    registry.registerFunction(FunctionIdentifier("st_xmax", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "X", "MAX"))
-    registry.registerFunction(FunctionIdentifier("st_xmin", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "X", "MIN"))
-    registry.registerFunction(FunctionIdentifier("st_ymax", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "Y", "MAX"))
-    registry.registerFunction(FunctionIdentifier("st_ymin", database), (exprs: Seq[Expression]) => ST_MinMaxXY(exprs(0), "Y", "MIN"))
-    registry.registerFunction(FunctionIdentifier("st_isvalid", database), (exprs: Seq[Expression]) => ST_IsValid(exprs(0)))
-    registry.registerFunction(FunctionIdentifier("st_geometrytype", database), (exprs: Seq[Expression]) => ST_GeometryType(exprs(0)))
-    registry.registerFunction(FunctionIdentifier("st_area", database), (exprs: Seq[Expression]) => ST_Area(exprs(0)))
-    registry.registerFunction(FunctionIdentifier("st_centroid2D", database), (exprs: Seq[Expression]) => ST_Centroid(exprs(0)))
-    registry.registerFunction(FunctionIdentifier("st_centroid3D", database), (exprs: Seq[Expression]) => ST_Centroid(exprs(0), 3))
-    registry.registerFunction(FunctionIdentifier("st_aswkt", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))
-    registry.registerFunction(FunctionIdentifier("st_astext", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt"))
-    registry.registerFunction(FunctionIdentifier("st_aswkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb"))
-    registry.registerFunction(FunctionIdentifier("st_asbinary", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb"))
-    registry.registerFunction(FunctionIdentifier("st_asgeojson", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson"))
+
     registry.registerFunction(FunctionIdentifier("st_dump", database), (exprs: Seq[Expression]) => FlattenPolygons(exprs(0), geometryAPI.name))
 
     //Not specific to Mosaic
@@ -81,12 +84,33 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
 
   object functions {
     /** IndexSystem and GeometryAPI Agnostic methods */
-    def convert_to(inGeom: Column, outDataType: String): Column = ColumnAdapter(ConvertTo(inGeom.expr, outDataType))
     def as_hex(inGeom: Column): Column = ColumnAdapter(AsHex(inGeom.expr))
     def as_json(inGeom: Column): Column = ColumnAdapter(AsJSON(inGeom.expr))
 
     /** GeometryAPI Specific */
     def flatten_polygons(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
+    def st_xmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "X", "MAX"))
+    def st_xmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "X", "MIN"))
+    def st_ymax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Y", "MAX"))
+    def st_ymin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Y", "MIN"))
+    def st_zmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Z", "MAX"))
+    def st_zmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Z", "MIN"))
+    def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr, geometryAPI.name))
+    def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr, geometryAPI.name))
+    def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr, geometryAPI.name))
+    def st_centroid2D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, geometryAPI.name))
+    def st_centroid3D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, geometryAPI.name, 3))
+    def convert_to(inGeom: Column, outDataType: String): Column = ColumnAdapter(ConvertTo(inGeom.expr, outDataType, geometryAPI.name))
+    def st_geomfromwkt(inGeom: Column): Column = ColumnAdapter(ConvertTo(inGeom.expr, "coords", geometryAPI.name))
+    def st_geomfromwkb(inGeom: Column): Column = ColumnAdapter(ConvertTo(inGeom.expr, "coords", geometryAPI.name))
+    def st_geomfromgeojson(inGeom: Column): Column = ColumnAdapter(ConvertTo(AsJSON(inGeom.expr), "coords", geometryAPI.name))
+    def st_aswkt(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt", geometryAPI.name))
+    def st_astext(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt", geometryAPI.name))
+    def st_aswkb(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb", geometryAPI.name))
+    def st_asbinary(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb", geometryAPI.name))
+    def st_asgeojson(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "geojson", geometryAPI.name))
+    def st_dump(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
+
 
     /** IndexSystem Specific */
     def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
@@ -100,27 +124,6 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     def point_index(lat: Column, lng: Column, resolution: Int): Column = ColumnAdapter(PointIndex(lat.expr, lng.expr, lit(resolution).expr, indexSystem.name))
     def polyfill(geom: Column, resolution: Column): Column = ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
     def polyfill(geom: Column, resolution: Int): Column = ColumnAdapter(Polyfill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
-
-
-    def st_xmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "X", "MAX"))
-    def st_xmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "X", "MIN"))
-    def st_ymax(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "Y", "MAX"))
-    def st_ymin(geom: Column): Column = ColumnAdapter(ST_MinMaxXY(geom.expr, "Y", "MIN"))
-    def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr))
-    def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr))
-    def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr))
-    def st_centroid2D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr))
-    def st_centroid3D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, 3))
-
-    def st_geomfromwkt(inGeom: Column): Column = ColumnAdapter(ConvertTo(inGeom.expr, "coords"))
-    def st_geomfromwkb(inGeom: Column): Column = ColumnAdapter(ConvertTo(inGeom.expr, "coords"))
-    def st_geomfromgeojson(inGeom: Column): Column = ColumnAdapter(ConvertTo(AsJSON(inGeom.expr), "coords"))
-    def st_aswkt(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt"))
-    def st_astext(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt"))
-    def st_aswkb(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb"))
-    def st_asbinary(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb"))
-    def st_asgeojson(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "geojson"))
-    def st_dump(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
 
     //Not specific to Mosaic
     def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))

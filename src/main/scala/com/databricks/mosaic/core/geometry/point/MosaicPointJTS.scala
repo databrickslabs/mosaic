@@ -1,4 +1,4 @@
-package com.databricks.mosaic.core.geometry
+package com.databricks.mosaic.core.geometry.point
 
 import com.uber.h3core.util.GeoCoord
 import org.locationtech.jts.geom.{Coordinate, GeometryFactory, Point}
@@ -19,6 +19,12 @@ case class MosaicPointJTS(point: Point) extends MosaicPoint {
   override def geoCoord: GeoCoord = new GeoCoord(point.getY, point.getX)
 
   override def coord: Coordinate = new Coordinate(point.getX, point.getY)
+
+  override def asSeq: Seq[Double] = if (point.getCoordinates.length == 2) {
+    Seq(getX, getY)
+  } else {
+    Seq(getX, getY, getZ)
+  }
 }
 
 object MosaicPointJTS {
