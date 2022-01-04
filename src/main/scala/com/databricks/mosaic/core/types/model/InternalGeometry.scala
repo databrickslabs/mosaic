@@ -1,6 +1,6 @@
 package com.databricks.mosaic.core.types.model
 
-import org.locationtech.jts.geom.{Geometry, GeometryFactory, Polygon}
+import org.locationtech.jts.geom.{Geometry, GeometryFactory, LineString, MultiPoint, Point, Polygon}
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -8,6 +8,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
 import com.databricks.mosaic.core.types.InternalCoordType
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
 
 /**
  * A case class modeling Polygons and MultiPolygons.
@@ -20,7 +21,7 @@ import com.databricks.mosaic.core.types.InternalCoordType
  *              sub Polygon.
  */
 case class InternalGeometry(
-   typeName: String,
+   typeId: Int,
    boundaries: Array[Array[InternalCoord]],
    holes: Array[Array[Array[InternalCoord]]]
 ) {
@@ -36,12 +37,24 @@ case class InternalGeometry(
       val holesRings = holes(ind).map(hole => gf.createLinearRing(hole.map(_.toCoordinate)))
       gf.createPolygon(boundaryRing, holesRings)
     }
-    typeName match {
-      case "Polygon" =>
+    GeometryTypeEnum.fromId(typeId) match {
+      case POINT =>
+        gf.createPoint(boundaries.head.map(_.toCoordinate).head)
+      case MULTIPOINT =>
+        gf.createMultiPointFromCoords(boundaries.map(p => p.head.toCoordinate))
+      case LINESTRING =>
+        gf.createLineString(boundaries.head.map(_.toCoordinate))
+      case MULTILINESTRING =>
+        val lineStrings = boundaries.map(
+          b => gf.createLineString(b.map(_.toCoordinate))
+        )
+        gf.createMultiLineString(lineStrings)
+      case POLYGON =>
         createPolygon(0)
-      case "MultiPolygon" =>
+      case MULTIPOLYGON =>
         val polygons = for (i <- boundaries.indices) yield createPolygon(i)
         gf.createMultiPolygon(polygons.toArray)
+
     }
   }
 
@@ -50,7 +63,7 @@ case class InternalGeometry(
    * @return An instance of [[InternalRow]].
    */
   def serialize: Any = InternalRow.fromSeq(Seq(
-      UTF8String.fromString(typeName),
+      typeId,
       ArrayData.toArrayData(
         boundaries.map(boundary => ArrayData.toArrayData(boundary.map(_.serialize)))
       ),
@@ -69,29 +82,50 @@ case class InternalGeometry(
 object InternalGeometry {
 
   /**
+   * Converts a Point to an instance of [[InternalGeometry]].
+   * @param g An instance of Point to be converted.
+   * @return An instance of [[InternalGeometry]].
+   */
+  private def fromPoint(g: Point, geometryType: Value): InternalGeometry = {
+    val shell = Array(InternalCoord(g.getCoordinate()))
+    new InternalGeometry(geometryType.id, Array(shell), Array(Array(Array())))
+  }
+
+  /**
+   * Converts a LineString to an instance of [[InternalGeometry]].
+   * @param g An instance of LineString to be converted.
+   * @return An instance of [[InternalGeometry]].
+   */
+  private def fromLineString(g: LineString, geometryType: Value): InternalGeometry = {
+    val shell = g.getCoordinates.map(c => InternalCoord(c))
+    new InternalGeometry(geometryType.id, Array(shell), Array(Array(Array())))
+  } 
+
+  /**
    * Converts a Polygon to an instance of [[InternalGeometry]].
    * @param g An instance of Polygon to be converted.
    * @param typeName Type name to used to construct the instance
    *                 of [[InternalGeometry]].
    * @return An instance of [[InternalGeometry]].
    */
-  private def fromPolygon(g: Polygon, typeName: String): InternalGeometry = {
+  private def fromPolygon(g: Polygon, geometryType: Value): InternalGeometry = {
     val boundary = g.getBoundary
     val shell = boundary.getGeometryN(0).getCoordinates.map(InternalCoord(_))
     val holes = for (i <- 1 until boundary.getNumGeometries)
       yield boundary.getGeometryN(i).getCoordinates.map(InternalCoord(_))
-    new InternalGeometry(typeName, Array(shell), Array(holes.toArray))
+    new InternalGeometry(geometryType.id, Array(shell), Array(holes.toArray))
   }
 
   /**
-   * Used for constructing a MultiPolygon instance by merging Polygon/MultiPolygon instances.
-   * @param left An instance of a Polygon/MultiPolygon.
-   * @param right An instance of a Polygon/MultiPolygon.
-   * @return An instance of a MultiPolygon created by combining left and right instances.
+   * Used for constructing a geometry collection by merging Point/MultiPoint,
+   * LineString/MultiLineString or Polygon/MultiPolygon instances.
+   * @param left An InternalGeometry instance.
+   * @param right An InternalGeometry instance.
+   * @return An InternalGeometry geometry collection created by combining left and right instances.
    */
   private def merge(left: InternalGeometry, right: InternalGeometry): InternalGeometry = {
     InternalGeometry(
-      "MultiPolygon",
+      left.typeId max right.typeId,
       left.boundaries ++ right.boundaries,
       left.holes ++ right.holes
     )
@@ -104,12 +138,24 @@ object InternalGeometry {
    * @return An instance of [[InternalGeometry]].
    */
   def apply(g: Geometry): InternalGeometry = {
-    g.getGeometryType match {
-      case "Polygon" =>
-        fromPolygon(g.asInstanceOf[Polygon], "Polygon")
-      case "MultiPolygon" =>
+    GeometryTypeEnum.fromString(g.getGeometryType) match {
+      case POINT =>
+        fromPoint(g.asInstanceOf[Point], POINT)
+      case MULTIPOINT =>
         val geoms = for (i <- 0 until g.getNumGeometries)
-          yield fromPolygon(g.getGeometryN(i).asInstanceOf[Polygon], "MultiPolygon")
+          yield fromPoint(g.getGeometryN(i).asInstanceOf[Point], MULTIPOINT)
+        geoms.reduce(merge)
+      case LINESTRING =>
+        fromLineString(g.asInstanceOf[LineString], LINESTRING)
+      case MULTILINESTRING =>
+        val geoms = for (i <- 0 until g.getNumGeometries)
+          yield fromLineString(g.getGeometryN(i).asInstanceOf[LineString], MULTILINESTRING)
+        geoms.reduce(merge)
+      case POLYGON =>
+        fromPolygon(g.asInstanceOf[Polygon], POLYGON)
+      case MULTIPOLYGON =>
+        val geoms = for (i <- 0 until g.getNumGeometries)
+          yield fromPolygon(g.getGeometryN(i).asInstanceOf[Polygon], MULTIPOLYGON)
         geoms.reduce(merge)
     }
   }
@@ -121,7 +167,7 @@ object InternalGeometry {
    * @return An instance of [[InternalGeometry]].
    */
   def apply(input: InternalRow): InternalGeometry = {
-    val typeName = input.get(0, StringType).asInstanceOf[UTF8String].toString
+    val typeId = input.getInt(0)
 
     val boundaries = input.getArray(1)
       .toObjectArray(ArrayType(ArrayType(InternalCoordType)))
@@ -139,7 +185,7 @@ object InternalGeometry {
             .map(c => InternalCoord(c.asInstanceOf[ArrayData])))
       )
 
-    new InternalGeometry(typeName, boundaries, holeGroups)
+    new InternalGeometry(typeId, boundaries, holeGroups)
   }
 
 }

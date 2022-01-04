@@ -20,13 +20,12 @@ class TestTypeCheck_OGC_H3 extends FunSuite with Matchers with SparkTest {
 
     val df = getWKTRowsDf
       .withColumn("result", st_geometrytype(col("wkt")))
-      .orderBy(rand(11)) //fix a specific ordering by fixing seed
       .select("result")
 
-    val results = df.as[String].collect().toList
-    val expected = List("POLYGON", "MULTIPOLYGON", "MULTIPOLYGON", "POLYGON")
+    val results = df.as[String].collect().toList.sorted
+    val expected = List("LINESTRING", "MULTILINESTRING", "MULTIPOINT", "MULTIPOLYGON", "MULTIPOLYGON", "POINT", "POLYGON", "POLYGON")
 
-    results should contain theSameElementsAs expected
+    results should contain theSameElementsInOrderAs expected
   }
 
   test("ST_GeometryType returns the correct geometry type string for hex-encoded WKB geometries") {
@@ -35,12 +34,11 @@ class TestTypeCheck_OGC_H3 extends FunSuite with Matchers with SparkTest {
 
     val df = getHexRowsDf
       .withColumn("result", st_geometrytype(as_hex(col("hex"))))
-      .orderBy(rand(11)) //fix a specific ordering by fixing seed
       .select("result")
 
-    val results = df.as[String].collect().toList
+    val results = df.as[String].collect().toList.sorted
 
-    val expected = List("POLYGON", "MULTIPOLYGON", "MULTIPOLYGON", "POLYGON")
-    results should contain theSameElementsAs expected
+    val expected = List("LINESTRING", "MULTILINESTRING", "MULTIPOINT", "MULTIPOLYGON", "MULTIPOLYGON", "POINT", "POLYGON", "POLYGON")
+    results should contain theSameElementsInOrderAs expected
   }
 }

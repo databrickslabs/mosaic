@@ -147,3 +147,6 @@ dmypy.json
 
 # spark
 spark-warehouse
+
+# MacOS
+.DS_Store
