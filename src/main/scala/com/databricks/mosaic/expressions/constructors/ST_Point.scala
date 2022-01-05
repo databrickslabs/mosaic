@@ -11,7 +11,7 @@ import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, 
 
 @ExpressionDescription(
   usage =
-    "_FUNC_(expr1) - Creates a new Point geometry from X and Y.",
+    "_FUNC_(expr1, expr2) - Creates a new Point geometry from X and Y.",
   examples =
     """
     Examples:
