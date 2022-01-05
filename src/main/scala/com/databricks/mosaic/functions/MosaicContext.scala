@@ -1,15 +1,17 @@
 package com.databricks.mosaic.functions
 
+import org.apache.spark.sql.{Column, SparkSession}
+import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.functions.{lit, struct}
+
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystem
+import com.databricks.mosaic.expressions.constructors.ST_Point
 import com.databricks.mosaic.expressions.format.{AsHex, AsJSON, ConvertTo}
 import com.databricks.mosaic.expressions.geometry._
 import com.databricks.mosaic.expressions.helper.TrySql
 import com.databricks.mosaic.expressions.index._
-import org.apache.spark.sql.catalyst.FunctionIdentifier
-import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.functions.{lit, struct}
-import org.apache.spark.sql.{Column, SparkSession}
 
 
 case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
@@ -35,7 +37,8 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     /** IndexSystem and GeometryAPI Agnostic methods */
     registry.registerFunction(FunctionIdentifier("as_hex", database), (exprs: Seq[Expression]) => AsHex(exprs(0)))
     registry.registerFunction(FunctionIdentifier("as_json", database), (exprs: Seq[Expression]) => AsJSON(exprs(0)))
-
+    registry.registerFunction(FunctionIdentifier("st_point", database), (exprs: Seq[Expression]) => ST_Point(exprs(0), exprs(1)))
+    
     /** GeometryAPI Specific */
     registry.registerFunction(FunctionIdentifier("flatten_polygons", database), (exprs: Seq[Expression]) => FlattenPolygons(exprs(0), geometryAPI.name))
     registry.registerFunction(FunctionIdentifier("st_xmax", database), (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "X", "MAX"))
@@ -94,6 +97,7 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     /** IndexSystem and GeometryAPI Agnostic methods */
     def as_hex(inGeom: Column): Column = ColumnAdapter(AsHex(inGeom.expr))
     def as_json(inGeom: Column): Column = ColumnAdapter(AsJSON(inGeom.expr))
+    def st_point(xVal: Column, yVal: Column): Column = ColumnAdapter(ST_Point(xVal.expr, yVal.expr))
 
     /** GeometryAPI Specific */
     def flatten_polygons(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
