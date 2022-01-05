@@ -21,7 +21,7 @@ class TestGeometryValidity_OGC_H3 extends FunSuite with SparkTest with Matchers 
 
     val df = getWKTRowsDf.select(st_xmin(col("wkt")))
     val results = df.as[Double].collect()
-    val expected = List(10.0, 0.0, 10.0, 10.0)
+    val expected = List(10.0, 0.0, 10.0, 10.0, -75.78033, 10.0, 10.0, 10.0)
 
     results should contain theSameElementsAs expected
   }
@@ -32,7 +32,7 @@ class TestGeometryValidity_OGC_H3 extends FunSuite with SparkTest with Matchers 
 
     val df = getWKTRowsDf.select(st_xmax(col("wkt")))
     val results = df.as[Double].collect()
-    val expected = List(40.0, 2.0, 110.0, 45.0)
+    val expected = List(40.0, 2.0, 110.0, 45.0, -75.78033, 40.0, 40.0, 40.0)
 
     results should contain theSameElementsAs expected
   }
@@ -43,7 +43,7 @@ class TestGeometryValidity_OGC_H3 extends FunSuite with SparkTest with Matchers 
 
     val df = getWKTRowsDf.select(st_ymin(col("wkt")))
     val results = df.as[Double].collect()
-    val expected = List(10.0, 0.0, 10.0, 5.0)
+    val expected = List(10.0, 0.0, 10.0, 5.0, 35.18937, 10.0, 10.0, 10.0)
 
     results should contain theSameElementsAs expected
   }
@@ -54,7 +54,7 @@ class TestGeometryValidity_OGC_H3 extends FunSuite with SparkTest with Matchers 
 
     val df = getWKTRowsDf.select(st_ymax(col("wkt")))
     val results = df.as[Double].collect()
-    val expected = List(40.0, 2.0, 110.0, 60.0)
+    val expected = List(40.0, 2.0, 110.0, 60.0, 35.18937, 40.0, 40.0, 40.0)
 
     results should contain theSameElementsAs expected
   }

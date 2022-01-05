@@ -34,4 +34,8 @@ trait MosaicGeometry extends GeometryWriter {
 
   def equals(other: MosaicGeometry): Boolean
 
+  def equals(other: java.lang.Object): Boolean
+
+  override def hashCode: Int
+
 }

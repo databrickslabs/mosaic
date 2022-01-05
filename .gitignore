@@ -144,3 +144,9 @@ dmypy.json
 # Metals
 .metals
 .bloop
+
+# spark
+spark-warehouse
+
+# MacOS
+.DS_Store

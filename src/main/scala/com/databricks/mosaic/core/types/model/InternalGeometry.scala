@@ -1,10 +1,14 @@
 package com.databricks.mosaic.core.types.model
 
-import com.databricks.mosaic.core.types.InternalCoordType
+import org.locationtech.jts.geom.{Geometry, GeometryFactory, LineString, MultiPoint, Point, Polygon}
+
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+
+import com.databricks.mosaic.core.types.InternalCoordType
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
 import org.locationtech.jts.geom.{Geometry, GeometryFactory}
 
 /**
@@ -18,10 +22,10 @@ import org.locationtech.jts.geom.{Geometry, GeometryFactory}
  *              sub Polygon.
  */
 case class InternalGeometry(
-   typeName: String,
+   typeId: Int,
    boundaries: Array[Array[InternalCoord]],
    holes: Array[Array[Array[InternalCoord]]]
-){
+) {
 
   /**
    * Used for constructing a MultiPolygon instance by merging Polygon/MultiPolygon instances.
@@ -41,7 +45,7 @@ case class InternalGeometry(
    * @return An instance of [[InternalRow]].
    */
   def serialize: Any = InternalRow.fromSeq(Seq(
-      UTF8String.fromString(typeName),
+      typeId,
       ArrayData.toArrayData(
         boundaries.map(boundary => ArrayData.toArrayData(boundary.map(_.serialize)))
       ),
@@ -52,8 +56,8 @@ case class InternalGeometry(
           )
         )
       )
-    ))
-
+    )
+  )
 }
 
 /** Companion object. */
@@ -66,7 +70,7 @@ object InternalGeometry {
    * @return An instance of [[InternalGeometry]].
    */
   def apply(input: InternalRow): InternalGeometry = {
-    val typeName = input.get(0, StringType).asInstanceOf[UTF8String].toString
+    val typeId = input.getInt(0)
 
     val boundaries = input.getArray(1)
       .toObjectArray(ArrayType(ArrayType(InternalCoordType)))
@@ -84,7 +88,7 @@ object InternalGeometry {
             .map(c => InternalCoord(c.asInstanceOf[ArrayData])))
       )
 
-    new InternalGeometry(typeName, boundaries, holeGroups)
+    new InternalGeometry(typeId, boundaries, holeGroups)
   }
 
 }

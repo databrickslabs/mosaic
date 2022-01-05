@@ -15,7 +15,7 @@ case class MosaicMultiPolygonOGC(multiPolygon: OGCMultiPolygon) extends MosaicMu
 
   override def getHolePoints: Seq[Seq[MosaicPoint]] = {
     val n = multiPolygon.numGeometries()
-    val holeGroups = for(i <- 0 until n)
+    val holeGroups = for (i <- 0 until n)
       yield MosaicPolygonOGC(multiPolygon.geometryN(i)).getHolePoints
     holeGroups.reduce(_ ++ _)
   }
@@ -24,6 +24,7 @@ case class MosaicMultiPolygonOGC(multiPolygon: OGCMultiPolygon) extends MosaicMu
 
 object MosaicMultiPolygonOGC {
 
-  def apply(multiPolygon: OGCGeometry) = new MosaicMultiPolygonOGC(multiPolygon.asInstanceOf[OGCMultiPolygon])
+  def apply(multiPolygon: OGCGeometry): MosaicMultiPolygonOGC =
+    new MosaicMultiPolygonOGC(multiPolygon.asInstanceOf[OGCMultiPolygon])
 
 }

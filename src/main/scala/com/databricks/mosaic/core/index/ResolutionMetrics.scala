@@ -1,4 +1,4 @@
-package com.databricks.mosaic.analyze
+package com.databricks.mosaic.core.index
 
 import org.apache.spark.sql.Row
 

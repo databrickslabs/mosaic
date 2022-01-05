@@ -1,6 +1,6 @@
 package com.databricks.mosaic.test
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SparkSession, SQLImplicits, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
@@ -17,6 +17,10 @@ trait SparkTest extends BeforeAndAfterAll { self: Suite =>
     _sc = new SparkContext("local[4]", "test", conf)
     _sc.setLogLevel("FATAL")
     _spark = SparkSession.builder.config(sc.getConf).getOrCreate()
+  }
+
+  protected object testImplicits extends SQLImplicits {
+    protected override def _sqlContext: SQLContext = self.spark.sqlContext
   }
 
   private def stopSpark(): Unit = {

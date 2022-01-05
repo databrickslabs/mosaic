@@ -14,8 +14,8 @@ object IndexSystemID {
 
   def getIndexSystem(indexSystemID: IndexSystemID): IndexSystem = indexSystemID match {
     case H3 => H3IndexSystem
-    case S2 => throw new NotImplementedError("S2 not supported yet!")
-    case BNG => throw new NotImplementedError("BNG not supported yet!")
+    case S2 => throw new NotImplementedError("S2 not supported yet!") // scalastyle:ignore
+    case BNG => throw new NotImplementedError("BNG not supported yet!") // scalastyle:ignore
   }
 }
 

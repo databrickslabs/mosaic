@@ -8,7 +8,10 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom.{Geometry, GeometryFactory, LinearRing, Polygon}
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
 import org.locationtech.jts.io.{WKBReader, WKBWriter, WKTReader, WKTWriter}
+import org.locationtech.jts.geom.{Geometry, GeometryFactory, LinearRing, MultiPolygon, Polygon}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
+
+import com.databricks.mosaic.expressions.format.Conversions
 
 case class MosaicGeometryJTS(geom: Geometry)
   extends MosaicGeometry {
@@ -47,6 +50,14 @@ case class MosaicGeometryJTS(geom: Geometry)
    */
   override def flatten: Seq[MosaicGeometry] = {
     geom.getGeometryType match {
+      case "Point" => List(geom)
+      case "MultiPoint" => for (
+        i <- 0 until geom.getNumGeometries
+      ) yield MosaicGeometryJTS(geom.getGeometryN(i))
+      case "LineString" => List(geom)
+      case "MultiLineString" => for (
+        i <- 0 until geom.getNumGeometries
+      ) yield MosaicGeometryJTS(geom.getGeometryN(i))
       case "Polygon" => List(this)
       case "MultiPolygon" => for (
         i <- 0 until geom.getNumGeometries
@@ -78,6 +89,10 @@ case class MosaicGeometryJTS(geom: Geometry)
     val otherGeom = other.asInstanceOf[MosaicGeometryJTS].geom
     this.geom.equalsExact(otherGeom)
   }
+
+  override def equals(other: java.lang.Object): Boolean = false
+
+  override def hashCode: Int = geom.hashCode()
 
   /**
    * Converts a Polygon to an instance of [[InternalGeometry]].

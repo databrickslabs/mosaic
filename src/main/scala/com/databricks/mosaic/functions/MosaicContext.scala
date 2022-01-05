@@ -1,15 +1,18 @@
 package com.databricks.mosaic.functions
 
+import org.apache.spark.sql.{Column, SparkSession}
+import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.functions.{lit, struct}
+
+import com.databricks.mosaic.core.geometry.GeometryAPI
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystem
 import com.databricks.mosaic.expressions.format.{AsHex, AsJSON, ConvertTo}
 import com.databricks.mosaic.expressions.geometry._
 import com.databricks.mosaic.expressions.helper.TrySql
 import com.databricks.mosaic.expressions.index.{IndexGeometry, MosaicExplode, MosaicFill, PointIndex, Polyfill}
-import org.apache.spark.sql.catalyst.FunctionIdentifier
-import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.functions.{lit, struct}
-import org.apache.spark.sql.{Column, SparkSession}
+
 
 case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
   import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
@@ -22,7 +25,8 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
    *                 By default none is passed resulting in functions
    *                 being registered in default database.
    */
-  //noinspection ZeroIndexToHead
+  // noinspection ZeroIndexToHead
+  // scalastyle:off line.size.limit
   def register(
     spark: SparkSession,
     database: Option[String] = None
@@ -78,10 +82,11 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
 
     registry.registerFunction(FunctionIdentifier("st_dump", database), (exprs: Seq[Expression]) => FlattenPolygons(exprs(0), geometryAPI.name))
 
-    //Not specific to Mosaic
+    // Not specific to Mosaic
     registry.registerFunction(FunctionIdentifier("try_sql", database), (exprs: Seq[Expression]) => TrySql(exprs(0)))
   }
 
+  // scalastyle:off object.name
   object functions {
     /** IndexSystem and GeometryAPI Agnostic methods */
     def as_hex(inGeom: Column): Column = ColumnAdapter(AsHex(inGeom.expr))
@@ -129,3 +134,5 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
   }
 }
+// scalastyle:on object.name
+// scalastyle:on line.size.limit

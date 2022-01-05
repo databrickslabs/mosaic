@@ -2,14 +2,21 @@ package com.databricks.mosaic.expressions.geometry
 
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
+import scala.collection.TraversableOnce
+
+import org.locationtech.jts.geom.Geometry
+import org.locationtech.jts.io.{WKBWriter, WKTWriter}
+
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionDescription, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
-import scala.collection.TraversableOnce
+import com.databricks.mosaic.core.types.{HexType, InternalGeometryType}
+import com.databricks.mosaic.core.types.model.InternalGeometry
+import com.databricks.mosaic.expressions.format.Conversions
 
 @ExpressionDescription(
   usage = "_FUNC_(geometry) - The geometry instance can contain both Polygons and MultiPolygons." +
@@ -35,10 +42,17 @@ case class FlattenPolygons(pair: Expression, geometryAPIName: String)
   override def position: Boolean = false
 
   /** @see [[FlattenPolygons()]] companion object for implementations. */
-  override def checkInputDataTypes(): TypeCheckResult = FlattenPolygons.checkInputDataTypesImpl(child)
-  override def elementSchema: StructType = FlattenPolygons.elementSchemaImpl(child)
-  override def eval(input: InternalRow): TraversableOnce[InternalRow] = FlattenPolygons.evalImpl(input, child, geometryAPIName)
-  override def makeCopy(newArgs: Array[AnyRef]): Expression = FlattenPolygons.makeCopyImpl(newArgs, geometryAPIName, this)
+  override def checkInputDataTypes(): TypeCheckResult =
+    FlattenPolygons.checkInputDataTypesImpl(child)
+
+  override def elementSchema: StructType =
+    FlattenPolygons.elementSchemaImpl(child)
+
+  override def eval(input: InternalRow): TraversableOnce[InternalRow] =
+    FlattenPolygons.evalImpl(input, child, geometryAPIName)
+
+  override def makeCopy(newArgs: Array[AnyRef]): Expression =
+    FlattenPolygons.makeCopyImpl(newArgs, geometryAPIName, this)
 }
 
 object FlattenPolygons {

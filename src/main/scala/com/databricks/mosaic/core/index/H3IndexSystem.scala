@@ -7,7 +7,14 @@ import com.uber.h3core.H3Core
 import org.locationtech.jts.geom.Geometry
 
 import java.{lang, util}
+
 import scala.collection.JavaConverters._
+
+import com.uber.h3core.H3Core
+import org.locationtech.jts.geom.{Coordinate, Geometry}
+
+import com.databricks.mosaic.core.geometry.{GeometryAPI, MosaicGeometry, MosaicPointOGC}
+import com.databricks.mosaic.core.types.model.MosaicChip
 
 /**
  * Implements the [[IndexSystem]] via [[H3Core]] java bindings.
@@ -28,8 +35,9 @@ object H3IndexSystem extends IndexSystem {
    */
   override def getResolution(res: Any): Int = {
     val resolution: Int = res.asInstanceOf[Int]
-    if (resolution < 0 | resolution > 15)
+    if (resolution < 0 | resolution > 15) {
       throw new IllegalStateException(s"H3 resolution has to be between 0 and 15; found $resolution")
+    }
     resolution
   }
 

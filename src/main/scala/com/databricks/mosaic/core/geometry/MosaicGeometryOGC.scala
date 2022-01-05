@@ -5,10 +5,13 @@ import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointOGC}
 import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonOGC
 import com.databricks.mosaic.core.types.model.{InternalCoord, InternalGeometry}
 import com.esri.core.geometry.ogc._
+import java.nio.ByteBuffer
+
 import com.esri.core.geometry.{Polygon, SpatialReference}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.io.{WKBReader, WKBWriter}
 
+import com.databricks.mosaic.expressions.format.Conversions
 import java.nio.ByteBuffer
 import scala.util.{Success, Try}
 
@@ -22,7 +25,7 @@ case class MosaicGeometryOGC(geom: OGCGeometry)
   override def getCoordinates: Seq[MosaicPoint] = geom.geometryType() match {
     case "Polygon" => MosaicPolygonOGC(geom).getBoundaryPoints
     case "MultiPolygon" => MosaicMultiPolygonOGC(geom).getBoundaryPoints
-    case _ => throw new NotImplementedError("Geometry type not implemented yet!")
+    case _ => throw new NotImplementedError("Geometry type not implemented yet!") // scalastyle:ignore
   }
 
   override def isEmpty: Boolean = geom.isEmpty
@@ -43,6 +46,14 @@ case class MosaicGeometryOGC(geom: OGCGeometry)
 
   override def flatten: Seq[MosaicGeometry] = {
     geom.geometryType() match {
+      case "Point" => List(geom)
+      case "MultiPoint" => for (
+        i <- 0 until geom.numGeometries()
+      ) yield MosaicGeometryOGC(geom.geometryN(i))
+      case "LineString" => List(geom)
+      case "MultiLineString" => for (
+        i <- 0 until geom.numGeometries()
+      ) yield MosaicGeometryOGC(geom.geometryN(i))
       case "Polygon" => List(this)
       case "MultiPolygon" =>
         val multiPolygon = geom.asInstanceOf[OGCMultiPolygon]
@@ -78,10 +89,14 @@ case class MosaicGeometryOGC(geom: OGCGeometry)
 
   override def equals(other: MosaicGeometry): Boolean = {
     val otherGeom = other.asInstanceOf[MosaicGeometryOGC].geom
-    //required to use object equals to perform exact equals
+    // required to use object equals to perform exact equals
     //noinspection ComparingUnrelatedTypes
     this.geom.equals(otherGeom.asInstanceOf[Object])
   }
+
+  override def equals(other: java.lang.Object): Boolean = false
+
+  override def hashCode: Int = geom.hashCode()
 
   /**
    * Converts a Polygon to an instance of [[InternalGeometry]].
@@ -138,13 +153,7 @@ object MosaicGeometryOGC extends GeometryReader {
     fromWKB(bytes)
   }
 
-  override def fromJSON(geoJson: String): MosaicGeometry = {
-    val x = Try(MosaicGeometryOGC(OGCGeometry.fromGeoJson(geoJson)))
-    x match {
-      case Success(result) => result
-      case _ => null
-    }
-  }
+  override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC(OGCGeometry.fromGeoJson(geoJson)))
 
   override def fromPoints(points: Seq[MosaicPoint]): MosaicGeometry = {
     val polygon = new Polygon()

@@ -1,17 +1,23 @@
 package com.databricks.mosaic.expressions.index
 
+import scala.collection.TraversableOnce
+
+import org.locationtech.jts.geom.Geometry
+
 import com.databricks.mosaic.core.Mosaic
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystemID
 import com.databricks.mosaic.core.types.{ChipType, HexType, InternalGeometryType}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionDescription, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
-import org.locationtech.jts.geom.Geometry
 
-import scala.collection.TraversableOnce
+import com.databricks.mosaic.core.Mosaic
+import com.databricks.mosaic.core.geometry.GeometryAPI
+import com.databricks.mosaic.core.index.IndexSystemID
+import com.databricks.mosaic.core.types.{ChipType, HexType, InternalGeometryType}
 
 
 @ExpressionDescription(
@@ -104,12 +110,12 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
     val geomType = child.dataType.asInstanceOf[StructType].fields.head.dataType
 
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-    val geometryAPI  = GeometryAPI(geometryAPIName)
+    val geometryAPI = GeometryAPI(geometryAPIName)
     val geometry = geometryAPI.geometry(inputData, geomType)
 
     val resolution = inputData.getInt(1)
 
-    val chips =  Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
+    val chips = Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
     chips.map(_.serialize)
   }
 
