@@ -1,69 +1,27 @@
 package com.databricks.mosaic.core.geometry
 
+import com.databricks.mosaic.core.geometry.linestring.MosaicLineStringJTS
+import com.databricks.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
+import com.databricks.mosaic.core.geometry.multipoint.MosaicMultiPointJTS
 import com.databricks.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
 import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonJTS
-import com.databricks.mosaic.core.types.model.{InternalCoord, InternalGeometry}
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
+import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
 import org.apache.spark.sql.catalyst.InternalRow
-import org.locationtech.jts.geom.{Geometry, GeometryFactory, LinearRing, Polygon}
+import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
 import org.locationtech.jts.io.{WKBReader, WKBWriter, WKTReader, WKTWriter}
-import org.locationtech.jts.geom.{Geometry, GeometryFactory, LinearRing, MultiPolygon, Polygon}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
 
-import com.databricks.mosaic.expressions.format.Conversions
-
-case class MosaicGeometryJTS(geom: Geometry)
+abstract class MosaicGeometryJTS(geom: Geometry)
   extends MosaicGeometry {
 
   override def getAPI: String = "JTS"
 
-  override def getCentroid: MosaicPoint = MosaicPointJTS(geom.getCentroid)
-
-  override def getCoordinates: Seq[MosaicPoint] = {
-    geom.getCoordinates.map(MosaicPointJTS(_))
-  }
+  override def getCentroid: MosaicPoint = new MosaicPointJTS(geom.getCentroid)
 
   override def isEmpty: Boolean = geom.isEmpty
-
-  override def getBoundary: Seq[MosaicPoint] = {
-    geom.getGeometryType match {
-      case "LinearRing" => MosaicPolygonJTS.getPoints(geom.asInstanceOf[LinearRing])
-      case "Polygon" => MosaicPolygonJTS(geom).getBoundaryPoints
-      case "MultiPolygon" => MosaicMultiPolygonJTS(geom).getBoundaryPoints
-    }
-  }
-
-
-  override def getHoles: Seq[Seq[MosaicPoint]] = {
-    geom.getGeometryType match {
-      case "LinearRing" => Seq(MosaicPolygonJTS.getPoints(geom.asInstanceOf[LinearRing]))
-      case "Polygon" => MosaicPolygonJTS(geom).getHolePoints
-      case "MultiPolygon" => MosaicMultiPolygonJTS(geom).getHolePoints
-    }
-  }
-
-  /**
-   * Flattens this geometry instance.
-   * This method assumes only a single level of nesting.
-   * @return A collection of piece-wise geometries.
-   */
-  override def flatten: Seq[MosaicGeometry] = {
-    geom.getGeometryType match {
-      case "Point" => List(geom)
-      case "MultiPoint" => for (
-        i <- 0 until geom.getNumGeometries
-      ) yield MosaicGeometryJTS(geom.getGeometryN(i))
-      case "LineString" => List(geom)
-      case "MultiLineString" => for (
-        i <- 0 until geom.getNumGeometries
-      ) yield MosaicGeometryJTS(geom.getGeometryN(i))
-      case "Polygon" => List(this)
-      case "MultiPolygon" => for (
-        i <- 0 until geom.getNumGeometries
-      ) yield MosaicGeometryJTS(geom.getGeometryN(i))
-    }
-  }
 
   override def boundary: MosaicGeometry = MosaicGeometryJTS(geom.getBoundary)
 
@@ -74,10 +32,12 @@ case class MosaicGeometryJTS(geom: Geometry)
   )
 
   override def intersection(other: MosaicGeometry): MosaicGeometry = {
-    val otherGeom = other.asInstanceOf[MosaicGeometryJTS].geom
+    val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
     val intersection = this.geom.intersection(otherGeom)
     MosaicGeometryJTS(intersection)
   }
+
+  def getGeom: Geometry = geom
 
   override def isValid: Boolean = geom.isValid
 
@@ -86,7 +46,7 @@ case class MosaicGeometryJTS(geom: Geometry)
   override def getArea: Double = geom.getArea
 
   override def equals(other: MosaicGeometry): Boolean = {
-    val otherGeom = other.asInstanceOf[MosaicGeometryJTS].geom
+    val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
     this.geom.equalsExact(otherGeom)
   }
 
@@ -94,31 +54,9 @@ case class MosaicGeometryJTS(geom: Geometry)
 
   override def hashCode: Int = geom.hashCode()
 
-  /**
-   * Converts a Polygon to an instance of [[InternalGeometry]].
-   * @param g An instance of Polygon to be converted.
-   * @param typeName Type name to used to construct the instance
-   *                 of [[InternalGeometry]].
-   * @return An instance of [[InternalGeometry]].
-   */
-  private def fromPolygon(g: Polygon, typeName: String): InternalGeometry = {
-    val boundary = g.getBoundary
-    val shell = boundary.getGeometryN(0).getCoordinates.map(InternalCoord(_))
-    val holes = for (i <- 1 until boundary.getNumGeometries) yield boundary.getGeometryN(i).getCoordinates.map(InternalCoord(_))
-    new InternalGeometry(typeName, Array(shell), Array(holes.toArray))
-  }
+  override def getLength: Double = geom.getLength
 
-  override def toInternal: InternalGeometry = {
-    geom.getGeometryType match {
-      case "Polygon" =>
-        fromPolygon(geom.asInstanceOf[Polygon], "Polygon")
-      case "MultiPolygon" =>
-        val geoms = for (i <- 0 until geom.getNumGeometries) yield fromPolygon(geom.getGeometryN(i).asInstanceOf[Polygon], "MultiPolygon")
-        geoms.reduce(_ merge _)
-    }
-  }
-
-  override def toWKB: Array[Byte] = new WKBWriter().write(geom)
+  override def distance(geom2: MosaicGeometry): Double = getGeom.distance(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
 
   override def toWKT: String = new WKTWriter().write(geom)
 
@@ -126,11 +64,11 @@ case class MosaicGeometryJTS(geom: Geometry)
 
   override def toHEX: String = WKBWriter.toHex(toWKB)
 
+  override def toWKB: Array[Byte] = new WKBWriter().write(geom)
+
 }
 
 object MosaicGeometryJTS extends GeometryReader {
-
-  override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS(new WKBReader().read(wkb))
 
   override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS(new WKTReader().read(wkt))
 
@@ -139,29 +77,36 @@ object MosaicGeometryJTS extends GeometryReader {
     fromWKB(bytes)
   }
 
+  override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS(new WKBReader().read(wkb))
+
+  def apply(geom: Geometry): MosaicGeometryJTS = GeometryTypeEnum.fromString(geom.getGeometryType) match {
+    case POINT => MosaicPointJTS(geom)
+    case MULTIPOINT => MosaicMultiPointJTS(geom)
+    case POLYGON => MosaicPolygonJTS(geom)
+    case MULTIPOLYGON => MosaicMultiPolygonJTS(geom)
+    case LINESTRING => MosaicLineStringJTS(geom)
+    case MULTILINESTRING => MosaicMultiLineStringJTS(geom)
+    case LINEARRING => MosaicLineStringJTS(geom)
+  }
+
   override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS(new GeoJsonReader().read(geoJson))
 
-  def fromPoints(points: Seq[MosaicPoint]): MosaicGeometryJTS = {
-    val gf = new GeometryFactory()
-    val polygon = gf.createPolygon(points.map(_.coord).toArray)
-    new MosaicGeometryJTS(polygon)
+  override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
+    reader(geomType.id).fromPoints(points, geomType)
+  }
+
+  def reader(geomTypeId: Int): GeometryReader = GeometryTypeEnum.fromId(geomTypeId) match {
+    case POINT => MosaicPointJTS
+    case MULTIPOINT => MosaicMultiPointJTS
+    case POLYGON => MosaicPolygonJTS
+    case MULTIPOLYGON => MosaicMultiPolygonJTS
+    case LINESTRING => MosaicLineStringJTS
+    case MULTILINESTRING => MosaicMultiLineStringJTS
   }
 
   override def fromInternal(row: InternalRow): MosaicGeometry = {
-    val gf = new GeometryFactory()
-    val internalGeom = InternalGeometry(row)
-    val shellCollection = internalGeom.boundaries.map(ring => ring.map(_.toCoordinate)).map(gf.createLinearRing)
-    val holesCollection = internalGeom.holes.map(
-      holes => holes.map(ring => ring.map(_.toCoordinate)).map(gf.createLinearRing)
-    )
-    val geometry = internalGeom.typeName match {
-      case "Polygon" => gf.createPolygon(shellCollection.head, holesCollection.head)
-      case "MultiPolygon" =>
-        val polygons = shellCollection.zip(holesCollection).map{ case (shell, holes) => gf.createPolygon(shell, holes)}
-        gf.createMultiPolygon(polygons)
-      case "LinearRing" => shellCollection.head
-      case _ => throw new NotImplementedError("Geometry type not implemented yet.")
-    }
-    MosaicGeometryJTS(geometry)
+    val internalGeometry = InternalGeometry(row)
+    reader(internalGeometry.typeId).fromInternal(row)
   }
+
 }

@@ -10,8 +10,10 @@ import com.stephenn.scalatest.jsonassert.JsonMatchers
 import org.apache.spark.sql.DataFrame
 import org.scalatest.{FunSuite, Matchers}
 
+//noinspection ScalaStyle
 class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with JsonMatchers {
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, OGC)
+
   import mosaicContext.functions._
   import testImplicits._
 
@@ -38,14 +40,14 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     hexDf.createOrReplaceTempView("format_testing_left")
     wktDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_wkt(wkb) as wkt from format_testing_left order by id"
-      )
+      "select convert_to_wkt(wkb) as wkt from format_testing_left order by id"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
@@ -58,25 +60,25 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left3 = spark.sql(
-        "select st_aswkt(wkb) as wkt from format_testing_left order by id"
-      )
+      "select st_aswkt(wkb) as wkt from format_testing_left order by id"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right.zip(left3).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left3).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left4 = spark.sql(
-        "select st_astext(wkb) as wkt from format_testing_left order by id"
-      )
+      "select st_astext(wkb) as wkt from format_testing_left order by id"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right.zip(left4).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left4).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from WKB to HEX") {
@@ -87,8 +89,8 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .withColumn("wkb", convert_to($"wkt", "wkb"))
 
     val left = wktDf.select(
-        convert_to($"wkb", "hex").getItem("hex").alias("hex")
-      )
+      convert_to($"wkb", "hex").getItem("hex").alias("hex")
+    )
       .orderBy("id")
       .as[String]
       .collect()
@@ -101,26 +103,26 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     wktDf.createOrReplaceTempView("format_testing_left")
     hexDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_hex(wkb)['hex'] as hex from format_testing_left order by id"
-      )
+      "select convert_to_hex(wkb)['hex'] as hex from format_testing_left order by id"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
     val right2 = spark.sql(
-        "select hex from format_testing_right order by id"
-      )
+      "select hex from format_testing_right order by id"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from WKB to COORDS") {
@@ -133,8 +135,8 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .withColumn("wkb", convert_to($"wkt", "wkb"))
 
     val left = wktDf.select(
-        convert_to($"wkb", "coords").alias("coords")
-      )
+      convert_to($"wkb", "coords").alias("coords")
+    )
       .collect()
       .map(_.toSeq.head)
 
@@ -198,7 +200,7 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry) // workaround for relaxed equality and crs info missing
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry) // workaround for relaxed equality and crs info missing
 
     val right = geojsonDf
       .orderBy("id")
@@ -206,43 +208,43 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
-    right.zip(left).map{ case(l, r) => l.equals(r) }.reduce(_ & _) shouldEqual true
+    right.zip(left).map { case (l, r) => l.equals(r) }.reduce(_ & _) shouldEqual true
 
     wkbDf.createOrReplaceTempView("format_testing_left")
     geojsonDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_geojson(wkb)['json'] as geojson from format_testing_left"
-      )
+      "select convert_to_geojson(wkb)['json'] as geojson from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
 
     val right2 = spark.sql(
-        "select geojson from format_testing_right"
-      )
+      "select geojson from format_testing_right"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
 
-    right2.zip(left2).map{ case(l, r) => l.equals(r) }.reduce(_ & _) shouldEqual true
+    right2.zip(left2).map { case (l, r) => l.equals(r) }.reduce(_ & _) shouldEqual true
 
     val left3 = spark.sql(
-        "select st_asgeojson(wkb)['json'] as geojson from format_testing_left"
-      )
+      "select st_asgeojson(wkb)['json'] as geojson from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
 
-    right.zip(left3).map{ case(l, r) => l.equals(r) }.reduce(_ & _) shouldEqual true
+    right.zip(left3).map { case (l, r) => l.equals(r) }.reduce(_ & _) shouldEqual true
 
   }
 
@@ -269,44 +271,44 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     wktDf.createOrReplaceTempView("format_testing_left")
     hexDf.createOrReplaceTempView("format_testing_right")
 
-    val left2: Array[Any] = spark.sql(
-        "select convert_to_wkb(wkt) as wkb from format_testing_left"
-      )
+    val left2 = spark.sql(
+      "select convert_to_wkb(wkt) as wkb from format_testing_left"
+    )
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    val right2: Array[Any] = spark.sql(
-        "select wkb from format_testing_right"
-      )
+    val right2 = spark.sql(
+      "select wkb from format_testing_right"
+    )
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left3 = spark.sql(
-        "select st_aswkb(wkt) as wkb from format_testing_left"
-      )
+      "select st_aswkb(wkt) as wkb from format_testing_left"
+    )
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right.zip(left3).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left3).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left4 = spark.sql(
-        "select st_asbinary(wkt) as wkb from format_testing_left"
-      )
+      "select st_asbinary(wkt) as wkb from format_testing_left"
+    )
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right.zip(left4).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left4).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from WKT to HEX") {
@@ -316,8 +318,8 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
     val wktDf = getWKTRowsDf.orderBy("id")
 
     val left = wktDf.select(
-        convert_to($"wkt", "hex").getItem("hex").alias("hex")
-      )
+      convert_to($"wkt", "hex").getItem("hex").alias("hex")
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
@@ -328,26 +330,26 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     wktDf.createOrReplaceTempView("format_testing_left")
     hexDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_hex(wkt)['hex'] as hex from format_testing_left"
-      )
+      "select convert_to_hex(wkt)['hex'] as hex from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
     val right2 = spark.sql(
-        "select hex from format_testing_right"
-      )
+      "select hex from format_testing_right"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from WKT to COORDS") {
@@ -358,8 +360,8 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
     val wktDf = getWKTRowsDf
 
     val left = wktDf.select(
-        convert_to($"wkt", "coords").alias("coords")
-      )
+      convert_to($"wkt", "coords").alias("coords")
+    )
       .collect()
       .map(_.toSeq.head)
 
@@ -368,40 +370,40 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(_.toSeq.head)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     wktDf.createOrReplaceTempView("format_testing_left")
     hexDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_coords(wkt) as coords from format_testing_left"
-      )
+      "select convert_to_coords(wkt) as coords from format_testing_left"
+    )
       .collect()
       .map(_.toSeq.head)
 
     val right2 = spark.sql(
-        "select coords from format_testing_right"
-      )
+      "select coords from format_testing_right"
+    )
       .collect()
       .map(_.toSeq.head)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left3 = wktDf.select(
-        st_geomfromwkt($"wkt").alias("coords")
-      )
+      st_geomfromwkt($"wkt").alias("coords")
+    )
       .collect()
       .map(_.toSeq.head)
 
-    right.zip(left3).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left3).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left4 = spark.sql(
-        "select st_geomfromwkt(wkt) as coords from format_testing_left"
-      )
+      "select st_geomfromwkt(wkt) as coords from format_testing_left"
+    )
       .collect()
       .map(_.toSeq.head)
 
-    right.zip(left4).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left4).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
   }
 
@@ -419,38 +421,38 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry) // workaround for missing crs in test data
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry) // workaround for missing crs in test data
 
     val right = geojsonDf
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     wktDf.createOrReplaceTempView("format_testing_left")
     geojsonDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_geojson(wkt)['json'] as geojson from format_testing_left"
-      )
+      "select convert_to_geojson(wkt)['json'] as geojson from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
     val right2 = spark.sql(
-        "select geojson from format_testing_right"
-      )
+      "select geojson from format_testing_right"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true}
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from HEX to WKB") {
@@ -461,7 +463,7 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
     val wktDf: DataFrame = getWKTRowsDf.orderBy("id")
       .withColumn("wkb", convert_to($"wkt", "WKB"))
 
-    val left: Array[Any] = hexDf
+    val left = hexDf
       .select(
         convert_to($"hex", "WKB").alias("wkb")
       )
@@ -469,32 +471,32 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    val right: Array[Any] = wktDf
+    val right = wktDf
       .select("wkb")
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     hexDf.createOrReplaceTempView("format_testing_left")
     wktDf.createOrReplaceTempView("format_testing_right")
 
-    val left2: Array[Any] = spark.sql(
-        "select convert_to_wkb(hex) as wkt from format_testing_left"
-      )
+    val left2 = spark.sql(
+      "select convert_to_wkb(hex) as wkt from format_testing_left"
+    )
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    val right2: Array[Any] = spark.sql(
-        "select wkb from format_testing_right"
-      )
+    val right2 = spark.sql(
+      "select wkb from format_testing_right"
+    )
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from HEX to WKT") {
@@ -505,8 +507,8 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
     val wktDf = getWKTRowsDf.orderBy("id")
 
     val left = hexDf.select(
-        convert_to($"hex", "wkt").alias("wkt").cast("string")
-      )
+      convert_to($"hex", "wkt").alias("wkt").cast("string")
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
@@ -517,26 +519,26 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     hexDf.createOrReplaceTempView("format_testing_left")
     wktDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_wkt(hex) as wkt from format_testing_left"
-      )
+      "select convert_to_wkt(hex) as wkt from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
     val right2 = spark.sql(
-        "select wkt from format_testing_right"
-      )
+      "select wkt from format_testing_right"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from HEX to COORDS") {
@@ -548,8 +550,8 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .withColumn("coords", convert_to($"wkt", "coords"))
 
     val left = hexDf.select(
-        convert_to($"hex", "coords").alias("coords")
-      )
+      convert_to($"hex", "coords").alias("coords")
+    )
       .collect()
       .map(_.toSeq.head)
 
@@ -558,24 +560,24 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(_.toSeq.head)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     hexDf.createOrReplaceTempView("format_testing_left")
     wktDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_coords(hex) as coords from format_testing_left"
-      )
+      "select convert_to_coords(hex) as coords from format_testing_left"
+    )
       .collect()
       .map(_.toSeq.head)
 
     val right2 = spark.sql(
-        "select coords from format_testing_right"
-      )
+      "select coords from format_testing_right"
+    )
       .collect()
       .map(_.toSeq.head)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from HEX to GeoJSON") {
@@ -592,37 +594,37 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry) // workaround for missing crs info in test data
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry) // workaround for missing crs info in test data
 
     val right = geojsonDf
       .select("geojson")
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     hexDf.createOrReplaceTempView("format_testing_left")
     geojsonDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_geojson(hex)['json'] as geojson from format_testing_left"
-      )
+      "select convert_to_geojson(hex)['json'] as geojson from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
     val right2 = spark.sql(
-        "select geojson from format_testing_right"
-      )
+      "select geojson from format_testing_right"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from COORDS to WKB") {
@@ -648,42 +650,42 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .map(MosaicGeometryOGC.fromWKB)
 
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     hexDf.createOrReplaceTempView("format_testing_left")
     wkbDf.createOrReplaceTempView("format_testing_right")
 
-    val left2: Array[Any] = spark.sql(
-        "select convert_to_wkb(coords) as wkb from format_testing_left"
-      )
+    val left2 = spark.sql(
+      "select convert_to_wkb(coords) as wkb from format_testing_left"
+    )
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    val right2: Array[Any] = spark.sql(
-        "select wkb from format_testing_right"
-      )
+    val right2 = spark.sql(
+      "select wkb from format_testing_right"
+    )
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
-    val left3  = hexDf
+    val left3 = hexDf
       .select(st_asbinary($"coords").alias("wkb"))
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right.zip(left3).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left3).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
-    val left4  = hexDf
+    val left4 = hexDf
       .select(st_aswkb($"coords").alias("wkb"))
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right.zip(left4).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left4).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
   }
 
@@ -695,8 +697,8 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
     val wktDf = getWKTRowsDf.orderBy("id")
 
     val left = hexDf.select(
-        convert_to($"coords", "wkt").alias("wkt").cast("string")
-      )
+      convert_to($"coords", "wkt").alias("wkt").cast("string")
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
@@ -707,44 +709,44 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     hexDf.createOrReplaceTempView("format_testing_left")
     wktDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_wkt(coords) as wkt from format_testing_left"
-      )
+      "select convert_to_wkt(coords) as wkt from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
     val right2 = spark.sql(
-        "select wkt from format_testing_right"
-      )
+      "select wkt from format_testing_right"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left3 = hexDf.select(
-        st_astext($"coords").alias("wkt")
-      )
+      st_astext($"coords").alias("wkt")
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right.zip(left3).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left3).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left4 = hexDf.select(
-        st_aswkt($"coords").alias("wkt")
-      )
+      st_aswkt($"coords").alias("wkt")
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right.zip(left4).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left4).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from COORDS to HEX") {
@@ -755,8 +757,8 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .withColumn("coords", convert_to($"wkt", "coords"))
 
     val left = wktDf.select(
-        convert_to($"coords", "hex").getItem("hex").alias("hex")
-      )
+      convert_to($"coords", "hex").getItem("hex").alias("hex")
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
@@ -767,26 +769,26 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     wktDf.createOrReplaceTempView("format_testing_left")
     hexDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_hex(coords)['hex'] as hex from format_testing_left"
-      )
+      "select convert_to_hex(coords)['hex'] as hex from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
     val right2 = spark.sql(
-        "select hex from format_testing_right"
-      )
+      "select hex from format_testing_right"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from COORDS to GeoJSON") {
@@ -804,37 +806,37 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
     val right = geojsonDf
       .select("geojson")
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     coordsDf.createOrReplaceTempView("format_testing_left")
     geojsonDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_geojson(coords)['json'] as geojson from format_testing_left"
-      )
+      "select convert_to_geojson(coords)['json'] as geojson from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
     val right2 = spark.sql(
-        "select geojson from format_testing_right"
-      )
+      "select geojson from format_testing_right"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left3 = coordsDf
       .select(
@@ -843,9 +845,9 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromJSON)
-      .map(_.asInstanceOf[MosaicGeometryOGC].geom.getEsriGeometry)
+      .map(_.asInstanceOf[MosaicGeometryOGC].getGeom.getEsriGeometry)
 
-    right.zip(left3).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left3).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
   }
 
@@ -871,26 +873,26 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     geojsonDf.createOrReplaceTempView("format_testing_left")
     wkbDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_wkb(as_json(geojson)) as wkb from format_testing_left"
-      )
+      "select convert_to_wkb(as_json(geojson)) as wkb from format_testing_left"
+    )
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
     val right2 = spark.sql(
-        "select wkb from format_testing_right"
-      )
+      "select wkb from format_testing_right"
+    )
       .as[Array[Byte]]
       .collect()
       .map(MosaicGeometryOGC.fromWKB)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from GeoJSON to WKT") {
@@ -914,26 +916,26 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     geojsonDf.createOrReplaceTempView("format_testing_left")
     wktDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_wkt(as_json(geojson)) as wkt from format_testing_left"
-      )
+      "select convert_to_wkt(as_json(geojson)) as wkt from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
     val right2 = spark.sql(
-        "select wkt from format_testing_right"
-      )
+      "select wkt from format_testing_right"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromWKT)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from GeoJSON to HEX") {
@@ -957,26 +959,26 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     geojsonDf.createOrReplaceTempView("format_testing_left")
     hexDf.createOrReplaceTempView("format_testing_right")
 
     val left2 = spark.sql(
-        "select convert_to_hex(as_json(geojson))['hex'] as hex from format_testing_left"
-      )
+      "select convert_to_hex(as_json(geojson))['hex'] as hex from format_testing_left"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
     val right2 = spark.sql(
-        "select hex from format_testing_right"
-      )
+      "select hex from format_testing_right"
+    )
       .as[String]
       .collect()
       .map(MosaicGeometryOGC.fromHEX)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
   test("Conversion from GeoJSON to COORDS") {
@@ -987,7 +989,7 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .select(as_hex($"hex").alias("hex"))
       .select(convert_to($"hex", "coords").alias("coords"))
 
-    val left: Array[Any] = geojsonDf
+    val left = geojsonDf
       .withColumn("geojson", as_json($"geojson"))
       .select(
         convert_to($"geojson", "coords").alias("coords")
@@ -995,35 +997,35 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(_.toSeq.head)
 
-    val right: Array[Any] = coordsDf
+    val right = coordsDf
       .collect()
       .map(_.toSeq.head)
 
-    right.zip(left).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     geojsonDf.createOrReplaceTempView("format_testing_left")
     coordsDf.createOrReplaceTempView("format_testing_right")
 
-    val left2: Array[Any] = spark.sql(
+    val left2 = spark.sql(
       "select convert_to_coords(as_json(geojson)) as coords from format_testing_left"
     )
       .collect()
       .map(_.toSeq.head)
-    val right2: Array[Any] = spark.sql(
+    val right2 = spark.sql(
       "select coords from format_testing_right"
     )
       .collect()
       .map(_.toSeq.head)
 
-    right2.zip(left2).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right2.zip(left2).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left3 = geojsonDf.select(
-        st_geomfromgeojson($"geojson").alias("coords")
-      )
+      st_geomfromgeojson($"geojson").alias("coords")
+    )
       .collect()
       .map(_.toSeq.head)
 
-    right.zip(left3).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left3).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
     val left4 = spark.sql(
       "select st_geomfromgeojson(geojson) as coords from format_testing_left"
@@ -1031,7 +1033,7 @@ class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with Js
       .collect()
       .map(_.toSeq.head)
 
-    right.zip(left4).foreach{ case (l, r) => l.equals(r) shouldEqual true }
+    right.zip(left4).foreach { case (l, r) => l.equals(r) shouldEqual true }
   }
 
 }

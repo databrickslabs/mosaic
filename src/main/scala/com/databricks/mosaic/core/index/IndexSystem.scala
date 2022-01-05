@@ -1,10 +1,10 @@
 package com.databricks.mosaic.core.index
 
-import java.util
-
 import com.databricks.mosaic.core.geometry.MosaicGeometry
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.types.model.MosaicChip
+
+import java.util
 
 /**
  * Defines the API that all index systems need to respect for Mosaic to support them.
@@ -13,6 +13,7 @@ trait IndexSystem {
 
   /**
    * Returns the name of the IndexSystem.
+   *
    * @return IndexSystem name.
    */
   def name: String = getIndexSystemID.name

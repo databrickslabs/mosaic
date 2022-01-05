@@ -11,6 +11,7 @@ import org.scalatest.{FunSuite, Matchers}
 
 class TestFlattenPolygon_OGC_H3 extends FunSuite with SparkTest with Matchers {
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, OGC)
+
   import mosaicContext.functions._
 
   test("Flattening of WKB Polygons") {
@@ -26,7 +27,7 @@ class TestFlattenPolygon_OGC_H3 extends FunSuite with SparkTest with Matchers {
     val geoms = df.select("wkb")
       .collect()
       .map(g => new WKBReader().read(g.get(0).asInstanceOf[Array[Byte]]))
-      .flatMap(g => for(i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
+      .flatMap(g => for (i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
 
     val flattenedGeoms = flattened
       .collect()
@@ -47,7 +48,7 @@ class TestFlattenPolygon_OGC_H3 extends FunSuite with SparkTest with Matchers {
     val geoms = df.select("wkt")
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
-      .flatMap(g => for(i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
+      .flatMap(g => for (i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
       .map(_.getCentroid) // proxy to avoid clockwise vs anti-clockwise
 
     val flattenedGeoms = flattened
@@ -73,7 +74,7 @@ class TestFlattenPolygon_OGC_H3 extends FunSuite with SparkTest with Matchers {
       .select("wkt")
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
-      .flatMap(g => for(i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
+      .flatMap(g => for (i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
       .map(_.getCentroid) // proxy to avoid clockwise vs anti-clockwise
 
     val flattenedGeoms = flattened
@@ -101,7 +102,7 @@ class TestFlattenPolygon_OGC_H3 extends FunSuite with SparkTest with Matchers {
       .select("wkt")
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
-      .flatMap(g => for(i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
+      .flatMap(g => for (i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
 
     val flattenedGeoms = flattened
       .withColumn("wkt", convert_to(col("hex"), "wkt"))

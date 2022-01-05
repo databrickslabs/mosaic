@@ -3,11 +3,10 @@ package com.databricks.mosaic.expressions.geometry
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.{DataType, DoubleType}
 
 case class ST_MinMaxXYZ(inputGeom: Expression, geometryAPIName: String, dimension: String, func: String)
-    extends UnaryExpression
+  extends UnaryExpression
     with NullIntolerant
     with CodegenFallback {
 
@@ -16,10 +15,10 @@ case class ST_MinMaxXYZ(inputGeom: Expression, geometryAPIName: String, dimensio
   override def dataType: DataType = DoubleType
 
   override def nullSafeEval(input1: Any): Any = {
-    val geometryAPI  = GeometryAPI(geometryAPIName)
+    val geometryAPI = GeometryAPI(geometryAPIName)
 
     val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-    val coordArray = geom.getCoordinates
+    val coordArray = geom.getBoundary
     val unitArray = dimension match {
       case "X" => coordArray.map(_.getX)
       case "Y" => coordArray.map(_.getY)

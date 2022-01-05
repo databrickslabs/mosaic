@@ -2,21 +2,14 @@ package com.databricks.mosaic.expressions.geometry
 
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
-import scala.collection.TraversableOnce
-
-import org.locationtech.jts.geom.Geometry
-import org.locationtech.jts.io.{WKBWriter, WKTWriter}
-
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionDescription, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionDescription, UnaryExpression}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
-import com.databricks.mosaic.core.types.{HexType, InternalGeometryType}
-import com.databricks.mosaic.core.types.model.InternalGeometry
-import com.databricks.mosaic.expressions.format.Conversions
+import scala.collection.TraversableOnce
 
 @ExpressionDescription(
   usage = "_FUNC_(geometry) - The geometry instance can contain both Polygons and MultiPolygons." +
@@ -37,8 +30,11 @@ case class FlattenPolygons(pair: Expression, geometryAPIName: String)
 
   /** Fixed definitions. */
   override val inline: Boolean = false
+
   override def collectionType: DataType = child.dataType
+
   override def child: Expression = pair
+
   override def position: Boolean = false
 
   /** @see [[FlattenPolygons()]] companion object for implementations. */
@@ -62,13 +58,14 @@ object FlattenPolygons {
    * Each output instance should be wrapped into an [[InternalRow]] wrapper.
    * For the generator expression [[evalImpl()]] call requires that
    * input is evaluated before the evaluation of this expression can occur.
+   *
    * @param input An instance of a row before the child expression has
    *              been evaluated.
-   * @return  A collection of [[InternalRow]] instances. This collection
-   *          has to implement [[TraversableOnce]] API.
+   * @return A collection of [[InternalRow]] instances. This collection
+   *         has to implement [[TraversableOnce]] API.
    */
   def evalImpl(input: InternalRow, child: Expression, geometryAPIName: String): TraversableOnce[InternalRow] = {
-    val geometryAPI  = GeometryAPI(geometryAPIName)
+    val geometryAPI = GeometryAPI(geometryAPIName)
     val geometry = geometryAPI.geometry(input, child.dataType)
     val output = geometry.flatten
 
@@ -95,6 +92,7 @@ object FlattenPolygons {
    * The supported data types are [[BinaryType]] for WKB encoding, [[StringType]]
    * for WKT encoding, [[HexType]] ([[StringType]] wrapper) for HEX encoding
    * and [[InternalGeometryType]] for primitive types encoding via [[ArrayType]].
+   *
    * @return An instance of [[TypeCheckResult]] indicating success or a failure.
    */
   def checkInputDataTypesImpl(child: Expression): TypeCheckResult = child.dataType match {
@@ -113,6 +111,7 @@ object FlattenPolygons {
    * expressions require the element schema to be provided.
    * Since we are flattening the geometries the element type is the
    * same type of the input data.
+   *
    * @see [[CollectionGenerator]] for the API of generator expressions.
    * @return The schema of the child element. Has to be provided as
    *         a [[StructType]].

@@ -1,26 +1,25 @@
 package com.databricks.mosaic.functions
 
-import org.apache.spark.sql.{Column, SparkSession}
-import org.apache.spark.sql.catalyst.FunctionIdentifier
-import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.functions.{lit, struct}
-
-import com.databricks.mosaic.core.geometry.GeometryAPI
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystem
 import com.databricks.mosaic.expressions.format.{AsHex, AsJSON, ConvertTo}
 import com.databricks.mosaic.expressions.geometry._
 import com.databricks.mosaic.expressions.helper.TrySql
-import com.databricks.mosaic.expressions.index.{IndexGeometry, MosaicExplode, MosaicFill, PointIndex, Polyfill}
+import com.databricks.mosaic.expressions.index._
+import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.functions.{lit, struct}
+import org.apache.spark.sql.{Column, SparkSession}
 
 
 case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
+
   import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 
   /**
    * Registers required parsers for SQL for Mosaic functionality.
    *
-   * @param spark SparkSession to which the parsers are registered to.
+   * @param spark    SparkSession to which the parsers are registered to.
    * @param database A database to which functions are added to.
    *                 By default none is passed resulting in functions
    *                 being registered in default database.
@@ -28,9 +27,9 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
   // noinspection ZeroIndexToHead
   // scalastyle:off line.size.limit
   def register(
-    spark: SparkSession,
-    database: Option[String] = None
-  ): Unit = {
+                spark: SparkSession,
+                database: Option[String] = None
+              ): Unit = {
     val registry = spark.sessionState.functionRegistry
 
     /** IndexSystem and GeometryAPI Agnostic methods */
@@ -63,13 +62,17 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     registry.registerFunction(FunctionIdentifier("st_aswkb", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name))
     registry.registerFunction(FunctionIdentifier("st_asbinary", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name))
     registry.registerFunction(FunctionIdentifier("st_asgeojson", database), (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson", geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_length", database), (exprs: Seq[Expression]) => ST_Length(exprs(0), geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_perimeter", database), (exprs: Seq[Expression]) => ST_Length(exprs(0), geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_distance", database), (exprs: Seq[Expression]) => ST_Distance(exprs(0), exprs(1), geometryAPI.name))
+
 
     /** IndexSystem Specific */
 
     /** IndexSystem and GeometryAPI Specific methods */
     registry.registerFunction(
-    FunctionIdentifier("mosaic_explode", database),
-    (exprs: Seq[Expression]) => MosaicExplode(struct(ColumnAdapter(exprs(0)), ColumnAdapter(exprs(1))).expr, indexSystem.name, geometryAPI.name)
+      FunctionIdentifier("mosaic_explode", database),
+      (exprs: Seq[Expression]) => MosaicExplode(struct(ColumnAdapter(exprs(0)), ColumnAdapter(exprs(1))).expr, indexSystem.name, geometryAPI.name)
     )
     registry.registerFunction(FunctionIdentifier("mosaicfill", database), (exprs: Seq[Expression]) => MosaicFill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name))
     registry.registerFunction(FunctionIdentifier("point_index", database), (exprs: Seq[Expression]) => PointIndex(exprs(0), exprs(1), exprs(2), indexSystem.name))
@@ -115,7 +118,9 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     def st_asbinary(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb", geometryAPI.name))
     def st_asgeojson(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "geojson", geometryAPI.name))
     def st_dump(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
-
+    def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
+    def st_perimeter(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
+    def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, geometryAPI.name))
 
     /** IndexSystem Specific */
     def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))

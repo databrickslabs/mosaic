@@ -6,8 +6,6 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.types.{DataType, DoubleType, StructField, StructType}
 
-import com.databricks.mosaic.core.types.any2geometry
-
 case class ST_Centroid(inputGeom: Expression, geometryAPIName: String, nDim: Int = 2)
   extends UnaryExpression
     with NullIntolerant
@@ -32,7 +30,7 @@ case class ST_Centroid(inputGeom: Expression, geometryAPIName: String, nDim: Int
   // scalastyle:on throwerror
 
   override def nullSafeEval(input1: Any): Any = {
-    val geometryAPI  = GeometryAPI(geometryAPIName)
+    val geometryAPI = GeometryAPI(geometryAPIName)
 
     val geom = geometryAPI.geometry(input1, inputGeom.dataType)
     val centroid = geom.getCentroid

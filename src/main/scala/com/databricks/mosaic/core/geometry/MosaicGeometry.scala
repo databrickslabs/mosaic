@@ -4,6 +4,10 @@ import com.databricks.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicGeometry extends GeometryWriter {
 
+  def getLength: Double
+
+  def distance(geom2: MosaicGeometry): Double
+
   def isValid: Boolean
 
   def getGeometryType: String
@@ -13,8 +17,6 @@ trait MosaicGeometry extends GeometryWriter {
   def getAPI: String
 
   def getCentroid: MosaicPoint
-
-  def getCoordinates: Seq[MosaicPoint]
 
   def isEmpty: Boolean
 
@@ -36,6 +38,6 @@ trait MosaicGeometry extends GeometryWriter {
 
   def equals(other: java.lang.Object): Boolean
 
-  override def hashCode: Int
+  def hashCode: Int
 
 }

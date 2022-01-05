@@ -1,25 +1,27 @@
 package com.databricks.mosaic.core.types.model
 
-import org.locationtech.jts.geom.Coordinate
-
 import org.apache.spark.sql.catalyst.util.ArrayData
+import org.locationtech.jts.geom.Coordinate
 
 /**
  * A case class modeling 2D or 3D point instances.
  * Coordinates are stored as an array of doubles
  * to accommodate for variable number of dimensions.
+ *
  * @param coords A sequence of coordinates.
  */
 case class InternalCoord(coords: Seq[Double]) {
 
   /**
    * Serialize for spark internals.
+   *
    * @return An instance of [[ArrayData]].
    */
   def serialize: ArrayData = ArrayData.toArrayData(coords)
 
   /**
    * Convert to JTS [[Coordinate]] instance.
+   *
    * @return An instance of [[Coordinate]].
    */
   //noinspection ZeroIndexToHead
@@ -37,6 +39,7 @@ object InternalCoord {
 
   /**
    * Smart constructor based on JTS [[Coordinate]] instance.
+   *
    * @param coordinate An instance of [[Coordinate]].
    * @return An instance of [[InternalCoord]].
    */
@@ -51,6 +54,7 @@ object InternalCoord {
 
   /**
    * Smart constructor based on Spark internal instance.
+   *
    * @param input An instance of [[ArrayData]].
    * @return An instance of [[InternalCoord]].
    */

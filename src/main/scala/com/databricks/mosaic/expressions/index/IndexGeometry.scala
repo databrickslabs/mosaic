@@ -4,11 +4,7 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystemID
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
-
-import com.databricks.mosaic.core.geometry.GeometryAPI
-import com.databricks.mosaic.core.index.IndexSystemID
 
 @ExpressionDescription(
   usage = "_FUNC_(indexID, indexSystem) - Returns the geometry representing the index.",
@@ -33,6 +29,7 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
 
   /**
    * Computes the H3 index corresponding to the provided lat and long coordinates.
+   *
    * @param input1 Any instance containing the ID of the index.
    * @return H3 index id in Long.
    */

@@ -1,14 +1,13 @@
 package com.databricks.mosaic.expressions.helper
 
-import java.io.{PrintWriter, StringWriter}
-
-import scala.util.{Failure, Success, Try}
-
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, UnaryExpression}
 import org.apache.spark.sql.types.{DataType, StringType, StructField, StructType}
 import org.apache.spark.unsafe.types.UTF8String
+
+import java.io.{PrintWriter, StringWriter}
+import scala.util.{Failure, Success, Try}
 
 @ExpressionDescription(
   usage = "_FUNC_(expr1) - Wraps evaluation of an expression into a Try/Catch block and in case of errors returns error" +
@@ -70,6 +69,7 @@ case class TrySql(inExpr: Expression)
     }
   }
 
+  override def child: Expression = inExpr
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val res = TrySql(
@@ -78,6 +78,4 @@ case class TrySql(inExpr: Expression)
     res.copyTagsFrom(this)
     res
   }
-
-  override def child: Expression = inExpr
 }

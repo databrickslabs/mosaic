@@ -1,17 +1,22 @@
 package com.databricks.mosaic.test
 
-import org.apache.spark.sql.{SparkSession, SQLImplicits, SQLContext}
+import org.apache.spark.sql.{SQLContext, SQLImplicits, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
-trait SparkTest extends BeforeAndAfterAll { self: Suite =>
+trait SparkTest extends BeforeAndAfterAll {
+  self: Suite =>
+  var conf: SparkConf = new SparkConf(false)
   @transient private var _sc: SparkContext = _
   @transient private var _spark: SparkSession = _
 
-  def sc: SparkContext = _sc
   def spark: SparkSession = _spark
 
-  var conf: SparkConf = new SparkConf(false)
+  //noinspection ProcedureDefinition
+  override def beforeAll() {
+    startSpark()
+    super.beforeAll()
+  }
 
   private def startSpark(): Unit = {
     _sc = new SparkContext("local[4]", "test", conf)
@@ -19,8 +24,12 @@ trait SparkTest extends BeforeAndAfterAll { self: Suite =>
     _spark = SparkSession.builder.config(sc.getConf).getOrCreate()
   }
 
-  protected object testImplicits extends SQLImplicits {
-    protected override def _sqlContext: SQLContext = self.spark.sqlContext
+  def sc: SparkContext = _sc
+
+  //noinspection ProcedureDefinition
+  override def afterAll() {
+    stopSpark()
+    super.afterAll()
   }
 
   private def stopSpark(): Unit = {
@@ -35,14 +44,12 @@ trait SparkTest extends BeforeAndAfterAll { self: Suite =>
     _spark = null
   }
 
-  override def beforeAll() {
-    startSpark()
-    super.beforeAll()
-  }
-
-  override def afterAll() {
-    stopSpark()
-    super.afterAll()
+  def benchmark[T](f: => T)(n: Int = 200): Double = {
+    val times = (0 until n).map(_ => {
+      restartSpark()
+      time(f)._2
+    })
+    1.0 * times.sum / times.length
   }
 
   def restartSpark(): Unit = {
@@ -57,11 +64,7 @@ trait SparkTest extends BeforeAndAfterAll { self: Suite =>
     (ret, (end - start) / 1000000000.0)
   }
 
-  def benchmark[T](f: => T)(n: Int = 200): Double = {
-    val times = (0 until n).map(_ => {
-      restartSpark()
-      time(f)._2
-    })
-    1.0*times.sum/times.length
+  protected object testImplicits extends SQLImplicits {
+    protected override def _sqlContext: SQLContext = self.spark.sqlContext
   }
 }

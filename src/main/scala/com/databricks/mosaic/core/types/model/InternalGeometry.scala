@@ -1,40 +1,37 @@
 package com.databricks.mosaic.core.types.model
 
-import org.locationtech.jts.geom.{Geometry, GeometryFactory, LineString, MultiPoint, Point, Polygon}
-
+import com.databricks.mosaic.core.types.InternalCoordType
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
-
-import com.databricks.mosaic.core.types.InternalCoordType
-import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
-import org.locationtech.jts.geom.{Geometry, GeometryFactory}
 
 /**
  * A case class modeling Polygons and MultiPolygons.
- * @param typeName "Polygon" or "MultiPolygon" indicating the type of the instance.
+ *
+ * @param typeId     Type id indicting which enum value represents this geometry.
  * @param boundaries A collection of boundaries, for Polygon the length is 1, for
  *                   MultiPolygon the collection will contain boundaries of each
  *                   sub Polygon.
- * @param holes A collection of hole collections, for Polygon the length is 1, for
- *              MultiPolygon the collection will contain hole collection for each
- *              sub Polygon.
+ * @param holes      A collection of hole collections, for Polygon the length is 1, for
+ *                   MultiPolygon the collection will contain hole collection for each
+ *                   sub Polygon.
  */
 case class InternalGeometry(
-   typeId: Int,
-   boundaries: Array[Array[InternalCoord]],
-   holes: Array[Array[Array[InternalCoord]]]
-) {
+                             typeId: Int,
+                             boundaries: Array[Array[InternalCoord]],
+                             holes: Array[Array[Array[InternalCoord]]]
+                           ) {
 
   /**
    * Used for constructing a MultiPolygon instance by merging Polygon/MultiPolygon instances.
+   *
    * @param other An instance of a Polygon/MultiPolygon.
    * @return An instance of a MultiPolygon created by combining left and right instances.
    */
   def merge(other: InternalGeometry): InternalGeometry = {
     InternalGeometry(
-      "MultiPolygon",
+      MULTIPOLYGON.id,
       this.boundaries ++ other.boundaries,
       this.holes ++ other.holes
     )
@@ -42,21 +39,22 @@ case class InternalGeometry(
 
   /**
    * Serialize for spark internals.
+   *
    * @return An instance of [[InternalRow]].
    */
   def serialize: Any = InternalRow.fromSeq(Seq(
-      typeId,
-      ArrayData.toArrayData(
-        boundaries.map(boundary => ArrayData.toArrayData(boundary.map(_.serialize)))
-      ),
-      ArrayData.toArrayData(
-        holes.map(
-          holeGroup => ArrayData.toArrayData(
-            holeGroup.map(hole => ArrayData.toArrayData(hole.map(_.serialize)))
-          )
+    typeId,
+    ArrayData.toArrayData(
+      boundaries.map(boundary => ArrayData.toArrayData(boundary.map(_.serialize)))
+    ),
+    ArrayData.toArrayData(
+      holes.map(
+        holeGroup => ArrayData.toArrayData(
+          holeGroup.map(hole => ArrayData.toArrayData(hole.map(_.serialize)))
         )
       )
     )
+  )
   )
 }
 
@@ -66,6 +64,7 @@ object InternalGeometry {
   /**
    * A smart constructor that construct an instance of [[InternalGeometry]]
    * based on an instance of internal Spark data.
+   *
    * @param input An instance of [[InternalRow]].
    * @return An instance of [[InternalGeometry]].
    */
@@ -76,7 +75,7 @@ object InternalGeometry {
       .toObjectArray(ArrayType(ArrayType(InternalCoordType)))
       .map(
         _.asInstanceOf[ArrayData].toObjectArray(InternalCoordType)
-        .map(c => InternalCoord(c.asInstanceOf[ArrayData]))
+          .map(c => InternalCoord(c.asInstanceOf[ArrayData]))
       )
 
     val holeGroups = input.getArray(2)
@@ -85,7 +84,7 @@ object InternalGeometry {
         _.asInstanceOf[ArrayData].toObjectArray(ArrayType(ArrayType(InternalCoordType)))
           .map(
             _.asInstanceOf[ArrayData].toObjectArray(ArrayType(ArrayType(InternalCoordType)))
-            .map(c => InternalCoord(c.asInstanceOf[ArrayData])))
+              .map(c => InternalCoord(c.asInstanceOf[ArrayData])))
       )
 
     new InternalGeometry(typeId, boundaries, holeGroups)

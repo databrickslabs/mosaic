@@ -13,6 +13,7 @@ import org.scalatest.{FunSuite, Matchers}
 class TestGeometryValidity_JTS_H3 extends FunSuite with SparkTest with Matchers {
 
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
+
   import mosaicContext.functions._
 
   test("Calling st_xmin() should return the minimum x value from all coordinates in the geometry") {

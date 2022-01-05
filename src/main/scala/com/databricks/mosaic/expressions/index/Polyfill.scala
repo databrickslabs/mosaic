@@ -5,13 +5,8 @@ import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 import com.databricks.mosaic.core.types.{HexType, InternalGeometryType}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
-
-import com.databricks.mosaic.core.geometry.GeometryAPI
-import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
-import com.databricks.mosaic.core.types.{HexType, InternalGeometryType}
 
 @ExpressionDescription(
   usage = "_FUNC_(geometry, resolution) - Returns the 1 set representation of geometry at resolution.",
@@ -33,6 +28,8 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
     case (InternalGeometryType, IntegerType) => Seq(InternalGeometryType, IntegerType)
     case _ => throw new IllegalArgumentException(s"Not supported data type: (${left.dataType}, ${right.dataType}).")
   }
+
+  override def right: Expression = resolution
 
   /** Expression output DataType. */
   override def dataType: DataType = ArrayType(LongType)
@@ -63,14 +60,12 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
     serialized
   }
 
+  override def left: Expression = geom
+
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
     val res = Polyfill(asArray(0), asArray(1), indexSystemName, geometryAPIName)
     res.copyTagsFrom(this)
     res
   }
-
-  override def left: Expression = geom
-
-  override def right: Expression = resolution
 }

@@ -11,6 +11,7 @@ import org.scalatest.{FunSuite, Matchers}
 
 class TestFlattenPolygon_JTS_H3 extends FunSuite with SparkTest with Matchers {
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
+
   import mosaicContext.functions._
 
   test("Flattening of WKB Polygons") {
@@ -26,7 +27,7 @@ class TestFlattenPolygon_JTS_H3 extends FunSuite with SparkTest with Matchers {
     val geoms = df.select("wkb")
       .collect()
       .map(g => new WKBReader().read(g.get(0).asInstanceOf[Array[Byte]]))
-      .flatMap(g => for(i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
+      .flatMap(g => for (i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
 
     val flattenedGeoms = flattened
       .collect()
@@ -67,7 +68,7 @@ class TestFlattenPolygon_JTS_H3 extends FunSuite with SparkTest with Matchers {
     val geoms = df.select("wkt")
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
-      .flatMap(g => for(i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
+      .flatMap(g => for (i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
 
     val flattenedGeoms = flattened
       .collect()
@@ -110,7 +111,7 @@ class TestFlattenPolygon_JTS_H3 extends FunSuite with SparkTest with Matchers {
       .select("wkt")
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
-      .flatMap(g => for(i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
+      .flatMap(g => for (i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
 
     val flattenedGeoms = flattened
       .withColumn("wkt", convert_to(col("coords"), "wkt"))
@@ -129,7 +130,8 @@ class TestFlattenPolygon_JTS_H3 extends FunSuite with SparkTest with Matchers {
 
     df.createOrReplaceTempView("source")
     val sqlFlattenedGeoms = spark
-    .sql("""with subquery (
+      .sql(
+        """with subquery (
           |  select flatten_polygons(coords) as coords
           |  from source
           |) select convert_to_wkt(coords) from subquery""".stripMargin)
@@ -139,10 +141,11 @@ class TestFlattenPolygon_JTS_H3 extends FunSuite with SparkTest with Matchers {
     sqlFlattenedGeoms should contain theSameElementsAs geoms
 
     val sqlFlattenedGeoms2 = spark
-      .sql("""with subquery (
-            |  select st_dump(coords) as coords
-            |  from source
-            |) select convert_to_wkt(coords) from subquery""".stripMargin)
+      .sql(
+        """with subquery (
+          |  select st_dump(coords) as coords
+          |  from source
+          |) select convert_to_wkt(coords) from subquery""".stripMargin)
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
@@ -164,7 +167,7 @@ class TestFlattenPolygon_JTS_H3 extends FunSuite with SparkTest with Matchers {
       .select("wkt")
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
-      .flatMap(g => for(i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
+      .flatMap(g => for (i <- 0 until g.getNumGeometries) yield g.getGeometryN(i))
 
     val flattenedGeoms = flattened
       .withColumn("wkt", convert_to(col("hex"), "wkt"))
@@ -183,7 +186,8 @@ class TestFlattenPolygon_JTS_H3 extends FunSuite with SparkTest with Matchers {
 
     df.createOrReplaceTempView("source")
     val sqlFlattenedGeoms = spark
-    .sql("""with subquery (
+      .sql(
+        """with subquery (
           |  select flatten_polygons(hex) as hex
           |  from source
           |) select convert_to_wkt(hex) from subquery""".stripMargin)
@@ -193,10 +197,11 @@ class TestFlattenPolygon_JTS_H3 extends FunSuite with SparkTest with Matchers {
     sqlFlattenedGeoms should contain theSameElementsAs geoms
 
     val sqlFlattenedGeoms2 = spark
-      .sql("""with subquery (
-            |  select st_dump(hex) as hex
-            |  from source
-            |) select convert_to_wkt(hex) from subquery""".stripMargin)
+      .sql(
+        """with subquery (
+          |  select st_dump(hex) as hex
+          |  from source
+          |) select convert_to_wkt(hex) from subquery""".stripMargin)
       .collect()
       .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 

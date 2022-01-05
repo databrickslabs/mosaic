@@ -1,20 +1,16 @@
 package com.databricks.mosaic.core.index
 
+
 import com.databricks.mosaic.core.geometry.MosaicGeometry
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.databricks.mosaic.core.types.model.MosaicChip
 import com.uber.h3core.H3Core
 import org.locationtech.jts.geom.Geometry
 
 import java.{lang, util}
-
 import scala.collection.JavaConverters._
 
-import com.uber.h3core.H3Core
-import org.locationtech.jts.geom.{Coordinate, Geometry}
-
-import com.databricks.mosaic.core.geometry.{GeometryAPI, MosaicGeometry, MosaicPointOGC}
-import com.databricks.mosaic.core.types.model.MosaicChip
 
 /**
  * Implements the [[IndexSystem]] via [[H3Core]] java bindings.
@@ -59,7 +55,7 @@ object H3IndexSystem extends IndexSystem {
     val centroid = geometry.getCentroid
     val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
     val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
-    val boundary = indexGeom.getCoordinates
+    val boundary = indexGeom.getBoundary
 
     // Hexagons have only 3 diameters.
     // Computing them manually and selecting the maximum.
@@ -107,16 +103,6 @@ object H3IndexSystem extends IndexSystem {
   }
 
   /**
-   * @see [[IndexSystem.getCoreChips()]]
-   * @param coreIndices Indices corresponding to the core area of the
-   *                    input geometry.
-   * @return A core area representation via [[MosaicChip]] set.
-   */
-  override def getCoreChips(coreIndices: util.List[lang.Long]): Seq[MosaicChip] = {
-    coreIndices.asScala.map(MosaicChip(true, _, null))
-  }
-
-  /**
    * Boundary that is returned by H3 isn't valid from JTS perspective since
    * it does not form a LinearRing (ie first point == last point).
    * The first point of the boundary is appended to the end of the
@@ -128,7 +114,17 @@ object H3IndexSystem extends IndexSystem {
   override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
     val boundary = h3.h3ToGeoBoundary(index).asScala
     val extended = boundary ++ List(boundary.head)
-    geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord))
+    geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord), POLYGON)
+  }
+
+  /**
+   * @see [[IndexSystem.getCoreChips()]]
+   * @param coreIndices Indices corresponding to the core area of the
+   *                    input geometry.
+   * @return A core area representation via [[MosaicChip]] set.
+   */
+  override def getCoreChips(coreIndices: util.List[lang.Long]): Seq[MosaicChip] = {
+    coreIndices.asScala.map(MosaicChip(true, _, null))
   }
 
   /**

@@ -1,25 +1,18 @@
 package com.databricks.mosaic.expressions.geometry
 
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
-import java.util.Locale
-
-import org.apache.spark.sql.catalyst.expressions.{
-  Expression,
-  ExpressionDescription,
-  NullIntolerant,
-  UnaryExpression
-}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.types.{DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
-import com.databricks.mosaic.core.types.any2geometry
+import java.util.Locale
 
 @ExpressionDescription(
   usage =
     "_FUNC_(expr1) - Returns the OGC Geometry class name for a given geometry.",
-  examples = """
+  examples =
+    """
     Examples:
       > SELECT _FUNC_(a);
        {"MULTIPOLYGON"}
@@ -27,21 +20,21 @@ import com.databricks.mosaic.core.types.any2geometry
   since = "1.0"
 )
 case class ST_GeometryType(inputGeom: Expression, geometryAPIName: String)
-    extends UnaryExpression
+  extends UnaryExpression
     with NullIntolerant
     with CodegenFallback {
 
   /** ST_GeometryType expression returns the OGC Geometry class name for a given
-  * geometry, allowing basic type checking of geometries in more complex
-  * functions.
-  */
+   * geometry, allowing basic type checking of geometries in more complex
+   * functions.
+   */
 
   override def child: Expression = inputGeom
 
   override def dataType: DataType = StringType
 
   override def nullSafeEval(input1: Any): Any = {
-    val geometryAPI  = GeometryAPI(geometryAPIName)
+    val geometryAPI = GeometryAPI(geometryAPIName)
 
     val geom = geometryAPI.geometry(input1, inputGeom.dataType)
     UTF8String.fromString(geom.getGeometryType.toUpperCase(Locale.ROOT))

@@ -2,6 +2,7 @@ package com.databricks.mosaic.core.geometry.api
 
 import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS, MosaicPointOGC}
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryJTS, MosaicGeometryOGC}
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
 import com.uber.h3core.util.GeoCoord
 import org.apache.spark.sql.catalyst.InternalRow
@@ -13,7 +14,8 @@ abstract class GeometryAPI(
 ) {
 
   def name: String
-  def geometry(points: Seq[MosaicPoint]): MosaicGeometry = reader.fromPoints(points)
+
+  def geometry(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = reader.fromPoints(points, geomType)
 
   /**
    * Constructs an instance of [[MosaicGeometry]] based on an instance

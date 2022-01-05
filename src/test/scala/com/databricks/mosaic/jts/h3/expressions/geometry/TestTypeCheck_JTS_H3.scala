@@ -11,6 +11,7 @@ import org.scalatest.{FunSuite, Matchers}
 class TestTypeCheck_JTS_H3 extends FunSuite with Matchers with SparkTest {
 
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
+
   import mosaicContext.functions._
 
   test("ST_GeometryType returns the correct geometry type string for WKT geometries") {
