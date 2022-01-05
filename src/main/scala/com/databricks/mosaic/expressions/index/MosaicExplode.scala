@@ -33,6 +33,49 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
 
   override val inline: Boolean = false
 
+  override def checkInputDataTypes(): TypeCheckResult = MosaicExplode.checkInputDataTypesImpl(child)
+
+  override def elementSchema: StructType = MosaicExplode.elementSchemaImpl(child)
+
+  override def eval(input: InternalRow): TraversableOnce[InternalRow] = MosaicExplode.evalImpl(input, child, indexSystemName, geometryAPIName)
+
+  override def makeCopy(newArgs: Array[AnyRef]): Expression = MosaicExplode.makeCopyImpl(newArgs, this)
+
+  override def collectionType: DataType = child.dataType
+
+  override def child: Expression = pair
+
+  override def position: Boolean = false
+}
+
+object MosaicExplode {
+
+  /**
+   * Type-wise differences in evaluation are only present on the input
+   * data conversion to a [[Geometry]]. The rest of the evaluation
+   * is agnostic to the input data type. The evaluation generates
+   * a set of core indices that are fully contained by the input
+   * [[Geometry]] and a set of border indices that are partially
+   * contained by the input [[Geometry]].
+   *
+   * @param input Struct containing a geometry and a resolution.
+   * @return A set of serialized [[com.databricks.mosaic.core.types.model.MosaicChip]].
+   *         This set will be used to generate new rows of data.
+   */
+  def evalImpl(input: InternalRow, child: Expression, indexSystemName: String, geometryAPIName: String): TraversableOnce[InternalRow] = {
+    val inputData = child.eval(input).asInstanceOf[InternalRow]
+    val geomType = child.dataType.asInstanceOf[StructType].fields.head.dataType
+
+    val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+    val geometryAPI = GeometryAPI(geometryAPIName)
+    val geometry = geometryAPI.geometry(inputData, geomType)
+
+    val resolution = inputData.getInt(1)
+
+    val chips = Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
+    chips.map(_.serialize)
+  }
+
   /**
    * [[MosaicExplode]] expression can only be called on supported data types.
    * The supported data types are [[BinaryType]] for WKB encoding, [[StringType]]
@@ -41,7 +84,7 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
    *
    * @return An instance of [[TypeCheckResult]] indicating success or a failure.
    */
-  override def checkInputDataTypes(): TypeCheckResult = {
+  def checkInputDataTypesImpl(child: Expression): TypeCheckResult = {
     val fields = child.dataType.asInstanceOf[StructType].fields
     val geomType = fields.head
     val resolutionType = fields(1)
@@ -71,7 +114,7 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
    * @return The schema of the child element. Has to be provided as
    *         a [[StructType]].
    */
-  override def elementSchema: StructType = {
+  def elementSchemaImpl(child: Expression): StructType = {
     val fields = child.dataType.asInstanceOf[StructType].fields
     val geomType = fields.head
     val resolutionType = fields(1)
@@ -88,43 +131,12 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
     }
   }
 
-  /**
-   * Type-wise differences in evaluation are only present on the input
-   * data conversion to a [[Geometry]]. The rest of the evaluation
-   * is agnostic to the input data type. The evaluation generates
-   * a set of core indices that are fully contained by the input
-   * [[Geometry]] and a set of border indices that are partially
-   * contained by the input [[Geometry]].
-   *
-   * @param input Struct containing a geometry and a resolution.
-   * @return A set of serialized [[com.databricks.mosaic.core.types.model.MosaicChip]].
-   *         This set will be used to generate new rows of data.
-   */
-  override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-    val inputData = child.eval(input).asInstanceOf[InternalRow]
-    val geomType = child.dataType.asInstanceOf[StructType].fields.head.dataType
-
-    val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-    val geometryAPI = GeometryAPI(geometryAPIName)
-    val geometry = geometryAPI.geometry(inputData, geomType)
-
-    val resolution = inputData.getInt(1)
-
-    val chips = Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
-    chips.map(_.serialize)
-  }
-
-  override def makeCopy(newArgs: Array[AnyRef]): Expression = {
+  def makeCopyImpl(newArgs: Array[AnyRef], instance: MosaicExplode): Expression = {
     val arg1 = newArgs.head.asInstanceOf[Expression]
-    val res = MosaicExplode(arg1, indexSystemName, geometryAPIName)
-    res.copyTagsFrom(this)
+    val res = MosaicExplode(arg1, instance.indexSystemName, instance.geometryAPIName)
+    res.copyTagsFrom(instance)
     res
   }
 
-  override def collectionType: DataType = child.dataType
-
-  override def child: Expression = pair
-
-  override def position: Boolean = false
 }
 
