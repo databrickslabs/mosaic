@@ -98,8 +98,8 @@ case class ST_PolygonWithHoles(boundaryRingArray: Expression, holeRingArray: Exp
   }
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-    val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-    val res = ST_Polygon(asArray.head)
+    val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
+    val res = ST_PolygonWithHoles(asArray(0), asArray(1))
     res.copyTagsFrom(this)
     res
   }
