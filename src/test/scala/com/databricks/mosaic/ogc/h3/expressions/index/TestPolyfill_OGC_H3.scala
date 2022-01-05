@@ -36,7 +36,7 @@ case class TestPolyfill_OGC_H3() extends FunSuite with SparkTest with Matchers {
     boroughs.collect().length shouldEqual mosaics2.length
   }
 
-  test("Polyfill  of a WKB polygon") {
+  test("Polyfill of a WKB polygon") {
     mosaicContext.register(spark)
 
     val boroughs: DataFrame = getBoroughs
@@ -57,7 +57,7 @@ case class TestPolyfill_OGC_H3() extends FunSuite with SparkTest with Matchers {
     boroughs.collect().length shouldEqual mosaics2.length
   }
 
-  test("Polyfill  of a HEX polygon") {
+  test("Polyfill of a HEX polygon") {
     mosaicContext.register(spark)
 
     val boroughs: DataFrame = getBoroughs
