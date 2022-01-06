@@ -12,13 +12,17 @@ mosaicPatch = MosaicPatchClass.apply(H3(), OGC())
 # original bindings             #
 #################################
 
+
 def flatten_polygons(inGeom: "ColumnOrName"):
-  return _mosaic_invoke_function("flatten_polygons", mosaicPatch, pyspark_to_java_column(inGeom))
+    return _mosaic_invoke_function(
+        "flatten_polygons", mosaicPatch, pyspark_to_java_column(inGeom)
+    )
+
 
 def mosaic_explode(inGeom: "ColumnOrName", resolution: "ColumnOrName"):
-  return _mosaic_invoke_function(
-    "mosaic_explode", 
-    mosaicPatch, 
-    pyspark_to_java_column(inGeom), 
-    pyspark_to_java_column(resolution)
-  )
+    return _mosaic_invoke_function(
+        "mosaic_explode",
+        mosaicPatch,
+        pyspark_to_java_column(inGeom),
+        pyspark_to_java_column(resolution),
+    )

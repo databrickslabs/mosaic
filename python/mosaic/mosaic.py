@@ -17,7 +17,9 @@ OGC = getattr(mosaicPackageObject, "OGC")
 mosaicContext = MosaicContextClass.apply(H3(), OGC())
 
 
-def _mosaic_invoke_function(name: str, mosaic_context: "MosaicContext", *args: Any) -> MosaicColumn:
-  assert SparkContext._active_spark_context is not None
-  func = getattr(mosaic_context.functions(), name)
-  return MosaicColumn(func(*args))
+def _mosaic_invoke_function(
+    name: str, mosaic_context: "MosaicContext", *args: Any
+) -> MosaicColumn:
+    assert SparkContext._active_spark_context is not None
+    func = getattr(mosaic_context.functions(), name)
+    return MosaicColumn(func(*args))
