@@ -39,7 +39,7 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
 
   override def eval(input: InternalRow): TraversableOnce[InternalRow] = MosaicExplode.evalImpl(input, child, indexSystemName, geometryAPIName)
 
-  override def makeCopy(newArgs: Array[AnyRef]): Expression = MosaicExplode.makeCopyImpl(newArgs, this)
+  override def makeCopy(newArgs: Array[AnyRef]): Expression = MosaicExplode.makeCopyImpl(newArgs, this, indexSystemName, geometryAPIName)
 
   override def collectionType: DataType = child.dataType
 
@@ -131,9 +131,9 @@ object MosaicExplode {
     }
   }
 
-  def makeCopyImpl(newArgs: Array[AnyRef], instance: MosaicExplode): Expression = {
+  def makeCopyImpl(newArgs: Array[AnyRef], instance: Expression, indexSystemName: String, geometryAPIName: String): Expression = {
     val arg1 = newArgs.head.asInstanceOf[Expression]
-    val res = MosaicExplode(arg1, instance.indexSystemName, instance.geometryAPIName)
+    val res = MosaicExplode(arg1, indexSystemName, geometryAPIName)
     res.copyTagsFrom(instance)
     res
   }

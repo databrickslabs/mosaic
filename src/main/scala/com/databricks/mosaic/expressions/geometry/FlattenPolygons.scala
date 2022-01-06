@@ -48,7 +48,7 @@ case class FlattenPolygons(pair: Expression, geometryAPIName: String)
     FlattenPolygons.evalImpl(input, child, geometryAPIName)
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression =
-    FlattenPolygons.makeCopyImpl(newArgs, geometryAPIName, this)
+    FlattenPolygons.makeCopyImpl(newArgs, this, geometryAPIName)
 }
 
 object FlattenPolygons {
@@ -123,7 +123,7 @@ object FlattenPolygons {
     case _: InternalGeometryType => StructType(Seq(StructField("element", InternalGeometryType)))
   }
 
-  def makeCopyImpl(newArgs: Array[AnyRef], geometryAPIName: String, instance: FlattenPolygons): Expression = {
+  def makeCopyImpl(newArgs: Array[AnyRef], instance: Expression, geometryAPIName: String): Expression = {
     val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
     val res = FlattenPolygons(asArray(0), geometryAPIName)
     res.copyTagsFrom(instance)
