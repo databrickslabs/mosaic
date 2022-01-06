@@ -18,7 +18,9 @@ def st_point(xVal: "ColumnOrName", yVal: "ColumnOrName"):
 def st_makeline(points: "ColumnOrName"):
   return _mosaic_invoke_function("st_makeline", mosaicContext, pyspark_to_java_column(points))
 
-def st_makepolygon(boundaryRing: "ColumnOrName"):
+def st_makepolygon(boundaryRing: "ColumnOrName", holeRingArray: "ColumnOrName" = None):
+  if holeRingArray:
+    return _mosaic_invoke_function("st_makepolygon", mosaicContext, pyspark_to_java_column(boundaryRing),  pyspark_to_java_column(holeRingArray))
   return _mosaic_invoke_function("st_makepolygon", mosaicContext, pyspark_to_java_column(boundaryRing))
 
 def flatten_polygons(inGeom: "ColumnOrName"):
