@@ -1,7 +1,7 @@
 package com.databricks.mosaic.expressions.index
 
 import com.databricks.mosaic.core.Mosaic
-import com.databricks.mosaic.core.geometry.GeometryAPI
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystemID
 import com.databricks.mosaic.core.types.{ChipType, HexType, InternalGeometryType}
 import org.apache.spark.sql.catalyst.InternalRow
@@ -95,6 +95,7 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
    * a set of core indices that are fully contained by the input
    * [[Geometry]] and a set of border indices that are partially
    * contained by the input [[Geometry]].
+   *
    * @param input Struct containing a geometry and a resolution.
    * @return A set of serialized [[com.databricks.mosaic.core.types.model.MosaicChip]].
    *         This set will be used to generate new rows of data.
@@ -104,12 +105,12 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
     val geomType = child.dataType.asInstanceOf[StructType].fields.head.dataType
 
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-    val geometryAPI  = GeometryAPI(geometryAPIName)
+    val geometryAPI = GeometryAPI(geometryAPIName)
     val geometry = geometryAPI.geometry(inputData, geomType)
 
     val resolution = inputData.getInt(1)
 
-    val chips =  Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
+    val chips = Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
     chips.map(_.serialize)
   }
 

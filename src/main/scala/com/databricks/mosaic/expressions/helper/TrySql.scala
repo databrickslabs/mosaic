@@ -69,6 +69,7 @@ case class TrySql(inExpr: Expression)
     }
   }
 
+  override def child: Expression = inExpr
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val res = TrySql(
@@ -77,6 +78,4 @@ case class TrySql(inExpr: Expression)
     res.copyTagsFrom(this)
     res
   }
-
-  override def child: Expression = inExpr
 }

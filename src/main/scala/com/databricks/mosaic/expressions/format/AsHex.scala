@@ -1,11 +1,12 @@
 package com.databricks.mosaic.expressions.format
 
-import com.databricks.mosaic.core.types.HexType
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.{DataType, StringType}
+
+import com.databricks.mosaic.core.types.HexType
 
 @ExpressionDescription(
   usage = "_FUNC_(expr1) - Returns the wkb hex string representation wrapped into a struct for a type matching purposes.",

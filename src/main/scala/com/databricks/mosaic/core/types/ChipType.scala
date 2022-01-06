@@ -1,6 +1,6 @@
 package com.databricks.mosaic.core.types
 
-import org.apache.spark.sql.types.{BinaryType, BooleanType, LongType, StructField, StructType}
+import org.apache.spark.sql.types._
 
 /**
  * Type definition for Chip.
@@ -10,7 +10,7 @@ class ChipType() extends StructType(
   Array(
     StructField("is_core", BooleanType),
     StructField("h3", LongType),
-    StructField("wkb", BinaryType),
+    StructField("wkb", BinaryType)
   )
 ) {
   override def typeName: String = "mosaic_chip"

@@ -29,6 +29,7 @@ case class PointIndex(lat: Expression, lng: Expression, resolution: Expression, 
 
   /**
    * Computes the H3 index corresponding to the provided lat and long coordinates.
+   *
    * @param input1 Any instance containing latitude.
    * @param input2 Any instance containing longitude.
    * @param input3 Any instance containing resolution.

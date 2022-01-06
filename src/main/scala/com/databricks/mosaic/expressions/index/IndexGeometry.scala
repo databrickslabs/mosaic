@@ -1,6 +1,6 @@
 package com.databricks.mosaic.expressions.index
 
-import com.databricks.mosaic.core.geometry.GeometryAPI
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystemID
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
@@ -19,7 +19,8 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
   extends UnaryExpression with NullIntolerant with CodegenFallback {
 
   /** Expression output DataType. */
-  override def dataType: DataType = BinaryType // Return WKB, if other type is required call ConvertTO
+  // Return WKB, if other type is required call ConvertTO
+  override def dataType: DataType = BinaryType
 
   override def toString: String = s"index_geometry($indexID)"
 
@@ -28,6 +29,7 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
 
   /**
    * Computes the H3 index corresponding to the provided lat and long coordinates.
+   *
    * @param input1 Any instance containing the ID of the index.
    * @return H3 index id in Long.
    */

@@ -1,7 +1,7 @@
 package com.databricks.mosaic.expressions.index
 
 import com.databricks.mosaic.core.Mosaic
-import com.databricks.mosaic.core.geometry.GeometryAPI
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, MosaicType}
 import org.apache.spark.sql.catalyst.InternalRow
@@ -33,6 +33,8 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
     case _ => throw new IllegalArgumentException(s"Not supported data type: (${left.dataType}, ${right.dataType}).")
   }
 
+  override def right: Expression = resolution
+
   /** Expression output DataType. */
   override def dataType: DataType = MosaicType
 
@@ -48,6 +50,7 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
    * a set of core indices that are fully contained by the input
    * [[Geometry]] and a set of border indices that are partially
    * contained by the input [[Geometry]].
+   *
    * @param input1 Any instance containing the geometry.
    * @param input2 Any instance containing the resolution
    * @return A set of serialized [[com.databricks.mosaic.core.types.model.MosaicChip]].
@@ -59,14 +62,16 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
     val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
     val geometryAPI = GeometryAPI(geometryAPIName)
     val geometry = geometryAPI.geometry(input1, left.dataType)
-    val chips =  Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
+    val chips = Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
 
     val serialized = InternalRow.fromSeq(Seq(
-      ArrayData.toArrayData(chips.map(_.serialize)),
+      ArrayData.toArrayData(chips.map(_.serialize))
     ))
 
     serialized
   }
+
+  override def left: Expression = geom
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
@@ -74,8 +79,4 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
     res.copyTagsFrom(this)
     res
   }
-
-  override def left: Expression = geom
-
-  override def right: Expression = resolution
 }

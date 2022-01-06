@@ -1,13 +1,15 @@
 package com.databricks.mosaic.expressions.format
 
-import com.databricks.mosaic.expressions.format.Conversions.{geojson2geom, geom2geojson, geom2hex, geom2wkb, geom2wkt, hex2geom, wkb2geom, wkb2hex, wkt2geom}
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
-import com.databricks.mosaic.core.types.model.InternalGeometry
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
+import org.apache.spark.unsafe.types.UTF8String
+
+import java.util.Locale
 
 @ExpressionDescription(
   usage = "_FUNC_(expr1, dataType) - Converts expr1 to the specified data type.",
@@ -20,7 +22,7 @@ import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
       "POLYGON ((...))"
   """,
   since = "1.0")
-case class ConvertTo(inGeometry: Expression, outDataType: String)
+case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPIName: String)
   extends UnaryExpression with NullIntolerant with CodegenFallback {
 
   /**
@@ -28,10 +30,11 @@ case class ConvertTo(inGeometry: Expression, outDataType: String)
    * input geometry and requested output data type.
    * Data type is provided as a string keyword.
    * Input geometry type is extracted from the expression input.
+   *
    * @return An instance of [[TypeCheckResult]] indicating success or a failure.
    */
   override def checkInputDataTypes(): TypeCheckResult =
-    (inGeometry.dataType, outDataType.toUpperCase) match {
+    (inGeometry.dataType, outDataType.toUpperCase(Locale.ROOT)) match {
       case (BinaryType, "WKT") => TypeCheckResult.TypeCheckSuccess
       case (BinaryType, "COORDS") => TypeCheckResult.TypeCheckSuccess
       case (BinaryType, "HEX") => TypeCheckResult.TypeCheckSuccess
@@ -58,15 +61,6 @@ case class ConvertTo(inGeometry: Expression, outDataType: String)
         )
     }
 
-  /** Expression output DataType. */
-  override def dataType: DataType = outDataType.toUpperCase match {
-    case "WKT" => StringType
-    case "WKB" => BinaryType
-    case "HEX" => HexType
-    case "COORDS" => InternalGeometryType
-    case "GEOJSON" => JSONType
-  }
-
   override def toString: String = s"convert_to($inGeometry, $outDataType)"
 
   /** Overridden to ensure [[Expression.sql]] is properly formatted. */
@@ -75,42 +69,39 @@ case class ConvertTo(inGeometry: Expression, outDataType: String)
   /**
    * Depending on the input data type and output data type keyword a specific
    * conversion function will be executed after the case matching has been evaluated.
+   *
    * @param input Type-erased input data that will be casted to a correct
    *              data type based on the case matching and the called function.
-   * @return  A converted representation of the input geometry.
+   * @return A converted representation of the input geometry.
    */
-  override def nullSafeEval(input: Any): Any =
-    (inGeometry.dataType, outDataType.toUpperCase) match {
-      case (BinaryType, "WKT") => geom2wkt(wkb2geom(input))
-      case (BinaryType, "HEX") => wkb2hex(input)
-      case (BinaryType, "COORDS") => InternalGeometry(wkb2geom(input)).serialize
-      case (BinaryType, "GEOJSON") => geom2geojson(wkb2geom(input))
-      case (StringType, "WKB") => geom2wkb(wkt2geom(input))
-      case (StringType, "HEX") => wkb2hex(geom2wkb(wkt2geom(input)))
-      case (StringType, "COORDS") => InternalGeometry(wkt2geom(input)).serialize
-      case (StringType, "GEOJSON") => geom2geojson(wkt2geom(input))
-      case (HexType, "WKT") => geom2wkt(hex2geom(input))
-      case (HexType, "WKB") => geom2wkb(hex2geom(input))
-      case (HexType, "COORDS") => InternalGeometry(hex2geom(input)).serialize
-      case (HexType, "GEOJSON") => geom2geojson(hex2geom(input))
-      case (JSONType, "WKT") => geom2wkt(geojson2geom(input))
-      case (JSONType, "WKB") => geom2wkb(geojson2geom(input))
-      case (JSONType, "HEX") => geom2hex(geojson2geom(input))
-      case (JSONType, "COORDS") => InternalGeometry(geojson2geom(input)).serialize
-      case (InternalGeometryType, "WKB") => geom2wkb(InternalGeometry(input.asInstanceOf[InternalRow]).toGeom)
-      case (InternalGeometryType, "WKT") => geom2wkt(InternalGeometry(input.asInstanceOf[InternalRow]).toGeom)
-      case (InternalGeometryType, "HEX") => wkb2hex(geom2wkb(InternalGeometry(input.asInstanceOf[InternalRow]).toGeom))
-      case (InternalGeometryType, "GEOJSON") => geom2geojson(InternalGeometry(input.asInstanceOf[InternalRow]).toGeom)
-      case _ =>
-        throw new Error(
-          s"Cannot convert from ${inGeometry.dataType.sql} to $dataType"
-        )
+  override def nullSafeEval(input: Any): Any = {
+    val geometryAPI = GeometryAPI(geometryAPIName)
+    val geometry = geometryAPI.geometry(input, inGeometry.dataType)
+
+    outDataType.toUpperCase(Locale.ROOT) match {
+      case "WKB" => geometry.toWKB
+      case "WKT" => UTF8String.fromString(geometry.toWKT)
+      case "HEX" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
+      case "GEOJSON" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
+      case "COORDS" => geometry.toInternal.serialize
+      case _ => throw new Error(s"Cannot convert from ${inGeometry.dataType.sql} to $dataType")
     }
+  }
+
+  /** Expression output DataType. */
+  override def dataType: DataType = outDataType.toUpperCase(Locale.ROOT) match {
+    case "WKT" => StringType
+    case "WKB" => BinaryType
+    case "HEX" => HexType
+    case "COORDS" => InternalGeometryType
+    case "GEOJSON" => JSONType
+  }
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val res = ConvertTo(
       newArgs(0).asInstanceOf[Expression],
-      outDataType
+      outDataType,
+      geometryAPIName
     )
     res.copyTagsFrom(this)
     res

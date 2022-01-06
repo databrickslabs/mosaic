@@ -1,17 +1,22 @@
 package com.databricks.mosaic.core.geometry
 
-import com.uber.h3core.util.GeoCoord
-import org.locationtech.jts.geom.{Coordinate, GeometryFactory}
+import com.databricks.mosaic.core.geometry.point.MosaicPoint
 
-trait MosaicGeometry {
+trait MosaicGeometry extends GeometryWriter {
 
-  def toWKB: Array[Byte]
+  def getLength: Double
+
+  def distance(geom2: MosaicGeometry): Double
+
+  def isValid: Boolean
+
+  def getGeometryType: String
+
+  def getArea: Double
 
   def getAPI: String
 
   def getCentroid: MosaicPoint
-
-  def getCoordinates: Seq[MosaicPoint]
 
   def isEmpty: Boolean
 
@@ -27,20 +32,12 @@ trait MosaicGeometry {
 
   def intersection(other: MosaicGeometry): MosaicGeometry
 
+  def flatten: Seq[MosaicGeometry]
+
   def equals(other: MosaicGeometry): Boolean
-}
 
-object MosaicGeometry {
+  def equals(other: java.lang.Object): Boolean
 
-  def fromCoordinates(coordinates: Seq[Coordinate]): MosaicGeometry = {
-    val geometryFactory = new GeometryFactory
-    val geom = geometryFactory.createPolygon(coordinates.toArray)
-    MosaicGeometryJTS(geom)
-  }
-
-  def fromGeoCoords(geoCoords: Seq[GeoCoord]): MosaicGeometry = {
-    val coords = geoCoords.map(c => new Coordinate(c.lng, c.lat))
-    this.fromCoordinates(coords)
-  }
+  def hashCode: Int
 
 }

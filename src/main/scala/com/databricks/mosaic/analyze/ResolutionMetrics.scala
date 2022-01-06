@@ -10,7 +10,7 @@ case class ResolutionMetrics(
     medianRecommendedResolution: Int,
     medianAreaRatio: Double,
     p75RecommendedResolution: Int,
-    p75AreaRatio: Double,
+    p75AreaRatio: Double
 )
 
 object ResolutionMetrics {
@@ -24,10 +24,10 @@ object ResolutionMetrics {
     )
 
     //noinspection ZeroIndexToHead
-    val p25Ratios = indexAreas.map(geometryAreas(0)/_).zipWithIndex.filter(i=> i._1 > 10 & i._1 < 100).minBy(_._1)
-    val meanRatios = indexAreas.map(geometryAreas(1)/_).zipWithIndex.filter(i=> i._1 > 10 & i._1 < 100).minBy(_._1)
-    val p50Ratios = indexAreas.map(geometryAreas(2)/_).zipWithIndex.filter(i=> i._1 > 10 & i._1 < 100).minBy(_._1)
-    val p75Ratios = indexAreas.map(geometryAreas(3)/_).zipWithIndex.filter(i=> i._1 > 10 & i._1 < 100).minBy(_._1)
+    val p25Ratios = indexAreas.map(geometryAreas(0)/_).zipWithIndex.filter(i => i._1 > 10 & i._1 < 100).minBy(_._1)
+    val meanRatios = indexAreas.map(geometryAreas(1)/_).zipWithIndex.filter(i => i._1 > 10 & i._1 < 100).minBy(_._1)
+    val p50Ratios = indexAreas.map(geometryAreas(2)/_).zipWithIndex.filter(i => i._1 > 10 & i._1 < 100).minBy(_._1)
+    val p75Ratios = indexAreas.map(geometryAreas(3)/_).zipWithIndex.filter(i => i._1 > 10 & i._1 < 100).minBy(_._1)
 
     ResolutionMetrics(
       meanRatios._2, meanRatios._1,
