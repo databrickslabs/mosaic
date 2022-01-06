@@ -24,12 +24,12 @@ setup(
     author="Databricks",
     version="1.0.0",
     description="Mosaic geospatial analytics (python bindings)",
-    URL="https://github.com/databricks/mosaic",
+    url="https://github.com/databricks/mosaic",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     python_requires=">=3.7.0",
     packages=find_packages(exclude=("tests",)),
-    install_requires=["pyspark==3.1.1"],
+    install_requires=["pyspark>=3.1.1"],
     extras_require={"dev": ["mypy", "isort", "flake8", "black", "build"]},
     # https://stackoverflow.com/questions/28509965/setuptools-development-requirements
     # Install dev requirements with: pip install -e .[dev]
