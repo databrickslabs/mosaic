@@ -51,8 +51,8 @@ class TestConstructors extends FunSuite with SparkTest with Matchers {
   test("ST_Polygon should create a new polygon InternalGeometryType from a sequence of double pairs.") {
     mosaicContext.register(spark)
 
-    val polygon = Array((30.0, 10.0), (40.0, 40.0), (20.0, 40.0), (10.0, 20.0), (30.0, 10.0))
-    val rows = List(Row(polygon.map({case (x: Double, y: Double) => Array(x, y)})))
+    val boundary = Array((30.0, 10.0), (40.0, 40.0), (20.0, 40.0), (10.0, 20.0), (30.0, 10.0))
+    val rows = List(Row(boundary.map({case (x: Double, y: Double) => Array(x, y)})))
     val schema = StructType(
         List(
           StructField("Boundary", ArrayType(ArrayType(DoubleType)))
@@ -68,6 +68,44 @@ class TestConstructors extends FunSuite with SparkTest with Matchers {
 
 
     val right = List("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+
+    left should contain allElementsOf right
+
+  }
+
+  test("ST_Polygon should create a new polygon InternalGeometryType from a " +
+    "sequence of double pairs and a nested array of holes.") {
+    mosaicContext.register(spark)
+
+    val boundary = Array((10.0, 10.0), (110.0, 10.0), (110.0, 110.0), (10.0, 110.0), (10.0, 10.0))
+    val holes = Array(
+      Array((20.0, 20.0), (20.0, 30.0), (30.0, 30.0), (30.0, 20.0), (20.0, 20.0)),
+      Array((40.0, 20.0), (40.0, 30.0), (50.0, 30.0), (50.0, 20.0), (40.0, 20.0))
+    )
+    val rows = List(Row(
+      boundary.map({case (x: Double, y: Double) => Array(x, y)}),
+      holes.map(h => h.map({ case (x: Double, y: Double) => Array(x, y)}))
+      ))
+    val schema = StructType(
+        List(
+          StructField("Boundary", ArrayType(ArrayType(DoubleType))),
+          StructField("Holes", ArrayType(ArrayType(ArrayType(DoubleType))))
+        )
+      )
+
+    val left = 
+      spark.createDataFrame(rows, schema)
+      .withColumn("geom", st_polygon($"Boundary", $"Holes"))
+      .select(st_astext($"geom").alias("wkt"))
+      .as[String]
+      .collect()
+
+
+    val right = List(
+    """POLYGON ((10 10, 110 10, 110 110, 10 110, 10 10),
+      | (20 20, 20 30, 30 30, 30 20, 20 20),
+      | (40 20, 40 30, 50 30, 50 20, 40 20))""".stripMargin.filter(_ >= ' ')
+    )
 
     left should contain allElementsOf right
 

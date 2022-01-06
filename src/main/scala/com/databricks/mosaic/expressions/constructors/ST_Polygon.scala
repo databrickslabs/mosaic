@@ -34,7 +34,7 @@ case class ST_Polygon(boundaryRingArray: Expression)
   override def eval(input: InternalRow): Any = {
     val boundaryRing = boundaryRingArray.eval(input).asInstanceOf[ArrayData]
     
-    val numCoords = boundaryRing.numElements()
+    val numCoords = boundaryRing.numElements
     var i = 0
     while (i < numCoords) {
       val coord = boundaryRing.getArray(i)
@@ -78,22 +78,44 @@ case class ST_PolygonWithHoles(boundaryRingArray: Expression, holeRingArray: Exp
 
   override def dataType: DataType = InternalGeometryType
 
-  private lazy val coordArray = new ArrayBuffer[InternalCoord]
+  private lazy val boundaryCoordArray = new ArrayBuffer[InternalCoord]
+  private lazy val holeCoordArray = new ArrayBuffer[InternalCoord]
+  private lazy val holesNestedArray = new ArrayBuffer[Array[InternalCoord]]
 
   override def nullSafeEval(input1: Any, input2: Any): Any = {
     val boundaryRing = input1.asInstanceOf[ArrayData]
     val holeRings = input2.asInstanceOf[ArrayData]
     
-    val numCoords = boundaryRing.numElements()
     var i = 0
-    while (i < numCoords) {
+    var j = 0
+    
+    val numBoundaryCoords = boundaryRing.numElements
+
+    while (i < numBoundaryCoords) {
       val coord = boundaryRing.getArray(i)
-      coordArray += new InternalCoord(Seq(coord.getDouble(0), coord.getDouble(1)))
+      boundaryCoordArray += new InternalCoord(Seq(coord.getDouble(0), coord.getDouble(1)))
       i += 1
     } 
-    val boundary = coordArray.toArray
+    val boundary = boundaryCoordArray.toArray
 
-    val polygon = new InternalGeometry(GeometryTypeEnum.POLYGON.id, Array(boundary), Array(Array()))
+    val numHoles = holeRings.numElements()
+    i = 0
+    while (i < numHoles) {
+      val holeRing = holeRings.getArray(i)
+      val numHoleCoords = holeRing.numElements
+      while (j < numHoleCoords) {
+        val coord = holeRing.getArray(j)
+        holeCoordArray += new InternalCoord(Seq(coord.getDouble(0), coord.getDouble(1)))
+        j += 1
+      }
+      holesNestedArray += holeCoordArray.toArray
+      holeCoordArray.clear
+      i += 1
+      j = 0
+    }
+    val holes = holesNestedArray.toArray
+
+    val polygon = new InternalGeometry(GeometryTypeEnum.POLYGON.id, Array(boundary), Array(holes))
     polygon.serialize
   }
 
