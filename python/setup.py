@@ -23,7 +23,7 @@ setup(
     name="databricks-mosaic",
     author="Databricks",
     version="1.0.0",
-    description="Mosaic geospatial analytics (python bindings)",
+    description="Mosaic: geospatial analytics in python, on Spark",
     url="https://github.com/databricks/mosaic",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
