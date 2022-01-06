@@ -3,7 +3,7 @@ package com.databricks.mosaic.expressions.constructors
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
-import org.apache.spark.sql.types.{DataType, DoubleType}
+import org.apache.spark.sql.types.DataType
 
 import com.databricks.mosaic.core.types.InternalGeometryType
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
@@ -11,7 +11,7 @@ import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, 
 
 @ExpressionDescription(
   usage =
-    "_FUNC_(expr1, expr2) - Creates a new Point geometry from X and Y.",
+    "_FUNC_(expr1, expr2) - Creates a new Point geometry from X and Y, where both values are DoubleType.",
   examples =
     """
     Examples:
