@@ -13,13 +13,17 @@ object GeometryTypeEnum extends Enumeration {
   val LINEARRING: GeometryTypeEnum.Value = Value(7, "LINEARRING")
 
   def fromString(value: String): GeometryTypeEnum.Value =
-    GeometryTypeEnum.values.find(_.toString == value.toUpperCase(Locale.ROOT))
-      .getOrElse(throw new IllegalArgumentException(
-        s"Invalid mode for geometry type: $value." +
-          s" Must be one of ${GeometryTypeEnum.values.mkString(",")}")
+    GeometryTypeEnum.values
+      .find(_.toString == value.toUpperCase(Locale.ROOT))
+      .getOrElse(
+        throw new IllegalArgumentException(
+          s"Invalid mode for geometry type: $value." +
+            s" Must be one of ${GeometryTypeEnum.values.mkString(",")}"
+        )
       )
 
   def fromId(id: Int): GeometryTypeEnum.Value =
-    GeometryTypeEnum.values.find(_.id == id)
-      .getOrElse(GeometryTypeEnum.MULTIPOLYGON)
+    GeometryTypeEnum.values
+      .find(_.id == id)
+      .getOrElse(throw new IllegalArgumentException(s"Invalid value for geometry type id: $id."))
 }
