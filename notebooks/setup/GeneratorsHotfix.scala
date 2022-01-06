@@ -68,9 +68,10 @@ case class MosaicExplodePatch(pair: Expression, indexSystemName: String, geometr
 
 // COMMAND ----------
 
+package com.databricks.mosaic.patch
+
 import com.databricks.mosaic.core.index.IndexSystem
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
-
 
 case class MosaicPatch(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
   import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
@@ -96,7 +97,3 @@ case class MosaicPatch(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     def mosaic_explode(geom: Column, resolution: Int): Column = ColumnAdapter(MosaicExplodePatch(struct(geom, lit(resolution)).expr, indexSystem.name, geometryAPI.name))
   }
 }
-
-// COMMAND ----------
-
-
