@@ -11,6 +11,9 @@ import mosaicContext.functions._
 
 // COMMAND ----------
 
+import com.databricks.mosaic.patch.MosaicPatch
+import com.databricks.mosaic.OGC
+import com.databricks.mosaic.H3
 val mosaicPatch = MosaicPatch(H3, OGC)
 import mosaicPatch.functions._
 
@@ -18,3 +21,7 @@ import mosaicPatch.functions._
 
 mosaicContext.register(spark)
 mosaicPatch.register(spark)
+
+// COMMAND ----------
+
+// MAGIC %run "./PythonBindings"
