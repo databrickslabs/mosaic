@@ -1,9 +1,10 @@
 package com.databricks.mosaic.expressions.format
 
+import com.databricks.mosaic.codegen.expression.format.InternalTypeWrapper
 import com.databricks.mosaic.core.types.JSONType
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodegenFallback, ExprCode}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.types.{DataType, StringType}
 
@@ -17,7 +18,7 @@ import org.apache.spark.sql.types.{DataType, StringType}
   """,
   since = "1.0")
 case class AsJSON(inGeometry: Expression)
-  extends UnaryExpression with NullIntolerant with CodegenFallback {
+  extends UnaryExpression with NullIntolerant {
 
   /**
    * AsHex expression wraps string payload into a StructType.
@@ -55,6 +56,9 @@ case class AsJSON(inGeometry: Expression)
           s"Cannot cast to GeoJSON from ${inGeometry.dataType.sql}! Only String Columns are supported."
         )
     }
+
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
+    InternalTypeWrapper.doGenCode(ctx, ev, this.nullSafeCodeGen)
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val res = AsJSON(

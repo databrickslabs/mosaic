@@ -4,12 +4,12 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getWKTRowsDf
-import com.databricks.mosaic.test.SparkTest
+import com.databricks.mosaic.test.SparkFunSuite
 import org.apache.spark.sql.functions.col
 import org.locationtech.jts.io.{WKBReader, WKTReader}
 import org.scalatest.{FunSuite, Matchers}
 
-class TestFlattenPolygon_JTS_H3 extends FunSuite with SparkTest with Matchers {
+class TestFlattenPolygon_JTS_H3 extends SparkFunSuite with Matchers {
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
 
   import mosaicContext.functions._

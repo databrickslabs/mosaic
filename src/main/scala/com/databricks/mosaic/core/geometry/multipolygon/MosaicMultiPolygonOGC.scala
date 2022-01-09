@@ -5,7 +5,6 @@ import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonOGC
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryOGC}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTIPOLYGON
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
-import com.esotericsoftware.kryo.io.Input
 import com.esri.core.geometry.Polygon
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPolygon}
 import org.apache.spark.sql.catalyst.InternalRow

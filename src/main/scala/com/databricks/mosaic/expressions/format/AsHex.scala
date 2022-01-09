@@ -1,11 +1,11 @@
 package com.databricks.mosaic.expressions.format
 
+import com.databricks.mosaic.codegen.expression.format.InternalTypeWrapper
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, GenericInternalRow, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodegenFallback, ExprCode}
 import org.apache.spark.sql.types.{DataType, StringType}
-
 import com.databricks.mosaic.core.types.HexType
 
 @ExpressionDescription(
@@ -18,7 +18,7 @@ import com.databricks.mosaic.core.types.HexType
   """,
   since = "1.0")
 case class AsHex(inGeometry: Expression)
-  extends UnaryExpression with NullIntolerant with CodegenFallback {
+  extends UnaryExpression with NullIntolerant {
 
   /**
    * AsHex expression wraps string payload into a StructType.
@@ -49,13 +49,16 @@ case class AsHex(inGeometry: Expression)
   override def nullSafeEval(input: Any): Any =
     inGeometry.dataType match {
       case StringType =>
-        val x = InternalRow.fromSeq(Seq(input))
-        x
+        InternalRow.fromSeq(Seq(input))
       case _ =>
         throw new Error(
           s"Cannot cast to HEX from ${inGeometry.dataType.sql}! Only String Columns are supported."
         )
     }
+
+  override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
+    InternalTypeWrapper.doGenCode(ctx, ev, this.nullSafeCodeGen)
+
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {
     val res = AsHex(
@@ -66,4 +69,5 @@ case class AsHex(inGeometry: Expression)
   }
 
   override def child: Expression = inGeometry
+
 }

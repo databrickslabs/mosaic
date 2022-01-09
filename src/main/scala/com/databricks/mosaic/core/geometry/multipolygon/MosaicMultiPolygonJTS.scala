@@ -57,6 +57,8 @@ object MosaicMultiPolygonJTS extends GeometryReader {
   override def fromInternal(row: InternalRow): MosaicGeometry = {
     val gf = new GeometryFactory()
     val internalGeom = InternalGeometry(row)
+
+    gf.createLinearRing(gf.createLineString().getCoordinates)
     val polygons = internalGeom.boundaries.zip(internalGeom.holes).map {
       case (boundaryRing, holesRings) =>
         val shell = gf.createLinearRing(boundaryRing.map(_.toCoordinate))

@@ -5,7 +5,6 @@ import com.databricks.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryOGC}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTILINESTRING
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
-import com.esotericsoftware.kryo.io.Input
 import com.esri.core.geometry.Polyline
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString, OGCMultiLineString}
 import org.apache.spark.sql.catalyst.InternalRow

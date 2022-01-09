@@ -1,18 +1,17 @@
-package com.databricks.mosaic.core.constructors
-
-import collection.JavaConversions._
-import org.scalatest.{FunSuite, Matchers}
-
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.functions.{collect_list, explode}
-import org.apache.spark.sql.types.{ArrayType, DoubleType, StringType, StructField, StructType}
+package com.databricks.mosaic.core.expressions
 
 import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.test.SparkTest
+import com.databricks.mosaic.test.SparkFunSuite
+import org.apache.spark.sql.Row
+import org.apache.spark.sql.functions.{collect_list, explode}
+import org.apache.spark.sql.types._
+import org.scalatest.Matchers
 
-class TestConstructors extends FunSuite with SparkTest with Matchers {
+import scala.collection.JavaConversions._
+
+class TestConstructors extends SparkFunSuite with Matchers {
   import testImplicits._
 
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)

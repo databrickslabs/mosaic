@@ -3,7 +3,6 @@ package com.databricks.mosaic.core.geometry.point
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryOGC}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.POINT
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
-import com.esotericsoftware.kryo.io.Input
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCPoint}
 import com.esri.core.geometry.{Point, SpatialReference}
 import com.uber.h3core.util.GeoCoord
