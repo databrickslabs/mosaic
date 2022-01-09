@@ -5,13 +5,13 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI.OGC
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.{getGeoJSONDf, getHexRowsDf, getWKTRowsDf}
-import com.databricks.mosaic.test.SparkTest
+import com.databricks.mosaic.test.SparkFunSuite
 import com.stephenn.scalatest.jsonassert.JsonMatchers
 import org.apache.spark.sql.DataFrame
 import org.scalatest.{FunSuite, Matchers}
 
 //noinspection ScalaStyle
-class TestConvertTo_OGC_H3 extends FunSuite with SparkTest with Matchers with JsonMatchers {
+class TestConvertTo_OGC_H3 extends SparkFunSuite with Matchers with JsonMatchers {
   val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, OGC)
 
   import mosaicContext.functions._

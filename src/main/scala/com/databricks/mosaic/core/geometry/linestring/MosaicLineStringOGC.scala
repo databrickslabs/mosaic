@@ -6,10 +6,7 @@ import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonOGC
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryOGC}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.LINESTRING
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
-import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esri.core.geometry.Polyline
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString}
-import org.apache.commons.io.output.ByteArrayOutputStream
 import org.apache.spark.sql.catalyst.InternalRow
 
 class MosaicLineStringOGC(lineString: OGCLineString)

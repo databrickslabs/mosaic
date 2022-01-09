@@ -1,6 +1,6 @@
 package com.databricks.mosaic.core.types
 
-import org.apache.spark.sql.types.{ArrayType, IntegerType, StructField, StructType}
+import org.apache.spark.sql.types.{IntegerType, StructField, StructType}
 
 /**
  * Type definition for InternalGeometryType.
@@ -12,8 +12,8 @@ class InternalGeometryType extends StructType(
   Array(
     // StructField("typeName", StringType),
     StructField("type_id", IntegerType),
-    StructField("boundary", ArrayType(ArrayType(InternalCoordType))),
-    StructField("holes", ArrayType(ArrayType(ArrayType(InternalCoordType))))
+    StructField("boundary", BoundaryType),
+    StructField("holes", HolesType)
   )
 ) {
   override def typeName: String = "internal_geometry"

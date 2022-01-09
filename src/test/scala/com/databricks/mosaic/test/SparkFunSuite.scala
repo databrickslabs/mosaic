@@ -4,7 +4,7 @@ import org.apache.spark.sql.{SQLContext, SQLImplicits, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest._
 
-trait SparkTest extends BeforeAndAfterAll {
+trait SparkFunSuite extends FunSuite with BeforeAndAfterAll {
   self: Suite =>
   var conf: SparkConf = new SparkConf(false)
   @transient private var _sc: SparkContext = _

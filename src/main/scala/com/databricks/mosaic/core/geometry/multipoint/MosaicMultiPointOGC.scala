@@ -4,7 +4,6 @@ import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointOGC}
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryOGC}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
-import com.esotericsoftware.kryo.io.Input
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPoint}
 import com.esri.core.geometry.{MultiPoint, Point}
 import org.apache.spark.sql.catalyst.InternalRow

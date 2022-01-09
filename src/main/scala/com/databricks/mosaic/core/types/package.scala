@@ -16,4 +16,6 @@ package object types {
   val InternalCoordType: DataType = ArrayType.apply(DoubleType)
   val InternalGeometryType: DataType = new InternalGeometryType()
   val KryoType: DataType = new KryoType()
+  val BoundaryType: ArrayType = ArrayType(ArrayType(InternalCoordType))
+  val HolesType: ArrayType = ArrayType(ArrayType(ArrayType(InternalCoordType)))
 }
