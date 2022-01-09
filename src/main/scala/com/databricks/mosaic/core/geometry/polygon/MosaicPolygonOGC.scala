@@ -6,11 +6,14 @@ import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointOGC}
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryJTS, MosaicGeometryOGC}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
+import com.esotericsoftware.kryo.io.Input
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString, OGCPolygon}
 import org.apache.spark.sql.catalyst.InternalRow
 
 class MosaicPolygonOGC(polygon: OGCPolygon)
   extends MosaicGeometryOGC(polygon) with MosaicPolygon {
+
+  def this() = this(null)
 
   override def toInternal: InternalGeometry = {
     def ringToInternalCoords(ring: OGCLineString): Array[InternalCoord] = {
@@ -68,12 +71,14 @@ object MosaicPolygonOGC extends GeometryReader {
     MosaicGeometryOGC(new OGCPolygon(polygon, spatialReference))
   }
 
-  override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
+  override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryOGC.fromWKB(wkb)
 
-  override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)
+  override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryOGC.fromWKT(wkt)
 
-  override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
+  override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC.fromJSON(geoJson)
 
-  override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
+  override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryOGC.fromHEX(hex)
+
+  override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryOGC.fromKryo(row)
 
 }

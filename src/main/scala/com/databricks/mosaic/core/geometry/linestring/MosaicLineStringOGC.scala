@@ -6,11 +6,16 @@ import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonOGC
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryOGC}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.LINESTRING
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
+import com.esotericsoftware.kryo.io.{Input, Output}
+import com.esri.core.geometry.Polyline
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString}
+import org.apache.commons.io.output.ByteArrayOutputStream
 import org.apache.spark.sql.catalyst.InternalRow
 
 class MosaicLineStringOGC(lineString: OGCLineString)
   extends MosaicGeometryOGC(lineString) with MosaicLineString {
+
+  def this() = this(null)
 
   override def asSeq: Seq[MosaicPoint] = getBoundaryPoints
 
@@ -36,6 +41,7 @@ class MosaicLineStringOGC(lineString: OGCLineString)
   override def getLength: Double = lineString.length()
 
   override def flatten: Seq[MosaicGeometry] = List(this)
+
 }
 
 object MosaicLineStringOGC extends GeometryReader {
@@ -69,5 +75,7 @@ object MosaicLineStringOGC extends GeometryReader {
   override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC.fromJSON(geoJson)
 
   override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryOGC.fromHEX(hex)
+
+  override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryOGC.fromKryo(row)
 
 }

@@ -11,7 +11,7 @@ import org.apache.spark.sql.types.{ArrayType, IntegerType, StructField, StructTy
 class InternalGeometryType extends StructType(
   Array(
     // StructField("typeName", StringType),
-    StructField("typeId", IntegerType),
+    StructField("type_id", IntegerType),
     StructField("boundary", ArrayType(ArrayType(InternalCoordType))),
     StructField("holes", ArrayType(ArrayType(ArrayType(InternalCoordType))))
   )

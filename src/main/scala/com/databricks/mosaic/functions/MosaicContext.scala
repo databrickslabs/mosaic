@@ -14,7 +14,7 @@ import com.databricks.mosaic.expressions.helper.TrySql
 import com.databricks.mosaic.expressions.index._
 
 
-case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
+case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends Serializable {
 
   import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 
@@ -39,12 +39,13 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     registry.registerFunction(FunctionIdentifier("as_json", database), (exprs: Seq[Expression]) => AsJSON(exprs(0)))
     registry.registerFunction(FunctionIdentifier("st_point", database), (exprs: Seq[Expression]) => ST_Point(exprs(0), exprs(1)))
     registry.registerFunction(FunctionIdentifier("st_makeline", database), (exprs: Seq[Expression]) => ST_MakeLine(exprs(0)))
-    registry.registerFunction(FunctionIdentifier("st_polygon", database), 
+    registry.registerFunction(FunctionIdentifier("st_polygon", database),
       (exprs: Seq[Expression]) => exprs match {
         case e if e.length == 1 => ST_MakePolygon(e.head)
         case e if e.length == 2 => ST_MakePolygonWithHoles(e.head, e.last)
       })
-    
+    registry.registerFunction(FunctionIdentifier("index_geometry", database), (exprs: Seq[Expression]) => IndexGeometry(exprs(0), indexSystem.name, geometryAPI.name))
+
     /** GeometryAPI Specific */
     registry.registerFunction(FunctionIdentifier("flatten_polygons", database), (exprs: Seq[Expression]) => FlattenPolygons(exprs(0), geometryAPI.name))
     registry.registerFunction(FunctionIdentifier("st_xmax", database), (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "X", "MAX"))
@@ -74,6 +75,7 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     registry.registerFunction(FunctionIdentifier("st_length", database), (exprs: Seq[Expression]) => ST_Length(exprs(0), geometryAPI.name))
     registry.registerFunction(FunctionIdentifier("st_perimeter", database), (exprs: Seq[Expression]) => ST_Length(exprs(0), geometryAPI.name))
     registry.registerFunction(FunctionIdentifier("st_distance", database), (exprs: Seq[Expression]) => ST_Distance(exprs(0), exprs(1), geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_contains", database), (exprs: Seq[Expression]) => ST_Contains(exprs(0), exprs(1), geometryAPI.name))
 
 
     /** IndexSystem Specific */
@@ -99,14 +101,14 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
   }
 
   // scalastyle:off object.name
-  object functions {
+  object functions extends Serializable {
     /** IndexSystem and GeometryAPI Agnostic methods */
     def as_hex(inGeom: Column): Column = ColumnAdapter(AsHex(inGeom.expr))
     def as_json(inGeom: Column): Column = ColumnAdapter(AsJSON(inGeom.expr))
     def st_point(xVal: Column, yVal: Column): Column = ColumnAdapter(ST_Point(xVal.expr, yVal.expr))
     def st_makeline(points: Column): Column = ColumnAdapter(ST_MakeLine(points.expr))
     def st_makepolygon(boundaryRing: Column): Column = ColumnAdapter(ST_MakePolygon(boundaryRing.expr))
-    def st_makepolygon(boundaryRing: Column, holeRingArray: Column): Column = 
+    def st_makepolygon(boundaryRing: Column, holeRingArray: Column): Column =
       ColumnAdapter(ST_MakePolygonWithHoles(boundaryRing.expr, holeRingArray.expr))
     
     /** GeometryAPI Specific */
@@ -135,9 +137,9 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
     def st_perimeter(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
     def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, geometryAPI.name))
+    def st_contains(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Contains(geom1.expr, geom2.expr, geometryAPI.name))
 
     /** IndexSystem Specific */
-    def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
 
     /** IndexSystem and GeometryAPI Specific methods */
     def mosaic_explode(geom: Column, resolution: Column): Column = ColumnAdapter(MosaicExplode(struct(geom, resolution).expr, indexSystem.name, geometryAPI.name))
@@ -148,6 +150,7 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     def point_index(lat: Column, lng: Column, resolution: Int): Column = ColumnAdapter(PointIndex(lat.expr, lng.expr, lit(resolution).expr, indexSystem.name))
     def polyfill(geom: Column, resolution: Column): Column = ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
     def polyfill(geom: Column, resolution: Int): Column = ColumnAdapter(Polyfill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
+    def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
 
     //Not specific to Mosaic
     def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))

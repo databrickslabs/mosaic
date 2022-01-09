@@ -1,9 +1,11 @@
 package com.databricks.mosaic.core.geometry.multipoint
 
+import com.databricks.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
 import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
-import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryJTS, MosaicGeometryOGC}
+import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryJTS}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
+import com.esotericsoftware.kryo.io.Input
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom.{Geometry, GeometryFactory, MultiPoint}
 
@@ -52,11 +54,18 @@ object MosaicMultiPointJTS extends GeometryReader {
     new MosaicMultiPointJTS(multiPoint)
   }
 
-  override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryOGC.fromWKB(wkb)
+  override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 
-  override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryOGC.fromWKT(wkt)
+  override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)
 
-  override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC.fromJSON(geoJson)
+  override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
 
-  override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryOGC.fromHEX(hex)
+  override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
+
+  override def fromKryo(row: InternalRow): MosaicGeometry = {
+    val kryoBytes = row.getBinary(1)
+    val input = new Input(kryoBytes)
+    MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicMultiPointJTS])
+  }
+
 }

@@ -9,7 +9,7 @@ import java.util
 /**
  * Defines the API that all index systems need to respect for Mosaic to support them.
  */
-trait IndexSystem {
+trait IndexSystem extends Serializable {
 
   /**
    * Returns the name of the IndexSystem.

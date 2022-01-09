@@ -15,4 +15,5 @@ package object types {
   // They have to be declared in this order.
   val InternalCoordType: DataType = ArrayType.apply(DoubleType)
   val InternalGeometryType: DataType = new InternalGeometryType()
+  val KryoType: DataType = new KryoType()
 }

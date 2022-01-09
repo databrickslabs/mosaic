@@ -1,7 +1,8 @@
 package com.databricks.mosaic.expressions.format
 
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType, KryoType}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -39,22 +40,32 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
       case (BinaryType, "COORDS") => TypeCheckResult.TypeCheckSuccess
       case (BinaryType, "HEX") => TypeCheckResult.TypeCheckSuccess
       case (BinaryType, "GEOJSON") => TypeCheckResult.TypeCheckSuccess
+      case (BinaryType, "KRYO") => TypeCheckResult.TypeCheckSuccess
       case (StringType, "WKB") => TypeCheckResult.TypeCheckSuccess
       case (StringType, "COORDS") => TypeCheckResult.TypeCheckSuccess
       case (StringType, "HEX") => TypeCheckResult.TypeCheckSuccess
       case (StringType, "GEOJSON") => TypeCheckResult.TypeCheckSuccess
-      case (dt, "WKT") if dt.sql == HexType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "WKB") if dt.sql == HexType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "COORDS") if dt.sql == HexType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "GEOJSON") if dt.sql == HexType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "WKT") if dt.sql == JSONType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "WKB") if dt.sql == JSONType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "HEX") if dt.sql == JSONType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "COORDS") if dt.sql == JSONType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "WKB") if dt.sql == InternalGeometryType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "WKT") if dt.sql == InternalGeometryType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "HEX") if dt.sql == InternalGeometryType.sql => TypeCheckResult.TypeCheckSuccess
-      case (dt, "GEOJSON") if dt.sql == InternalGeometryType.sql => TypeCheckResult.TypeCheckSuccess
+      case (StringType, "KRYO") => TypeCheckResult.TypeCheckSuccess
+      case (HexType, "WKT") => TypeCheckResult.TypeCheckSuccess
+      case (HexType, "WKB") => TypeCheckResult.TypeCheckSuccess
+      case (HexType, "COORDS") => TypeCheckResult.TypeCheckSuccess
+      case (HexType, "GEOJSON") => TypeCheckResult.TypeCheckSuccess
+      case (HexType, "KRYO") => TypeCheckResult.TypeCheckSuccess
+      case (JSONType, "WKT") => TypeCheckResult.TypeCheckSuccess
+      case (JSONType, "WKB") => TypeCheckResult.TypeCheckSuccess
+      case (JSONType, "HEX") => TypeCheckResult.TypeCheckSuccess
+      case (JSONType, "COORDS") => TypeCheckResult.TypeCheckSuccess
+      case (JSONType, "KRYO") => TypeCheckResult.TypeCheckSuccess
+      case (InternalGeometryType, "WKB") => TypeCheckResult.TypeCheckSuccess
+      case (InternalGeometryType, "WKT") => TypeCheckResult.TypeCheckSuccess
+      case (InternalGeometryType, "HEX") => TypeCheckResult.TypeCheckSuccess
+      case (InternalGeometryType, "GEOJSON") => TypeCheckResult.TypeCheckSuccess
+      case (InternalGeometryType, "KRYO") => TypeCheckResult.TypeCheckSuccess
+      case (KryoType, "WKB") => TypeCheckResult.TypeCheckSuccess
+      case (KryoType, "WKT") => TypeCheckResult.TypeCheckSuccess
+      case (KryoType, "COORDS") => TypeCheckResult.TypeCheckSuccess
+      case (KryoType, "HEX") => TypeCheckResult.TypeCheckSuccess
+      case (KryoType, "GEOJSON") => TypeCheckResult.TypeCheckSuccess
       case _ =>
         TypeCheckResult.TypeCheckFailure(
           s"Cannot convert from ${inGeometry.dataType.sql} to $dataType"
@@ -84,6 +95,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
       case "HEX" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
       case "GEOJSON" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
       case "COORDS" => geometry.toInternal.serialize
+      case "KRYO" => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
       case _ => throw new Error(s"Cannot convert from ${inGeometry.dataType.sql} to $dataType")
     }
   }
@@ -95,6 +107,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
     case "HEX" => HexType
     case "COORDS" => InternalGeometryType
     case "GEOJSON" => JSONType
+    case "KRYO" => KryoType
   }
 
   override def makeCopy(newArgs: Array[AnyRef]): Expression = {

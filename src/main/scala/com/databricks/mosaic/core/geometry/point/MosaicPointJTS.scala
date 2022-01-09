@@ -1,8 +1,10 @@
 package com.databricks.mosaic.core.geometry.point
 
+import com.databricks.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryJTS}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.POINT
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
+import com.esotericsoftware.kryo.io.Input
 import com.uber.h3core.util.GeoCoord
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom.{Coordinate, Geometry, GeometryFactory, Point}
@@ -72,4 +74,11 @@ object MosaicPointJTS extends GeometryReader {
   override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
 
   override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
+
+  override def fromKryo(row: InternalRow): MosaicGeometry = {
+    val kryoBytes = row.getBinary(1)
+    val input = new Input(kryoBytes)
+    MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicPointJTS])
+  }
+
 }
