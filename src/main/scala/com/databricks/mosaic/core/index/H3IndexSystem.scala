@@ -17,10 +17,10 @@ import scala.collection.JavaConverters._
  *
  * @see [[https://github.com/uber/h3-java]]
  */
-object H3IndexSystem extends IndexSystem {
+object H3IndexSystem extends IndexSystem with Serializable {
 
   //An instance of H3Core to be used for IndexSystem implementation.
-  val h3: H3Core = H3Core.newInstance()
+  @transient val h3: H3Core = H3Core.newInstance()
 
   /**
    * H3 resolution can only be an Int value between 0 and 15.

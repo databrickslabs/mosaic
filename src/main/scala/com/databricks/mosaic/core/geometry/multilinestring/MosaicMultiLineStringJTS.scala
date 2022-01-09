@@ -5,6 +5,7 @@ import com.databricks.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryJTS}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTILINESTRING
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
+import com.esotericsoftware.kryo.io.Input
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom.{Geometry, GeometryFactory, LineString, MultiLineString}
 
@@ -65,5 +66,11 @@ object MosaicMultiLineStringJTS extends GeometryReader {
   override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
 
   override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
+
+  override def fromKryo(row: InternalRow): MosaicGeometry = {
+    val kryoBytes = row.getBinary(1)
+    val input = new Input(kryoBytes)
+    MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicMultiLineStringJTS])
+  }
 
 }

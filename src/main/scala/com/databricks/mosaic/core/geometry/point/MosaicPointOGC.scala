@@ -1,8 +1,9 @@
 package com.databricks.mosaic.core.geometry.point
 
-import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryJTS, MosaicGeometryOGC}
+import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryOGC}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.POINT
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
+import com.esotericsoftware.kryo.io.Input
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCPoint}
 import com.esri.core.geometry.{Point, SpatialReference}
 import com.uber.h3core.util.GeoCoord
@@ -10,6 +11,8 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom.Coordinate
 
 class MosaicPointOGC(point: OGCPoint) extends MosaicGeometryOGC(point) with MosaicPoint {
+
+  def this() = this(null)
 
   override def geoCoord: GeoCoord = new GeoCoord(point.Y(), point.X())
 
@@ -83,11 +86,14 @@ object MosaicPointOGC extends GeometryReader {
     new MosaicPointOGC(point)
   }
 
-  override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
+  override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryOGC.fromWKB(wkb)
 
-  override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)
+  override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryOGC.fromWKT(wkt)
 
-  override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
+  override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC.fromJSON(geoJson)
 
-  override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
+  override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryOGC.fromHEX(hex)
+
+  override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryOGC.fromKryo(row)
+
 }

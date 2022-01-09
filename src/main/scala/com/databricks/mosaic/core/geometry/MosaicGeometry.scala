@@ -2,7 +2,9 @@ package com.databricks.mosaic.core.geometry
 
 import com.databricks.mosaic.core.geometry.point.MosaicPoint
 
-trait MosaicGeometry extends GeometryWriter {
+trait MosaicGeometry extends GeometryWriter with Serializable {
+
+  def contains(geom2: MosaicGeometry): Boolean
 
   def getLength: Double
 

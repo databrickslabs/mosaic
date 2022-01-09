@@ -3,7 +3,7 @@ package com.databricks.mosaic.core.geometry.api
 import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS, MosaicPointOGC}
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryJTS, MosaicGeometryOGC}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum
-import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
+import com.databricks.mosaic.core.types.{HexType, InternalGeometryType, JSONType, KryoType}
 import com.uber.h3core.util.GeoCoord
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
@@ -11,7 +11,7 @@ import org.apache.spark.unsafe.types.UTF8String
 
 abstract class GeometryAPI(
   reader: GeometryReader
-) {
+) extends Serializable {
 
   def name: String
 
@@ -48,13 +48,14 @@ abstract class GeometryAPI(
       case _: HexType => reader.fromHEX(inputData.asInstanceOf[InternalRow].getString(0))
       case _: JSONType => reader.fromJSON(inputData.asInstanceOf[InternalRow].getString(0))
       case _: InternalGeometryType => reader.fromInternal(inputData.asInstanceOf[InternalRow])
+      case _: KryoType => reader.fromKryo(inputData.asInstanceOf[InternalRow])
     }
 
   def fromGeoCoord(point: GeoCoord): MosaicPoint
 
 }
 
-object GeometryAPI {
+object GeometryAPI extends Serializable {
 
   object OGC extends GeometryAPI(MosaicGeometryOGC) {
 

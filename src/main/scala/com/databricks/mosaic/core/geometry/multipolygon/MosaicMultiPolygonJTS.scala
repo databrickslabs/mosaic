@@ -1,10 +1,12 @@
 package com.databricks.mosaic.core.geometry.multipolygon
 
+import com.databricks.mosaic.core.geometry.multipoint.MosaicMultiPointJTS
 import com.databricks.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonJTS
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryJTS}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTIPOLYGON
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
+import com.esotericsoftware.kryo.io.Input
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom.{Geometry, GeometryFactory, MultiPolygon, Polygon}
 
@@ -80,5 +82,10 @@ object MosaicMultiPolygonJTS extends GeometryReader {
 
   override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
 
+  override def fromKryo(row: InternalRow): MosaicGeometry = {
+    val kryoBytes = row.getBinary(1)
+    val input = new Input(kryoBytes)
+    MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicMultiPolygonJTS])
+  }
 
 }

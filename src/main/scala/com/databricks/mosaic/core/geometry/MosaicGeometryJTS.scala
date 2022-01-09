@@ -8,6 +8,9 @@ import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
 import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonJTS
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
+import com.esotericsoftware.kryo.Kryo
+import com.esotericsoftware.kryo.io.{Input, Output}
+import org.apache.commons.io.output.ByteArrayOutputStream
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
@@ -37,10 +40,7 @@ abstract class MosaicGeometryJTS(geom: Geometry)
     MosaicGeometryJTS(intersection)
   }
 
-  override def contains(other: MosaicGeometry): Boolean = {
-    val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
-    this.geom.contains(otherGeom)
-  }
+  override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
 
   def getGeom: Geometry = geom
 
@@ -71,9 +71,22 @@ abstract class MosaicGeometryJTS(geom: Geometry)
 
   override def toWKB: Array[Byte] = new WKBWriter().write(geom)
 
+  override def toKryo: Array[Byte] = {
+    val b = new ByteArrayOutputStream()
+    val output = new Output(b)
+    MosaicGeometryJTS.kryo.writeObject(output, this)
+    val result = output.toBytes
+    output.flush()
+    output.close()
+    result
+  }
+
 }
 
 object MosaicGeometryJTS extends GeometryReader {
+
+  @transient val kryo = new Kryo()
+  kryo.register(classOf[MosaicGeometryJTS])
 
   override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS(new WKTReader().read(wkt))
 
@@ -110,8 +123,12 @@ object MosaicGeometryJTS extends GeometryReader {
   }
 
   override def fromInternal(row: InternalRow): MosaicGeometry = {
-    val internalGeometry = InternalGeometry(row)
-    reader(internalGeometry.typeId).fromInternal(row)
+    val typeId = row.getInt(0)
+    reader(typeId).fromInternal(row)
   }
 
+  override def fromKryo(row: InternalRow): MosaicGeometry = {
+    val typeId = row.getInt(0)
+    reader(typeId).fromKryo(row)
+  }
 }

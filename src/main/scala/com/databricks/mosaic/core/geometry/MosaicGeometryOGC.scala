@@ -6,10 +6,13 @@ import com.databricks.mosaic.core.geometry.multipoint.MosaicMultiPointOGC
 import com.databricks.mosaic.core.geometry.multipolygon.MosaicMultiPolygonOGC
 import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointOGC}
 import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonOGC
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
-import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
+import com.esotericsoftware.kryo.Kryo
+import com.esotericsoftware.kryo.io.{Input, Output}
 import com.esri.core.geometry.SpatialReference
 import com.esri.core.geometry.ogc._
+import org.apache.commons.io.output.ByteArrayOutputStream
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.io.{WKBReader, WKBWriter}
 
@@ -33,10 +36,7 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry)
     MosaicGeometryOGC(this.getGeom.intersection(otherGeom))
   }
 
-  override def contains(other:MosaicGeometry): Boolean = {
-    val otherGeom = other.asInstanceOf[MosaicGeometryOGC].getGeom
-    this.getGeom.contains(otherGeom)
-  }
+  override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryOGC].getGeom)
 
   /**
    * The naming convention in ESRI bindings is different.
@@ -76,11 +76,24 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry)
 
   override def toHEX: String = WKBWriter.toHex(geom.asBinary().array())
 
+  override def toKryo: Array[Byte] = {
+    val b = new ByteArrayOutputStream()
+    val output = new Output(b)
+    MosaicGeometryOGC.kryo.writeObject(output, toWKB)
+    val result = output.toBytes
+    output.flush()
+    output.close()
+    result
+  }
+
 }
 
 object MosaicGeometryOGC extends GeometryReader {
 
   val spatialReference: SpatialReference = SpatialReference.create(4326)
+
+  @transient val kryo = new Kryo()
+  kryo.register(classOf[Array[Byte]])
 
   override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryOGC(OGCGeometry.fromText(wkt))
 
@@ -116,8 +129,15 @@ object MosaicGeometryOGC extends GeometryReader {
   }
 
   override def fromInternal(row: InternalRow): MosaicGeometry = {
-    val internalGeometry = InternalGeometry(row)
-    reader(internalGeometry.typeId).fromInternal(row)
+    val typeId = row.getInt(0)
+    reader(typeId).fromInternal(row)
+  }
+
+  override def fromKryo(row: InternalRow): MosaicGeometry = {
+    val kryoBytes = row.getBinary(1)
+    val input = new Input(kryoBytes)
+    val wkb = MosaicGeometryOGC.kryo.readObject(input, classOf[Array[Byte]])
+    fromWKB(wkb)
   }
 
 }
