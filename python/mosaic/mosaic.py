@@ -1,3 +1,5 @@
+import site
+import os
 from typing import Any
 
 from pyspark import SparkContext
@@ -5,7 +7,10 @@ from pyspark.sql import SparkSession
 from pyspark.sql.column import Column as MosaicColumn
 
 
-spark = SparkSession.builder.getOrCreate()
+jar_filename = "mosaic-1.0-SNAPSHOT-jar-with-dependencies.jar"
+jar_path = os.path.join(site.getsitepackages()[0], "mosaic", jar_filename)
+
+spark = SparkSession.builder.config("spark.jars", jar_path).getOrCreate()
 sc = spark.sparkContext
 
 MosaicContextClass = getattr(sc._jvm.com.databricks.mosaic.functions, "MosaicContext")
