@@ -12,6 +12,10 @@ import com.databricks.mosaic.core.types.model.MosaicChip
   */
 trait IndexSystem extends Serializable {
 
+    def minResolution: Int
+
+    def maxResolution: Int
+
     /**
       * Returns the name of the IndexSystem.
       *

@@ -172,4 +172,7 @@ object H3IndexSystem extends IndexSystem with Serializable {
         h3.geoToH3(x, y, resolution)
     }
 
+    override def minResolution: Int = 0
+
+    override def maxResolution: Int = 16
 }

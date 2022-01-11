@@ -17,7 +17,8 @@ class MosaicFrame private (
 ) {
 
     def toDataset: Dataset[(MosaicGeometry, Long, Any, Boolean)] = {
-        val geometryAPI = MosaicContext.context.getGeometryAPI
+        val mosaicContext = MosaicContext.context
+        val geometryAPI = mosaicContext.getGeometryAPI
 
         val spark = SparkSession.builder().getOrCreate()
         import spark.implicits._
@@ -44,6 +45,16 @@ class MosaicFrame private (
 
     def indexColumn: Column = _indexColumn.getOrElse(df.col("index"))
 
+    def getResolutionMetrics(lowerLimit: Int = 10, upperLimit: Int = 100, fraction: Double = 0.1): DataFrame =
+        MosaicAnalyzer.getResolutionMetrics(df, geometryColumn.expr.sql, lowerLimit, upperLimit, fraction)
+
+    def df: DataFrame = _df
+
+    def geometryColumn: Column =
+        _geometryColumn.getOrElse(
+          throw new IllegalStateException("Geometry column is not set!")
+        )
+
     def setIndex(name: String): MosaicFrame = MosaicFrame(_df, _chipColumn, _chipFlagColumn, Some(_df.col(name)), _geometryColumn)
 
     def setGeom(name: String): MosaicFrame = MosaicFrame(_df, _chipColumn, _chipFlagColumn, _indexColumn, Some(_df.col(name)))
@@ -59,17 +70,7 @@ class MosaicFrame private (
 
     private def pointInPolygonJoin(frame: MosaicFrame): DataFrame = PointInPolygonJoin.join(this, frame)
 
-    def getResolutionMetrics(lowerLimit: Int, upperLimit: Int, fraction: Double = 0.1): DataFrame =
-        MosaicAnalyzer.getResolutionMetrics(df, geometryColumn.expr.sql, lowerLimit, upperLimit, fraction)
-
-    def geometryColumn: Column =
-        _geometryColumn.getOrElse(
-          throw new IllegalStateException("Geometry column is not set!")
-        )
-
     def prettified: DataFrame = Prettifier.prettified(df)
-
-    def df: DataFrame = _df
 
 }
 

@@ -26,7 +26,7 @@ class TestDatasetEncoders extends SparkFunSuite with Matchers with JsonMatchers 
             .withColumn("wkb", convert_to(as_hex($"hex"), "WKB"))
         val wktDf: DataFrame = getWKTRowsDf
 
-        MosaicFrame(hexDf).toDataset
+        //MosaicFrame(hexDf).toDataset
 
         val left = hexDf
             .orderBy("id")

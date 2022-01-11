@@ -4,17 +4,16 @@ import java.util.Locale
 
 import scala.util.Try
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.catalyst.FunctionIdentifier
-import org.apache.spark.sql.functions.{col, expr}
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions.col
+
+import com.databricks.mosaic.functions.MosaicContext
 
 object Prettifier {
 
     def prettified(df: DataFrame): DataFrame = {
-        val functionRegistry = SparkSession.builder().getOrCreate().sessionState.functionRegistry
-        require(functionRegistry.functionExists(FunctionIdentifier("st_aswkt")), "Mosaic Context has not registered the functions.")
-
-        // add static method
+        val mosaicContext = MosaicContext.context
+        import mosaicContext.functions._
 
         val keywords = List("WKB_", "_WKB", "_HEX", "HEX_", "COORDS_", "_COORDS", "POLYGON", "POINT", "GEOMETRY")
 
@@ -22,7 +21,7 @@ object Prettifier {
             .map(colName =>
                 Try {
                     if (keywords.exists(kw => colName.toUpperCase(Locale.ROOT).contains(kw))) {
-                        expr(s"st_aswkt($colName)")
+                        st_aswkt(col(colName)).alias(s"WKT($colName)")
                     } else {
                         col(colName)
                     }
