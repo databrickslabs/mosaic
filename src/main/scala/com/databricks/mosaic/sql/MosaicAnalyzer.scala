@@ -3,11 +3,24 @@ package com.databricks.mosaic.sql
 import scala.collection.JavaConverters._
 
 import org.apache.spark.sql._
-import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
+import com.databricks.mosaic.functions.MosaicContext
+
 object MosaicAnalyzer {
+
+    def getOptimalResolution(df: DataFrame, columnName: String): Int = {
+        val ss = SparkSession.builder().getOrCreate()
+        import ss.implicits._
+        val metrics = getResolutionMetrics(df, columnName, 10, 100)
+            .select("resolution", "percentile_50_geometry_area")
+            .as[(Int, Double)]
+            .collect()
+            .sortBy(_._2)
+        val midInd: Int = (metrics.length - 1) / 2
+        metrics(midInd)._1
+    }
 
     def getResolutionMetrics(
         df: DataFrame,
@@ -16,14 +29,14 @@ object MosaicAnalyzer {
         upperLimit: Int = 500,
         fraction: Double = 0.1
     ): DataFrame = {
-        val functionRegistry = SparkSession.builder().getOrCreate().sessionState.functionRegistry
-        require(functionRegistry.functionExists(FunctionIdentifier("st_area")), "Mosaic Context has not registered the functions.")
+        val mosaicContext = MosaicContext.context
+        import mosaicContext.functions._
 
-        def areaPercentile(p: Double) = percentile_approx(col("area"), lit(p), lit(10000))
+        def areaPercentile(p: Double): Column = percentile_approx(col("area"), lit(p), lit(10000))
 
         val percentiles = df
             .sample(fraction)
-            .withColumn("area", expr(s"st_area($columnName)"))
+            .withColumn("area", st_area(col(columnName)))
             .select(
               mean("area").alias("mean"),
               areaPercentile(0.25).alias("p25"),
@@ -33,7 +46,9 @@ object MosaicAnalyzer {
             .collect()
             .head
 
-        val meanIndexAreas = for (i <- 0 until 16) yield (i, getMeanIndexArea(df, columnName, i, fraction / 10))
+        val minResolution = mosaicContext.getIndexSystem.minResolution
+        val maxResolution = mosaicContext.getIndexSystem.maxResolution
+        val meanIndexAreas = for (i <- minResolution until maxResolution) yield (i, getMeanIndexArea(df, columnName, i, fraction / 10))
 
         val data = meanIndexAreas.map { case (resolution, indexArea) =>
             Row(
@@ -74,21 +89,23 @@ object MosaicAnalyzer {
     }
 
     private def getMeanIndexArea(df: DataFrame, columnName: String, resolution: Int, fraction: Double): Double = {
-        val functionRegistry = SparkSession.builder().getOrCreate().sessionState.functionRegistry
-        require(functionRegistry.functionExists(FunctionIdentifier("st_centroid2D")), "Mosaic Context has not registered the functions.")
+        val mosaicContext = MosaicContext.context
+        import mosaicContext.functions._
 
         val meanIndexArea = df
             .sample(fraction)
-            .withColumn("centroid", expr(s"st_centroid2D($columnName)"))
+            .withColumn("centroid", st_centroid2D(col(columnName)))
             .select(
               mean(
-                expr(s"""
-                        |st_area(
-                        |  index_geometry(
-                        |    point_index(centroid['x'], centroid['y'], $resolution)
-                        |  )
-                        |)
-                        |""".stripMargin)
+                st_area(
+                  index_geometry(
+                    point_index(
+                      col("centroid").getItem("x"),
+                      col("centroid").getItem("y"),
+                      lit(resolution)
+                    )
+                  )
+                )
               )
             )
             .collect()
