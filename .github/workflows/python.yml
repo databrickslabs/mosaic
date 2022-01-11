@@ -1,4 +1,4 @@
-name: Build scala project
+name: Build python package
 on:
   push:
     branches:
