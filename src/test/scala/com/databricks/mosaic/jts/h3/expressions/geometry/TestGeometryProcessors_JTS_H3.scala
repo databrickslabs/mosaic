@@ -126,4 +126,18 @@ class TestGeometryProcessors_JTS_H3 extends FunSuite with Matchers with SparkTes
 
   }
 
+  test("Test convex hull generation") {
+    mosaicContext.register(spark)
+    val multiPoint = List("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)")
+    val expected = List("POLYGON ((-80 35, -80 45, -70 45, -70 35, -80 35))")
+
+    val results = 
+      multiPoint.toDF("multiPoint")
+      .withColumn("result", st_convexhull($"multiPoint"))
+      .select(st_astext($"result"))
+      .as[String]
+      .collect()     
+    
+    results should contain allElementsOf expected
+  }
 }

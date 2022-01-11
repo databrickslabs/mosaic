@@ -1,11 +1,16 @@
 package com.databricks.mosaic.core.geometry.multipoint
 
-import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
+import org.locationtech.jts.geom.{Geometry, GeometryFactory, MultiPoint, Polygon}
+
+import org.apache.spark.sql.catalyst.InternalRow
+
 import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryJTS, MosaicGeometryOGC}
+import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
+import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonJTS
+import com.databricks.mosaic.core.geometry.polygon.MosaicPolygon
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
-import org.apache.spark.sql.catalyst.InternalRow
-import org.locationtech.jts.geom.{Geometry, GeometryFactory, MultiPoint}
+
 
 class MosaicMultiPointJTS(multiPoint: MultiPoint)
   extends MosaicGeometryJTS(multiPoint) with MosaicMultiPoint {
@@ -25,6 +30,9 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint)
     for (i <- 0 until multiPoint.getNumPoints)
       yield MosaicPointJTS(multiPoint.getGeometryN(i).getCoordinates.head)
   }
+
+  override def convexHull: MosaicPolygon =
+    new MosaicPolygonJTS(multiPoint.convexHull.asInstanceOf[Polygon])
 }
 
 object MosaicMultiPointJTS extends GeometryReader {
