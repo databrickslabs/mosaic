@@ -1,6 +1,8 @@
 package com.databricks.mosaic.core.geometry.multipoint
 
 import com.esri.core.geometry.{MultiPoint, Point}
+import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPoint}
+
 import com.esri.core.geometry.ogc._
 
 import org.apache.spark.sql.catalyst.InternalRow
@@ -8,6 +10,12 @@ import org.apache.spark.sql.catalyst.InternalRow
 import com.databricks.mosaic.core.geometry._
 import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointOGC}
 import com.databricks.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonOGC}
+import com.databricks.mosaic.core.types.model._
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
+
+class MosaicMultiPointOGC(multiPoint: OGCMultiPoint) extends MosaicGeometryOGC(multiPoint) with MosaicMultiPoint {
+import com.databricks.mosaic.core.geometry._
+import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointOGC}
 import com.databricks.mosaic.core.types.model._
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
 

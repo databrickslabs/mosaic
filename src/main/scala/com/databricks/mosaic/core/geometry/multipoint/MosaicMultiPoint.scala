@@ -7,7 +7,7 @@ import com.databricks.mosaic.core.geometry.polygon.MosaicPolygon
 
 trait MosaicMultiPoint extends MosaicGeometry {
 
-  def asSeq: Seq[MosaicPoint]
+    def asSeq: Seq[MosaicPoint]
 
   def convexHull: MosaicPolygon
 

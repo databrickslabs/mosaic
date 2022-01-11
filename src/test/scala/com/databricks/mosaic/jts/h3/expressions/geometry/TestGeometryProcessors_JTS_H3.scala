@@ -16,7 +16,7 @@ import com.databricks.mosaic.test.SparkFunSuite
 
 class TestGeometryProcessors_JTS_H3 extends SparkFunSuite with Matchers {
 
-    val mosaicContext: MosaicContext = MosaicContext(H3IndexSystem, JTS)
+    val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
 
     import mosaicContext.functions._
     import testImplicits._
