@@ -1,18 +1,20 @@
 package com.databricks.mosaic.core.geometry
 
+import org.locationtech.jts.geom.{Geometry, GeometryCollection}
+import org.locationtech.jts.io._
+import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
+import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
+
+import org.apache.spark.sql.catalyst.InternalRow
+
 import com.databricks.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
 import com.databricks.mosaic.core.geometry.multipoint.MosaicMultiPointJTS
 import com.databricks.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
 import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonJTS
-import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
 import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
-import org.apache.spark.sql.catalyst.InternalRow
-import org.locationtech.jts.geom.Geometry
-import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
-import org.locationtech.jts.io.{WKBReader, WKBWriter, WKTReader, WKTWriter}
-import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
 
 abstract class MosaicGeometryJTS(geom: Geometry)
   extends MosaicGeometry {
@@ -37,8 +39,6 @@ abstract class MosaicGeometryJTS(geom: Geometry)
     MosaicGeometryJTS(intersection)
   }
 
-  def getGeom: Geometry = geom
-
   override def isValid: Boolean = geom.isValid
 
   override def getGeometryType: String = geom.getGeometryType
@@ -57,6 +57,8 @@ abstract class MosaicGeometryJTS(geom: Geometry)
   override def getLength: Double = geom.getLength
 
   override def distance(geom2: MosaicGeometry): Double = getGeom.distance(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
+
+  def getGeom: Geometry = geom
 
   override def toWKT: String = new WKTWriter().write(geom)
 
@@ -87,6 +89,16 @@ object MosaicGeometryJTS extends GeometryReader {
     case LINESTRING => MosaicLineStringJTS(geom)
     case MULTILINESTRING => MosaicMultiLineStringJTS(geom)
     case LINEARRING => MosaicLineStringJTS(geom)
+    // Hotfix for intersections that generate a geometry collection
+    // TODO: Decide if intersection is a generator function
+    // TODO: Decide if we auto flatten geometry collections
+    case GEOMETRYCOLLECTION =>
+      val geomCollection = geom.asInstanceOf[GeometryCollection]
+      val geometries = for (i <- 0 until geomCollection.getNumGeometries) yield geomCollection.getGeometryN(i)
+      geometries.find(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.getGeometryType))) match {
+        case Some(firstChip) => MosaicPolygonJTS(firstChip)
+        case None => MosaicPolygonJTS.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryJTS]
+      }
   }
 
   override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS(new GeoJsonReader().read(geoJson))
