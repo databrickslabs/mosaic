@@ -74,6 +74,7 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     registry.registerFunction(FunctionIdentifier("st_length", database), (exprs: Seq[Expression]) => ST_Length(exprs(0), geometryAPI.name))
     registry.registerFunction(FunctionIdentifier("st_perimeter", database), (exprs: Seq[Expression]) => ST_Length(exprs(0), geometryAPI.name))
     registry.registerFunction(FunctionIdentifier("st_distance", database), (exprs: Seq[Expression]) => ST_Distance(exprs(0), exprs(1), geometryAPI.name))
+    registry.registerFunction(FunctionIdentifier("st_contains", database), (exprs: Seq[Expression]) => ST_Contains(exprs(0), exprs(1), geometryAPI.name))
 
 
     /** IndexSystem Specific */
@@ -135,6 +136,7 @@ case class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
     def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
     def st_perimeter(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
     def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, geometryAPI.name))
+    def st_contains(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Contains(geom1.expr, geom2.expr, geometryAPI.name))
 
     /** IndexSystem Specific */
     def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))

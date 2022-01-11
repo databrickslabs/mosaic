@@ -33,6 +33,11 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry)
     MosaicGeometryOGC(this.getGeom.intersection(otherGeom))
   }
 
+  override def contains(other:MosaicGeometry): Boolean = {
+    val otherGeom = other.asInstanceOf[MosaicGeometryOGC].getGeom
+    this.getGeom.contains(otherGeom)
+  }
+
   /**
    * The naming convention in ESRI bindings is different.
    * isSimple actually reflects validity of a geometry.

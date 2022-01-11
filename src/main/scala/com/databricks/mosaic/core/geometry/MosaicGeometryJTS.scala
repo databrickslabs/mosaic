@@ -37,6 +37,11 @@ abstract class MosaicGeometryJTS(geom: Geometry)
     MosaicGeometryJTS(intersection)
   }
 
+  override def contains(other: MosaicGeometry): Boolean = {
+    val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
+    this.geom.contains(otherGeom)
+  }
+
   def getGeom: Geometry = geom
 
   override def isValid: Boolean = geom.isValid
