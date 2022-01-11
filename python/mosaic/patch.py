@@ -1,6 +1,7 @@
 from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
 
-from .mosaic import sc, H3, OGC, _mosaic_invoke_function
+from .attach import sc
+from .mosaic import H3, OGC, _mosaic_invoke_function
 
 
 MosaicPatchClass = getattr(sc._jvm.com.databricks.mosaic.patch, "MosaicPatch")
