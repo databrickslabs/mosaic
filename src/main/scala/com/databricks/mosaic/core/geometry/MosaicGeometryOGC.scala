@@ -39,8 +39,6 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
 
     override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryOGC].getGeom)
 
-    def getGeom: OGCGeometry = geom
-
     /**
       * The naming convention in ESRI bindings is different. isSimple actually
       * reflects validity of a geometry.
@@ -70,6 +68,8 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
     override def boundary: MosaicGeometry = MosaicGeometryOGC(geom.boundary())
 
     override def distance(geom2: MosaicGeometry): Double = this.getGeom.distance(geom2.asInstanceOf[MosaicGeometryOGC].getGeom)
+
+    def getGeom: OGCGeometry = geom
 
     override def toWKT: String = geom.asText()
 
@@ -105,27 +105,30 @@ object MosaicGeometryOGC extends GeometryReader {
         fromWKB(bytes)
     }
 
-    override def fromWKB(wkb: Array[Byte]): MosaicGeometryOGC = MosaicGeometryOGC(OGCGeometry.fromBinary(ByteBuffer.wrap(wkb)))
+    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC(OGCGeometry.fromGeoJson(geoJson))
 
     def apply(geom: OGCGeometry): MosaicGeometryOGC =
         GeometryTypeEnum.fromString(geom.geometryType()) match {
-            case POINT           => MosaicPointOGC(geom)
-            case MULTIPOINT      => MosaicMultiPointOGC(geom)
-            case POLYGON         => MosaicPolygonOGC(geom)
-            case MULTIPOLYGON    => MosaicMultiPolygonOGC(geom)
-            case LINESTRING      => MosaicLineStringOGC(geom)
-            case MULTILINESTRING => MosaicMultiLineStringOGC(geom)
+            case POINT              => MosaicPointOGC(geom)
+            case MULTIPOINT         => MosaicMultiPointOGC(geom)
+            case POLYGON            => MosaicPolygonOGC(geom)
+            case MULTIPOLYGON       => MosaicMultiPolygonOGC(geom)
+            case LINESTRING         => MosaicLineStringOGC(geom)
+            case MULTILINESTRING    => MosaicMultiLineStringOGC(geom)
+            // Hotfix for intersections that generate a geometry collection
+            // TODO: Decide if intersection is a generator function
+            // TODO: Decide if we auto flatten geometry collections
+            case GEOMETRYCOLLECTION =>
+                val geomCollection = geom.asInstanceOf[OGCGeometryCollection]
+                val geometries = for (i <- 0 until geomCollection.numGeometries()) yield geomCollection.geometryN(i)
+                geometries.find(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.geometryType()))) match {
+                    case Some(firstChip) => MosaicPolygonOGC(firstChip)
+                    case None            => MosaicPolygonOGC.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryOGC]
+                }
         }
-
-    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC(OGCGeometry.fromGeoJson(geoJson))
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
         reader(geomType.id).fromPoints(points, geomType)
-    }
-
-    override def fromInternal(row: InternalRow): MosaicGeometry = {
-        val typeId = row.getInt(0)
-        reader(typeId).fromInternal(row)
     }
 
     def reader(geomTypeId: Int): GeometryReader =
@@ -138,11 +141,18 @@ object MosaicGeometryOGC extends GeometryReader {
             case MULTILINESTRING => MosaicMultiLineStringOGC
         }
 
+    override def fromInternal(row: InternalRow): MosaicGeometry = {
+        val typeId = row.getInt(0)
+        reader(typeId).fromInternal(row)
+    }
+
     override def fromKryo(row: InternalRow): MosaicGeometry = {
         val kryoBytes = row.getBinary(1)
         val input = new Input(kryoBytes)
         val wkb = MosaicGeometryOGC.kryo.readObject(input, classOf[Array[Byte]])
         fromWKB(wkb)
     }
+
+    override def fromWKB(wkb: Array[Byte]): MosaicGeometryOGC = MosaicGeometryOGC(OGCGeometry.fromBinary(ByteBuffer.wrap(wkb)))
 
 }

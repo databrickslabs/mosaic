@@ -12,6 +12,7 @@ object GeometryTypeEnum extends Enumeration {
     val MULTIPOLYGON: GeometryTypeEnum.Value = Value(6, "MULTIPOLYGON")
     // coercion type JTS boundary returns LinearRing instead of LineString
     val LINEARRING: GeometryTypeEnum.Value = Value(7, "LINEARRING")
+    val GEOMETRYCOLLECTION: GeometryTypeEnum.Value = Value(8, "GEOMETRYCOLLECTION")
 
     def fromString(value: String): GeometryTypeEnum.Value =
         GeometryTypeEnum.values
