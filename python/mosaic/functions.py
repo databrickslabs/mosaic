@@ -193,6 +193,15 @@ def st_distance(geom1: "ColumnOrName", geom2: "ColumnOrName"):
     )
 
 
+def st_contains(geom1: "ColumnOrName", geom2: "ColumnOrName"):
+    return _mosaic_invoke_function(
+        "st_contains",
+        mosaicContext,
+        pyspark_to_java_column(geom1),
+        pyspark_to_java_column(geom2),
+    )
+
+
 def mosaicfill(inGeom: "ColumnOrName", resolution: "ColumnOrName"):
     return _mosaic_invoke_function(
         "mosaicfill",
