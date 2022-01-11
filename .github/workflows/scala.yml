@@ -1,0 +1,28 @@
+name: Build scala project
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        dbr: [9.1LTS]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-java@v1
+      with:
+        java-version: '8'
+    - env:
+        DBR_VERSION: ${{ matrix.dbr }}
+      run: mvn -q clean install -Druntime=${DBR_VERSION}
+    - run: mkdir staging
+    - run: cp target/mosaic*.jar staging
+    - uses: actions/upload-artifact@v2
+      with:
+        name: generated-jars
+        path: staging
