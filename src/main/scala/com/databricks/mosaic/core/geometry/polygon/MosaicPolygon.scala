@@ -5,8 +5,8 @@ import com.databricks.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicPolygon extends MosaicGeometry {
 
-  def getBoundaryPoints: Seq[MosaicPoint]
+    def getBoundaryPoints: Seq[MosaicPoint]
 
-  def getHolePoints: Seq[Seq[MosaicPoint]]
+    def getHolePoints: Seq[Seq[MosaicPoint]]
 
 }

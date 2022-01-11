@@ -4,42 +4,42 @@ import com.databricks.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
 
-  def contains(geom2: MosaicGeometry): Boolean
+    def contains(geom2: MosaicGeometry): Boolean
 
-  def getLength: Double
+    def getLength: Double
 
-  def distance(geom2: MosaicGeometry): Double
+    def distance(geom2: MosaicGeometry): Double
 
-  def isValid: Boolean
+    def isValid: Boolean
 
-  def getGeometryType: String
+    def getGeometryType: String
 
-  def getArea: Double
+    def getArea: Double
 
-  def getAPI: String
+    def getAPI: String
 
-  def getCentroid: MosaicPoint
+    def getCentroid: MosaicPoint
 
-  def isEmpty: Boolean
+    def isEmpty: Boolean
 
-  def getBoundary: Seq[MosaicPoint]
+    def getBoundary: Seq[MosaicPoint]
 
-  def getHoles: Seq[Seq[MosaicPoint]]
+    def getHoles: Seq[Seq[MosaicPoint]]
 
-  def boundary: MosaicGeometry
+    def boundary: MosaicGeometry
 
-  def buffer(distance: Double): MosaicGeometry
+    def buffer(distance: Double): MosaicGeometry
 
-  def simplify(tolerance: Double): MosaicGeometry
+    def simplify(tolerance: Double): MosaicGeometry
 
-  def intersection(other: MosaicGeometry): MosaicGeometry
+    def intersection(other: MosaicGeometry): MosaicGeometry
 
-  def flatten: Seq[MosaicGeometry]
+    def flatten: Seq[MosaicGeometry]
 
-  def equals(other: MosaicGeometry): Boolean
+    def equals(other: MosaicGeometry): Boolean
 
-  def equals(other: java.lang.Object): Boolean
+    def equals(other: java.lang.Object): Boolean
 
-  def hashCode: Int
+    def hashCode: Int
 
 }

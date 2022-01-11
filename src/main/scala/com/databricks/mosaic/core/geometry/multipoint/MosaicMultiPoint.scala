@@ -5,6 +5,6 @@ import com.databricks.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicMultiPoint extends MosaicGeometry {
 
-  def asSeq: Seq[MosaicPoint]
+    def asSeq: Seq[MosaicPoint]
 
 }

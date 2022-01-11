@@ -122,13 +122,13 @@ This file is divided into 3 sections:
 
   <check level="warn" class="org.scalastyle.scalariform.EnsureSingleSpaceBeforeTokenChecker" enabled="true">
    <parameters>
-     <parameter name="tokens">ARROW, EQUALS, ELSE, TRY, CATCH, FINALLY, LARROW, RARROW</parameter>
+     <parameter name="tokens">ELSE, TRY, CATCH, FINALLY, LARROW, RARROW</parameter>
    </parameters>
   </check>
 
   <check level="warn" class="org.scalastyle.scalariform.EnsureSingleSpaceAfterTokenChecker" enabled="true">
     <parameters>
-     <parameter name="tokens">ARROW, EQUALS, COMMA, COLON, IF, ELSE, DO, WHILE, FOR, MATCH, TRY, CATCH, FINALLY, LARROW, RARROW</parameter>
+     <parameter name="tokens">ARROW, COMMA, COLON, IF, ELSE, DO, WHILE, FOR, MATCH, TRY, CATCH, FINALLY, LARROW, RARROW</parameter>
     </parameters>
   </check>
 
@@ -307,11 +307,6 @@ This file is divided into 3 sections:
     <customMessage><![CDATA[
       Single Space between ')' and `{`.
     ]]></customMessage>
-  </check>
-
-  <check customId="NoScalaDoc" level="warn" class="org.scalastyle.file.RegexChecker" enabled="true">
-    <parameters><parameter name="regex">(?m)^(\s*)/[*][*].*$(\r|)\n^\1  [*]</parameter></parameters>
-    <customMessage>Use Javadoc style indentation for multiline comments</customMessage>
   </check>
 
   <check customId="OmitBracesInCase" level="warn" class="org.scalastyle.file.RegexChecker" enabled="true">
