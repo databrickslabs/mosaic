@@ -1,4 +1,4 @@
-name: Build python package
+name: Build mosaic project
 on:
   push:
     branches:
@@ -24,11 +24,12 @@ jobs:
     - env:
         DBR_VERSION: ${{ matrix.dbr }}
       run: mvn -q -Druntime=${DBR_VERSION} clean install
-    - run: cp target/mosaic-*-jar-with-dependencies.jar python/mosaic
-    - run: (cd python;python -m build)
     - run: mkdir staging
+    - run: cp target/mosaic*.jar staging
+    - run: cp target/mosaic-*-jar-with-dependencies.jar python/mosaic
+    - run: (cd python;pip install -e .[dev];python -m build)
     - run: cp python/dist/*.whl staging
     - uses: actions/upload-artifact@v2
       with:
-        name: generated-wheels
+        name: artefacts
         path: staging

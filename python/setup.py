@@ -11,10 +11,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-# README file from repo root directory
 repo_root = str(pathlib.Path(__file__).resolve().parent)
-
-# README file from Feast repo root directory
 README_FILE = os.path.join(repo_root, "README.md")
 with open(README_FILE, "r") as f:
     LONG_DESCRIPTION = f.read()
