@@ -4,15 +4,14 @@ import java.nio.ByteBuffer
 
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esri.core.geometry.{SpatialReference, Transformation2D}
 import com.esri.core.geometry.ogc._
+import com.esri.core.geometry.{SpatialReference, Transformation2D}
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.locationtech.jts.io.{WKBReader, WKBWriter}
 
 import org.apache.spark.sql.catalyst.InternalRow
 
 import com.databricks.mosaic.core.geometry.linestring.MosaicLineStringOGC
-import com.databricks.mosaic.core.geometry.multilinestring.MosaicMultiLineStringOGC
 import com.databricks.mosaic.core.geometry.multipoint.MosaicMultiPointOGC
 import com.databricks.mosaic.core.geometry.multipolygon.MosaicMultiPolygonOGC
 import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointOGC}
@@ -92,6 +91,8 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
         this.getGeom.Equals(otherGeom)
     }
 
+    def getGeom: OGCGeometry = geom
+
     override def equals(other: java.lang.Object): Boolean = false
 
     override def hashCode: Int = geom.hashCode()
@@ -100,9 +101,7 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
 
     override def distance(geom2: MosaicGeometry): Double = this.getGeom.distance(geom2.asInstanceOf[MosaicGeometryOGC].getGeom)
 
-    def getGeom: OGCGeometry = geom
-
-    override def convexHull: MosaicGeometryOGC = MosaicGeometryOGC(geom.convexHull())
+  override def convexHull: MosaicGeometryOGC = MosaicGeometryOGC(geom.convexHull())
 
     override def toWKT: String = geom.asText()
 
@@ -138,31 +137,6 @@ object MosaicGeometryOGC extends GeometryReader {
         fromWKB(bytes)
     }
 
-    override def fromWKB(wkb: Array[Byte]): MosaicGeometryOGC = MosaicGeometryOGC(OGCGeometry.fromBinary(ByteBuffer.wrap(wkb)))
-
-    def apply(geom: OGCGeometry): MosaicGeometryOGC =
-        GeometryTypeEnum.fromString(geom.geometryType()) match {
-            case POINT              => MosaicPointOGC(geom)
-            case MULTIPOINT         => MosaicMultiPointOGC(geom)
-            case POLYGON            => MosaicPolygonOGC(geom)
-            case MULTIPOLYGON       => MosaicMultiPolygonOGC(geom)
-            case LINESTRING         => MosaicLineStringOGC(geom)
-            case MULTILINESTRING    => MosaicMultiLineStringOGC(geom)
-            // Hotfix for intersections that generate a geometry collection
-            // TODO: Decide if intersection is a generator function
-            // TODO: Decide if we auto flatten geometry collections
-            case GEOMETRYCOLLECTION =>
-                val geomCollection = geom.asInstanceOf[OGCGeometryCollection]
-                val geometries = for (i <- 0 until geomCollection.numGeometries()) yield geomCollection.geometryN(i)
-                geometries.find(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.geometryType()))) match {
-                    case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == POLYGON.id      =>
-                        MosaicPolygonOGC(firstChip)
-                    case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == MULTIPOLYGON.id =>
-                        MosaicMultiPolygonOGC(firstChip)
-                    case None => MosaicPolygonOGC.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryOGC]
-                }
-        }
-
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC(OGCGeometry.fromGeoJson(geoJson))
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
@@ -190,5 +164,30 @@ object MosaicGeometryOGC extends GeometryReader {
         val wkb = MosaicGeometryOGC.kryo.readObject(input, classOf[Array[Byte]])
         fromWKB(wkb)
     }
+
+    override def fromWKB(wkb: Array[Byte]): MosaicGeometryOGC = MosaicGeometryOGC(OGCGeometry.fromBinary(ByteBuffer.wrap(wkb)))
+
+    def apply(geom: OGCGeometry): MosaicGeometryOGC =
+        GeometryTypeEnum.fromString(geom.geometryType()) match {
+            case POINT              => MosaicPointOGC(geom)
+            case MULTIPOINT         => MosaicMultiPointOGC(geom)
+            case POLYGON            => MosaicPolygonOGC(geom)
+            case MULTIPOLYGON       => MosaicMultiPolygonOGC(geom)
+            case LINESTRING         => MosaicLineStringOGC(geom)
+            case MULTILINESTRING    => MosaicMultiLineStringOGC(geom)
+            // Hotfix for intersections that generate a geometry collection
+            // TODO: Decide if intersection is a generator function
+            // TODO: Decide if we auto flatten geometry collections
+            case GEOMETRYCOLLECTION =>
+                val geomCollection = geom.asInstanceOf[OGCGeometryCollection]
+                val geometries = for (i <- 0 until geomCollection.numGeometries()) yield geomCollection.geometryN(i)
+                geometries.find(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.geometryType()))) match {
+                    case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == POLYGON.id      =>
+                        MosaicPolygonOGC(firstChip)
+                    case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == MULTIPOLYGON.id =>
+                        MosaicMultiPolygonOGC(firstChip)
+                    case None => MosaicPolygonOGC.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryOGC]
+                }
+        }
 
 }

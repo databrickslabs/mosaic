@@ -71,6 +71,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         this.geom.equalsExact(otherGeom)
     }
 
+    def getGeom: Geometry = geom
+
     override def equals(other: java.lang.Object): Boolean = false
 
     override def hashCode: Int = geom.hashCode()
@@ -78,8 +80,6 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
     override def getLength: Double = geom.getLength
 
     override def distance(geom2: MosaicGeometry): Double = getGeom.distance(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
-
-    def getGeom: Geometry = geom
 
     override def convexHull: MosaicGeometryJTS = MosaicGeometryJTS(geom.convexHull())
 
@@ -117,6 +117,8 @@ object MosaicGeometryJTS extends GeometryReader {
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometryJTS = MosaicGeometryJTS(new WKBReader().read(wkb))
 
+    override def fromJSON(geoJson: String): MosaicGeometryJTS = MosaicGeometryJTS(new GeoJsonReader().read(geoJson))
+
     def apply(geom: Geometry): MosaicGeometryJTS =
         GeometryTypeEnum.fromString(geom.getGeometryType) match {
             case POINT              => MosaicPointJTS(geom)
@@ -141,8 +143,6 @@ object MosaicGeometryJTS extends GeometryReader {
                 }
         }
 
-    override def fromJSON(geoJson: String): MosaicGeometryJTS = MosaicGeometryJTS(new GeoJsonReader().read(geoJson))
-
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometryJTS = {
         reader(geomType.id).fromPoints(points, geomType).asInstanceOf[MosaicGeometryJTS]
     }
@@ -150,11 +150,6 @@ object MosaicGeometryJTS extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometryJTS = {
         val typeId = row.getInt(0)
         reader(typeId).fromInternal(row).asInstanceOf[MosaicGeometryJTS]
-    }
-
-    override def fromKryo(row: InternalRow): MosaicGeometryJTS = {
-        val typeId = row.getInt(0)
-        reader(typeId).fromKryo(row).asInstanceOf[MosaicGeometryJTS]
     }
 
     def reader(geomTypeId: Int): GeometryReader =
@@ -166,5 +161,10 @@ object MosaicGeometryJTS extends GeometryReader {
             case LINESTRING      => MosaicLineStringJTS
             case MULTILINESTRING => MosaicMultiLineStringJTS
         }
+
+    override def fromKryo(row: InternalRow): MosaicGeometryJTS = {
+        val typeId = row.getInt(0)
+        reader(typeId).fromKryo(row).asInstanceOf[MosaicGeometryJTS]
+    }
 
 }
