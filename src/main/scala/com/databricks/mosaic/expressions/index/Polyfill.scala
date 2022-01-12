@@ -41,9 +41,7 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
 
     override def toString: String = s"h3_polyfill($geom, $resolution)"
 
-    /**
-      * Overridden to ensure [[Expression.sql]] is properly formatted.
-      */
+    /** Overridden to ensure [[Expression.sql]] is properly formatted. */
     override def prettyName: String = "h3_polyfill"
 
     /**

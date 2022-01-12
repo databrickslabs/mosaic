@@ -42,9 +42,7 @@ case class TrySql(inExpr: Expression) extends UnaryExpression with CodegenFallba
 
     override def toString: String = s"try_sql($inExpr)"
 
-    /**
-      * Overridden to ensure [[Expression.sql]] is properly formatted.
-      */
+    /** Overridden to ensure [[Expression.sql]] is properly formatted. */
     override def prettyName: String = "try_sql"
 
     override def eval(input: InternalRow): Any = {

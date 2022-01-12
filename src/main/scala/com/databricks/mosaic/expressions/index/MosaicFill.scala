@@ -47,9 +47,7 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
 
     override def toString: String = s"h3_mosaicfill($geom, $resolution)"
 
-    /**
-      * Overridden to ensure [[Expression.sql]] is properly formatted.
-      */
+    /** Overridden to ensure [[Expression.sql]] is properly formatted. */
     override def prettyName: String = "h3_mosaicfill"
 
     /**

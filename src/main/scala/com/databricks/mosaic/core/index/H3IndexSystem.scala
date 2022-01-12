@@ -74,23 +74,6 @@ object H3IndexSystem extends IndexSystem with Serializable {
     }
 
     /**
-      * Boundary that is returned by H3 isn't valid from JTS perspective since
-      * it does not form a LinearRing (ie first point == last point). The first
-      * point of the boundary is appended to the end of the boundary to form a
-      * LinearRing.
-      *
-      * @param index
-      *   Id of the index whose geometry should be returned.
-      * @return
-      *   An instance of [[Geometry]] corresponding to index.
-      */
-    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
-        val boundary = h3.h3ToGeoBoundary(index).asScala
-        val extended = boundary ++ List(boundary.head)
-        geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord), POLYGON)
-    }
-
-    /**
       * H3 polyfill logic is based on the centroid point of the individual index
       * geometry. Blind spots do occur near the boundary of the geometry.
       *
@@ -136,6 +119,23 @@ object H3IndexSystem extends IndexSystem with Serializable {
     }
 
     /**
+      * Boundary that is returned by H3 isn't valid from JTS perspective since
+      * it does not form a LinearRing (ie first point == last point). The first
+      * point of the boundary is appended to the end of the boundary to form a
+      * LinearRing.
+      *
+      * @param index
+      *   Id of the index whose geometry should be returned.
+      * @return
+      *   An instance of [[Geometry]] corresponding to index.
+      */
+    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
+        val boundary = h3.h3ToGeoBoundary(index).asScala
+        val extended = boundary ++ List(boundary.head)
+        geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord), POLYGON)
+    }
+
+    /**
       * @see
       *   [[IndexSystem.getCoreChips()]]
       * @param coreIndices
@@ -175,4 +175,5 @@ object H3IndexSystem extends IndexSystem with Serializable {
     override def minResolution: Int = 0
 
     override def maxResolution: Int = 16
+
 }

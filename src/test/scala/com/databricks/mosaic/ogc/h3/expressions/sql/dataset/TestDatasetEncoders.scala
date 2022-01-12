@@ -10,7 +10,6 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI.OGC
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.{getHexRowsDf, getWKTRowsDf}
-import com.databricks.mosaic.sql.MosaicFrame
 import com.databricks.mosaic.test.SparkFunSuite
 
 class TestDatasetEncoders extends SparkFunSuite with Matchers with JsonMatchers {
@@ -26,7 +25,7 @@ class TestDatasetEncoders extends SparkFunSuite with Matchers with JsonMatchers 
             .withColumn("wkb", convert_to(as_hex($"hex"), "WKB"))
         val wktDf: DataFrame = getWKTRowsDf
 
-        //MosaicFrame(hexDf).toDataset
+        // MosaicFrame(hexDf).toDataset
 
         val left = hexDf
             .orderBy("id")

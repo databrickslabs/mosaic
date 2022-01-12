@@ -13,7 +13,7 @@ import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
 
 class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(multiPoint) with MosaicMultiPoint {
 
-    //noinspection DuplicatedCode
+    // noinspection DuplicatedCode
     override def toInternal: InternalGeometry = {
         val points = asSeq.map(_.coord).map(InternalCoord(_))
         new InternalGeometry(MULTIPOINT.id, Array(points.toArray), Array(Array(Array())))

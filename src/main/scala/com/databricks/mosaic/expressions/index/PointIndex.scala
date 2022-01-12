@@ -28,9 +28,7 @@ case class PointIndex(lat: Expression, lng: Expression, resolution: Expression, 
 
     override def toString: String = s"h3_point_index($lat, $lng, $resolution)"
 
-    /**
-      * Overridden to ensure [[Expression.sql]] is properly formatted.
-      */
+    /** Overridden to ensure [[Expression.sql]] is properly formatted. */
     override def prettyName: String = "h3_point_index"
 
     /**

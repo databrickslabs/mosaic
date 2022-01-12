@@ -28,10 +28,7 @@ case class ST_Scale(inputGeom: Expression, xd: Expression, yd: Expression, geome
 
     override def children: Seq[Expression] = Seq(inputGeom, xd, yd)
 
-    /** Output Data Type */
-    override def dataType: DataType = inputGeom.dataType
-
-    //noinspection DuplicatedCode
+    // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geom = geometryAPI.geometry(input1, dataType)
@@ -40,6 +37,9 @@ case class ST_Scale(inputGeom: Expression, xd: Expression, yd: Expression, geome
         val output = geom.scale(xDist, yDist)
         geometryAPI.serialize(output, dataType)
     }
+
+    /** Output Data Type */
+    override def dataType: DataType = inputGeom.dataType
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])

@@ -27,9 +27,7 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
 
     override def toString: String = s"index_geometry($indexID)"
 
-    /**
-      * Overridden to ensure [[Expression.sql]] is properly formatted.
-      */
+    /** Overridden to ensure [[Expression.sql]] is properly formatted. */
     override def prettyName: String = "index_geometry"
 
     /**

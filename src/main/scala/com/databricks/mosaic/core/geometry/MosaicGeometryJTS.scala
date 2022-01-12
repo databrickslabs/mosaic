@@ -58,8 +58,6 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         MosaicGeometryJTS(intersection)
     }
 
-    def getGeom: Geometry = geom
-
     override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
 
     override def isValid: Boolean = geom.isValid
@@ -80,6 +78,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
     override def getLength: Double = geom.getLength
 
     override def distance(geom2: MosaicGeometry): Double = getGeom.distance(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
+
+    def getGeom: Geometry = geom
 
     override def toWKT: String = new WKTWriter().write(geom)
 
@@ -115,8 +115,6 @@ object MosaicGeometryJTS extends GeometryReader {
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS(new WKBReader().read(wkb))
 
-    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS(new GeoJsonReader().read(geoJson))
-
     def apply(geom: Geometry): MosaicGeometryJTS =
         GeometryTypeEnum.fromString(geom.getGeometryType) match {
             case POINT              => MosaicPointJTS(geom)
@@ -141,8 +139,20 @@ object MosaicGeometryJTS extends GeometryReader {
                 }
         }
 
+    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS(new GeoJsonReader().read(geoJson))
+
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
         reader(geomType.id).fromPoints(points, geomType)
+    }
+
+    override def fromInternal(row: InternalRow): MosaicGeometry = {
+        val typeId = row.getInt(0)
+        reader(typeId).fromInternal(row)
+    }
+
+    override def fromKryo(row: InternalRow): MosaicGeometry = {
+        val typeId = row.getInt(0)
+        reader(typeId).fromKryo(row)
     }
 
     def reader(geomTypeId: Int): GeometryReader =
@@ -154,15 +164,5 @@ object MosaicGeometryJTS extends GeometryReader {
             case LINESTRING      => MosaicLineStringJTS
             case MULTILINESTRING => MosaicMultiLineStringJTS
         }
-
-    override def fromInternal(row: InternalRow): MosaicGeometry = {
-        val typeId = row.getInt(0)
-        reader(typeId).fromInternal(row)
-    }
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = {
-        val typeId = row.getInt(0)
-        reader(typeId).fromKryo(row)
-    }
 
 }

@@ -38,9 +38,7 @@ case class AsJSON(inGeometry: Expression) extends UnaryExpression with NullIntol
 
     override def toString: String = s"as_json($inGeometry)"
 
-    /**
-      * Overridden to ensure [[Expression.sql]] is properly formatted.
-      */
+    /** Overridden to ensure [[Expression.sql]] is properly formatted. */
     override def prettyName: String = "as_json"
 
     /**

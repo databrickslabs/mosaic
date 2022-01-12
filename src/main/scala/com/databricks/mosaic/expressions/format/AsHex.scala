@@ -38,9 +38,7 @@ case class AsHex(inGeometry: Expression) extends UnaryExpression with NullIntole
 
     override def toString: String = s"as_hex($inGeometry)"
 
-    /**
-      * Overridden to ensure [[Expression.sql]] is properly formatted.
-      */
+    /** Overridden to ensure [[Expression.sql]] is properly formatted. */
     override def prettyName: String = "as_hex"
 
     /**
