@@ -4,13 +4,11 @@ import sys
 from typing import Any
 
 from pyspark import SparkContext
-from pyspark.sql import SparkSession
 from pyspark.sql.column import Column as MosaicColumn
 
+from .attach import sc
 
-# jar_filename = "mosaic-1.0-SNAPSHOT-jar-with-dependencies.jar"
 
-# db_jar_path = f"/databricks/python/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages/mosaic/{jar_filename}"
 # std_jar_path = os.path.join(site.getsitepackages()[0], "mosaic", jar_filename)
 # if os.path.exists(db_jar_path):
 #     jar_path = db_jar_path
@@ -18,10 +16,6 @@ from pyspark.sql.column import Column as MosaicColumn
 #     jar_path = std_jar_path
 # else:
 #     raise FileNotFoundError(f"Mosaic JAR package {jar_filename} could not be located.")
-
-spark = SparkSession.builder.getOrCreate()
-sc = spark.sparkContext
-# sc._jsc.addJar(jar_path)
 
 
 MosaicContextClass = getattr(sc._jvm.com.databricks.mosaic.functions, "MosaicContext")
