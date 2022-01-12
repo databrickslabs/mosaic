@@ -55,6 +55,8 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry)
     this.getGeom.equals(otherGeom.asInstanceOf[Object])
   }
 
+  def getGeom: OGCGeometry = geom
+
   override def equals(other: java.lang.Object): Boolean = false
 
   override def hashCode: Int = geom.hashCode()
@@ -62,8 +64,6 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry)
   override def boundary: MosaicGeometry = MosaicGeometryOGC(geom.boundary())
 
   override def distance(geom2: MosaicGeometry): Double = this.getGeom.distance(geom2.asInstanceOf[MosaicGeometryOGC].getGeom)
-
-  def getGeom: OGCGeometry = geom
 
   override def toWKB: Array[Byte] = geom.asBinary().array()
 
@@ -102,7 +102,10 @@ object MosaicGeometryOGC extends GeometryReader {
       val geomCollection = geom.asInstanceOf[OGCGeometryCollection]
       val geometries = for (i <- 0 until geomCollection.numGeometries()) yield geomCollection.geometryN(i)
       geometries.find(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.geometryType()))) match {
-        case Some(firstChip) => MosaicPolygonOGC(firstChip)
+        case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == POLYGON.id      =>
+          MosaicPolygonOGC(firstChip)
+        case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == MULTIPOLYGON.id =>
+          MosaicMultiPolygonOGC(firstChip)
         case None => MosaicPolygonOGC.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryOGC]
       }
   }
