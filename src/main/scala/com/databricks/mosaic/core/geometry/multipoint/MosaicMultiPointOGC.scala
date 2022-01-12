@@ -1,12 +1,16 @@
 package com.databricks.mosaic.core.geometry.multipoint
 
-import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointOGC}
-import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryOGC}
-import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
-import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
-import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPoint}
-import com.esri.core.geometry.{MultiPoint, Point}
+import com.esri.core.geometry.{MultiPoint, OperatorConvexHull, Point}
+import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPoint, OGCPolygon}
+
 import org.apache.spark.sql.catalyst.InternalRow
+
+import com.databricks.mosaic.core.geometry.{GeometryReader, MosaicGeometry, MosaicGeometryOGC}
+import com.databricks.mosaic.core.geometry.point.{MosaicPoint, MosaicPointOGC}
+import com.databricks.mosaic.core.geometry.polygon.MosaicPolygon
+import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
+import com.databricks.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
+import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonOGC
 
 class MosaicMultiPointOGC(multiPoint: OGCMultiPoint)
   extends MosaicGeometryOGC(multiPoint) with MosaicMultiPoint {
@@ -28,6 +32,10 @@ class MosaicMultiPointOGC(multiPoint: OGCMultiPoint)
   override def getLength: Double = 0.0
 
   override def flatten: Seq[MosaicGeometry] = asSeq
+
+  override def convexHull: MosaicPolygon = {
+    new MosaicPolygonOGC(multiPoint.convexHull.asInstanceOf[OGCPolygon])
+}
 }
 
 object MosaicMultiPointOGC extends GeometryReader {
