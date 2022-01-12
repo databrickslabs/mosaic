@@ -93,7 +93,9 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
 
     def getGeom: OGCGeometry = geom
 
-    override def equals(other: java.lang.Object): Boolean = false
+    def getGeom: OGCGeometry = geom
+
+  override def equals(other: java.lang.Object): Boolean = false
 
     override def hashCode: Int = geom.hashCode()
 
@@ -183,9 +185,9 @@ object MosaicGeometryOGC extends GeometryReader {
                 val geometries = for (i <- 0 until geomCollection.numGeometries()) yield geomCollection.geometryN(i)
                 geometries.find(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.geometryType()))) match {
                     case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == POLYGON.id      =>
-                        MosaicPolygonOGC(firstChip)
-                    case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == MULTIPOLYGON.id =>
-                        MosaicMultiPolygonOGC(firstChip)
+          MosaicPolygonOGC(firstChip)
+        case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == MULTIPOLYGON.id =>
+          MosaicMultiPolygonOGC(firstChip)
                     case None => MosaicPolygonOGC.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryOGC]
                 }
         }
