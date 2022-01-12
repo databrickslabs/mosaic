@@ -4,7 +4,11 @@ import com.databricks.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
 
-    def contains(geom2: MosaicGeometry): Boolean
+    def translate(xd: Double, yd: Double): MosaicGeometry
+
+    def scale(xd: Double, yd: Double): MosaicGeometry
+
+    def rotate(td: Double): MosaicGeometry
 
     def getLength: Double
 

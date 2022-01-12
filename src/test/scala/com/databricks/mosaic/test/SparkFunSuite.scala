@@ -34,18 +34,6 @@ trait SparkFunSuite extends FunSuite with BeforeAndAfterAll {
         super.afterAll()
     }
 
-    private def stopSpark(): Unit = {
-        if (_sc != null) {
-            _sc.stop()
-        }
-
-        // To avoid Akka rebinding to the same port, since it doesn't unbind immediately on shutdown
-        System.clearProperty("spark.driver.port")
-
-        _sc = null
-        _spark = null
-    }
-
     def benchmark[T](f: => T)(n: Int = 200): Double = {
         val times = (0 until n).map(_ => {
             restartSpark()
@@ -57,6 +45,18 @@ trait SparkFunSuite extends FunSuite with BeforeAndAfterAll {
     def restartSpark(): Unit = {
         stopSpark()
         startSpark()
+    }
+
+    private def stopSpark(): Unit = {
+        if (_sc != null) {
+            _sc.stop()
+        }
+
+        // To avoid Akka rebinding to the same port, since it doesn't unbind immediately on shutdown
+        System.clearProperty("spark.driver.port")
+
+        _sc = null
+        _spark = null
     }
 
     def time[T](f: => T): (T, Double) = {

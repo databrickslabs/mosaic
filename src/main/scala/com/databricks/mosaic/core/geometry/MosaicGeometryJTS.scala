@@ -4,6 +4,7 @@ import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.Output
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.locationtech.jts.geom.{Geometry, GeometryCollection}
+import org.locationtech.jts.geom.util.AffineTransformation
 import org.locationtech.jts.io._
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
@@ -20,6 +21,21 @@ import com.databricks.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
 
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
+
+    override def translate(xd: Double, yd: Double): MosaicGeometry = {
+        val transformation = AffineTransformation.translationInstance(xd, yd)
+        MosaicGeometryJTS(transformation.transform(geom))
+    }
+
+    override def scale(xd: Double, yd: Double): MosaicGeometry = {
+        val transformation = AffineTransformation.scaleInstance(xd, yd)
+        MosaicGeometryJTS(transformation.transform(geom))
+    }
+
+    override def rotate(td: Double): MosaicGeometry = {
+        val transformation = AffineTransformation.rotationInstance(td)
+        MosaicGeometryJTS(transformation.transform(geom))
+    }
 
     override def getAPI: String = "JTS"
 

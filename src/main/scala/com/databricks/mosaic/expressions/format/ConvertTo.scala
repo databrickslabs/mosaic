@@ -2,16 +2,13 @@ package com.databricks.mosaic.expressions.format
 
 import java.util.Locale
 
-import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
 
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.types._
-import com.databricks.mosaic.core.types.model.GeometryTypeEnum
 
 @ExpressionDescription(
   usage = "_FUNC_(expr1, dataType) - Converts expr1 to the specified data type.",
@@ -75,11 +72,20 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
                 )
         }
 
+    /** Expression output DataType. */
+    override def dataType: DataType =
+        outDataType.toUpperCase(Locale.ROOT) match {
+            case "WKT"     => StringType
+            case "WKB"     => BinaryType
+            case "HEX"     => HexType
+            case "COORDS"  => InternalGeometryType
+            case "GEOJSON" => JSONType
+            case "KRYO"    => KryoType
+        }
+
     override def toString: String = s"convert_to($inGeometry, $outDataType)"
 
-    /**
-      * Overridden to ensure [[Expression.sql]] is properly formatted.
-      */
+    /** Overridden to ensure [[Expression.sql]] is properly formatted. */
     override def prettyName: String = "convert_to"
 
     /**
@@ -96,28 +102,8 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
     override def nullSafeEval(input: Any): Any = {
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geometry = geometryAPI.geometry(input, inGeometry.dataType)
-
-        outDataType.toUpperCase(Locale.ROOT) match {
-            case "WKB"     => geometry.toWKB
-            case "WKT"     => UTF8String.fromString(geometry.toWKT)
-            case "HEX"     => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
-            case "GEOJSON" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
-            case "COORDS"  => geometry.toInternal.serialize
-            case "KRYO"    => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
-            case _         => throw new Error(s"Cannot convert from ${inGeometry.dataType.sql} to $dataType")
-        }
+        geometryAPI.serialize(geometry, outDataType)
     }
-
-    /** Expression output DataType. */
-    override def dataType: DataType =
-        outDataType.toUpperCase(Locale.ROOT) match {
-            case "WKT"     => StringType
-            case "WKB"     => BinaryType
-            case "HEX"     => HexType
-            case "COORDS"  => InternalGeometryType
-            case "GEOJSON" => JSONType
-            case "KRYO"    => KryoType
-        }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val res = ConvertTo(

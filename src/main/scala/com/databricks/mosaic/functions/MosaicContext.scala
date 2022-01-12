@@ -167,6 +167,18 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_Contains(exprs(0), exprs(1), geometryAPI.name)
         )
         registry.registerFunction(
+          FunctionIdentifier("st_translate", database),
+          (exprs: Seq[Expression]) => ST_Translate(exprs(0), exprs(1), exprs(2), geometryAPI.name)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("st_scale", database),
+          (exprs: Seq[Expression]) => ST_Scale(exprs(0), exprs(1), exprs(2), geometryAPI.name)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("st_rotate", database),
+          (exprs: Seq[Expression]) => ST_Rotate(exprs(0), exprs(1), geometryAPI.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_convexhull", database),
           (exprs: Seq[Expression]) => ST_ConvexHull(exprs(0), geometryAPI.name)
         )
@@ -249,6 +261,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_perimeter(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
         def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, geometryAPI.name))
         def st_contains(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Contains(geom1.expr, geom2.expr, geometryAPI.name))
+        def st_translate(geom1: Column, xd: Column, yd: Column): Column =
+            ColumnAdapter(ST_Translate(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
+        def st_scale(geom1: Column, xd: Column, yd: Column): Column =
+            ColumnAdapter(ST_Scale(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
+        def st_rotate(geom1: Column, td: Column): Column = ColumnAdapter(ST_Rotate(geom1.expr, td.expr, geometryAPI.name))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))
 
         /** IndexSystem Specific */
