@@ -1,5 +1,10 @@
 package com.databricks.mosaic.jts.h3.expressions.geometry
 
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.io.{WKTReader, WKTWriter}
+import org.scalatest._
+import scala.collection.immutable
+
 import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.mosaic.core.geometry.{MosaicGeometry, MosaicGeometryJTS}
@@ -7,11 +12,7 @@ import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks
 import com.databricks.mosaic.test.SparkTest
-import org.locationtech.jts.geom.GeometryFactory
-import org.locationtech.jts.io.{WKTReader, WKTWriter}
-import org.scalatest._
 
-import scala.collection.immutable
 
 class TestGeometryProcessors_JTS_H3 extends FunSuite with Matchers with SparkTest {
 
@@ -123,6 +124,28 @@ class TestGeometryProcessors_JTS_H3 extends FunSuite with Matchers with SparkTes
     val sqlResult = spark.sql("select st_distance(leftGeom, rightGeom) from source").as[Double].collect()
 
     sqlResult should contain allElementsOf expected
+
+  }
+
+  test("Test polygon contains point") {
+    mosaicContext.register(spark)
+    
+    val poly = 
+      """POLYGON ((10 10, 110 10, 110 110, 10 110, 10 10),
+        | (20 20, 20 30, 30 30, 30 20, 20 20),
+        | (40 20, 40 30, 50 30, 50 20, 40 20))""".stripMargin.filter(_ >= ' ')
+
+    val rows = List(
+      (poly, "POINT (35 25)", true), 
+      (poly, "POINT (25 25)", false)
+      )
+
+    val results = 
+      rows.toDF("leftGeom", "rightGeom", "expected")
+      .withColumn("result", st_contains($"leftGeom", $"rightGeom"))
+      .where($"expected" === $"result")
+
+    results.count shouldBe 2
 
   }
 

@@ -32,6 +32,8 @@ trait MosaicGeometry extends GeometryWriter {
 
   def intersection(other: MosaicGeometry): MosaicGeometry
 
+  def contains(other: MosaicGeometry): Boolean
+
   def flatten: Seq[MosaicGeometry]
 
   def equals(other: MosaicGeometry): Boolean
