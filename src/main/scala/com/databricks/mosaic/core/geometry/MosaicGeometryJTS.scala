@@ -42,9 +42,9 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         MosaicGeometryJTS(intersection)
     }
 
-    override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
-
     def getGeom: Geometry = geom
+
+    override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
 
     override def isValid: Boolean = geom.isValid
 
@@ -117,8 +117,11 @@ object MosaicGeometryJTS extends GeometryReader {
                 val geomCollection = geom.asInstanceOf[GeometryCollection]
                 val geometries = for (i <- 0 until geomCollection.getNumGeometries) yield geomCollection.getGeometryN(i)
                 geometries.find(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.getGeometryType))) match {
-                    case Some(firstChip) => MosaicPolygonJTS(firstChip)
-                    case None            => MosaicPolygonJTS.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryJTS]
+                    case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.getGeometryType).id == POLYGON.id      =>
+                        MosaicPolygonJTS(firstChip)
+                    case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.getGeometryType).id == MULTIPOLYGON.id =>
+                        MosaicMultiPolygonJTS(firstChip)
+                    case None => MosaicPolygonJTS.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryJTS]
                 }
         }
 

@@ -61,6 +61,8 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
         this.getGeom.equals(otherGeom.asInstanceOf[Object])
     }
 
+    def getGeom: OGCGeometry = geom
+
     override def equals(other: java.lang.Object): Boolean = false
 
     override def hashCode: Int = geom.hashCode()
@@ -68,8 +70,6 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
     override def boundary: MosaicGeometry = MosaicGeometryOGC(geom.boundary())
 
     override def distance(geom2: MosaicGeometry): Double = this.getGeom.distance(geom2.asInstanceOf[MosaicGeometryOGC].getGeom)
-
-    def getGeom: OGCGeometry = geom
 
     override def toWKT: String = geom.asText()
 
@@ -122,13 +122,21 @@ object MosaicGeometryOGC extends GeometryReader {
                 val geomCollection = geom.asInstanceOf[OGCGeometryCollection]
                 val geometries = for (i <- 0 until geomCollection.numGeometries()) yield geomCollection.geometryN(i)
                 geometries.find(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.geometryType()))) match {
-                    case Some(firstChip) => MosaicPolygonOGC(firstChip)
-                    case None            => MosaicPolygonOGC.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryOGC]
+                    case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == POLYGON.id      =>
+                        MosaicPolygonOGC(firstChip)
+                    case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == MULTIPOLYGON.id =>
+                        MosaicMultiPolygonOGC(firstChip)
+                    case None => MosaicPolygonOGC.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryOGC]
                 }
         }
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
         reader(geomType.id).fromPoints(points, geomType)
+    }
+
+    override def fromInternal(row: InternalRow): MosaicGeometry = {
+        val typeId = row.getInt(0)
+        reader(typeId).fromInternal(row)
     }
 
     def reader(geomTypeId: Int): GeometryReader =
@@ -140,11 +148,6 @@ object MosaicGeometryOGC extends GeometryReader {
             case LINESTRING      => MosaicLineStringOGC
             case MULTILINESTRING => MosaicMultiLineStringOGC
         }
-
-    override def fromInternal(row: InternalRow): MosaicGeometry = {
-        val typeId = row.getInt(0)
-        reader(typeId).fromInternal(row)
-    }
 
     override def fromKryo(row: InternalRow): MosaicGeometry = {
         val kryoBytes = row.getBinary(1)
