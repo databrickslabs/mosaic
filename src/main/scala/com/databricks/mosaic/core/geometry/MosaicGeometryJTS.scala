@@ -96,7 +96,10 @@ object MosaicGeometryJTS extends GeometryReader {
       val geomCollection = geom.asInstanceOf[GeometryCollection]
       val geometries = for (i <- 0 until geomCollection.getNumGeometries) yield geomCollection.getGeometryN(i)
       geometries.find(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.getGeometryType))) match {
-        case Some(firstChip) => MosaicPolygonJTS(firstChip)
+        case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.getGeometryType).id == POLYGON.id      =>
+          MosaicPolygonJTS(firstChip)
+        case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.getGeometryType).id == MULTIPOLYGON.id =>
+          MosaicMultiPolygonJTS(firstChip)
         case None => MosaicPolygonJTS.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryJTS]
       }
   }
