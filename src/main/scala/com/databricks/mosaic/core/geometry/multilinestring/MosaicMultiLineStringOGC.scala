@@ -53,12 +53,19 @@ object MosaicMultiLineStringOGC extends GeometryReader {
         MosaicMultiLineStringOGC(ogcMultiLineString)
     }
 
-    def createPolyline(shellCollection: Array[Array[InternalCoord]]): Polyline = {
+    def createPolyline(shellCollection: Array[Array[InternalCoord]], dontClose: Boolean = false): Polyline = {
         // noinspection ZeroIndexToHead
         def addPath(polyline: Polyline, path: Array[InternalCoord]): Unit = {
             if (path.nonEmpty) {
                 val start = path.head
-                val tail = path.tail
+                val end = path.last
+
+                val tail =
+                    if (dontClose && start.equals(end)) {
+                        path.tail.dropRight(1)
+                    } else {
+                        path.tail
+                    }
 
                 polyline.startPath(start.coords(0), start.coords(1))
                 for (point <- tail) polyline.lineTo(point.coords(0), point.coords(1))

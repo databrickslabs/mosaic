@@ -5,16 +5,16 @@ import scala.collection.immutable
 import com.databricks.mosaic.mocks
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.io.{WKTReader, WKTWriter}
-import org.scalatest._
+import org.scalatest.matchers.should.Matchers
 
 import com.databricks.mosaic.core.geometry.{MosaicGeometry, MosaicGeometryJTS}
 import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.test.SparkFunSuite
+import com.databricks.mosaic.test.SparkFlatSpec
 
-class TestGeometryProcessors_JTS_H3 extends SparkFunSuite with Matchers {
+class TestGeometryProcessors_JTS_H3 extends SparkFlatSpec with Matchers {
 
     val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
 
@@ -26,7 +26,7 @@ class TestGeometryProcessors_JTS_H3 extends SparkFunSuite with Matchers {
     val geomFactory = new GeometryFactory()
     val referenceGeoms: immutable.Seq[MosaicGeometry] = mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(MosaicGeometryJTS.fromWKT)
 
-    test("Test length (or perimeter) calculation") {
+    it should "Test length (or perimeter) calculation" in {
         mosaicContext.register(spark)
         // TODO break into two for line segment vs. polygons
 
@@ -62,7 +62,7 @@ class TestGeometryProcessors_JTS_H3 extends SparkFunSuite with Matchers {
         sqlResult2 should contain theSameElementsAs expected
     }
 
-    test("Test area calculation") {
+    it should "Test area calculation" in {
         mosaicContext.register(spark)
 
         val expected = referenceGeoms.map(_.getArea)
@@ -84,7 +84,7 @@ class TestGeometryProcessors_JTS_H3 extends SparkFunSuite with Matchers {
 
     }
 
-    test("Test centroid calculation (2-dimensional)") {
+    it should "Test centroid calculation (2-dimensional)" in {
         mosaicContext.register(spark)
 
         val expected = referenceGeoms.map(_.getCentroid.coord).map(c => (c.x, c.y))
@@ -108,7 +108,7 @@ class TestGeometryProcessors_JTS_H3 extends SparkFunSuite with Matchers {
         sqlResult should contain theSameElementsAs expected
     }
 
-    test("Test distance calculation") {
+    it should "Test distance calculation" in {
         mosaicContext.register(spark)
 
         val coords = referenceGeoms.head.getBoundary
@@ -129,7 +129,7 @@ class TestGeometryProcessors_JTS_H3 extends SparkFunSuite with Matchers {
 
     }
 
-    test("Test polygon contains point") {
+    it should "Test polygon contains point" in {
         mosaicContext.register(spark)
 
         val poly = """POLYGON ((10 10, 110 10, 110 110, 10 110, 10 10),
@@ -150,7 +150,7 @@ class TestGeometryProcessors_JTS_H3 extends SparkFunSuite with Matchers {
 
     }
 
-    test("Test convex hull generation") {
+    it should "Test convex hull generation" in {
         mosaicContext.register(spark)
         val multiPoint = List("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)")
         val expected = List("POLYGON ((-80 35, -80 45, -70 45, -70 35, -80 35))")

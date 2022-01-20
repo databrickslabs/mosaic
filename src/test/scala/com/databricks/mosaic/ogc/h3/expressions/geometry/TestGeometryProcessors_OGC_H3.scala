@@ -1,20 +1,20 @@
 package com.databricks.mosaic.ogc.h3.expressions.geometry
 
-import org.scalatest._
+import org.scalatest.matchers.should.Matchers
 
 import com.databricks.mosaic.core.geometry.api.GeometryAPI.OGC
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.test.SparkFunSuite
+import com.databricks.mosaic.test.SparkFlatSpec
 
-class TestGeometryProcessors_OGC_H3 extends SparkFunSuite with Matchers {
+class TestGeometryProcessors_OGC_H3 extends SparkFlatSpec with Matchers {
 
     val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, OGC)
 
     import mosaicContext.functions._
     import testImplicits._
 
-    test("Test polygon contains point") {
+    it should "Test polygon contains point" in {
         mosaicContext.register(spark)
 
         val poly = """POLYGON ((10 10, 110 10, 110 110, 10 110, 10 10),
@@ -35,10 +35,11 @@ class TestGeometryProcessors_OGC_H3 extends SparkFunSuite with Matchers {
 
     }
 
-    test("Test convex hull generation") {
+    it should "Test convex hull generation" in {
         mosaicContext.register(spark)
         val multiPoint = List("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)")
         val expected = List("POLYGON ((-70 35, -80 35, -80 45, -70 45, -70 35))")
+            .map(mosaicContext.getGeometryAPI.geometry(_, "WKT"))
 
         val results = multiPoint
             .toDF("multiPoint")
@@ -46,8 +47,10 @@ class TestGeometryProcessors_OGC_H3 extends SparkFunSuite with Matchers {
             .select(st_astext($"result"))
             .as[String]
             .collect()
+            .map(mosaicContext.getGeometryAPI.geometry(_, "WKT"))
 
-        results should contain allElementsOf expected
+
+        results.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
 }

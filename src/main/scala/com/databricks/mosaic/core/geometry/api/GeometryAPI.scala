@@ -19,6 +19,16 @@ abstract class GeometryAPI(
 
     def name: String
 
+    def geometry(input: Any, typeName: String): MosaicGeometry = {
+        typeName match {
+            case "WKT" => reader.fromWKT(input.asInstanceOf[String])
+            case "HEX" => reader.fromHEX(input.asInstanceOf[String])
+            case "WKB" => reader.fromWKB(input.asInstanceOf[Array[Byte]])
+            case "GEOJSON" => reader.fromJSON(input.asInstanceOf[String])
+            case _ => throw new UnsupportedOperationException
+        }
+    }
+
     def geometry(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = reader.fromPoints(points, geomType)
 
     /**

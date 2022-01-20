@@ -1,7 +1,7 @@
 package com.databricks.mosaic.ogc.h3.expressions.geometry
 
 import org.locationtech.jts.io.{WKBReader, WKTReader}
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import org.apache.spark.sql.functions.col
 
@@ -9,15 +9,15 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI.OGC
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getWKTRowsDf
-import com.databricks.mosaic.test.SparkFunSuite
+import com.databricks.mosaic.test.SparkFlatSpec
 
-class TestFlattenPolygon_OGC_H3 extends SparkFunSuite with Matchers {
+class TestFlattenPolygon_OGC_H3 extends SparkFlatSpec with Matchers {
 
     val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, OGC)
 
     import mosaicContext.functions._
 
-    test("Flattening of WKB Polygons") {
+    it should "Flattening of WKB Polygons" in {
         mosaicContext.register(spark)
         // we ensure that we have WKB test data by converting WKT testing data to WKB
 
@@ -43,7 +43,7 @@ class TestFlattenPolygon_OGC_H3 extends SparkFunSuite with Matchers {
         flattenedGeoms should contain theSameElementsAs geoms
     }
 
-    test("Flattening of WKT Polygons") {
+    it should "Flattening of WKT Polygons" in {
         mosaicContext.register(spark)
 
         val df = getWKTRowsDf
@@ -70,7 +70,7 @@ class TestFlattenPolygon_OGC_H3 extends SparkFunSuite with Matchers {
         flattenedGeoms should contain theSameElementsAs geoms
     }
 
-    test("Flattening of Coords Polygons") {
+    it should "Flattening of Coords Polygons" in {
         mosaicContext.register(spark)
 
         val df = getWKTRowsDf
@@ -101,7 +101,7 @@ class TestFlattenPolygon_OGC_H3 extends SparkFunSuite with Matchers {
         flattenedGeoms should contain theSameElementsAs geoms
     }
 
-    test("Flattening of Hex Polygons") {
+    it should "Flattening of Hex Polygons" in {
         mosaicContext.register(spark)
 
         val df = getWKTRowsDf

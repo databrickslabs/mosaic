@@ -4,10 +4,12 @@ import java.util.Locale
 
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
 
+import com.databricks.mosaic.codegen.expression.format.ConvertToCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.{JTS, OGC}
 import com.databricks.mosaic.core.types._
 
 @ExpressionDescription(
@@ -21,10 +23,7 @@ import com.databricks.mosaic.core.types._
   """,
   since = "1.0"
 )
-case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPIName: String)
-    extends UnaryExpression
-      with NullIntolerant
-      with CodegenFallback {
+case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
     /**
       * Ensure that the expression is called only for compatible pairing of
@@ -114,6 +113,32 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
         res.copyTagsFrom(this)
         res
     }
+
+    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
+        val geometryAPI = geometryAPIName match {
+            case n if n == JTS.name => JTS
+            case n if n == OGC.name => OGC
+        }
+        ConvertToCodeGen.doCodeGenOGC(
+          ctx,
+          ev,
+          nullSafeCodeGen,
+          child.dataType,
+          getOutType,
+          geometryAPI
+        )
+    }
+
+    def getOutType: DataType =
+        outDataType.toUpperCase(Locale.ROOT) match {
+            case "WKT"     => StringType
+            case "WKB"     => BinaryType
+            case "HEX"     => HexType
+            case "JSON"    => JSONType
+            case "GEOJSON" => JSONType
+            case "COORDS"  => InternalGeometryType
+            case _         => ???
+        }
 
     override def child: Expression = inGeometry
 

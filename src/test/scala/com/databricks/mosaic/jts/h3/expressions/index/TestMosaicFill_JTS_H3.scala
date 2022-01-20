@@ -1,6 +1,6 @@
 package com.databricks.mosaic.jts.h3.expressions.index
 
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
@@ -9,15 +9,15 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getBoroughs
-import com.databricks.mosaic.test.SparkFunSuite
+import com.databricks.mosaic.test.SparkFlatSpec
 
-case class TestMosaicFill_JTS_H3() extends SparkFunSuite with Matchers {
+case class TestMosaicFill_JTS_H3() extends SparkFlatSpec with Matchers {
 
     val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
 
     import mosaicContext.functions._
 
-    test("MosaicFill of a WKT polygon") {
+    it should "MosaicFill of a WKT polygon" in {
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
@@ -41,7 +41,7 @@ case class TestMosaicFill_JTS_H3() extends SparkFunSuite with Matchers {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    test("MosaicFill of a WKB polygon") {
+    it should "MosaicFill of a WKB polygon" in {
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
@@ -65,7 +65,7 @@ case class TestMosaicFill_JTS_H3() extends SparkFunSuite with Matchers {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    test("MosaicFill of a HEX polygon") {
+    it should "MosaicFill of a HEX polygon" in {
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
@@ -89,7 +89,7 @@ case class TestMosaicFill_JTS_H3() extends SparkFunSuite with Matchers {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    test("MosaicFill of a COORDS polygon") {
+    it should "MosaicFill of a COORDS polygon" in {
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs

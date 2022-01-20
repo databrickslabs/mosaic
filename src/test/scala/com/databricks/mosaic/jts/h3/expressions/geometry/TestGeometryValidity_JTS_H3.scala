@@ -1,6 +1,6 @@
 package com.databricks.mosaic.jts.h3.expressions.geometry
 
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.col
@@ -10,15 +10,15 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getWKTRowsDf
-import com.databricks.mosaic.test.SparkFunSuite
+import com.databricks.mosaic.test.SparkFlatSpec
 
-class TestGeometryValidity_JTS_H3 extends SparkFunSuite with Matchers {
+class TestGeometryValidity_JTS_H3 extends SparkFlatSpec with Matchers {
 
     val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
 
     import mosaicContext.functions._
 
-    test("Calling st_xmin() should return the minimum x value from all coordinates in the geometry") {
+    it should "Calling st_xmin() should return the minimum x value from all coordinates in the geometry" in {
         mosaicContext.register(spark)
         val ss = spark
         import ss.implicits._
@@ -43,7 +43,7 @@ class TestGeometryValidity_JTS_H3 extends SparkFunSuite with Matchers {
 
     }
 
-    test("Calling st_xmax() should return the maximum x value from all coordinates in the geometry") {
+    it should "Calling st_xmax() should return the maximum x value from all coordinates in the geometry" in {
         mosaicContext.register(spark)
         val ss = spark
         import ss.implicits._
@@ -63,7 +63,7 @@ class TestGeometryValidity_JTS_H3 extends SparkFunSuite with Matchers {
         sqlResults should contain theSameElementsAs expected
     }
 
-    test("Calling st_ymin() should return the minimum y value from all coordinates in the geometry") {
+    it should "Calling st_ymin() should return the minimum y value from all coordinates in the geometry" in {
         mosaicContext.register(spark)
         val ss = spark
         import ss.implicits._
@@ -83,7 +83,7 @@ class TestGeometryValidity_JTS_H3 extends SparkFunSuite with Matchers {
         sqlResults should contain theSameElementsAs expected
     }
 
-    test("Calling st_ymax() should return the maximum y value from all coordinates in the geometry") {
+    it should "Calling st_ymax() should return the maximum y value from all coordinates in the geometry" in {
         mosaicContext.register(spark)
         val ss = spark
         import ss.implicits._
@@ -103,7 +103,7 @@ class TestGeometryValidity_JTS_H3 extends SparkFunSuite with Matchers {
         sqlResults should contain theSameElementsAs expected
     }
 
-    test("Calling st_isvalid() on a valid geometry should return true.") {
+    it should "Calling st_isvalid() on a valid geometry should return true." in {
         mosaicContext.register(spark)
         val ss = spark
         import ss.implicits._
@@ -123,7 +123,7 @@ class TestGeometryValidity_JTS_H3 extends SparkFunSuite with Matchers {
         all(sqlResults) should be(true)
     }
 
-    test("Calling st_isvalid() on an invalid geometry should return false.") {
+    it should "Calling st_isvalid() on an invalid geometry should return false." in {
         // create df with a selection of invalid geometries expressed as WKT
         mosaicContext.register(spark)
 

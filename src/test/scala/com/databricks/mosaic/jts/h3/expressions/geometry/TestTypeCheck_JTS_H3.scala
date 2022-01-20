@@ -1,6 +1,6 @@
 package com.databricks.mosaic.jts.h3.expressions.geometry
 
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import org.apache.spark.sql.SparkSession
 
@@ -8,15 +8,15 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.{getHexRowsDf, getWKTRowsDf}
-import com.databricks.mosaic.test.SparkFunSuite
+import com.databricks.mosaic.test.SparkFlatSpec
 
-class TestTypeCheck_JTS_H3 extends SparkFunSuite with Matchers {
+class TestTypeCheck_JTS_H3 extends SparkFlatSpec with Matchers {
 
     val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
 
     import mosaicContext.functions._
 
-    test("ST_GeometryType returns the correct geometry type string for WKT geometries") {
+    it should "ST_GeometryType returns the correct geometry type string for WKT geometries" in {
         mosaicContext.register(spark)
         val ss: SparkSession = spark
         import ss.implicits._
@@ -44,7 +44,7 @@ class TestTypeCheck_JTS_H3 extends SparkFunSuite with Matchers {
         sqlResults should contain theSameElementsInOrderAs expected
     }
 
-    test("ST_GeometryType returns the correct geometry type string for hex-encoded WKB geometries") {
+    it should "ST_GeometryType returns the correct geometry type string for hex-encoded WKB geometries" in {
         mosaicContext.register(spark)
         val ss: SparkSession = spark
         import ss.implicits._

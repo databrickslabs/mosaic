@@ -1,74 +1,65 @@
 package com.databricks.mosaic.codegen.expression.format
 
-import java.nio.ByteBuffer
-
-import com.esri.core.geometry.ogc.OGCGeometry
-
 import org.apache.spark.sql.catalyst.expressions.codegen._
 import org.apache.spark.sql.types._
 
-import com.databricks.mosaic.core.types.{HexType, JSONType}
+import com.databricks.mosaic.codegen.geometry.{MosaicGeometryIOCodeGenJTS, MosaicGeometryIOCodeGenOGC}
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.{JTS, OGC}
+import com.databricks.mosaic.core.types._
 
 object ConvertToCodeGen {
 
     // noinspection DuplicatedCode
-    private def doCodeGenOGC(
+    def doCodeGenOGC(
         ctx: CodegenContext,
         ev: ExprCode,
         nullSafeCodeGen: (CodegenContext, ExprCode, String => String) => ExprCode,
         inputDataType: DataType,
-        outputDataType: DataType
+        outputDataType: DataType,
+        geometryAPI: GeometryAPI
     ): ExprCode = {
-        val inputType = CodeGenerator.javaType(inputDataType)
-        val ogcGeom = classOf[OGCGeometry].getName
-        val byteBuffer = classOf[ByteBuffer]
-        val outputType = CodeGenerator.javaType(outputDataType)
-        val inputVar = ctx.freshName("inputVar")
-        val inputGeom = ctx.freshName("inputGeom")
-        val outputVar = ctx.freshName("outputVar")
+        val geometryCodeGen = geometryAPI.name match {
+            case n if n == OGC.name => MosaicGeometryIOCodeGenOGC
+            case n if n == JTS.name => MosaicGeometryIOCodeGenJTS
+        }
         nullSafeCodeGen(
           ctx,
           ev,
           eval => {
-              s"""
-                 |/*mosaic_codegen*/
-                 |$inputType $inputVar = ($inputType)($eval);
-                 |${inputDataType match {
-                  case BinaryType => s"""$ogcGeom $inputGeom = $ogcGeom.fromBinary($byteBuffer.wrap($inputVar));""".stripMargin
-                  case StringType => s"""$ogcGeom $inputGeom = $ogcGeom.fromText($inputVar);""".stripMargin
-                  case HexType    =>
-                      val tmpHolder = ctx.freshName("tmpHolder")
-                      s"""
-                 |String $tmpHolder = ${CodeGenerator.getValue(inputVar, StringType, "0")};
-                 |$ogcGeom $inputGeom = $ogcGeom.fromText($tmpHolder);
-                 |""".stripMargin
-                  case JSONType   =>
-                      val tmpHolder = ctx.freshName("tmpHolder")
-                      s"""
-                 |String $tmpHolder = ${CodeGenerator.getValue(inputVar, StringType, "0")};
-                 |$ogcGeom $inputGeom = $ogcGeom.fromText($tmpHolder);
-                 |""".stripMargin
-              }}
-                 |$outputType $outputVar = ${outputDataType match {
-                  case BinaryType =>
-              }}
-                 |""".stripMargin
-          }
-        )
-    }
+              val (inCode, geomInRef) = inputDataType match {
+                  case BinaryType           => geometryCodeGen.fromWKB(ctx, eval, geometryAPI)
+                  case StringType           => geometryCodeGen.fromWKT(ctx, eval, geometryAPI)
+                  case HexType              => geometryCodeGen.fromHex(ctx, eval, geometryAPI)
+                  case JSONType             => geometryCodeGen.fromJSON(ctx, eval, geometryAPI)
+                  case InternalGeometryType => geometryCodeGen.fromInternal(ctx, eval, geometryAPI)
+                  case KryoType             => ???
+              }
 
-    private def doCodeGenOGC(
-        ctx: CodegenContext,
-        ev: ExprCode,
-        nullSafeCodeGen: (CodegenContext, ExprCode, String => String) => ExprCode
-    ): ExprCode = {
-        nullSafeCodeGen(
-          ctx,
-          ev,
-          eval => {
-              s"""
-                 |
-                 |""".stripMargin
+              val (outCode, geomOutRef) = outputDataType match {
+                  case BinaryType           => geometryCodeGen.toWKB(ctx, geomInRef, geometryAPI)
+                  case StringType           => geometryCodeGen.toWKT(ctx, geomInRef, geometryAPI)
+                  case HexType              => geometryCodeGen.toHEX(ctx, geomInRef, geometryAPI)
+                  case JSONType             => geometryCodeGen.toJSON(ctx, geomInRef, geometryAPI)
+                  case InternalGeometryType => geometryCodeGen.toInternal(ctx, geomInRef, geometryAPI)
+                  case KryoType             => ???
+              }
+              geometryAPI.name match {
+                  case n if n == OGC.name => s"""
+                                                |$inCode
+                                                |$outCode
+                                                |${ev.value} = $geomOutRef;
+                                                |""".stripMargin
+                  case n if n == JTS.name => s"""
+                                                |try {
+                                                |$inCode
+                                                |$outCode
+                                                |${ev.value} = $geomOutRef;
+                                                |} catch (Exception e) {
+                                                | throw e;
+                                                |}
+                                                |""".stripMargin
+              }
           }
         )
     }

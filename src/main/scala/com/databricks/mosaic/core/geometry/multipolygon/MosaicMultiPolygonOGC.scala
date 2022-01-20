@@ -6,6 +6,7 @@ import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPolygon}
 import org.apache.spark.sql.catalyst.InternalRow
 
 import com.databricks.mosaic.core.geometry._
+import com.databricks.mosaic.core.geometry.multilinestring.MosaicMultiLineStringOGC
 import com.databricks.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.mosaic.core.geometry.polygon.MosaicPolygonOGC
 import com.databricks.mosaic.core.types.model._
@@ -57,21 +58,31 @@ object MosaicMultiPolygonOGC extends GeometryReader {
 
     // noinspection ZeroIndexToHead
     def createPolygon(shellCollection: Array[Array[InternalCoord]], holesCollection: Array[Array[Array[InternalCoord]]]): Polygon = {
-        def addPath(polygon: Polygon, path: Array[InternalCoord]): Unit = {
-            if (path.nonEmpty) {
-                val start = path.head
-                val middle = path.tail.dropRight(1)
-                val last = path.last
-
-                polygon.startPath(start.coords(0), start.coords(1))
-                for (point <- middle) polygon.lineTo(point.coords(0), point.coords(1))
-                if (!last.equals(start)) polygon.lineTo(last.coords(0), last.coords(1))
-            }
-        }
+        val boundariesPath = MosaicMultiLineStringOGC.createPolyline(shellCollection, dontClose = true)
+        val holesPathsCollection = holesCollection.map(MosaicMultiLineStringOGC.createPolyline(_, dontClose = true))
 
         val polygon = new Polygon()
-        for (shell <- shellCollection) addPath(polygon, shell)
-        for (holes <- holesCollection) for (hole <- holes) addPath(polygon, hole)
+
+        for (i <- 0 until boundariesPath.getPathCount) {
+            val tmpPolygon = new Polygon()
+            tmpPolygon.addPath(boundariesPath, i, true)
+            if (tmpPolygon.calculateArea2D() < 0) {
+                polygon.addPath(boundariesPath, i, false)
+            } else {
+                polygon.addPath(boundariesPath, i, true)
+            }
+        }
+        holesPathsCollection.foreach(holesPath =>
+            for (i <- 0 until holesPath.getPathCount) {
+                val tmpPolygon = new Polygon()
+                tmpPolygon.addPath(holesPath, i, true)
+                if (tmpPolygon.calculateArea2D() < 0) {
+                    polygon.addPath(holesPath, i, true)
+                } else {
+                    polygon.addPath(holesPath, i, false)
+                }
+            }
+        )
 
         polygon
     }

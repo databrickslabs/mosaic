@@ -1,12 +1,11 @@
 package com.databricks.mosaic.test
 
 import org.apache.spark.{SparkConf, SparkContext}
-import org.scalatest._
+import org.scalatest.{BeforeAndAfterAll, TestSuite}
 
 import org.apache.spark.sql._
 
-trait SparkFunSuite extends FunSuite with BeforeAndAfterAll {
-    self: Suite =>
+trait SparkSuite extends TestSuite with BeforeAndAfterAll {
 
     var conf: SparkConf = new SparkConf(false)
     @transient private var _sc: SparkContext = _
@@ -19,14 +18,6 @@ trait SparkFunSuite extends FunSuite with BeforeAndAfterAll {
         startSpark()
         super.beforeAll()
     }
-
-    private def startSpark(): Unit = {
-        _sc = new SparkContext("local[4]", "test", conf)
-        _sc.setLogLevel("FATAL")
-        _spark = SparkSession.builder.config(sc.getConf).getOrCreate()
-    }
-
-    def sc: SparkContext = _sc
 
     // noinspection ProcedureDefinition
     override def afterAll() {
@@ -46,6 +37,14 @@ trait SparkFunSuite extends FunSuite with BeforeAndAfterAll {
         stopSpark()
         startSpark()
     }
+
+    private def startSpark(): Unit = {
+        _sc = new SparkContext("local[4]", "test", conf)
+        _sc.setLogLevel("FATAL")
+        _spark = SparkSession.builder.config(sc.getConf).getOrCreate()
+    }
+
+    def sc: SparkContext = _sc
 
     private def stopSpark(): Unit = {
         if (_sc != null) {
@@ -67,7 +66,7 @@ trait SparkFunSuite extends FunSuite with BeforeAndAfterAll {
     }
 
     protected object testImplicits extends SQLImplicits {
-        protected override def _sqlContext: SQLContext = self.spark.sqlContext
+        protected override def _sqlContext: SQLContext = _spark.sqlContext
     }
 
 }

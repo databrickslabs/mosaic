@@ -1,6 +1,6 @@
 package com.databricks.mosaic.ogc.h3.expressions.index
 
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
@@ -9,15 +9,15 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI.OGC
 import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getBoroughs
-import com.databricks.mosaic.test.SparkFunSuite
+import com.databricks.mosaic.test.SparkFlatSpec
 
-case class TestPolyfill_OGC_H3() extends SparkFunSuite with Matchers {
+case class TestPolyfill_OGC_H3() extends SparkFlatSpec with Matchers {
 
     val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, OGC)
 
     import mosaicContext.functions._
 
-    test("Polyfill of a WKT polygon") {
+    it should "Polyfill of a WKT polygon" in {
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
@@ -41,7 +41,7 @@ case class TestPolyfill_OGC_H3() extends SparkFunSuite with Matchers {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    test("Polyfill of a WKB polygon") {
+    it should "Polyfill of a WKB polygon" in {
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
@@ -65,7 +65,7 @@ case class TestPolyfill_OGC_H3() extends SparkFunSuite with Matchers {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    test("Polyfill of a HEX polygon") {
+    it should "Polyfill of a HEX polygon" in {
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
@@ -89,7 +89,7 @@ case class TestPolyfill_OGC_H3() extends SparkFunSuite with Matchers {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    test("Polyfill of a COORDS polygon") {
+    it should "Polyfill of a COORDS polygon" in {
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs

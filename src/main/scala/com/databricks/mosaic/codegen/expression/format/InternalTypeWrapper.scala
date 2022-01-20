@@ -23,7 +23,7 @@ object InternalTypeWrapper {
               s"""
                  |Object[] $values = new Object[1];
                  |$values[0] = $eval;
-                 |final InternalRow ${ev.value} = new $rowClass($values);
+                 |${ev.value} = new $rowClass($values);
                  |$values = null;
                  |""".stripMargin
           }

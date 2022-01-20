@@ -1,29 +1,23 @@
-package com.databricks.mosaic.core.expressions
+package com.databricks.mosaic.expressions.constructors
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
-import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.Row
+import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions.{collect_list, explode}
 import org.apache.spark.sql.types._
 
-import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
-import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.test.SparkFlatSpec
 
-class TestConstructors extends SparkFlatSpec {
+trait ConstructorsBehaviors { this: AnyFlatSpec =>
 
-    import testImplicits._
-
-    val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
-    import mosaicContext.functions._
-
-
-    "ST_Point should create a new point InternalGeometryType from two doubles." should "" in {
-        mosaicContext.register(spark)
+    def createST_Point(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
 
         val xVals = Array(30.0, 40.0, -20.1, 10.0, 30.3)
         val yVals = Array(10.0, 40.0, 40.0, 20.5, -10.2)
@@ -36,7 +30,7 @@ class TestConstructors extends SparkFlatSpec {
         )
 
         val left = spark
-            .createDataFrame(rows, schema)
+            .createDataFrame(rows.asJava, schema)
             .withColumn("geom", st_point($"X", $"Y"))
             .select(st_astext($"geom").alias("wkt"))
             .as[String]
@@ -51,41 +45,13 @@ class TestConstructors extends SparkFlatSpec {
         )
 
         left should contain allElementsOf right
-
     }
 
-    "ST_MakeLine should create a new LineString geometry from an array of Point geometries." should "" in {
-        mosaicContext.register(spark)
-
-        val xVals = Array(30.0, 40.0, -20.1, 10.0, 30.3)
-        val yVals = Array(10.0, 40.0, 40.0, 20.5, -10.2)
-        val rows = xVals.zip(yVals).map({ case (x: Double, y: Double) => Row(x, y) }).toList
-        val schema = StructType(
-          List(
-            StructField("X", DoubleType),
-            StructField("Y", DoubleType)
-          )
-        )
-
-        val left = spark
-            .createDataFrame(rows, schema)
-            .withColumn("points", st_point($"X", $"Y"))
-            .groupBy()
-            .agg(collect_list($"points").alias("linePoints"))
-            .withColumn("lineString", st_makeline($"linePoints"))
-            .select(st_astext($"lineString").alias("wkt"))
-            .as[String]
-            .collect
-            .head
-
-        val right = "LINESTRING (30 10, 40 40, -20.1 40, 10 20.5, 30.3 -10.2)"
-
-        left shouldBe right
-
-    }
-
-    "ST_MakeLine should create a new LineString geometry from a mixed array of geometries including Point, MultiPoint, LineString and MultiLineString." should "" in {
-        mosaicContext.register(spark)
+    def createST_MakeLine(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
 
         val geometries = List(
           "POINT (30 10)",
@@ -94,11 +60,11 @@ class TestConstructors extends SparkFlatSpec {
           "MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))"
         )
 
-        val rows = geometries.map(s => Row(s)).toList
+        val rows = geometries.map(s => Row(s))
         val schema = StructType(List(StructField("wkt", StringType)))
 
         val left = spark
-            .createDataFrame(rows, schema)
+            .createDataFrame(rows.asJava, schema)
             .withColumn("geom", st_geomfromwkt($"wkt"))
             .groupBy()
             .agg(collect_list($"geom").alias("geoms"))
@@ -111,39 +77,44 @@ class TestConstructors extends SparkFlatSpec {
         val right = "LINESTRING (30 10, 10 40, 40 30, 20 20, 30 10, 30 10, 10 30, 40 40, 10 10, 20 20, 10 40, 40 40, 30 30, 40 20, 30 10)"
 
         left shouldBe right
-
     }
 
-    "ST_MakePolygon should create a new Polygon from a closed LineString geometry." should "" in {
-        mosaicContext.register(spark)
+    def createST_MakePolygonNoHoles(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
 
         val lineStrings = List(
           "LINESTRING (30 10, 40 40, 20 40, 10 20, 30 10)",
           "LINESTRING (35 10, 45 45, 15 40, 10 20, 35 10)"
         )
 
-        val rows = lineStrings.map(s => Row(s)).toList
+        val rows = lineStrings.map(s => Row(s))
         val schema = StructType(List(StructField("wkt", StringType)))
 
         val left = spark
-            .createDataFrame(rows, schema)
+            .createDataFrame(rows.asJava, schema)
             .withColumn("geom", st_geomfromwkt($"wkt"))
             .withColumn("polygon", st_makepolygon($"geom"))
             .select(st_astext($"polygon").alias("wkt"))
             .as[String]
             .collect
+            .map(mc.getGeometryAPI.geometry(_, "WKT"))
 
         val right = List(
           "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))",
           "POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10))"
-        )
+        ).map(mc.getGeometryAPI.geometry(_, "WKT"))
 
-        left should contain allElementsOf right
-
+        right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    "ST_MakePolygon should create a new Polygon from a closed LineString geometry and an array of LineStrings representing holes." should "" in {
-        mosaicContext.register(spark)
+    def createST_MakePolygonWithHoles(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
 
         val lineStrings = List(
           ("LINESTRING (35 10, 45 45, 15 40, 10 20, 35 10)", List("LINESTRING (20 30, 35 35, 30 20, 20 30)")),
@@ -153,7 +124,7 @@ class TestConstructors extends SparkFlatSpec {
           )
         )
 
-        val rows = lineStrings.map({ case (b: String, h: List[String]) => Row(b, h) }).toList
+        val rows = lineStrings.map({ case (b: String, h: List[String]) => Row(b, h) })
         val schema = StructType(
           List(
             StructField("boundaryWkt", StringType),
@@ -162,7 +133,7 @@ class TestConstructors extends SparkFlatSpec {
         )
 
         val left = spark
-            .createDataFrame(rows, schema)
+            .createDataFrame(rows.asJava, schema)
             .withColumn("boundaryGeom", st_geomfromwkt($"boundaryWkt"))
             .withColumn("holeWkt", explode($"holesWkt"))
             .withColumn("holeGeom", st_geomfromwkt($"holeWkt"))
@@ -172,14 +143,14 @@ class TestConstructors extends SparkFlatSpec {
             .select(st_astext($"polygon").alias("wkt"))
             .as[String]
             .collect
+            .map(mc.getGeometryAPI.geometry(_, "WKT")).sortBy(_.getArea)
 
         val right = List(
           "POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30, 35 35, 30 20, 20 30))",
           "POLYGON ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20), (35 20, 32 20, 32 18, 35 20))"
-        )
+        ).map(mc.getGeometryAPI.geometry(_, "WKT")).sortBy(_.getArea)
 
-        left should contain allElementsOf right
-
+        right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
 }
