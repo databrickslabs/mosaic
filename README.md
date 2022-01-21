@@ -6,7 +6,7 @@ An extension to the [Apache Spark](https://spark.apache.org/) framework that all
 Mosaic provides:
 - easy conversion between common spatial data encodings (WKT, WKB and GeoJSON);
 - constructors to easily generate new geometries from Spark native data types;
-- many of the OGC SQL standard `ST_` functions as Spark Expressions for transforming, aggregating and joining spatial datasets;
+- many of the OGC SQL standard `ST_` functions implemented as Spark Expressions for transforming, aggregating and joining spatial datasets;
 - high performance through implementation of Spark code generation within the core Mosaic functions;
 - optimisations for performing point-in-polygon joins using an approach we co-developed with Ordnance Survey ([blog post](https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html)); and 
 - the choice of a Scala, SQL and Python API. 
