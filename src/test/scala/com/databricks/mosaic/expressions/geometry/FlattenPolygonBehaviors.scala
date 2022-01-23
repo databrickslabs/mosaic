@@ -1,25 +1,21 @@
-package com.databricks.mosaic.jts.h3.expressions.geometry
+package com.databricks.mosaic.expressions.geometry
 
 import org.locationtech.jts.io.{WKBReader, WKTReader}
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers._
 
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
 
-import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
-import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getWKTRowsDf
-import com.databricks.mosaic.test.SparkFlatSpec
 
-class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
+trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
 
-    val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
-
-    import mosaicContext.functions._
-
-    it should "Flattening of WKB Polygons" in {
+    def flattenWKBPolygon(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
-        // we ensure that we have WKB test data by converting WKT testing data to WKB
 
         val df = getWKTRowsDf.withColumn("wkb", convert_to(col("wkt"), "wkb"))
 
@@ -40,14 +36,14 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKBReader().read(g.get(0).asInstanceOf[Array[Byte]]))
 
-        flattenedGeoms should contain theSameElementsAs geoms
+        flattenedGeoms.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val flattenedGeoms2 = df
             .select(st_dump(col("wkb")))
             .collect()
             .map(g => new WKBReader().read(g.get(0).asInstanceOf[Array[Byte]]))
 
-        flattenedGeoms2 should contain theSameElementsAs geoms
+        flattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         df.createOrReplaceTempView("source")
         val sqlFlattenedGeoms = spark
@@ -55,18 +51,19 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKBReader().read(g.get(0).asInstanceOf[Array[Byte]]))
 
-        sqlFlattenedGeoms should contain theSameElementsAs geoms
+        sqlFlattenedGeoms.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val sqlFlattenedGeoms2 = spark
             .sql("select st_dump(wkb) from source")
             .collect()
             .map(g => new WKBReader().read(g.get(0).asInstanceOf[Array[Byte]]))
 
-        sqlFlattenedGeoms2 should contain theSameElementsAs geoms
-
+        sqlFlattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    it should "Flattening of WKT Polygons" in {
+    def flattenWKTPolygon(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val df = getWKTRowsDf
@@ -88,14 +85,14 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        flattenedGeoms should contain theSameElementsAs geoms
+        flattenedGeoms.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val flattenedGeoms2 = df
             .select(st_dump(col("wkt")))
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        flattenedGeoms2 should contain theSameElementsAs geoms
+        flattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         df.createOrReplaceTempView("source")
         val sqlFlattenedGeoms = spark
@@ -103,17 +100,19 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        sqlFlattenedGeoms should contain theSameElementsAs geoms
+        sqlFlattenedGeoms.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val sqlFlattenedGeoms2 = spark
             .sql("select st_dump(wkt) from source")
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        sqlFlattenedGeoms2 should contain theSameElementsAs geoms
+        sqlFlattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    it should "Flattening of Coords Polygons" in {
+    def flattenCOORDSPolygon(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val df = getWKTRowsDf
@@ -139,7 +138,7 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        flattenedGeoms should contain theSameElementsAs geoms
+        flattenedGeoms.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val flattenedGeoms2 = df
             .select(st_dump(col("coords")).alias("coords"))
@@ -147,7 +146,7 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        flattenedGeoms2 should contain theSameElementsAs geoms
+        flattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         df.createOrReplaceTempView("source")
         val sqlFlattenedGeoms = spark
@@ -158,7 +157,7 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        sqlFlattenedGeoms should contain theSameElementsAs geoms
+        sqlFlattenedGeoms.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val sqlFlattenedGeoms2 = spark
             .sql("""with subquery (
@@ -168,10 +167,12 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        sqlFlattenedGeoms2 should contain theSameElementsAs geoms
+        sqlFlattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    it should "Flattening of Hex Polygons" in {
+    def flattenHEXPolygon(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val df = getWKTRowsDf
@@ -197,7 +198,7 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        flattenedGeoms should contain theSameElementsAs geoms
+        flattenedGeoms.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val flattenedGeoms2 = df
             .select(st_dump(col("hex")).alias("hex"))
@@ -205,7 +206,7 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        flattenedGeoms2 should contain theSameElementsAs geoms
+        flattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         df.createOrReplaceTempView("source")
         val sqlFlattenedGeoms = spark
@@ -216,7 +217,7 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        sqlFlattenedGeoms should contain theSameElementsAs geoms
+        sqlFlattenedGeoms.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val sqlFlattenedGeoms2 = spark
             .sql("""with subquery (
@@ -226,7 +227,7 @@ class TestFlattenPolygon_JTS_H3 extends SparkFlatSpec with Matchers {
             .collect()
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
-        sqlFlattenedGeoms2 should contain theSameElementsAs geoms
+        sqlFlattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
 }

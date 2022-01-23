@@ -1,23 +1,20 @@
-package com.databricks.mosaic.jts.h3.expressions.index
+package com.databricks.mosaic.expressions.index
 
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.col
 
-import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
-import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getBoroughs
-import com.databricks.mosaic.test.SparkFlatSpec
 
-case class TestMosaicExplode_JTS_H3() extends SparkFlatSpec with Matchers {
+trait MosaicExplodeBehaviors {
+    this: AnyFlatSpec =>
 
-    val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
-
-    import mosaicContext.functions._
-
-    it should "Decomposition of a WKT polygon to mosaics" in {
+    def wktDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
@@ -41,7 +38,9 @@ case class TestMosaicExplode_JTS_H3() extends SparkFlatSpec with Matchers {
         boroughs.collect().length should be < mosaics2.length
     }
 
-    it should "Decomposition of a WKB polygon to mosaics" in {
+    def wkbDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
@@ -65,7 +64,9 @@ case class TestMosaicExplode_JTS_H3() extends SparkFlatSpec with Matchers {
         boroughs.collect().length should be < mosaics2.length
     }
 
-    it should "Decomposition of a HEX polygon to mosaics" in {
+    def hexDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
@@ -89,7 +90,9 @@ case class TestMosaicExplode_JTS_H3() extends SparkFlatSpec with Matchers {
         boroughs.collect().length should be < mosaics2.length
     }
 
-    it should "Decomposition of a COORDS polygon to mosaics" in {
+    def coordsDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs

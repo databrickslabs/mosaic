@@ -14,9 +14,14 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
         it should behave like createST_Point(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
-    "ST_MakeLine" should "construct a line geometry for any index system and any geometry API" in {
-        it should behave like createST_MakeLine(MosaicContext.build(H3IndexSystem, OGC), spark)
-        it should behave like createST_MakeLine(MosaicContext.build(H3IndexSystem, JTS), spark)
+    "ST_MakeLine" should "construct a line geometry from an array of points for any index system and any geometry API" in {
+        it should behave like createST_MakeLineSimple(MosaicContext.build(H3IndexSystem, OGC), spark)
+        it should behave like createST_MakeLineSimple(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
+    "ST_MakeLine" should "construct a line geometry from a set of geometries for any index system and any geometry API" in {
+        it should behave like createST_MakeLineComplex(MosaicContext.build(H3IndexSystem, OGC), spark)
+        it should behave like createST_MakeLineComplex(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
     "ST_MakePolygon" should "construct a polygon geometry without holes for any index system and any geometry API" in {

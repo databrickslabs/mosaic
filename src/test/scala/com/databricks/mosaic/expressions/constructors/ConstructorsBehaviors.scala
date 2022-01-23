@@ -47,7 +47,39 @@ trait ConstructorsBehaviors { this: AnyFlatSpec =>
         left should contain allElementsOf right
     }
 
-    def createST_MakeLine(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def createST_MakeLineSimple(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+
+        val xVals = Array(30.0, 40.0, -20.1, 10.0, 30.3)
+        val yVals = Array(10.0, 40.0, 40.0, 20.5, -10.2)
+        val rows = xVals.zip(yVals).map({ case (x: Double, y: Double) => Row(x, y) }).toList
+        val schema = StructType(
+          List(
+            StructField("X", DoubleType),
+            StructField("Y", DoubleType)
+          )
+        )
+
+        val left = spark
+            .createDataFrame(rows.asJava, schema)
+            .withColumn("points", st_point($"X", $"Y"))
+            .groupBy()
+            .agg(collect_list($"points").alias("linePoints"))
+            .withColumn("lineString", st_makeline($"linePoints"))
+            .select(st_astext($"lineString").alias("wkt"))
+            .as[String]
+            .collect
+            .head
+
+        val right = "LINESTRING (30 10, 40 40, -20.1 40, 10 20.5, 30.3 -10.2)"
+
+        left shouldBe right
+    }
+
+    def createST_MakeLineComplex(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
         val sc = spark
         import mc.functions._
@@ -143,7 +175,8 @@ trait ConstructorsBehaviors { this: AnyFlatSpec =>
             .select(st_astext($"polygon").alias("wkt"))
             .as[String]
             .collect
-            .map(mc.getGeometryAPI.geometry(_, "WKT")).sortBy(_.getArea)
+            .map(mc.getGeometryAPI.geometry(_, "WKT"))
+            .sortBy(_.getArea)
 
         val right = List(
           "POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30, 35 35, 30 20, 20 30))",

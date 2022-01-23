@@ -1,30 +1,27 @@
-package com.databricks.mosaic.jts.h3.expressions.index
+package com.databricks.mosaic.expressions.index
 
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.col
 
-import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
-import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getBoroughs
-import com.databricks.mosaic.test.SparkFlatSpec
 
-case class TestMosaicFill_JTS_H3() extends SparkFlatSpec with Matchers {
+trait PolyfillBehaviors {
+    this: AnyFlatSpec =>
 
-    val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
-
-    import mosaicContext.functions._
-
-    it should "MosaicFill of a WKT polygon" in {
+    def wktPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
 
         val mosaics = boroughs
             .select(
-              mosaicfill(col("wkt"), 11)
+              polyfill(col("wkt"), 11)
             )
             .collect()
 
@@ -34,21 +31,23 @@ case class TestMosaicFill_JTS_H3() extends SparkFlatSpec with Matchers {
 
         val mosaics2 = spark
             .sql("""
-                   |select mosaicfill(wkt, 11) from boroughs
+                   |select polyfill(wkt, 11) from boroughs
                    |""".stripMargin)
             .collect()
 
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    it should "MosaicFill of a WKB polygon" in {
+    def wkbPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
 
         val mosaics = boroughs
             .select(
-              mosaicfill(convert_to(col("wkt"), "wkb"), 11)
+              polyfill(convert_to(col("wkt"), "wkb"), 11)
             )
             .collect()
 
@@ -58,21 +57,23 @@ case class TestMosaicFill_JTS_H3() extends SparkFlatSpec with Matchers {
 
         val mosaics2 = spark
             .sql("""
-                   |select mosaicfill(convert_to_wkb(wkt), 11) from boroughs
+                   |select polyfill(convert_to_wkb(wkt), 11) from boroughs
                    |""".stripMargin)
             .collect()
 
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    it should "MosaicFill of a HEX polygon" in {
+    def hexPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
 
         val mosaics = boroughs
             .select(
-              mosaicfill(convert_to(col("wkt"), "hex"), 11)
+              polyfill(convert_to(col("wkt"), "hex"), 11)
             )
             .collect()
 
@@ -82,21 +83,23 @@ case class TestMosaicFill_JTS_H3() extends SparkFlatSpec with Matchers {
 
         val mosaics2 = spark
             .sql("""
-                   |select mosaicfill(convert_to_hex(wkt), 11) from boroughs
+                   |select polyfill(convert_to_hex(wkt), 11) from boroughs
                    |""".stripMargin)
             .collect()
 
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    it should "MosaicFill of a COORDS polygon" in {
+    def coordsPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val boroughs: DataFrame = getBoroughs
 
         val mosaics = boroughs
             .select(
-              mosaicfill(convert_to(col("wkt"), "coords"), 11)
+              polyfill(convert_to(col("wkt"), "coords"), 11)
             )
             .collect()
 
@@ -106,7 +109,7 @@ case class TestMosaicFill_JTS_H3() extends SparkFlatSpec with Matchers {
 
         val mosaics2 = spark
             .sql("""
-                   |select mosaicfill(convert_to_coords(wkt), 11) from boroughs
+                   |select polyfill(convert_to_coords(wkt), 11) from boroughs
                    |""".stripMargin)
             .collect()
 

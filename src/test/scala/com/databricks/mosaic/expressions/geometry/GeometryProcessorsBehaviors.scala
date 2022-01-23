@@ -1,34 +1,36 @@
-package com.databricks.mosaic.jts.h3.expressions.geometry
+package com.databricks.mosaic.expressions.geometry
 
 import scala.collection.immutable
 
-import com.databricks.mosaic.mocks
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.io.{WKTReader, WKTWriter}
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers._
 
-import com.databricks.mosaic.core.geometry.{MosaicGeometry, MosaicGeometryJTS}
-import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
-import com.databricks.mosaic.core.geometry.point.MosaicPointJTS
-import com.databricks.mosaic.core.index.H3IndexSystem
+import org.apache.spark.sql.SparkSession
+
+import com.databricks.mosaic.core.geometry.MosaicGeometry
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.test.SparkFlatSpec
+import com.databricks.mosaic.mocks
 
-class TestGeometryProcessors_JTS_H3 extends SparkFlatSpec with Matchers {
 
-    val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
-
-    import mosaicContext.functions._
-    import testImplicits._
+trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
 
     val wktReader = new WKTReader()
     val wktWriter = new WKTWriter()
     val geomFactory = new GeometryFactory()
-    val referenceGeoms: immutable.Seq[MosaicGeometry] = mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(MosaicGeometryJTS.fromWKT)
 
-    it should "Test length (or perimeter) calculation" in {
+    def lengthCalculation(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
         mosaicContext.register(spark)
+
         // TODO break into two for line segment vs. polygons
+
+        val referenceGeoms: immutable.Seq[MosaicGeometry] =
+            mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
 
         val expected = referenceGeoms.map(_.getLength)
         val result = mocks.getWKTRowsDf
@@ -36,14 +38,14 @@ class TestGeometryProcessors_JTS_H3 extends SparkFlatSpec with Matchers {
             .as[Double]
             .collect()
 
-        result should contain theSameElementsAs expected
+        result.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val result2 = mocks.getWKTRowsDf
             .select(st_perimeter($"wkt"))
             .as[Double]
             .collect()
 
-        result2 should contain theSameElementsAs expected
+        result2.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         mocks.getWKTRowsDf.createOrReplaceTempView("source")
 
@@ -52,18 +54,25 @@ class TestGeometryProcessors_JTS_H3 extends SparkFlatSpec with Matchers {
             .as[Double]
             .collect()
 
-        sqlResult should contain theSameElementsAs expected
+        sqlResult.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val sqlResult2 = spark
             .sql("select st_perimeter(wkt) from source")
             .as[Double]
             .collect()
 
-        sqlResult2 should contain theSameElementsAs expected
+        sqlResult2.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    it should "Test area calculation" in {
+    def areaCalculation(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
         mosaicContext.register(spark)
+
+        val referenceGeoms: immutable.Seq[MosaicGeometry] =
+            mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
 
         val expected = referenceGeoms.map(_.getArea)
         val result = mocks.getWKTRowsDf
@@ -71,7 +80,7 @@ class TestGeometryProcessors_JTS_H3 extends SparkFlatSpec with Matchers {
             .as[Double]
             .collect()
 
-        result should contain theSameElementsAs expected
+        result.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         mocks.getWKTRowsDf.createOrReplaceTempView("source")
 
@@ -80,21 +89,27 @@ class TestGeometryProcessors_JTS_H3 extends SparkFlatSpec with Matchers {
             .as[Double]
             .collect()
 
-        sqlResult should contain theSameElementsAs expected
-
+        sqlResult.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    it should "Test centroid calculation (2-dimensional)" in {
+    def centroid2DCalculation(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
         mosaicContext.register(spark)
+
+        val referenceGeoms: immutable.Seq[MosaicGeometry] =
+            mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
 
         val expected = referenceGeoms.map(_.getCentroid.coord).map(c => (c.x, c.y))
         val result = mocks.getWKTRowsDf
             .select(st_centroid2D($"wkt").alias("coord"))
             .selectExpr("coord.*")
-            .as[Tuple2[Double, Double]]
+            .as[(Double, Double)]
             .collect()
 
-        result should contain theSameElementsAs expected
+        result.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         mocks.getWKTRowsDf.createOrReplaceTempView("source")
 
@@ -102,17 +117,24 @@ class TestGeometryProcessors_JTS_H3 extends SparkFlatSpec with Matchers {
             .sql("""with subquery (
                    | select st_centroid2D(wkt) as coord from source
                    |) select coord.* from subquery""".stripMargin)
-            .as[Tuple2[Double, Double]]
+            .as[(Double, Double)]
             .collect()
 
-        sqlResult should contain theSameElementsAs expected
+        sqlResult.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    it should "Test distance calculation" in {
+    def distanceCalculation(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
         mosaicContext.register(spark)
 
+        val referenceGeoms: immutable.Seq[MosaicGeometry] =
+            mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
+
         val coords = referenceGeoms.head.getBoundary
-        val pointsWKT = coords.map(_.asInstanceOf[MosaicPointJTS].getGeom).map(MosaicGeometryJTS(_).toWKT)
+        val pointsWKT = coords.map(_.toWKT)
         val pointWKTCompared = pointsWKT.zip(pointsWKT.tail)
         val expected = coords.zip(coords.tail).map({ case (a, b) => a.distance(b) })
 
@@ -120,16 +142,19 @@ class TestGeometryProcessors_JTS_H3 extends SparkFlatSpec with Matchers {
 
         val result = df.select(st_distance($"leftGeom", $"rightGeom")).as[Double].collect()
 
-        result should contain allElementsOf expected
+        result.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         df.createOrReplaceTempView("source")
         val sqlResult = spark.sql("select st_distance(leftGeom, rightGeom) from source").as[Double].collect()
 
-        sqlResult should contain allElementsOf expected
-
+        sqlResult.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    it should "Test polygon contains point" in {
+    def polygonContains(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
         mosaicContext.register(spark)
 
         val poly = """POLYGON ((10 10, 110 10, 110 110, 10 110, 10 10),
@@ -150,10 +175,16 @@ class TestGeometryProcessors_JTS_H3 extends SparkFlatSpec with Matchers {
 
     }
 
-    it should "Test convex hull generation" in {
+    def convexHullGeneration(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
         mosaicContext.register(spark)
+
         val multiPoint = List("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)")
         val expected = List("POLYGON ((-80 35, -80 45, -70 45, -70 35, -80 35))")
+            .map(mc.getGeometryAPI.geometry(_, "WKT"))
 
         val results = multiPoint
             .toDF("multiPoint")
@@ -161,8 +192,10 @@ class TestGeometryProcessors_JTS_H3 extends SparkFlatSpec with Matchers {
             .select(st_astext($"result"))
             .as[String]
             .collect()
+            .map(mc.getGeometryAPI.geometry(_, "WKT"))
 
-        results should contain allElementsOf expected
+        results.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
+
     }
 
 }

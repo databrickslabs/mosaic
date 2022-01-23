@@ -1,25 +1,22 @@
-package com.databricks.mosaic.jts.h3.expressions.geometry
+package com.databricks.mosaic.expressions.geometry
 
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.SparkSession
 
-import com.databricks.mosaic.core.geometry.api.GeometryAPI.JTS
-import com.databricks.mosaic.core.index.H3IndexSystem
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.{getHexRowsDf, getWKTRowsDf}
-import com.databricks.mosaic.test.SparkFlatSpec
 
-class TestTypeCheck_JTS_H3 extends SparkFlatSpec with Matchers {
+trait TypeCheckBehaviors {
+    this: AnyFlatSpec =>
 
-    val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, JTS)
-
-    import mosaicContext.functions._
-
-    it should "ST_GeometryType returns the correct geometry type string for WKT geometries" in {
+    def wktTypes(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
         mosaicContext.register(spark)
-        val ss: SparkSession = spark
-        import ss.implicits._
 
         val df = getWKTRowsDf
 
@@ -31,7 +28,7 @@ class TestTypeCheck_JTS_H3 extends SparkFlatSpec with Matchers {
             .sorted
         val expected = List("LINESTRING", "MULTILINESTRING", "MULTIPOINT", "MULTIPOLYGON", "MULTIPOLYGON", "POINT", "POLYGON", "POLYGON")
 
-        results should contain theSameElementsInOrderAs expected
+        results.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         df.createOrReplaceTempView("source")
         val sqlResults = spark
@@ -41,13 +38,15 @@ class TestTypeCheck_JTS_H3 extends SparkFlatSpec with Matchers {
             .toList
             .sorted
 
-        sqlResults should contain theSameElementsInOrderAs expected
+        sqlResults.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    it should "ST_GeometryType returns the correct geometry type string for hex-encoded WKB geometries" in {
+    def hexTypes(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
         mosaicContext.register(spark)
-        val ss: SparkSession = spark
-        import ss.implicits._
 
         val df = getHexRowsDf.select(as_hex($"hex").alias("hex"))
 
@@ -60,7 +59,8 @@ class TestTypeCheck_JTS_H3 extends SparkFlatSpec with Matchers {
             .sorted
 
         val expected = List("LINESTRING", "MULTILINESTRING", "MULTIPOINT", "MULTIPOLYGON", "MULTIPOLYGON", "POINT", "POLYGON", "POLYGON")
-        results should contain theSameElementsInOrderAs expected
+
+        results.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         df.createOrReplaceTempView("source")
         val sqlResults = spark
@@ -70,7 +70,7 @@ class TestTypeCheck_JTS_H3 extends SparkFlatSpec with Matchers {
             .toList
             .sorted
 
-        sqlResults should contain theSameElementsInOrderAs expected
+        sqlResults.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
 }

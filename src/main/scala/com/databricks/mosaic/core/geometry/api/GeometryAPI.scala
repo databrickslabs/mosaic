@@ -11,7 +11,7 @@ import org.apache.spark.unsafe.types.UTF8String
 import com.databricks.mosaic.core.geometry._
 import com.databricks.mosaic.core.geometry.point._
 import com.databricks.mosaic.core.types._
-import com.databricks.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
 
 abstract class GeometryAPI(
     reader: GeometryReader
