@@ -48,4 +48,6 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def hashCode: Int
 
+    def convexHull: MosaicGeometry
+
 }

@@ -1,9 +1,10 @@
 package com.databricks.mosaic.expressions.geometry
 
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, NullIntolerant}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{BooleanType, DataType}
 
+import com.databricks.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
 @ExpressionDescription(
@@ -15,10 +16,7 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI
   """,
   since = "1.0"
 )
-case class ST_Contains(leftGeom: Expression, rightGeom: Expression, geometryAPIName: String)
-    extends BinaryExpression
-      with NullIntolerant
-      with CodegenFallback {
+case class ST_Contains(leftGeom: Expression, rightGeom: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
 
     override def left: Expression = leftGeom
 
@@ -26,6 +24,7 @@ case class ST_Contains(leftGeom: Expression, rightGeom: Expression, geometryAPIN
 
     override def dataType: DataType = BooleanType
 
+    // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any): Any = {
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geom1 = geometryAPI.geometry(input1, leftGeom.dataType)
@@ -39,5 +38,37 @@ case class ST_Contains(leftGeom: Expression, rightGeom: Expression, geometryAPIN
         res.copyTagsFrom(this)
         res
     }
+
+    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
+        nullSafeCodeGen(
+          ctx,
+          ev,
+          (leftEval, rightEval) => {
+              val geometryAPI = GeometryAPI.apply(geometryAPIName)
+              // TODO: code can be simplified if the function is registered and called 2 times
+              val (leftInCode, leftGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, leftGeom.dataType, geometryAPI)
+              val (rightInCode, rightGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, rightEval, rightGeom.dataType, geometryAPI)
+
+              // not merged into the same code block due to JTS IOException throwing
+              // OGC code will always remain simpler
+              geometryAPIName match {
+                  case "OGC" => s"""
+                                   |$leftInCode
+                                   |$rightInCode
+                                   |${ev.value} = $leftGeomInRef.contains($rightGeomInRef);
+                                   |""".stripMargin
+                  case "JTS" => s"""
+                                   |try {
+                                   |$leftInCode
+                                   |$rightInCode
+                                   |${ev.value} = $leftGeomInRef.contains($rightGeomInRef);
+                                   |} catch (Exception e) {
+                                   | throw e;
+                                   |}
+                                   |""".stripMargin
+
+              }
+          }
+        )
 
 }

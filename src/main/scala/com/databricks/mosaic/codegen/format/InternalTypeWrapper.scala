@@ -1,4 +1,4 @@
-package com.databricks.mosaic.codegen.expression.format
+package com.databricks.mosaic.codegen.format
 
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}

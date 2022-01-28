@@ -7,7 +7,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescript
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
 
-import com.databricks.mosaic.codegen.expression.format.ConvertToCodeGen
+import com.databricks.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.geometry.api.GeometryAPI.{JTS, OGC}
 import com.databricks.mosaic.core.types._

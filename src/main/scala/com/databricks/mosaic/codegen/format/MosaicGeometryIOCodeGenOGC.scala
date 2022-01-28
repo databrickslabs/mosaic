@@ -1,44 +1,43 @@
-package com.databricks.mosaic.codegen.geometry
+package com.databricks.mosaic.codegen.format
 
-import org.locationtech.jts.geom._
-import org.locationtech.jts.io._
-import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
+import java.nio.ByteBuffer
 
-import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
+import com.esri.core.geometry.ogc.OGCGeometry
+import org.locationtech.jts.io.{WKBReader, WKBWriter}
+
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
+import org.apache.spark.sql.types.{BinaryType, StringType}
 
-import com.databricks.mosaic.core.geometry.MosaicGeometryJTS
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.mosaic.core.geometry.MosaicGeometryOGC
 import com.databricks.mosaic.core.types.InternalGeometryType
 
-object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
+object MosaicGeometryIOCodeGenOGC extends GeometryIOCodeGen {
 
     override def fromWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val inputGeom = ctx.freshName("inputGeom")
-        val jtsGeom = classOf[Geometry].getName
-        val wktReader = classOf[WKTReader].getName
-        (s"""$jtsGeom $inputGeom = new $wktReader().read($eval.toString());""", inputGeom)
+        val ogcGeom = classOf[OGCGeometry].getName
+        (s"""$ogcGeom $inputGeom = $ogcGeom.fromText($eval.toString());""", inputGeom)
     }
 
     override def fromWKB(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val inputGeom = ctx.freshName("inputGeom")
         val binaryJavaType = CodeGenerator.javaType(BinaryType)
-        val jtsGeom = classOf[Geometry].getName
-        val wkbReader = classOf[WKBReader].getName
-        (s"""$jtsGeom $inputGeom = new $wkbReader().read(($binaryJavaType)($eval));""", inputGeom)
+        val ogcGeom = classOf[OGCGeometry].getName
+        val byteBuffer = classOf[ByteBuffer].getName
+        (s"""$ogcGeom $inputGeom = $ogcGeom.fromBinary($byteBuffer.wrap(($binaryJavaType)($eval)));""", inputGeom)
     }
 
     override def fromJSON(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val inputGeom = ctx.freshName("inputGeom")
         val stringJavaType = CodeGenerator.javaType(StringType)
         val tmpHolder = ctx.freshName("tmpHolder")
-        val jtsGeom = classOf[Geometry].getName
-        val jsonReader = classOf[GeoJsonReader].getName
+        val ogcGeom = classOf[OGCGeometry].getName
         (
           s"""
              |$stringJavaType $tmpHolder = ${CodeGenerator.getValue(eval, StringType, "0")};
-             |$jtsGeom $inputGeom = new $jsonReader().read($tmpHolder.toString());
+             |$ogcGeom $inputGeom = $ogcGeom.fromGeoJson($tmpHolder.toString());
              |$tmpHolder = null;
              |""".stripMargin,
           inputGeom
@@ -52,12 +51,13 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
         val tmpHolder = ctx.freshName("tmpHolder")
         val bytes = ctx.freshName("bytes")
         val wkbReader = classOf[WKBReader].getName
-        val jtsGeom = classOf[Geometry].getName
+        val ogcGeom = classOf[OGCGeometry].getName
+        val byteBuffer = classOf[ByteBuffer].getName
         (
           s"""
              |$stringJavaType $tmpHolder = ${CodeGenerator.getValue(eval, StringType, "0")};
              |byte[] $bytes = $wkbReader.hexToBytes($tmpHolder.toString());
-             |$jtsGeom $inputGeom = new $wkbReader().read($bytes);
+             |$ogcGeom $inputGeom = $ogcGeom.fromBinary($byteBuffer.wrap($bytes));
              |$bytes = null;
              |$tmpHolder = null;
              |""".stripMargin,
@@ -65,15 +65,14 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
         )
     }
 
-    // noinspection DuplicatedCode
     override def fromInternal(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
-        val geometryClass = classOf[Geometry].getName
+        val ogcGeom = classOf[OGCGeometry].getName
         val geometry = ctx.freshName("geometry")
-        val mosaicGeometryClass = classOf[MosaicGeometryJTS].getName
+        val mosaicGeometryClass = classOf[MosaicGeometryOGC].getName
 
         (
           s"""
-             |$geometryClass $geometry = (($mosaicGeometryClass)$mosaicGeometryClass.fromInternal($eval)).getGeom();
+             |$ogcGeom $geometry = (($mosaicGeometryClass)$mosaicGeometryClass.fromInternal($eval)).getGeom();
              |""".stripMargin,
           geometry
         )
@@ -82,25 +81,13 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
     override def toWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val outputGeom = ctx.freshName("outputGeom")
         val javaStringType = CodeGenerator.javaType(StringType)
-        val wktWriterClass = classOf[WKTWriter].getName
-        (
-          s"""
-             |$javaStringType $outputGeom = $javaStringType.fromString(new $wktWriterClass().write($eval));
-             |""".stripMargin,
-          outputGeom
-        )
+        (s"""$javaStringType $outputGeom = $javaStringType.fromString($eval.asText());""", outputGeom)
     }
 
     override def toWKB(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val outputGeom = ctx.freshName("outputGeom")
         val javaBinaryType = CodeGenerator.javaType(BinaryType)
-        val wkbWriterClass = classOf[WKBWriter].getName
-        (
-          s"""
-             |$javaBinaryType $outputGeom = new $wkbWriterClass().write($eval);
-             |""".stripMargin,
-          outputGeom
-        )
+        (s"""$javaBinaryType $outputGeom = $eval.asBinary().array();""", outputGeom)
     }
 
     // noinspection DuplicatedCode
@@ -111,12 +98,12 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
         val tmpHolder = ctx.freshName("tmpHolder")
         val values = ctx.freshName("values")
         val bytes = ctx.freshName("bytes")
-        val wktWriterClass = classOf[WKBWriter].getName
+        val wkbWriter = classOf[WKBWriter].getName
         val rowClass = classOf[GenericInternalRow].getName
         (
           s"""
-             |$binaryJavaType $bytes = new $wktWriterClass().write($eval);
-             |$stringJavaType $tmpHolder = $stringJavaType.fromString($wktWriterClass.toHex($bytes));
+             |$binaryJavaType $bytes = $eval.asBinary().array();
+             |$stringJavaType $tmpHolder = $stringJavaType.fromString($wkbWriter.toHex($bytes));
              |Object[] $values = new Object[1];
              |$values[0] = $tmpHolder;
              |InternalRow $outputGeom = new $rowClass($values);
@@ -135,10 +122,9 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
         val tmpHolder = ctx.freshName("tmpHolder")
         val values = ctx.freshName("values")
         val rowClass = classOf[GenericInternalRow].getName
-        val geoJsonWriterClass = classOf[GeoJsonWriter].getName
         (
           s"""
-             |$stringJavaType $tmpHolder = $stringJavaType.fromString(new $geoJsonWriterClass().write($eval));
+             |$stringJavaType $tmpHolder = $stringJavaType.fromString($eval.asGeoJson());
              |Object[] $values = new Object[1];
              |$values[0] = $tmpHolder;
              |InternalRow $outputGeom = new $rowClass($values);
@@ -151,7 +137,7 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
 
     override def toInternal(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val outputGeom = ctx.freshName("outputGeom")
-        val mosaicGeometryClass = classOf[MosaicGeometryJTS].getName
+        val mosaicGeometryClass = classOf[MosaicGeometryOGC].getName
         val internalGeometryJavaType = CodeGenerator.javaType(InternalGeometryType)
         (
           s"""

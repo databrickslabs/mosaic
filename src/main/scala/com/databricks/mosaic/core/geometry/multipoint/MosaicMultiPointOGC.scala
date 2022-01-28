@@ -31,10 +31,6 @@ class MosaicMultiPointOGC(multiPoint: OGCMultiPoint) extends MosaicGeometryOGC(m
 
     override def flatten: Seq[MosaicGeometry] = asSeq
 
-    override def convexHull: MosaicPolygon = {
-        new MosaicPolygonOGC(multiPoint.convexHull.asInstanceOf[OGCPolygon])
-    }
-
 }
 
 object MosaicMultiPointOGC extends GeometryReader {

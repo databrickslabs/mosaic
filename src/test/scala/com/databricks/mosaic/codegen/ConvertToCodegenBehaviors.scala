@@ -9,7 +9,6 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.col
 
-import com.databricks.mosaic.core.geometry.MosaicGeometryOGC
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks._
 

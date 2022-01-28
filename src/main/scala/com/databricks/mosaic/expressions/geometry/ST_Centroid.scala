@@ -2,15 +2,15 @@ package com.databricks.mosaic.expressions.geometry
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
 
+import com.databricks.mosaic.codegen.format.ConvertToCodeGen
+import com.databricks.mosaic.codegen.geometry
+import com.databricks.mosaic.codegen.geometry.CentroidCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
-case class ST_Centroid(inputGeom: Expression, geometryAPIName: String, nDim: Int = 2)
-    extends UnaryExpression
-      with NullIntolerant
-      with CodegenFallback {
+case class ST_Centroid(inputGeom: Expression, geometryAPIName: String, nDim: Int = 2) extends UnaryExpression with NullIntolerant {
 
     /**
       * ST_Centroid expression returns the centroid of the
@@ -47,5 +47,36 @@ case class ST_Centroid(inputGeom: Expression, geometryAPIName: String, nDim: Int
         res.copyTagsFrom(this)
         res
     }
+
+    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
+        nullSafeCodeGen(
+          ctx,
+          ev,
+          eval => {
+              val geometryAPI = GeometryAPI.apply(geometryAPIName)
+              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, eval, inputGeom.dataType, geometryAPI)
+              val (centroidCode, centroidRow) = CentroidCodeGen(geometryAPI).centroid(ctx, geomInRef, geometryAPI, nDim)
+
+              geometryAPIName match {
+                  case "OGC" =>
+                      s"""
+                         |$inCode
+                         |$centroidCode
+                         |${ev.value} = $centroidRow;
+                         |""".stripMargin
+                  case "JTS" =>
+                      s"""
+                         |try {
+                         |$inCode
+                         |$centroidCode
+                         |${ev.value} = $centroidRow;
+                         |} catch (Exception e) {
+                         | throw e;
+                         |}
+                         |""".stripMargin
+
+              }
+          }
+        )
 
 }

@@ -1,6 +1,7 @@
 package com.databricks.mosaic.expressions.geometry
 
 import scala.collection.TraversableOnce
+import scala.util.Try
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
@@ -30,6 +31,19 @@ case class FlattenPolygons(pair: Expression, geometryAPIName: String)
     extends UnaryExpression
       with CollectionGenerator
       with CodegenFallback {
+
+    //fix attempt
+    lazy val nodePatterns: Seq[AnyRef] = {
+        import scala.reflect.runtime.universe
+        val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)
+        val module = runtimeMirror.staticModule("org.apache.spark.sql.catalyst.trees.TreePattern")
+        val obj = runtimeMirror.reflectModule(module).instance
+        val generator = obj.getClass.getDeclaredMethods.toSeq.find(_.getName.contains("GENERATOR"))
+        val valueMethod = obj.getClass.getDeclaredMethod(generator.map(_.getName).getOrElse(
+            throw new IllegalAccessException("Trying to access GENERATOR enum at runtime and bytecode is missing."))
+        )
+        Seq(valueMethod.invoke(obj))
+    }
 
     /** Fixed definitions. */
     override val inline: Boolean = false

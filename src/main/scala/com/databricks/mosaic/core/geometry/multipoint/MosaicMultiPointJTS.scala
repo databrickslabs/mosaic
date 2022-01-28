@@ -29,8 +29,6 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
         for (i <- 0 until multiPoint.getNumPoints) yield MosaicPointJTS(multiPoint.getGeometryN(i).getCoordinates.head)
     }
 
-    override def convexHull: MosaicPolygon = new MosaicPolygonJTS(multiPoint.convexHull.asInstanceOf[Polygon])
-
 }
 
 object MosaicMultiPointJTS extends GeometryReader {

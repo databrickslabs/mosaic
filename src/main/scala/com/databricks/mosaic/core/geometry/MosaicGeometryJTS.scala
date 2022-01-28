@@ -22,37 +22,37 @@ import com.databricks.mosaic.core.types.model.GeometryTypeEnum._
 
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
-    override def translate(xd: Double, yd: Double): MosaicGeometry = {
+    override def translate(xd: Double, yd: Double): MosaicGeometryJTS = {
         val transformation = AffineTransformation.translationInstance(xd, yd)
         MosaicGeometryJTS(transformation.transform(geom))
     }
 
-    override def scale(xd: Double, yd: Double): MosaicGeometry = {
+    override def scale(xd: Double, yd: Double): MosaicGeometryJTS = {
         val transformation = AffineTransformation.scaleInstance(xd, yd)
         MosaicGeometryJTS(transformation.transform(geom))
     }
 
-    override def rotate(td: Double): MosaicGeometry = {
+    override def rotate(td: Double): MosaicGeometryJTS = {
         val transformation = AffineTransformation.rotationInstance(td)
         MosaicGeometryJTS(transformation.transform(geom))
     }
 
     override def getAPI: String = "JTS"
 
-    override def getCentroid: MosaicPoint = new MosaicPointJTS(geom.getCentroid)
+    override def getCentroid: MosaicPointJTS = new MosaicPointJTS(geom.getCentroid)
 
     override def isEmpty: Boolean = geom.isEmpty
 
-    override def boundary: MosaicGeometry = MosaicGeometryJTS(geom.getBoundary)
+    override def boundary: MosaicGeometryJTS = MosaicGeometryJTS(geom.getBoundary)
 
-    override def buffer(distance: Double): MosaicGeometry = MosaicGeometryJTS(geom.buffer(distance))
+    override def buffer(distance: Double): MosaicGeometryJTS = MosaicGeometryJTS(geom.buffer(distance))
 
-    override def simplify(tolerance: Double = 1e-8): MosaicGeometry =
+    override def simplify(tolerance: Double = 1e-8): MosaicGeometryJTS =
         MosaicGeometryJTS(
           DouglasPeuckerSimplifier.simplify(geom, tolerance)
         )
 
-    override def intersection(other: MosaicGeometry): MosaicGeometry = {
+    override def intersection(other: MosaicGeometry): MosaicGeometryJTS = {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
         val intersection = this.geom.intersection(otherGeom)
         MosaicGeometryJTS(intersection)
@@ -81,6 +81,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     def getGeom: Geometry = geom
 
+    override def convexHull: MosaicGeometryJTS = MosaicGeometryJTS(geom.convexHull())
+
     override def toWKT: String = new WKTWriter().write(geom)
 
     override def toJSON: String = new GeoJsonWriter().write(geom)
@@ -106,14 +108,14 @@ object MosaicGeometryJTS extends GeometryReader {
     @transient val kryo = new Kryo()
     kryo.register(classOf[MosaicGeometryJTS])
 
-    override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS(new WKTReader().read(wkt))
+    override def fromWKT(wkt: String): MosaicGeometryJTS = MosaicGeometryJTS(new WKTReader().read(wkt))
 
-    override def fromHEX(hex: String): MosaicGeometry = {
+    override def fromHEX(hex: String): MosaicGeometryJTS = {
         val bytes = WKBReader.hexToBytes(hex)
         fromWKB(bytes)
     }
 
-    override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS(new WKBReader().read(wkb))
+    override def fromWKB(wkb: Array[Byte]): MosaicGeometryJTS = MosaicGeometryJTS(new WKBReader().read(wkb))
 
     def apply(geom: Geometry): MosaicGeometryJTS =
         GeometryTypeEnum.fromString(geom.getGeometryType) match {
@@ -139,20 +141,20 @@ object MosaicGeometryJTS extends GeometryReader {
                 }
         }
 
-    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS(new GeoJsonReader().read(geoJson))
+    override def fromJSON(geoJson: String): MosaicGeometryJTS = MosaicGeometryJTS(new GeoJsonReader().read(geoJson))
 
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
-        reader(geomType.id).fromPoints(points, geomType)
+    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometryJTS = {
+        reader(geomType.id).fromPoints(points, geomType).asInstanceOf[MosaicGeometryJTS]
     }
 
-    override def fromInternal(row: InternalRow): MosaicGeometry = {
+    override def fromInternal(row: InternalRow): MosaicGeometryJTS = {
         val typeId = row.getInt(0)
-        reader(typeId).fromInternal(row)
+        reader(typeId).fromInternal(row).asInstanceOf[MosaicGeometryJTS]
     }
 
-    override def fromKryo(row: InternalRow): MosaicGeometry = {
+    override def fromKryo(row: InternalRow): MosaicGeometryJTS = {
         val typeId = row.getInt(0)
-        reader(typeId).fromKryo(row)
+        reader(typeId).fromKryo(row).asInstanceOf[MosaicGeometryJTS]
     }
 
     def reader(geomTypeId: Int): GeometryReader =

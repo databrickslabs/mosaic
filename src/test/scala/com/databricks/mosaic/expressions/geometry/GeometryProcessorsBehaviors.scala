@@ -2,17 +2,19 @@ package com.databricks.mosaic.expressions.geometry
 
 import scala.collection.immutable
 
+import com.databricks.mosaic.mocks
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.io.{WKTReader, WKTWriter}
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
+import org.apache.spark.sql.execution.WholeStageCodegenExec
 
 import com.databricks.mosaic.core.geometry.MosaicGeometry
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.mocks
-
 
 trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
 
@@ -92,6 +94,29 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         sqlResult.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
+    def areaCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val result = mocks.getWKTRowsDf
+            .select(st_area($"wkt"))
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+    }
+
     def centroid2DCalculation(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
         val sc = spark
@@ -123,6 +148,30 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         sqlResult.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
+    def centroid2DCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val result = mocks.getWKTRowsDf
+            .select(st_centroid2D($"wkt").alias("coord"))
+            .selectExpr("coord.*")
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+    }
+
     def distanceCalculation(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
         val sc = spark
@@ -150,6 +199,37 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         sqlResult.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
+    def distanceCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val referenceGeoms: immutable.Seq[MosaicGeometry] =
+            mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
+
+        val coords = referenceGeoms.head.getBoundary
+        val df = coords.map(_.toWKT).toDF("point")
+
+        val result = df
+            .withColumnRenamed("point", "pointLeft")
+            .crossJoin(df.withColumnRenamed("point", "pointRight"))
+            .select(st_distance($"pointLeft", st_asbinary($"pointRight")))
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+    }
+
     def polygonContains(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
         val sc = spark
@@ -175,6 +255,43 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
 
     }
 
+    def containsCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val poly = """POLYGON ((10 10, 110 10, 110 110, 10 110, 10 10),
+                     | (20 20, 20 30, 30 30, 30 20, 20 20),
+                     | (40 20, 40 30, 50 30, 50 20, 40 20))""".stripMargin.filter(_ >= ' ')
+
+        val rows = List(
+          ("POINT (35 25)", true),
+          ("POINT (25 25)", false)
+        )
+
+        val polygons = List(poly).toDF("leftGeom")
+        val points = rows.toDF("rightGeom", "expected")
+
+        val result = polygons
+            .crossJoin(points)
+            .withColumn("result", st_contains($"leftGeom", $"rightGeom"))
+            .where($"expected" === $"result")
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+    }
+
     def convexHullGeneration(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
         val sc = spark
@@ -188,14 +305,43 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
 
         val results = multiPoint
             .toDF("multiPoint")
+            .crossJoin(multiPoint.toDF("other"))
             .withColumn("result", st_convexhull($"multiPoint"))
-            .select(st_astext($"result"))
+            .select($"result")
             .as[String]
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "WKT"))
 
         results.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
+    }
+
+    def convexHullCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val multiPoint = List("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)").toDF("multiPoint")
+        val expected = List("POLYGON ((-80 35, -80 45, -70 45, -70 35, -80 35))").toDF("polygon")
+
+        val result = multiPoint
+            .crossJoin(expected)
+            .withColumn("result", st_convexhull($"multiPoint"))
+            .select(st_asbinary($"result"))
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
     }
 
 }

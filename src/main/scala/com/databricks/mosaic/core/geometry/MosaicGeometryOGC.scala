@@ -102,6 +102,8 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
 
     def getGeom: OGCGeometry = geom
 
+    override def convexHull: MosaicGeometryOGC = MosaicGeometryOGC(geom.convexHull())
+
     override def toWKT: String = geom.asText()
 
     override def toJSON: String = geom.asGeoJson()

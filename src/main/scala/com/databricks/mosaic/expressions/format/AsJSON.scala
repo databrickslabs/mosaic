@@ -6,7 +6,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescript
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{DataType, StringType}
 
-import com.databricks.mosaic.codegen.expression.format.InternalTypeWrapper
+import com.databricks.mosaic.codegen.format.InternalTypeWrapper
 import com.databricks.mosaic.core.types.JSONType
 
 @ExpressionDescription(

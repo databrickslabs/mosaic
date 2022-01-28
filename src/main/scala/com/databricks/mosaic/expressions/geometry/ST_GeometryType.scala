@@ -3,10 +3,11 @@ package com.databricks.mosaic.expressions.geometry
 import java.util.Locale
 
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator, CodegenFallback, ExprCode}
 import org.apache.spark.sql.types.{DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
+import com.databricks.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
 @ExpressionDescription(
@@ -20,8 +21,7 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI
 )
 case class ST_GeometryType(inputGeom: Expression, geometryAPIName: String)
     extends UnaryExpression
-      with NullIntolerant
-      with CodegenFallback {
+      with NullIntolerant {
 
     /**
       * ST_GeometryType expression returns the OGC Geometry class name for a
@@ -47,4 +47,33 @@ case class ST_GeometryType(inputGeom: Expression, geometryAPIName: String)
         res
     }
 
+    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
+        nullSafeCodeGen(
+            ctx,
+            ev,
+            leftEval => {
+                val geometryAPI = GeometryAPI.apply(geometryAPIName)
+                val javaStringClass = CodeGenerator.javaType(StringType)
+                // TODO: code can be simplified if the function is registered and called 2 times
+                val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
+
+                // not merged into the same code block due to JTS IOException throwing
+                // OGC code will always remain simpler
+                geometryAPIName match {
+                    case "OGC" => s"""
+                                     |$inCode
+                                     |${ev.value} = $javaStringClass.fromString($geomInRef.geometryType());
+                                     |""".stripMargin
+                    case "JTS" => s"""
+                                     |try {
+                                     |$inCode
+                                     |${ev.value} = $javaStringClass.fromString($geomInRef.getGeometryType());
+                                     |} catch (Exception e) {
+                                     | throw e;
+                                     |}
+                                     |""".stripMargin
+
+                }
+            }
+        )
 }
