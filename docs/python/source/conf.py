@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Mosaic'
-copyright = '2022, Stuart Lynn, Milos Colic'
+copyright = '2022, Databricks Inc'
 author = 'Stuart Lynn, Milos Colic'
 
 # The full version, including alpha/beta/rc tags
@@ -34,7 +34,8 @@ extensions = [
     "sphinx_material",
     "sphinx.ext.autodoc",
     "nbsphinx",
-    "sphinx.ext.githubpages"
+    "sphinx.ext.githubpages",
+    "sphinx.ext.autosectionlabel"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
