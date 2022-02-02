@@ -47,7 +47,7 @@
   
   
   
-    <title>Geometry Constructors &#8212; Mosaic 0.1 documentation</title>
+    <title>Geometry constructors &#8212; Mosaic 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/material.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -57,8 +57,8 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Geometry Accessors" href="geometry-accessors.html" />
-    <link rel="prev" title="Quickstart notebook" href="../usage/quickstart.html" />
+    <link rel="next" title="Geometry accessors" href="geometry-accessors.html" />
+    <link rel="prev" title="Mosaic optimizations for spatial joins" href="../usage/join-optimizations.html" />
   
    
 
@@ -95,7 +95,7 @@
       <div class="md-flex__cell md-flex__cell--stretch">
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           <span class="md-header-nav__topic">Mosaic 0.1 documentation</span>
-          <span class="md-header-nav__topic"> Geometry Constructors </span>
+          <span class="md-header-nav__topic"> Geometry constructors </span>
         </div>
       </div>
       <div class="md-flex__cell md-flex__cell--shrink">
@@ -184,13 +184,19 @@
 <nav class="md-nav md-nav--secondary">
     <label class="md-nav__title" for="__toc">Contents</label>
   <ul class="md-nav__list" data-md-scrollfix="">
-        <li class="md-nav__item"><a href="#api-geometry-constructors--page-root" class="md-nav__link">Geometry Constructors</a><nav class="md-nav">
+        <li class="md-nav__item"><a href="#api-geometry-constructors--page-root" class="md-nav__link">Geometry constructors</a><nav class="md-nav">
               <ul class="md-nav__list">
         <li class="md-nav__item"><a href="#st-point" class="md-nav__link">st_point</a>
         </li>
         <li class="md-nav__item"><a href="#st-makeline" class="md-nav__link">st_makeline</a>
         </li>
         <li class="md-nav__item"><a href="#st-makepolygon" class="md-nav__link">st_makepolygon</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-geomfromwkt" class="md-nav__link">st_geomfromwkt</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-geomfromwkb" class="md-nav__link">st_geomfromwkb</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-geomfromgeojson" class="md-nav__link">st_geomfromgeojson</a>
         </li></ul>
             </nav>
         </li>
@@ -209,7 +215,7 @@
           <article class="md-content__inner md-typeset" role="main">
             
   <section id="geometry-constructors">
-<h1 id="api-geometry-constructors--page-root">Geometry Constructors<a class="headerlink" href="#api-geometry-constructors--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="api-geometry-constructors--page-root">Geometry constructors<a class="headerlink" href="#api-geometry-constructors--page-root" title="Permalink to this headline">¶</a></h1>
 <section id="st-point">
 <h2 id="st-point">st_point<a class="headerlink" href="#st-point" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
@@ -219,12 +225,12 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – x coordinate (e.g. Longitude), DoubleType</p></li>
-<li><p><strong>y</strong> – y coordinate (e.g. Latitude), DoubleType</p></li>
+<li><p><strong>x</strong> (<em>Column: DoubleType</em>) – x coordinate (DoubleType)</p></li>
+<li><p><strong>y</strong> (<em>Column: DoubleType</em>) – y coordinate (DoubleType)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column[InternalGeometryType]</p>
+<dd class="field-even"><p>Column: InternalGeometryType</p>
 </dd>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
@@ -248,10 +254,10 @@
 <dd><p>Create a new Mosaic LineString geometry from an Array of Mosaic Points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – ArrayType[InternalGeometryType]</p>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column: ArrayType</em><em>[</em><em>InternalGeometryType</em><em>]</em>) – Point array</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column[InternalGeometryType]</p>
+<dd class="field-even"><p>Column: InternalGeometryType</p>
 </dd>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
@@ -284,10 +290,10 @@
 <dd><p>Create a new Mosaic Polygon geometry from a closed LineString.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – closed LineString, InternalGeometryType</p>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column: InternalGeometryType</em>) – closed LineString</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column[InternalGeometryType]</p>
+<dd class="field-even"><p>Column: InternalGeometryType</p>
 </dd>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
@@ -299,6 +305,92 @@
 <span class="go">+-----------------------------------------------------------------------------------+</span>
 <span class="go">|{5, [[[30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0]]], [[]]}|</span>
 <span class="go">+-----------------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="st-geomfromwkt">
+<h2 id="st-geomfromwkt">st_geomfromwkt<a class="headerlink" href="#st-geomfromwkt" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_geomfromwkt">
+<span class="sig-name descname"><span class="pre">st_geomfromwkt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_geomfromwkt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new Mosaic geometry from Well-known Text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column: StringType</em>) – Well-known Text Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: InternalGeometryType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'LINESTRING (30 10, 40 40, 20 40, 10 20, 30 10)'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_geomfromwkt</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+-------------------------------------------------------------------------------------+</span>
+<span class="go">|convert_to(wkt)                                                                      |</span>
+<span class="go">+-------------------------------------------------------------------------------------+</span>
+<span class="go">|{3, [[[30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0]]], [[[]]]}|</span>
+<span class="go">+-------------------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="st-geomfromwkb">
+<h2 id="st-geomfromwkb">st_geomfromwkb<a class="headerlink" href="#st-geomfromwkb" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_geomfromwkb">
+<span class="sig-name descname"><span class="pre">st_geomfromwkb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_geomfromwkb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new Mosaic geometry from Well-known Binary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column: BinaryType</em>) – Well-known Binary Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: InternalGeometryType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">binascii</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">hex</span> <span class="o">=</span> <span class="s1">'0000000001C052F1F0ED3D859D4041983D46B26BF8'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">binary</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="nb">hex</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkb'</span><span class="p">:</span> <span class="n">binary</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_geomfromwkb</span><span class="p">(</span><span class="s1">'wkb'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+--------------------------------------+</span>
+<span class="go">|convert_to(wkb)                       |</span>
+<span class="go">+--------------------------------------+</span>
+<span class="go">|{1, [[[-75.78033, 35.18937]]], [[[]]]}|</span>
+<span class="go">+--------------------------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="st-geomfromgeojson">
+<h2 id="st-geomfromgeojson">st_geomfromgeojson<a class="headerlink" href="#st-geomfromgeojson" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_geomfromgeojson">
+<span class="sig-name descname"><span class="pre">st_geomfromgeojson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_geomfromgeojson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new Mosaic geometry from GeoJSON.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column: StringType</em>) – GeoJSON Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: InternalGeometryType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span>
+<span class="go">    'json': '{"type":"Point","coordinates":[-75.78033,35.18937],"crs":{"type":"name","properties":{"name":"EPSG:0"}}}'</span>
+<span class="go">    }])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_geomfromgeojson</span><span class="p">(</span><span class="s1">'json'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+--------------------------------------+</span>
+<span class="go">|convert_to(as_json(json))             |</span>
+<span class="go">+--------------------------------------+</span>
+<span class="go">|{1, [[[-75.78033, 35.18937]]], [[[]]]}|</span>
+<span class="go">+--------------------------------------+</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -315,7 +407,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
           
-            <a href="../usage/quickstart.html" title="Quickstart notebook"
+            <a href="../usage/join-optimizations.html" title="Mosaic optimizations for spatial joins"
                class="md-flex md-footer-nav__link md-footer-nav__link--prev"
                rel="prev">
               <div class="md-flex__cell md-flex__cell--shrink">
@@ -324,17 +416,17 @@
               <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
                 <span class="md-flex__ellipsis">
                   <span
-                      class="md-footer-nav__direction"> Previous </span> Quickstart notebook </span>
+                      class="md-footer-nav__direction"> Previous </span> Mosaic optimizations for spatial joins </span>
               </div>
             </a>
           
           
-            <a href="geometry-accessors.html" title="Geometry Accessors"
+            <a href="geometry-accessors.html" title="Geometry accessors"
                class="md-flex md-footer-nav__link md-footer-nav__link--next"
                rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
                 class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> Geometry Accessors </span>
+                class="md-footer-nav__direction"> Next </span> Geometry accessors </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink"><i
                 class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>

@@ -47,7 +47,7 @@
   
   
   
-    <title>Geometry Accessors &#8212; Mosaic 0.1 documentation</title>
+    <title>Geometry accessors &#8212; Mosaic 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/material.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -57,8 +57,8 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Spatial Functions" href="spatial-functions.html" />
-    <link rel="prev" title="Geometry Constructors" href="geometry-constructors.html" />
+    <link rel="next" title="Spatial functions" href="spatial-functions.html" />
+    <link rel="prev" title="Geometry constructors" href="geometry-constructors.html" />
   
    
 
@@ -95,7 +95,7 @@
       <div class="md-flex__cell md-flex__cell--stretch">
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           <span class="md-header-nav__topic">Mosaic 0.1 documentation</span>
-          <span class="md-header-nav__topic"> Geometry Accessors </span>
+          <span class="md-header-nav__topic"> Geometry accessors </span>
         </div>
       </div>
       <div class="md-flex__cell md-flex__cell--shrink">
@@ -184,7 +184,7 @@
 <nav class="md-nav md-nav--secondary">
     <label class="md-nav__title" for="__toc">Contents</label>
   <ul class="md-nav__list" data-md-scrollfix="">
-        <li class="md-nav__item"><a href="#api-geometry-accessors--page-root" class="md-nav__link">Geometry Accessors</a><nav class="md-nav">
+        <li class="md-nav__item"><a href="#api-geometry-accessors--page-root" class="md-nav__link">Geometry accessors</a><nav class="md-nav">
               <ul class="md-nav__list">
         <li class="md-nav__item"><a href="#st-asbinary" class="md-nav__link">st_asbinary</a>
         </li>
@@ -213,7 +213,7 @@
           <article class="md-content__inner md-typeset" role="main">
             
   <section id="geometry-accessors">
-<h1 id="api-geometry-accessors--page-root">Geometry Accessors<a class="headerlink" href="#api-geometry-accessors--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="api-geometry-accessors--page-root">Geometry accessors<a class="headerlink" href="#api-geometry-accessors--page-root" title="Permalink to this headline">¶</a></h1>
 <section id="st-asbinary">
 <h2 id="st-asbinary">st_asbinary<a class="headerlink" href="#st-asbinary" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
@@ -222,10 +222,10 @@
 <dd><p>Translate a geometry into its Well-known Binary (WKB) representation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – StringType, HexType, JSONType or InternalGeometryType</p>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column: StringType</em><em>, </em><em>HexType</em><em>, </em><em>JSONType</em><em> or </em><em>InternalGeometryType</em>) – Geometry column</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column[BinaryType]</p>
+<dd class="field-even"><p>Column: BinaryType</p>
 </dd>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
@@ -249,10 +249,10 @@
 <dd><p>Translate a geometry into its GeoJSON representation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – BinaryType, StringType, HexType or InternalGeometryType</p>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column: BinaryType</em><em>, </em><em>StringType</em><em>, </em><em>HexType</em><em> or </em><em>InternalGeometryType</em>) – Geometry column</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column[JSONType]</p>
+<dd class="field-even"><p>Column: JSONType</p>
 </dd>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
@@ -276,10 +276,10 @@
 <dd><p>Translate a geometry into its Well-known Text (WKT) representation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – BinaryType, HexType, JSONType or InternalGeometryType</p>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column: BinaryType</em><em>, </em><em>HexType</em><em>, </em><em>JSONType</em><em> or </em><em>InternalGeometryType</em>) – Geometry column</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column[StringType]</p>
+<dd class="field-even"><p>Column: StringType</p>
 </dd>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
@@ -303,10 +303,10 @@
 <dd><p>Translate a geometry into its Well-known Binary (WKB) representation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – StringType, HexType, JSONType or InternalGeometryType</p>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column: StringType</em><em>, </em><em>HexType</em><em>, </em><em>JSONType</em><em> or </em><em>InternalGeometryType</em>) – Geometry column</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column[BinaryType]</p>
+<dd class="field-even"><p>Column: BinaryType</p>
 </dd>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
@@ -330,10 +330,10 @@
 <dd><p>Translate a geometry into its Well-known Text (WKT) representation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – BinaryType, HexType, JSONType or InternalGeometryType</p>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column: BinaryType</em><em>, </em><em>HexType</em><em>, </em><em>JSONType</em><em> or </em><em>InternalGeometryType</em>) – Geometry column</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column[StringType]</p>
+<dd class="field-even"><p>Column: StringType</p>
 </dd>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
@@ -361,7 +361,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
           
-            <a href="geometry-constructors.html" title="Geometry Constructors"
+            <a href="geometry-constructors.html" title="Geometry constructors"
                class="md-flex md-footer-nav__link md-footer-nav__link--prev"
                rel="prev">
               <div class="md-flex__cell md-flex__cell--shrink">
@@ -370,17 +370,17 @@
               <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
                 <span class="md-flex__ellipsis">
                   <span
-                      class="md-footer-nav__direction"> Previous </span> Geometry Constructors </span>
+                      class="md-footer-nav__direction"> Previous </span> Geometry constructors </span>
               </div>
             </a>
           
           
-            <a href="spatial-functions.html" title="Spatial Functions"
+            <a href="spatial-functions.html" title="Spatial functions"
                class="md-flex md-footer-nav__link md-footer-nav__link--next"
                rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
                 class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> Spatial Functions </span>
+                class="md-footer-nav__direction"> Next </span> Spatial functions </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink"><i
                 class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>

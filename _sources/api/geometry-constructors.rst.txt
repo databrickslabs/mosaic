@@ -1,5 +1,5 @@
 =====================
-Geometry Constructors
+Geometry constructors
 =====================
 
 st_point
@@ -9,11 +9,11 @@ st_point
 
     Create a new Mosaic Point geometry from two DoubleType values.
 
-    :param x: x coordinate (e.g. Longitude), DoubleType
-    :type lon: Column
-    :param y: y coordinate (e.g. Latitude), DoubleType
-    :type lat: Column
-    :rtype: Column[InternalGeometryType]
+    :param x: x coordinate (DoubleType)
+    :type x: Column: DoubleType
+    :param y: y coordinate (DoubleType)
+    :type y: Column: DoubleType
+    :rtype: Column: InternalGeometryType
 
     :example:
 
@@ -32,9 +32,9 @@ st_makeline
 
     Create a new Mosaic LineString geometry from an Array of Mosaic Points.
 
-    :param col: ArrayType[InternalGeometryType]
-    :type col: Column
-    :rtype: Column[InternalGeometryType]
+    :param col: Point array
+    :type col: Column: ArrayType[InternalGeometryType]
+    :rtype: Column: InternalGeometryType
 
     :example:
 
@@ -62,9 +62,9 @@ st_makepolygon
 
     Create a new Mosaic Polygon geometry from a closed LineString.
 
-    :param col: closed LineString, InternalGeometryType
-    :type col: Column
-    :rtype: Column[InternalGeometryType]
+    :param col: closed LineString
+    :type col: Column: InternalGeometryType
+    :rtype: Column: InternalGeometryType
 
     :example:
 
@@ -75,3 +75,71 @@ st_makepolygon
     +-----------------------------------------------------------------------------------+
     |{5, [[[30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0]]], [[]]}|
     +-----------------------------------------------------------------------------------+
+
+st_geomfromwkt
+**************
+
+.. function:: st_geomfromwkt(col)
+
+    Create a new Mosaic geometry from Well-known Text.
+
+    :param col: Well-known Text Geometry
+    :type col: Column: StringType
+    :rtype: Column: InternalGeometryType
+
+    :example:
+
+    >>> df = spark.createDataFrame([{'wkt': 'LINESTRING (30 10, 40 40, 20 40, 10 20, 30 10)'}])
+    >>> df.select(st_geomfromwkt('wkt')).show(1, False)
+    +-------------------------------------------------------------------------------------+
+    |convert_to(wkt)                                                                      |
+    +-------------------------------------------------------------------------------------+
+    |{3, [[[30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0]]], [[[]]]}|
+    +-------------------------------------------------------------------------------------+
+
+st_geomfromwkb
+**************
+
+.. function:: st_geomfromwkb(col)
+
+    Create a new Mosaic geometry from Well-known Binary.
+
+    :param col: Well-known Binary Geometry
+    :type col: Column: BinaryType
+    :rtype: Column: InternalGeometryType
+
+    :example:
+
+    >>> import binascii
+    >>> hex = '0000000001C052F1F0ED3D859D4041983D46B26BF8'
+    >>> binary = binascii.unhexlify(hex)
+    >>> df = spark.createDataFrame([{'wkb': binary}])
+    >>> df.select(st_geomfromwkb('wkb')).show(1, False)
+    +--------------------------------------+
+    |convert_to(wkb)                       |
+    +--------------------------------------+
+    |{1, [[[-75.78033, 35.18937]]], [[[]]]}|
+    +--------------------------------------+
+
+st_geomfromgeojson
+******************
+
+.. function:: st_geomfromgeojson(col)
+
+    Create a new Mosaic geometry from GeoJSON.
+
+    :param col: GeoJSON Geometry
+    :type col: Column: StringType
+    :rtype: Column: InternalGeometryType
+
+    :example:
+
+    >>> df = spark.createDataFrame([{
+        'json': '{"type":"Point","coordinates":[-75.78033,35.18937],"crs":{"type":"name","properties":{"name":"EPSG:0"}}}'
+        }])
+    >>> df.select(st_geomfromgeojson('json')).show(1, False)
+    +--------------------------------------+
+    |convert_to(as_json(json))             |
+    +--------------------------------------+
+    |{1, [[[-75.78033, 35.18937]]], [[[]]]}|
+    +--------------------------------------+

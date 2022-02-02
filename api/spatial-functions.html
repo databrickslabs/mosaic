@@ -47,7 +47,7 @@
   
   
   
-    <title>Spatial Functions &#8212; Mosaic 0.1 documentation</title>
+    <title>Spatial functions &#8212; Mosaic 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/material.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
@@ -57,8 +57,8 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Spatial Predicates" href="spatial-predicates.html" />
-    <link rel="prev" title="Geometry Accessors" href="geometry-accessors.html" />
+    <link rel="next" title="Spatial predicates" href="spatial-predicates.html" />
+    <link rel="prev" title="Geometry accessors" href="geometry-accessors.html" />
   
    
 
@@ -95,7 +95,7 @@
       <div class="md-flex__cell md-flex__cell--stretch">
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           <span class="md-header-nav__topic">Mosaic 0.1 documentation</span>
-          <span class="md-header-nav__topic"> Spatial Functions </span>
+          <span class="md-header-nav__topic"> Spatial functions </span>
         </div>
       </div>
       <div class="md-flex__cell md-flex__cell--shrink">
@@ -182,7 +182,44 @@
               <div class="md-sidebar__inner">
                 
 <nav class="md-nav md-nav--secondary">
+    <label class="md-nav__title" for="__toc">Contents</label>
   <ul class="md-nav__list" data-md-scrollfix="">
+        <li class="md-nav__item"><a href="#api-spatial-functions--page-root" class="md-nav__link">Spatial functions</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#st-area" class="md-nav__link">st_area</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-perimeter" class="md-nav__link">st_perimeter</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-centroid2d" class="md-nav__link">st_centroid2D</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-centroid3d" class="md-nav__link">st_centroid3D</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-xmin" class="md-nav__link">st_xmin</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-xmax" class="md-nav__link">st_xmax</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-ymin" class="md-nav__link">st_ymin</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-ymax" class="md-nav__link">st_ymax</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-zmin" class="md-nav__link">st_zmin</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-zmax" class="md-nav__link">st_zmax</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-isvalid" class="md-nav__link">st_isvalid</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-geometrytype" class="md-nav__link">st_geometrytype</a>
+        </li>
+        <li class="md-nav__item"><a href="#flatten-polygons" class="md-nav__link">flatten_polygons</a>
+        </li>
+        <li class="md-nav__item"><a href="#point-index" class="md-nav__link">point_index</a>
+        </li>
+        <li class="md-nav__item"><a href="#polyfill" class="md-nav__link">polyfill</a>
+        </li>
+        <li class="md-nav__item"><a href="#mosaicfill" class="md-nav__link">mosaicfill</a>
+        </li></ul>
+            </nav>
+        </li>
     
 <li class="md-nav__item"><a class="md-nav__extra_link" href="../_sources/api/spatial-functions.rst.txt">Show Source</a> </li>
 
@@ -198,7 +235,446 @@
           <article class="md-content__inner md-typeset" role="main">
             
   <section id="spatial-functions">
-<h1 id="api-spatial-functions--page-root">Spatial Functions<a class="headerlink" href="#api-spatial-functions--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="api-spatial-functions--page-root">Spatial functions<a class="headerlink" href="#api-spatial-functions--page-root" title="Permalink to this headline">¶</a></h1>
+<section id="st-area">
+<h2 id="st-area">st_area<a class="headerlink" href="#st-area" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_area">
+<span class="sig-name descname"><span class="pre">st_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_area" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the area of a geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: DoubleType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_area</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+------------+</span>
+<span class="go">|st_area(wkt)|</span>
+<span class="go">+------------+</span>
+<span class="go">|       550.0|</span>
+<span class="go">+------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When using the ESRI geometry API (the default), the sign of the
+computed area of a polygon will depend on the direction of the sequence
+of points comprising the polygon’s boundary ring, such that:</p>
+<ul class="simple">
+<li><p>A clockwise boundary will generate a positive area; and</p></li>
+<li><p>An anti-clockwise boundary will generate a negative area.</p></li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Results of this function are always expressed in the same units as the input geometry.</p>
+</div>
+</section>
+<section id="st-perimeter">
+<h2 id="st-perimeter">st_perimeter<a class="headerlink" href="#st-perimeter" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_perimeter">
+<span class="sig-name descname"><span class="pre">st_perimeter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_perimeter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the perimeter length of a geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: DoubleType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_length</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+-----------------+</span>
+<span class="go">|   st_length(wkt)|</span>
+<span class="go">+-----------------+</span>
+<span class="go">|96.34413615167959|</span>
+<span class="go">+-----------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Results of this function are always expressed in the same units as the input geometry.</p>
+</div>
+</section>
+<section id="st-centroid2d">
+<h2 id="st-centroid2d">st_centroid2D<a class="headerlink" href="#st-centroid2d" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_centroid2D">
+<span class="sig-name descname"><span class="pre">st_centroid2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_centroid2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the x and y coordinates representing the centroid of the input geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: StructType[x: DoubleType, y: DoubleType]</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_centroid2D</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+---------------------------------------+</span>
+<span class="go">|st_centroid(wkt)                       |</span>
+<span class="go">+---------------------------------------+</span>
+<span class="go">|{25.454545454545453, 26.96969696969697}|</span>
+<span class="go">+---------------------------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="st-centroid3d">
+<h2 id="st-centroid3d">st_centroid3D<a class="headerlink" href="#st-centroid3d" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_centroid3D">
+<span class="sig-name descname"><span class="pre">st_centroid3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_centroid3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the x, y and z coordinates representing the centroid of the input geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: StructType[x: DoubleType, y: DoubleType, z: DoubleType]</p>
+</dd>
+</dl>
+</dd></dl>
+</section>
+<section id="st-xmin">
+<h2 id="st-xmin">st_xmin<a class="headerlink" href="#st-xmin" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_xmin">
+<span class="sig-name descname"><span class="pre">st_xmin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_xmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the smallest x coordinate in the input geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: DoubleType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_xmin</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+-----------------+</span>
+<span class="go">|st_minmaxxyz(wkt)|</span>
+<span class="go">+-----------------+</span>
+<span class="go">|             10.0|</span>
+<span class="go">+-----------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="st-xmax">
+<h2 id="st-xmax">st_xmax<a class="headerlink" href="#st-xmax" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_xmax">
+<span class="sig-name descname"><span class="pre">st_xmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_xmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the largest x coordinate in the input geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: DoubleType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_xmax</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+-----------------+</span>
+<span class="go">|st_minmaxxyz(wkt)|</span>
+<span class="go">+-----------------+</span>
+<span class="go">|             40.0|</span>
+<span class="go">+-----------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="st-ymin">
+<h2 id="st-ymin">st_ymin<a class="headerlink" href="#st-ymin" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_ymin">
+<span class="sig-name descname"><span class="pre">st_ymin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_ymin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the smallest y coordinate in the input geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: DoubleType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_ymin</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+-----------------+</span>
+<span class="go">|st_minmaxxyz(wkt)|</span>
+<span class="go">+-----------------+</span>
+<span class="go">|             10.0|</span>
+<span class="go">+-----------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="st-ymax">
+<h2 id="st-ymax">st_ymax<a class="headerlink" href="#st-ymax" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_ymax">
+<span class="sig-name descname"><span class="pre">st_ymax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_ymax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the largest y coordinate in the input geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: DoubleType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_ymax</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+-----------------+</span>
+<span class="go">|st_minmaxxyz(wkt)|</span>
+<span class="go">+-----------------+</span>
+<span class="go">|             40.0|</span>
+<span class="go">+-----------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="st-zmin">
+<h2 id="st-zmin">st_zmin<a class="headerlink" href="#st-zmin" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_zmin">
+<span class="sig-name descname"><span class="pre">st_zmin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_zmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the smallest z coordinate in the input geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: DoubleType</p>
+</dd>
+</dl>
+</dd></dl>
+</section>
+<section id="st-zmax">
+<h2 id="st-zmax">st_zmax<a class="headerlink" href="#st-zmax" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_zmax">
+<span class="sig-name descname"><span class="pre">st_zmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_zmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the largest z coordinate in the input geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: DoubleType</p>
+</dd>
+</dl>
+</dd></dl>
+</section>
+<section id="st-isvalid">
+<h2 id="st-isvalid">st_isvalid<a class="headerlink" href="#st-isvalid" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_isvalid">
+<span class="sig-name descname"><span class="pre">st_isvalid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_isvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <cite>true</cite> if the geometry is valid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: BooleanType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_isvalid</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+---------------+</span>
+<span class="go">|st_isvalid(wkt)|</span>
+<span class="go">+---------------+</span>
+<span class="go">|           true|</span>
+<span class="go">+---------------+</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span>
+<span class="go">    'wkt': 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))'</span>
+<span class="go">    }])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_isvalid</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+---------------+</span>
+<span class="go">|st_isvalid(wkt)|</span>
+<span class="go">+---------------+</span>
+<span class="go">|          false|</span>
+<span class="go">+---------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Validity assertions will be dependent on the chosen geometry API.
+The assertions used in the ESRI geometry API (the default) follow the definitions in the
+“Simple feature access - Part 1” document (OGC 06-103r4) for each geometry type.</p>
+</div>
+</section>
+<section id="st-geometrytype">
+<h2 id="st-geometrytype">st_geometrytype<a class="headerlink" href="#st-geometrytype" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_geometrytype">
+<span class="sig-name descname"><span class="pre">st_geometrytype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_geometrytype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the type of the input geometry (“POINT”, “LINESTRING”, “POLYGON” etc.).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: StringType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_geometrytype</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+--------------------+</span>
+<span class="go">|st_geometrytype(wkt)|</span>
+<span class="go">+--------------------+</span>
+<span class="go">|             POLYGON|</span>
+<span class="go">+--------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="flatten-polygons">
+<h2 id="flatten-polygons">flatten_polygons<a class="headerlink" href="#flatten-polygons" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="flatten_polygons">
+<span class="sig-name descname"><span class="pre">flatten_polygons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#flatten_polygons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explodes a MultiPolygon geometry into one row per constituent Polygon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – MultiPolygon Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: StringType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([</span>
+<span class="go">    {'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}</span>
+<span class="go">    ])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">flatten_polygons</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+------------------------------------------+</span>
+<span class="go">|element                                   |</span>
+<span class="go">+------------------------------------------+</span>
+<span class="go">|POLYGON ((30 20, 45 40, 10 40, 30 20))    |</span>
+<span class="go">|POLYGON ((15 5, 40 10, 10 20, 5 10, 15 5))|</span>
+<span class="go">+------------------------------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="point-index">
+<h2 id="point-index">point_index<a class="headerlink" href="#point-index" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="point_index">
+<span class="sig-name descname"><span class="pre">point_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#point_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <cite>resolution</cite> grid index associated with
+the input <cite>lat</cite> and <cite>lng</cite> coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lat</strong> (<em>Column: DoubleType</em>) – Latitude</p></li>
+<li><p><strong>lng</strong> (<em>Column: DoubleType</em>) – Longitude</p></li>
+<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: LongType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'lon'</span><span class="p">:</span> <span class="mf">30.</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">:</span> <span class="mf">10.</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index</span><span class="p">(</span><span class="s1">'lat'</span><span class="p">,</span> <span class="s1">'lon'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+----------------------------+</span>
+<span class="go">|h3_point_index(lat, lon, 10)|</span>
+<span class="go">+----------------------------+</span>
+<span class="go">|623385352048508927          |</span>
+<span class="go">+----------------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="polyfill">
+<h2 id="polyfill">polyfill<a class="headerlink" href="#polyfill" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">polyfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the set of grid indices covering the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>col</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: ArrayType[LongType]</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span>
+<span class="go">    'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span>
+<span class="go">    }])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">polyfill</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+------------------------------------------------------------+</span>
+<span class="go">|h3_polyfill(wkt, 0)                                         |</span>
+<span class="go">+------------------------------------------------------------+</span>
+<span class="go">|[577586652210266111, 578360708396220415, 577269992861466623]|</span>
+<span class="go">+------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="mosaicfill">
+<h2 id="mosaicfill">mosaicfill<a class="headerlink" href="#mosaicfill" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">mosaicfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the set of Mosaic chips covering the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>col</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: MosaicType</p>
+</dd>
+</dl>
+</dd></dl>
+</section>
 </section>
 
 
@@ -211,7 +687,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
           
-            <a href="geometry-accessors.html" title="Geometry Accessors"
+            <a href="geometry-accessors.html" title="Geometry accessors"
                class="md-flex md-footer-nav__link md-footer-nav__link--prev"
                rel="prev">
               <div class="md-flex__cell md-flex__cell--shrink">
@@ -220,17 +696,17 @@
               <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
                 <span class="md-flex__ellipsis">
                   <span
-                      class="md-footer-nav__direction"> Previous </span> Geometry Accessors </span>
+                      class="md-footer-nav__direction"> Previous </span> Geometry accessors </span>
               </div>
             </a>
           
           
-            <a href="spatial-predicates.html" title="Spatial Predicates"
+            <a href="spatial-predicates.html" title="Spatial predicates"
                class="md-flex md-footer-nav__link md-footer-nav__link--next"
                rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
                 class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> Spatial Predicates </span>
+                class="md-footer-nav__direction"> Next </span> Spatial predicates </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink"><i
                 class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
