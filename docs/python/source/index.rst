@@ -12,6 +12,11 @@ Mosaic Documentation
 
    usage/installation
    usage/quickstart
+   api/geometry-constructors
+   api/geometry-accessors
+   api/spatial-functions
+   api/spatial-predicates
+
 
 
 
