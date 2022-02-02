@@ -1,0 +1,25 @@
+name: Pages
+on:
+  push:
+    branches:
+    - documentation
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: install pandoc
+      run: apt-get install pandoc
+    - uses: actions/setup-python@v2
+    - uses: actions/checkout@documentation
+      with:
+        fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+    - name: Build and Commit
+      uses: sphinx-notes/pages@v2
+      with:
+        documentation_path: docs/python
+        requirements_path: docs/python/requirements.txt
+    - name: Push changes
+      uses: ad-m/github-push-action@documentation
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: gh-pages
