@@ -22,7 +22,7 @@ copyright = '2022, Databricks Inc'
 author = 'Stuart Lynn, Milos Colic'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = 'v0.1-alpha'
 
 
 # -- General configuration ---------------------------------------------------
@@ -36,7 +36,7 @@ extensions = [
     "nbsphinx",
     "sphinx.ext.githubpages",
     "sphinx.ext.autosectionlabel",
-    "sphinxcontrib.fulltoc"
+    # "sphinxcontrib.fulltoc"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -63,26 +63,37 @@ html_theme = 'sphinx_material'
 html_theme_options = {
 
     # Set the name of the project to appear in the navigation.
-    'nav_title': 'Mosaic',
+    'nav_title': f'Mosaic {release}',
 
     # Specify a base_url used to generate sitemap.xml. If not
     # specified, then no sitemap will be built.
     # 'base_url': 'https://project.github.io/project',
 
     # Set the color and the accent color
-    'color_primary': 'blue',
-    'color_accent': 'light-blue',
+    'color_primary': 'indigo',
+    'color_accent': 'blue',
 
     # Set the repo location to get a badge with stats
     'repo_url': 'https://github.com/databricks/mosaic/',
     'repo_name': 'Mosaic',
 
-    # Visible levels of the global TOC; -1 means unlimited
-    'globaltoc_depth': 3,
-    # If False, expand all TOC entries
-    'globaltoc_collapse': False,
-    # If True, show hidden TOC entries
-    'globaltoc_includehidden': False,
+    'master_doc': False,
+
+    'globaltoc_depth': 1,
+    'globaltoc_collapse': True,
+    'globaltoc_includehidden': True,    
+    'heroes': {'index': 'Simple, scalable geospatial analytics on Databricks',
+               'examples/index': 'examples and tutorials to get started with '
+                                 'Mosaic'},
+    "version_dropdown": True,
+    # "version_json": "../versions-v2.json",
+
+}
+html_title = project
+html_short_title = project
+html_logo = 'images/mosaic_logo.svg'
+html_sidebars = {
+    "**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
