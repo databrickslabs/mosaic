@@ -1,3 +1,3 @@
 ==================
-Spatial Predicates
+Spatial predicates
 ==================
