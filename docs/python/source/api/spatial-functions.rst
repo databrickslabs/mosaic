@@ -308,8 +308,8 @@ polyfill
 
     Returns the set of grid indices covering the input `geometry` at `resolution`.
 
-    :param col: Geometry
-    :type col: Column
+    :param geometry: Geometry
+    :type geometry: Column
     :param resolution: Index resolution
     :type resolution: Column: Integer
     :rtype: Column: ArrayType[LongType]
@@ -333,8 +333,8 @@ mosaicfill
 
     Returns the set of Mosaic chips covering the input `geometry` at `resolution`.
 
-    :param col: Geometry
-    :type col: Column
+    :param geometry: Geometry
+    :type geometry: Column
     :param resolution: Index resolution
     :type resolution: Column: Integer
     :rtype: Column: MosaicType
