@@ -9,15 +9,6 @@ from pyspark.sql.column import Column as MosaicColumn
 from .attach import sc
 
 
-# std_jar_path = os.path.join(site.getsitepackages()[0], "mosaic", jar_filename)
-# if os.path.exists(db_jar_path):
-#     jar_path = db_jar_path
-# elif os.path.exists(std_jar_path):
-#     jar_path = std_jar_path
-# else:
-#     raise FileNotFoundError(f"Mosaic JAR package {jar_filename} could not be located.")
-
-
 MosaicContextClass = getattr(sc._jvm.com.databricks.mosaic.functions, "MosaicContext")
 mosaicPackageRef = getattr(sc._jvm.com.databricks.mosaic, "package$")
 mosaicPackageObject = getattr(mosaicPackageRef, "MODULE$")
