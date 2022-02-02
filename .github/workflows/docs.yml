@@ -10,8 +10,9 @@ jobs:
     - name: install pandoc
       run: apt-get install pandoc
     - uses: actions/setup-python@v2
-    - uses: actions/checkout@documentation
+    - uses: actions/checkout@v2
       with:
+        ref: documentation
         fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
     - name: Build and Commit
       uses: sphinx-notes/pages@v2
