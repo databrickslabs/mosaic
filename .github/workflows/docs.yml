@@ -20,7 +20,7 @@ jobs:
         documentation_path: docs/python
         requirements_path: docs/python/requirements.txt
     - name: Push changes
-      uses: ad-m/github-push-action@documentation
+      uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: gh-pages
