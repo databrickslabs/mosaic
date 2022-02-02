@@ -20,8 +20,6 @@ Mosaic Documentation
    api/spatial-predicates
 
 
-
-
 Indices and tables
 ==================
 
