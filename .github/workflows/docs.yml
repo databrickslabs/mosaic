@@ -17,7 +17,7 @@ jobs:
     - name: Build and Commit
       uses: sphinx-notes/pages@v2
       with:
-        documentation_path: docs/python
+        documentation_path: docs/python/source
         requirements_path: docs/python/requirements.txt
     - name: Push changes
       uses: ad-m/github-push-action@master
