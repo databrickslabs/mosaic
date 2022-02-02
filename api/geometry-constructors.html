@@ -182,7 +182,18 @@
               <div class="md-sidebar__inner">
                 
 <nav class="md-nav md-nav--secondary">
+    <label class="md-nav__title" for="__toc">Contents</label>
   <ul class="md-nav__list" data-md-scrollfix="">
+        <li class="md-nav__item"><a href="#api-geometry-constructors--page-root" class="md-nav__link">Geometry Constructors</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#st-point" class="md-nav__link">st_point</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-makeline" class="md-nav__link">st_makeline</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-makepolygon" class="md-nav__link">st_makepolygon</a>
+        </li></ul>
+            </nav>
+        </li>
     
 <li class="md-nav__item"><a class="md-nav__extra_link" href="../_sources/api/geometry-constructors.rst.txt">Show Source</a> </li>
 
@@ -199,6 +210,99 @@
             
   <section id="geometry-constructors">
 <h1 id="api-geometry-constructors--page-root">Geometry Constructors<a class="headerlink" href="#api-geometry-constructors--page-root" title="Permalink to this headline">¶</a></h1>
+<section id="st-point">
+<h2 id="st-point">st_point<a class="headerlink" href="#st-point" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_point">
+<span class="sig-name descname"><span class="pre">st_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new Mosaic Point geometry from two DoubleType values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – x coordinate (e.g. Longitude), DoubleType</p></li>
+<li><p><strong>y</strong> – y coordinate (e.g. Latitude), DoubleType</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column[InternalGeometryType]</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'lon'</span><span class="p">:</span> <span class="mf">30.</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">:</span> <span class="mf">10.</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="s1">'lon'</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">'point_geom'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+---------------------------+</span>
+<span class="go">|point_geom                 |</span>
+<span class="go">+---------------------------+</span>
+<span class="go">|{1, [[[30.0, 10.0]]], [[]]}|</span>
+<span class="go">+---------------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="st-makeline">
+<h2 id="st-makeline">st_makeline<a class="headerlink" href="#st-makeline" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_makeline">
+<span class="sig-name descname"><span class="pre">st_makeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_makeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new Mosaic LineString geometry from an Array of Mosaic Points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – ArrayType[InternalGeometryType]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column[InternalGeometryType]</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([</span>
+<span class="go">        {'lon': 30., 'lat': 10.},</span>
+<span class="go">        {'lon': 10., 'lat': 30.},</span>
+<span class="go">        {'lon': 40., 'lat': 40.}</span>
+<span class="go">        ])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span>
+<span class="go">        df.select(st_point('lon', 'lat').alias('point_geom'))</span>
+<span class="go">        .groupBy()</span>
+<span class="go">        .agg(collect_list('point_geom').alias('point_array'))</span>
+<span class="go">        .select(st_makeline('point_array').alias('line_geom'))</span>
+<span class="go">    ).show(1, False)</span>
+<span class="go">+-------------------------------------------------------+</span>
+<span class="go">|line_geom                                              |</span>
+<span class="go">+-------------------------------------------------------+</span>
+<span class="go">|{3, [[[40.0, 40.0], [30.0, 10.0], [10.0, 30.0]]], [[]]}|</span>
+<span class="go">+-------------------------------------------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
+<section id="st-makepolygon">
+<h2 id="st-makepolygon">st_makepolygon<a class="headerlink" href="#st-makepolygon" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_makepolygon">
+<span class="sig-name descname"><span class="pre">st_makepolygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_makepolygon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new Mosaic Polygon geometry from a closed LineString.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – closed LineString, InternalGeometryType</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column[InternalGeometryType]</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'LINESTRING (30 10, 40 40, 20 40, 10 20, 30 10)'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_makepolygon</span><span class="p">(</span><span class="n">st_geomfromwkt</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">'polygon_geom'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+-----------------------------------------------------------------------------------+</span>
+<span class="go">|polygon_geom                                                                       |</span>
+<span class="go">+-----------------------------------------------------------------------------------+</span>
+<span class="go">|{5, [[[30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0]]], [[]]}|</span>
+<span class="go">+-----------------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</dd></dl>
+</section>
 </section>
 
 
@@ -244,7 +348,7 @@
       <div class="md-footer-meta__inner md-grid">
         <div class="md-footer-copyright">
           <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2022, Stuart Lynn, Milos Colic.
+              &#169; Copyright 2022, Databricks Inc.
               
           </div>
             Created using

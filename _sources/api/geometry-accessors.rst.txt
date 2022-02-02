@@ -2,6 +2,46 @@
 Geometry Accessors
 ==================
 
+
+st_asbinary
+***********
+
+.. function:: st_asbinary(col)
+
+    Translate a geometry into its Well-known Binary (WKB) representation.
+
+    :param col: StringType, HexType, JSONType or InternalGeometryType
+    :type col: Column
+    :rtype: Column[BinaryType]
+
+    :example:
+
+    >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+    >>> df.select(st_asbinary('wkt').alias('wkb')).collect()
+    [Row(wkb=bytearray(b'\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00>@\x00\x00\x00\x00\x00\x00$@'))]
+
+.. note:: Alias for :ref:`st_aswkb`.
+
+st_asgeojson
+************
+
+.. function:: st_asgeojson(col)
+
+    Translate a geometry into its GeoJSON representation.
+
+    :param col: BinaryType, StringType, HexType or InternalGeometryType
+    :type col: Column
+    :rtype: Column[JSONType]
+
+    :example:
+
+    >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+    >>> df.select(st_asgeojson('wkt').cast('string').alias('json')).collect()
+    [Row(json='{{"type":"Point","coordinates":[30,10],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}}')]
+
+.. note:: Alias for :ref:`st_astext`.
+
+
 st_astext
 *********
 
@@ -15,6 +55,47 @@ st_astext
 
     :example:
 
-    >>> df = spark.createDataFrame([(30., 10.)], ['lon', 'lat'])
+    >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
     >>> df.select(st_astext(st_point('lon', 'lat')).alias('wkt')).collect()
     [Row(wkt='POINT (30 10)')]
+
+.. note:: Alias for :ref:`st_aswkt`.
+
+
+st_aswkb
+********
+
+.. function:: st_aswkb(col)
+
+    Translate a geometry into its Well-known Binary (WKB) representation.
+
+    :param col: StringType, HexType, JSONType or InternalGeometryType
+    :type col: Column
+    :rtype: Column[BinaryType]
+
+    :example:
+
+    >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+    >>> df.select(st_aswkb('wkt').alias('wkb')).collect()
+    [Row(wkb=bytearray(b'\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00>@\x00\x00\x00\x00\x00\x00$@'))]
+
+.. note:: Alias for :ref:`st_asbinary`.
+
+st_aswkt
+********
+
+.. function:: st_aswkt(col)
+
+    Translate a geometry into its Well-known Text (WKT) representation.
+
+    :param col: BinaryType, HexType, JSONType or InternalGeometryType
+    :type col: Column
+    :rtype: Column[StringType]
+
+    :example:
+
+    >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+    >>> df.select(st_astext(st_point('lon', 'lat')).alias('wkt')).collect()
+    [Row(wkt='POINT (30 10)')]
+
+.. note:: Alias for :ref:`st_astext`.
