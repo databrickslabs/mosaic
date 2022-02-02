@@ -1,5 +1,5 @@
 ==================
-Geometry Accessors
+Geometry accessors
 ==================
 
 
@@ -10,9 +10,9 @@ st_asbinary
 
     Translate a geometry into its Well-known Binary (WKB) representation.
 
-    :param col: StringType, HexType, JSONType or InternalGeometryType
-    :type col: Column
-    :rtype: Column[BinaryType]
+    :param col: Geometry column
+    :type col: Column: StringType, HexType, JSONType or InternalGeometryType
+    :rtype: Column: BinaryType
 
     :example:
 
@@ -29,9 +29,9 @@ st_asgeojson
 
     Translate a geometry into its GeoJSON representation.
 
-    :param col: BinaryType, StringType, HexType or InternalGeometryType
-    :type col: Column
-    :rtype: Column[JSONType]
+    :param col: Geometry column
+    :type col: Column: BinaryType, StringType, HexType or InternalGeometryType
+    :rtype: Column: JSONType
 
     :example:
 
@@ -49,9 +49,9 @@ st_astext
 
     Translate a geometry into its Well-known Text (WKT) representation.
 
-    :param col: BinaryType, HexType, JSONType or InternalGeometryType
-    :type col: Column
-    :rtype: Column[StringType]
+    :param col: Geometry column
+    :type col: Column: BinaryType, HexType, JSONType or InternalGeometryType
+    :rtype: Column: StringType
 
     :example:
 
@@ -69,9 +69,9 @@ st_aswkb
 
     Translate a geometry into its Well-known Binary (WKB) representation.
 
-    :param col: StringType, HexType, JSONType or InternalGeometryType
-    :type col: Column
-    :rtype: Column[BinaryType]
+    :param col: Geometry column
+    :type col: Column: StringType, HexType, JSONType or InternalGeometryType
+    :rtype: Column: BinaryType
 
     :example:
 
@@ -88,9 +88,9 @@ st_aswkt
 
     Translate a geometry into its Well-known Text (WKT) representation.
 
-    :param col: BinaryType, HexType, JSONType or InternalGeometryType
-    :type col: Column
-    :rtype: Column[StringType]
+    :param col: Geometry column
+    :type col: Column: BinaryType, HexType, JSONType or InternalGeometryType
+    :rtype: Column: StringType
 
     :example:
 
