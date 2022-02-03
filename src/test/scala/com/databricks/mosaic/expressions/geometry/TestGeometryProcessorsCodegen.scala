@@ -11,11 +11,13 @@ import com.databricks.mosaic.test.{SparkCodeGenSuite, SparkSuite}
 
 class TestGeometryProcessorsCodegen extends AnyFlatSpec with GeometryProcessorsBehaviors with SparkCodeGenSuite {
 
-//    "ST_Perimeter and ST_Length" should "compute the total length for any index system and any geometry API" in {
-//        it should behave like lengthCalculation(MosaicContext.build(H3IndexSystem, OGC), spark)
-//        it should behave like lengthCalculation(MosaicContext.build(H3IndexSystem, JTS), spark)
-//    }
-//
+    "ST_Perimeter and ST_Length" should "compute the total length for any index system and any geometry API" in {
+        it should behave like lengthCalculationCodegen(MosaicContext.build(H3IndexSystem, OGC), spark)
+        it should behave like lengthCalculationCodegen(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like lengthCalculation(MosaicContext.build(H3IndexSystem, OGC), spark)
+        it should behave like lengthCalculation(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
     "ST_Area" should "compute the area for any index system and any geometry API" in {
         it should behave like areaCodegen(MosaicContext.build(H3IndexSystem, OGC), spark)
         it should behave like areaCodegen(MosaicContext.build(H3IndexSystem, JTS), spark)
@@ -50,6 +52,11 @@ class TestGeometryProcessorsCodegen extends AnyFlatSpec with GeometryProcessorsB
         it should behave like convexHullCodegen(MosaicContext.build(H3IndexSystem, JTS), spark)
         it should behave like convexHullGeneration(MosaicContext.build(H3IndexSystem, OGC), spark)
         it should behave like convexHullGeneration(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
+    "ST_ transformations" should "execute without errors for any index system and any geometry API" in {
+        it should behave like transformationsCodegen(MosaicContext.build(H3IndexSystem, OGC), spark)
+        it should behave like transformationsCodegen(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
 }

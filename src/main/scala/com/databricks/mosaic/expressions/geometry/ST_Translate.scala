@@ -1,9 +1,10 @@
 package com.databricks.mosaic.expressions.geometry
 
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, TernaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
 
+import com.databricks.mosaic.codegen.geometry.GeometryTransformationsCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
 @ExpressionDescription(
@@ -17,8 +18,7 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI
 )
 case class ST_Translate(inputGeom: Expression, xd: Expression, yd: Expression, geometryAPIName: String)
     extends TernaryExpression
-      with NullIntolerant
-      with CodegenFallback {
+      with NullIntolerant {
 
     /**
       * ST_Translate expression returns are covered by the
@@ -47,5 +47,32 @@ case class ST_Translate(inputGeom: Expression, xd: Expression, yd: Expression, g
         res.copyTagsFrom(this)
         res
     }
+
+    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
+        nullSafeCodeGen(
+          ctx,
+          ev,
+          (firstEval, secondEval, thirdEval) => {
+              val geometryAPI = GeometryAPI.apply(geometryAPIName)
+              val (code, result) =
+                  GeometryTransformationsCodeGen.translate(ctx, firstEval, secondEval, thirdEval, inputGeom.dataType, geometryAPI)
+
+              geometryAPIName match {
+                  case "OGC" => s"""
+                                   |$code
+                                   |${ev.value} = $result;
+                                   |""".stripMargin
+                  case "JTS" => s"""
+                                   |try {
+                                   |$code
+                                   |${ev.value} = $result;
+                                   |} catch (Exception e) {
+                                   | throw e;
+                                   |}
+                                   |""".stripMargin
+
+              }
+          }
+        )
 
 }

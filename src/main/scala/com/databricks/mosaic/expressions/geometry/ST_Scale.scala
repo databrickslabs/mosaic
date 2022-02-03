@@ -1,9 +1,12 @@
 package com.databricks.mosaic.expressions.geometry
 
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, TernaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
 
+import com.databricks.mosaic.codegen.format.ConvertToCodeGen
+import com.databricks.mosaic.codegen.geometry.GeometryTransformationsCodeGen
+import com.databricks.mosaic.core.geometry.{MosaicGeometryJTS, MosaicGeometryOGC}
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
 @ExpressionDescription(
@@ -17,8 +20,7 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI
 )
 case class ST_Scale(inputGeom: Expression, xd: Expression, yd: Expression, geometryAPIName: String)
     extends TernaryExpression
-      with NullIntolerant
-      with CodegenFallback {
+      with NullIntolerant {
 
     /**
       * ST_Scale expression returns are covered by the
@@ -47,5 +49,31 @@ case class ST_Scale(inputGeom: Expression, xd: Expression, yd: Expression, geome
         res.copyTagsFrom(this)
         res
     }
+
+    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
+        nullSafeCodeGen(
+          ctx,
+          ev,
+          (firstEval, secondEval, thirdEval) => {
+              val geometryAPI = GeometryAPI.apply(geometryAPIName)
+              val (code, result) = GeometryTransformationsCodeGen.scale(ctx, firstEval, secondEval, thirdEval, inputGeom.dataType, geometryAPI)
+
+              geometryAPIName match {
+                  case "OGC" => s"""
+                                   |$code
+                                   |${ev.value} = $result;
+                                   |""".stripMargin
+                  case "JTS" => s"""
+                                   |try {
+                                   |$code
+                                   |${ev.value} = $result;
+                                   |} catch (Exception e) {
+                                   | throw e;
+                                   |}
+                                   |""".stripMargin
+
+              }
+          }
+        )
 
 }

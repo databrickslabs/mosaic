@@ -1,9 +1,10 @@
 package com.databricks.mosaic.expressions.geometry
 
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, NullIntolerant}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
 
+import com.databricks.mosaic.codegen.geometry.GeometryTransformationsCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 @ExpressionDescription(
   usage = "_FUNC_(expr1, td) - Returns a new geometry rotated by td radians.",
@@ -14,10 +15,7 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI
                """,
   since = "1.0"
 )
-case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: String)
-    extends BinaryExpression
-      with NullIntolerant
-      with CodegenFallback {
+case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
 
     /**
       * ST_Rotate expression returns are covered by the
@@ -47,5 +45,31 @@ case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: Str
     override def left: Expression = inputGeom
 
     override def right: Expression = td
+
+    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
+        nullSafeCodeGen(
+          ctx,
+          ev,
+          (leftEval, rightEval) => {
+              val geometryAPI = GeometryAPI.apply(geometryAPIName)
+              val (code, result) = GeometryTransformationsCodeGen.rotate(ctx, leftEval, rightEval, inputGeom.dataType, geometryAPI)
+
+              geometryAPIName match {
+                  case "OGC" => s"""
+                                   |$code
+                                   |${ev.value} = $result;
+                                   |""".stripMargin
+                  case "JTS" => s"""
+                                   |try {
+                                   |$code
+                                   |${ev.value} = $result;
+                                   |} catch (Exception e) {
+                                   | throw e;
+                                   |}
+                                   |""".stripMargin
+
+              }
+          }
+        )
 
 }

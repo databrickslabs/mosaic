@@ -4,6 +4,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescript
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodegenFallback, ExprCode}
 import org.apache.spark.sql.types.{DataType, DoubleType}
 
+import com.databricks.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
 @ExpressionDescription(
@@ -15,7 +16,7 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI
   """,
   since = "1.0"
 )
-case class ST_Length(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant with CodegenFallback {
+case class ST_Length(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
     def dataType: DataType = DoubleType
 
@@ -34,4 +35,29 @@ case class ST_Length(inputGeom: Expression, geometryAPIName: String) extends Una
         res
     }
 
+    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
+        nullSafeCodeGen(
+            ctx,
+            ev,
+            leftEval => {
+                val geometryAPI = GeometryAPI.apply(geometryAPIName)
+                val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
+
+                geometryAPIName match {
+                    case "OGC" => s"""
+                                     |$inCode
+                                     |${ev.value} = $geomInRef.getEsriGeometry().calculateLength2D();
+                                     |""".stripMargin
+                    case "JTS" => s"""
+                                     |try {
+                                     |$inCode
+                                     |${ev.value} = $geomInRef.getLength();
+                                     |} catch (Exception e) {
+                                     | throw e;
+                                     |}
+                                     |""".stripMargin
+
+                }
+            }
+        )
 }

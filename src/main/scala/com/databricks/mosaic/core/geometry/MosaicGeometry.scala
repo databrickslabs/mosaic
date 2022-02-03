@@ -50,4 +50,17 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def convexHull: MosaicGeometry
 
+    def minMaxCoord(dimension: String, func: String): Double = {
+        val coordArray = this.getBoundary
+        val unitArray = dimension match {
+            case "X" => coordArray.map(_.getX)
+            case "Y" => coordArray.map(_.getY)
+            case "Z" => coordArray.map(_.getZ)
+        }
+        func match {
+            case "MIN" => unitArray.min
+            case "MAX" => unitArray.max
+        }
+    }
+
 }

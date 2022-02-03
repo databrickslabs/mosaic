@@ -12,6 +12,7 @@ import org.scalatest.matchers.should.Matchers._
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.execution.WholeStageCodegenExec
+import org.apache.spark.sql.functions.lit
 
 import com.databricks.mosaic.core.geometry.MosaicGeometry
 import com.databricks.mosaic.functions.MosaicContext
@@ -64,6 +65,32 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
             .collect()
 
         sqlResult2.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
+    }
+
+    def lengthCalculationCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        // TODO break into two for line segment vs. polygons
+
+        val result = mocks.getWKTRowsDf
+            .select(st_length($"wkt"))
+            .as[Double]
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
     }
 
     def areaCalculation(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
@@ -342,6 +369,48 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         val (_, code) = codeGenStage.doCodeGen()
 
         noException should be thrownBy CodeGenerator.compile(code)
+    }
+
+    def transformationsCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val multiPoint = List("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)")
+
+        val result = multiPoint
+            .toDF("multiPoint")
+            .crossJoin(multiPoint.toDF("other"))
+            .withColumn("result", st_convexhull($"multiPoint"))
+            .select($"result")
+            .select(
+              st_translate(
+                st_scale(
+                  st_rotate($"result", lit(1.1)),
+                  lit(1.1),
+                  lit(1.2)
+                ),
+                lit(1.2),
+                lit(1.3)
+              )
+            )
+            .as[String]
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+
+        result.collect().length > 0 shouldBe true
     }
 
 }

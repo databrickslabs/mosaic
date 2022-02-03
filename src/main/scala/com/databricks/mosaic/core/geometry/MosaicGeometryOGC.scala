@@ -26,7 +26,7 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
     override def translate(xd: Double, yd: Double): MosaicGeometry = {
         val tr = new Transformation2D
         tr.setShift(xd, yd)
-        geom.setSpatialReference(SpatialReference.create(0))
+        geom.setSpatialReference(MosaicGeometryOGC.spatialReference)
         val esriGeom = geom.getEsriGeometry
         esriGeom.applyTransformation(tr)
         MosaicGeometryOGC(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryOGC.spatialReference))
@@ -36,7 +36,7 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
     override def scale(xd: Double, yd: Double): MosaicGeometry = {
         val tr = new Transformation2D
         tr.setScale(xd, yd)
-        geom.setSpatialReference(SpatialReference.create(0))
+        geom.setSpatialReference(MosaicGeometryOGC.spatialReference)
         val esriGeom = geom.getEsriGeometry
         esriGeom.applyTransformation(tr)
         MosaicGeometryOGC(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryOGC.spatialReference))
@@ -46,7 +46,7 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
     override def rotate(td: Double): MosaicGeometry = {
         val tr = new Transformation2D
         tr.setRotate(td)
-        geom.setSpatialReference(SpatialReference.create(0))
+        geom.setSpatialReference(MosaicGeometryOGC.spatialReference)
         val esriGeom = geom.getEsriGeometry
         esriGeom.applyTransformation(tr)
         MosaicGeometryOGC(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryOGC.spatialReference))

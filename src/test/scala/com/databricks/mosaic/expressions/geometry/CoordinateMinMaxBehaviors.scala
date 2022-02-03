@@ -1,9 +1,12 @@
 package com.databricks.mosaic.expressions.geometry
 
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
+import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.col
 
 import com.databricks.mosaic.functions.MosaicContext
@@ -37,6 +40,31 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
         sqlResults.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
+    def xMinCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val df = getWKTRowsDf.orderBy("id")
+        val result = df
+            .select(st_xmin(col("wkt")))
+            .as[Double]
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+    }
+
     def xMax(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
         val sc = spark
@@ -57,6 +85,31 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
             .collect()
 
         sqlResults.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
+    }
+
+    def xMaxCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val df = getWKTRowsDf.orderBy("id")
+        val result = df
+            .select(st_xmax(col("wkt")))
+            .as[Double]
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
     }
 
     def yMin(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
@@ -81,6 +134,31 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
         sqlResults.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
+    def yMinCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val df = getWKTRowsDf.orderBy("id")
+        val result = df
+            .select(st_ymin(col("wkt")))
+            .as[Double]
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+    }
+
     def yMax(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
         val sc = spark
@@ -101,6 +179,31 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
             .collect()
 
         sqlResults.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
+    }
+
+    def yMaxCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val df = getWKTRowsDf.orderBy("id")
+        val result = df
+            .select(st_ymax(col("wkt")))
+            .as[Double]
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
     }
 
 }
