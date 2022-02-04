@@ -50,7 +50,7 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
                                    |$inCode
                                    |${ev.value} = $geomInRef.isValid();
                                    |} catch (Exception e) {
-                                   | throw e;
+                                   | ${ev.value} = false;
                                    |}
                                    |""".stripMargin
 

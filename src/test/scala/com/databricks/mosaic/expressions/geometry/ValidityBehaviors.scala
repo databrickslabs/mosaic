@@ -37,7 +37,9 @@ trait ValidityBehaviors {
 
     def invalidGeometries(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
+        val sc = spark
         import mc.functions._
+        import sc.implicits._
         mosaicContext.register(spark)
 
         val invalidGeometries = List(
@@ -75,7 +77,7 @@ trait ValidityBehaviors {
         val invalidGeometriesDf = spark.createDataFrame(rdd, schema)
 
         val df = invalidGeometriesDf.withColumn("result", st_isvalid(col("wkt")))
-        val results = df.collect().map(_.getBoolean(1)).toList
+        val results = df.select("result").as[Boolean].collect().toList
 
         all(results) should be(false)
 
