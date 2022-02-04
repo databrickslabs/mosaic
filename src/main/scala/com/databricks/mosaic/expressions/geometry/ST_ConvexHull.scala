@@ -3,22 +3,13 @@ package com.databricks.mosaic.expressions.geometry
 import com.esri.core.geometry.ogc.OGCGeometry
 import org.locationtech.jts.geom.{Geometry => JTSGeometry}
 
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
 
 import com.databricks.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
-@ExpressionDescription(
-  usage = "_FUNC_(expr1) - Returns the convex hull for a given MultiPoint geometry.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a);
-       {"POLYGON (( 0 0, 1 0, 1 1, 0 1 ))"}
-  """,
-  since = "1.0"
-)
 case class ST_ConvexHull(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
     override def child: Expression = inputGeom
@@ -49,7 +40,7 @@ case class ST_ConvexHull(inputGeom: Expression, geometryAPIName: String) extends
               val ogcPolygonClass = classOf[OGCGeometry].getName
               val jtsPolygonClass = classOf[JTSGeometry].getName
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-              val (outCode, outGeomRef) =  ConvertToCodeGen.writeGeometryCode(ctx, convexHull, inputGeom.dataType, geometryAPI)
+              val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, convexHull, inputGeom.dataType, geometryAPI)
               // not merged into the same code block due to JTS IOException throwing
               // OGC code will always remain simpler
               geometryAPIName match {
@@ -72,6 +63,34 @@ case class ST_ConvexHull(inputGeom: Expression, geometryAPIName: String) extends
 
               }
           }
+        )
+
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputGeom = newChild)
+
+}
+
+object ST_ConvexHull {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[ST_ConvexHull].getCanonicalName,
+          db.orNull,
+          "st_convexhull",
+          """
+            |    _FUNC_(expr1) - Returns the convex hull for a given MultiPoint geometry.
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a);
+            |        {"POLYGON (( 0 0, 1 0, 1 1, 0 1 ))"}
+            |  """.stripMargin,
+          "",
+          "misc_funcs",
+          "1.0",
+          "",
+          "built-in"
         )
 
 }

@@ -1,7 +1,7 @@
 package com.databricks.mosaic.expressions.constructors
 
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.DataType
@@ -44,5 +44,32 @@ case class ST_MakeLine(geoms: Expression) extends UnaryExpression with NullIntol
         res.copyTagsFrom(this)
         res
     }
+
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(geoms = newChild)
+
+}
+
+object ST_MakeLine {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[ST_MakeLine].getCanonicalName,
+          db.orNull,
+          "st_makeline",
+          """
+            |    _FUNC_(expr1) - Creates a new LineString geometry from an Array of Point, MultiPoint, LineString or MultiLineString geometries.
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(A);
+            |  """.stripMargin,
+          "",
+          "collection_funcs",
+          "1.0",
+          "",
+          "built-in"
+        )
 
 }

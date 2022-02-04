@@ -1,20 +1,12 @@
 package com.databricks.mosaic.expressions.geometry
 
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
 
 import com.databricks.mosaic.codegen.geometry.GeometryTransformationsCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
-@ExpressionDescription(
-  usage = "_FUNC_(expr1, td) - Returns a new geometry rotated by td radians.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a, td);
-       POLYGON ((...))
-               """,
-  since = "1.0"
-)
+
 case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
 
     /**
@@ -72,4 +64,32 @@ case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: Str
           }
         )
 
+    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
+        copy(inputGeom = newLeft, td = newRight)
+
+}
+
+object ST_Rotate {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[ST_Length].getCanonicalName,
+          db.orNull,
+          name,
+          """
+            |    _FUNC_(expr1) - Rotates a given geometry by td.
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a);
+            |        13.23
+            |  """.stripMargin,
+          "",
+          "misc_funcs",
+          "1.0",
+          "",
+          "built-in"
+        )
 }

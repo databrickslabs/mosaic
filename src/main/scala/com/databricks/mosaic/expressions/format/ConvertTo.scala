@@ -3,7 +3,7 @@ package com.databricks.mosaic.expressions.format
 import java.util.Locale
 
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
 
@@ -141,5 +141,33 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
         }
 
     override def child: Expression = inGeometry
+
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inGeometry = newChild)
+
+}
+
+object ConvertTo {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[ConvertTo].getCanonicalName,
+          db.orNull,
+          name,
+          "_FUNC_(col1) - Wraps the column in a fixed struct for type inference.",
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a, 'hex');
+            |       {"00001005FA...00A"}
+            |      > SELECT _FUNC_(a, 'wkt');
+            |      "POLYGON ((...))"
+            |  """.stripMargin,
+          "",
+          "struct_funcs",
+          "1.0",
+          "",
+          "built-in"
+        )
 
 }

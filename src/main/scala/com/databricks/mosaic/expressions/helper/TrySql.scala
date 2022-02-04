@@ -5,24 +5,11 @@ import java.io.{PrintWriter, StringWriter}
 import scala.util._
 
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
-@ExpressionDescription(
-  usage = "_FUNC_(expr1) - Wraps evaluation of an expression into a Try/Catch block and in case of errors returns error" +
-      "message for each row in the dataset.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a);
-       |row1|result|OK|
-       |row2|result|Error message|
-       |....
-       |rowN|result|OK|
-  """,
-  since = "1.0"
-)
 case class TrySql(inExpr: Expression) extends UnaryExpression with CodegenFallback {
 
     /** Expression output DataType. */
@@ -77,5 +64,37 @@ case class TrySql(inExpr: Expression) extends UnaryExpression with CodegenFallba
         res.copyTagsFrom(this)
         res
     }
+
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inExpr = newChild)
+
+}
+
+object TrySql {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[TrySql].getCanonicalName,
+          db.orNull,
+          name,
+          """
+            |    _FUNC_(expr1) - Wraps evaluation of an expression into a Try/Catch block and in case of 
+            |    errors returns error message for each row in the dataset.
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a);
+            |        |row1|result|OK|
+            |        |row2|result|Error message|
+            |         ....
+            |        |rowN|result|OK|
+            |  """.stripMargin,
+          "",
+          "misc_funcs",
+          "1.0",
+          "",
+          "built-in"
+        )
 
 }
