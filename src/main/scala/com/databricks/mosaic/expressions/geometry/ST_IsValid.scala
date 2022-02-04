@@ -16,11 +16,16 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
     override def dataType: DataType = BooleanType
 
     override def nullSafeEval(input1: Any): Any = {
-        Try {
-            val geometryAPI = GeometryAPI(geometryAPIName)
-            val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-            return geom.isValid
-        }.getOrElse(false)
+        val geometryAPI = GeometryAPI(geometryAPIName)
+        geometryAPIName match {
+            case "OGC" =>
+                val geom = geometryAPI.geometry(input1, inputGeom.dataType)
+                geom.isValid
+            case "JTS" => Try {
+                    val geom = geometryAPI.geometry(input1, inputGeom.dataType)
+                    geom.isValid
+                }.getOrElse(false)
+        }
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
