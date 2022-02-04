@@ -19,7 +19,7 @@ with open(README_FILE, "r") as f:
 setup(
     name="databricks-mosaic",
     author="Databricks",
-    version="1.0.0",
+    version="0.1.0-SNAPSHOT",
     description="Mosaic: geospatial analytics in python, on Spark",
     url="https://github.com/databricks/mosaic",
     long_description=LONG_DESCRIPTION,
