@@ -2,44 +2,65 @@ package com.databricks.mosaic.core.geometry
 
 import com.databricks.mosaic.core.geometry.point.MosaicPoint
 
-trait MosaicGeometry extends GeometryWriter {
+trait MosaicGeometry extends GeometryWriter with Serializable {
 
-  def getLength: Double
+    def translate(xd: Double, yd: Double): MosaicGeometry
 
-  def distance(geom2: MosaicGeometry): Double
+    def scale(xd: Double, yd: Double): MosaicGeometry
 
-  def isValid: Boolean
+    def rotate(td: Double): MosaicGeometry
 
-  def getGeometryType: String
+    def getLength: Double
 
-  def getArea: Double
+    def distance(geom2: MosaicGeometry): Double
 
-  def getAPI: String
+    def isValid: Boolean
 
-  def getCentroid: MosaicPoint
+    def getGeometryType: String
 
-  def isEmpty: Boolean
+    def getArea: Double
 
-  def getBoundary: Seq[MosaicPoint]
+    def getAPI: String
 
-  def getHoles: Seq[Seq[MosaicPoint]]
+    def getCentroid: MosaicPoint
 
-  def boundary: MosaicGeometry
+    def isEmpty: Boolean
 
-  def buffer(distance: Double): MosaicGeometry
+    def getBoundary: Seq[MosaicPoint]
 
-  def simplify(tolerance: Double): MosaicGeometry
+    def getHoles: Seq[Seq[MosaicPoint]]
 
-  def intersection(other: MosaicGeometry): MosaicGeometry
+    def boundary: MosaicGeometry
 
-  def contains(other: MosaicGeometry): Boolean
+    def buffer(distance: Double): MosaicGeometry
 
-  def flatten: Seq[MosaicGeometry]
+    def simplify(tolerance: Double): MosaicGeometry
 
-  def equals(other: MosaicGeometry): Boolean
+    def intersection(other: MosaicGeometry): MosaicGeometry
 
-  def equals(other: java.lang.Object): Boolean
+    def contains(other: MosaicGeometry): Boolean
 
-  def hashCode: Int
+    def flatten: Seq[MosaicGeometry]
+
+    def equals(other: MosaicGeometry): Boolean
+
+    def equals(other: java.lang.Object): Boolean
+
+    def hashCode: Int
+
+    def convexHull: MosaicGeometry
+
+    def minMaxCoord(dimension: String, func: String): Double = {
+        val coordArray = this.getBoundary
+        val unitArray = dimension match {
+            case "X" => coordArray.map(_.getX)
+            case "Y" => coordArray.map(_.getY)
+            case "Z" => coordArray.map(_.getZ)
+        }
+        func match {
+            case "MIN" => unitArray.min
+            case "MAX" => unitArray.max
+        }
+    }
 
 }
