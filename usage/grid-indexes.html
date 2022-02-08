@@ -303,6 +303,27 @@
             
   <section id="using-grid-index-systems-in-mosaic">
 <h1 id="usage-grid-indexes--page-root">Using grid index systems in Mosaic<a class="headerlink" href="#usage-grid-indexes--page-root" title="Permalink to this headline">¶</a></h1>
+<p>Set operations over big geospatial datasets become very expensive without some form of spatial indexing.</p>
+<p>Spatial indexes not only allow operations like point-in-polygon joins to be partitioned but, if only approximate results
+are required, can be used to reduce these to deterministic SQL joins directly on the indexes.</p>
+<p>The workflow for a point-in-poly join would then be:</p>
+<ul class="simple">
+<li><p>Choose an appropriate resolution for your grid index.</p></li>
+<li><p>Apply the index to the set of points in your left-hand dataframe.
+This will generate generate an index value that corresponds to the grid ‘cell’ that this point occupies.</p></li>
+<li><p>Compute the set of indices that fully covers each polygon in the right-hand dataframe
+(this is referred to as a _polyfill_ operation).</p></li>
+<li><p>‘Explode’ the polygon index dataframe, such that each polygon index becomes a row in a new dataframe.</p></li>
+<li><p>Join the new left- and right-hand dataframes directly on the index.</p></li>
+</ul>
+<p>Choosing an appropriate resolution for your task:</p>
+<ul class="simple">
+<li><p>A resolution that generates ~10x the number of indices as polygons is recommended.</p></li>
+<li><p>You may have significant skew in the areas of your polygons. To check whether this is the case, and help choose an
+appropriate index resolution you may wish to look at using Mosaic’s analysis tools.</p></li>
+</ul>
+<p>Mosaic provides support for Uber’s H3 spatial indexing library as a core part of the API, but the framework is designed
+to be extensible. If you are considering plugging your own favourite library in to perform</p>
 </section>
 
 
