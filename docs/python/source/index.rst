@@ -8,7 +8,7 @@
    :alt: mosaic
    :align: left
 
-An extension to the `Apache Spark <https://spark.apache.org/>`__ framework that allows easy and fast processing of very large geospatial datasets.
+Mosaic is an extension to the `Apache Spark <https://spark.apache.org/>`__ framework that allows easy and fast processing of very large geospatial datasets.
 
 Mosaic provides:
    - easy conversion between common spatial data encodings (WKT, WKB and GeoJSON);
