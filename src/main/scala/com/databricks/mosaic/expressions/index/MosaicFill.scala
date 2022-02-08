@@ -3,7 +3,7 @@ package com.databricks.mosaic.expressions.index
 import org.locationtech.jts.geom.Geometry
 
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
@@ -89,5 +89,34 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
         res.copyTagsFrom(this)
         res
     }
+
+    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
+        copy(geom = newLeft, resolution = newRight)
+
+}
+
+object MosaicFill {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+            classOf[IndexGeometry].getCanonicalName,
+            db.orNull,
+            "mosaic_fill",
+            """
+              |    _FUNC_(geometry, resolution) - Returns the 2 set representation of geometry at resolution.
+            """.stripMargin,
+            "",
+            """
+              |    Examples:
+              |      > SELECT _FUNC_(a, b);
+              |        [{index_id, is_border, chip_geom}, {index_id, is_border, chip_geom}, ..., {index_id, is_border, chip_geom}]
+              |  """.stripMargin,
+            "",
+            "collection_funcs",
+            "1.0",
+            "",
+            "built-in"
+        )
 
 }

@@ -1,11 +1,10 @@
 package com.databricks.mosaic.expressions.geometry
 
 import scala.collection.TraversableOnce
-import scala.util.Try
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionDescription, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -13,37 +12,10 @@ import org.apache.spark.unsafe.types.UTF8String
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.types._
 
-@ExpressionDescription(
-  usage = "_FUNC_(geometry) - The geometry instance can contain both Polygons and MultiPolygons." +
-      "The flattened representation will only contain Polygons." +
-      "MultiPolygon rows will be exploded into Polygon rows.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a);
-        Polygon ((...))
-        Polygon ((...))
-        ...
-        Polygon ((...))
-  """,
-  since = "1.0"
-)
 case class FlattenPolygons(pair: Expression, geometryAPIName: String)
     extends UnaryExpression
       with CollectionGenerator
       with CodegenFallback {
-
-    //fix attempt
-    lazy val nodePatterns: Seq[AnyRef] = {
-        import scala.reflect.runtime.universe
-        val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)
-        val module = runtimeMirror.staticModule("org.apache.spark.sql.catalyst.trees.TreePattern")
-        val obj = runtimeMirror.reflectModule(module).instance
-        val generator = obj.getClass.getDeclaredMethods.toSeq.find(_.getName.contains("GENERATOR"))
-        val valueMethod = obj.getClass.getDeclaredMethod(generator.map(_.getName).getOrElse(
-            throw new IllegalAccessException("Trying to access GENERATOR enum at runtime and bytecode is missing."))
-        )
-        Seq(valueMethod.invoke(obj))
-    }
 
     /** Fixed definitions. */
     override val inline: Boolean = false
@@ -58,13 +30,15 @@ case class FlattenPolygons(pair: Expression, geometryAPIName: String)
       */
     override def checkInputDataTypes(): TypeCheckResult = FlattenPolygons.checkInputDataTypesImpl(child)
 
-    override def elementSchema: StructType = FlattenPolygons.elementSchemaImpl(child)
-
     override def child: Expression = pair
+
+    override def elementSchema: StructType = FlattenPolygons.elementSchemaImpl(child)
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = FlattenPolygons.evalImpl(input, child, geometryAPIName)
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = FlattenPolygons.makeCopyImpl(newArgs, this, geometryAPIName)
+
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(pair = newChild)
 
 }
 
@@ -160,5 +134,32 @@ object FlattenPolygons {
         res.copyTagsFrom(instance)
         res
     }
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[FlattenPolygons].getCanonicalName,
+          db.orNull,
+          "flatten_polygons",
+          """
+            |    _FUNC_(geometry) - The geometry instance can contain both Polygons and MultiPolygons.
+            |    The flattened representation will only contain Polygons.
+            |    MultiPolygon rows will be exploded into Polygon rows
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a);
+            |        Polygon ((...))
+            |        Polygon ((...))
+            |        ...
+            |        Polygon ((...))
+            |  """.stripMargin,
+          "",
+          "generator_funcs",
+          "1.0",
+          "",
+          "built-in"
+        )
 
 }

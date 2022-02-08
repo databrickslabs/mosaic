@@ -1,6 +1,6 @@
 package com.databricks.mosaic.expressions.geometry
 
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{DataType, DoubleType}
 
@@ -58,4 +58,30 @@ case class ST_MinMaxXYZ(inputGeom: Expression, geometryAPIName: String, dimensio
             }
         )
 
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputGeom = newChild)
+}
+
+object ST_MinMaxXYZ {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
+        new ExpressionInfo(
+            classOf[ST_Length].getCanonicalName,
+            db.orNull,
+            name,
+            """
+              |    _FUNC_(expr1) - Returns min/max coord for a given geometry.
+            """.stripMargin,
+            "",
+            """
+              |    Examples:
+              |      > SELECT _FUNC_(a);
+              |        13.23
+              |  """.stripMargin,
+            "",
+            "misc_funcs",
+            "1.0",
+            "",
+            "built-in"
+        )
 }

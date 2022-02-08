@@ -1,6 +1,6 @@
 package com.databricks.mosaic.expressions.index
 
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
@@ -36,6 +36,8 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
 
     override def right: Expression = resolution
 
+    override def left: Expression = geom
+
     /** Expression output DataType. */
     override def dataType: DataType = ArrayType(LongType)
 
@@ -68,13 +70,40 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
         serialized
     }
 
-    override def left: Expression = geom
-
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
         val res = Polyfill(asArray(0), asArray(1), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
+
+    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
+        copy(geom = newLeft, resolution = newRight)
+
+}
+
+object Polyfill {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+            classOf[Polyfill].getCanonicalName,
+            db.orNull,
+            "polyfill",
+            """
+              |    _FUNC_(geometry, resolution) - Returns the 1 set representation of geometry at resolution.
+            """.stripMargin,
+            "",
+            """
+              |    Examples:
+              |      > SELECT _FUNC_(a, b);
+              |        [622236721348804607, 622236721274716159, ...]
+              |  """.stripMargin,
+            "",
+            "collection_funcs",
+            "1.0",
+            "",
+            "built-in"
+        )
 
 }

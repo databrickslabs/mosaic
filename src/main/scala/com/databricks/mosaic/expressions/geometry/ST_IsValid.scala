@@ -2,7 +2,7 @@ package com.databricks.mosaic.expressions.geometry
 
 import scala.util.Try
 
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{BooleanType, DataType}
 
@@ -61,6 +61,33 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
 
               }
           }
+        )
+
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputGeom = newChild)
+}
+
+object ST_IsValid {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+            classOf[ST_GeometryType].getCanonicalName,
+            db.orNull,
+            "st_isvalid",
+            """
+              |    _FUNC_(expr1) - Returns the validity for a given geometry.
+            """.stripMargin,
+            "",
+            """
+              |    Examples:
+              |      > SELECT _FUNC_(a);
+              |        true
+              |  """.stripMargin,
+            "",
+            "predicate_funcs",
+            "1.0",
+            "",
+            "built-in"
         )
 
 }

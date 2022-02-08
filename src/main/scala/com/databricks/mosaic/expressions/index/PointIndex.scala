@@ -1,20 +1,11 @@
 package com.databricks.mosaic.expressions.index
 
-import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant, TernaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 
-@ExpressionDescription(
-  usage = "_FUNC_(lat, lng, resolution) - Returns the h3 index of a point(lat, lng) at resolution.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a, b, 10);
-      622236721348804607
-  """,
-  since = "1.0"
-)
 case class PointIndex(lat: Expression, lng: Expression, resolution: Expression, indexSystemName: String)
     extends TernaryExpression
       with ExpectsInputTypes
@@ -61,6 +52,39 @@ case class PointIndex(lat: Expression, lng: Expression, resolution: Expression, 
         res
     }
 
-    override def children: Seq[Expression] = Seq(lat, lng, resolution)
+    override def first: Expression = lat
+
+    override def second: Expression = lng
+
+    override def third: Expression = resolution
+
+    override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
+        copy(lat = newFirst, lng = newSecond, resolution = newThird)
+
+}
+
+object PointIndex {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[PointIndex].getCanonicalName,
+          db.orNull,
+          "point_index",
+          """
+            |    _FUNC_(lat, lng, resolution) - Returns the h3 index of a point(lat, lng) at resolution.
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a, b, 10);
+            |        622236721348804607
+            |  """.stripMargin,
+          "",
+          "misc_funcs",
+          "1.0",
+          "",
+          "built-in"
+        )
 
 }

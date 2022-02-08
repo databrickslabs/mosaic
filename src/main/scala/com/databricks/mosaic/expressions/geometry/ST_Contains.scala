@@ -1,21 +1,12 @@
 package com.databricks.mosaic.expressions.geometry
 
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{BooleanType, DataType}
 
 import com.databricks.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
-@ExpressionDescription(
-  usage = "_FUNC_(expr1) - Return the contains relationship between left and right.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(A, B);
-       true
-  """,
-  since = "1.0"
-)
 case class ST_Contains(leftGeom: Expression, rightGeom: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
 
     override def left: Expression = leftGeom
@@ -69,6 +60,35 @@ case class ST_Contains(leftGeom: Expression, rightGeom: Expression, geometryAPIN
 
               }
           }
+        )
+
+    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
+        copy(leftGeom = newLeft, rightGeom = newRight)
+
+}
+
+object ST_Contains {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[ST_Contains].getCanonicalName,
+          db.orNull,
+          "st_contains",
+          """
+            |    _FUNC_(expr1) - Return the contains relationship between left and right.
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(A, B);
+            |        true
+            |  """.stripMargin,
+          "",
+          "predicate_funcs",
+          "1.0",
+          "",
+          "built-in"
         )
 
 }
