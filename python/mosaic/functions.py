@@ -42,7 +42,9 @@ def st_makeline(points: ColumnOrName) -> Column:
     return mosaic_context.invoke_function("st_makeline", pyspark_to_java_column(points))
 
 
-def st_makepolygon(boundary_ring: ColumnOrName, hole_ring_array: ColumnOrName = None) -> Column:
+def st_makepolygon(
+    boundary_ring: ColumnOrName, hole_ring_array: ColumnOrName = None
+) -> Column:
     if hole_ring_array:
         return mosaic_context.invoke_function(
             "st_makepolygon",
@@ -145,11 +147,15 @@ def st_aswkb(in_geom: ColumnOrName) -> Column:
 
 
 def st_asbinary(in_geom: ColumnOrName) -> Column:
-    return mosaic_context.invoke_function("st_asbinary", pyspark_to_java_column(in_geom))
+    return mosaic_context.invoke_function(
+        "st_asbinary", pyspark_to_java_column(in_geom)
+    )
 
 
 def st_asgeojson(in_geom: ColumnOrName) -> Column:
-    return mosaic_context.invoke_function("st_asgeojson", pyspark_to_java_column(in_geom))
+    return mosaic_context.invoke_function(
+        "st_asgeojson", pyspark_to_java_column(in_geom)
+    )
 
 
 def st_length(in_geom: ColumnOrName) -> Column:
@@ -157,7 +163,9 @@ def st_length(in_geom: ColumnOrName) -> Column:
 
 
 def st_perimeter(in_geom: ColumnOrName) -> Column:
-    return mosaic_context.invoke_function("st_perimeter", pyspark_to_java_column(in_geom))
+    return mosaic_context.invoke_function(
+        "st_perimeter", pyspark_to_java_column(in_geom)
+    )
 
 
 def st_distance(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
@@ -184,7 +192,9 @@ def mosaicfill(in_geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     )
 
 
-def point_index(lat: ColumnOrName, lng: ColumnOrName, resolution: ColumnOrName) -> Column:
+def point_index(
+    lat: ColumnOrName, lng: ColumnOrName, resolution: ColumnOrName
+) -> Column:
     return mosaic_context.invoke_function(
         "point_index",
         pyspark_to_java_column(lat),
