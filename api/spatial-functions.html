@@ -54,6 +54,7 @@
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/tabs.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -266,9 +267,25 @@
         </li>
         <li class="md-nav__item"><a href="#st-perimeter" class="md-nav__link">st_perimeter</a>
         </li>
+        <li class="md-nav__item"><a href="#st-length" class="md-nav__link">st_length</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-convexhull" class="md-nav__link">st_convexhull</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-dump" class="md-nav__link">st_dump</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-translate" class="md-nav__link">st_translate</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-scale" class="md-nav__link">st_scale</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-rotate" class="md-nav__link">st_rotate</a>
+        </li>
         <li class="md-nav__item"><a href="#st-centroid2d" class="md-nav__link">st_centroid2D</a>
         </li>
         <li class="md-nav__item"><a href="#st-centroid3d" class="md-nav__link">st_centroid3D</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-isvalid" class="md-nav__link">st_isvalid</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-geometrytype" class="md-nav__link">st_geometrytype</a>
         </li>
         <li class="md-nav__item"><a href="#st-xmin" class="md-nav__link">st_xmin</a>
         </li>
@@ -282,10 +299,6 @@
         </li>
         <li class="md-nav__item"><a href="#st-zmax" class="md-nav__link">st_zmax</a>
         </li>
-        <li class="md-nav__item"><a href="#st-isvalid" class="md-nav__link">st_isvalid</a>
-        </li>
-        <li class="md-nav__item"><a href="#st-geometrytype" class="md-nav__link">st_geometrytype</a>
-        </li>
         <li class="md-nav__item"><a href="#flatten-polygons" class="md-nav__link">flatten_polygons</a>
         </li>
         <li class="md-nav__item"><a href="#point-index" class="md-nav__link">point_index</a>
@@ -293,6 +306,8 @@
         <li class="md-nav__item"><a href="#polyfill" class="md-nav__link">polyfill</a>
         </li>
         <li class="md-nav__item"><a href="#mosaicfill" class="md-nav__link">mosaicfill</a>
+        </li>
+        <li class="md-nav__item"><a href="#mosaic-explode" class="md-nav__link">mosaic_explode</a>
         </li></ul>
             </nav>
         </li>
@@ -331,9 +346,25 @@
         </li>
         <li class="md-nav__item"><a href="#st-perimeter" class="md-nav__link">st_perimeter</a>
         </li>
+        <li class="md-nav__item"><a href="#st-length" class="md-nav__link">st_length</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-convexhull" class="md-nav__link">st_convexhull</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-dump" class="md-nav__link">st_dump</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-translate" class="md-nav__link">st_translate</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-scale" class="md-nav__link">st_scale</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-rotate" class="md-nav__link">st_rotate</a>
+        </li>
         <li class="md-nav__item"><a href="#st-centroid2d" class="md-nav__link">st_centroid2D</a>
         </li>
         <li class="md-nav__item"><a href="#st-centroid3d" class="md-nav__link">st_centroid3D</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-isvalid" class="md-nav__link">st_isvalid</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-geometrytype" class="md-nav__link">st_geometrytype</a>
         </li>
         <li class="md-nav__item"><a href="#st-xmin" class="md-nav__link">st_xmin</a>
         </li>
@@ -347,10 +378,6 @@
         </li>
         <li class="md-nav__item"><a href="#st-zmax" class="md-nav__link">st_zmax</a>
         </li>
-        <li class="md-nav__item"><a href="#st-isvalid" class="md-nav__link">st_isvalid</a>
-        </li>
-        <li class="md-nav__item"><a href="#st-geometrytype" class="md-nav__link">st_geometrytype</a>
-        </li>
         <li class="md-nav__item"><a href="#flatten-polygons" class="md-nav__link">flatten_polygons</a>
         </li>
         <li class="md-nav__item"><a href="#point-index" class="md-nav__link">point_index</a>
@@ -358,6 +385,8 @@
         <li class="md-nav__item"><a href="#polyfill" class="md-nav__link">polyfill</a>
         </li>
         <li class="md-nav__item"><a href="#mosaicfill" class="md-nav__link">mosaicfill</a>
+        </li>
+        <li class="md-nav__item"><a href="#mosaic-explode" class="md-nav__link">mosaic_explode</a>
         </li></ul>
             </nav>
         </li>
@@ -393,7 +422,9 @@
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-0-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_area</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+------------+</span>
 <span class="go">|st_area(wkt)|</span>
@@ -402,17 +433,24 @@
 <span class="go">+------------+</span>
 </pre></div>
 </div>
-</dd></dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>When using the ESRI geometry API (the default), the sign of the
-computed area of a polygon will depend on the direction of the sequence
-of points comprising the polygon’s boundary ring, such that:</p>
-<ul class="simple">
-<li><p>A clockwise boundary will generate a positive area; and</p></li>
-<li><p>An anti-clockwise boundary will generate a negative area.</p></li>
-</ul>
+</div><div aria-labelledby="tab-0-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_area</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+------------+</span>
+<span class="o">|</span><span class="n">st_area</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+------------+</span>
+<span class="o">|</span>       <span class="mf">550.0</span><span class="o">|</span>
+<span class="o">+------------+</span>
+</pre></div>
 </div>
+</div><div aria-labelledby="tab-0-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_area</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">------------+</span>
+<span class="o">|</span><span class="n">st_area</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">------------+</span>
+<span class="o">|</span><span class="w">       </span><span class="mi">550</span><span class="p">.</span><span class="mi">0</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">------------+</span>
+</pre></div>
+</div>
+</div></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Results of this function are always expressed in the same units as the input geometry.</p>
@@ -434,7 +472,63 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-1-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-1-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_perimeter</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+-----------------+</span>
+<span class="go">|   st_length(wkt)|</span>
+<span class="go">+-----------------+</span>
+<span class="go">|96.34413615167959|</span>
+<span class="go">+-----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_perimeter</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span>   <span class="n">st_length</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="mf">96.34413615167959</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_perimeter</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="w">   </span><span class="n">st_length</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="mi">96</span><span class="p">.</span><span class="mi">34413615167959</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Results of this function are always expressed in the same units as the input geometry.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Alias for <a class="reference internal" href="#st-length"><span class="std std-ref">st_length</span></a>.</p>
+</div>
+
+
+<h2 id="st-length">st_length<a class="headerlink" href="#st-length" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_length">
+<span class="sig-name descname"><span class="pre">st_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the length of a geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: DoubleType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-2-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-2-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-2-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-2-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-2-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_length</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+-----------------+</span>
 <span class="go">|   st_length(wkt)|</span>
@@ -443,11 +537,284 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <span class="go">+-----------------+</span>
 </pre></div>
 </div>
-</dd></dl>
+</div><div aria-labelledby="tab-2-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_length</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span>   <span class="n">st_length</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="mf">96.34413615167959</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-2-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_length</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="w">   </span><span class="n">st_length</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="mi">96</span><span class="p">.</span><span class="mi">34413615167959</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+</pre></div>
+</div>
+</div></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Results of this function are always expressed in the same units as the input geometry.</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Alias for <a class="reference internal" href="#st-perimeter"><span class="std std-ref">st_perimeter</span></a>.</p>
+</div>
+
+
+<h2 id="st-convexhull">st_convexhull<a class="headerlink" href="#st-convexhull" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_convexhull">
+<span class="sig-name descname"><span class="pre">st_convexhull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_convexhull" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the convex hull of a geometry or multi-geometry object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-3-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-3-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-3-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-3-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-3-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_convexhull</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+---------------------------------------------+</span>
+<span class="go">|st_convexhull(wkt)                           |</span>
+<span class="go">+---------------------------------------------+</span>
+<span class="go">|POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|</span>
+<span class="go">+---------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-3-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_convexhull</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<span class="o">+---------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_convexhull</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span>                           <span class="o">|</span>
+<span class="o">+---------------------------------------------+</span>
+<span class="o">|</span><span class="nc">POLYGON</span> <span class="p">((</span><span class="mi">10</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">20</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">40</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">10</span> <span class="mi">40</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+---------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-3-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_convexhull</span><span class="p">(</span><span class="ss">"MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_convexhull</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="w">                           </span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------------------------------------+</span>
+<span class="o">|</span><span class="n">POLYGON</span><span class="w"> </span><span class="p">((</span><span class="mi">10</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">40</span><span class="p">))</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
+<h2 id="st-dump">st_dump<a class="headerlink" href="#st-dump" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_dump">
+<span class="sig-name descname"><span class="pre">st_dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_dump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explodes a multi-geometry into one row per constituent geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – The input multi-geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-4-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-4-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-4-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-4-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-4-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_dump</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+-------------+</span>
+<span class="go">|element      |</span>
+<span class="go">+-------------+</span>
+<span class="go">|POINT (10 40)|</span>
+<span class="go">|POINT (40 30)|</span>
+<span class="go">|POINT (20 20)|</span>
+<span class="go">|POINT (30 10)|</span>
+<span class="go">+-------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_dump</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<span class="o">+-------------+</span>
+<span class="o">|</span><span class="n">element</span>      <span class="o">|</span>
+<span class="o">+-------------+</span>
+<span class="o">|</span><span class="nc">POINT</span> <span class="p">(</span><span class="mi">10</span> <span class="mi">40</span><span class="p">)</span><span class="o">|</span>
+<span class="o">|</span><span class="nc">POINT</span> <span class="p">(</span><span class="mi">40</span> <span class="mi">30</span><span class="p">)</span><span class="o">|</span>
+<span class="o">|</span><span class="nc">POINT</span> <span class="p">(</span><span class="mi">20</span> <span class="mi">20</span><span class="p">)</span><span class="o">|</span>
+<span class="o">|</span><span class="nc">POINT</span> <span class="p">(</span><span class="mi">30</span> <span class="mi">10</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+-------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_dump</span><span class="p">(</span><span class="ss">"MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------------+</span>
+<span class="o">|</span><span class="n">element</span><span class="w">      </span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------------+</span>
+<span class="o">|</span><span class="n">POINT</span><span class="w"> </span><span class="p">(</span><span class="mi">10</span><span class="w"> </span><span class="mi">40</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="n">POINT</span><span class="w"> </span><span class="p">(</span><span class="mi">40</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="n">POINT</span><span class="w"> </span><span class="p">(</span><span class="mi">20</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="n">POINT</span><span class="w"> </span><span class="p">(</span><span class="mi">30</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
+<h2 id="st-translate">st_translate<a class="headerlink" href="#st-translate" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_translate">
+<span class="sig-name descname"><span class="pre">st_translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yd</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_translate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translates <cite>geom</cite> to a new location using the distance parameters <cite>xd</cite> and <cite>yd</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>geom</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>xd</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Offset in the x-direction</p></li>
+<li><p><strong>yd</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Offset in the y-direction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-5-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-5-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-5-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-5-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-5-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-5-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-5-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-5-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_translate</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+----------------------------------------------+</span>
+<span class="go">|st_translate(wkt, 10, -5)                     |</span>
+<span class="go">+----------------------------------------------+</span>
+<span class="go">|MULTIPOINT ((20 35), (50 25), (30 15), (40 5))|</span>
+<span class="go">+----------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-5-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-5-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_translate</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mf">10d</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="o">-</span><span class="mf">5d</span><span class="p">))).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<span class="o">+----------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_translate</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">)</span>                     <span class="o">|</span>
+<span class="o">+----------------------------------------------+</span>
+<span class="o">|</span><span class="nc">MULTIPOINT</span> <span class="p">((</span><span class="mi">20</span> <span class="mi">35</span><span class="p">),</span> <span class="p">(</span><span class="mi">50</span> <span class="mi">25</span><span class="p">),</span> <span class="p">(</span><span class="mi">30</span> <span class="mi">15</span><span class="p">),</span> <span class="p">(</span><span class="mi">40</span> <span class="mi">5</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+----------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-5-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-5-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_translate</span><span class="p">(</span><span class="ss">"MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">5</span><span class="n">d</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">----------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_translate</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">5</span><span class="p">)</span><span class="w">                     </span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">----------------------------------------------+</span>
+<span class="o">|</span><span class="n">MULTIPOINT</span><span class="w"> </span><span class="p">((</span><span class="mi">20</span><span class="w"> </span><span class="mi">35</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="mi">50</span><span class="w"> </span><span class="mi">25</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="mi">30</span><span class="w"> </span><span class="mi">15</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="mi">40</span><span class="w"> </span><span class="mi">5</span><span class="p">))</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">----------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
+<h2 id="st-scale">st_scale<a class="headerlink" href="#st-scale" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_scale">
+<span class="sig-name descname"><span class="pre">st_scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yd</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scales <cite>geom</cite> using the scaling factors <cite>xd</cite> and <cite>yd</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>geom</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>xd</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Scale factor in the x-direction</p></li>
+<li><p><strong>yd</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Scale factor in the y-direction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-6-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-6-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-6-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-6-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-6-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-6-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-6-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-6-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_scale</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+--------------------------------------------+</span>
+<span class="go">|st_scale(wkt, 0.5, 2)                       |</span>
+<span class="go">+--------------------------------------------+</span>
+<span class="go">|POLYGON ((15 20, 20 80, 10 80, 5 40, 15 20))|</span>
+<span class="go">+--------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-6-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-6-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_scale</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="mf">2.0</span><span class="p">))).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<span class="o">+--------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_scale</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>                       <span class="o">|</span>
+<span class="o">+--------------------------------------------+</span>
+<span class="o">|</span><span class="nc">POLYGON</span> <span class="p">((</span><span class="mi">15</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">10</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">5</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">15</span> <span class="mi">20</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+--------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-6-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-6-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_scale</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">.</span><span class="mi">0</span><span class="n">d</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">--------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_scale</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">                       </span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">--------------------------------------------+</span>
+<span class="o">|</span><span class="n">POLYGON</span><span class="w"> </span><span class="p">((</span><span class="mi">15</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="mi">20</span><span class="p">))</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">--------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
+<h2 id="st-rotate">st_rotate<a class="headerlink" href="#st-rotate" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_rotate">
+<span class="sig-name descname"><span class="pre">st_rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">td</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotates <cite>geom</cite> using the rotational factor <cite>td</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>geom</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>td</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Rotation (in radians)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-7-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-7-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-7-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-7-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-7-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-7-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-7-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-7-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_rotate</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="n">pi</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+-------------------------------------------------------+</span>
+<span class="go">|st_rotate(wkt, 3.141592653589793)                      |</span>
+<span class="go">+-------------------------------------------------------+</span>
+<span class="go">|POLYGON ((-30 -10, -40 -40, -20 -40, -10 -20, -30 -10))|</span>
+<span class="go">+-------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-7-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-7-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="k">import</span> <span class="nn">math</span><span class="p">.</span><span class="nc">Pi</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_rotate</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="nc">Pi</span><span class="p">))).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<span class="o">+-------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_rotate</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="mf">3.141592653589793</span><span class="p">)</span>                      <span class="o">|</span>
+<span class="o">+-------------------------------------------------------+</span>
+<span class="o">|</span><span class="nc">POLYGON</span> <span class="p">((</span><span class="o">-</span><span class="mi">30</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">40</span> <span class="o">-</span><span class="mi">40</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span> <span class="o">-</span><span class="mi">40</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span> <span class="o">-</span><span class="mi">10</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+-------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-7-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-7-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_rotate</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">,</span><span class="w"> </span><span class="n">pi</span><span class="p">())</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_rotate</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">.</span><span class="mi">141592653589793</span><span class="p">)</span><span class="w">                      </span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">POLYGON</span><span class="w"> </span><span class="p">((</span><span class="o">-</span><span class="mi">30</span><span class="w"> </span><span class="o">-</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">40</span><span class="w"> </span><span class="o">-</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">20</span><span class="w"> </span><span class="o">-</span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">10</span><span class="w"> </span><span class="o">-</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mi">30</span><span class="w"> </span><span class="o">-</span><span class="mi">10</span><span class="p">))</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
 
 
 <h2 id="st-centroid2d">st_centroid2D<a class="headerlink" href="#st-centroid2d" title="Permalink to this headline">¶</a></h2>
@@ -465,7 +832,9 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-8-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-8-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button></div><div aria-labelledby="tab-8-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-8-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_centroid2D</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+---------------------------------------+</span>
 <span class="go">|st_centroid(wkt)                       |</span>
@@ -474,7 +843,7 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <span class="go">+---------------------------------------+</span>
 </pre></div>
 </div>
-</dd></dl>
+</div></div>
 
 
 <h2 id="st-centroid3d">st_centroid3D<a class="headerlink" href="#st-centroid3d" title="Permalink to this headline">¶</a></h2>
@@ -493,6 +862,129 @@ of points comprising the polygon’s boundary ring, such that:</p>
 </dd></dl>
 
 
+<h2 id="st-isvalid">st_isvalid<a class="headerlink" href="#st-isvalid" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_isvalid">
+<span class="sig-name descname"><span class="pre">st_isvalid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_isvalid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <cite>true</cite> if the geometry is valid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: BooleanType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-9-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-9-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-9-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-9-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-9-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-9-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-9-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-9-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_isvalid</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+---------------+</span>
+<span class="go">|st_isvalid(wkt)|</span>
+<span class="go">+---------------+</span>
+<span class="go">|           true|</span>
+<span class="go">+---------------+</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span>
+<span class="go">    'wkt': 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))'</span>
+<span class="go">    }])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_isvalid</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+---------------+</span>
+<span class="go">|st_isvalid(wkt)|</span>
+<span class="go">+---------------+</span>
+<span class="go">|          false|</span>
+<span class="go">+---------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-9-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-9-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_isvalid</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+---------------+</span>
+<span class="o">|</span><span class="n">st_isvalid</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+---------------+</span>
+<span class="o">|</span>           <span class="kc">true</span><span class="o">|</span>
+<span class="o">+---------------+</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_isvalid</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+---------------+</span>
+<span class="o">|</span><span class="n">st_isvalid</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+---------------+</span>
+<span class="o">|</span>          <span class="kc">false</span><span class="o">|</span>
+<span class="o">+---------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-9-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-9-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_isvalid</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------+</span>
+<span class="o">|</span><span class="n">st_isvalid</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------+</span>
+<span class="o">|</span><span class="w">           </span><span class="k">true</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------+</span>
+
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_isvalid</span><span class="p">(</span><span class="ss">"POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------+</span>
+<span class="o">|</span><span class="n">st_isvalid</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------+</span>
+<span class="o">|</span><span class="w">          </span><span class="k">false</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------+</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Validity assertions will be dependent on the chosen geometry API.
+The assertions used in the ESRI geometry API (the default) follow the definitions in the
+“Simple feature access - Part 1” document (OGC 06-103r4) for each geometry type.</p>
+</div>
+
+
+<h2 id="st-geometrytype">st_geometrytype<a class="headerlink" href="#st-geometrytype" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_geometrytype">
+<span class="sig-name descname"><span class="pre">st_geometrytype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_geometrytype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the type of the input geometry (“POINT”, “LINESTRING”, “POLYGON” etc.).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: StringType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-10-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-10-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-10-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-10-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-10-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-10-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-10-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-10-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_geometrytype</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+--------------------+</span>
+<span class="go">|st_geometrytype(wkt)|</span>
+<span class="go">+--------------------+</span>
+<span class="go">|             POLYGON|</span>
+<span class="go">+--------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-10-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-10-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_geometrytype</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+--------------------+</span>
+<span class="o">|</span><span class="n">st_geometrytype</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+--------------------+</span>
+<span class="o">|</span>             <span class="nc">POLYGON</span><span class="o">|</span>
+<span class="o">+--------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-10-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-10-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_geometrytype</span><span class="p">(</span><span class="ss">"POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">--------------------+</span>
+<span class="o">|</span><span class="n">st_geometrytype</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">--------------------+</span>
+<span class="o">|</span><span class="w">             </span><span class="n">POLYGON</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">--------------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
 <h2 id="st-xmin">st_xmin<a class="headerlink" href="#st-xmin" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_xmin">
@@ -508,7 +1000,9 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-11-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-11-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-11-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-11-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-11-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-11-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-11-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-11-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_xmin</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+-----------------+</span>
 <span class="go">|st_minmaxxyz(wkt)|</span>
@@ -517,7 +1011,24 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <span class="go">+-----------------+</span>
 </pre></div>
 </div>
-</dd></dl>
+</div><div aria-labelledby="tab-11-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-11-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_xmin</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span>             <span class="mf">10.0</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-11-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-11-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_xmin</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="w">             </span><span class="mi">10</span><span class="p">.</span><span class="mi">0</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+</pre></div>
+</div>
+</div></div>
 
 
 <h2 id="st-xmax">st_xmax<a class="headerlink" href="#st-xmax" title="Permalink to this headline">¶</a></h2>
@@ -535,7 +1046,9 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-12-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-12-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-12-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-12-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-12-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-12-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-12-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-12-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_xmax</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+-----------------+</span>
 <span class="go">|st_minmaxxyz(wkt)|</span>
@@ -544,7 +1057,24 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <span class="go">+-----------------+</span>
 </pre></div>
 </div>
-</dd></dl>
+</div><div aria-labelledby="tab-12-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-12-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_xmax</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span>             <span class="mf">40.0</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-12-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-12-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_xmax</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="w">             </span><span class="mi">40</span><span class="p">.</span><span class="mi">0</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+</pre></div>
+</div>
+</div></div>
 
 
 <h2 id="st-ymin">st_ymin<a class="headerlink" href="#st-ymin" title="Permalink to this headline">¶</a></h2>
@@ -562,7 +1092,9 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-13-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-13-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-13-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-13-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-13-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-13-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-13-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-13-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_ymin</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+-----------------+</span>
 <span class="go">|st_minmaxxyz(wkt)|</span>
@@ -571,7 +1103,24 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <span class="go">+-----------------+</span>
 </pre></div>
 </div>
-</dd></dl>
+</div><div aria-labelledby="tab-13-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-13-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_ymin</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span>             <span class="mf">10.0</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-13-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-13-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_ymin</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="w">             </span><span class="mi">10</span><span class="p">.</span><span class="mi">0</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+</pre></div>
+</div>
+</div></div>
 
 
 <h2 id="st-ymax">st_ymax<a class="headerlink" href="#st-ymax" title="Permalink to this headline">¶</a></h2>
@@ -589,8 +1138,10 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_ymax</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-14-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-14-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-14-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-14-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-14-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-14-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-14-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-14-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_xmax</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+-----------------+</span>
 <span class="go">|st_minmaxxyz(wkt)|</span>
 <span class="go">+-----------------+</span>
@@ -598,7 +1149,24 @@ of points comprising the polygon’s boundary ring, such that:</p>
 <span class="go">+-----------------+</span>
 </pre></div>
 </div>
-</dd></dl>
+</div><div aria-labelledby="tab-14-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-14-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_xmax</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span>             <span class="mf">40.0</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-14-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-14-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_xmax</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="w">             </span><span class="mi">40</span><span class="p">.</span><span class="mi">0</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+</pre></div>
+</div>
+</div></div>
 
 
 <h2 id="st-zmin">st_zmin<a class="headerlink" href="#st-zmin" title="Permalink to this headline">¶</a></h2>
@@ -633,77 +1201,6 @@ of points comprising the polygon’s boundary ring, such that:</p>
 </dd></dl>
 
 
-<h2 id="st-isvalid">st_isvalid<a class="headerlink" href="#st-isvalid" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="st_isvalid">
-<span class="sig-name descname"><span class="pre">st_isvalid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_isvalid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns <cite>true</cite> if the geometry is valid.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column: BooleanType</p>
-</dd>
-<dt class="field-odd">Example</dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_isvalid</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="go">+---------------+</span>
-<span class="go">|st_isvalid(wkt)|</span>
-<span class="go">+---------------+</span>
-<span class="go">|           true|</span>
-<span class="go">+---------------+</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span>
-<span class="go">    'wkt': 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))'</span>
-<span class="go">    }])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_isvalid</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="go">+---------------+</span>
-<span class="go">|st_isvalid(wkt)|</span>
-<span class="go">+---------------+</span>
-<span class="go">|          false|</span>
-<span class="go">+---------------+</span>
-</pre></div>
-</div>
-</dd></dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Validity assertions will be dependent on the chosen geometry API.
-The assertions used in the ESRI geometry API (the default) follow the definitions in the
-“Simple feature access - Part 1” document (OGC 06-103r4) for each geometry type.</p>
-</div>
-
-
-<h2 id="st-geometrytype">st_geometrytype<a class="headerlink" href="#st-geometrytype" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="st_geometrytype">
-<span class="sig-name descname"><span class="pre">st_geometrytype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_geometrytype" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the type of the input geometry (“POINT”, “LINESTRING”, “POLYGON” etc.).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column: StringType</p>
-</dd>
-<dt class="field-odd">Example</dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_geometrytype</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="go">+--------------------+</span>
-<span class="go">|st_geometrytype(wkt)|</span>
-<span class="go">+--------------------+</span>
-<span class="go">|             POLYGON|</span>
-<span class="go">+--------------------+</span>
-</pre></div>
-</div>
-</dd></dl>
-
-
 <h2 id="flatten-polygons">flatten_polygons<a class="headerlink" href="#flatten-polygons" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="flatten_polygons">
@@ -719,7 +1216,9 @@ The assertions used in the ESRI geometry API (the default) follow the definition
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([</span>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-15-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-15-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-15-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-15-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-15-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-15-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-15-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-15-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([</span>
 <span class="go">    {'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}</span>
 <span class="go">    ])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">flatten_polygons</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -731,7 +1230,20 @@ The assertions used in the ESRI geometry API (the default) follow the definition
 <span class="go">+------------------------------------------+</span>
 </pre></div>
 </div>
-</dd></dl>
+</div><div aria-labelledby="tab-15-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-15-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">flatten_polygons</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">)).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<span class="o">+------------------------------------------+</span>
+<span class="o">|</span><span class="n">element</span>                                   <span class="o">|</span>
+<span class="o">+------------------------------------------+</span>
+<span class="o">|</span><span class="nc">POLYGON</span> <span class="p">((</span><span class="mi">30</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">45</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">10</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">30</span> <span class="mi">20</span><span class="p">))</span>    <span class="o">|</span>
+<span class="o">|</span><span class="nc">POLYGON</span> <span class="p">((</span><span class="mi">15</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">40</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">5</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">15</span> <span class="mi">5</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-15-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-15-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"></span>
+</pre></div>
+</div>
+</div></div>
 
 
 <h2 id="point-index">point_index<a class="headerlink" href="#point-index" title="Permalink to this headline">¶</a></h2>
@@ -754,7 +1266,9 @@ the input <cite>lat</cite> and <cite>lng</cite> coordinates.</p>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'lon'</span><span class="p">:</span> <span class="mf">30.</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">:</span> <span class="mf">10.</span><span class="p">}])</span>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-16-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-16-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-16-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-16-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-16-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-16-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-16-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-16-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'lon'</span><span class="p">:</span> <span class="mf">30.</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">:</span> <span class="mf">10.</span><span class="p">}])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index</span><span class="p">(</span><span class="s1">'lat'</span><span class="p">,</span> <span class="s1">'lon'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 <span class="go">+----------------------------+</span>
 <span class="go">|h3_point_index(lat, lon, 10)|</span>
@@ -763,7 +1277,24 @@ the input <cite>lat</cite> and <cite>lng</cite> coordinates.</p>
 <span class="go">+----------------------------+</span>
 </pre></div>
 </div>
-</dd></dl>
+</div><div aria-labelledby="tab-16-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-16-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="mf">30.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"lon"</span><span class="p">,</span> <span class="s">"lat"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index</span><span class="p">(</span><span class="n">$</span><span class="s">"lon"</span><span class="p">,</span> <span class="n">$</span><span class="s">"lat"</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+----------------------------+</span>
+<span class="o">|</span><span class="n">h3_point_index</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+----------------------------+</span>
+<span class="o">|</span><span class="mi">623385352048508927</span>          <span class="o">|</span>
+<span class="o">+----------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-16-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-16-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">point_index</span><span class="p">(</span><span class="mi">30</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">----------------------------+</span>
+<span class="o">|</span><span class="n">h3_point_index</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">----------------------------+</span>
+<span class="o">|</span><span class="mi">623385352048508927</span><span class="w">          </span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">----------------------------+</span>
+</pre></div>
+</div>
+</div></div>
 
 
 <h2 id="polyfill">polyfill<a class="headerlink" href="#polyfill" title="Permalink to this headline">¶</a></h2>
@@ -784,7 +1315,9 @@ the input <cite>lat</cite> and <cite>lng</cite> coordinates.</p>
 <dt class="field-odd">Example</dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-17-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-17-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-17-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-17-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-17-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-17-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-17-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-17-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span>
 <span class="go">    'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span>
 <span class="go">    }])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">polyfill</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -795,14 +1328,103 @@ the input <cite>lat</cite> and <cite>lng</cite> coordinates.</p>
 <span class="go">+------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</dd></dl>
+</div><div aria-labelledby="tab-17-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-17-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">polyfill</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<span class="o">+------------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">h3_polyfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>                                         <span class="o">|</span>
+<span class="o">+------------------------------------------------------------+</span>
+<span class="o">|</span><span class="p">[</span><span class="mi">577586652210266111</span><span class="p">,</span> <span class="mi">578360708396220415</span><span class="p">,</span> <span class="mi">577269992861466623</span><span class="p">]</span><span class="o">|</span>
+<span class="o">+------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-17-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-17-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">polyfill</span><span class="p">(</span><span class="ss">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">------------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">h3_polyfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">                                         </span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">------------------------------------------------------------+</span>
+<span class="o">|</span><span class="p">[</span><span class="mi">577586652210266111</span><span class="p">,</span><span class="w"> </span><span class="mi">578360708396220415</span><span class="p">,</span><span class="w"> </span><span class="mi">577269992861466623</span><span class="p">]</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
 
 
 <h2 id="mosaicfill">mosaicfill<a class="headerlink" href="#mosaicfill" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="id1">
 <span class="sig-name descname"><span class="pre">mosaicfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates:
+- a set of core indices that are fully contained by <cite>geometry</cite>; and
+- a set of border indices and sub-polygons that are partially contained by the input.</p>
+<p>Outputs an array of chip structs for each input row.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: ArrayType[MosaicType]</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-18-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-18-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-18-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-18-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-18-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-18-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-18-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-18-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">printSchema</span><span class="p">()</span>
+<span class="go">root</span>
+<span class="go"> |-- h3_mosaicfill(wkt, 0): mosaic (nullable = true)</span>
+<span class="go"> |    |-- chips: array (nullable = true)</span>
+<span class="go"> |    |    |-- element: mosaic_chip (containsNull = true)</span>
+<span class="go"> |    |    |    |-- is_core: boolean (nullable = true)</span>
+<span class="go"> |    |    |    |-- h3: long (nullable = true)</span>
+<span class="go"> |    |    |    |-- wkb: binary (nullable = true)</span>
+
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+---------------------+</span>
+<span class="go">|h3_mosaicfill(wkt, 0)|</span>
+<span class="go">+---------------------+</span>
+<span class="go">| {[{false, 5774810...|</span>
+<span class="go">+---------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-18-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-18-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">printSchema</span>
+<span class="n">root</span>
+ <span class="o">|--</span> <span class="n">h3_mosaicfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span> <span class="n">mosaic</span> <span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="kc">true</span><span class="p">)</span>
+ <span class="o">|</span>    <span class="o">|--</span> <span class="n">chips</span><span class="p">:</span> <span class="n">array</span> <span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="kc">true</span><span class="p">)</span>
+ <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">element</span><span class="p">:</span> <span class="n">mosaic_chip</span> <span class="p">(</span><span class="n">containsNull</span> <span class="o">=</span> <span class="kc">true</span><span class="p">)</span>
+ <span class="o">|</span>    <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">is_core</span><span class="p">:</span> <span class="n">boolean</span> <span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="kc">true</span><span class="p">)</span>
+ <span class="o">|</span>    <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">h3</span><span class="p">:</span> <span class="n">long</span> <span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="kc">true</span><span class="p">)</span>
+ <span class="o">|</span>    <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">wkb</span><span class="p">:</span> <span class="n">binary</span> <span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="kc">true</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+---------------------+</span>
+<span class="o">|</span><span class="n">h3_mosaicfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+---------------------+</span>
+<span class="o">|</span> <span class="p">{[{</span><span class="kc">false</span><span class="p">,</span> <span class="mi">5774810</span><span class="p">...</span><span class="o">|</span>
+<span class="o">+---------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-18-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-18-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; SELECT mosaicfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
++---------------------+
+|h3_mosaicfill(wkt, 0)|
++---------------------+
+| {[{false, 5774810...|
++---------------------+
+</pre></div>
+</div>
+</div></div>
+
+
+<h2 id="mosaic-explode">mosaic_explode<a class="headerlink" href="#mosaic-explode" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">mosaicfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the set of Mosaic chips covering the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
+<p>In contrast to <span class="xref std std-ref">mosaic_fill</span>, <cite>mosaic_explode</cite> generates one result row per chip.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -813,8 +1435,59 @@ the input <cite>lat</cite> and <cite>lng</cite> coordinates.</p>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>Column: MosaicType</p>
 </dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-19-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-19-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-19-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-19-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-19-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-19-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-19-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-19-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaic_explode</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+-----------------------------------------------+</span>
+<span class="go">|is_core|                h3|                 wkb|</span>
+<span class="go">+-------+------------------+--------------------+</span>
+<span class="go">|  false|577481099093999615|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|578044049047420927|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|578782920861286399|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|577023702256844799|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|577938495931154431|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|577586652210266111|[01 06 00 00 00 0...|</span>
+<span class="go">|  false|577269992861466623|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|578360708396220415|[01 03 00 00 00 0...|</span>
+<span class="go">+-------+------------------+--------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-19-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-19-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaic_explode</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+-----------------------------------------------+</span>
+<span class="o">|</span><span class="n">is_core</span><span class="o">|</span>                <span class="n">h3</span><span class="o">|</span>                 <span class="n">wkb</span><span class="o">|</span>
+<span class="o">+-------+------------------+--------------------+</span>
+<span class="o">|</span>  <span class="kc">false</span><span class="o">|</span><span class="mi">577481099093999615</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span> <span class="mi">03</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">0</span><span class="p">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="kc">false</span><span class="o">|</span><span class="mi">578044049047420927</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span> <span class="mi">03</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">0</span><span class="p">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="kc">false</span><span class="o">|</span><span class="mi">578782920861286399</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span> <span class="mi">03</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">0</span><span class="p">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="kc">false</span><span class="o">|</span><span class="mi">577023702256844799</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span> <span class="mi">03</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">0</span><span class="p">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="kc">false</span><span class="o">|</span><span class="mi">577938495931154431</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span> <span class="mi">03</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">0</span><span class="p">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="kc">false</span><span class="o">|</span><span class="mi">577586652210266111</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span> <span class="mi">06</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">0</span><span class="p">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="kc">false</span><span class="o">|</span><span class="mi">577269992861466623</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span> <span class="mi">03</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">0</span><span class="p">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="kc">false</span><span class="o">|</span><span class="mi">578360708396220415</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span> <span class="mi">03</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">0</span><span class="p">...</span><span class="o">|</span>
+<span class="o">+-------+------------------+--------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-19-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-19-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">mosaic_explode</span><span class="p">(</span><span class="ss">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------------------------------------+</span>
+<span class="o">|</span><span class="n">is_core</span><span class="o">|</span><span class="w">                </span><span class="n">h3</span><span class="o">|</span><span class="w">                 </span><span class="n">wkb</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------+------------------+--------------------+</span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577481099093999615</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">578044049047420927</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">578782920861286399</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577023702256844799</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577938495931154431</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577586652210266111</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">06</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577269992861466623</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">578360708396220415</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------+------------------+--------------------+</span>
+</pre></div>
+</div>
+</div></div>
 
 
 
