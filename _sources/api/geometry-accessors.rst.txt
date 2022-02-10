@@ -2,7 +2,6 @@
 Geometry accessors
 ==================
 
-
 st_asbinary
 ***********
 
@@ -16,9 +15,36 @@ st_asbinary
 
     :example:
 
+.. tabs::
+   .. code-tab:: py
+
     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
-    >>> df.select(st_asbinary('wkt').alias('wkb')).collect()
-    [Row(wkb=bytearray(b'\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00>@\x00\x00\x00\x00\x00\x00$@'))]
+    >>> df.select(st_asbinary('wkt').alias('wkb')).show()
+    +--------------------+
+    |                 wkb|
+    +--------------------+
+    |[01 01 00 00 00 0...|
+    +--------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POINT (30 10)")).toDF("wkt")
+    >>> df.select(st_asbinary($"wkt").alias("wkb")).show()
+    +--------------------+
+    |                 wkb|
+    +--------------------+
+    |[01 01 00 00 00 0...|
+    +--------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_asbinary("POINT (30 10)") AS wkb
+    +--------------------+
+    |                 wkb|
+    +--------------------+
+    |[01 01 00 00 00 0...|
+    +--------------------+
+
 
 .. note:: Alias for :ref:`st_aswkb`.
 
@@ -35,11 +61,35 @@ st_asgeojson
 
     :example:
 
-    >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
-    >>> df.select(st_asgeojson('wkt').cast('string').alias('json')).collect()
-    [Row(json='{{"type":"Point","coordinates":[30,10],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}}')]
+.. tabs::
+   .. code-tab:: py
 
-.. note:: Alias for :ref:`st_astext`.
+    >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+    >>> df.select(st_asgeojson('wkt').cast('string').alias('json')).show(truncate=False)
+    +------------------------------------------------------------------------------------------------+
+    |json                                                                                            |
+    +------------------------------------------------------------------------------------------------+
+    |{{"type":"Point","coordinates":[30,10],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}}|
+    +------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POINT (30 10)")).toDF("wkt")
+    >>> df.select(st_asgeojson($"wkt").cast("string").alias("json")).show(false)
+    +------------------------------------------------------------------------------------------------+
+    |json                                                                                            |
+    +------------------------------------------------------------------------------------------------+
+    |{{"type":"Point","coordinates":[30,10],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}}|
+    +------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT cast(st_asgeojson("POINT (30 10)") AS string) AS json
+    +------------------------------------------------------------------------------------------------+
+    |json                                                                                            |
+    +------------------------------------------------------------------------------------------------+
+    |{{"type":"Point","coordinates":[30,10],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}}|
+    +------------------------------------------------------------------------------------------------+
 
 
 st_astext
@@ -55,9 +105,35 @@ st_astext
 
     :example:
 
+.. tabs::
+   .. code-tab:: py
+
     >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-    >>> df.select(st_astext(st_point('lon', 'lat')).alias('wkt')).collect()
-    [Row(wkt='POINT (30 10)')]
+    >>> df.select(st_astext(st_point('lon', 'lat')).alias('wkt')).show()
+    +-------------+
+    |          wkt|
+    +-------------+
+    |POINT (30 10)|
+    +-------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
+    >>> df.select(st_astext(st_point($"lon", $"lat")).alias("wkt")).show()
+    +-------------+
+    |          wkt|
+    +-------------+
+    |POINT (30 10)|
+    +-------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_astext(st_point(30.0D, 10.0D)) AS wkt
+    +-------------+
+    |          wkt|
+    +-------------+
+    |POINT (30 10)|
+    +-------------+
 
 .. note:: Alias for :ref:`st_aswkt`.
 
@@ -75,9 +151,35 @@ st_aswkb
 
     :example:
 
+.. tabs::
+   .. code-tab:: py
+
     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
-    >>> df.select(st_aswkb('wkt').alias('wkb')).collect()
-    [Row(wkb=bytearray(b'\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00>@\x00\x00\x00\x00\x00\x00$@'))]
+    >>> df.select(st_aswkb('wkt').alias('wkb')).show()
+    +--------------------+
+    |                 wkb|
+    +--------------------+
+    |[01 01 00 00 00 0...|
+    +--------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POINT (30 10)")).toDF("wkt")
+    >>> df.select(st_aswkb($"wkt").alias("wkb")).show()
+    +--------------------+
+    |                 wkb|
+    +--------------------+
+    |[01 01 00 00 00 0...|
+    +--------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_aswkb("POINT (30 10)") AS wkb
+    +--------------------+
+    |                 wkb|
+    +--------------------+
+    |[01 01 00 00 00 0...|
+    +--------------------+
 
 .. note:: Alias for :ref:`st_asbinary`.
 
@@ -94,8 +196,35 @@ st_aswkt
 
     :example:
 
+.. tabs::
+   .. code-tab:: py
+
     >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-    >>> df.select(st_astext(st_point('lon', 'lat')).alias('wkt')).collect()
-    [Row(wkt='POINT (30 10)')]
+    >>> df.select(st_aswkt(st_point('lon', 'lat')).alias('wkt')).show()
+    +-------------+
+    |          wkt|
+    +-------------+
+    |POINT (30 10)|
+    +-------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
+    >>> df.select(st_aswkt(st_point($"lon", $"lat")).alias("wkt")).show()
+    +-------------+
+    |          wkt|
+    +-------------+
+    |POINT (30 10)|
+    +-------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_aswkt(st_point(30.0D, 10.0D)) AS wkt
+    +-------------+
+    |          wkt|
+    +-------------+
+    |POINT (30 10)|
+    +-------------+
+
 
 .. note:: Alias for :ref:`st_astext`.
