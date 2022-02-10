@@ -1,185 +1,191 @@
-from pyspark.sql import SparkSession
+from typing import Union
+
+from pyspark.sql import SparkSession, Column
 from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
 
 from .library_handler import MosaicLibraryHandler
 from .mosaic_context import MosaicContext
 
-mosaicContext = None
+mosaic_context: MosaicContext
 
 
 def enable_mosaic(spark: SparkSession):
-    global mosaicContext
+    global mosaic_context
     handler = MosaicLibraryHandler(spark)
-    mosaicContext = MosaicContext(spark)
+    mosaic_context = MosaicContext(spark)
 
+
+ColumnOrName = Union[Column, str]
 
 #################################
 # Bindings of mosaic functions  #
 #################################
-def as_hex(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("as_hex", pyspark_to_java_column(inGeom))
 
 
-def as_json(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("as_json", pyspark_to_java_column(inGeom))
+def as_hex(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("as_hex", pyspark_to_java_column(in_geom))
 
 
-def st_point(xVal: "ColumnOrName", yVal: "ColumnOrName"):
-    return mosaicContext.invoke_function(
+def as_json(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("as_json", pyspark_to_java_column(in_geom))
+
+
+def st_point(x_val: ColumnOrName, y_val: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
         "st_point",
-        pyspark_to_java_column(xVal),
-        pyspark_to_java_column(yVal),
+        pyspark_to_java_column(x_val),
+        pyspark_to_java_column(y_val),
     )
 
 
-def st_makeline(points: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_makeline", pyspark_to_java_column(points))
+def st_makeline(points: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_makeline", pyspark_to_java_column(points))
 
 
-def st_makepolygon(boundaryRing: "ColumnOrName", holeRingArray: "ColumnOrName" = None):
-    if holeRingArray:
-        return mosaicContext.invoke_function(
+def st_makepolygon(boundary_ring: ColumnOrName, hole_ring_array: ColumnOrName = None) -> Column:
+    if hole_ring_array:
+        return mosaic_context.invoke_function(
             "st_makepolygon",
-            pyspark_to_java_column(boundaryRing),
-            pyspark_to_java_column(holeRingArray),
+            pyspark_to_java_column(boundary_ring),
+            pyspark_to_java_column(hole_ring_array),
         )
-    return mosaicContext.invoke_function(
-        "st_makepolygon", pyspark_to_java_column(boundaryRing)
+    return mosaic_context.invoke_function(
+        "st_makepolygon", pyspark_to_java_column(boundary_ring)
     )
 
 
-def flatten_polygons(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function(
-        "flatten_polygons", pyspark_to_java_column(inGeom)
+def flatten_polygons(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
+        "flatten_polygons", pyspark_to_java_column(in_geom)
     )
 
 
-def st_xmax(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_xmax", pyspark_to_java_column(inGeom))
+def st_xmax(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_xmax", pyspark_to_java_column(in_geom))
 
 
-def st_xmin(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_xmin", pyspark_to_java_column(inGeom))
+def st_xmin(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_xmin", pyspark_to_java_column(in_geom))
 
 
-def st_ymax(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_ymax", pyspark_to_java_column(inGeom))
+def st_ymax(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_ymax", pyspark_to_java_column(in_geom))
 
 
-def st_ymin(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_ymin", pyspark_to_java_column(inGeom))
+def st_ymin(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_ymin", pyspark_to_java_column(in_geom))
 
 
-def st_zmax(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_zmax", pyspark_to_java_column(inGeom))
+def st_zmax(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_zmax", pyspark_to_java_column(in_geom))
 
 
-def st_zmin(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_zmin", pyspark_to_java_column(inGeom))
+def st_zmin(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_zmin", pyspark_to_java_column(in_geom))
 
 
-def st_isvalid(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_isvalid", pyspark_to_java_column(inGeom))
+def st_isvalid(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_isvalid", pyspark_to_java_column(in_geom))
 
 
-def st_geometrytype(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function(
-        "st_geometrytype", pyspark_to_java_column(inGeom)
+def st_geometrytype(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
+        "st_geometrytype", pyspark_to_java_column(in_geom)
     )
 
 
-def st_area(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_area", pyspark_to_java_column(inGeom))
+def st_area(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_area", pyspark_to_java_column(in_geom))
 
 
-def st_centroid2D(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function(
-        "st_centroid2D", pyspark_to_java_column(inGeom)
+def st_centroid2D(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
+        "st_centroid2D", pyspark_to_java_column(in_geom)
     )
 
 
-def st_centroid3D(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function(
-        "st_centroid3D", pyspark_to_java_column(inGeom)
+def st_centroid3D(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
+        "st_centroid3D", pyspark_to_java_column(in_geom)
     )
 
 
-def convert_to(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("convert_to", pyspark_to_java_column(inGeom))
+def convert_to(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("convert_to", pyspark_to_java_column(in_geom))
 
 
-def st_geomfromwkt(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function(
-        "st_geomfromwkt", pyspark_to_java_column(inGeom)
+def st_geomfromwkt(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
+        "st_geomfromwkt", pyspark_to_java_column(in_geom)
     )
 
 
-def st_geomfromwkb(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function(
-        "st_geomfromwkb", pyspark_to_java_column(inGeom)
+def st_geomfromwkb(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
+        "st_geomfromwkb", pyspark_to_java_column(in_geom)
     )
 
 
-def st_geomfromgeojson(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function(
-        "st_geomfromgeojson", pyspark_to_java_column(inGeom)
+def st_geomfromgeojson(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
+        "st_geomfromgeojson", pyspark_to_java_column(in_geom)
     )
 
 
-def st_aswkt(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_aswkt", pyspark_to_java_column(inGeom))
+def st_aswkt(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_aswkt", pyspark_to_java_column(in_geom))
 
 
-def st_astext(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_astext", pyspark_to_java_column(inGeom))
+def st_astext(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_astext", pyspark_to_java_column(in_geom))
 
 
-def st_aswkb(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_aswkb", pyspark_to_java_column(inGeom))
+def st_aswkb(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_aswkb", pyspark_to_java_column(in_geom))
 
 
-def st_asbinary(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_asbinary", pyspark_to_java_column(inGeom))
+def st_asbinary(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_asbinary", pyspark_to_java_column(in_geom))
 
 
-def st_asgeojson(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_asgeojson", pyspark_to_java_column(inGeom))
+def st_asgeojson(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_asgeojson", pyspark_to_java_column(in_geom))
 
 
-def st_length(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_length", pyspark_to_java_column(inGeom))
+def st_length(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_length", pyspark_to_java_column(in_geom))
 
 
-def st_perimeter(inGeom: "ColumnOrName"):
-    return mosaicContext.invoke_function("st_perimeter", pyspark_to_java_column(inGeom))
+def st_perimeter(in_geom: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function("st_perimeter", pyspark_to_java_column(in_geom))
 
 
-def st_distance(geom1: "ColumnOrName", geom2: "ColumnOrName"):
-    return mosaicContext.invoke_function(
+def st_distance(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
         "st_distance",
         pyspark_to_java_column(geom1),
         pyspark_to_java_column(geom2),
     )
 
 
-def st_contains(geom1: "ColumnOrName", geom2: "ColumnOrName"):
-    return mosaicContext.invoke_function(
+def st_contains(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
         "st_contains",
         pyspark_to_java_column(geom1),
         pyspark_to_java_column(geom2),
     )
 
 
-def mosaicfill(inGeom: "ColumnOrName", resolution: "ColumnOrName"):
-    return mosaicContext.invoke_function(
+def mosaicfill(in_geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
         "mosaicfill",
-        pyspark_to_java_column(inGeom),
+        pyspark_to_java_column(in_geom),
         pyspark_to_java_column(resolution),
     )
 
 
-def point_index(lat: "ColumnOrName", lng: "ColumnOrName", resolution: "ColumnOrName"):
-    return mosaicContext.invoke_function(
+def point_index(lat: ColumnOrName, lng: ColumnOrName, resolution: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
         "point_index",
         pyspark_to_java_column(lat),
         pyspark_to_java_column(lng),
@@ -187,17 +193,17 @@ def point_index(lat: "ColumnOrName", lng: "ColumnOrName", resolution: "ColumnOrN
     )
 
 
-def polyfill(inGeom: "ColumnOrName", resolution: "ColumnOrName"):
-    return mosaicContext.invoke_function(
+def polyfill(in_geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
         "polyfill",
-        pyspark_to_java_column(inGeom),
+        pyspark_to_java_column(in_geom),
         pyspark_to_java_column(resolution),
     )
 
 
-def mosaic_explode(inGeom: "ColumnOrName", resolution: "ColumnOrName"):
-    return mosaicContext.invoke_function(
+def mosaic_explode(in_geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+    return mosaic_context.invoke_function(
         "mosaic_explode",
-        pyspark_to_java_column(inGeom),
+        pyspark_to_java_column(in_geom),
         pyspark_to_java_column(resolution),
     )
