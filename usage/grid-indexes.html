@@ -310,9 +310,9 @@ are required, can be used to reduce these to deterministic SQL joins directly on
 <ul class="simple">
 <li><p>Choose an appropriate resolution for your grid index.</p></li>
 <li><p>Apply the index to the set of points in your left-hand dataframe.
-This will generate generate an index value that corresponds to the grid ‘cell’ that this point occupies.</p></li>
+This will generate an index value that corresponds to the grid ‘cell’ that this point occupies.</p></li>
 <li><p>Compute the set of indices that fully covers each polygon in the right-hand dataframe
-(this is referred to as a _polyfill_ operation).</p></li>
+(this is referred to as a <cite>polyfill</cite> operation).</p></li>
 <li><p>‘Explode’ the polygon index dataframe, such that each polygon index becomes a row in a new dataframe.</p></li>
 <li><p>Join the new left- and right-hand dataframes directly on the index.</p></li>
 </ul>
@@ -322,8 +322,12 @@ This will generate generate an index value that corresponds to the grid ‘cell�
 <li><p>You may have significant skew in the areas of your polygons. To check whether this is the case, and help choose an
 appropriate index resolution you may wish to look at using Mosaic’s analysis tools.</p></li>
 </ul>
-<p>Mosaic provides support for Uber’s H3 spatial indexing library as a core part of the API, but the framework is designed
-to be extensible. If you are considering plugging your own favourite library in to perform</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Details of how to use the analysis function in Scala</p>
+</div>
+<p>Mosaic provides support for Uber’s H3 spatial indexing library as a core part of the API, but we plan to add support for
+other index systems, including S2 and British National Grid in due course.</p>
 
 
 
