@@ -36,6 +36,7 @@ extensions = [
     "sphinx_tabs.tabs",
     "sphinx.ext.githubpages",
     "sphinx.ext.autosectionlabel",
+    "sphinx.ext.todo"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -51,6 +52,7 @@ pygments_style = 'sphinx'
 nbsphinx_execute = 'never'
 napoleon_use_admonition_for_notes = True
 sphinx_tabs_disable_tab_closing = True
+todo_include_todos = True
 
 # -- Options for HTML output -------------------------------------------------
 
