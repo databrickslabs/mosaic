@@ -8,14 +8,14 @@ class MosaicLibraryHandler:
     spark = None
     sc = None
     _jar_path = None
-    _jar_filename = "lib/mosaic-1.0-SNAPSHOT-jar-with-dependencies.jar"
+    _jar_filename = "mosaic-1.0-SNAPSHOT-jar-with-dependencies.jar"
     _auto_attached_enabled = None
 
     def __init__(self, spark):
         self.spark = spark
         self.sc = spark.sparkContext
         self.sc.setLogLevel("info")
-        log4jLogger = self.sc.jvm.org.apache.log4j
+        log4jLogger = self.sc._jvm.org.apache.log4j
         LOGGER = log4jLogger.LogManager.getLogger(__class__.__name__)
 
         if self.auto_attach_enabled:
@@ -47,24 +47,24 @@ class MosaicLibraryHandler:
                 self._jar_path = self.spark.conf.get("spark.databricks.mosaic.jar.path")
                 self._jar_filename = self._jar_path.split("/")[-1]
             except Py4JJavaError as e:
-                self._jar_path = f"/databricks/python/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages/mosaic/{self._jar_filename}"
+                self._jar_path = f"/databricks/python/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages/mosaic/lib/{self._jar_filename}"
         return self._jar_path
 
     def auto_attach(self):
-        JavaURI = getattr(self.sc.jvm.java.net, "URI")
-        JavaJarId = getattr(self.sc.jvm.com.databricks.libraries, "JavaJarId")
+        JavaURI = getattr(self.sc._jvm.java.net, "URI")
+        JavaJarId = getattr(self.sc._jvm.com.databricks.libraries, "JavaJarId")
         ManagedLibraryId = getattr(
-            self.sc.jvm.com.databricks.libraries, "ManagedLibraryId"
+            self.sc._jvm.com.databricks.libraries, "ManagedLibraryId"
         )
         ManagedLibraryVersions = getattr(
-            self.sc.jvm.com.databricks.libraries, "ManagedLibraryVersions"
+            self.sc._jvm.com.databricks.libraries, "ManagedLibraryVersions"
         )
         NoVersion = getattr(ManagedLibraryVersions, "NoVersion$")
         NoVersionModule = getattr(NoVersion, "MODULE$")
         DatabricksILoop = getattr(
-            self.sc.jvm.com.databricks.backend.daemon.driver, "DatabricksILoop"
+            self.sc._jvm.com.databricks.backend.daemon.driver, "DatabricksILoop"
         )
-        converters = self.sc.jvm.scala.collection.JavaConverters
+        converters = self.sc._jvm.scala.collection.JavaConverters
 
         JarURI = JavaURI.create("file:" + self._jar_path)
         lib = JavaJarId(

@@ -10,9 +10,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('./source'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../../../python'))
 
 
 # -- Project information -----------------------------------------------------
@@ -32,8 +32,8 @@ release = 'v0.1-alpha'
 # ones.
 extensions = [
     "sphinx_material",
-    "sphinx.ext.autodoc",
     "nbsphinx",
+    "sphinx_tabs.tabs",
     "sphinx.ext.githubpages",
     "sphinx.ext.autosectionlabel",
 ]
@@ -44,12 +44,13 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', "env"]
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', ".env"]
 source_suffix = [".rst", ".md"]
 
 pygments_style = 'sphinx'
 nbsphinx_execute = 'never'
-
+napoleon_use_admonition_for_notes = True
+sphinx_tabs_disable_tab_closing = True
 
 # -- Options for HTML output -------------------------------------------------
 

@@ -7,15 +7,43 @@ from .library_handler import MosaicLibraryHandler
 from .mosaic_context import MosaicContext
 
 mosaic_context: MosaicContext
+ColumnOrName = Union[Column, str]
 
 
-def enable_mosaic(spark: SparkSession):
+def enable_mosaic(spark: SparkSession) -> None:
+    """
+    Enable Mosaic functions.
+
+    Use this function at the start of your workflow to ensure all of the required dependencies are installed and
+    Mosaic is configured according to your needs.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+            The active SparkSession.
+
+    Returns
+    -------
+
+    Notes
+    -----
+    Users can control various aspects of Mosaic's operation with the following Spark confs:
+
+    - `spark.databricks.mosaic.jar.autoattach`: 'true' (default) or 'false'
+       Automatically attach the Mosaic JAR to the Databricks cluster? (Optional)
+    - `spark.databricks.mosaic.jar.location`
+       Explicitly specify the path to the Mosaic JAR.
+       (Optional and not required at all in a standard Databricks environment).
+    - `spark.databricks.mosaic.geometry.api`: 'OGC' (default) or 'JTS'
+       Explicitly specify the underlying geometry library to use for spatial operations. (Optional)
+    - `spark.databricks.mosaic.index.system`: 'H3' (default)
+       Explicitly specify the index system to use for optimized spatial joins. (Optional)
+
+    """
     global mosaic_context
     handler = MosaicLibraryHandler(spark)
     mosaic_context = MosaicContext(spark)
 
-
-ColumnOrName = Union[Column, str]
 
 #################################
 # Bindings of mosaic functions  #
@@ -30,11 +58,27 @@ def as_json(geom: ColumnOrName) -> Column:
     return mosaic_context.invoke_function("as_json", pyspark_to_java_column(geom))
 
 
-def st_point(x_val: ColumnOrName, y_val: ColumnOrName) -> Column:
+def st_point(x: ColumnOrName, y: ColumnOrName) -> Column:
+    """
+    Create a new Mosaic Point geometry from two DoubleType values.
+
+    Parameters
+    ----------
+    x : Column (DoubleType)
+        `x` co-ordinate of the point
+    y : Column (DoubleType)
+        `y` co-ordinate of the point
+
+    Returns
+    -------
+    Column (InternalGeometryType)
+        A point geometry.
+
+    """
     return mosaic_context.invoke_function(
         "st_point",
-        pyspark_to_java_column(x_val),
-        pyspark_to_java_column(y_val),
+        pyspark_to_java_column(x),
+        pyspark_to_java_column(y),
     )
 
 

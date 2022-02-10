@@ -27,7 +27,7 @@ setup(
     python_requires=">=3.7.0",
     packages=find_packages(exclude=("tests",)),
     install_requires=[],
-    extras_require={"dev": ["mypy", "isort", "flake8", "black", "build"]},
+    extras_require={"dev": ["isort", "black", "build"]},
     # https://stackoverflow.com/questions/28509965/setuptools-development-requirements
     # Install dev requirements with: pip install -e .[dev]
     include_package_data=True,
