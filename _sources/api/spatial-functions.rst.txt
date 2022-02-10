@@ -45,7 +45,7 @@ st_area
     |       550.0|
     +------------+
 
-.. note:: Results of this function are always expressed in the same units as the input geometry.
+.. note:: Results of this function are always expressed in the original units of the input geometry.
 
 st_perimeter
 ************
@@ -91,7 +91,7 @@ st_perimeter
     +-----------------+
 
 
-.. note:: Results of this function are always expressed in the same units as the input geometry.
+.. note:: Results of this function are always expressed in the original units of the input geometry.
 
 .. note:: Alias for :ref:`st_length`.
 
@@ -139,7 +139,7 @@ st_length
     +-----------------+
 
 
-.. note:: Results of this function are always expressed in the same units as the input geometry.
+.. note:: Results of this function are always expressed in the original units of the input geometry.
 
 .. note:: Alias for :ref:`st_perimeter`.
 

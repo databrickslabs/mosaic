@@ -48,7 +48,7 @@ st_distance
     |      15.652475842498529|
     +------------------------+
 
-.. note:: Results of this function are always expressed in the same units as the input geometries.
+.. note:: Results of this function are always expressed in the original units of the input geometries.
 
 
 st_contains
