@@ -6,10 +6,10 @@ import com.databricks.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicMultiLineString extends MosaicGeometry {
 
-  def getBoundaryPoints: Seq[Seq[MosaicPoint]]
+    def getBoundaryPoints: Seq[Seq[MosaicPoint]]
 
-  def getHolePoints: Seq[Seq[Seq[MosaicPoint]]]
+    def getHolePoints: Seq[Seq[Seq[MosaicPoint]]]
 
-  def asSeq: Seq[MosaicLineString]
+    def asSeq: Seq[MosaicLineString]
 
 }
