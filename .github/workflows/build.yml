@@ -27,7 +27,7 @@ jobs:
       run: mvn -q -Druntime=${DBR_VERSION} clean install
     - run: mkdir staging
     - run: cp target/mosaic*.jar staging
-    - run: cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib
+    - run: cp target/mosaic-*-jar-with-dependencies.jar /home/runner/work/mosaic/mosaic/python/mosaic/lib
     - run: (cd python;pip install pyspark==${{ matrix.spark }};pip install -e .[dev])
     - run: (cd python ;python -m unittest)
     - run: (cd python; python -m build)
