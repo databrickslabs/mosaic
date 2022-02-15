@@ -9,3 +9,4 @@ mosaic_context: MosaicContext
 sql_context: SQLContext
 display_handler: DisplayHandler
 ipython_hook: InteractiveShell
+notebook_utils = None

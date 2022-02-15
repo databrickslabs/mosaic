@@ -1,23 +1,16 @@
 import h3
 from IPython.core.magic import Magics, cell_magic, magics_class
 from keplergl import KeplerGl
-from pyspark.sql import functions as F
+from pyspark.sql.functions import lower, conv, col
 
 from mosaic.config import config
 from mosaic.utils.kepler_config import mosaic_kepler_config
-
-try:
-    from PythonShellImpl.PythonShell import displayHTML
-except ImportError:
-
-    def displayHTML(html: str):
-        print(html)
 
 
 @magics_class
 class MosaicKepler(Magics):
     def displayKepler(self, map_instance, height, width):
-        displayHTML(
+        config.notebook_utils.displayHTML(
             map_instance._repr_html_()
             .decode("utf-8")
             .replace(".height||400", f".height||{height}")
@@ -51,7 +44,7 @@ class MosaicKepler(Magics):
         if feature_type == "h3":
             if feature_col_dt[1] == "bigint":
                 data = data.withColumn(
-                    feature_name, F.lower(F.conv(F.col(feature_name), 10, 16))
+                    feature_name, lower(conv(col(feature_name), 10, 16))
                 )
         elif feature_type == "geometry":
             raise Exception(f"Usupported geometry type: {feature_type}.")
@@ -74,5 +67,5 @@ class MosaicKepler(Magics):
 
         logo_html = "<img src='/files/milos_colic/mosaic_logo.png' height='20px'>"
 
-        displayHTML(logo_html)
+        config.notebook_utils.displayHTML(logo_html)
         self.displayKepler(m1, 800, 1200)

@@ -6,9 +6,10 @@ from mosaic.config import config
 from mosaic.core.library_handler import MosaicLibraryHandler
 from mosaic.core.mosaic_context import MosaicContext
 from mosaic.utils.kepler_magic import MosaicKepler
+from mosaic.utils.notebook_utils import NotebookUtils
 
 
-def enable_mosaic(spark: SparkSession) -> None:
+def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     """
     Enable Mosaic functions.
 
@@ -19,6 +20,9 @@ def enable_mosaic(spark: SparkSession) -> None:
     ----------
     spark : pyspark.sql.SparkSession
             The active SparkSession.
+    dbutils : dbruntime.dbutils.DBUtils
+            The dbutils object used for `display` and `displayHTML` functions.
+            Optional, only applicable to Databricks users.
 
     Returns
     -------
@@ -42,6 +46,7 @@ def enable_mosaic(spark: SparkSession) -> None:
     _ = MosaicLibraryHandler(config.mosaic_spark)
     config.mosaic_context = MosaicContext(config.mosaic_spark)
     config.sql_context = SQLContext(spark.sparkContext)
+    config.notebook_utils = dbutils.notebook if dbutils else NotebookUtils
     config.ipython_hook = get_ipython()
     if config.ipython_hook:
         config.ipython_hook.register_magics(MosaicKepler)
