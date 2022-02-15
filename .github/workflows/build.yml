@@ -22,13 +22,13 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python }}
-    - run: pwd
+    - run: ls -R
     - env:
         DBR_VERSION: ${{ matrix.dbr }}
-      run: mvn -q -Druntime=${DBR_VERSION} clean install
+      run: mvn -q -Druntime=${DBR_VERSION} clean install -DskipTests
     - run: mkdir staging
     - run: cp target/mosaic*.jar staging
-    - run: cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib/mosaic-1.0-SNAPSHOT-jar-with-dependencies.jar
+    - run: cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib/
     - run: (cd python; pip install pyspark==${{ matrix.spark }})
     - run: (cd python; pip install -e .[dev])
     - run: (cd python ;python -m unittest)
