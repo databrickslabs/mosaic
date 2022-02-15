@@ -65,7 +65,7 @@ def displayMosaic(
     geometry_column: ColumnOrName = None,
 ):
     if not hasattr(config, "display_handler"):
-    # if not config.display_handler:
+        # if not config.display_handler:
         config.display_handler = DisplayHandler(config.mosaic_spark)
     config.display_handler.display(
         df, chip_column, chip_flag_column, index_column, geometry_column
