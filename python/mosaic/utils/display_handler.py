@@ -23,7 +23,7 @@ class DisplayHandler:
         )
         self.MosaicFrameCompanionObject = getattr(self.MosaicFrameClass, "MODULE$")
         try:
-            import PythonShellImpl.PythonShell
+            from PythonShellImpl import PythonShell
 
             self.in_databricks = True
         except ImportError:
@@ -44,17 +44,18 @@ class DisplayHandler:
         index_column: ColumnOrName,
         geometry_column: ColumnOrName,
     ):
-        mosaic_df = self.MosaicFrameCompanionObject.apply(
+        mosaic_jdf = self.MosaicFrameCompanionObject.apply(
             df._jdf,
             self.make_option(chip_column),
             self.make_option(chip_flag_column),
             self.make_option(index_column),
             self.make_option(geometry_column),
-        )
+        ).prettified()
+        pretty_df = DataFrame(mosaic_jdf, config.sql_context)
         if self.in_databricks:
-            PythonShellImpl.PythonShell.display(mosaic_df.prettified())
+            PythonShell.display(pretty_df)
         else:
-            mosaic_df.prettified().show()
+            pretty_df.show()
 
 
 def displayMosaic(
@@ -65,7 +66,6 @@ def displayMosaic(
     geometry_column: ColumnOrName = None,
 ):
     if not hasattr(config, "display_handler"):
-        # if not config.display_handler:
         config.display_handler = DisplayHandler(config.mosaic_spark)
     config.display_handler.display(
         df, chip_column, chip_flag_column, index_column, geometry_column

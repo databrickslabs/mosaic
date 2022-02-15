@@ -14,24 +14,38 @@ jobs:
         python: [3.8.8, 3.8.10]
         spark: [3.2.1]
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-java@v1
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install JDK
+      uses: actions/setup-java@v1
       with:
         java-version: '8'
-    - uses: actions/setup-python@v2
+    - name: Install python interpreter
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python }}
-    - run: ls -R
-    - run: mvn -q clean install
-    - run: mkdir staging
-    - run: cp target/mosaic*.jar staging
-    - run: mkdir -p python/mosaic/lib
-    - run: cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib/
-    - run: (cd python; pip install pyspark==${{ matrix.spark }})
-    - run: (cd python; pip install -e .[dev])
-    - run: (cd python; python -m unittest)
-    - run: (cd python; python -m build)
-    - run: cp python/dist/*.whl staging
+    - name: Test and build the scala JAR
+      run: mvn -q clean install
+    - name: Copy Scala artifacts to GH Actions run
+      run: |
+        mkdir staging
+        cp target/mosaic*.jar staging
+    - name: Copy Scala artifacts to python package
+      run: |
+        mkdir -p python/mosaic/lib
+        cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib/
+    - name: Install python dependencies
+      run: |
+        cd python
+        pip install pyspark==${{ matrix.spark }}
+        pip install -e .[dev]
+    - name: Test and build python package
+      run: |
+        cd python
+        python -m unittest
+        python -m build
+    - name: Copt python artifacts to GH Actions run
+      run: cp python/dist/*.whl staging
     - uses: actions/upload-artifact@v2
       with:
         name: artefacts
