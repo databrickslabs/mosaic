@@ -13,6 +13,7 @@ jobs:
       matrix:
         dbr: [9.1LTS]
         python: [3.8.8, 3.8.10]
+        spark: [3.2.1]
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-java@v1
@@ -27,7 +28,9 @@ jobs:
     - run: mkdir staging
     - run: cp target/mosaic*.jar staging
     - run: cp target/mosaic-*-jar-with-dependencies.jar python/mosaic
-    - run: (cd python;pip install -e .[dev];python -m build)
+    - run: (cd python;pip install spark==${{ matrix.spark }};pip install -e .[dev])
+    - run: (cd python ;python -m unittest)
+    - run: (cd python; python -m build)
     - run: cp python/dist/*.whl staging
     - uses: actions/upload-artifact@v2
       with:
