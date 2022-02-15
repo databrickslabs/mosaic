@@ -16,11 +16,11 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Install JDK
+    - name: Configure JDK
       uses: actions/setup-java@v1
       with:
         java-version: '8'
-    - name: Install python interpreter
+    - name: Configure python interpreter
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python }}
@@ -44,7 +44,7 @@ jobs:
         cd python
         python -m unittest
         python -m build
-    - name: Copt python artifacts to GH Actions run
+    - name: CopY python artifacts to GH Actions run
       run: cp python/dist/*.whl staging
     - uses: actions/upload-artifact@v2
       with:
