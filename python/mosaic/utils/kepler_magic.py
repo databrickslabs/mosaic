@@ -1,11 +1,10 @@
-import json
-
 import h3
 from IPython.core.magic import Magics, cell_magic, magics_class
 from keplergl import KeplerGl
 from pyspark.sql import functions as F
 
 from mosaic.config import config
+from mosaic.utils.kepler_config import mosaic_kepler_config
 
 try:
     from PythonShellImpl.PythonShell import displayHTML
@@ -13,10 +12,6 @@ except ImportError:
 
     def displayHTML(html: str):
         print(html)
-
-
-with open("mosaic/utils/kepler_config.json", "r") as fh:
-    mosaic_kepler_config = json.load(fh)
 
 
 @magics_class
