@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        dbr: [9.1LTS]
         python: [3.8.8, 3.8.10]
         spark: [3.2.1]
     steps:
@@ -23,9 +22,7 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
     - run: ls -R
-    - env:
-        DBR_VERSION: ${{ matrix.dbr }}
-      run: mvn -q -Druntime=${DBR_VERSION} clean install
+    - run: mvn -q clean install
     - run: mkdir staging
     - run: cp target/mosaic*.jar staging
     - run: mkdir -p python/mosaic/lib
