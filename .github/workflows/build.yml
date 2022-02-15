@@ -22,6 +22,7 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python }}
+    - run: pwd
     - env:
         DBR_VERSION: ${{ matrix.dbr }}
       run: mvn -q -Druntime=${DBR_VERSION} clean install
