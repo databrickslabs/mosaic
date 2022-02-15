@@ -14,5 +14,5 @@ class ChipType()
         StructField("wkb", BinaryType)
       )
     ) {
-    override def typeName: String = "mosaic_chip"
+    override def typeName: String = "struct"
 }

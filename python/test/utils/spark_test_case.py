@@ -1,11 +1,9 @@
-from unittest import TestCase
+import unittest
 
 from pyspark.sql import SparkSession
 
-from .context import functions as F
 
-
-class SparkTestCase(TestCase):
+class SparkTestCase(unittest.TestCase):
 
     spark = None
     library_location = None
@@ -28,10 +26,3 @@ class SparkTestCase(TestCase):
     def tearDownClass(cls) -> None:
         cls.spark.sparkContext.setLogLevel("warn")
         cls.spark.stop()
-
-
-class MosaicTestCase(SparkTestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        F.enable_mosaic(cls.spark)
