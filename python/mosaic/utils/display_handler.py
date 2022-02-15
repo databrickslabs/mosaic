@@ -13,8 +13,17 @@ class DisplayHandler:
     ScalaOptionClass: py4j.java_gateway.JavaClass
     ScalaOptionObject: py4j.java_gateway.JavaObject
     in_databricks: bool
+    display_function = None
 
     def __init__(self, spark: SparkSession):
+        try:
+            from PythonShellImpl import PythonShell
+
+            self.display_function = PythonShell.display
+            self.in_databricks = True
+        except ImportError:
+            self.display_function = self.basic_display
+            self.in_databricks = False
         sc = spark.sparkContext
         self.ScalaOptionClass = getattr(sc._jvm.scala, "Option$")
         self.ScalaOptionObject = getattr(self.ScalaOptionClass, "MODULE$")
@@ -22,12 +31,6 @@ class DisplayHandler:
             sc._jvm.com.databricks.mosaic.sql, "MosaicFrame$"
         )
         self.MosaicFrameCompanionObject = getattr(self.MosaicFrameClass, "MODULE$")
-        try:
-            from PythonShellImpl import PythonShell
-
-            self.in_databricks = True
-        except ImportError:
-            self.in_databricks = False
 
     def make_option(
         self, col_name: ColumnOrName = None
@@ -35,6 +38,10 @@ class DisplayHandler:
         if col_name:
             return self.ScalaOptionObject.apply(pyspark_to_java_column(col_name))
         return self.ScalaOptionObject.apply(None)
+
+    @staticmethod
+    def basic_display(df: DataFrame):
+        df.show()
 
     def display(
         self,
@@ -52,10 +59,7 @@ class DisplayHandler:
             self.make_option(geometry_column),
         ).prettified()
         pretty_df = DataFrame(mosaic_jdf, config.sql_context)
-        if self.in_databricks:
-            PythonShell.display(pretty_df)
-        else:
-            pretty_df.show()
+        self.display_function(pretty_df)
 
 
 def displayMosaic(
