@@ -1,9 +1,10 @@
+from IPython.core.getipython import get_ipython
 from pyspark.sql import SparkSession
 
 from mosaic.config import config
 from mosaic.core.library_handler import MosaicLibraryHandler
 from mosaic.core.mosaic_context import MosaicContext
-from mosaic.utils.display_handler import DisplayHandler
+from mosaic.utils.kepler_magic import MosaicKepler
 
 
 def enable_mosaic(spark: SparkSession) -> None:
@@ -39,3 +40,6 @@ def enable_mosaic(spark: SparkSession) -> None:
     config.mosaic_spark = spark
     _ = MosaicLibraryHandler(config.mosaic_spark)
     config.mosaic_context = MosaicContext(config.mosaic_spark)
+    config.ipython_hook = get_ipython()
+    if config.ipython_hook:
+        config.ipython_hook.register_magics(MosaicKepler)
