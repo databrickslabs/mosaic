@@ -1,6 +1,7 @@
 from IPython.core.getipython import get_ipython
 from pyspark import SQLContext
 from pyspark.sql import SparkSession
+import warnings
 
 from mosaic.config import config
 from mosaic.core.library_handler import MosaicLibraryHandler
@@ -45,7 +46,10 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     config.mosaic_spark = spark
     _ = MosaicLibraryHandler(config.mosaic_spark)
     config.mosaic_context = MosaicContext(config.mosaic_spark)
-    config.sql_context = SQLContext(spark.sparkContext)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=FutureWarning)
+        config.sql_context = SQLContext(spark.sparkContext)
+
     config.notebook_utils = dbutils.notebook if dbutils else NotebookUtils
     config.ipython_hook = get_ipython()
     if config.ipython_hook:
