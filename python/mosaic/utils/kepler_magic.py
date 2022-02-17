@@ -1,9 +1,10 @@
 import h3
 from IPython.core.magic import Magics, cell_magic, magics_class
 from keplergl import KeplerGl
-from pyspark.sql.functions import lower, conv, col
+from pyspark.sql.functions import col, conv, lower
 
 from mosaic.config import config
+from mosaic.resources import mosaic_logo_b64str
 from mosaic.utils.kepler_config import mosaic_kepler_config
 
 
@@ -65,7 +66,9 @@ class MosaicKepler(Magics):
         m1 = KeplerGl(config=mosaic_kepler_config)
         m1.add_data(data=pandasData, name=table_name)
 
-        logo_html = "<img src='/files/milos_colic/mosaic_logo.png' height='20px'>"
+        logo_html = (
+            f"<img src='data:image/png;base64, {mosaic_logo_b64str}' height='20px'>"
+        )
 
         config.notebook_utils.displayHTML(logo_html)
         self.displayKepler(m1, 800, 1200)

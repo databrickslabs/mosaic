@@ -1,2 +1,2 @@
 recursive-include mosaic *.jar
-recursive-include mosaic *.json
+recursive-include mosaic *.png
