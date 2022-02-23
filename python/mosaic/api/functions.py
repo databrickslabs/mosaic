@@ -415,6 +415,12 @@ def point_index(
     )
 
 
+def index_geometry(index_id: ColumnOrName) -> Column:
+    return config.mosaic_context.invoke_function(
+        "index_geometry", pyspark_to_java_column(index_id)
+    )
+
+
 def polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
     Returns the set of grid indices covering the input geometry `geom` at resolution `resolution`.

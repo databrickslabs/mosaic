@@ -45,8 +45,8 @@ class MosaicFrame private(
 
   def indexColumn: Column = _indexColumn.getOrElse(df.col("index"))
 
-  def getResolutionMetrics(lowerLimit: Int = 10, upperLimit: Int = 100, fraction: Double = 0.1): DataFrame =
-    MosaicAnalyzer.getResolutionMetrics(df, geometryColumn.expr.sql, lowerLimit, upperLimit, fraction)
+  def getResolutionMetrics(lowerLimit: Int = 10, upperLimit: Int = 100): DataFrame =
+    MosaicAnalyzer.getResolutionMetrics(df, geometryColumn.expr.sql, lowerLimit, upperLimit)
 
   def df: DataFrame = _df
 
