@@ -31,6 +31,7 @@ class MosaicMultiPointOGC(multiPoint: OGCMultiPoint) extends MosaicGeometryOGC(m
 
     override def flatten: Seq[MosaicGeometry] = asSeq
 
+    override def numPoints: Int = multiPoint.numGeometries()
 }
 
 object MosaicMultiPointOGC extends GeometryReader {
