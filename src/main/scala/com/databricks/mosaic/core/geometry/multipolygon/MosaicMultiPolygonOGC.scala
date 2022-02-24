@@ -45,6 +45,7 @@ class MosaicMultiPolygonOGC(multiPolygon: OGCMultiPolygon) extends MosaicGeometr
     override def asSeq: Seq[MosaicGeometry] =
         for (i <- 0 until multiPolygon.numGeometries()) yield MosaicGeometryOGC(multiPolygon.geometryN(i))
 
+    override def numPoints: Int = getHolePoints.length + getBoundaryPoints.length
 }
 
 object MosaicMultiPolygonOGC extends GeometryReader {

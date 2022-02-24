@@ -58,6 +58,17 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         MosaicGeometryJTS(intersection)
     }
 
+    override def intersects(other: MosaicGeometry): Boolean = {
+        val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
+        this.geom.intersects(otherGeom)
+    }
+
+    override def union(other: MosaicGeometry): MosaicGeometry = {
+        val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
+        val union = this.geom.union(otherGeom)
+        MosaicGeometryJTS(union)
+    }
+
     override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
 
     override def isValid: Boolean = geom.isValid
@@ -101,6 +112,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         result
     }
 
+    override def numPoints: Int = geom.getNumPoints
 }
 
 object MosaicGeometryJTS extends GeometryReader {
@@ -117,7 +129,8 @@ object MosaicGeometryJTS extends GeometryReader {
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometryJTS = MosaicGeometryJTS(new WKBReader().read(wkb))
 
-    def apply(geom: Geometry): MosaicGeometryJTS =
+    def apply(geom: Geometry): MosaicGeometryJTS = {
+        geom.setSRID(4326)
         GeometryTypeEnum.fromString(geom.getGeometryType) match {
             case POINT              => MosaicPointJTS(geom)
             case MULTIPOINT         => MosaicMultiPointJTS(geom)
@@ -140,6 +153,7 @@ object MosaicGeometryJTS extends GeometryReader {
                     case None => MosaicPolygonJTS.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryJTS]
                 }
         }
+    }
 
     override def fromJSON(geoJson: String): MosaicGeometryJTS = MosaicGeometryJTS(new GeoJsonReader().read(geoJson))
 

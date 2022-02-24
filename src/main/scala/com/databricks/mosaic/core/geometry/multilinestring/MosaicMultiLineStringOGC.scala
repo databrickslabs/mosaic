@@ -42,6 +42,9 @@ class MosaicMultiLineStringOGC(multiLineString: OGCMultiLineString) extends Mosa
         for (i <- 0 until multiLineString.numGeometries())
             yield new MosaicLineStringOGC(multiLineString.geometryN(i).asInstanceOf[OGCLineString])
 
+    override def numPoints: Int =
+        (for (i <- 0 until multiLineString.numGeometries()) yield multiLineString.geometryN(i).asInstanceOf[OGCLineString].numPoints()).sum
+
 }
 
 object MosaicMultiLineStringOGC extends GeometryReader {

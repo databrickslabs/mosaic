@@ -236,8 +236,25 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           ST_ConvexHull.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_ConvexHull(exprs(0), geometryAPI.name)
         )
+        registry.registerFunction(
+            FunctionIdentifier("st_numpoints", database),
+            ST_NumPoints.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_NumPoints(exprs(0), geometryAPI.name)
+        )
 
-        /** IndexSystem Specific */
+        /** Aggregators */
+        registry.registerFunction(
+            FunctionIdentifier("st_reduce_intersection", database),
+            MosaicExplode.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) =>
+                ST_ReduceIntersection(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("st_reduce_intersects", database),
+            ST_ReduceIntersects.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) =>
+                ST_ReduceIntersects(exprs(0), exprs(1), geometryAPI.name)
+        )
 
         /** IndexSystem and GeometryAPI Specific methods */
         registry.registerFunction(
@@ -330,6 +347,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_Scale(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
         def st_rotate(geom1: Column, td: Column): Column = ColumnAdapter(ST_Rotate(geom1.expr, td.expr, geometryAPI.name))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))
+        def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
+
+        /** Aggregators */
+        def st_reduce_intersects(leftIndex: Column, rightIndex: Column): Column =
+            ColumnAdapter(ST_ReduceIntersects(leftIndex.expr, rightIndex.expr, geometryAPI.name).toAggregateExpression(isDistinct = false))
+        def st_reduce_intersection(leftIndex: Column, rightIndex: Column): Column =
+            ColumnAdapter(ST_ReduceIntersection(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem.name).toAggregateExpression(isDistinct = false))
 
         /** IndexSystem Specific */
 

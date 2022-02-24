@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.{Input, Output}
-import com.esri.core.geometry.{SpatialReference, Transformation2D}
+import com.esri.core.geometry.{GeometryCursor, Operator, OperatorFactoryLocal, OperatorIntersection, SpatialReference, Transformation2D}
 import com.esri.core.geometry.ogc._
 import org.apache.commons.io.output.ByteArrayOutputStream
 import org.locationtech.jts.io.{WKBReader, WKBWriter}
@@ -62,9 +62,29 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
 
     override def simplify(tolerance: Double): MosaicGeometry = MosaicGeometryOGC(geom.makeSimple())
 
+    private def intersection(another: OGCGeometry): OGCGeometry = {
+        val op: OperatorIntersection =
+            OperatorFactoryLocal.getInstance.getOperator(Operator.Type.Intersection).asInstanceOf[OperatorIntersection]
+        val cursor: GeometryCursor =
+            op.execute(geom.getEsriGeometryCursor, another.getEsriGeometryCursor, geom.getEsriSpatialReference, null, -1)
+        OGCGeometry.createFromEsriCursor(cursor, geom.getEsriSpatialReference, true)
+    }
+
     override def intersection(other: MosaicGeometry): MosaicGeometry = {
         val otherGeom = other.asInstanceOf[MosaicGeometryOGC].getGeom
-        MosaicGeometryOGC(this.getGeom.intersection(otherGeom))
+        MosaicGeometryOGC(intersection(otherGeom))
+    }
+
+    def getGeom: OGCGeometry = geom
+
+    override def intersects(other: MosaicGeometry): Boolean = {
+        val otherGeom = other.asInstanceOf[MosaicGeometryOGC].getGeom
+        this.geom.intersects(otherGeom)
+    }
+
+    override def union(other: MosaicGeometry): MosaicGeometry = {
+        val otherGeom = other.asInstanceOf[MosaicGeometryOGC].getGeom
+        MosaicGeometryOGC(this.getGeom.union(otherGeom))
     }
 
     override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryOGC].getGeom)
@@ -99,8 +119,6 @@ abstract class MosaicGeometryOGC(geom: OGCGeometry) extends MosaicGeometry {
     override def boundary: MosaicGeometry = MosaicGeometryOGC(geom.boundary())
 
     override def distance(geom2: MosaicGeometry): Double = this.getGeom.distance(geom2.asInstanceOf[MosaicGeometryOGC].getGeom)
-
-    def getGeom: OGCGeometry = geom
 
     override def convexHull: MosaicGeometryOGC = MosaicGeometryOGC(geom.convexHull())
 

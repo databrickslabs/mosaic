@@ -39,6 +39,7 @@ class MosaicLineStringOGC(lineString: OGCLineString) extends MosaicGeometryOGC(l
 
     override def flatten: Seq[MosaicGeometry] = List(this)
 
+    override def numPoints: Int = lineString.numPoints()
 }
 
 object MosaicLineStringOGC extends GeometryReader {

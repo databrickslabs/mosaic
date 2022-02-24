@@ -10,7 +10,7 @@ class ChipType()
     extends StructType(
       Array(
         StructField("is_core", BooleanType),
-        StructField("h3", LongType),
+        StructField("index_id", LongType),
         StructField("wkb", BinaryType)
       )
     ) {
