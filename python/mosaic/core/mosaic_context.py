@@ -1,5 +1,6 @@
 from typing import Any
 
+from py4j.java_gateway import JavaClass, JavaObject
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import SparkSession
 from pyspark.sql.column import Column as MosaicColumn
@@ -10,14 +11,17 @@ class MosaicContext:
     _context = None
     _geometry_api: str
     _index_system: str
+    _mosaicContextClass: JavaClass
+    _mosaicPackageRef: JavaClass
+    _mosaicPackageObject: JavaObject
 
     def __init__(self, spark: SparkSession):
         sc = spark.sparkContext
-        MosaicContextClass = getattr(
+        self._mosaicContextClass = getattr(
             sc._jvm.com.databricks.mosaic.functions, "MosaicContext"
         )
-        mosaicPackageRef = getattr(sc._jvm.com.databricks.mosaic, "package$")
-        mosaicPackageObject = getattr(mosaicPackageRef, "MODULE$")
+        self._mosaicPackageRef = getattr(sc._jvm.com.databricks.mosaic, "package$")
+        self._mosaicPackageObject = getattr(self._mosaicPackageRef, "MODULE$")
 
         try:
             self._geometry_api = spark.conf.get("spark.databricks.mosaic.geometry.api")
@@ -29,10 +33,10 @@ class MosaicContext:
         except Py4JJavaError as e:
             self._index_system = "H3"
 
-        IndexSystemClass = getattr(mosaicPackageObject, self._index_system)
-        GeometryAPIClass = getattr(mosaicPackageObject, self._geometry_api)
+        IndexSystemClass = getattr(self._mosaicPackageObject, self._index_system)
+        GeometryAPIClass = getattr(self._mosaicPackageObject, self._geometry_api)
 
-        self._context = MosaicContextClass.build(IndexSystemClass(), GeometryAPIClass())
+        self._context = self._mosaicContextClass.build(IndexSystemClass(), GeometryAPIClass())
 
     def invoke_function(self, name: str, *args: Any) -> MosaicColumn:
         func = getattr(self._context.functions(), name)

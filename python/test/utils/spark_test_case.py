@@ -20,7 +20,7 @@ class SparkTestCase(unittest.TestCase):
         )
         cls.spark.conf.set("spark.databricks.mosaic.jar.autoattach", "false")
         cls.spark.conf.set("spark.databricks.mosaic.jar.path", cls.library_location)
-        cls.spark.sparkContext.setLogLevel("info")
+        cls.spark.sparkContext.setLogLevel("warn")
 
     @classmethod
     def tearDownClass(cls) -> None:

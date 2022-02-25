@@ -17,10 +17,10 @@ case class PointIndexLonLat(lat: Expression, lon: Expression, resolution: Expres
     /** Expression output DataType. */
     override def dataType: DataType = LongType
 
-    override def toString: String = s"h3_point_index($lat, $lon, $resolution)"
+    override def toString: String = s"point_index($lat, $lon, $resolution)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "h3_point_index"
+    override def prettyName: String = "point_index"
 
     /**
       * Computes the H3 index corresponding to the provided lat and long
