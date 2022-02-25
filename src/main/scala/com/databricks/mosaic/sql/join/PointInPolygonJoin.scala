@@ -18,7 +18,7 @@ object PointInPolygonJoin {
         points.df.join(
           polygons.df,
           points.indexColumn === polygons.indexColumn && (
-            polygons.chipFlagColumn || st_contains(col(chipColumnIdentifier), col(pointColumnIdentifier))
+            polygons.chipFlagColumn || st_contains(polygons.chipColumn, points.geometryColumn)
           )
         )
 

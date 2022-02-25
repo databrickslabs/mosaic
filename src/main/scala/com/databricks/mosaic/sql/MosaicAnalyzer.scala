@@ -2,22 +2,25 @@ package com.databricks.mosaic.sql
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
-
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-
 import com.databricks.mosaic.functions.MosaicContext
 
 
-object MosaicAnalyzer {
+trait MosaicAnalyzer {
 
-  private var sampleFraction = 0.01
+  var geometryColumn: Column = _
+  var geometryColumnType: DataType = _
+  var analyzerDataFrame: DataFrame = _
 
-  def getOptimalResolution(df: DataFrame, columnName: String): Int = {
-    val ss = SparkSession.builder().getOrCreate()
-    import ss.implicits._
-    val metrics = getResolutionMetrics(df, columnName, 1, 100)
+  var analyzerSampleFraction = 0.01
+
+  val ss: SparkSession = SparkSession.builder().getOrCreate()
+  import ss.implicits._
+
+  def getOptimalResolution: Int = {
+    val metrics = getResolutionMetrics(1, 100)
       .select("resolution", "percentile_50_geometry_area")
       .as[(Int, Double)]
       .collect()
@@ -27,8 +30,6 @@ object MosaicAnalyzer {
   }
 
   def getResolutionMetrics(
-                            df: DataFrame,
-                            columnName: String,
                             lowerLimit: Int = 5,
                             upperLimit: Int = 500
                           ): DataFrame = {
@@ -37,9 +38,9 @@ object MosaicAnalyzer {
 
     def areaPercentile(p: Double): Column = percentile_approx(col("area"), lit(p), lit(10000))
 
-    val percentiles = df
-      .sample(sampleFraction)
-      .withColumn("area", st_area(col(columnName)))
+    val percentiles = analyzerDataFrame
+      .sample(analyzerSampleFraction)
+      .withColumn("area", st_area(geometryColumn))
       .select(
         mean("area").alias("mean"),
         areaPercentile(0.25).alias("p25"),
@@ -51,13 +52,13 @@ object MosaicAnalyzer {
 
     val minResolution = mosaicContext.getIndexSystem.minResolution
     val maxResolution = mosaicContext.getIndexSystem.maxResolution
-    val meanIndexAreas = for (i <- minResolution until maxResolution) yield (i, getMeanIndexArea(df, columnName, i))
+    val meanIndexAreas = for (i <- minResolution until maxResolution) yield (i, getMeanIndexArea(i))
 
     if (percentiles.anyNull) {
-      throw SQLExceptions.NotEnoughGeometriesException
+      throw MosaicSQLExceptions.NotEnoughGeometriesException
     }
-    val data = meanIndexAreas.map { case (resolution, indexArea) =>
-      Row(
+    meanIndexAreas.map { case (resolution, indexArea) =>
+      List(
         resolution,
         indexArea,
         percentiles.getDouble(0) / indexArea,
@@ -65,25 +66,7 @@ object MosaicAnalyzer {
         percentiles.getDouble(2) / indexArea,
         percentiles.getDouble(3) / indexArea
       )
-    }.asJava
-
-    val spark = SparkSession.builder().getOrCreate()
-    val schema = StructType(
-      Seq(
-        StructField("resolution", IntegerType),
-        StructField("mean_index_area", DoubleType),
-        StructField("mean_geometry_area", DoubleType),
-        StructField("percentile_25_geometry_area", DoubleType),
-        StructField("percentile_50_geometry_area", DoubleType),
-        StructField("percentile_75_geometry_area", DoubleType)
-      )
-    )
-
-    spark
-      .createDataFrame(
-        data,
-        schema = schema
-      )
+    }.toDF("resolution", "mean_index_area", "mean_geometry_area", "percentile_25_geometry_area", "percentile_50_geometry_area", "percentile_75_geometry_area")
       .where(
         s"""
            |($lowerLimit < mean_geometry_area and mean_geometry_area < $upperLimit) or
@@ -94,27 +77,21 @@ object MosaicAnalyzer {
       )
   }
 
-  private def getMeanIndexArea(df: DataFrame, columnName: String, resolution: Int): Double = {
-    val ss = df.sparkSession
-    import ss.implicits._
+  private def getMeanIndexArea(resolution: Int): Double = {
     val mosaicContext = MosaicContext.context
     import mosaicContext.functions._
 
-    val meanIndexAreaDf = df
-      .sample(sampleFraction)
-      .withColumn("centroid", st_centroid2D(col(columnName)))
+    val meanIndexAreaDf = analyzerDataFrame
+      .sample(analyzerSampleFraction)
+      .withColumn("centroid", st_centroid2D(geometryColumn))
       .select(
         mean(st_area(index_geometry(point_index($"centroid.x", $"centroid.x", lit(resolution)))))
       )
 
     Try(meanIndexAreaDf.as[Double].collect.head) match {
       case Success(result) => result
-      case Failure(_) => throw SQLExceptions.NotEnoughGeometriesException
+      case Failure(_) => throw MosaicSQLExceptions.NotEnoughGeometriesException
     }
   }
-
-  def getSampleFraction: Double = sampleFraction
-
-  def setSampleFraction(fraction: Double): Unit = sampleFraction = fraction
 
 }
