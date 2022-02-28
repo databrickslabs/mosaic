@@ -1,21 +1,12 @@
 package com.databricks.mosaic.expressions.geometry
 
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, TernaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
 
 import com.databricks.mosaic.codegen.geometry.GeometryTransformationsCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
-@ExpressionDescription(
-  usage = "_FUNC_(expr1, xd, yd) - Returns a new geometry translated by xd over x axis and yd over y axis.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a, xd, yd);
-       POLYGON ((...))
-               """,
-  since = "1.0"
-)
 case class ST_Translate(inputGeom: Expression, xd: Expression, yd: Expression, geometryAPIName: String)
     extends TernaryExpression
       with NullIntolerant {
@@ -25,8 +16,6 @@ case class ST_Translate(inputGeom: Expression, xd: Expression, yd: Expression, g
       * [[org.locationtech.jts.geom.Geometry]] instance extracted from inputGeom
       * expression.
       */
-
-    override def children: Seq[Expression] = Seq(inputGeom, xd, yd)
 
     // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
@@ -47,6 +36,12 @@ case class ST_Translate(inputGeom: Expression, xd: Expression, yd: Expression, g
         res.copyTagsFrom(this)
         res
     }
+
+    override def first: Expression = inputGeom
+
+    override def second: Expression = xd
+
+    override def third: Expression = yd
 
     override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
         nullSafeCodeGen(
@@ -73,6 +68,35 @@ case class ST_Translate(inputGeom: Expression, xd: Expression, yd: Expression, g
 
               }
           }
+        )
+
+    override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
+        copy(inputGeom = newFirst, xd = newSecond, yd = newThird)
+
+}
+
+object ST_Translate {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[ST_Translate].getCanonicalName,
+          db.orNull,
+          name,
+          """
+            |    _FUNC_(expr1, xd, yd) - Returns a new geometry translated by xd over x axis and yd over y axis.
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a, xd, yd);
+            |        POLYGON ((...))
+            |  """.stripMargin,
+          "",
+          "misc_funcs",
+          "1.0",
+          "",
+          "built-in"
         )
 
 }

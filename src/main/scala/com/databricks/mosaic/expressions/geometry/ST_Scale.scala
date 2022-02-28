@@ -1,23 +1,12 @@
 package com.databricks.mosaic.expressions.geometry
 
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, TernaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
 
-import com.databricks.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.mosaic.codegen.geometry.GeometryTransformationsCodeGen
-import com.databricks.mosaic.core.geometry.{MosaicGeometryJTS, MosaicGeometryOGC}
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
-@ExpressionDescription(
-  usage = "_FUNC_(expr1, xd, yd) - Returns a new geometry scaled using xd for x axis and yd for y axis.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a, xd, yd);
-       POLYGON ((...))
-  """,
-  since = "1.0"
-)
 case class ST_Scale(inputGeom: Expression, xd: Expression, yd: Expression, geometryAPIName: String)
     extends TernaryExpression
       with NullIntolerant {
@@ -27,8 +16,6 @@ case class ST_Scale(inputGeom: Expression, xd: Expression, yd: Expression, geome
       * [[org.locationtech.jts.geom.Geometry]] instance extracted from inputGeom
       * expression.
       */
-
-    override def children: Seq[Expression] = Seq(inputGeom, xd, yd)
 
     // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
@@ -50,13 +37,20 @@ case class ST_Scale(inputGeom: Expression, xd: Expression, yd: Expression, geome
         res
     }
 
+    override def first: Expression = inputGeom
+
+    override def second: Expression = xd
+
+    override def third: Expression = yd
+
     override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
         nullSafeCodeGen(
           ctx,
           ev,
           (firstEval, secondEval, thirdEval) => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val (code, result) = GeometryTransformationsCodeGen.scale(ctx, firstEval, secondEval, thirdEval, inputGeom.dataType, geometryAPI)
+              val (code, result) =
+                  GeometryTransformationsCodeGen.scale(ctx, firstEval, secondEval, thirdEval, inputGeom.dataType, geometryAPI)
 
               geometryAPIName match {
                   case "OGC" => s"""
@@ -74,6 +68,35 @@ case class ST_Scale(inputGeom: Expression, xd: Expression, yd: Expression, geome
 
               }
           }
+        )
+
+    override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
+        copy(inputGeom = newFirst, xd = newSecond, yd = newThird)
+
+}
+
+object ST_Scale {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[ST_Scale].getCanonicalName,
+          db.orNull,
+          name,
+          """
+            |    _FUNC_(expr1, xd, yd) - Returns a new geometry scaled using xd for x axis and yd for y axis.
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a, xd, yd);
+            |        POLYGON ((...))
+            |  """.stripMargin,
+          "",
+          "misc_funcs",
+          "1.0",
+          "",
+          "built-in"
         )
 
 }

@@ -26,8 +26,8 @@ setup(
     long_description_content_type="text/markdown",
     python_requires=">=3.7.0",
     packages=find_packages(exclude=("tests",)),
-    install_requires=["pyspark>=3.1.1"],
-    extras_require={"dev": ["mypy", "isort", "flake8", "black", "build"]},
+    install_requires=["keplergl==0.3.2", " h3==3.7.3"],
+    extras_require={"dev": ["isort", "black", "build"]},
     # https://stackoverflow.com/questions/28509965/setuptools-development-requirements
     # Install dev requirements with: pip install -e .[dev]
     include_package_data=True,

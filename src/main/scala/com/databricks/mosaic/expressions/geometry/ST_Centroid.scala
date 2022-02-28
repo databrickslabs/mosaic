@@ -1,12 +1,11 @@
 package com.databricks.mosaic.expressions.geometry
 
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
 
 import com.databricks.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.mosaic.codegen.geometry
 import com.databricks.mosaic.codegen.geometry.CentroidCodeGen
 import com.databricks.mosaic.core.geometry.api.GeometryAPI
 
@@ -58,25 +57,51 @@ case class ST_Centroid(inputGeom: Expression, geometryAPIName: String, nDim: Int
               val (centroidCode, centroidRow) = CentroidCodeGen(geometryAPI).centroid(ctx, geomInRef, geometryAPI, nDim)
 
               geometryAPIName match {
-                  case "OGC" =>
-                      s"""
-                         |$inCode
-                         |$centroidCode
-                         |${ev.value} = $centroidRow;
-                         |""".stripMargin
-                  case "JTS" =>
-                      s"""
-                         |try {
-                         |$inCode
-                         |$centroidCode
-                         |${ev.value} = $centroidRow;
-                         |} catch (Exception e) {
-                         | throw e;
-                         |}
-                         |""".stripMargin
+                  case "OGC" => s"""
+                                   |$inCode
+                                   |$centroidCode
+                                   |${ev.value} = $centroidRow;
+                                   |""".stripMargin
+                  case "JTS" => s"""
+                                   |try {
+                                   |$inCode
+                                   |$centroidCode
+                                   |${ev.value} = $centroidRow;
+                                   |} catch (Exception e) {
+                                   | throw e;
+                                   |}
+                                   |""".stripMargin
 
               }
           }
+        )
+
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputGeom = newChild)
+
+}
+
+object ST_Centroid {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[ST_Centroid].getCanonicalName,
+          db.orNull,
+          name,
+          """
+            |    _FUNC_(expr1) - Returns the centroid of the geometry.
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a);
+            |        (15.2512, 12.12)
+            |  """.stripMargin,
+          "",
+          "misc_funcs",
+          "1.0",
+          "",
+          "built-in"
         )
 
 }

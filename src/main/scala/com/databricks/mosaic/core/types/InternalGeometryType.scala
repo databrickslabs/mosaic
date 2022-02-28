@@ -16,5 +16,5 @@ class InternalGeometryType
         StructField("holes", HolesType)
       )
     ) {
-    override def typeName: String = "internal_geometry"
+    override def typeName: String = "struct"
 }

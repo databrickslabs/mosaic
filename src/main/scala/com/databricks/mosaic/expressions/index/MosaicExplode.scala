@@ -6,7 +6,7 @@ import org.locationtech.jts.geom.Geometry
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionDescription, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
@@ -15,20 +15,6 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.IndexSystemID
 import com.databricks.mosaic.core.types._
 
-@ExpressionDescription(
-  usage = "_FUNC_(struct(geometry, resolution)) - Generates the h3 mosaic chips for the input geometry" +
-      "at a given resolution. Geometry and resolution are provided via struct wrapper to ensure UnaryExpression" +
-      "API is respected.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a, b);
-        {index_id, is_border, chip_geom}
-        {index_id, is_border, chip_geom}
-        ...
-        {index_id, is_border, chip_geom}
-  """,
-  since = "1.0"
-)
 case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIName: String)
     extends UnaryExpression
       with CollectionGenerator
@@ -51,6 +37,8 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
     override def child: Expression = pair
 
     override def position: Boolean = false
+
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(pair = newChild)
 
 }
 
@@ -147,5 +135,32 @@ object MosaicExplode {
         res.copyTagsFrom(instance)
         res
     }
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[IndexGeometry].getCanonicalName,
+          db.orNull,
+          "mosaic_explode",
+          """
+            |    _FUNC_(struct(geometry, resolution)) - Generates the h3 mosaic chips for the input geometry
+            |    at a given resolution. Geometry and resolution are provided via struct wrapper to ensure 
+            |    UnaryExpression API is respected.
+            """.stripMargin,
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a, b);
+            |        {index_id, is_border, chip_geom}
+            |        {index_id, is_border, chip_geom}
+            |        ...
+            |        {index_id, is_border, chip_geom}
+            |  """.stripMargin,
+          "",
+          "generator_funcs",
+          "1.0",
+          "",
+          "built-in"
+        )
 
 }

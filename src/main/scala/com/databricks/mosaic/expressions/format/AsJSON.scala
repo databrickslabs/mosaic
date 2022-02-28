@@ -2,22 +2,13 @@ package com.databricks.mosaic.expressions.format
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{DataType, StringType}
 
 import com.databricks.mosaic.codegen.format.InternalTypeWrapper
 import com.databricks.mosaic.core.types.JSONType
 
-@ExpressionDescription(
-  usage = "_FUNC_(expr1) - Returns the GeoJSON string representation wrapped into a struct for a type matching purposes.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a);
-       {"{"type":"Polygon","coordinates":[[[30,10]...]]}"}
-  """,
-  since = "1.0"
-)
 case class AsJSON(inGeometry: Expression) extends UnaryExpression with NullIntolerant {
 
     /**
@@ -68,4 +59,29 @@ case class AsJSON(inGeometry: Expression) extends UnaryExpression with NullIntol
     override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
         InternalTypeWrapper.doGenCode(ctx, ev, this.nullSafeCodeGen)
 
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inGeometry = newChild)
+
+}
+
+object AsJSON {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[AsJSON].getCanonicalName,
+          db.orNull,
+          "as_json",
+          "_FUNC_(col1) - Wraps the column in a fixed struct for type inference.",
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a);
+            |       {"{"type":"Polygon","coordinates":[[[30,10]...]]}"}
+            |  """.stripMargin,
+          "",
+          "struct_funcs",
+          "1.0",
+          "",
+          "built-in"
+        )
 }
