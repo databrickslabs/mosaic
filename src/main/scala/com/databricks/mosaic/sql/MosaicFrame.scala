@@ -1,7 +1,6 @@
 package com.databricks.mosaic.sql
 
 import com.databricks.mosaic.core.geometry.MosaicGeometry
-import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import org.apache.spark.sql._
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.mosaic.functions.MosaicContext
@@ -25,10 +24,6 @@ class MosaicFrame private (var df: DataFrame, geometryColumnName: String, geomet
       GeometryTypeEnum.fromString(geometryTypeString)
   }
   analyzerDataFrame = df
-
-//  val chipColumn: StructField = StructField("chip_wkb", BinaryType, nullable = true, new MetadataBuilder().putString("geo_encoding", "wkb").build())
-//  val chipFlagColumn: StructField = StructField("is_core", BooleanType, nullable = false)
-//  val indexColumn: StructField = StructField("mosaic_index", LongType, nullable = false)
 
   private val chipColumnName = "chip_geometry"
   def chipColumn: Column = df.col(chipColumnName)
