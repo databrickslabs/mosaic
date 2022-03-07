@@ -23,6 +23,10 @@ class TestMosaicFrame extends AnyFlatSpec with MosaicFrameBehaviors with SparkSu
         it should behave like testIndexPolygons(MosaicContext.build(H3IndexSystem, OGC), spark)
         it should behave like testIndexPolygons(MosaicContext.build(H3IndexSystem, JTS), spark)
       }
+    "MosaicFrame" should "suggest an appropriate resolution to index a set of polygon geometries" in {
+        it should behave like testGetOptimalResolution(MosaicContext.build(H3IndexSystem, OGC), spark)
+        it should behave like testGetOptimalResolution(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
     "MosaicFrame" should "join point and polygon typed MosaicFrames" in {
         it should behave like testPointInPolyJoin(MosaicContext.build(H3IndexSystem, OGC), spark)
         it should behave like testPointInPolyJoin(MosaicContext.build(H3IndexSystem, JTS), spark)
