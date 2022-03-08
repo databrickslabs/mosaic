@@ -3,12 +3,11 @@ package com.databricks.mosaic.sql
 import java.util.concurrent.atomic.AtomicLong
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{Column, DataFrame, SparkSession}
+import org.apache.spark.sql.{Column, DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.adapters.MosaicDataset
 import org.apache.spark.sql.types._
 
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum
-import com.databricks.mosaic.core.types.model.GeometryTypeEnum.polygonGeometries
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.sql.MosaicFrame._
 import com.databricks.mosaic.sql.join.PointInPolygonJoin
@@ -315,7 +314,7 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
     protected def defaultColName(role: String, geomGroup: GeometryTypeEnum.Value): String =
         role match {
             case ColRoles.INDEX     =>
-                if (polygonGeometries.contains(geomGroup)) DefaultColNames.defaultFillIndexColumnName
+                if (GeometryTypeEnum.polygonGeometries.contains(geomGroup)) DefaultColNames.defaultFillIndexColumnName
                 else DefaultColNames.defaultPointIndexColumnName
             case ColRoles.CHIP      => DefaultColNames.defaultChipColumnName
             case ColRoles.CHIP_FLAG => DefaultColNames.defaultChipFlagColumnName
@@ -332,7 +331,7 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
     }
 
     private def addMosaicColumnMetadata(indexId: Long): MosaicFrame = {
-        val focalGeometryId = getFocalGeometryField.get.metadata.getLong("GeometryId")
+        val focalGeometryId = getFocalGeometryField.get.metadata.getLong(ColMetaTags.GEOMETRY_ID)
         val indexColumnName = auxiliaryColumnNameGen(ColRoles.INDEX, getGeometryType, focalGeometryId, indexId)
         val indexColumnMetadata = new MetadataBuilder()
             .putString(ColMetaTags.ROLE, ColRoles.INDEX)
@@ -367,6 +366,8 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
         }
 
     }
+
+    override def alias(alias: String): MosaicFrame = MosaicFrame(super.alias(alias))
 
 }
 
