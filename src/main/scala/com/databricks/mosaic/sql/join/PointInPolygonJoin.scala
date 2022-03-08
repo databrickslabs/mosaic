@@ -8,6 +8,7 @@ object PointInPolygonJoin {
     def join(points: MosaicFrame, polygons: MosaicFrame): MosaicFrame = {
         val mosaicContext = MosaicContext.context
         import mosaicContext.functions._
+
         val (pointsProjected, polygonsProjected) =
             if (points.columns.diff(polygons.columns).isEmpty) {
                 (points, polygons)
@@ -17,19 +18,14 @@ object PointInPolygonJoin {
 
         val joinedDf = pointsProjected.join(
           polygonsProjected,
-          pointsProjected.indexColumn === polygonsProjected.indexColumn && (polygonsProjected.chipFlagColumn || st_contains(
-            polygonsProjected.chipColumn,
-            pointsProjected.geometryColumn
+          pointsProjected.getPointIndexColumn() === polygonsProjected.getFillIndexColumn() &&
+          (polygonsProjected.getChipFlagColumn() || st_contains(
+            polygonsProjected.getChipColumn(),
+            pointsProjected.getGeometryColumn
           ))
         )
 
-        new MosaicFrame(
-          joinedDf,
-          pointsProjected.getGeometryColumnName,
-          Some(pointsProjected.getGeometryType),
-          pointsProjected.isIndexed,
-          Some(pointsProjected.getIndexResolution)
-        )
+        new MosaicFrame(joinedDf)
 
     }
 }

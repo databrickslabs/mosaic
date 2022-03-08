@@ -7,8 +7,8 @@ import org.scalatest.matchers.should.Matchers._
 import com.databricks.mosaic.mocks.getWKTRowsDf
 import org.apache.spark.sql.functions.to_json
 
-
 trait MosaicFrameBehaviors { this: AnyFlatSpec =>
+
     def testConstructFromPoints(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
         val sc = spark
@@ -61,8 +61,7 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         import mc.functions._
 
-        val polyDf =
-            spark.read
+        val polyDf = spark.read
             .json("src/test/resources/NYC_Taxi_Zones.geojson")
             .withColumn("geometry", st_geomfromgeojson(to_json($"geometry")))
         val polyMdf = MosaicFrame(polyDf, "geometry")
@@ -76,22 +75,25 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         import mc.functions._
 
-        val pointDf =
-            spark.read
-                .options(Map(
-                    "header" -> "true",
-                    "inferSchema" -> "true"
-                ))
-                .csv("src/test/resources/nyctaxi_yellow_trips.csv")
-                .withColumn("geometry", st_point($"pickup_longitude", $"pickup_latitude"))
+        val pointDf = spark.read
+            .options(
+              Map(
+                "header" -> "true",
+                "inferSchema" -> "true"
+              )
+            )
+            .csv("src/test/resources/nyctaxi_yellow_trips.csv")
+            .withColumn("geometry", st_point($"pickup_longitude", $"pickup_latitude"))
 
-        val polyDf =
-            spark.read
-                .json("src/test/resources/NYC_Taxi_Zones.geojson")
-                .withColumn("geometry", st_geomfromgeojson(to_json($"geometry")))
-        val pointMdf = MosaicFrame(pointDf, "geometry").setIndexResolution(9).applyIndex()
+        val polyDf = spark.read
+            .json("src/test/resources/NYC_Taxi_Zones.geojson")
+            .withColumn("geometry", st_geomfromgeojson(to_json($"geometry")))
+        val pointMdf = MosaicFrame(pointDf, "geometry")
+            .setIndexResolution(9)
+            .applyIndex()
         val polyMdf = MosaicFrame(polyDf, "geometry").setIndexResolution(9).applyIndex()
         val resultMdf = pointMdf.join(polyMdf)
         resultMdf.show()
     }
+
 }

@@ -14,6 +14,13 @@ object GeometryTypeEnum extends Enumeration {
     val LINEARRING: GeometryTypeEnum.Value = Value(7, "LINEARRING")
     val GEOMETRYCOLLECTION: GeometryTypeEnum.Value = Value(8, "GEOMETRYCOLLECTION")
 
+    val pointGeometries = List(this.POINT, this.MULTIPOINT)
+    val linestringGeometries = List(this.LINESTRING, this.MULTILINESTRING)
+    val polygonGeometries = List(this.POLYGON, this.MULTIPOLYGON)
+
+    val singleGeometries = List(this.POINT, this.LINESTRING, this.POLYGON)
+    val multipleGeometries = List(this.MULTIPOINT, this.MULTILINESTRING, this.MULTIPOLYGON)
+
     def fromString(value: String): GeometryTypeEnum.Value =
         GeometryTypeEnum.values
             .find(_.toString == value.toUpperCase(Locale.ROOT))
@@ -28,5 +35,18 @@ object GeometryTypeEnum extends Enumeration {
         GeometryTypeEnum.values
             .find(_.id == id)
             .getOrElse(throw new IllegalArgumentException(s"Invalid value for geometry type id: $id."))
+
+    def groupOf(enumerator: GeometryTypeEnum.Value): GeometryTypeEnum.Value =
+        enumerator match {
+            case g if pointGeometries.contains(g)      => this.POINT
+            case g if linestringGeometries.contains(g) => this.LINESTRING
+            case g if polygonGeometries.contains(g)    => this.POLYGON
+        }
+
+    def isFlat(enumerator: GeometryTypeEnum.Value): Boolean =
+        enumerator match {
+            case g if singleGeometries.contains(g)   => true
+            case g if multipleGeometries.contains(g) => false
+        }
 
 }
