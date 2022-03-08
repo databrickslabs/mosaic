@@ -1,25 +1,38 @@
-from functools import reduce
-
 from pyspark.sql import DataFrame
 
 from mosaic import MosaicFrame
-from mosaic.core.mosaic_frame import MosaicJoinType
 from test.utils import MosaicTestCase
 
 
 class TestMosaicFrame(MosaicTestCase):
-    def test_join_types(self):
-        self.assertEqual(MosaicJoinType().point_in_polygon.toString(), "PointInPolygon")
-        self.assertEqual(MosaicJoinType().polygon_intersection.toString(), "PolygonIntersection")
+    point_df: DataFrame
+    poly_df: DataFrame
+    point_mdf: MosaicFrame
+    poly_mdf: MosaicFrame
 
-    def test_get_resolution_metrics(self):
-        def union_df(left: DataFrame, right: DataFrame) -> DataFrame:
-            return left.unionAll(right)
-        df = reduce(union_df, [self.generate_input_polygon_collection() for i in range(10)])
-        print(df.count())
-        mdf = MosaicFrame(df, "geometry")
-        result = mdf.get_resolution_metrics().collect()
-        self.assertEqual(result, 10)
+    def setUp(self) -> None:
+        self.point_df = self.generate_input_point_collection()
+        self.poly_df = self.generate_input_polygon_collection()
+        self.point_mdf = MosaicFrame(self.point_df, "geometry")
+        self.poly_mdf = MosaicFrame(self.poly_df, "geometry")
+
+    def test_count_rows(self):
+        self.assertEqual(self.point_mdf.count(), 100_000)
+        self.assertEqual(self.poly_mdf.count(), 263)
+
+    def test_analyzer(self):
+        self.assertEqual(self.poly_mdf.get_optimal_resolution(200), 9)
 
     def test_join(self):
-        self.fail()
+        joined_df = (
+            self.point_mdf
+                .set_index_resolution(9)
+                .apply_index()
+                .join(
+                self.poly_mdf
+                    .set_index_resolution(9)
+                    .apply_index()
+            )
+        )
+        self.assertEqual(joined_df.count(), 100_000)
+        self.assertEqual(len(joined_df.columns), 19)

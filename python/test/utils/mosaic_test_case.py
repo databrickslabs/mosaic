@@ -1,5 +1,5 @@
 from test.context import api
-from mosaic import st_geomfromgeojson
+from mosaic import st_geomfromgeojson, st_point
 
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import to_json, col
@@ -26,6 +26,13 @@ class MosaicTestCase(SparkTestCase):
             .withColumn("geometry", st_geomfromgeojson(to_json(col("geometry"))))
             .select("properties.*", "geometry")
             .drop("shape_area", "shape_leng")
+        )
+
+    def generate_input_point_collection(self) -> DataFrame:
+        return (
+            self.spark.read
+            .csv("test/data/nyctaxi_yellow_trips.csv", inferSchema=True, header=True)
+            .withColumn("geometry", st_point(col("pickup_longitude"), col("pickup_latitude")))
         )
         # wkt_rows_boroughs = [
         #     (
