@@ -33,15 +33,21 @@ class TestMosaicFrame extends AnyFlatSpec with MosaicFrameBehaviors with SparkSu
         it should behave like testGetOptimalResolution(MosaicContext.build(H3IndexSystem, OGC), spark)
         it should behave like testGetOptimalResolution(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
-
     "MosaicFrame" should "allow users to generate indexes at a number of different resolutions" in {
         it should behave like testMultiplePointIndexResolutions(MosaicContext.build(H3IndexSystem, OGC), spark)
         it should behave like testMultiplePointIndexResolutions(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
-
     "MosaicFrame" should "join point and polygon typed MosaicFrames" in {
         it should behave like testPointInPolyJoin(MosaicContext.build(H3IndexSystem, OGC), spark)
         it should behave like testPointInPolyJoin(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+    "MosaicFrame" should "join point and polygon typed MosaicFrames when the polygons are exploded" in {
+        it should behave like testPointInPolyJoinExploded(MosaicContext.build(H3IndexSystem, OGC), spark)
+        it should behave like testPointInPolyJoinExploded(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+    "MosaicFrame" should "join point and polygon typed MosaicFrames when the points are incorrectly indexed" in {
+        it should behave like testPoorlyConfiguredPointInPolyJoins(MosaicContext.build(H3IndexSystem, OGC), spark)
+        it should behave like testPoorlyConfiguredPointInPolyJoins(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
 }

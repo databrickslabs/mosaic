@@ -63,15 +63,37 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
                 d.setIndexResolution(i).applyIndex(dropExistingIndexes = false)
             })
 
-        val indexDf = indexedMdf.listIndexes
-        indexDf.count() shouldBe resolutions.length
+        val indexList = indexedMdf.listIndexes
+        indexList.length shouldBe resolutions.length
     }
 
     def testPointInPolyJoin(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val sc = spark
         val mc = mosaicContext
-        import sc.implicits._
         import mc.functions.st_contains
+        import sc.implicits._
+
+        val limitedPoints = pointDf.limit(100)
+        val pointMdf = MosaicFrame(limitedPoints, "geometry")
+            .setIndexResolution(9)
+            .applyIndex()
+        val polyMdf = MosaicFrame(polyDf, "geometry")
+            .setIndexResolution(9)
+            .applyIndex(explodePolyFillIndexes = false)
+
+        val resultMdf = pointMdf.join(polyMdf)
+
+        val expectedRowCount =
+            limitedPoints.alias("points").join(polyDf.alias("polygon"), st_contains($"polygon.geometry", $"points.geometry")).count()
+
+        resultMdf.count() shouldBe expectedRowCount
+    }
+
+    def testPointInPolyJoinExploded(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val sc = spark
+        val mc = mosaicContext
+        import mc.functions.st_contains
+        import sc.implicits._
 
         val limitedPoints = pointDf.limit(100)
         val pointMdf = MosaicFrame(limitedPoints, "geometry")
@@ -87,6 +109,31 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
             limitedPoints.alias("points").join(polyDf.alias("polygon"), st_contains($"polygon.geometry", $"points.geometry")).count()
 
         resultMdf.count() shouldBe expectedRowCount
+    }
+
+    def testPoorlyConfiguredPointInPolyJoins(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val sc = spark
+        val mc = mosaicContext
+        import mc.functions.st_contains
+        import sc.implicits._
+
+        val limitedPoints = pointDf.limit(100)
+        val pointMdf_1 = MosaicFrame(limitedPoints, "geometry")
+            .setIndexResolution(8)
+            .applyIndex()
+        val pointMdf_2 = MosaicFrame(limitedPoints, "geometry")
+        val polyMdf = MosaicFrame(polyDf, "geometry")
+            .setIndexResolution(9)
+            .applyIndex()
+
+        val resultMdf_1 = pointMdf_1.join(polyMdf)
+        val resultMdf_2 = pointMdf_2.join(polyMdf)
+
+        val expectedRowCount =
+            limitedPoints.alias("points").join(polyDf.alias("polygon"), st_contains($"polygon.geometry", $"points.geometry")).count()
+
+        resultMdf_1.count() shouldBe expectedRowCount
+        resultMdf_2.count() shouldBe expectedRowCount
     }
 
 }

@@ -22,6 +22,12 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
     val spark: SparkSession = sparkDataFrame.sparkSession
     import spark.implicits._
 
+    def listGeometryColumns: List[Column] =
+        this.schema.fields
+            .filter(f => fieldFilter(f, Map(ColMetaTags.ROLE -> ColRoles.GEOMETRY)))
+            .map(f => col(f.name))
+            .toList
+
     def setGeometryColumn(geometryColumnName: String): MosaicFrame = {
         val geometryColumn = this.col(geometryColumnName)
         val geometryColumnEncoding = geometryColumnEncodings(geometryColumn.expr.dataType)
@@ -71,6 +77,20 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
         }
     }
 
+    protected def inferGeometryType(geometryColumnName: String): GeometryTypeEnum.Value = {
+        val geomColGeometryType = where(col(geometryColumnName).isNotNull)
+            .limit(1)
+            .select(st_geometrytype(col(geometryColumnName)))
+            .as[String]
+            .collect
+            .head
+        GeometryTypeEnum.fromString(geomColGeometryType)
+    }
+
+    override def where(condition: Column): MosaicFrame = MosaicFrame(super.where(condition))
+
+    override def limit(n: Int): MosaicFrame = MosaicFrame(super.limit(n))
+
     def getPointIndexColumn(indexId: Option[Long] = None): Column = this.col(getPointIndexColumnName(indexId))
 
     def getPointIndexColumnName(indexId: Option[Long]): String =
@@ -90,17 +110,6 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
     def getGeometryId: Long =
         getFocalGeometryField.getOrElse(throw MosaicSQLExceptions.NoGeometryColumnSet).metadata.getLong(ColMetaTags.GEOMETRY_ID)
 
-    def getFocalGeometryField: Option[StructField] =
-        this.schema.fields
-            .filter(f => f.metadata.contains("FocalGeometry")) match {
-            case fieldsWithFocalLabel: Array[StructField] if !fieldsWithFocalLabel.isEmpty =>
-                fieldsWithFocalLabel.filter(f => f.metadata.getBoolean("FocalGeometry")).head match {
-                    case f: StructField => Some(f)
-                    case _              => None
-                }
-            case _                                                                         => None
-        }
-
     private def getGeometryAssociatedFieldByRole(role: String, geometryId: Long, indexId: Option[Long]): Option[StructField] = {
 
         val indexIdCriterion =
@@ -115,24 +124,55 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
         }
     }
 
-    def getChipColumn(indexId: Option[Long] = None): Column = this.col(getChipColumnName(indexId))
+    private def fieldFilter(field: StructField, criteria: Map[String, Any]): Boolean =
+        criteria.forall({ case (k, v) =>
+            if (!field.metadata.contains(k)) false
+            else {
+                v match {
+                    case s: String  => field.metadata.getString(k) == s
+                    case i: Int     => field.metadata.getLong(k).toInt == i
+                    case l: Long    => field.metadata.getLong(k) == l
+                    case b: Boolean => field.metadata.getBoolean(k) == b
+                    case _          => false
+                }
+            }
+        })
 
-    def getChipColumnName(indexId: Option[Long]): String =
-        getGeometryAssociatedFieldByRole(ColRoles.CHIP, getGeometryId, indexId) match {
-            case Some(f: StructField) => f.name
-            case _                    => DefaultColNames.defaultChipColumnName
+    def fieldFilter(field: StructField, tags: List[String]): Boolean = tags.forall(field.metadata.contains)
+
+    def getChipColumn(indexId: Option[Long] = None): Option[Column] =
+        getChipColumnName(indexId) match {
+            case Some(s: String) => Some(this.col(s))
+            case _               => None
         }
 
-    def getChipFlagColumn(indexId: Option[Long] = None): Column = this.col(getChipFlagColumnName(indexId))
+    def getChipColumnName(indexId: Option[Long]): Option[String] =
+        getGeometryAssociatedFieldByRole(ColRoles.CHIP, getGeometryId, indexId) match {
+            case Some(f: StructField) => Some(f.name)
+            case _                    => None
+        }
 
-    def getChipFlagColumnName(indexId: Option[Long]): String =
+    def getChipFlagColumn(indexId: Option[Long] = None): Option[Column] =
+        getChipFlagColumnName(indexId) match {
+            case Some(s: String) => Some(this.col(s))
+            case _               => None
+        }
+
+    def prettified: DataFrame = Prettifier.prettified(this)
+
+    def getChipFlagColumnName(indexId: Option[Long]): Option[String] =
         getGeometryAssociatedFieldByRole(ColRoles.CHIP_FLAG, getGeometryId, indexId) match {
-            case Some(f: StructField) => f.name
-            case _                    => DefaultColNames.defaultChipFlagColumnName
+            case Some(f: StructField) => Some(f.name)
+            case _                    => None
         }
 
     def join(other: MosaicFrame): MosaicFrame = {
-        if (!(this.isIndexed & other.isIndexed)) throw MosaicSQLExceptions.MosaicFrameNotIndexed
+        if (!this.isIndexed & GeometryTypeEnum.groupOf(getGeometryType) == GeometryTypeEnum.POLYGON) {
+            throw MosaicSQLExceptions.MosaicFrameNotIndexed
+        } else if (!other.isIndexed & GeometryTypeEnum.groupOf(other.getGeometryType) == GeometryTypeEnum.POLYGON) {
+            throw MosaicSQLExceptions.MosaicFrameNotIndexed
+        }
+
         val joinedDf = (getGeometryType, other.getGeometryType) match {
             case (GeometryTypeEnum.POINT, GeometryTypeEnum.POLYGON)      => Some(PointInPolygonJoin.join(this, other))
             case (GeometryTypeEnum.POLYGON, GeometryTypeEnum.POINT)      => Some(PointInPolygonJoin.join(other, this))
@@ -153,18 +193,6 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
         GeometryTypeEnum.fromId(geomColGeometryType)
     }
 
-    //    def prettified: DataFrame = Prettifier.prettified(df)
-
-    def inferGeometryType(geometryColumnName: String): GeometryTypeEnum.Value = {
-        val geomColGeometryType = where(col(geometryColumnName).isNotNull)
-            .limit(1)
-            .select(st_geometrytype(col(geometryColumnName)))
-            .as[String]
-            .collect
-            .head
-        GeometryTypeEnum.fromString(geomColGeometryType)
-    }
-
     def setIndexResolution(resolution: Int): MosaicFrame =
         resolution match {
             case i: Int if mosaicContext.getIndexSystem.minResolution to mosaicContext.getIndexSystem.maxResolution contains i =>
@@ -180,32 +208,28 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
                 )
         }
 
-    def getFocalGeometryColumnName: String = getFocalGeometryField.getOrElse(throw MosaicSQLExceptions.NoGeometryColumnSet).name
+    override def withColumn(colName: String, col: Column): MosaicFrame = MosaicFrame(super.withColumn(colName, col))
 
     def getGeometryColumn: Column = this.col(getFocalGeometryColumnName)
+
+    def getFocalGeometryColumnName: String = getFocalGeometryField.getOrElse(throw MosaicSQLExceptions.NoGeometryColumnSet).name
+
+    def getFocalGeometryField: Option[StructField] =
+        this.schema.fields
+            .filter(f => f.metadata.contains("FocalGeometry")) match {
+            case fieldsWithFocalLabel: Array[StructField] if !fieldsWithFocalLabel.isEmpty =>
+                fieldsWithFocalLabel.filter(f => f.metadata.getBoolean("FocalGeometry")).head match {
+                    case f: StructField => Some(f)
+                    case _              => None
+                }
+            case _                                                                         => None
+        }
 
     def getOptimalResolution(sampleFraction: Double): Int = {
         analyzer.getOptimalResolution(sampleFraction)
     }
 
     def analyzer: MosaicAnalyzer = new MosaicAnalyzer(this)
-
-    //    def toDataset: Dataset[(MosaicGeometry, Long, Any, Boolean)] = {
-    //
-    //        df.select(
-    //            geometryColumn,
-    //            indexColumn,
-    //            chipColumn,
-    //            chipFlagColumn
-    //        ).map { row =>
-    //            (
-    //                mosaicContext.getGeometryAPI.geometry(row.get(0), geometryColumnType),
-    //                row.getLong(1),
-    //                row.get(2),
-    //                row.getBoolean(3)
-    //            )
-    //        }
-    //    }
 
     def getOptimalResolution(sampleRows: Int): Int = {
         analyzer.getOptimalResolution(sampleRows)
@@ -222,8 +246,55 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
 
     override def select(cols: Column*): MosaicFrame = MosaicFrame(super.select(cols: _*))
 
+    def indexColumnMap(resolution: Int = getIndexResolution): Map[String, Column] =
+        listIndexesForGeometry()
+            .filter(i => i.indexResolution == resolution)
+            .maxBy(_.id)
+            .indexColumnsWithRoles
+            .map(i => i.role -> this.col(i.column))
+            .toMap
+
+    def listIndexesForGeometry(geometryColumnName: String = getFocalGeometryColumnName): List[MosaicFrameIndex] =
+        listIndexes.filter(i => i.parentGeometryColumn == geometryColumnName)
+
+    def listIndexes: List[MosaicFrameIndex] =
+        this.schema.fields
+            .filter(f => fieldFilter(f, Map(ColMetaTags.ROLE -> ColRoles.INDEX)))
+            .map(f => f.metadata)
+            .map(m =>
+                MosaicFrameIndex(
+                  m.getLong(ColMetaTags.INDEX_ID),
+                  geometryColIds(m.getLong(ColMetaTags.PARENT_GEOMETRY_ID)),
+                  m.getString(ColMetaTags.INDEX_SYSTEM),
+                  m.getLong(ColMetaTags.INDEX_RESOLUTION).toInt,
+                  indexColumns(m.getLong(ColMetaTags.INDEX_ID))
+                )
+            )
+            .toList
+
+    def indexColumns(indexID: Long): Seq[MosaicColumnRole] =
+        this.schema.fields
+            .filter(f => fieldFilter(f, Map(ColMetaTags.INDEX_ID -> indexID)))
+            .groupBy(_.metadata.getString(ColMetaTags.ROLE))
+            .mapValues(f => f.map(f => f.name).head)
+            .map(f => MosaicColumnRole(f._1, f._2))
+            .toList
+
+    def geometryColIds: Map[Long, String] =
+        this.schema.fields
+            .filter(f => fieldFilter(f, List(ColMetaTags.GEOMETRY_ID)))
+            .map(f => f.metadata.getLong(ColMetaTags.GEOMETRY_ID) -> f.name)
+            .toMap
+
     def getIndexResolution: Int =
         getFocalGeometryField.getOrElse(throw MosaicSQLExceptions.NoGeometryColumnSet).metadata.getLong(ColMetaTags.INDEX_RESOLUTION).toInt
+
+    def dropAllIndexes: MosaicFrame =
+        listIndexes
+            .filter(i => i.parentGeometryColumn == getFocalGeometryColumnName)
+            .flatMap(i => i.indexColumnsWithRoles.map(_.column))
+            .foldLeft(this)((m, c) => m.drop(c))
+            .distinct()
 
     def applyIndex(dropExistingIndexes: Boolean = true, explodePolyFillIndexes: Boolean = true): MosaicFrame = {
         val indexId = indexCounter.getAndIncrement()
@@ -232,7 +303,7 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
         val trimmedDf =
             if (isIndexed & dropExistingIndexes) {
                 // this is brutal, we can refine
-                this.drop(getGeometryAssociatedColumnNames(Some(indexId)): _*).distinct()
+                dropAllIndexes
             } else {
                 this
             }
@@ -243,7 +314,7 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
         val chipColumnName = auxiliaryColumnNameGen(ColRoles.CHIP, GeometryTypeEnum.groupOf(getGeometryType), geometryId, indexId)
         val chipFlagColumnName = auxiliaryColumnNameGen(ColRoles.CHIP_FLAG, GeometryTypeEnum.groupOf(getGeometryType), geometryId, indexId)
 
-        val (indexedDf, additionalColumns) = (trimmedDf.getGeometryType match {
+        val (indexedDf, additionalColumns) = trimmedDf.getGeometryType match {
             case GeometryTypeEnum.POLYGON | GeometryTypeEnum.MULTIPOLYGON =>
                 if (explodePolyFillIndexes) {
                     (
@@ -274,65 +345,17 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
                   Map(ColRoles.INDEX -> indexColumnName)
                 )
             case _                      => (trimmedDf, Map[String, String]().empty)
-        })
+        }
         indexedDf.addMosaicColumnMetadata(indexId, additionalColumns)
     }
 
-    def listIndexes: Dataset[MosaicFrameIndex] = {
-
-        def allIndexColumns(indexID: Long) = this.schema.fields
-            .filter(f => fieldFilter(f, Map(ColMetaTags.INDEX_ID -> indexID)))
-            .groupBy(_.metadata.getString(ColMetaTags.ROLE))
-            .mapValues(f => f.map(f => f.name).head)
-            .map(f => MosaicColumnRole(f._1, f._2))
-            .toList
-
+    def latestIndexId: Long =
         this.schema.fields
-//            .filter(f => fieldFilter(f, List(ColMetaTags.INDEX_ID)))
             .filter(f => fieldFilter(f, Map(ColMetaTags.ROLE -> ColRoles.INDEX)))
-            .map(f => f.metadata)
-            .map(m =>
-                MosaicFrameIndex(
-                  m.getLong(ColMetaTags.INDEX_ID),
-                  geometryColIds(m.getLong(ColMetaTags.PARENT_GEOMETRY_ID)),
-                  m.getString(ColMetaTags.INDEX_SYSTEM),
-                  m.getLong(ColMetaTags.INDEX_RESOLUTION).toInt,
-                  allIndexColumns(m.getLong(ColMetaTags.INDEX_ID))
-                )
-            )
-            .toList
-            .toDS()
-    }
-
-    private def fieldFilter(field: StructField, criteria: Map[String, Any]): Boolean =
-        criteria.forall({ case (k, v) =>
-            if (!field.metadata.contains(k)) false
-            else {
-                v match {
-                    case s: String  => field.metadata.getString(k) == s
-                    case i: Int     => field.metadata.getLong(k).toInt == i
-                    case l: Long    => field.metadata.getLong(k) == l
-                    case b: Boolean => field.metadata.getBoolean(k) == b
-                    case _          => false
-                }
-            }
-        })
-
-    private def fieldFilter(field: StructField, tags: List[String]): Boolean = tags.forall(field.metadata.contains)
-
-    def geometryColIds: Map[Long, String] =
-        this.schema.fields
-            .filter(f => fieldFilter(f, List(ColMetaTags.GEOMETRY_ID)))
-            .map(f => f.metadata.getLong(ColMetaTags.GEOMETRY_ID) -> f.name)
-            .toMap
-
-    override def withColumn(colName: String, col: Column): MosaicFrame = MosaicFrame(super.withColumn(colName, col))
+            .map(_.metadata.getLong(ColMetaTags.INDEX_ID))
+            .max
 
     override def select(col: String, cols: String*): MosaicFrame = MosaicFrame(super.select(col, cols: _*))
-
-    override def where(condition: Column): MosaicFrame = MosaicFrame(super.where(condition))
-
-    override def limit(n: Int): MosaicFrame = MosaicFrame(super.limit(n))
 
     override def drop(col: Column): MosaicFrame = MosaicFrame(super.drop(col))
 
@@ -355,14 +378,7 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
         }
 
     protected def auxiliaryColumnNameGen(role: String, geomGroup: GeometryTypeEnum.Value, geometryId: Long, indexId: Long): String =
-        s"${defaultColName(role, geomGroup)}_${geometryId}_${indexId}"
-
-    private def getGeometryAssociatedColumnNames(indexId: Option[Long]): List[String] = {
-        for (role <- ColRoles.AUXILIARIES) yield getGeometryAssociatedFieldByRole(role, getGeometryId, indexId) match {
-            case Some(f: StructField) => f.name
-            case None                 => "blah"
-        }
-    }
+        s"${defaultColName(role, geomGroup)}_${geometryId}_$indexId"
 
     private def addMosaicColumnMetadata(indexId: Long, additionalColumns: Map[String, String]): MosaicFrame = {
         val focalGeometryId = getFocalGeometryField.get.metadata.getLong(ColMetaTags.GEOMETRY_ID)
@@ -385,8 +401,6 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
 
 object MosaicFrame {
 
-    //  def prettify(df: DataFrame): DataFrame = MosaicFrame(df).prettified
-
     protected val geometryCounter = new AtomicLong()
     protected val indexCounter = new AtomicLong()
 
@@ -404,7 +418,7 @@ object MosaicFrame {
         parentGeometryColumn: String,
         indexSystem: String,
         indexResolution: Int,
-        indexColumnsWithRoles: List[MosaicColumnRole]
+        indexColumnsWithRoles: Seq[MosaicColumnRole]
     )
 
 }
