@@ -4,100 +4,88 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.to_json
 
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.mocks.getWKTRowsDf
+import com.databricks.mosaic.sql.mocks._
 
 trait MosaicFrameBehaviors { this: AnyFlatSpec =>
 
     def testConstructFromPoints(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
-        val sc = spark
-        import mc.functions._
-        import sc.implicits._
-
-        val df = getWKTRowsDf.where(st_geometrytype($"wkt") === "Point")
-        val mdf = MosaicFrame(df, "wkt")
-        mdf.count() shouldBe 1
+        val limitedPoints = pointDf.limit(100)
+        val mdf = MosaicFrame(limitedPoints, "geometry")
+        mdf.count() shouldBe limitedPoints.count()
     }
 
     def testConstructFromPolygons(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
-        val sc = spark
-        import mc.functions._
-        import sc.implicits._
-
-        val df = getWKTRowsDf.where(st_geometrytype($"wkt") === "Polygon")
-        val mdf = MosaicFrame(df, "wkt")
-        mdf.count() shouldBe 2
+        val mdf = MosaicFrame(polyDf, "geometry")
+        mdf.count() shouldBe polyDf.count()
     }
 
     def testIndexPoints(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
-        val sc = spark
-        import mc.functions._
-        import sc.implicits._
-
-        val df = getWKTRowsDf.where(st_geometrytype($"wkt") === "Point")
-        val mdf = MosaicFrame(df, "wkt")
-            .setIndexResolution(3)
+        val limitedPoints = pointDf.limit(100)
+        val mdf = MosaicFrame(limitedPoints, "geometry")
+            .setIndexResolution(9)
             .applyIndex()
-        mdf.columns.length shouldBe 3
+        mdf.columns.length shouldBe 20
+        mdf.count shouldBe limitedPoints.count
     }
 
     def testIndexPolygons(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
-        val sc = spark
-        import mc.functions._
-        import sc.implicits._
+        val mdf = MosaicFrame(polyDf, "geometry")
+            .setIndexResolution(9)
+            .applyIndex(explodePolyFillIndexes = false)
+        mdf.columns.length shouldBe polyDf.columns.length + 1
+        mdf.count() shouldBe polyDf.count()
+    }
 
-        val df = getWKTRowsDf.where(st_geometrytype($"wkt") === "Polygon")
-        val mdf = MosaicFrame(df, "wkt").setIndexResolution(3).applyIndex()
-        mdf.columns.length shouldBe 5
+    def testIndexPolygonsExplode(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mdf = MosaicFrame(polyDf, "geometry")
+            .setIndexResolution(9)
+            .applyIndex()
+        mdf.columns.length shouldBe polyDf.columns.length + 3
+        mdf.count() shouldBe 11986
     }
 
     def testGetOptimalResolution(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
-        val sc = spark
-        import mc.functions._
-        import sc.implicits._
-
-        val polyDf = spark.read
-            .json("src/test/resources/NYC_Taxi_Zones.geojson")
-            .withColumn("geometry", st_geomfromgeojson(to_json($"geometry")))
-        val polyMdf = MosaicFrame(polyDf, "geometry")
-        val res = polyMdf.getOptimalResolution(1d)
+        val mdf = MosaicFrame(polyDf, "geometry")
+            .setIndexResolution(3)
+            .applyIndex()
+        val res = mdf.getOptimalResolution(1d)
         res shouldBe 9
     }
 
+    def testMultiplePointIndexResolutions(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val limitedPoints = pointDf.limit(100)
+        val mdf = MosaicFrame(limitedPoints, "geometry")
+        val resolutions = (6 to 10).toList
+        val indexedMdf = resolutions
+            .foldLeft(mdf)((d, i) => {
+                d.setIndexResolution(i).applyIndex(dropExistingIndexes = false)
+            })
+
+        val indexDf = indexedMdf.listIndexes
+        indexDf.count() shouldBe resolutions.length
+    }
+
     def testPointInPolyJoin(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
         val sc = spark
-        import mc.functions._
+        val mc = mosaicContext
         import sc.implicits._
+        import mc.functions.st_contains
 
-        val pointDf = spark.read
-            .options(
-              Map(
-                "header" -> "true",
-                "inferSchema" -> "true"
-              )
-            )
-            .csv("src/test/resources/nyctaxi_yellow_trips.csv")
-            .withColumn("geometry", st_point($"pickup_longitude", $"pickup_latitude"))
-            .limit(100)
-
-        val polyDf = spark.read
-            .json("src/test/resources/NYC_Taxi_Zones.geojson")
-            .withColumn("geometry", st_geomfromgeojson(to_json($"geometry")))
-        val pointMdf = MosaicFrame(pointDf, "geometry")
+        val limitedPoints = pointDf.limit(100)
+        val pointMdf = MosaicFrame(limitedPoints, "geometry")
             .setIndexResolution(9)
             .applyIndex()
-        val polyMdf = MosaicFrame(polyDf, "geometry").setIndexResolution(9).applyIndex()
+        val polyMdf = MosaicFrame(polyDf, "geometry")
+            .setIndexResolution(9)
+            .applyIndex()
+
         val resultMdf = pointMdf.join(polyMdf)
+
         val expectedRowCount =
-            pointDf.alias("points").join(polyDf.alias("polygon"), st_contains($"polygon.geometry", $"points.geometry")).count()
+            limitedPoints.alias("points").join(polyDf.alias("polygon"), st_contains($"polygon.geometry", $"points.geometry")).count()
+
         resultMdf.count() shouldBe expectedRowCount
     }
 
