@@ -1,6 +1,7 @@
+from py4j.protocol import Py4JJavaError
 from pyspark.sql import DataFrame
 
-from mosaic import MosaicFrame
+from mosaic import MosaicFrame, displayMosaic
 from test.utils import MosaicTestCase
 
 
@@ -16,12 +17,13 @@ class TestMosaicFrame(MosaicTestCase):
         self.point_mdf = MosaicFrame(self.point_df, "geometry")
         self.poly_mdf = MosaicFrame(self.poly_df, "geometry")
 
+    def test_get_optimal_resolution(self):
+        result = self.poly_mdf.get_optimal_resolution(sample_fraction=1.0)
+        self.assertEqual(result, 9)
+
     def test_count_rows(self):
         self.assertEqual(self.point_mdf.count(), 100_000)
         self.assertEqual(self.poly_mdf.count(), 263)
-
-    def test_analyzer(self):
-        self.assertEqual(self.poly_mdf.get_optimal_resolution(200), 9)
 
     def test_join(self):
         joined_df = (
@@ -36,3 +38,6 @@ class TestMosaicFrame(MosaicTestCase):
         )
         self.assertEqual(joined_df.count(), 100_000)
         self.assertEqual(len(joined_df.columns), 19)
+
+    def test_pretty_print(self):
+        displayMosaic(self.point_mdf)

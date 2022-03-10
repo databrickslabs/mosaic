@@ -1,13 +1,8 @@
-from typing import Any
-from py4j.java_gateway import JavaClass, JavaObject, JavaPackage, JavaMember
-from pyspark import SparkContext
+from typing import Optional
+from py4j.java_gateway import JavaClass, JavaObject
+from pyspark.sql import DataFrame
 
 from mosaic.config import config
-
-from mosaic.utils.types import ColumnOrName, scala_option
-
-from pyspark.sql import DataFrame
-from pyspark.sql.column import _to_java_column
 
 
 class MosaicFrame(DataFrame):
@@ -18,7 +13,7 @@ class MosaicFrame(DataFrame):
     _geometry_column_name: str
 
     def __init__(
-        self,
+            self,
             df: DataFrame,
             geometry_column_name: str
     ):
@@ -35,85 +30,32 @@ class MosaicFrame(DataFrame):
             self._geometry_column_name
         )
 
-    def get_optimal_resolution(self, sample_rows: int = 1000) -> int:
-        return self._mosaicFrame.getOptimalResolution(sample_rows)
+    def get_optimal_resolution(self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None) -> int:
+        if sample_rows:
+            return self._mosaicFrame.getOptimalResolution(sample_rows)
+        if sample_fraction:
+            return self._mosaicFrame.getOptimalResolution(sample_fraction)
+        return self._mosaicFrame.getOptimalResolution()
 
     def set_index_resolution(self, resolution: int) -> "MosaicFrame":
         self._mosaicFrame = self._mosaicFrame.setIndexResolution(resolution)
         return self
 
     def apply_index(self) -> "MosaicFrame":
-        self._mosaicFrame = self._mosaicFrame.applyIndex(True)
+        self._mosaicFrame = self._mosaicFrame.applyIndex(True, True)
         return self
 
     def join(self, other: "MosaicFrame") -> "MosaicFrame":
         self._mosaicFrame = self._mosaicFrame.join(other._mosaicFrame)
         return self
 
-#
-#     def
-#
-#     def get_resolution_metrics(
-#         self, lower_limit: int = 10, upper_limit: int = 100, fraction_sample: float = 0.01
-#     ) -> DataFrame:
-#         return self._mosaicFrame.getResolutionMetrics(lower_limit, upper_limit)
-#
-#     def join(self, other: 'MosaicFrame', join_type: MosaicJoinType):
-#         pass
-#
-#
-# def setGeometryColumn:
-#     pass
-#
-# def getPointIndexColumn:
-#     pass
-#
-# def getPointIndexColumnName:
-#     pass
-#
-# def getFillIndexColumn:
-#     pass
-#
-# def getFillIndexColumnName:
-#     pass
-#
-# def getChipColumn:
-#     pass
-#
-# def getChipColumnName:
-#     pass
-#
-# def getGeometryId:
-#     pass
-#
-# def getChipFlagColumn:
-#     pass
-#
-# def getChipFlagColumnName:
-#     pass
-#
-# def join:
-#     pass
-#
-# def isIndexed:
-#     pass
-#
-# def getGeometryType:
-#     pass
-#
-# def setIndexResolution:
-#     pass
-#
-# getGeometryColumn
-# withColumn
-# getOptimalResolution
+    @property
+    def geometry_column(self):
+        return self._mosaicFrame.getFocalGeometryColumnName()
 
-# getOptimalResolution
-# analyzer
-# withPrefix
-# select
-# flattenGeometries
-# getIndexResolution
-# applyIndex
-#     def count(self):
-#         self._mosaicFrame.count()
+    def set_geometry_column(self, column_name: str) -> "MosaicFrame":
+        self._mosaicFrame = self._mosaicFrame.setGeometryColumn(column_name)
+        return self
+
+    def _prettified(self) -> DataFrame:
+        return self._mosaicFrame.prettified

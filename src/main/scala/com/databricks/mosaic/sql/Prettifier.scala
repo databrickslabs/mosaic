@@ -12,7 +12,7 @@ import com.databricks.mosaic.functions.MosaicContext
 object Prettifier {
 
     def prettifiedMosaicFrame(mosaicFrame: MosaicFrame): DataFrame = {
-        prettified(mosaicFrame.toDF)
+        prettified(mosaicFrame.toDF, Some(List(mosaicFrame.getFocalGeometryColumnName)))
     }
 
     def prettified(df: DataFrame, columnNames: Option[List[String]] = None): DataFrame = {
