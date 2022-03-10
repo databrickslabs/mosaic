@@ -30,7 +30,7 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
     - name: Test and build the scala JAR
-      run: mvn -q clean install
+      run: mvn -q clean install -Dmaven.test.skip=true -DskipTests
     - name: Copy Scala artifacts to GH Actions run
       run: |
         mkdir staging
