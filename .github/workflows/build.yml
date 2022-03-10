@@ -23,8 +23,8 @@ jobs:
         distribution: 'zulu'
     - name: install maven
       run: |
-        apt update
-        apt install -y maven
+        sudo apt update
+        sudo apt install -y maven
     - name: Configure python interpreter
       uses: actions/setup-python@v2
       with:
