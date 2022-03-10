@@ -47,7 +47,7 @@ jobs:
     - name: Test and build python package
       run: |
         cd python 
-        python -m unittest test/*
+        python -m unittest test/test_*
         python -m build
     - name: Copy python artifacts to GH Actions run
       run: cp python/dist/*.whl staging
