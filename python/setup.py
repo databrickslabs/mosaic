@@ -11,10 +11,12 @@ try:
 except ImportError:
     from distutils.core import setup
 
-repo_root = str(pathlib.Path(__file__).resolve().parent)
-README_FILE = os.path.join(repo_root, "README.md")
-with open(README_FILE, "r") as f:
-    LONG_DESCRIPTION = f.read()
+LONG_DESCRIPTION = ""
+
+# repo_root = str(pathlib.Path(__file__).resolve().parent)
+# README_FILE = os.path.join(repo_root, "README.md")
+# with open(README_FILE, "r") as f:
+#     LONG_DESCRIPTION = f.read()
 
 setup(
     name="databricks-mosaic",
