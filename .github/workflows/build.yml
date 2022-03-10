@@ -21,14 +21,6 @@ jobs:
       with:
         java-version: '8'
         distribution: 'zulu'
-    - name: install maven
-      run: |
-        sudo apt update
-        sudo apt install -y maven
-    - name: Configure python interpreter
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python }}
     - name: Test and build the scala JAR
       run: mvn -q clean install -Dmaven.test.skip=true -DskipTests
     - name: Copy Scala artifacts to GH Actions run
@@ -39,10 +31,16 @@ jobs:
       run: |
         mkdir -p python/mosaic/lib
         cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib/
+    - name: Configure python interpreter
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
     - name: Install python dependencies
       run: |
         cd python
-        pip install pyspark==${{ matrix.spark }}
+        which python
+        which pip
+        pip install wheel pyspark==${{ matrix.spark }}
         pip install -e .
     - name: Test and build python package
       run: |
