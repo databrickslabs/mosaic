@@ -32,11 +32,12 @@ class DisplayHandler:
 
     def display(self, df: DataFrame):
         prettifier = self.PrettifierModule
-        pretty_df = (
+        pretty_jdf = (
             prettifier.prettified(df._jdf, self.ScalaOptionObject.apply(None))
             if not type(df) == "MosaicFrame"
             else prettifier.prettifiedMosaicFrame(df._mosaicFrame)
         )
+        pretty_df = DataFrame(pretty_jdf, config.sql_context)
         self.display_function(pretty_df)
 
 
