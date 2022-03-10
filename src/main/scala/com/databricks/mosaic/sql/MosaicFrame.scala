@@ -155,30 +155,6 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
 
     def fieldFilter(field: StructField, tags: List[String]): Boolean = tags.forall(field.metadata.contains)
 
-    def getChipColumn(indexId: Option[Long] = None): Option[Column] =
-        getChipColumnName(indexId) match {
-            case Some(s: String) => Some(this.col(s))
-            case _               => None
-        }
-
-    def getChipColumnName(indexId: Option[Long]): Option[String] =
-        getGeometryAssociatedFieldByRole(ColRoles.CHIP, getGeometryId, indexId) match {
-            case Some(f: StructField) => Some(f.name)
-            case _                    => None
-        }
-
-    def getChipFlagColumn(indexId: Option[Long] = None): Option[Column] =
-        getChipFlagColumnName(indexId) match {
-            case Some(s: String) => Some(this.col(s))
-            case _               => None
-        }
-
-    def getChipFlagColumnName(indexId: Option[Long]): Option[String] =
-        getGeometryAssociatedFieldByRole(ColRoles.CHIP_FLAG, getGeometryId, indexId) match {
-            case Some(f: StructField) => Some(f.name)
-            case _                    => None
-        }
-
     def prettified(): DataFrame = Prettifier.prettifiedMosaicFrame(this)
 
     def join(other: MosaicFrame): MosaicFrame = {
@@ -237,11 +213,6 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
 
     def getOptimalResolution: Int = {
         analyzer.getOptimalResolution(analyzer.defaultSampleFraction)
-    }
-
-    def withPrefix(prefix: String): MosaicFrame = {
-        def prepend(str: String) = s"${prefix}_$str"
-        this.select(columns.map(c => col(c).alias(prepend(c))): _*)
     }
 
     override def select(cols: Column*): MosaicFrame = MosaicFrame(super.select(cols: _*))
