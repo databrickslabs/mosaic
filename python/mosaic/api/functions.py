@@ -391,15 +391,15 @@ def flatten_polygons(geom: ColumnOrName) -> Column:
 
 
 def point_index(
-    lat: ColumnOrName, lng: ColumnOrName, resolution: ColumnOrName
+    lng: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
 ) -> Column:
     """
     Returns the `resolution` grid index associated with the input `lat` and `lng` coordinates.
 
     Parameters
     ----------
-    lat : Column (DoubleType)
     lng : Column (DoubleType)
+    lat : Column (DoubleType)
     resolution : Column (IntegerType)
 
     Returns
@@ -409,8 +409,8 @@ def point_index(
     """
     return config.mosaic_context.invoke_function(
         "point_index",
-        pyspark_to_java_column(lat),
         pyspark_to_java_column(lng),
+        pyspark_to_java_column(lat),
         pyspark_to_java_column(resolution),
     )
 
