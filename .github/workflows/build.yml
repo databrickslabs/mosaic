@@ -11,15 +11,20 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python: [3.8.8, 3.8.10]
+        python: [3.8.10]
         spark: [3.2.1]
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Configure JDK
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v2
       with:
         java-version: '8'
+        distribution: 'zulu'
+    - name: install maven
+      run: |
+        apt update
+        apt install -y maven
     - name: Configure python interpreter
       uses: actions/setup-python@v2
       with:
@@ -42,9 +47,9 @@ jobs:
     - name: Test and build python package
       run: |
         cd python
-        python -m unittest
+        python -m unittest 
         python -m build
-    - name: CopY python artifacts to GH Actions run
+    - name: Copy python artifacts to GH Actions run
       run: cp python/dist/*.whl staging
     - uses: actions/upload-artifact@v2
       with:
