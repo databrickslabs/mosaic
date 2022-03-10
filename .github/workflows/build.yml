@@ -43,12 +43,9 @@ jobs:
       run: |
         cd python
         pip install pyspark==${{ matrix.spark }}
-        pip install -e .[dev]
+        pip install -e .
     - name: Test and build python package
-      run: |
-        cd python
-        python -m unittest 
-        python -m build
+      run: pwd && ls && cd python && pwd && ls && python -m unittest && python -m build
     - name: Copy python artifacts to GH Actions run
       run: cp python/dist/*.whl staging
     - uses: actions/upload-artifact@v2
