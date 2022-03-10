@@ -38,10 +38,9 @@ jobs:
     - name: Install python dependencies
       run: |
         cd python
-        which python
-        which pip
         pip install wheel pyspark==${{ matrix.spark }}
         pip install -e .
+        python -c 'import mosaic'
     - name: Test and build python package
       run: |
         cd python 
