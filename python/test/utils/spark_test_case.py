@@ -1,6 +1,7 @@
 import unittest
 
 from pyspark.sql import SparkSession
+from importlib.metadata import version
 
 
 class SparkTestCase(unittest.TestCase):
@@ -10,9 +11,7 @@ class SparkTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.library_location = (
-            "mosaic/lib/mosaic-1.0-SNAPSHOT-jar-with-dependencies.jar"
-        )
+        cls.library_location = f"mosaic/lib/mosaic-{version('databricks-mosaic')}-jar-with-dependencies.jar"
         cls.spark = (
             SparkSession.builder.master("local[2]")
             .config("spark.jars", cls.library_location)

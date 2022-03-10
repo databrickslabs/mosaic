@@ -12,11 +12,7 @@ class MosaicFrame(DataFrame):
     _df: JavaObject
     _geometry_column_name: str
 
-    def __init__(
-            self,
-            df: DataFrame,
-            geometry_column_name: str
-    ):
+    def __init__(self, df: DataFrame, geometry_column_name: str):
         super(MosaicFrame, self).__init__(df._jdf, config.sql_context)
         self._df = df._jdf
         self._geometry_column_name = geometry_column_name
@@ -26,11 +22,12 @@ class MosaicFrame(DataFrame):
         )
         self._mosaicFrameObject = getattr(self._mosaicFrameClass, "MODULE$")
         self._mosaicFrame = self._mosaicFrameObject.apply(
-            self._df,
-            self._geometry_column_name
+            self._df, self._geometry_column_name
         )
 
-    def get_optimal_resolution(self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None) -> int:
+    def get_optimal_resolution(
+        self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None
+    ) -> int:
         if sample_rows:
             return self._mosaicFrame.getOptimalResolution(sample_rows)
         if sample_fraction:

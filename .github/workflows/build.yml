@@ -38,13 +38,12 @@ jobs:
     - name: Install python dependencies
       run: |
         cd python
-        pip install wheel pyspark==${{ matrix.spark }}
-        pip install -e .
-        python -c 'import mosaic'
+        pip install build wheel pyspark==${{ matrix.spark }}
+        pip install .
     - name: Test and build python package
       run: |
         cd python 
-        python -m unittest test/test_*
+        python -m unittest
         python -m build
     - name: Copy python artifacts to GH Actions run
       run: cp python/dist/*.whl staging

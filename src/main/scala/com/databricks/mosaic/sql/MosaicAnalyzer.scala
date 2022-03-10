@@ -21,10 +21,6 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
         getOptimalResolution(SampleStrategy(sampleFraction = Some(sampleFraction)))
     }
 
-    def getOptimalResolution(sampleRows: Int): Int = {
-        getOptimalResolution(SampleStrategy(sampleRows = Some(sampleRows)))
-    }
-
     private def getOptimalResolution(sampleStrategy: SampleStrategy): Int = {
 
         val metrics = getResolutionMetrics(sampleStrategy, 1, 100)
@@ -113,6 +109,10 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
         }
     }
 
+    def getOptimalResolution(sampleRows: Int): Int = {
+        getOptimalResolution(SampleStrategy(sampleRows = Some(sampleRows)))
+    }
+
 }
 
 case class SampleStrategy(sampleFraction: Option[Double] = None, sampleRows: Option[Int] = None) {
@@ -120,7 +120,8 @@ case class SampleStrategy(sampleFraction: Option[Double] = None, sampleRows: Opt
         (sampleFraction, sampleRows) match {
             case (Some(d), None)    => df.sample(d)
             case (None, Some(l))    => df.limit(l)
-            case (Some(d), Some(l)) => df
+            case (Some(d), Some(l)) => df.limit(l)
+            case _                  => df
         }
     }
 }

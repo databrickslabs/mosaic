@@ -27,14 +27,9 @@ class TestMosaicFrame(MosaicTestCase):
 
     def test_join(self):
         joined_df = (
-            self.point_mdf
-                .set_index_resolution(9)
-                .apply_index()
-                .join(
-                self.poly_mdf
-                    .set_index_resolution(9)
-                    .apply_index()
-            )
+            self.point_mdf.set_index_resolution(9)
+            .apply_index()
+            .join(self.poly_mdf.set_index_resolution(9).apply_index())
         )
         self.assertEqual(joined_df.count(), 100_000)
         self.assertEqual(len(joined_df.columns), 19)

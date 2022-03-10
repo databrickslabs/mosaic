@@ -36,7 +36,9 @@ class MosaicContext:
         IndexSystemClass = getattr(self._mosaicPackageObject, self._index_system)
         GeometryAPIClass = getattr(self._mosaicPackageObject, self._geometry_api)
 
-        self._context = self._mosaicContextClass.build(IndexSystemClass(), GeometryAPIClass())
+        self._context = self._mosaicContextClass.build(
+            IndexSystemClass(), GeometryAPIClass()
+        )
 
     def invoke_function(self, name: str, *args: Any) -> MosaicColumn:
         func = getattr(self._context.functions(), name)

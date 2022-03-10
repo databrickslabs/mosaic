@@ -20,8 +20,7 @@ class MosaicTestCase(SparkTestCase):
 
     def generate_input_polygon_collection(self) -> DataFrame:
         return (
-            self.spark.read
-            .json("test/data/NYC_Taxi_Zones.geojson")
+            self.spark.read.json("test/data/NYC_Taxi_Zones.geojson")
             .repartition(self.spark.sparkContext.defaultParallelism)
             .withColumn("geometry", st_geomfromgeojson(to_json(col("geometry"))))
             .select("properties.*", "geometry")
@@ -29,10 +28,10 @@ class MosaicTestCase(SparkTestCase):
         )
 
     def generate_input_point_collection(self) -> DataFrame:
-        return (
-            self.spark.read
-            .csv("test/data/nyctaxi_yellow_trips.csv", inferSchema=True, header=True)
-            .withColumn("geometry", st_point(col("pickup_longitude"), col("pickup_latitude")))
+        return self.spark.read.csv(
+            "test/data/nyctaxi_yellow_trips.csv", inferSchema=True, header=True
+        ).withColumn(
+            "geometry", st_point(col("pickup_longitude"), col("pickup_latitude"))
         )
 
     def wkt_boroughs(self) -> DataFrame:

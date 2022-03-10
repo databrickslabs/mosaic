@@ -2,13 +2,14 @@ import os
 import sys
 
 from py4j.protocol import Py4JJavaError
+from importlib.metadata import version
 
 
 class MosaicLibraryHandler:
     spark = None
     sc = None
     _jar_path = None
-    _jar_filename = "mosaic-1.0-SNAPSHOT-jar-with-dependencies.jar"
+    _jar_filename = f"mosaic-{version('databricks-mosaic')}-jar-with-dependencies.jar"
     _auto_attached_enabled = None
 
     def __init__(self, spark):

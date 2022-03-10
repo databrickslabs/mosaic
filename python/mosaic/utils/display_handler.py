@@ -30,13 +30,13 @@ class DisplayHandler:
     def basic_display(df: DataFrame):
         df.show()
 
-    def display(
-            self,
-            df: DataFrame
-    ):
+    def display(self, df: DataFrame):
         prettifier = self.PrettifierModule
-        pretty_df = (prettifier.prettified(df._jdf, self.ScalaOptionObject.apply(None)) if not type(
-            df) == "MosaicFrame" else prettifier.prettifiedMosaicFrame(df._mosaicFrame))
+        pretty_df = (
+            prettifier.prettified(df._jdf, self.ScalaOptionObject.apply(None))
+            if not type(df) == "MosaicFrame"
+            else prettifier.prettifiedMosaicFrame(df._mosaicFrame)
+        )
         self.display_function(pretty_df)
 
 
