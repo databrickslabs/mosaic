@@ -244,13 +244,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
         /** Aggregators */
         registry.registerFunction(
-            FunctionIdentifier("st_reduce_intersection", database),
+            FunctionIdentifier("st_intersection_aggregate", database),
             MosaicExplode.registryExpressionInfo(database),
             (exprs: Seq[Expression]) =>
                 ST_IntersectionAggregate(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("st_reduce_intersects", database),
+            FunctionIdentifier("st_intersects_aggregate", database),
             ST_IntersectsAggregate.registryExpressionInfo(database),
             (exprs: Seq[Expression]) =>
                 ST_IntersectsAggregate(exprs(0), exprs(1), geometryAPI.name)
@@ -355,9 +355,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
 
         /** Aggregators */
-        def st_reduce_intersects(leftIndex: Column, rightIndex: Column): Column =
+        def st_intersects_aggregate(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(ST_IntersectsAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name).toAggregateExpression(isDistinct = false))
-        def st_reduce_intersection(leftIndex: Column, rightIndex: Column): Column =
+        def st_intersection_aggregate(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(ST_IntersectionAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem.name).toAggregateExpression(isDistinct = false))
 
         /** IndexSystem Specific */
