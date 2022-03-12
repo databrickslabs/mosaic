@@ -1,86 +1,142 @@
-from enum import Enum
-from typing import Any
-from py4j.java_gateway import JavaClass, JavaObject, JavaPackage, JavaMember
-from pyspark import SparkContext
+from typing import Optional
+from py4j.java_gateway import JavaClass, JavaObject
+from pyspark.sql import DataFrame
 
 from mosaic.config import config
 
-# from mosaic import MosaicAnalyzer
-from mosaic.utils.types import ColumnOrName, scala_option
 
-from pyspark.sql import DataFrame
-from pyspark.sql.column import _to_java_column
-
-
-class MosaicJoinType:
-    sc: SparkContext
-    _joinTypeEnumObject: JavaClass
-    _POINT_IN_POLYGON: JavaObject
-    _POLYGON_INTERSECTION: JavaObject
-
-    def __init__(self):
-        self.sc = config.mosaic_spark.sparkContext
-        self._joinTypeEnumObject = self.sc._jvm.com.databricks.mosaic.sql.MosaicJoinType
-        self._POINT_IN_POLYGON = self._joinTypeEnumObject.POINT_IN_POLYGON()
-        self._POLYGON_INTERSECTION = self._joinTypeEnumObject.POLYGON_INTERSECTION()
-
-    @property
-    def point_in_polygon(self):
-        return self._POINT_IN_POLYGON
-
-    @property
-    def polygon_intersection(self):
-        return self._POLYGON_INTERSECTION
-
-    def from_id(self, value: int) -> JavaObject:
-        return self._joinTypeEnumObject.fromId(value)
-
-    def from_string(self, value) -> JavaObject:
-        return self._joinTypeEnumObject.fromString(value)
-
-
-class MosaicFrame:
+class MosaicFrame(DataFrame):
     _mosaicFrameClass: JavaClass
     _mosaicFrameObject: JavaObject
     _mosaicFrame: JavaObject
     _df: JavaObject
-    _chipColumn: JavaObject
-    _chipFlagColumn: JavaObject
-    _indexColumn: JavaObject
-    _geometryColumn: JavaObject
+    _geometry_column_name: str
 
-    def __init__(
-        self,
-        df: DataFrame,
-        geometry_column: ColumnOrName,
-        chip_column: ColumnOrName = "",
-        chip_flag_column: ColumnOrName = "",
-        index_column: ColumnOrName = ""
-    ):
+    def __init__(self, df: DataFrame, geometry_column_name: str):
+        super(MosaicFrame, self).__init__(df._jdf, config.sql_context)
         self._df = df._jdf
-        self._chipColumn = _to_java_column(chip_column)
-        self._chipFlagColumn = _to_java_column(chip_flag_column)
-        self._indexColumn = _to_java_column(index_column)
-        self._geometryColumn = _to_java_column(geometry_column)
+        self._geometry_column_name = geometry_column_name
         self.sc = config.mosaic_spark.sparkContext
         self._mosaicFrameClass = getattr(
             self.sc._jvm.com.databricks.mosaic.sql, "MosaicFrame$"
         )
         self._mosaicFrameObject = getattr(self._mosaicFrameClass, "MODULE$")
         self._mosaicFrame = self._mosaicFrameObject.apply(
-            self._df,
-            scala_option(self._chipColumn),
-            scala_option(self._chipFlagColumn),
-            scala_option(self._indexColumn),
-            scala_option(self._geometryColumn),
+            self._df, self._geometry_column_name
         )
+        """
+        The MosaicFrame class provides convenience functions for indexing and joining spatial dataframes.
 
-    def get_resolution_metrics(
-        self, lower_limit: int = 10, upper_limit: int = 100, fraction_sample: float = 0.01
-    ) -> DataFrame:
-        return self._mosaicFrame.getResolutionMetrics(lower_limit, upper_limit)
+        Attributes
+        ----------
+        df: DataFrame
+            A Spark DataFrame
+        geometry_column_name: str
+            The name of the primary geometry in this spatial dataframe.
+        """
+    def get_optimal_resolution(
+        self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None
+    ) -> int:
+        """
+        Analyzes the geometries in the currently selected geometry column and proposes an optimal
+        grid-index resolution.
 
-    def join(self, other: 'MosaicFrame', join_type: MosaicJoinType):
-        pass
+        Provide either `sample_rows` or `sample_fraction` parameters to control how much data is passed to the analyzer.
+        (Providing too little data to the analyzer may result in a `NotEnoughGeometriesException`)
 
+        Parameters
+        ----------
+        sample_rows: int, optional
+            The number of rows to sample.
+        sample_fraction: float, optional
+            The proportion of rows to sample.
 
+        Returns
+        -------
+        int
+            The recommended grid-index resolution to apply to this MosaicFrame.
+        """
+        if sample_rows:
+            return self._mosaicFrame.getOptimalResolution(sample_rows)
+        if sample_fraction:
+            return self._mosaicFrame.getOptimalResolution(sample_fraction)
+        return self._mosaicFrame.getOptimalResolution()
+
+    def set_index_resolution(self, resolution: int) -> "MosaicFrame":
+        """
+        Sets the index resolution for this MosaicFrame.
+
+        Parameters
+        ----------
+        resolution: int
+            The index resolution to use.
+
+        Returns
+        -------
+        MosaicFrame
+            A new instance of the MosaicFrame.
+        """
+        self._mosaicFrame = self._mosaicFrame.setIndexResolution(resolution)
+        return self
+
+    def apply_index(self) -> "MosaicFrame":
+        """
+        Applies the currently selected indexing strategy to this MosaicFrame.
+
+        Returns
+        -------
+        MosaicFrame
+            A new instance of the MosaicFrame.
+        """
+        self._mosaicFrame = self._mosaicFrame.applyIndex(True, True)
+        return self
+
+    def join(self, other: "MosaicFrame") -> "MosaicFrame":
+        """
+        Joins this MosaicFrame to `other`.
+
+        Both MosaicFrame instances must be indexed before calling this method.
+
+        Parameters
+        ----------
+        other: MosaicFrame
+
+        Returns
+        -------
+        MosaicFrame
+            The result of joining this MosaicFrame to `other`.
+        """
+        self._mosaicFrame = self._mosaicFrame.join(other._mosaicFrame)
+        return self
+
+    @property
+    def geometry_column(self):
+        """
+        Returns the currently selected geometry in the MosaicFrame.
+
+        Returns
+        -------
+        str
+            The column name of the currently selected geometry.
+        """
+        return self._mosaicFrame.getFocalGeometryColumnName()
+
+    def set_geometry_column(self, column_name: str) -> "MosaicFrame":
+        """
+        Updates the currently selected geometry in the MosaicFrame.
+
+        Parameters
+        ----------
+        column_name: str
+            The column name of the geometry to be selected.
+
+        Returns
+        -------
+        MosaicFrame
+            A new instance of the MosaicFrame.
+        """
+        self._mosaicFrame = self._mosaicFrame.setGeometryColumn(column_name)
+        return self
+
+    def _prettified(self) -> DataFrame:
+        return self._mosaicFrame.prettified

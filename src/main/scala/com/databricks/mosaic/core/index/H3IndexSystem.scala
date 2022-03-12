@@ -168,8 +168,8 @@ object H3IndexSystem extends IndexSystem with Serializable {
       * @return
       *   Index ID in this index system.
       */
-    override def pointToIndex(x: Double, y: Double, resolution: Int): Long = {
-        h3.geoToH3(x, y, resolution)
+    override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = {
+        h3.geoToH3(lat, lon, resolution)
     }
 
     override def minResolution: Int = 0

@@ -3,4 +3,3 @@ from .constructors import *
 from .enable import *
 from .functions import *
 from .predicates import *
-from .analyzer import MosaicAnalyzer
