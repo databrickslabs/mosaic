@@ -44,7 +44,7 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
               "right_id"
             )
             .agg(
-              st_reduce_intersects(col("left_index"), col("right_index"))
+              st_intersects_aggregate(col("left_index"), col("right_index"))
             )
 
         result.collect().length should be > 0
@@ -53,7 +53,7 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
         right.createOrReplaceTempView("right")
 
         val result2 = spark.sql("""
-                                  |SELECT ST_REDUCE_INTERSECTS(LEFT_INDEX, RIGHT_INDEX)
+                                  |SELECT ST_INTERSECTS_AGGREGATE(LEFT_INDEX, RIGHT_INDEX)
                                   |FROM LEFT
                                   |INNER JOIN RIGHT ON LEFT_INDEX.INDEX_ID == RIGHT_INDEX.INDEX_ID
                                   |GROUP BY LEFT_ID, RIGHT_ID
@@ -106,7 +106,7 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
               "right_id"
             )
             .agg(
-              st_reduce_intersection(col("left_index"), col("right_index")).alias("intersection")
+              st_intersection_aggregate(col("left_index"), col("right_index")).alias("intersection")
             )
             .withColumn("area", st_area(col("intersection")))
             .withColumn("wkt", st_astext(col("intersection")))
