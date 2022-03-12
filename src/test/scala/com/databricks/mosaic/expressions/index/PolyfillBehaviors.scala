@@ -7,7 +7,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.col
 
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.mocks.getBoroughs
+import com.databricks.mosaic.test.mocks.getBoroughs
 
 trait PolyfillBehaviors {
     this: AnyFlatSpec =>

@@ -7,7 +7,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
 
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.mocks.getBoroughs
+import com.databricks.mosaic.test.mocks._
 
 trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
 
@@ -77,6 +77,13 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
               mosaic_explode(col("wkt"), 9).alias("left_index")
             )
 
+        left.select(st_astext(col("left_index.wkb")).alias("tmp"))
+            .withColumn("area", st_area(col("tmp")))
+            .withColumn("cent", st_centroid2D(col("tmp")))
+            .select("area", "cent", "tmp")
+            .orderBy(desc("cent"))
+            //.show(1000, truncate = false)
+
         val right = boroughs
             .select(
               col("id"),
@@ -106,7 +113,9 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
 
         result
             .withColumn("area", st_area(col("intersection")))
-            .drop("intersection")
+            .withColumn("cent", st_centroid2D(col("intersection")))
+            .select("cent", "area")
+            .orderBy(desc("cent"))
             .show(truncate = false)
     }
 

@@ -10,7 +10,7 @@ import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.col
 
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.mocks._
+import com.databricks.mosaic.test.mocks._
 
 trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
 

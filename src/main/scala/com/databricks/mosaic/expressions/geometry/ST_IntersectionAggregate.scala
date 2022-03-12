@@ -10,7 +10,7 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.mosaic.expressions.index.IndexGeometry
 
-case class ST_ReduceIntersection(
+case class ST_IntersectionAggregate(
     leftChip: Expression,
     rightChip: Expression,
     geometryAPIName: String,
@@ -43,8 +43,8 @@ case class ST_ReduceIntersection(
 
         val geomIncrement = (leftCoreFlag, rightCoreFlag) match {
             case (true, true)   => indexSystem.indexToGeometry(leftIndexValue.getLong(1), geometryAPI)
-            case (true, false)  => indexSystem.indexToGeometry(rightIndexValue.getLong(1), geometryAPI)
-            case (false, true)  => indexSystem.indexToGeometry(leftIndexValue.getLong(1), geometryAPI)
+            case (true, false)  => geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
+            case (false, true)  => geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
             case (false, false) =>
                 val leftChipGeom = geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
                 val rightChipGeom = geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
@@ -77,12 +77,12 @@ case class ST_ReduceIntersection(
 
     override def deserialize(storageFormat: Array[Byte]): Array[Byte] = storageFormat
 
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): ST_ReduceIntersection =
+    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): ST_IntersectionAggregate =
         copy(leftChip = newLeft, rightChip = newRight)
 
 }
 
-object ST_ReduceIntersection {
+object ST_IntersectionAggregate {
 
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(

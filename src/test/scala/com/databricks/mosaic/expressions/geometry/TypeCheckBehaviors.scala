@@ -11,7 +11,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.mocks.{getHexRowsDf, getWKTRowsDf}
+import com.databricks.mosaic.test.mocks.{getHexRowsDf, getWKTRowsDf}
 
 trait TypeCheckBehaviors {
     this: AnyFlatSpec =>
