@@ -51,6 +51,7 @@ class MosaicPointOGC(point: OGCPoint) extends MosaicGeometryOGC(point) with Mosa
 
     override def flatten: Seq[MosaicGeometry] = List(this)
 
+    override def numPoints: Int = 1
 }
 
 object MosaicPointOGC extends GeometryReader {

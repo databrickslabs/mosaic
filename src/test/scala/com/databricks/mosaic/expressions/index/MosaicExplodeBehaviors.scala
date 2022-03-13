@@ -4,7 +4,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions._
 
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.mocks.getBoroughs
@@ -36,6 +36,21 @@ trait MosaicExplodeBehaviors {
             .collect()
 
         boroughs.collect().length should be < mosaics2.length
+
+        boroughs
+            .select(
+                mosaic_explode(col("wkt"), 11)
+            )
+            .withColumn("area", st_area(index_geometry(col("index.index_id"))))
+            .show()
+
+        boroughs
+            .select(
+                mosaic_explode(col("wkt"), 11)
+            )
+            .withColumn("area", st_area(index_geometry(col("index.index_id"))))
+            .select(sum("area"))
+            .show()
     }
 
     def wkbDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {

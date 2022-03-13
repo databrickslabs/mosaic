@@ -69,7 +69,8 @@ object MosaicExplode {
         val resolution = inputData.getInt(1)
 
         val chips = Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
-        chips.map(_.serialize)
+
+        chips.map(row => InternalRow.fromSeq(Seq(row.serialize)))
     }
 
     /**
@@ -118,10 +119,10 @@ object MosaicExplode {
         val resolutionType = fields(1)
 
         (geomType.dataType, resolutionType.dataType) match {
-            case (BinaryType, IntegerType)           => ChipType.asInstanceOf[StructType]
-            case (StringType, IntegerType)           => ChipType.asInstanceOf[StructType]
-            case (HexType, IntegerType)              => ChipType.asInstanceOf[StructType]
-            case (InternalGeometryType, IntegerType) => ChipType.asInstanceOf[StructType]
+            case (BinaryType, IntegerType)           => StructType(Array(StructField("index", ChipType)))
+            case (StringType, IntegerType)           => StructType(Array(StructField("index", ChipType)))
+            case (HexType, IntegerType)              => StructType(Array(StructField("index", ChipType)))
+            case (InternalGeometryType, IntegerType) => StructType(Array(StructField("index", ChipType)))
             case _                                   => throw new Error(
                   s"Input to h3 mosaic explode should be (geometry, resolution) pair. " +
                       s"Geometry type can be WKB, WKT, Hex or Coords. Provided type was: ${child.dataType.catalogString}"
