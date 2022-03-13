@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types._
 
 import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.mocks.getWKTRowsDf
+import com.databricks.mosaic.test.mocks.getWKTRowsDf
 
 trait ValidityBehaviors {
     this: AnyFlatSpec =>

@@ -4,6 +4,8 @@ import com.databricks.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
 
+    def numPoints: Int
+
     def translate(xd: Double, yd: Double): MosaicGeometry
 
     def scale(xd: Double, yd: Double): MosaicGeometry
@@ -37,6 +39,10 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def simplify(tolerance: Double): MosaicGeometry
 
     def intersection(other: MosaicGeometry): MosaicGeometry
+
+    def intersects(other: MosaicGeometry): Boolean
+
+    def union(other: MosaicGeometry): MosaicGeometry
 
     def contains(other: MosaicGeometry): Boolean
 

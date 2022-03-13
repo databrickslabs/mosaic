@@ -2,7 +2,7 @@ package com.databricks.mosaic.expressions.geometry
 
 import scala.collection.immutable
 
-import com.databricks.mosaic.mocks
+import com.databricks.mosaic.test.mocks
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.io.{WKTReader, WKTWriter}
 import org.scalatest.flatspec.AnyFlatSpec
