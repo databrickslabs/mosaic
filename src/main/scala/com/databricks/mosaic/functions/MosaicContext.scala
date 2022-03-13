@@ -285,8 +285,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         )
         registry.registerFunction(
           FunctionIdentifier("point_index", database),
-          PointIndex.registryExpressionInfo(database),
+          PointIndexLonLat.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => PointIndex(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("point_index", database),
+            PointIndex.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => PointIndex(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
         registry.registerFunction(
             FunctionIdentifier("polyfill", database),

@@ -1,11 +1,12 @@
 package com.databricks.mosaic.sql.join
 
+import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
 
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.sql.MosaicFrame
-import com.databricks.mosaic.sql.constants.ColRoles
+import com.databricks.mosaic.sql.constants.{ColMetaTags, ColRoles}
 
 object PointInPolygonJoin {
 
@@ -24,36 +25,65 @@ object PointInPolygonJoin {
         val indexedPoints = checkIndex(points)
         val indexedPolygons = checkIndex(polygons)
 
-        val pointsIndexCols = indexedPoints.indexColumnMap(selectedResolution)
-        val polygonsIndexCols = indexedPolygons.indexColumnMap(selectedResolution)
+        val pointsIndexCol = indexedPoints.indexColumnMap(selectedResolution)(ColRoles.INDEX)
+        val polygonsIndexCol = indexedPolygons.indexColumnMap(selectedResolution)(ColRoles.INDEX)
 
         // test if the indexes have been exploded
         val joinedDf =
-            if (polygonsIndexCols.contains(ColRoles.CHIP_FLAG)) {
-                indexedPoints.join(
-                  indexedPolygons,
-                  pointsIndexCols(ColRoles.INDEX) === polygonsIndexCols(ColRoles.INDEX) &&
-                  (polygonsIndexCols(ColRoles.CHIP_FLAG) ||
-                  st_contains(polygonsIndexCols(ColRoles.CHIP), indexedPoints.getGeometryColumn))
-                )
+            if (indexedPolygons.schema(polygonsIndexCol.toString).metadata.getBoolean(ColMetaTags.EXPLODED_POLYFILL)) {
+                joinExplodedRows(indexedPoints, indexedPolygons, pointsIndexCol, polygonsIndexCol)
             } else {
-                val tempColName = java.util.UUID.randomUUID.toString
-                val indexColumn = polygonsIndexCols(ColRoles.INDEX).getField("chips")
-                indexedPoints
-                    .join(
-                      indexedPolygons,
-                      array_contains(indexColumn.getField("index_id"), pointsIndexCols(ColRoles.INDEX))
-                    )
-                    .withColumn(tempColName, array_position(indexColumn.getField("index_id"), pointsIndexCols(ColRoles.INDEX)).cast(IntegerType))
-                    .where(col(tempColName) > 0)
-                    .where(
-                      element_at(indexColumn.getField("is_core"), col(tempColName)) ||
-                      st_contains(element_at(indexColumn.getField("wkb"), col(tempColName)), indexedPoints.getGeometryColumn)
-                    )
-                    .drop(tempColName)
+                joinArrayRows(indexedPoints, indexedPolygons, pointsIndexCol, polygonsIndexCol)
             }
 
         new MosaicFrame(joinedDf)
+    }
+
+    private def joinArrayRows(
+        indexedPoints: MosaicFrame,
+        indexedPolygons: MosaicFrame,
+        pointsIndexCol: Column,
+        polygonsIndexCol: Column
+    ) = {
+
+        val mosaicContext = MosaicContext.context
+        import mosaicContext.functions.st_contains
+
+        val polygonIndexChips = polygonsIndexCol.getField("chips")
+        val tempColName = java.util.UUID.randomUUID.toString
+        indexedPoints
+            .join(
+              indexedPolygons,
+              array_contains(polygonIndexChips.getField("index_id"), pointsIndexCol)
+            )
+            .withColumn(
+              tempColName,
+              array_position(polygonIndexChips.getField("index_id"), pointsIndexCol).cast(IntegerType)
+            )
+            .where(col(tempColName) > 0)
+            .where(
+              element_at(polygonIndexChips.getField("is_core"), col(tempColName)) ||
+              st_contains(element_at(polygonIndexChips.getField("wkb"), col(tempColName)), indexedPoints.getGeometryColumn)
+            )
+            .drop(tempColName)
+    }
+
+    private def joinExplodedRows(
+        indexedPoints: MosaicFrame,
+        indexedPolygons: MosaicFrame,
+        pointsIndexCol: Column,
+        polygonsIndexCol: Column
+    ) = {
+
+        val mosaicContext = MosaicContext.context
+        import mosaicContext.functions.st_contains
+
+        indexedPoints.join(
+          indexedPolygons,
+          pointsIndexCol === polygonsIndexCol.getField("index_id") &&
+          (polygonsIndexCol.getField("is_core") ||
+          st_contains(polygonsIndexCol.getField("wkb"), indexedPoints.getGeometryColumn))
+        )
     }
 
     def checkIndex(mosaicFrame: MosaicFrame): MosaicFrame =
