@@ -42,9 +42,9 @@ object PointInPolygonJoin {
                 indexedPoints
                     .join(
                       indexedPolygons,
-                      array_contains(indexColumn.getField("h3"), pointsIndexCols(ColRoles.INDEX))
+                      array_contains(indexColumn.getField("index_id"), pointsIndexCols(ColRoles.INDEX))
                     )
-                    .withColumn(tempColName, array_position(indexColumn.getField("h3"), pointsIndexCols(ColRoles.INDEX)).cast(IntegerType))
+                    .withColumn(tempColName, array_position(indexColumn.getField("index_id"), pointsIndexCols(ColRoles.INDEX)).cast(IntegerType))
                     .where(col(tempColName) > 0)
                     .where(
                       element_at(indexColumn.getField("is_core"), col(tempColName)) ||

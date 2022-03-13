@@ -1,10 +1,15 @@
 package com.databricks.mosaic
 
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{IntegerType, StringType}
+
+import com.databricks.mosaic.core.geometry.api.GeometryAPI.OGC
+import com.databricks.mosaic.core.index.H3IndexSystem
+import com.databricks.mosaic.functions.MosaicContext
 
 package object test {
 
-    //noinspection ScalaStyle
+    // noinspection ScalaStyle
     object mocks {
 
         import org.apache.spark.sql._
@@ -39,7 +44,6 @@ package object test {
                 "00000000050000000200000000020000000340240000000000004024000000000000403400000000000040340000000000004024000000000000404400000000000000000000020000000440440000000000004044000000000000403E000000000000403E00000000000040440000000000004034000000000000403E0000000000004024000000000000"
               )
             )
-
         val wkt_rows =
             List(
               List(1, "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"),
@@ -61,7 +65,6 @@ package object test {
               List(7, "LINESTRING (30 10, 10 30, 40 40)"),
               List(8, "MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))")
             )
-
         val geoJSON_rows =
             List(
               List(
@@ -94,7 +97,6 @@ package object test {
                 """{"type":"MultiLineString","coordinates":[[[10,10],[20,20],[10,40]],[[40,40],[30,30],[40,20],[30,10]]],"crs":{"type":"name","properties":{"name":"EPSG:0"}}}"""
               )
             )
-
         val wkt_rows_boroughs =
             List(
               List(
@@ -122,6 +124,28 @@ package object test {
                 "POLYGON ((-74.1597481587429570 40.6414165257901772, -74.1599787569963098 40.6414464808363576, -74.1603665567036785 40.6415795387926551, -74.1611124252219156 40.6418354537373574, -74.1611789710470646 40.6420066123307677, -74.1613480397163300 40.6435009886979728, -74.1614598592411625 40.6442914295759721, -74.1614603600531836 40.6442949697649141, -74.1579875954066665 40.6438617889660350, -74.1574334920100711 40.6433028577790125, -74.1575530521179331 40.6432482917784057, -74.1579158940678411 40.6430826944529571, -74.1581345160336980 40.6426325306630645, -74.1582754371735149 40.6425633838383860, -74.1584034767242173 40.6425416038819449, -74.1584849583912842 40.6425384668857674, -74.1585504377056566 40.6424975013064795, -74.1585761059831157 40.6424293511026207, -74.1586612596052674 40.6423051054572042, -74.1587437814761898 40.6420038398483285, -74.1588109374531115 40.6417586347403272, -74.1592002453457866 40.6416504039773514, -74.1594560243820524 40.6414483333241208, -74.1597481587429570 40.6414165257901772))"
               )
             )
+
+        def polyDf(sparkSession: SparkSession): DataFrame = {
+            val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, OGC)
+            import mosaicContext.functions.st_geomfromgeojson
+            sparkSession.read
+                .json("src/test/resources/NYC_Taxi_Zones.geojson")
+                .withColumn("geometry", st_geomfromgeojson(to_json(col("geometry"))))
+        }
+
+        def pointDf(sparkSession: SparkSession): DataFrame = {
+            val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, OGC)
+            import mosaicContext.functions.st_point
+            sparkSession.read
+                .options(
+                  Map(
+                    "header" -> "true",
+                    "inferSchema" -> "true"
+                  )
+                )
+                .csv("src/test/resources/nyctaxi_yellow_trips.csv")
+                .withColumn("geometry", st_point(col("pickup_longitude"), col("pickup_latitude")))
+        }
 
         def getHexRowsDf: DataFrame = {
             val spark = SparkSession.builder().getOrCreate()
