@@ -42,7 +42,7 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         val mdf = MosaicFrame(polyDf, "geometry")
             .setIndexResolution(9)
             .applyIndex()
-        mdf.columns.length shouldBe polyDf.columns.length + 3
+        mdf.columns.length shouldBe polyDf.columns.length + 1
         mdf.count() shouldBe 11986
     }
 

@@ -30,6 +30,7 @@ package object sql {
             val INDEX_ID = "IndexId"
             val INDEX_SYSTEM = "IndexSystem"
             val INDEX_RESOLUTION = "IndexResolution"
+            val EXPLODED_POLYFILL = "ExplodedPolyfill"
             val PARENT_GEOMETRY_ID = "ParentGeometryId"
 
         }
