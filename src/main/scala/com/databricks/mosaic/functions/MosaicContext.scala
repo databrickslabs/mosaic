@@ -241,6 +241,16 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ST_NumPoints.registryExpressionInfo(database),
             (exprs: Seq[Expression]) => ST_NumPoints(exprs(0), geometryAPI.name)
         )
+        registry.registerFunction(
+            FunctionIdentifier("st_intersects", database),
+            ST_Intersects.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_Intersects(exprs(0), exprs(1), geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("st_intersects", database),
+            ST_Intersection.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_Intersection(exprs(0), exprs(1), geometryAPI.name)
+        )
 
         /** Aggregators */
         registry.registerFunction(
@@ -353,6 +363,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_rotate(geom1: Column, td: Column): Column = ColumnAdapter(ST_Rotate(geom1.expr, td.expr, geometryAPI.name))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))
         def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
+        def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, geometryAPI.name))
+        def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))
 
         /** Aggregators */
         def st_intersects_aggregate(leftIndex: Column, rightIndex: Column): Column =

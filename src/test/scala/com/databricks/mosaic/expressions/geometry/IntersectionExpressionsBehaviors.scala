@@ -9,7 +9,7 @@ import org.apache.spark.sql.functions._
 import com.databricks.mosaic.functions.MosaicContext
 import com.databricks.mosaic.test.mocks._
 
-trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
+trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
 
     def intersects(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
@@ -21,7 +21,8 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
         val left = boroughs
             .select(
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), 11).alias("left_index")
+              mosaic_explode(col("wkt"), 11).alias("left_index"),
+              col("wkt").alias("left_wkt")
             )
 
         val right = boroughs
@@ -31,7 +32,8 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
             )
             .select(
               col("id").alias("right_id"),
-              mosaic_explode(col("wkt"), 11).alias("right_index")
+              mosaic_explode(col("wkt"), 11).alias("right_index"),
+              col("wkt").alias("right_wkt")
             )
 
         val result = left
@@ -44,10 +46,20 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
               "right_id"
             )
             .agg(
-              st_intersects_aggregate(col("left_index"), col("right_index"))
+              st_intersects_aggregate(col("left_index"), col("right_index")).alias("agg_intersects"),
+              first("left_wkt").alias("left_wkt"),
+              first("right_wkt").alias("right_wkt")
+            )
+            .withColumn(
+              "flat_intersects",
+              st_intersects(col("left_wkt"), col("right_wkt"))
+            )
+            .withColumn(
+              "comparison",
+              col("flat_intersects") === col("agg_intersects")
             )
 
-        result.collect().length should be > 0
+        result.select("comparison").collect().map(_.getBoolean(0)).forall(identity) shouldBe true
 
         left.createOrReplaceTempView("left")
         right.createOrReplaceTempView("right")
@@ -74,15 +86,9 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
             .select(
               col("wkt"),
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), 9).alias("left_index")
+              mosaic_explode(col("wkt"), 9).alias("left_index"),
+              col("wkt").alias("left_wkt")
             )
-
-        left.select(st_astext(col("left_index.wkb")).alias("tmp"))
-            .withColumn("area", st_area(col("tmp")))
-            .withColumn("cent", st_centroid2D(col("tmp")))
-            .select("area", "cent", "tmp")
-            .orderBy(desc("cent"))
-            //.show(1000, truncate = false)
 
         val right = boroughs
             .select(
@@ -92,7 +98,8 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
             .select(
               col("wkt"),
               col("id").alias("right_id"),
-              mosaic_explode(col("wkt"), 9).alias("right_index")
+              mosaic_explode(col("wkt"), 9).alias("right_index"),
+              col("wkt").alias("right_wkt")
             )
 
         val result = left
@@ -106,17 +113,16 @@ trait IntersectionReduceExpressionsBehaviors { this: AnyFlatSpec =>
               "right_id"
             )
             .agg(
-              st_intersection_aggregate(col("left_index"), col("right_index")).alias("intersection")
+              st_intersection_aggregate(col("left_index"), col("right_index")).alias("agg_intersection"),
+              first("left_wkt").alias("left_wkt"),
+              first("right_wkt").alias("right_wkt")
             )
-            .withColumn("area", st_area(col("intersection")))
-            .withColumn("wkt", st_astext(col("intersection")))
+            .withColumn("agg_area", st_area(col("agg_intersection")))
+            .withColumn("flat_intersection", st_intersection(col("left_wkt"), col("right_wkt")))
+            .withColumn("flat_area", st_area(col("flat_intersection")))
+            .withColumn("comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)) // ESRI Spatial tolerance
 
-        result
-            .withColumn("area", st_area(col("intersection")))
-            .withColumn("cent", st_centroid2D(col("intersection")))
-            .select("cent", "area")
-            .orderBy(desc("cent"))
-            .show(truncate = false)
+        result.select("comparison").collect().map(_.getBoolean(0)).forall(identity) shouldBe true
     }
 
 }

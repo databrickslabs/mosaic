@@ -36,21 +36,6 @@ trait MosaicExplodeBehaviors {
             .collect()
 
         boroughs.collect().length should be < mosaics2.length
-
-        boroughs
-            .select(
-                mosaic_explode(col("wkt"), 11)
-            )
-            .withColumn("area", st_area(index_geometry(col("index.index_id"))))
-            .show()
-
-        boroughs
-            .select(
-                mosaic_explode(col("wkt"), 11)
-            )
-            .withColumn("area", st_area(index_geometry(col("index.index_id"))))
-            .select(sum("area"))
-            .show()
     }
 
     def wkbDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
