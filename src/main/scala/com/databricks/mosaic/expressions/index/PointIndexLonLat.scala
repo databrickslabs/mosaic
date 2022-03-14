@@ -70,9 +70,9 @@ object PointIndexLonLat {
         new ExpressionInfo(
           classOf[PointIndexLonLat].getCanonicalName,
           db.orNull,
-          "point_index_latlon",
+          "point_index_lonlat",
           """
-            |    _FUNC_(lat, lng, resolution) - Returns the h3 index of a point(lat, lng) at resolution.
+            |    _FUNC_(lon, lat, resolution) - Returns the h3 index of a point(lon, lat) at resolution.
             """.stripMargin,
           "",
           """

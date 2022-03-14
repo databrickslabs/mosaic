@@ -9,8 +9,7 @@ import com.databricks.mosaic.core.geometry.api.GeometryAPI
 case class ST_NumPoints(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant with CodegenFallback {
 
     /**
-      * ST_Area expression returns are covered by the
-      * [[org.locationtech.jts.geom.Geometry]] instance extracted from inputGeom
+      * ST_NumPoints expression returns the number of points for a given geometry.
       * expression.
       */
 
@@ -27,7 +26,7 @@ case class ST_NumPoints(inputGeom: Expression, geometryAPIName: String) extends 
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = ST_Area(asArray(0), geometryAPIName)
+        val res = ST_NumPoints(asArray(0), geometryAPIName)
         res.copyTagsFrom(this)
         res
     }

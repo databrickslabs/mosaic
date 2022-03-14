@@ -29,7 +29,7 @@ case class ST_IntersectionAggregate(
     override val dataType: DataType = BinaryType
     private val emptyWKB = geometryAPI.geometry("POLYGON(EMPTY)", "WKT").toWKB
 
-    override def prettyName: String = "st_reduce_intersection"
+    override def prettyName: String = "st_intersection_aggregate"
 
     override def update(accumulator: Array[Byte], inputRow: InternalRow): Array[Byte] = {
         val state = accumulator

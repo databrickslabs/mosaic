@@ -159,10 +159,10 @@ object H3IndexSystem extends IndexSystem with Serializable {
     /**
       * Get the index ID corresponding to the provided coordinates.
       *
-      * @param x
-      *   X coordinate of the point.
-      * @param y
-      *   Y coordinate of the point.
+      * @param lon
+      *   Longitude coordinate of the point.
+      * @param lat
+      *   Latitude coordinate of the point.
       * @param resolution
       *   Resolution of the index.
       * @return
