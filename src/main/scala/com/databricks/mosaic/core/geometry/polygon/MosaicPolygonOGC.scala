@@ -43,6 +43,7 @@ class MosaicPolygonOGC(polygon: OGCPolygon) extends MosaicGeometryOGC(polygon) w
 
     override def flatten: Seq[MosaicGeometry] = List(this)
 
+    override def numPoints: Int = getHolePoints.length + getBoundaryPoints.length
 }
 
 object MosaicPolygonOGC extends GeometryReader {

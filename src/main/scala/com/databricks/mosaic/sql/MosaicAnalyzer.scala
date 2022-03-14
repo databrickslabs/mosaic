@@ -99,7 +99,7 @@ object MosaicAnalyzer {
               mean(
                 st_area(
                   index_geometry(
-                    point_index(
+                    point_index_lonlat(
                       col("centroid").getItem("x"),
                       col("centroid").getItem("y"),
                       lit(resolution)

@@ -1,0 +1,111 @@
+package com.databricks.mosaic.expressions.geometry
+
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
+import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
+import org.apache.spark.sql.catalyst.trees.BinaryLike
+import org.apache.spark.sql.types._
+
+import com.databricks.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.mosaic.expressions.index.IndexGeometry
+
+case class ST_IntersectionAggregate(
+    leftChip: Expression,
+    rightChip: Expression,
+    geometryAPIName: String,
+    indexSystemName: String,
+    mutableAggBufferOffset: Int = 0,
+    inputAggBufferOffset: Int = 0
+) extends TypedImperativeAggregate[Array[Byte]]
+      with BinaryLike[Expression] {
+
+    lazy val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
+    lazy val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID.apply(indexSystemName))
+    override lazy val deterministic: Boolean = true
+    override val left: Expression = leftChip
+    override val right: Expression = rightChip
+    override val nullable: Boolean = false
+    override val dataType: DataType = BinaryType
+    private val emptyWKB = geometryAPI.geometry("POLYGON(EMPTY)", "WKT").toWKB
+
+    override def prettyName: String = "st_intersection_aggregate"
+
+    override def update(accumulator: Array[Byte], inputRow: InternalRow): Array[Byte] = {
+        val state = accumulator
+        val partialGeom = geometryAPI.geometry(state, "WKB")
+
+        val leftIndexValue = left.eval(inputRow).asInstanceOf[InternalRow]
+        val rightIndexValue = right.eval(inputRow).asInstanceOf[InternalRow]
+
+        val leftCoreFlag = leftIndexValue.getBoolean(0)
+        val rightCoreFlag = rightIndexValue.getBoolean(0)
+
+        val geomIncrement = (leftCoreFlag, rightCoreFlag) match {
+            case (true, true)   => indexSystem.indexToGeometry(leftIndexValue.getLong(1), geometryAPI)
+            case (true, false)  => geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
+            case (false, true)  => geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
+            case (false, false) =>
+                val leftChipGeom = geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
+                val rightChipGeom = geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
+                leftChipGeom.intersection(rightChipGeom)
+        }
+
+        partialGeom.union(geomIncrement).toWKB
+    }
+
+    override def merge(accumulator: Array[Byte], input: Array[Byte]): Array[Byte] = {
+        val leftPartial = accumulator
+        val rightPartial = input
+        val leftPartialGeom = geometryAPI.geometry(leftPartial, "WKB")
+        val rightPartialGeom = geometryAPI.geometry(rightPartial, "WKB")
+        val result = leftPartialGeom.union(rightPartialGeom)
+        result.toWKB
+    }
+
+    override def createAggregationBuffer(): Array[Byte] = emptyWKB
+
+    override def withNewInputAggBufferOffset(newInputAggBufferOffset: Int): ImperativeAggregate =
+        copy(inputAggBufferOffset = newInputAggBufferOffset)
+
+    override def withNewMutableAggBufferOffset(newMutableAggBufferOffset: Int): ImperativeAggregate =
+        copy(mutableAggBufferOffset = newMutableAggBufferOffset)
+
+    override def eval(accumulator: Array[Byte]): Any = accumulator
+
+    override def serialize(accumulator: Array[Byte]): Array[Byte] = accumulator
+
+    override def deserialize(storageFormat: Array[Byte]): Array[Byte] = storageFormat
+
+    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): ST_IntersectionAggregate =
+        copy(leftChip = newLeft, rightChip = newRight)
+
+}
+
+object ST_IntersectionAggregate {
+
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+            classOf[IndexGeometry].getCanonicalName,
+            db.orNull,
+            "st_reduce_intersection",
+            """
+              |    _FUNC_(left_index, right_index)) - Resolves an intersection geometry based on matched indices.
+            """.stripMargin,
+            "",
+            """
+              |    Examples:
+              |      > SELECT _FUNC_(a, b);
+              |        geom
+              |        geom
+              |        ...
+              |        geom
+              |  """.stripMargin,
+            "",
+            "agg_funcs",
+            "1.0",
+            "",
+            "built-in"
+        )
+
+}

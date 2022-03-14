@@ -1,9 +1,10 @@
-package com.databricks
+package com.databricks.mosaic
 
 import org.apache.spark.sql.types.{IntegerType, StringType}
 
-package object mosaic {
-    // noinspection ScalaStyle
+package object test {
+
+    //noinspection ScalaStyle
     object mocks {
 
         import org.apache.spark.sql._

@@ -236,8 +236,35 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ST_ConvexHull.registryExpressionInfo(database),
             (exprs: Seq[Expression]) => ST_ConvexHull(exprs(0), geometryAPI.name)
         )
+        registry.registerFunction(
+            FunctionIdentifier("st_numpoints", database),
+            ST_NumPoints.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_NumPoints(exprs(0), geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("st_intersects", database),
+            ST_Intersects.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_Intersects(exprs(0), exprs(1), geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("st_intersection", database),
+            ST_Intersection.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_Intersection(exprs(0), exprs(1), geometryAPI.name)
+        )
 
-        /** IndexSystem Specific */
+        /** Aggregators */
+        registry.registerFunction(
+            FunctionIdentifier("st_intersection_aggregate", database),
+            MosaicExplode.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) =>
+                ST_IntersectionAggregate(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("st_intersects_aggregate", database),
+            ST_IntersectsAggregate.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) =>
+                ST_IntersectsAggregate(exprs(0), exprs(1), geometryAPI.name)
+        )
 
         /** IndexSystem and GeometryAPI Specific methods */
         registry.registerFunction(
@@ -253,12 +280,12 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         )
         registry.registerFunction(
             FunctionIdentifier("point_index_latlon", database),
-            PointIndexLatLon.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => PointIndexLatLon(exprs(0), exprs(1), exprs(2), indexSystem.name)
+            PointIndexLonLat.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => PointIndexLonLat(exprs(0), exprs(1), exprs(2), indexSystem.name)
         )
         registry.registerFunction(
             FunctionIdentifier("point_index", database),
-            PointIndexLatLon.registryExpressionInfo(database),
+            PointIndex.registryExpressionInfo(database),
             (exprs: Seq[Expression]) => PointIndex(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
         registry.registerFunction(
@@ -335,6 +362,15 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_Scale(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
         def st_rotate(geom1: Column, td: Column): Column = ColumnAdapter(ST_Rotate(geom1.expr, td.expr, geometryAPI.name))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))
+        def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
+        def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, geometryAPI.name))
+        def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))
+
+        /** Aggregators */
+        def st_intersects_aggregate(leftIndex: Column, rightIndex: Column): Column =
+            ColumnAdapter(ST_IntersectsAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name).toAggregateExpression(isDistinct = false))
+        def st_intersection_aggregate(leftIndex: Column, rightIndex: Column): Column =
+            ColumnAdapter(ST_IntersectionAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem.name).toAggregateExpression(isDistinct = false))
 
         /** IndexSystem Specific */
 
@@ -347,14 +383,14 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(MosaicFill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
         def mosaicfill(geom: Column, resolution: Int): Column =
             ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
-        def point_index(lat: Column, lng: Column, resolution: Column): Column =
-            ColumnAdapter(PointIndexLatLon(lat.expr, lng.expr, resolution.expr, indexSystem.name))
-        def point_index(lat: Column, lng: Column, resolution: Int): Column =
-            ColumnAdapter(PointIndexLatLon(lat.expr, lng.expr, lit(resolution).expr, indexSystem.name))
-        def point_index(geom: Column, resolution: Column): Column =
-            ColumnAdapter(PointIndex(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
-        def point_index(geom: Column, resolution: Int): Column =
-            ColumnAdapter(PointIndex(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
+        def point_index(point: Column, resolution: Column): Column =
+            ColumnAdapter(PointIndex(point.expr, resolution.expr, indexSystem.name, geometryAPI.name))
+        def point_index(point: Column, resolution: Int): Column =
+            ColumnAdapter(PointIndex(point.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
+        def point_index_lonlat(lon: Column, lat: Column, resolution: Column): Column =
+            ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, resolution.expr, indexSystem.name))
+        def point_index_lonlat(lon: Column, lat: Column, resolution: Int): Column =
+            ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, lit(resolution).expr, indexSystem.name))
         def polyfill(geom: Column, resolution: Column): Column =
             ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
         def polyfill(geom: Column, resolution: Int): Column =
