@@ -247,7 +247,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             (exprs: Seq[Expression]) => ST_Intersects(exprs(0), exprs(1), geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("st_intersects", database),
+            FunctionIdentifier("st_intersection", database),
             ST_Intersection.registryExpressionInfo(database),
             (exprs: Seq[Expression]) => ST_Intersection(exprs(0), exprs(1), geometryAPI.name)
         )

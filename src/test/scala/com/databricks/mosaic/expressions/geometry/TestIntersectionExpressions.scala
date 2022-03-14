@@ -14,7 +14,7 @@ class TestIntersectionExpressions extends AnyFlatSpec with IntersectionExpressio
         it should behave like intersects(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
-    "ST_IntersectionAggregate" should "compute the intersects flag via aggregate expression" in {
+    "ST_IntersectionAggregate" should "compute the intersection via aggregate expression" in {
         it should behave like intersection(MosaicContext.build(H3IndexSystem, OGC), spark)
         it should behave like intersection(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
