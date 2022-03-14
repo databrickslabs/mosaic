@@ -117,15 +117,15 @@ trait IndexSystem extends Serializable {
     /**
       * Get the index ID corresponding to the provided coordinates.
       *
-      * @param x
+      * @param lon
       *   X coordinate of the point.
-      * @param y
+      * @param lat
       *   Y coordinate of the point.
       * @param resolution
       *   Resolution of the index.
       * @return
       *   Index ID in this index system.
       */
-    def pointToIndex(x: Double, y: Double, resolution: Int): Long
+    def pointToIndex(lon: Double, lat: Double, resolution: Int): Long
 
 }
