@@ -33,7 +33,7 @@ class MosaicLibraryHandler:
         if not self._auto_attached_enabled:
             try:
                 result = (
-                    self.spark.conf.get("spark.databricks.mosaic.jar.autoattach")
+                    self.spark.conf.get("spark.databricks.labs.mosaic.jar.autoattach")
                     == "true"
                 )
             except Py4JJavaError as e:
@@ -45,7 +45,7 @@ class MosaicLibraryHandler:
     def mosaic_library_location(self):
         if not self._jar_path:
             try:
-                self._jar_path = self.spark.conf.get("spark.databricks.mosaic.jar.path")
+                self._jar_path = self.spark.conf.get("spark.databricks.labs.mosaic.jar.path")
                 self._jar_filename = self._jar_path.split("/")[-1]
             except Py4JJavaError as e:
                 self._jar_path = f"/databricks/python/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages/mosaic/lib/{self._jar_filename}"

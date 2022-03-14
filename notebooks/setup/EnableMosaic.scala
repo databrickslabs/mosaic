@@ -1,7 +1,7 @@
 // Databricks notebook source
-import com.databricks.mosaic.functions.MosaicContext
-import com.databricks.mosaic.OGC
-import com.databricks.mosaic.H3
+import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.OGC
+import com.databricks.labs.mosaic.H3
 val mosaicContext: MosaicContext = MosaicContext(H3, OGC)
 import mosaicContext.functions._
 
@@ -11,9 +11,9 @@ import mosaicContext.functions._
 
 // COMMAND ----------
 
-import com.databricks.mosaic.patch.MosaicPatch
-import com.databricks.mosaic.OGC
-import com.databricks.mosaic.H3
+import com.databricks.labs.mosaic.patch.MosaicPatch
+import com.databricks.labs.mosaic.OGC
+import com.databricks.labs.mosaic.H3
 val mosaicPatch = MosaicPatch(H3, OGC)
 import mosaicPatch.functions._
 

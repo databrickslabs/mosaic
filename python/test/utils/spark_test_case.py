@@ -17,8 +17,8 @@ class SparkTestCase(unittest.TestCase):
             .config("spark.jars", cls.library_location)
             .getOrCreate()
         )
-        cls.spark.conf.set("spark.databricks.mosaic.jar.autoattach", "false")
-        cls.spark.conf.set("spark.databricks.mosaic.jar.path", cls.library_location)
+        cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
+        cls.spark.conf.set("spark.databricks.labs.mosaic.jar.path", cls.library_location)
         cls.spark.sparkContext.setLogLevel("warn")
 
     @classmethod

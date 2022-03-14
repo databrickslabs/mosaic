@@ -33,14 +33,14 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     -----
     Users can control various aspects of Mosaic's operation with the following Spark confs:
 
-    - `spark.databricks.mosaic.jar.autoattach`: 'true' (default) or 'false'
+    - `spark.databricks.labs.mosaic.jar.autoattach`: 'true' (default) or 'false'
        Automatically attach the Mosaic JAR to the Databricks cluster? (Optional)
-    - `spark.databricks.mosaic.jar.location`
+    - `spark.databricks.labs.mosaic.jar.location`
        Explicitly specify the path to the Mosaic JAR.
        (Optional and not required at all in a standard Databricks environment).
-    - `spark.databricks.mosaic.geometry.api`: 'OGC' (default) or 'JTS'
+    - `spark.databricks.labs.mosaic.geometry.api`: 'OGC' (default) or 'JTS'
        Explicitly specify the underlying geometry library to use for spatial operations. (Optional)
-    - `spark.databricks.mosaic.index.system`: 'H3' (default)
+    - `spark.databricks.labs.mosaic.index.system`: 'H3' (default)
        Explicitly specify the index system to use for optimized spatial joins. (Optional)
 
     """

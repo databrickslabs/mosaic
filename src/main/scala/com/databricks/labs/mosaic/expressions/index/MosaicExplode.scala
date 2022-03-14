@@ -54,7 +54,7 @@ object MosaicExplode {
       *   Struct containing a geometry and a resolution.
       * @return
       *   A set of serialized
-      *   [[com.databricks.mosaic.core.types.model.MosaicChip]]. This set will
+      *   [[com.databricks.labs.mosaic.core.types.model.MosaicChip]]. This set will
       *   be used to generate new rows of data.
       */
     def evalImpl(input: InternalRow, child: Expression, indexSystemName: String, geometryAPIName: String): TraversableOnce[InternalRow] = {

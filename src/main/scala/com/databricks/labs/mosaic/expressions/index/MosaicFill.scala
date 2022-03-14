@@ -67,7 +67,7 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
       *   Any instance containing the resolution
       * @return
       *   A set of serialized
-      *   [[com.databricks.mosaic.core.types.model.MosaicChip]].
+      *   [[com.databricks.labs.mosaic.core.types.model.MosaicChip]].
       */
     // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any): Any = {
