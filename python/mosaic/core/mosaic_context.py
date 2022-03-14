@@ -18,9 +18,9 @@ class MosaicContext:
     def __init__(self, spark: SparkSession):
         sc = spark.sparkContext
         self._mosaicContextClass = getattr(
-            sc._jvm.com.databricks.mosaic.functions, "MosaicContext"
+            sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
         )
-        self._mosaicPackageRef = getattr(sc._jvm.com.databricks.mosaic, "package$")
+        self._mosaicPackageRef = getattr(sc._jvm.com.databricks.labs.mosaic, "package$")
         self._mosaicPackageObject = getattr(self._mosaicPackageRef, "MODULE$")
 
         try:
