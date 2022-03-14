@@ -1,0 +1,9 @@
+Sphinx==4.4.0
+sphinx-material==0.0.35
+nbsphinx==0.8.8
+pandoc==2.0.1
+ipython==8.0.1
+sphinxcontrib-fulltoc==1.2.0
+livereload==2.6.3
+autodocsumm==0.2.7
+sphinx-tabs==3.2.0

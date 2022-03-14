@@ -7,11 +7,12 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 import com.databricks.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 import com.databricks.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.mosaic.sql.MosaicSQLExceptions
 
 case class PointIndex(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
     extends BinaryExpression
-        with NullIntolerant
-        with CodegenFallback {
+      with NullIntolerant
+      with CodegenFallback {
 
     /** Expression output DataType. */
     override def dataType: DataType = LongType
@@ -22,16 +23,16 @@ case class PointIndex(geom: Expression, resolution: Expression, indexSystemName:
     override def prettyName: String = "point_index"
 
     /**
-     * Computes the H3 index corresponding to the provided lat and long
-     * coordinates.
-     *
-     * @param input1
-     *   Any instance containing a point geometry.
-     * @param input2
-     *   Any instance containing resolution.
-     * @return
-     *   H3 index id in Long.
-     */
+      * Computes the H3 index corresponding to the provided lat and long
+      * coordinates.
+      *
+      * @param input1
+      *   Any instance containing a point geometry.
+      * @param input2
+      *   Any instance containing resolution.
+      * @return
+      *   H3 index id in Long.
+      */
     override def nullSafeEval(input1: Any, input2: Any): Any = {
         val resolution: Int = H3IndexSystem.getResolution(input2)
         val geometryAPI = GeometryAPI(geometryAPIName)
@@ -42,7 +43,7 @@ case class PointIndex(geom: Expression, resolution: Expression, indexSystemName:
             case GeometryTypeEnum.POINT =>
                 val point = rowGeom.asInstanceOf[MosaicPoint]
                 indexSystem.pointToIndex(point.getX, point.getY, resolution)
-            case _ =>
+            case _ => throw MosaicSQLExceptions.IncorrectGeometryTypeSupplied(toString, geomType, GeometryTypeEnum.POINT)
         }
     }
 

@@ -11,24 +11,42 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        dbr: [9.1LTS]
-        python: [3.8.8, 3.8.10]
+        python: [3.8.10]
+        spark: [3.2.1]
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-java@v1
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Configure JDK
+      uses: actions/setup-java@v2
       with:
         java-version: '8'
-    - uses: actions/setup-python@v2
+        distribution: 'zulu'
+    - name: Test and build the scala JAR
+      run: mvn -q clean install
+    - name: Copy Scala artifacts to GH Actions run
+      run: |
+        mkdir staging
+        cp target/mosaic*.jar staging
+    - name: Copy Scala artifacts to python package
+      run: |
+        mkdir -p python/mosaic/lib
+        cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib/
+    - name: Configure python interpreter
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python }}
-    - env:
-        DBR_VERSION: ${{ matrix.dbr }}
-      run: mvn -q -Druntime=${DBR_VERSION} clean install
-    - run: mkdir staging
-    - run: cp target/mosaic*.jar staging
-    - run: cp target/mosaic-*-jar-with-dependencies.jar python/mosaic
-    - run: (cd python;pip install -e .[dev];python -m build)
-    - run: cp python/dist/*.whl staging
+    - name: Install python dependencies
+      run: |
+        cd python
+        pip install build wheel pyspark==${{ matrix.spark }}
+        pip install .
+    - name: Test and build python package
+      run: |
+        cd python 
+        python -m unittest
+        python -m build
+    - name: Copy python artifacts to GH Actions run
+      run: cp python/dist/*.whl staging
     - uses: actions/upload-artifact@v2
       with:
         name: artefacts
