@@ -1,7 +1,7 @@
 // Databricks notebook source
-package com.databricks.mosaic.patch
+package com.databricks.labs.mosaic.patch
 
-import com.databricks.mosaic.expressions.geometry.FlattenPolygons
+import com.databricks.labs.mosaic.expressions.geometry.FlattenPolygons
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -34,9 +34,9 @@ case class FlattenPolygonsPatch(pair: Expression, geometryAPIName: String)
 
 // COMMAND ----------
 
-package com.databricks.mosaic.patch
+package com.databricks.labs.mosaic.patch
 
-import com.databricks.mosaic.expressions.index.MosaicExplode
+import com.databricks.labs.mosaic.expressions.index.MosaicExplode
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -68,14 +68,14 @@ case class MosaicExplodePatch(pair: Expression, indexSystemName: String, geometr
 
 // COMMAND ----------
 
-package com.databricks.mosaic.patch
+package com.databricks.labs.mosaic.patch
 
-import com.databricks.mosaic.core.index.IndexSystem
-import com.databricks.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 
 case class MosaicPatch(indexSystem: IndexSystem, geometryAPI: GeometryAPI) {
   import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
-  import com.databricks.mosaic.patch._
+  import com.databricks.labs.mosaic.patch._
   import org.apache.spark.sql.{Column, SparkSession}
   import org.apache.spark.sql.catalyst.FunctionIdentifier
   import org.apache.spark.sql.catalyst.expressions.Expression

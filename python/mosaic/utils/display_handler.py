@@ -24,7 +24,7 @@ class DisplayHandler:
         sc = spark.sparkContext
         self.ScalaOptionClass = getattr(sc._jvm.scala, "Option$")
         self.ScalaOptionObject = getattr(self.ScalaOptionClass, "MODULE$")
-        self.PrettifierModule = getattr(sc._jvm.com.databricks.mosaic.sql, "Prettifier")
+        self.PrettifierModule = getattr(sc._jvm.com.databricks.labs.mosaic.sql, "Prettifier")
 
     @staticmethod
     def basic_display(df: DataFrame):

@@ -18,7 +18,7 @@ class MosaicFrame(DataFrame):
         self._geometry_column_name = geometry_column_name
         self.sc = config.mosaic_spark.sparkContext
         self._mosaicFrameClass = getattr(
-            self.sc._jvm.com.databricks.mosaic.sql, "MosaicFrame$"
+            self.sc._jvm.com.databricks.labs.mosaic.sql, "MosaicFrame$"
         )
         self._mosaicFrameObject = getattr(self._mosaicFrameClass, "MODULE$")
         self._mosaicFrame = self._mosaicFrameObject.apply(

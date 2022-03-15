@@ -36,13 +36,13 @@ polygons1.createOrReplaceTempView("polygons1")
 // COMMAND ----------
 
 // MAGIC %sql
-// MAGIC 
+// MAGIC
 // MAGIC select mosaic_explode(wkb_polygon, 10)
 // MAGIC from polygons1
 
 // COMMAND ----------
 
-import com.databricks.mosaic.analyze.MosaicAnalyzer._
+import com.databricks.labs.mosaic.analyze.MosaicAnalyzer._
 
 val metrics = polygons1.optimalResolution("wkb_polygon", mosaicContext)
 metrics
@@ -50,11 +50,11 @@ metrics
 // COMMAND ----------
 
 // MAGIC %python
-// MAGIC 
+// MAGIC
 // MAGIC from pyspark.sql import functions as F
-// MAGIC 
+// MAGIC
 // MAGIC polygons1 = spark.read.table("polygons1")
-// MAGIC 
+// MAGIC
 // MAGIC display(
 // MAGIC   polygons1.select(mosaic_explode(F.col("wkb_polygon"), F.lit(10)))
 // MAGIC )
