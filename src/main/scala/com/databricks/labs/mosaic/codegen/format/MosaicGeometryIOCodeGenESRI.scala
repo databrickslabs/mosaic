@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.codegen.format
 
 import java.nio.ByteBuffer
 
-import com.databricks.labs.mosaic.core.geometry.MosaicGeometryOGC
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometryESRI
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import com.esri.core.geometry.ogc.OGCGeometry
@@ -12,7 +12,7 @@ import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
 import org.apache.spark.sql.types.{BinaryType, StringType}
 
-object MosaicGeometryIOCodeGenOGC extends GeometryIOCodeGen {
+object MosaicGeometryIOCodeGenESRI extends GeometryIOCodeGen {
 
     override def fromWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val inputGeom = ctx.freshName("inputGeom")
@@ -67,7 +67,7 @@ object MosaicGeometryIOCodeGenOGC extends GeometryIOCodeGen {
     override def fromInternal(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val ogcGeom = classOf[OGCGeometry].getName
         val geometry = ctx.freshName("geometry")
-        val mosaicGeometryClass = classOf[MosaicGeometryOGC].getName
+        val mosaicGeometryClass = classOf[MosaicGeometryESRI].getName
 
         (
           s"""
@@ -136,7 +136,7 @@ object MosaicGeometryIOCodeGenOGC extends GeometryIOCodeGen {
 
     override def toInternal(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val outputGeom = ctx.freshName("outputGeom")
-        val mosaicGeometryClass = classOf[MosaicGeometryOGC].getName
+        val mosaicGeometryClass = classOf[MosaicGeometryESRI].getName
         val internalGeometryJavaType = CodeGenerator.javaType(InternalGeometryType)
         (
           s"""

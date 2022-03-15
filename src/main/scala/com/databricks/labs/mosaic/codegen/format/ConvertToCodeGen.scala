@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.codegen.format
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{JTS, OGC}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{JTS, ESRI}
 import com.databricks.labs.mosaic.core.types._
 
 import org.apache.spark.sql.catalyst.expressions.codegen._
@@ -10,7 +10,7 @@ import org.apache.spark.sql.types._
 object ConvertToCodeGen {
 
     // noinspection DuplicatedCode
-    def doCodeGenOGC(
+    def doCodeGenESRI(
         ctx: CodegenContext,
         ev: ExprCode,
         nullSafeCodeGen: (CodegenContext, ExprCode, String => String) => ExprCode,
@@ -26,7 +26,7 @@ object ConvertToCodeGen {
               val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataType, geometryAPI)
 
               geometryAPI.name match {
-                  case n if n == OGC.name => s"""
+                  case n if n == ESRI.name => s"""
                                                 |$inCode
                                                 |$outCode
                                                 |${ev.value} = $geomOutRef;
@@ -48,7 +48,7 @@ object ConvertToCodeGen {
     // noinspection DuplicatedCode
     def readGeometryCode(ctx: CodegenContext, eval: String, inputDataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
         val geometryCodeGen = geometryAPI.name match {
-            case n if n == OGC.name => MosaicGeometryIOCodeGenOGC
+            case n if n == ESRI.name => MosaicGeometryIOCodeGenESRI
             case n if n == JTS.name => MosaicGeometryIOCodeGenJTS
         }
         // noinspection ScalaStyle
@@ -66,7 +66,7 @@ object ConvertToCodeGen {
     // noinspection DuplicatedCode
     def writeGeometryCode(ctx: CodegenContext, eval: String, outputDataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
         val geometryCodeGen = geometryAPI.name match {
-            case n if n == OGC.name => MosaicGeometryIOCodeGenOGC
+            case n if n == ESRI.name => MosaicGeometryIOCodeGenESRI
             case n if n == JTS.name => MosaicGeometryIOCodeGenJTS
         }
         // noinspection ScalaStyle

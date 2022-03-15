@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.OGC
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.ESRI
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 
@@ -126,7 +126,7 @@ package object test {
             )
 
         def polyDf(sparkSession: SparkSession): DataFrame = {
-            val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, OGC)
+            val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, ESRI)
             import mosaicContext.functions.st_geomfromgeojson
             sparkSession.read
                 .json("src/test/resources/NYC_Taxi_Zones.geojson")
@@ -134,7 +134,7 @@ package object test {
         }
 
         def pointDf(sparkSession: SparkSession): DataFrame = {
-            val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, OGC)
+            val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, ESRI)
             import mosaicContext.functions.st_point
             sparkSession.read
                 .options(

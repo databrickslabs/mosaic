@@ -10,7 +10,7 @@ import org.locationtech.jts.geom.Coordinate
 
 import org.apache.spark.sql.catalyst.InternalRow
 
-class MosaicPointOGC(point: OGCPoint) extends MosaicGeometryOGC(point) with MosaicPoint {
+class MosaicPointESRI(point: OGCPoint) extends MosaicGeometryESRI(point) with MosaicPoint {
 
     def this() = this(null)
 
@@ -54,15 +54,15 @@ class MosaicPointOGC(point: OGCPoint) extends MosaicGeometryOGC(point) with Mosa
 
 }
 
-object MosaicPointOGC extends GeometryReader {
+object MosaicPointESRI extends GeometryReader {
 
-    def apply(geoCoord: GeoCoord): MosaicPointOGC = {
-        MosaicPointOGC(
+    def apply(geoCoord: GeoCoord): MosaicPointESRI = {
+        MosaicPointESRI(
           new OGCPoint(new Point(geoCoord.lng, geoCoord.lat), SpatialReference.create(4326))
         )
     }
 
-    def apply(point: OGCGeometry): MosaicPointOGC = new MosaicPointOGC(point.asInstanceOf[OGCPoint])
+    def apply(point: OGCGeometry): MosaicPointESRI = new MosaicPointESRI(point.asInstanceOf[OGCPoint])
 
     // noinspection ZeroIndexToHead
     override def fromInternal(row: InternalRow): MosaicGeometry = {
@@ -72,14 +72,14 @@ object MosaicPointOGC extends GeometryReader {
         val coordinate = internalGeom.boundaries.head.head
         val point =
             if (coordinate.coords.length == 2) {
-                new OGCPoint(new Point(coordinate.coords(0), coordinate.coords(1)), MosaicGeometryOGC.spatialReference)
+                new OGCPoint(new Point(coordinate.coords(0), coordinate.coords(1)), MosaicGeometryESRI.spatialReference)
             } else {
                 new OGCPoint(
                   new Point(coordinate.coords(0), coordinate.coords(1), coordinate.coords(2)),
-                  MosaicGeometryOGC.spatialReference
+                  MosaicGeometryESRI.spatialReference
                 )
             }
-        new MosaicPointOGC(point)
+        new MosaicPointESRI(point)
     }
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = POINT): MosaicGeometry = {
@@ -88,21 +88,21 @@ object MosaicPointOGC extends GeometryReader {
         val mosaicPoint = points.head
         val point =
             if (mosaicPoint.asSeq.length == 2) {
-                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY), MosaicGeometryOGC.spatialReference)
+                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY), MosaicGeometryESRI.spatialReference)
             } else {
-                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY, mosaicPoint.getZ), MosaicGeometryOGC.spatialReference)
+                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY, mosaicPoint.getZ), MosaicGeometryESRI.spatialReference)
             }
-        new MosaicPointOGC(point)
+        new MosaicPointESRI(point)
     }
 
-    override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryOGC.fromWKB(wkb)
+    override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)
 
-    override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryOGC.fromWKT(wkt)
+    override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryESRI.fromWKT(wkt)
 
-    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC.fromJSON(geoJson)
+    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryESRI.fromJSON(geoJson)
 
-    override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryOGC.fromHEX(hex)
+    override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryESRI.fromHEX(hex)
 
-    override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryOGC.fromKryo(row)
+    override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryESRI.fromKryo(row)
 
 }

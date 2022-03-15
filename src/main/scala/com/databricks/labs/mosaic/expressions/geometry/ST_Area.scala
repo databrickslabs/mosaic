@@ -41,7 +41,7 @@ case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends Unary
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, eval, inputGeom.dataType, geometryAPI)
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$inCode
                                    |${ev.value} = $geomInRef.getEsriGeometry().calculateArea2D();
                                    |""".stripMargin

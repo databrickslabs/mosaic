@@ -53,7 +53,7 @@ case class ST_Translate(inputGeom: Expression, xd: Expression, yd: Expression, g
                   GeometryTransformationsCodeGen.translate(ctx, firstEval, secondEval, thirdEval, inputGeom.dataType, geometryAPI)
 
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$code
                                    |${ev.value} = $result;
                                    |""".stripMargin

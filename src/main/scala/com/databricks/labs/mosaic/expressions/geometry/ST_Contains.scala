@@ -41,9 +41,9 @@ case class ST_Contains(leftGeom: Expression, rightGeom: Expression, geometryAPIN
               val (rightInCode, rightGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, rightEval, rightGeom.dataType, geometryAPI)
 
               // not merged into the same code block due to JTS IOException throwing
-              // OGC code will always remain simpler
+              // ESRI code will always remain simpler
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$leftInCode
                                    |$rightInCode
                                    |${ev.value} = $leftGeomInRef.contains($rightGeomInRef);

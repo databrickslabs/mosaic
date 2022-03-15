@@ -48,9 +48,9 @@ case class ST_Intersection(leftGeom: Expression, rightGeom: Expression, geometry
               val resultGeom = ctx.freshName("result")
               val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, resultGeom, leftGeom.dataType, geometryAPI)
               // not merged into the same code block due to JTS IOException throwing
-              // OGC code will always remain simpler
+              // ESRI code will always remain simpler
               geometryAPIName match {
-                  case "OGC" =>
+                  case "ESRI" =>
                       val operatorIntersectionClass = classOf[OperatorIntersection]
                       val operatorFactoryLocalClass = classOf[OperatorFactoryLocal]
                       val esriOperatorClass = classOf[Operator]

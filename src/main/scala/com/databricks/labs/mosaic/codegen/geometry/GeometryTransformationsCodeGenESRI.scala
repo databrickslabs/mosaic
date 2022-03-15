@@ -1,21 +1,21 @@
 package com.databricks.labs.mosaic.codegen.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.MosaicGeometryOGC
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometryESRI
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.esri.core.geometry.ogc.OGCGeometry
 
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
 
-object GeometryTransformationsCodeGenOGC {
+object GeometryTransformationsCodeGenESRI {
 
     def rotate(ctx: CodegenContext, geomEval: String, angleEval: String, dataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
         val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, geomEval, dataType, geometryAPI)
         val tmpGeom = ctx.freshName("tmpGeom")
         val (outCode, geomOutRef) = ConvertToCodeGen.writeGeometryCode(ctx, tmpGeom, dataType, geometryAPI)
         val ogcGeometryClass = classOf[OGCGeometry].getName
-        val mosaicGeometryOGCClass = classOf[MosaicGeometryOGC].getName
+        val mosaicGeometryOGCClass = classOf[MosaicGeometryESRI].getName
         (
           s"""
              |$inCode
@@ -38,7 +38,7 @@ object GeometryTransformationsCodeGenOGC {
         val tmpGeom = ctx.freshName("tmpGeom")
         val (outCode, geomOutRef) = ConvertToCodeGen.writeGeometryCode(ctx, tmpGeom, dataType, geometryAPI)
         val ogcGeometryClass = classOf[OGCGeometry].getName
-        val mosaicGeometryOGCClass = classOf[MosaicGeometryOGC].getName
+        val mosaicGeometryOGCClass = classOf[MosaicGeometryESRI].getName
         (
           s"""
              |$inCode
@@ -61,7 +61,7 @@ object GeometryTransformationsCodeGenOGC {
         val tmpGeom = ctx.freshName("tmpGeom")
         val (outCode, geomOutRef) = ConvertToCodeGen.writeGeometryCode(ctx, tmpGeom, dataType, geometryAPI)
         val ogcGeometryClass = classOf[OGCGeometry].getName
-        val mosaicGeometryOGCClass = classOf[MosaicGeometryOGC].getName
+        val mosaicGeometryOGCClass = classOf[MosaicGeometryESRI].getName
         (
           s"""
              |$inCode
