@@ -57,7 +57,7 @@ case class ST_Centroid(inputGeom: Expression, geometryAPIName: String, nDim: Int
               val (centroidCode, centroidRow) = CentroidCodeGen(geometryAPI).centroid(ctx, geomInRef, geometryAPI, nDim)
 
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$inCode
                                    |$centroidCode
                                    |${ev.value} = $centroidRow;

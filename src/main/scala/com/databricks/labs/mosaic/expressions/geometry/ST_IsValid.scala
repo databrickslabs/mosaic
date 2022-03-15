@@ -18,7 +18,7 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
     override def nullSafeEval(input1: Any): Any = {
         val geometryAPI = GeometryAPI(geometryAPIName)
         geometryAPIName match {
-            case "OGC" =>
+            case "ESRI" =>
                 val geom = geometryAPI.geometry(input1, inputGeom.dataType)
                 geom.isValid
             case "JTS" => Try {
@@ -46,7 +46,7 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
               // not merged into the same code block due to JTS IOException throwing
               // OGC code will always remain simpler
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$inCode
                                    |${ev.value} = $geomInRef.isSimple();
                                    |""".stripMargin

@@ -103,20 +103,20 @@ object GeometryAPI extends Serializable {
     def apply(name: String): GeometryAPI =
         name match {
             case "JTS" => JTS
-            case "OGC" => OGC
+            case "ESRI" => ESRI
         }
 
     def getReader(name: String): GeometryReader =
         name match {
             case "JTS" => MosaicGeometryJTS
-            case "OGC" => MosaicGeometryOGC
+            case "ESRI" => MosaicGeometryESRI
         }
 
-    object OGC extends GeometryAPI(MosaicGeometryOGC) {
+    object ESRI extends GeometryAPI(MosaicGeometryESRI) {
 
-        override def name: String = "OGC"
+        override def name: String = "ESRI"
 
-        override def fromGeoCoord(point: GeoCoord): MosaicPoint = MosaicPointOGC(point)
+        override def fromGeoCoord(point: GeoCoord): MosaicPoint = MosaicPointESRI(point)
 
     }
 

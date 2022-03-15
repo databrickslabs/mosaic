@@ -5,7 +5,7 @@ import com.esri.core.geometry.ogc.OGCPoint
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 
-object CentroidCodeGenOGC {
+object CentroidCodeGenESRI {
     // noinspection DuplicatedCode
     def centroid(ctx: CodegenContext, eval: String): (String, String) = {
         val centroid = ctx.freshName("centroid")

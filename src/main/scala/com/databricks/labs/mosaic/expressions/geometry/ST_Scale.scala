@@ -53,7 +53,7 @@ case class ST_Scale(inputGeom: Expression, xd: Expression, yd: Expression, geome
                   GeometryTransformationsCodeGen.scale(ctx, firstEval, secondEval, thirdEval, inputGeom.dataType, geometryAPI)
 
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$code
                                    |${ev.value} = $result;
                                    |""".stripMargin

@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.{MosaicGeometryJTS, MosaicGeometryOGC}
+import com.databricks.labs.mosaic.core.geometry.{MosaicGeometryJTS, MosaicGeometryESRI}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
@@ -37,11 +37,11 @@ case class ST_MinMaxXYZ(inputGeom: Expression, geometryAPIName: String, dimensio
           leftEval => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-              val mosaicGeometryOGC = classOf[MosaicGeometryOGC].getName
+              val mosaicGeometryOGC = classOf[MosaicGeometryESRI].getName
               val mosaicGeometryJTS = classOf[MosaicGeometryJTS].getName
 
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$inCode
                                    |${ev.value} = $mosaicGeometryOGC.apply($geomInRef).minMaxCoord("$dimension", "$func");
                                    |""".stripMargin

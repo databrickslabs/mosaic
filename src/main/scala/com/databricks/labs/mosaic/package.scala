@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.core.index.IndexSystem
 package object mosaic {
 
     val JTS: GeometryAPI = mosaic.core.geometry.api.GeometryAPI.JTS
-    val OGC: GeometryAPI = mosaic.core.geometry.api.GeometryAPI.OGC
+    val ESRI: GeometryAPI = mosaic.core.geometry.api.GeometryAPI.ESRI
     val H3: IndexSystem = mosaic.core.index.H3IndexSystem
 
 }

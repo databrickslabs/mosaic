@@ -9,7 +9,7 @@ object GeometryTransformationsCodeGen {
 
     def rotate(ctx: CodegenContext, geomEval: String, angleEval: String, dataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
         geometryAPI.name match {
-            case "OGC" => GeometryTransformationsCodeGenOGC.rotate(ctx, geomEval, angleEval, dataType, geometryAPI)
+            case "ESRI" => GeometryTransformationsCodeGenESRI.rotate(ctx, geomEval, angleEval, dataType, geometryAPI)
             case "JTS" => GeometryTransformationsCodeGenJTS.rotate(ctx, geomEval, angleEval, dataType, geometryAPI)
         }
     }
@@ -23,7 +23,7 @@ object GeometryTransformationsCodeGen {
         geometryAPI: GeometryAPI
     ): (String, String) = {
         geometryAPI.name match {
-            case "OGC" => GeometryTransformationsCodeGenOGC.scale(ctx, geomEval, xDist, yDist, dataType, geometryAPI)
+            case "ESRI" => GeometryTransformationsCodeGenESRI.scale(ctx, geomEval, xDist, yDist, dataType, geometryAPI)
             case "JTS" => GeometryTransformationsCodeGenJTS.scale(ctx, geomEval, xDist, yDist, dataType, geometryAPI)
         }
     }
@@ -37,7 +37,7 @@ object GeometryTransformationsCodeGen {
         geometryAPI: GeometryAPI
     ): (String, String) = {
         geometryAPI.name match {
-            case "OGC" => GeometryTransformationsCodeGenOGC.translate(ctx, geomEval, xDist, yDist, dataType, geometryAPI)
+            case "ESRI" => GeometryTransformationsCodeGenESRI.translate(ctx, geomEval, xDist, yDist, dataType, geometryAPI)
             case "JTS" => GeometryTransformationsCodeGenJTS.translate(ctx, geomEval, xDist, yDist, dataType, geometryAPI)
         }
     }

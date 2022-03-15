@@ -41,9 +41,9 @@ case class ST_ConvexHull(inputGeom: Expression, geometryAPIName: String) extends
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
               val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, convexHull, inputGeom.dataType, geometryAPI)
               // not merged into the same code block due to JTS IOException throwing
-              // OGC code will always remain simpler
+              // ESRI code will always remain simpler
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$inCode
                                    |$ogcPolygonClass $convexHull = $geomInRef.convexHull();
                                    |$outCode

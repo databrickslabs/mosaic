@@ -47,7 +47,7 @@ case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: Str
               val (code, result) = GeometryTransformationsCodeGen.rotate(ctx, leftEval, rightEval, inputGeom.dataType, geometryAPI)
 
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$code
                                    |${ev.value} = $result;
                                    |""".stripMargin

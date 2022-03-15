@@ -35,7 +35,7 @@ case class ST_Length(inputGeom: Expression, geometryAPIName: String) extends Una
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
 
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$inCode
                                    |${ev.value} = $geomInRef.getEsriGeometry().calculateLength2D();
                                    |""".stripMargin

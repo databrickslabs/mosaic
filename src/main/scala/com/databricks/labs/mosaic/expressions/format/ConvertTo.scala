@@ -4,7 +4,7 @@ import java.util.Locale
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{JTS, OGC}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{JTS, ESRI}
 import com.databricks.labs.mosaic.core.types._
 
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
@@ -117,9 +117,9 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
     override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
         val geometryAPI = geometryAPIName match {
             case n if n == JTS.name => JTS
-            case n if n == OGC.name => OGC
+            case n if n == ESRI.name => ESRI
         }
-        ConvertToCodeGen.doCodeGenOGC(
+        ConvertToCodeGen.doCodeGenESRI(
           ctx,
           ev,
           nullSafeCodeGen,

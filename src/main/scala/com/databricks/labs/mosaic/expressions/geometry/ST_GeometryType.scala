@@ -47,9 +47,9 @@ case class ST_GeometryType(inputGeom: Expression, geometryAPIName: String) exten
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
 
               // not merged into the same code block due to JTS IOException throwing
-              // OGC code will always remain simpler
+              // ESRI code will always remain simpler
               geometryAPIName match {
-                  case "OGC" => s"""
+                  case "ESRI" => s"""
                                    |$inCode
                                    |${ev.value} = $javaStringClass.fromString($geomInRef.geometryType());
                                    |""".stripMargin
@@ -79,7 +79,7 @@ object ST_GeometryType {
           db.orNull,
           "st_geometrytype",
           """
-            |    _FUNC_(expr1) - Returns the OGC Geometry class name for a given geometry.
+            |    _FUNC_(expr1) - Returns the Geometry class name for a given geometry.
             """.stripMargin,
           "",
           """

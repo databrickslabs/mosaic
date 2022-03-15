@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry.multipoint
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointOGC}
+import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
 import com.esri.core.geometry.{MultiPoint, Point}
@@ -9,7 +9,7 @@ import com.esri.core.geometry.ogc._
 
 import org.apache.spark.sql.catalyst.InternalRow
 
-class MosaicMultiPointOGC(multiPoint: OGCMultiPoint) extends MosaicGeometryOGC(multiPoint) with MosaicMultiPoint {
+class MosaicMultiPointESRI(multiPoint: OGCMultiPoint) extends MosaicGeometryESRI(multiPoint) with MosaicMultiPoint {
 
     // noinspection DuplicatedCode
     override def toInternal: InternalGeometry = {
@@ -20,7 +20,7 @@ class MosaicMultiPointOGC(multiPoint: OGCMultiPoint) extends MosaicGeometryOGC(m
     override def getBoundary: Seq[MosaicPoint] = asSeq
 
     override def asSeq: Seq[MosaicPoint] = {
-        for (i <- 0 until multiPoint.numGeometries()) yield MosaicPointOGC(multiPoint.geometryN(i))
+        for (i <- 0 until multiPoint.numGeometries()) yield MosaicPointESRI(multiPoint.geometryN(i))
     }
 
     override def getHoles: Seq[Seq[MosaicPoint]] = Nil
@@ -33,9 +33,9 @@ class MosaicMultiPointOGC(multiPoint: OGCMultiPoint) extends MosaicGeometryOGC(m
 
 }
 
-object MosaicMultiPointOGC extends GeometryReader {
+object MosaicMultiPointESRI extends GeometryReader {
 
-    def apply(multiPoint: OGCGeometry): MosaicGeometryOGC = new MosaicMultiPointOGC(multiPoint.asInstanceOf[OGCMultiPoint])
+    def apply(multiPoint: OGCGeometry): MosaicGeometryESRI = new MosaicMultiPointESRI(multiPoint.asInstanceOf[OGCMultiPoint])
 
     // noinspection ZeroIndexToHead
     override def fromInternal(row: InternalRow): MosaicGeometry = {
@@ -52,8 +52,8 @@ object MosaicMultiPointOGC extends GeometryReader {
             case _ => throw new UnsupportedOperationException("Only 2D and 3D points supported.")
         }
 
-        val ogcMultiPoint = new OGCMultiPoint(multiPoint, MosaicGeometryOGC.spatialReference)
-        new MosaicMultiPointOGC(ogcMultiPoint)
+        val ogcMultiPoint = new OGCMultiPoint(multiPoint, MosaicGeometryESRI.spatialReference)
+        new MosaicMultiPointESRI(ogcMultiPoint)
     }
 
     // noinspection ZeroIndexToHead
@@ -69,18 +69,18 @@ object MosaicMultiPointOGC extends GeometryReader {
             case _ => throw new UnsupportedOperationException("Only 2D and 3D points supported.")
         }
 
-        val ogcMultiPoint = new OGCMultiPoint(multiPoint, MosaicGeometryOGC.spatialReference)
-        new MosaicMultiPointOGC(ogcMultiPoint)
+        val ogcMultiPoint = new OGCMultiPoint(multiPoint, MosaicGeometryESRI.spatialReference)
+        new MosaicMultiPointESRI(ogcMultiPoint)
     }
 
-    override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryOGC.fromWKB(wkb)
+    override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)
 
-    override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryOGC.fromWKT(wkt)
+    override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryESRI.fromWKT(wkt)
 
-    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryOGC.fromJSON(geoJson)
+    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryESRI.fromJSON(geoJson)
 
-    override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryOGC.fromHEX(hex)
+    override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryESRI.fromHEX(hex)
 
-    override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryOGC.fromKryo(row)
+    override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryESRI.fromKryo(row)
 
 }
