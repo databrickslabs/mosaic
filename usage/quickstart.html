@@ -133,7 +133,7 @@
       
         <div class="md-flex__cell md-flex__cell--shrink">
           <div class="md-header-nav__source">
-            <a href="https://github.com/databricks/mosaic/" title="Go to repository" class="md-source" data-md-source="github">
+            <a href="https://github.com/databrickslabs/mosaic/" title="Go to repository" class="md-source" data-md-source="github">
 
     <div class="md-source__icon">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
@@ -185,7 +185,7 @@
        title="Mosaic">Mosaic v0.1-alpha</a>
   </label>
     <div class="md-nav__source">
-      <a href="https://github.com/databricks/mosaic/" title="Go to repository" class="md-source" data-md-source="github">
+      <a href="https://github.com/databrickslabs/mosaic/" title="Go to repository" class="md-source" data-md-source="github">
 
     <div class="md-source__icon">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
@@ -698,14 +698,14 @@ enable_mosaic(spark: pyspark.sql.session.SparkSession, dbutils=None) -&gt; None
     -----
     Users can control various aspects of Mosaic's operation with the following Spark confs:
 
-    - `spark.databricks.mosaic.jar.autoattach`: 'true' (default) or 'false'
+    - `spark.databricks.labs.mosaic.jar.autoattach`: 'true' (default) or 'false'
        Automatically attach the Mosaic JAR to the Databricks cluster? (Optional)
-    - `spark.databricks.mosaic.jar.location`
+    - `spark.databricks.labs.mosaic.jar.location`
        Explicitly specify the path to the Mosaic JAR.
        (Optional and not required at all in a standard Databricks environment).
-    - `spark.databricks.mosaic.geometry.api`: 'OGC' (default) or 'JTS'
+    - `spark.databricks.labs.mosaic.geometry.api`: 'OGC' (default) or 'JTS'
        Explicitly specify the underlying geometry library to use for spatial operations. (Optional)
-    - `spark.databricks.mosaic.index.system`: 'H3' (default)
+    - `spark.databricks.labs.mosaic.index.system`: 'H3' (default)
        Explicitly specify the index system to use for optimized spatial joins. (Optional)
 
 </div></div>
