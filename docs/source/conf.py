@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../../python'))
+sys.path.insert(0, os.path.abspath('../../python'))
 
 
 # -- Project information -----------------------------------------------------
@@ -76,7 +76,7 @@ html_theme_options = {
     'color_accent': 'green',
 
     # Set the repo location to get a badge with stats
-    'repo_url': 'https://github.com/databricks/mosaic/',
+    'repo_url': 'https://github.com/databrickslabs/mosaic/',
     'repo_name': 'Mosaic',
 
     'master_doc': False,
