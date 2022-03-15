@@ -16,7 +16,8 @@ Mosaic provides:
    - many of the OGC SQL standard `ST_` functions implemented as Spark Expressions for transforming, aggregating and joining spatial datasets;
    - high performance through implementation of Spark code generation within the core Mosaic functions;
    - optimisations for performing point-in-polygon joins using an approach we co-developed with Ordnance Survey (`blog post <https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html>`__); and 
-   - the choice of a Scala, SQL and Python API. 
+   - the choice of a Scala, SQL and Python API.
+
 
 Documentation
 =============
@@ -43,3 +44,11 @@ Indices and tables
 
 
 .. * :ref:`modindex`
+
+
+Project Support
+===============
+
+Please note that all projects in the ``databrickslabs`` github space are provided for your exploration only, and are not formally supported by Databricks with Service Level Agreements (SLAs). They are provided AS-IS and we do not make any guarantees of any kind. Please do not submit a support ticket relating to any issues arising from the use of these projects.
+
+Any issues discovered through the use of this project should be filed as GitHub Issues on the Repo. They will be reviewed as time permits, but there are no formal SLAs for support.
