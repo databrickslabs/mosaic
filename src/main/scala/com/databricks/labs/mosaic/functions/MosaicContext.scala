@@ -53,7 +53,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         registry.registerFunction(
           FunctionIdentifier("st_makeline", database),
           ST_MakeLine.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_MakeLine(exprs(0))
+          (exprs: Seq[Expression]) => ST_MakeLine(exprs(0), geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("st_polygon", database),
@@ -327,7 +327,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def as_hex(inGeom: Column): Column = ColumnAdapter(AsHex(inGeom.expr))
         def as_json(inGeom: Column): Column = ColumnAdapter(AsJSON(inGeom.expr))
         def st_point(xVal: Column, yVal: Column): Column = ColumnAdapter(ST_Point(xVal.expr, yVal.expr))
-        def st_makeline(points: Column): Column = ColumnAdapter(ST_MakeLine(points.expr))
+        def st_makeline(points: Column): Column = ColumnAdapter(ST_MakeLine(points.expr, geometryAPI.name))
         def st_makepolygon(boundaryRing: Column): Column = ColumnAdapter(ST_MakePolygon(boundaryRing.expr, array().expr))
         def st_makepolygon(boundaryRing: Column, holeRingArray: Column): Column =
             ColumnAdapter(ST_MakePolygon(boundaryRing.expr, holeRingArray.expr))

@@ -4,6 +4,8 @@ import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
 
+    def reduceFromMulti: MosaicGeometry
+
     def numPoints: Int
 
     def translate(xd: Double, yd: Double): MosaicGeometry

@@ -3,13 +3,25 @@ package com.databricks.labs.mosaic.core.index
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.MosaicChip
-import java.util
+import java.{lang, util}
 
 /**
   * Defines the API that all index systems need to respect for Mosaic to support
   * them.
   */
 trait IndexSystem extends Serializable {
+
+    /**
+     * Get the k ring of indices around the provided index id.
+     *
+     * @param index
+     *   Index ID to be used as a center of k ring.
+     * @param n
+     *   Number of k rings to be generated around the input index.
+     * @return
+     *   A collection of index IDs forming a k ring.
+     */
+    def kRing(index: Long, n: Int): util.List[lang.Long]
 
     def minResolution: Int
 

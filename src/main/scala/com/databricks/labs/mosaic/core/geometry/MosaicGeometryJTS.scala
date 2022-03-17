@@ -21,6 +21,15 @@ import org.apache.spark.sql.catalyst.InternalRow
 
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
+    override def reduceFromMulti: MosaicGeometry = {
+        val n = geom.getNumGeometries
+        if (n == 1) {
+            MosaicGeometryJTS(geom.getGeometryN(0))
+        } else {
+            this
+        }
+    }
+
     override def translate(xd: Double, yd: Double): MosaicGeometryJTS = {
         val transformation = AffineTransformation.translationInstance(xd, yd)
         MosaicGeometryJTS(transformation.transform(geom))
@@ -62,13 +71,13 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         this.geom.intersects(otherGeom)
     }
 
+    def getGeom: Geometry = geom
+
     override def union(other: MosaicGeometry): MosaicGeometry = {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
         val union = this.geom.union(otherGeom)
         MosaicGeometryJTS(union)
     }
-
-    def getGeom: Geometry = geom
 
     override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
 
@@ -166,6 +175,11 @@ object MosaicGeometryJTS extends GeometryReader {
         reader(typeId).fromInternal(row).asInstanceOf[MosaicGeometryJTS]
     }
 
+    override def fromKryo(row: InternalRow): MosaicGeometryJTS = {
+        val typeId = row.getInt(0)
+        reader(typeId).fromKryo(row).asInstanceOf[MosaicGeometryJTS]
+    }
+
     def reader(geomTypeId: Int): GeometryReader =
         GeometryTypeEnum.fromId(geomTypeId) match {
             case POINT           => MosaicPointJTS
@@ -175,10 +189,5 @@ object MosaicGeometryJTS extends GeometryReader {
             case LINESTRING      => MosaicLineStringJTS
             case MULTILINESTRING => MosaicMultiLineStringJTS
         }
-
-    override def fromKryo(row: InternalRow): MosaicGeometryJTS = {
-        val typeId = row.getInt(0)
-        reader(typeId).fromKryo(row).asInstanceOf[MosaicGeometryJTS]
-    }
 
 }

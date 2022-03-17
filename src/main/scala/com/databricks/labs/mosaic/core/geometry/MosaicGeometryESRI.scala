@@ -31,6 +31,8 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
         MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryESRI.spatialReference))
     }
 
+    override def reduceFromMulti: MosaicGeometry = MosaicGeometryESRI(geom.reduceFromMulti())
+
     // noinspection DuplicatedCode
     override def scale(xd: Double, yd: Double): MosaicGeometry = {
         val tr = new Transformation2D

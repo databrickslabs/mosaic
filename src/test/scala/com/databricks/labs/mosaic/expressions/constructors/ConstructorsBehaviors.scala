@@ -7,7 +7,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.{Row, SparkSession}
-import org.apache.spark.sql.functions.{collect_list, explode}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
 trait ConstructorsBehaviors { this: AnyFlatSpec =>
@@ -96,11 +96,10 @@ trait ConstructorsBehaviors { this: AnyFlatSpec =>
 
         val left = spark
             .createDataFrame(rows.asJava, schema)
-            .withColumn("geom", st_geomfromwkt($"wkt"))
             .groupBy()
-            .agg(collect_list($"geom").alias("geoms"))
+            .agg(collect_list($"wkt").alias("geoms"))
             .withColumn("lineString", st_makeline($"geoms"))
-            .select(st_astext($"lineString").alias("wkt"))
+            .select(col("lineString"))
             .as[String]
             .collect
             .head
@@ -108,6 +107,36 @@ trait ConstructorsBehaviors { this: AnyFlatSpec =>
         val right = "LINESTRING (30 10, 10 40, 40 30, 20 20, 30 10, 30 10, 10 30, 40 40, 10 10, 20 20, 10 40, 40 40, 30 30, 40 20, 30 10)"
 
         left shouldBe right
+    }
+
+    def createST_MakeLineAnyNull(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+
+        val geometries = List(
+            "POINT (30 10)",
+            "MULTIPOINT (10 40, 40 30, 20 20, 30 10)",
+            "LINESTRING (30 10, 10 30, 40 40)",
+            "MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))"
+        )
+
+        val rows = geometries.map(s => Row(s))
+        val schema = StructType(List(StructField("wkt", StringType)))
+
+        val left = spark
+            .createDataFrame(rows.asJava, schema)
+            .withColumn("geom", st_geomfromwkt($"wkt"))
+            .groupBy()
+            .agg(collect_list($"geom").alias("geoms"))
+            .withColumn("lineString", st_makeline(array_union($"geoms", array(lit(null)))))
+            .select(st_astext($"lineString").alias("wkt"))
+            .as[String]
+            .collect
+            .head
+
+        left shouldBe null
     }
 
     def createST_MakePolygonNoHoles(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {

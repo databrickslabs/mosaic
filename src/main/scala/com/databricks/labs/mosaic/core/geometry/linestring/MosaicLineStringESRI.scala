@@ -62,7 +62,8 @@ object MosaicLineStringESRI extends GeometryReader {
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicGeometry = {
         require(geomType.id == LINESTRING.id)
         val polygon = MosaicPolygonESRI.fromPoints(points).asInstanceOf[MosaicGeometryESRI].getGeom
-        MosaicLineStringESRI(polygon.boundary().asInstanceOf[OGCLineString])
+        val boundary = polygon.boundary().reduceFromMulti()
+        MosaicLineStringESRI(boundary.asInstanceOf[OGCLineString])
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)
