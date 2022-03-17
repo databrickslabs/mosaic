@@ -1,3 +1,5 @@
+from typing import overload
+
 from pyspark.sql import Column
 from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
 
@@ -390,6 +392,7 @@ def flatten_polygons(geom: ColumnOrName) -> Column:
     )
 
 
+@overload
 def point_index(
     lng: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
 ) -> Column:
@@ -408,9 +411,31 @@ def point_index(
 
     """
     return config.mosaic_context.invoke_function(
-        "point_index",
+        "point_index_lonlat",
         pyspark_to_java_column(lng),
         pyspark_to_java_column(lat),
+        pyspark_to_java_column(resolution),
+    )
+
+
+def point_index(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+    """
+    Returns the `resolution` grid index associated with the input `lat` and `lng` coordinates.
+
+    Parameters
+    ----------
+    lng : Column (DoubleType)
+    lat : Column (DoubleType)
+    resolution : Column (IntegerType)
+
+    Returns
+    -------
+    Column (LongType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "point_index",
+        pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
     )
 
