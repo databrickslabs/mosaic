@@ -34,6 +34,7 @@ class MosaicFrame(DataFrame):
         geometry_column_name: str
             The name of the primary geometry in this spatial dataframe.
         """
+
     def get_optimal_resolution(
         self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None
     ) -> int:

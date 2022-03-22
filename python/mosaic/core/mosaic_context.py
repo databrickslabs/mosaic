@@ -24,12 +24,16 @@ class MosaicContext:
         self._mosaicPackageObject = getattr(self._mosaicPackageRef, "MODULE$")
 
         try:
-            self._geometry_api = spark.conf.get("spark.databricks.labs.mosaic.geometry.api")
+            self._geometry_api = spark.conf.get(
+                "spark.databricks.labs.mosaic.geometry.api"
+            )
         except Py4JJavaError as e:
             self._geometry_api = "ESRI"
 
         try:
-            self._index_system = spark.conf.get("spark.databricks.labs.mosaic.index.system")
+            self._index_system = spark.conf.get(
+                "spark.databricks.labs.mosaic.index.system"
+            )
         except Py4JJavaError as e:
             self._index_system = "H3"
 
