@@ -328,8 +328,8 @@
 
 <h2 id="pre-requisites">Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this headline">¶</a></h2>
 <p>In order to use Mosaic, you must have access to a Databricks cluster running
-Databricks Runtime 9.1 LTS. If you have cluster creation permissions in your Databricks workspace, you
-can create a cluster using the instructions
+Databricks Runtime 10.0 or later. If you have cluster creation permissions in your Databricks
+workspace, you can create a cluster using the instructions
 <a class="reference external" href="https://docs.databricks.com/clusters/create.html#use-the-cluster-ui">here</a>.</p>
 <p>You will also need “Can Manage” permissions on this cluster in order to attach the
 Mosaic library to your cluster. A workspace administrator will be able to grant
@@ -339,15 +339,9 @@ in our documentation
 
 
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The advice here will change when Mosaic is officially released.
-Check back regularly for updates to the installation process.</p>
-</div>
-<p>Mosaic is packaged as a Python <a class="reference external" href="https://www.python.org/dev/peps/pep-0427/">Wheel</a>.</p>
 <p>To install Mosaic on your Databricks cluster, take the following steps:</p>
 <ol class="arabic simple">
-<li><p>Download the Python .whl file from the Mosaic repository.</p></li>
+<li><p>Download the Python .whl file (or Scala JAR if you do not intend to use Python) from the ‘Releases’ section of the Mosaic GitHub repository.</p></li>
 <li><p>Attach the file to the cluster following the instructions <a class="reference external" href="https://docs.databricks.com/libraries/cluster-libraries.html#cluster-installed-library">here</a>.</p></li>
 </ol>
 
