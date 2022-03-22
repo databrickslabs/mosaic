@@ -55,7 +55,7 @@ object Mosaic {
         indexSystem: IndexSystem,
         geometryAPI: GeometryAPI
     ): Seq[MosaicChip] = {
-        val start = line.getBoundaryPoints.head
+        val start = line.getShells.head.asSeq.head
         val startIndex = indexSystem.pointToIndex(start.getX, start.getY, resolution)
 
         @tailrec

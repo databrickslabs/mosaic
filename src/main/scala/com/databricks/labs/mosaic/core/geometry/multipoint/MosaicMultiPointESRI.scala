@@ -17,17 +17,13 @@ class MosaicMultiPointESRI(multiPoint: OGCMultiPoint) extends MosaicGeometryESRI
         new InternalGeometry(MULTIPOINT.id, Array(points.toArray), Array(Array(Array())))
     }
 
-    override def getBoundary: Seq[MosaicPoint] = asSeq
-
     override def asSeq: Seq[MosaicPoint] = {
         for (i <- 0 until multiPoint.numGeometries()) yield MosaicPointESRI(multiPoint.geometryN(i))
     }
 
-    override def getHoles: Seq[Seq[MosaicPoint]] = Nil
+    override def getBoundary: MosaicGeometry = MosaicGeometryESRI(multiPoint.boundary())
 
     override def getLength: Double = 0.0
-
-    override def flatten: Seq[MosaicGeometry] = asSeq
 
     override def numPoints: Int = multiPoint.numGeometries()
 

@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic.expressions.constructors
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.LINESTRING
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo, UnaryExpression}
@@ -43,31 +44,17 @@ case class ST_MakeLine(geoms: Expression, geometryAPIName: String) extends Unary
                     .map(geom => InternalGeometry(geom.asInstanceOf[InternalRow]))
                 val outputGeom = internalGeoms.reduce(reduceGeoms)
                 val result = geometryAPI.geometry(outputGeom.serialize, InternalGeometryType)
+
+                val points = geomPieces.flatMap(_.getShellPoints).flatten
+                val outputGeom2 = geometryAPI.geometry(points, LINESTRING)
+                val x = geomPieces.last.getBoundary
+
                 geometryAPI.serialize(result, dataType)
             }
         }
     }
 
     override def dataType: DataType = geoms.dataType.asInstanceOf[ArrayType].elementType
-
-    def eval2(input: InternalRow): Any = {
-        val evaluated = geoms.eval(input)
-        if (Option(evaluated).isEmpty) {
-            null
-        } else {
-            val dataArray = evaluated.asInstanceOf[ArrayData]
-            val n = dataArray.numElements()
-            val anyNull = (for (i <- 0 until n) yield dataArray.isNullAt(i)).exists(identity)
-            if (anyNull) {
-                null
-            } else {
-                val geomArray = evaluated.asInstanceOf[ArrayData].toObjectArray(InternalGeometryType)
-                val internalGeoms = geomArray.map(g => InternalGeometry(g.asInstanceOf[InternalRow]))
-                val outputGeom = internalGeoms.reduce(reduceGeoms)
-                outputGeom.serialize
-            }
-        }
-    }
 
     def reduceGeoms(leftGeom: InternalGeometry, rightGeom: InternalGeometry): InternalGeometry =
         new InternalGeometry(

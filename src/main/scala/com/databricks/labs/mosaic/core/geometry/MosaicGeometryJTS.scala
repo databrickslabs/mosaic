@@ -21,6 +21,8 @@ import org.apache.spark.sql.catalyst.InternalRow
 
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
+    override def getNumGeometries: Int = geom.getNumGeometries
+
     override def reduceFromMulti: MosaicGeometry = {
         val n = geom.getNumGeometries
         if (n == 1) {

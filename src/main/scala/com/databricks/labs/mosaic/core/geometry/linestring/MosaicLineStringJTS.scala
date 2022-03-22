@@ -11,24 +11,14 @@ import org.apache.spark.sql.catalyst.InternalRow
 
 class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(lineString) with MosaicLineString {
 
-    override def getHolePoints: Seq[Seq[MosaicPoint]] = Nil
-
-    override def asSeq: Seq[MosaicPoint] = getBoundaryPoints
-
-    override def getBoundaryPoints: Seq[MosaicPoint] = {
-        MosaicLineStringJTS.getPoints(lineString)
-    }
+    override def getShellPoints: Seq[Seq[MosaicPoint]] = Seq(MosaicLineStringJTS.getPoints(lineString))
 
     override def toInternal: InternalGeometry = {
         val shell = lineString.getCoordinates.map(InternalCoord(_))
         new InternalGeometry(LINESTRING.id, Array(shell), Array(Array(Array())))
     }
 
-    override def getBoundary: Seq[MosaicPoint] = getBoundaryPoints
-
-    override def getHoles: Seq[Seq[MosaicPoint]] = Nil
-
-    override def flatten: Seq[MosaicGeometry] = List(this)
+    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(lineString.getBoundary)
 
 }
 
@@ -45,6 +35,13 @@ object MosaicLineStringJTS extends GeometryReader {
         MosaicLineStringJTS(lineString)
     }
 
+    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicGeometry = {
+        require(geomType.id == LINESTRING.id)
+        val gf = new GeometryFactory()
+        val lineString = gf.createLineString(points.map(_.coord).toArray)
+        MosaicLineStringJTS(lineString)
+    }
+
     def apply(geometry: Geometry): MosaicLineStringJTS = {
         GeometryTypeEnum.fromString(geometry.getGeometryType) match {
             case LINESTRING => new MosaicLineStringJTS(geometry.asInstanceOf[LineString])
@@ -54,13 +51,6 @@ object MosaicLineStringJTS extends GeometryReader {
                   )
                 )
         }
-    }
-
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicGeometry = {
-        require(geomType.id == LINESTRING.id)
-        val gf = new GeometryFactory()
-        val lineString = gf.createLineString(points.map(_.coord).toArray)
-        MosaicLineStringJTS(lineString)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)

@@ -60,7 +60,7 @@ object H3IndexSystem extends IndexSystem with Serializable {
         val centroid = geometry.getCentroid
         val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
         val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
-        val boundary = indexGeom.getBoundary
+        val boundary = indexGeom.getShellPoints.head // first shell is always in head
 
         // Hexagons have only 3 diameters.
         // Computing them manually and selecting the maximum.
@@ -103,11 +103,15 @@ object H3IndexSystem extends IndexSystem with Serializable {
     override def polyfill(geometry: MosaicGeometry, resolution: Int): util.List[java.lang.Long] = {
         if (geometry.isEmpty) Seq.empty[java.lang.Long].asJava
         else {
-            val boundary = geometry.getBoundary.map(_.geoCoord).asJava
-            val holes = geometry.getHoles.map(_.map(_.geoCoord).asJava).asJava
+            val shellPoints = geometry.getShellPoints
+            val holePoints = geometry.getHolePoints
+            (for (i <- 0 until geometry.getNumGeometries) yield {
+                val boundary = shellPoints(i).map(_.geoCoord).asJava
+                val holes = holePoints(i).map(_.map(_.geoCoord).asJava).asJava
 
-            val indices = h3.polyfill(boundary, holes, resolution)
-            indices
+                val indices = h3.polyfill(boundary, holes, resolution)
+                indices.asScala
+            }).flatten.asJava
         }
     }
 

@@ -21,6 +21,16 @@ import org.apache.spark.sql.catalyst.InternalRow
 
 abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
+    override def getNumGeometries: Int =
+        GeometryTypeEnum.fromString(geom.geometryType()) match {
+            case POINT           => 1
+            case MULTIPOINT      => geom.asInstanceOf[OGCMultiPoint].numGeometries()
+            case LINESTRING      => 1
+            case MULTILINESTRING => geom.asInstanceOf[OGCMultiLineString].numGeometries()
+            case POLYGON         => 1
+            case MULTIPOLYGON    => geom.asInstanceOf[OGCMultiPolygon].numGeometries()
+        }
+
     // noinspection DuplicatedCode
     override def translate(xd: Double, yd: Double): MosaicGeometry = {
         val tr = new Transformation2D
@@ -86,9 +96,9 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
         MosaicGeometryESRI(this.getGeom.union(otherGeom))
     }
 
-    override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryESRI].getGeom)
-
     def getGeom: OGCGeometry = geom
+
+    override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryESRI].getGeom)
 
     /**
       * The naming convention in ESRI bindings is different. isSimple actually
@@ -180,15 +190,12 @@ object MosaicGeometryESRI extends GeometryReader {
         fromWKB(bytes)
     }
 
+    override def fromWKB(wkb: Array[Byte]): MosaicGeometryESRI = MosaicGeometryESRI(OGCGeometry.fromBinary(ByteBuffer.wrap(wkb)))
+
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryESRI(OGCGeometry.fromGeoJson(geoJson))
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
         reader(geomType.id).fromPoints(points, geomType)
-    }
-
-    override def fromInternal(row: InternalRow): MosaicGeometry = {
-        val typeId = row.getInt(0)
-        reader(typeId).fromInternal(row)
     }
 
     def reader(geomTypeId: Int): GeometryReader =
@@ -201,13 +208,16 @@ object MosaicGeometryESRI extends GeometryReader {
             case MULTILINESTRING => MosaicMultiLineStringESRI
         }
 
+    override def fromInternal(row: InternalRow): MosaicGeometry = {
+        val typeId = row.getInt(0)
+        reader(typeId).fromInternal(row)
+    }
+
     override def fromKryo(row: InternalRow): MosaicGeometry = {
         val kryoBytes = row.getBinary(1)
         val input = new Input(kryoBytes)
         val wkb = MosaicGeometryESRI.kryo.readObject(input, classOf[Array[Byte]])
         fromWKB(wkb)
     }
-
-    override def fromWKB(wkb: Array[Byte]): MosaicGeometryESRI = MosaicGeometryESRI(OGCGeometry.fromBinary(ByteBuffer.wrap(wkb)))
 
 }

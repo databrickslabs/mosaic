@@ -12,15 +12,6 @@ import org.apache.spark.sql.catalyst.InternalRow
 
 class MosaicMultiLineStringJTS(multiLineString: MultiLineString) extends MosaicGeometryJTS(multiLineString) with MosaicMultiLineString {
 
-    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]] = Nil
-
-    override def getBoundaryPoints: Seq[Seq[MosaicPoint]] = {
-        for (i <- 0 until multiLineString.getNumGeometries) yield {
-            val lineString = multiLineString.getGeometryN(i).asInstanceOf[LineString]
-            MosaicLineStringJTS.getPoints(lineString)
-        }
-    }
-
     override def toInternal: InternalGeometry = {
         val shells = for (i <- 0 until multiLineString.getNumGeometries) yield {
             val lineString = multiLineString.getGeometryN(i).asInstanceOf[LineString]
@@ -29,11 +20,10 @@ class MosaicMultiLineStringJTS(multiLineString: MultiLineString) extends MosaicG
         new InternalGeometry(MULTILINESTRING.id, shells.toArray, Array(Array(Array())))
     }
 
-    override def getBoundary: Seq[MosaicPoint] = MosaicGeometryJTS(multiLineString.getBoundary).getBoundary
+    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(multiLineString.getBoundary)
 
-    override def getHoles: Seq[Seq[MosaicPoint]] = Nil
-
-    override def flatten: Seq[MosaicGeometry] = asSeq
+    override def getShells: Seq[MosaicLineString] =
+        for (i <- 0 until multiLineString.getNumGeometries) yield MosaicLineStringJTS(multiLineString.getGeometryN(i))
 
     override def asSeq: Seq[MosaicLineString] =
         for (i <- 0 until multiLineString.getNumGeometries)

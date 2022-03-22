@@ -3,7 +3,6 @@ package com.databricks.labs.mosaic.core.geometry.linestring
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
-import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonESRI
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.LINESTRING
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString}
@@ -14,7 +13,7 @@ class MosaicLineStringESRI(lineString: OGCLineString) extends MosaicGeometryESRI
 
     def this() = this(null)
 
-    override def asSeq: Seq[MosaicPoint] = getBoundaryPoints
+    override def getShellPoints: Seq[Seq[MosaicPoint]] = Seq(MosaicLineStringESRI.getPoints(lineString))
 
     override def toInternal: InternalGeometry = {
         val shell = for (i <- 0 until lineString.numPoints()) yield {
@@ -24,19 +23,9 @@ class MosaicLineStringESRI(lineString: OGCLineString) extends MosaicGeometryESRI
         new InternalGeometry(LINESTRING.id, Array(shell.toArray), Array(Array(Array())))
     }
 
-    override def getBoundary: Seq[MosaicPoint] = getBoundaryPoints
-
-    override def getBoundaryPoints: Seq[MosaicPoint] = {
-        MosaicLineStringESRI.getPoints(lineString)
-    }
-
-    override def getHoles: Seq[Seq[MosaicPoint]] = getHolePoints
-
-    override def getHolePoints: Seq[Seq[MosaicPoint]] = Nil
+    override def getBoundary: MosaicGeometry = MosaicGeometryESRI(lineString.boundary())
 
     override def getLength: Double = lineString.length()
-
-    override def flatten: Seq[MosaicGeometry] = List(this)
 
     override def numPoints: Int = lineString.numPoints()
 
@@ -61,9 +50,11 @@ object MosaicLineStringESRI extends GeometryReader {
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicGeometry = {
         require(geomType.id == LINESTRING.id)
-        val polygon = MosaicPolygonESRI.fromPoints(points).asInstanceOf[MosaicGeometryESRI].getGeom
-        val boundary = polygon.boundary().reduceFromMulti()
-        MosaicLineStringESRI(boundary.asInstanceOf[OGCLineString])
+        val polyline = MosaicMultiLineStringESRI.createPolyline(
+          Array(points.map(c => InternalCoord(Seq(c.coord.getX, c.coord.getY))).toArray)
+        )
+        val ogcLineString = new OGCLineString(polyline, 0, MosaicGeometryESRI.spatialReference)
+        MosaicLineStringESRI(ogcLineString)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)

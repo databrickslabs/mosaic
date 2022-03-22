@@ -6,6 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
 
 trait MosaicFrameBehaviors { this: AnyFlatSpec =>
 
@@ -38,11 +39,11 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
     }
 
     def testIndexPolygonsExplode(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mdf = MosaicFrame(polyDf(spark), "geometry")
+        val mdf = MosaicFrame(polyDf(spark).withColumn("id", monotonically_increasing_id()), "geometry")
             .setIndexResolution(9)
             .applyIndex()
-        mdf.columns.length shouldBe polyDf(spark).columns.length + 1
-        mdf.count() shouldBe 11986
+        mdf.columns.length shouldBe polyDf(spark).columns.length + 2
+        mdf.groupBy("id").count().count() shouldBe polyDf(spark).count()
     }
 
     def testGetOptimalResolution(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {

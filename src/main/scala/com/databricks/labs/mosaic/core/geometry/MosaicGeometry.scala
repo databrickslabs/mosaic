@@ -1,8 +1,15 @@
 package com.databricks.labs.mosaic.core.geometry
 
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
+
+    def getNumGeometries: Int
+
+    def getShellPoints: Seq[Seq[MosaicPoint]]
+
+    def getHolePoints: Seq[Seq[Seq[MosaicPoint]]]
 
     def reduceFromMulti: MosaicGeometry
 
@@ -30,9 +37,11 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def isEmpty: Boolean
 
-    def getBoundary: Seq[MosaicPoint]
+    def getBoundary: MosaicGeometry
 
-    def getHoles: Seq[Seq[MosaicPoint]]
+    def getShells: Seq[MosaicLineString]
+
+    def getHoles: Seq[Seq[MosaicLineString]]
 
     def boundary: MosaicGeometry
 
@@ -59,15 +68,20 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def convexHull: MosaicGeometry
 
     def minMaxCoord(dimension: String, func: String): Double = {
-        val coordArray = this.getBoundary
-        val unitArray = dimension match {
-            case "X" => coordArray.map(_.getX)
-            case "Y" => coordArray.map(_.getY)
-            case "Z" => coordArray.map(_.getZ)
-        }
+        val coordArray = this.getShellPoints.map(shell => {
+            val unitArray = dimension match {
+                case "X" => shell.map(_.getX)
+                case "Y" => shell.map(_.getY)
+                case "Z" => shell.map(_.getZ)
+            }
+            func match {
+                case "MIN" => unitArray.min
+                case "MAX" => unitArray.max
+            }
+        })
         func match {
-            case "MIN" => unitArray.min
-            case "MAX" => unitArray.max
+            case "MIN" => coordArray.min
+            case "MAX" => coordArray.max
         }
     }
 
