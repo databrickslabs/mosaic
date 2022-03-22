@@ -420,12 +420,11 @@ def point_index(
 
 def point_index(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
-    Returns the `resolution` grid index associated with the input `lat` and `lng` coordinates.
+    Returns the `resolution` grid index associated with the input POINT(x, y).
 
     Parameters
     ----------
-    lng : Column (DoubleType)
-    lat : Column (DoubleType)
+    point : Column (WKT/WKB)
     resolution : Column (IntegerType)
 
     Returns
