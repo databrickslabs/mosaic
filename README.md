@@ -9,7 +9,11 @@ Mosaic provides:
 - many of the OGC SQL standard `ST_` functions implemented as Spark Expressions for transforming, aggregating and joining spatial datasets;
 - high performance through implementation of Spark code generation within the core Mosaic functions;
 - optimisations for performing point-in-polygon joins using an approach we co-developed with Ordnance Survey ([blog post](https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html)); and 
-- the choice of a Scala, SQL and Python API. 
+- the choice of a Scala, SQL and Python API.
+
+
+  ![mosaic-logo](src/main/resources/MosaicLogicalDesign.png)
+Image1: Mosaic logical design.
 
 ## Getting started
 
@@ -21,6 +25,12 @@ The only requirement to start using Mosaic is a Databricks cluster running Datab
 Both the .whl and JAR can be found in the 'Releases' section of the Mosaic GitHub repository.
 
 Instructions for how to attach libraries to a Databricks cluster can be found [here](https://docs.databricks.com/libraries/cluster-libraries.html).
+
+### Ecosystem
+Mosaic is intended to augment the existing system and unlock the potential by integrating spark, delta and 3rd party frameworks into the Lakehouse architecture.
+
+![mosaic-logo](src/main/resources/MosaicEcosystem.png)
+Image2: Mosaic ecosystem - Lakehouse integration.
 
 ### Example notebooks
 This repository contains several example notebooks in `notebooks/examples`. You can import them into your Databricks workspace using the instructions [here](https://docs.databricks.com/notebooks/notebooks-manage.html#import-a-notebook).
