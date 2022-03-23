@@ -246,6 +246,54 @@ def st_isvalid(geom: ColumnOrName) -> Column:
     )
 
 
+def st_intersects(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
+    """
+    Returns true if the geometry `left_geom` intersects `right_geom`.
+
+    Parameters
+    ----------
+    left_geom : Column
+    right_geom : Column
+
+    Returns
+    -------
+    Column (BooleanType)
+
+    Notes
+    -----
+    Intersection logic will be dependent on the chosen geometry API (ESRI or JTS).
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_intersects", pyspark_to_java_column(left_geom), pyspark_to_java_column(right_geom)
+    )
+
+def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
+    """
+    Returns the geometry result of the intersection between `left_geom` and `right_geom`.
+
+    Parameters
+    ----------
+    left_geom : Column
+    right_geom : Column
+
+    Returns
+    -------
+    Column
+        The intersection geometry.
+
+    Notes
+    -----
+    The resulting geometry could give different results depending on the chosen
+    geometry API (ESRI or JTS), especially for polygons that are invalid based on
+    the choosen geometry API.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_intersection", pyspark_to_java_column(left_geom), pyspark_to_java_column(right_geom)
+    )
+
+
 def st_geometrytype(geom: ColumnOrName) -> Column:
     """
     Returns the type of the input geometry `geom` (“POINT”, “LINESTRING”, “POLYGON” etc.).
