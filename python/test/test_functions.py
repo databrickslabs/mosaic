@@ -58,7 +58,18 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_zmax", api.st_zmax("wkt"))
             .withColumn("flatten_polygons", api.flatten_polygons("wkt"))
             .withColumn("point_index", api.point_index(lit(1), lit(1), lit(1)))
+            .withColumn(
+                "point_index", api.point_index(lit(1), lit(1), resolution=lit(1))
+            )
+            .withColumn(
+                "point_index",
+                api.point_index(lng=lit(1), lat=lit(1), resolution=lit(1)),
+            )
             .withColumn("point_index", api.point_index("point_wkt", lit(1)))
+            .withColumn("point_index", api.point_index("point_wkt", resolution=lit(1)))
+            .withColumn(
+                "point_index", api.point_index(geom="point_wkt", resolution=lit(1))
+            )
             .withColumn("index_geometry", api.index_geometry(lit(1)))
             .withColumn("polyfill", api.polyfill("wkt", lit(1)))
             .withColumn("mosaic_explode", api.mosaic_explode("wkt", lit(1)))
