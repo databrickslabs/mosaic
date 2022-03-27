@@ -29,7 +29,9 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
     override def asSeq: Seq[MosaicGeometry] =
         for (i <- 0 until multiPolygon.numGeometries()) yield MosaicGeometryESRI(multiPolygon.geometryN(i))
 
-    override def numPoints: Int = getHolePoints.length + getShellPoints.length
+    override def numPoints: Int = {
+        getHolePoints.map(_.length).sum + getShellPoints.map(_.length).sum
+    }
 
     override def getHoles: Seq[Seq[MosaicLineString]] = {
         val n = multiPolygon.numGeometries()

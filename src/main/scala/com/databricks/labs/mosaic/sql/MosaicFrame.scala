@@ -210,7 +210,7 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
     def analyzer: MosaicAnalyzer = new MosaicAnalyzer(this)
 
     def getOptimalResolution(sampleRows: Int): Int = {
-        analyzer.getOptimalResolution(sampleRows)
+        analyzer.getOptimalResolution(SampleStrategy(sampleRows = Some(sampleRows)))
     }
 
     def getOptimalResolution: Int = {

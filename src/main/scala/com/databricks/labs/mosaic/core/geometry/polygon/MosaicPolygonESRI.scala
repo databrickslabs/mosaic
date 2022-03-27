@@ -31,7 +31,9 @@ class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon)
 
     override def getLength: Double = MosaicGeometryESRI(polygon.boundary()).getLength
 
-    override def numPoints: Int = getHolePoints.length + getShellPoints.length
+    override def numPoints: Int = {
+        getHolePoints.map(_.length).sum + getShellPoints.map(_.length).sum
+    }
 
     override def getShells: Seq[MosaicLineString] = Seq(MosaicLineStringESRI(polygon.exteriorRing()))
 
