@@ -446,9 +446,7 @@ def flatten_polygons(geom: ColumnOrName) -> Column:
         "flatten_polygons", pyspark_to_java_column(geom)
     )
 
-
-@overload
-def point_index(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+def point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
     Returns the `resolution` grid index associated with the input geometry `geom`.
 
@@ -462,20 +460,23 @@ def point_index(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     Column (LongType)
 
     """
-    ...
+    return config.mosaic_context.invoke_function(
+        "point_index_geom",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(resolution),
+    )
 
 
-@overload
-def point_index(
-    lng: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
+def point_index_lonlat(
+    lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
 ) -> Column:
     """
     Returns the `resolution` grid index associated with the input `lng` and `lat` coordinates.
 
     Parameters
     ----------
-    lng : Column (DoubleType)
-    lat : Column (DoubleType)
+    lon : Column (DoubleType) Longitude
+    lat : Column (DoubleType) Latitude
     resolution : Column (IntegerType)
 
     Returns
@@ -483,53 +484,12 @@ def point_index(
     Column (LongType)
 
     """
-    ...
-
-
-def point_index(*args: ColumnOrName, **kwargs: ColumnOrName) -> Column:
-
-    geom = None
-    lng = None
-    lat = None
-    resolution = None
-
-    if "resolution" in kwargs:
-        resolution = kwargs["resolution"]
-
-        if "geom" in kwargs:
-            geom = kwargs["geom"]
-
-        if "lng" in kwargs and "lat" in kwargs:
-            lng, lat = kwargs["lng"], kwargs["lat"]
-
-    if all([geom is None, lng is None, lat is None]):
-        if len(args) == 1:
-            geom, *_ = args
-        elif len(args) == 2:
-            if resolution is not None:
-                lng, lat, *_ = args
-            else:
-                geom, resolution, *_ = args
-        elif len(args) == 3:
-            lng, lat, resolution, *_ = args
-        else:
-            raise TypeError(
-                f"{point_index.__name__} called with incorrect number of arguments."
-            )
-
-    if geom is not None:
-        return config.mosaic_context.invoke_function(
-            "point_index",
-            pyspark_to_java_column(geom),
-            pyspark_to_java_column(resolution),
-        )
-    else:
-        return config.mosaic_context.invoke_function(
-            "point_index_lonlat",
-            pyspark_to_java_column(as_typed_col(lng, "double")),
-            pyspark_to_java_column(as_typed_col(lat, "double")),
-            pyspark_to_java_column(resolution),
-        )
+    return config.mosaic_context.invoke_function(
+        "point_index_lonlat",
+        pyspark_to_java_column(as_typed_col(lon, "double")),
+        pyspark_to_java_column(as_typed_col(lat, "double")),
+        pyspark_to_java_column(resolution),
+    )
 
 
 def index_geometry(index_id: ColumnOrName) -> Column:
