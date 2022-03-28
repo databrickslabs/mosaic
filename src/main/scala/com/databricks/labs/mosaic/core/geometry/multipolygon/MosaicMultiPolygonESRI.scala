@@ -35,14 +35,14 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
 
     override def getHoles: Seq[Seq[MosaicLineString]] = {
         val n = multiPolygon.numGeometries()
-        val holes = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getHoles.head
-        holes
+        val holes = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getHoles
+        holes.flatten
     }
 
     override def getShells: Seq[MosaicLineString] = {
         val n = multiPolygon.numGeometries()
-        val shells = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getShells.head
-        shells
+        val shells = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getShells
+        shells.flatten
     }
 
 }

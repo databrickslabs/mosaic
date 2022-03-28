@@ -27,9 +27,9 @@ class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicGeometryJT
         val n = multiPolygon.getNumGeometries
         val shells = for (i <- 0 until n) yield {
             val polygon = MosaicPolygonJTS(multiPolygon.getGeometryN(i).asInstanceOf[Polygon])
-            polygon.getShells.head
+            polygon.getShells
         }
-        shells
+        shells.flatten
     }
 
     override def asSeq: Seq[MosaicGeometry] =
@@ -39,9 +39,9 @@ class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicGeometryJT
         val n = multiPolygon.getNumGeometries
         val holes = for (i <- 0 until n) yield {
             val polygon = MosaicPolygonJTS(multiPolygon.getGeometryN(i).asInstanceOf[Polygon])
-            polygon.getHoles.head
+            polygon.getHoles
         }
-        holes
+        holes.flatten
     }
 
 }
