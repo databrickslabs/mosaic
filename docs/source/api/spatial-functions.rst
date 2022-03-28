@@ -779,18 +779,18 @@ flatten_polygons
 
     >>>
 
-point_index
+point_index_lonlat
 ***********
 
-.. function:: point_index(lat, lng, resolution)
+.. function:: point_index_lonlat(lon, lat, resolution)
 
     Returns the `resolution` grid index associated with 
-    the input `lat` and `lng` coordinates.
+    the input `lon` and `lat` coordinates.
 
+    :param lon: Longitude
+    :type lon: Column: DoubleType
     :param lat: Latitude
     :type lat: Column: DoubleType
-    :param lng: Longitude
-    :type lng: Column: DoubleType
     :param resolution: Index resolution
     :type resolution: Column: Integer
     :rtype: Column: LongType
@@ -801,9 +801,9 @@ point_index
    .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-    >>> df.select(point_index('lat', 'lon', lit(10))).show(1, False)
+    >>> df.select(point_index_lonlat('lon', 'lat', lit(10))).show(1, False)
     +----------------------------+
-    |h3_point_index(lat, lon, 10)|
+    |h3_point_index(lon, lat, 10)|
     +----------------------------+
     |623385352048508927          |
     +----------------------------+
@@ -811,7 +811,7 @@ point_index
    .. code-tab:: scala
 
     >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
-    >>> df.select(point_index($"lon", $"lat", lit(10))).show()
+    >>> df.select(point_index_lonlat($"lon", $"lat", lit(10))).show()
     +----------------------------+
     |h3_point_index(lat, lon, 10)|
     +----------------------------+
@@ -820,7 +820,7 @@ point_index
 
    .. code-tab:: sql
 
-    >>> SELECT point_index(30d, 10d, 10)
+    >>> SELECT point_index_lonlat(30d, 10d, 10)
     +----------------------------+
     |h3_point_index(lat, lon, 10)|
     +----------------------------+

@@ -1,10 +1,12 @@
+import inspect
 from typing import overload
 
 from pyspark.sql import Column
-from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
+from pyspark.sql.functions import col, _to_java_column as pyspark_to_java_column
 
 from mosaic.config import config
-from mosaic.utils.types import ColumnOrName
+from mosaic.utils.types import ColumnOrName, as_typed_col
+
 
 #####################
 # Spatial functions #
@@ -265,8 +267,11 @@ def st_intersects(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "st_intersects", pyspark_to_java_column(left_geom), pyspark_to_java_column(right_geom)
+        "st_intersects",
+        pyspark_to_java_column(left_geom),
+        pyspark_to_java_column(right_geom),
     )
+
 
 def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
     """
@@ -290,7 +295,9 @@ def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column
 
     """
     return config.mosaic_context.invoke_function(
-        "st_intersection", pyspark_to_java_column(left_geom), pyspark_to_java_column(right_geom)
+        "st_intersection",
+        pyspark_to_java_column(left_geom),
+        pyspark_to_java_column(right_geom),
     )
 
 
@@ -439,18 +446,37 @@ def flatten_polygons(geom: ColumnOrName) -> Column:
         "flatten_polygons", pyspark_to_java_column(geom)
     )
 
-
-@overload
-def point_index(
-    lng: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
-) -> Column:
+def point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
-    Returns the `resolution` grid index associated with the input `lat` and `lng` coordinates.
+    Returns the `resolution` grid index associated with the input geometry `geom`.
 
     Parameters
     ----------
-    lng : Column (DoubleType)
-    lat : Column (DoubleType)
+    geom: Column (Geometry)
+    resolution : Column (IntegerType)
+
+    Returns
+    -------
+    Column (LongType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "point_index_geom",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(resolution),
+    )
+
+
+def point_index_lonlat(
+    lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
+) -> Column:
+    """
+    Returns the `resolution` grid index associated with the input `lng` and `lat` coordinates.
+
+    Parameters
+    ----------
+    lon : Column (DoubleType) Longitude
+    lat : Column (DoubleType) Latitude
     resolution : Column (IntegerType)
 
     Returns
@@ -460,29 +486,8 @@ def point_index(
     """
     return config.mosaic_context.invoke_function(
         "point_index_lonlat",
-        pyspark_to_java_column(lng),
-        pyspark_to_java_column(lat),
-        pyspark_to_java_column(resolution),
-    )
-
-
-def point_index(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
-    """
-    Returns the `resolution` grid index associated with the input POINT(x, y).
-
-    Parameters
-    ----------
-    point : Column (WKT/WKB)
-    resolution : Column (IntegerType)
-
-    Returns
-    -------
-    Column (LongType)
-
-    """
-    return config.mosaic_context.invoke_function(
-        "point_index",
-        pyspark_to_java_column(geom),
+        pyspark_to_java_column(as_typed_col(lon, "double")),
+        pyspark_to_java_column(as_typed_col(lat, "double")),
         pyspark_to_java_column(resolution),
     )
 
