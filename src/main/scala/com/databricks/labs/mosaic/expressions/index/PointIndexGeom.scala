@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, 
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
-case class PointIndex(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
+case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
     extends BinaryExpression
       with NullIntolerant
       with CodegenFallback {
@@ -19,11 +19,10 @@ case class PointIndex(geom: Expression, resolution: Expression, indexSystemName:
     override def dataType: DataType = LongType
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "point_index"
+    override def prettyName: String = "point_index_geom"
 
     /**
-      * Computes the H3 index corresponding to the provided lat and long
-      * coordinates.
+      * Computes the H3 index corresponding to the provided POINT geometry.
       *
       * @param input1
       *   Any instance containing a point geometry.
@@ -46,11 +45,11 @@ case class PointIndex(geom: Expression, resolution: Expression, indexSystemName:
         }
     }
 
-    override def toString: String = s"point_index($geom, $resolution)"
+    override def toString: String = s"point_index_geom($geom, $resolution)"
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = PointIndex(asArray(0), asArray(1), indexSystemName, geometryAPIName)
+        val res = PointIndexGeom(asArray(0), asArray(1), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -64,14 +63,14 @@ case class PointIndex(geom: Expression, resolution: Expression, indexSystemName:
 
 }
 
-object PointIndex {
+object PointIndexGeom {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[PointIndex].getCanonicalName,
+          classOf[PointIndexGeom].getCanonicalName,
           db.orNull,
-          "point_index",
+          "point_index_geom",
           """
             |    _FUNC_(geom, resolution) - Returns the h3 index of a point geometry at resolution.
             """.stripMargin,

@@ -3,8 +3,17 @@ from mosaic.config import config
 
 from pyspark.sql import Column
 from pyspark.sql.column import _to_java_column
+from pyspark.sql.functions import col
 
 ColumnOrName = Union[Column, str]
+
+
+def as_typed_col(value: ColumnOrName, data_type: str):
+    return (
+        value.cast(data_type)
+        if isinstance(value, Column)
+        else col(value).cast(data_type)
+    )
 
 
 def scala_option(value: Any):
