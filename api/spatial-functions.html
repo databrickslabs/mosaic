@@ -301,7 +301,7 @@
         </li>
         <li class="md-nav__item"><a href="#flatten-polygons" class="md-nav__link">flatten_polygons</a>
         </li>
-        <li class="md-nav__item"><a href="#point-index" class="md-nav__link">point_index</a>
+        <li class="md-nav__item"><a href="#point-index-lonlat" class="md-nav__link">point_index_lonlat</a>
         </li>
         <li class="md-nav__item"><a href="#polyfill" class="md-nav__link">polyfill</a>
         </li>
@@ -380,7 +380,7 @@
         </li>
         <li class="md-nav__item"><a href="#flatten-polygons" class="md-nav__link">flatten_polygons</a>
         </li>
-        <li class="md-nav__item"><a href="#point-index" class="md-nav__link">point_index</a>
+        <li class="md-nav__item"><a href="#point-index-lonlat" class="md-nav__link">point_index_lonlat</a>
         </li>
         <li class="md-nav__item"><a href="#polyfill" class="md-nav__link">polyfill</a>
         </li>
@@ -1246,17 +1246,17 @@ The assertions used in the ESRI geometry API (the default) follow the definition
 </div></div>
 
 
-<h2 id="point-index">point_index<a class="headerlink" href="#point-index" title="Permalink to this headline">¶</a></h2>
+<h2 id="point-index-lonlat">point_index_lonlat<a class="headerlink" href="#point-index-lonlat" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="point_index">
-<span class="sig-name descname"><span class="pre">point_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#point_index" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="point_index_lonlat">
+<span class="sig-name descname"><span class="pre">point_index_lonlat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#point_index_lonlat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the <cite>resolution</cite> grid index associated with
-the input <cite>lat</cite> and <cite>lng</cite> coordinates.</p>
+the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>lon</strong> (<em>Column: DoubleType</em>) – Longitude</p></li>
 <li><p><strong>lat</strong> (<em>Column: DoubleType</em>) – Latitude</p></li>
-<li><p><strong>lng</strong> (<em>Column: DoubleType</em>) – Longitude</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
 </ul>
 </dd>
@@ -1269,16 +1269,16 @@ the input <cite>lat</cite> and <cite>lng</cite> coordinates.</p>
 </dd></dl>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-16-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-16-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-16-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-16-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-16-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-16-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-16-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-16-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'lon'</span><span class="p">:</span> <span class="mf">30.</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">:</span> <span class="mf">10.</span><span class="p">}])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index</span><span class="p">(</span><span class="s1">'lat'</span><span class="p">,</span> <span class="s1">'lon'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index_lonlat</span><span class="p">(</span><span class="s1">'lon'</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 <span class="go">+----------------------------+</span>
-<span class="go">|h3_point_index(lat, lon, 10)|</span>
+<span class="go">|h3_point_index(lon, lat, 10)|</span>
 <span class="go">+----------------------------+</span>
 <span class="go">|623385352048508927          |</span>
 <span class="go">+----------------------------+</span>
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-16-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-16-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kd">val</span> <span class="n">df</span> <span class="o">=</span> <span class="nc">List</span><span class="p">((</span><span class="mf">30.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"lon"</span><span class="p">,</span> <span class="s">"lat"</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index</span><span class="p">(</span><span class="n">$</span><span class="s">"lon"</span><span class="p">,</span> <span class="n">$</span><span class="s">"lat"</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index_lonlat</span><span class="p">(</span><span class="n">$</span><span class="s">"lon"</span><span class="p">,</span> <span class="n">$</span><span class="s">"lat"</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+----------------------------+</span>
 <span class="o">|</span><span class="n">h3_point_index</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">|</span>
 <span class="o">+----------------------------+</span>
@@ -1286,7 +1286,7 @@ the input <cite>lat</cite> and <cite>lng</cite> coordinates.</p>
 <span class="o">+----------------------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-16-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-16-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">point_index</span><span class="p">(</span><span class="mi">30</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
+</div><div aria-labelledby="tab-16-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-16-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">point_index_lonlat</span><span class="p">(</span><span class="mi">30</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
 <span class="o">+</span><span class="c1">----------------------------+</span>
 <span class="o">|</span><span class="n">h3_point_index</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
 <span class="o">+</span><span class="c1">----------------------------+</span>
