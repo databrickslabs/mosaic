@@ -10,16 +10,9 @@ import com.esri.core.geometry.ogc._
 
 import org.apache.spark.sql.catalyst.InternalRow
 
-class MosaicMultiLineStringESRI(multiLineString: OGCMultiLineString) extends MosaicGeometryESRI(multiLineString) with MosaicMultiLineString {
-
-    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]] = Nil
-
-    override def getBoundaryPoints: Seq[Seq[MosaicPoint]] = {
-        for (i <- 0 until multiLineString.numGeometries()) yield {
-            val lineString = multiLineString.geometryN(i).asInstanceOf[OGCLineString]
-            MosaicLineStringESRI.getPoints(lineString)
-        }
-    }
+class MosaicMultiLineStringESRI(multiLineString: OGCMultiLineString)
+    extends MosaicGeometryESRI(multiLineString)
+      with MosaicMultiLineString {
 
     override def toInternal: InternalGeometry = {
         val shells = for (i <- 0 until multiLineString.numGeometries()) yield {
@@ -31,11 +24,10 @@ class MosaicMultiLineStringESRI(multiLineString: OGCMultiLineString) extends Mos
 
     override def getLength: Double = multiLineString.length()
 
-    override def getBoundary: Seq[MosaicPoint] = MosaicGeometryESRI(multiLineString.boundary()).getBoundary
+    override def getBoundary: MosaicGeometry = MosaicGeometryESRI(multiLineString.boundary())
 
-    override def getHoles: Seq[Seq[MosaicPoint]] = Nil
-
-    override def flatten: Seq[MosaicGeometry] = asSeq
+    override def getShells: Seq[MosaicLineString] =
+        for (i <- 0 until multiLineString.numGeometries()) yield MosaicLineStringESRI(multiLineString.geometryN(i))
 
     override def asSeq: Seq[MosaicLineString] =
         for (i <- 0 until multiLineString.numGeometries())

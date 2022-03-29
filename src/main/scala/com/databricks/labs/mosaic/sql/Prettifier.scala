@@ -27,7 +27,10 @@ object Prettifier {
                 Try {
                     if (explicitColumns.contains(colName)) {
                         st_aswkt(col(colName))
-                    } else if (keywords.exists(kw => colName.toUpperCase(Locale.ROOT).contains(kw))) {
+                    } else if (
+                      keywords.exists(kw => colName.toUpperCase(Locale.ROOT).contains(kw)) &
+                          !colName.toUpperCase(Locale.ROOT).contains("INDEX")
+                    ) {
                         st_aswkt(col(colName)).alias(s"WKT($colName)")
                     } else {
                         col(colName)

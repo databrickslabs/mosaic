@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks.getBoroughs
+import com.databricks.labs.mosaic.test.mocks.{getBoroughs, getWKTRowsDf}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -35,6 +35,32 @@ trait MosaicExplodeBehaviors {
             .collect()
 
         boroughs.collect().length should be < mosaics2.length
+    }
+
+    def lineDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+        mosaicContext.register(spark)
+
+        val wktRows: DataFrame = getWKTRowsDf
+
+        val mosaics = wktRows
+            .select(
+                mosaic_explode(col("wkt"), 4)
+            )
+            .collect()
+
+        wktRows.collect().length should be < mosaics.length
+
+        wktRows.createOrReplaceTempView("wkt_rows")
+
+        val mosaics2 = spark
+            .sql("""
+                   |select mosaic_explode(wkt, 4) from wkt_rows
+                   |""".stripMargin)
+            .collect()
+
+        wktRows.collect().length should be < mosaics2.length
     }
 
     def wkbDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {

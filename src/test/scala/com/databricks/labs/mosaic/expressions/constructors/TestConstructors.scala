@@ -23,6 +23,11 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
         it should behave like createST_MakeLineComplex(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
+    "ST_MakeLine" should "return null if any input is null" in {
+        it should behave like createST_MakeLineAnyNull(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like createST_MakeLineAnyNull(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
     "ST_MakePolygon" should "construct a polygon geometry without holes for any index system and any geometry API" in {
         it should behave like createST_MakePolygonNoHoles(MosaicContext.build(H3IndexSystem, ESRI), spark)
         it should behave like createST_MakePolygonNoHoles(MosaicContext.build(H3IndexSystem, JTS), spark)

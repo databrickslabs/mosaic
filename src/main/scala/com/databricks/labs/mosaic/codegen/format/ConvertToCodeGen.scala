@@ -58,8 +58,7 @@ object ConvertToCodeGen {
             case HexType              => geometryCodeGen.fromHex(ctx, eval, geometryAPI)
             case JSONType             => geometryCodeGen.fromJSON(ctx, eval, geometryAPI)
             case InternalGeometryType => geometryCodeGen.fromInternal(ctx, eval, geometryAPI)
-            case KryoType             => // noinspection NotImplementedCode
-                ???
+            case KryoType             => throw new NotImplementedError("KryoType is not Supported yet.")
         }
     }
 
@@ -76,8 +75,7 @@ object ConvertToCodeGen {
             case HexType              => geometryCodeGen.toHEX(ctx, eval, geometryAPI)
             case JSONType             => geometryCodeGen.toJSON(ctx, eval, geometryAPI)
             case InternalGeometryType => geometryCodeGen.toInternal(ctx, eval, geometryAPI)
-            case KryoType             => // noinspection NotImplementedCode
-                ???
+            case KryoType             => throw new NotImplementedError("KryoType is not Supported yet.")
         }
     }
 

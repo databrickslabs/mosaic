@@ -5,10 +5,15 @@ import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicLineString extends MosaicGeometry {
 
-    def getBoundaryPoints: Seq[MosaicPoint]
+    def asSeq: Seq[MosaicPoint] = getShellPoints.head
 
-    def getHolePoints: Seq[Seq[MosaicPoint]]
+    override def getHoles: Seq[Seq[MosaicLineString]] = Nil
 
-    def asSeq: Seq[MosaicPoint]
+    override def getShells: Seq[MosaicLineString] = Seq(this)
+
+    override def flatten: Seq[MosaicGeometry] = Seq(this)
+
+    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]] = Nil
+
 
 }

@@ -60,7 +60,7 @@ object H3IndexSystem extends IndexSystem with Serializable {
         val centroid = geometry.getCentroid
         val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
         val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
-        val boundary = indexGeom.getBoundary
+        val boundary = indexGeom.getShellPoints.head // first shell is always in head
 
         // Hexagons have only 3 diameters.
         // Computing them manually and selecting the maximum.
@@ -70,6 +70,23 @@ object H3IndexSystem extends IndexSystem with Serializable {
           boundary(1).distance(boundary(4)),
           boundary(2).distance(boundary(5))
         ).max / 2
+    }
+
+    /**
+      * Boundary that is returned by H3 isn't valid from JTS perspective since
+      * it does not form a LinearRing (ie first point == last point). The first
+      * point of the boundary is appended to the end of the boundary to form a
+      * LinearRing.
+      *
+      * @param index
+      *   Id of the index whose geometry should be returned.
+      * @return
+      *   An instance of [[Geometry]] corresponding to index.
+      */
+    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
+        val boundary = h3.h3ToGeoBoundary(index).asScala
+        val extended = boundary ++ List(boundary.head)
+        geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord), POLYGON)
     }
 
     /**
@@ -86,11 +103,15 @@ object H3IndexSystem extends IndexSystem with Serializable {
     override def polyfill(geometry: MosaicGeometry, resolution: Int): util.List[java.lang.Long] = {
         if (geometry.isEmpty) Seq.empty[java.lang.Long].asJava
         else {
-            val boundary = geometry.getBoundary.map(_.geoCoord).asJava
-            val holes = geometry.getHoles.map(_.map(_.geoCoord).asJava).asJava
+            val shellPoints = geometry.getShellPoints
+            val holePoints = geometry.getHolePoints
+            (for (i <- 0 until geometry.getNumGeometries) yield {
+                val boundary = shellPoints(i).map(_.geoCoord).asJava
+                val holes = holePoints(i).map(_.map(_.geoCoord).asJava).asJava
 
-            val indices = h3.polyfill(boundary, holes, resolution)
-            indices
+                val indices = h3.polyfill(boundary, holes, resolution)
+                indices.asScala
+            }).flatten.asJava
         }
     }
 
@@ -115,23 +136,6 @@ object H3IndexSystem extends IndexSystem with Serializable {
             chip.intersection(geometry)
         }
         intersections.filterNot(_.isEmpty)
-    }
-
-    /**
-      * Boundary that is returned by H3 isn't valid from JTS perspective since
-      * it does not form a LinearRing (ie first point == last point). The first
-      * point of the boundary is appended to the end of the boundary to form a
-      * LinearRing.
-      *
-      * @param index
-      *   Id of the index whose geometry should be returned.
-      * @return
-      *   An instance of [[Geometry]] corresponding to index.
-      */
-    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
-        val boundary = h3.h3ToGeoBoundary(index).asScala
-        val extended = boundary ++ List(boundary.head)
-        geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord), POLYGON)
     }
 
     /**
@@ -169,6 +173,20 @@ object H3IndexSystem extends IndexSystem with Serializable {
       */
     override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = {
         h3.geoToH3(lat, lon, resolution)
+    }
+
+    /**
+      * Get the k ring of indices around the provided index id.
+      *
+      * @param index
+      *   Index ID to be used as a center of k ring.
+      * @param n
+      *   Number of k rings to be generated around the input index.
+      * @return
+      *   A collection of index IDs forming a k ring.
+      */
+    override def kRing(index: Long, n: Int): util.List[lang.Long] = {
+        h3.kRing(index, n)
     }
 
     override def minResolution: Int = 0

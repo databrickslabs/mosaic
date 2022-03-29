@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.core.geometry.polygon
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometryESRI.spatialReference
+import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringESRI}
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonESRI
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
 import com.databricks.labs.mosaic.core.types.model._
@@ -26,23 +27,20 @@ class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon)
         new InternalGeometry(POLYGON.id, Array(shell), Array(holes.toArray))
     }
 
-    override def getBoundary: Seq[MosaicPoint] = getBoundaryPoints
-
-    override def getHoles: Seq[Seq[MosaicPoint]] = getHolePoints
+    override def getBoundary: MosaicGeometry = MosaicGeometryESRI(polygon.boundary())
 
     override def getLength: Double = MosaicGeometryESRI(polygon.boundary()).getLength
 
-    override def flatten: Seq[MosaicGeometry] = List(this)
-
-    override def numPoints: Int = getHolePoints.length + getBoundaryPoints.length
-
-    override def getBoundaryPoints: Seq[MosaicPoint] = {
-        MosaicPolygonESRI.getPoints(polygon.exteriorRing())
+    override def numPoints: Int = {
+        getHolePoints.map(_.length).sum + getShellPoints.map(_.length).sum
     }
 
-    override def getHolePoints: Seq[Seq[MosaicPoint]] = {
-        for (i <- 0 until polygon.numInteriorRing()) yield MosaicPolygonESRI.getPoints(polygon.interiorRingN(i))
-    }
+    override def getShells: Seq[MosaicLineString] = Seq(MosaicLineStringESRI(polygon.exteriorRing()))
+
+    override def getHoles: Seq[Seq[MosaicLineString]] =
+        Seq(
+          for (i <- 0 until polygon.numInteriorRing()) yield MosaicLineStringESRI(polygon.interiorRingN(i))
+        )
 
 }
 
