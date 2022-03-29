@@ -39,6 +39,8 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
 
     override def flatten: Seq[MosaicGeometry] = List(this)
 
+    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = f(this)
+
 }
 
 object MosaicPointJTS extends GeometryReader {

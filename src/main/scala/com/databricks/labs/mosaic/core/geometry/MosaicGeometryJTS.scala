@@ -122,6 +122,10 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def numPoints: Int = geom.getNumPoints
 
+    override def getSpatialReference: Int = geom.getSRID
+
+    override def setSpatialReference(srid: Int): Unit = geom.setSRID(srid)
+
 }
 
 object MosaicGeometryJTS extends GeometryReader {

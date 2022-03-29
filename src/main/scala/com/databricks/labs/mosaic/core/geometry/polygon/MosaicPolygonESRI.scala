@@ -7,6 +7,7 @@ import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointE
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.esri.core.geometry.ogc._
+import com.esri.core.geometry.SpatialReference
 
 import org.apache.spark.sql.catalyst.InternalRow
 
@@ -42,6 +43,14 @@ class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon)
 
     override def getHolePoints: Seq[Seq[MosaicPoint]] = {
         for (i <- 0 until polygon.numInteriorRing()) yield MosaicPolygonESRI.getPoints(polygon.interiorRingN(i))
+    }
+
+    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = {
+        val sr = SpatialReference.create(getSpatialReference)
+        val boundaries = Array(getBoundaryPoints.map(f).map { p: MosaicPoint => InternalCoord(p.asSeq) }.toArray)
+        val holes = Array(getHolePoints.map { h => h.map(f).map { p: MosaicPoint => InternalCoord(p.asSeq) }.toArray }.toArray)
+        val polygon = MosaicMultiPolygonESRI.createPolygon(boundaries, holes)
+        MosaicGeometryESRI(new OGCPolygon(polygon, sr))
     }
 
 }

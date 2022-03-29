@@ -31,6 +31,8 @@ class MosaicMultiPointESRI(multiPoint: OGCMultiPoint) extends MosaicGeometryESRI
 
     override def numPoints: Int = multiPoint.numGeometries()
 
+    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = MosaicMultiPointESRI.fromPoints(this.asSeq.map(f))
+
 }
 
 object MosaicMultiPointESRI extends GeometryReader {

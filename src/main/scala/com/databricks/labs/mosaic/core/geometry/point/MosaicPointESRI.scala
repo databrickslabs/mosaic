@@ -52,6 +52,8 @@ class MosaicPointESRI(point: OGCPoint) extends MosaicGeometryESRI(point) with Mo
 
     override def numPoints: Int = 1
 
+    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = f(this)
+
 }
 
 object MosaicPointESRI extends GeometryReader {

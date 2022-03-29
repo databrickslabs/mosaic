@@ -13,22 +13,24 @@ class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(line
 
     override def getHolePoints: Seq[Seq[MosaicPoint]] = Nil
 
+    override def toInternal: InternalGeometry = {
+        val shell = lineString.getCoordinates.map(InternalCoord(_))
+        new InternalGeometry(LINESTRING.id, Array(shell), Array(Array(Array())))
+    }
+
+    override def getHoles: Seq[Seq[MosaicPoint]] = Nil
+
+    override def flatten: Seq[MosaicGeometry] = List(this)
+
+    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = MosaicLineStringJTS.fromPoints(this.asSeq.map(f))
+
     override def asSeq: Seq[MosaicPoint] = getBoundaryPoints
 
     override def getBoundaryPoints: Seq[MosaicPoint] = {
         MosaicLineStringJTS.getPoints(lineString)
     }
 
-    override def toInternal: InternalGeometry = {
-        val shell = lineString.getCoordinates.map(InternalCoord(_))
-        new InternalGeometry(LINESTRING.id, Array(shell), Array(Array(Array())))
-    }
-
     override def getBoundary: Seq[MosaicPoint] = getBoundaryPoints
-
-    override def getHoles: Seq[Seq[MosaicPoint]] = Nil
-
-    override def flatten: Seq[MosaicGeometry] = List(this)
 
 }
 

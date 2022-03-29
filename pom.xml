@@ -13,6 +13,7 @@
         <spec2.version>4.2.0</spec2.version>
     </properties>
 
+
     <dependencies>
         <dependency>
             <groupId>org.scala-lang</groupId>
@@ -95,6 +96,11 @@
                     <artifactId>jackson-core</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.locationtech.proj4j</groupId>
+            <artifactId>proj4j</artifactId>
+            <version>1.1.5</version>
         </dependency>
 
     </dependencies>

@@ -36,6 +36,18 @@ class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with
 
     override def flatten: Seq[MosaicGeometry] = List(this)
 
+    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = {
+        val gf = new GeometryFactory()
+        val shell = gf.createLinearRing(getBoundaryPoints.map(f).map(_.coord).toArray)
+        val holes = getHolePoints
+            .map { h: Seq[MosaicPoint] => h.map(f).map(_.coord) }
+            .map { h: Seq[Coordinate] => gf.createLinearRing(h.toArray) }
+            .toArray
+
+        val geom = gf.createPolygon(shell, holes)
+        MosaicPolygonJTS(geom)
+    }
+
 }
 
 object MosaicPolygonJTS extends GeometryReader {

@@ -141,6 +141,13 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def toWKB: Array[Byte] = geom.asBinary().array()
 
+    override def getSpatialReference: Int = geom.getEsriSpatialReference.getID
+
+    override def setSpatialReference(srid: Int): Unit = {
+        val sr = SpatialReference.create(srid)
+        geom.setSpatialReference(sr)
+    }
+
 }
 
 object MosaicGeometryESRI extends GeometryReader {

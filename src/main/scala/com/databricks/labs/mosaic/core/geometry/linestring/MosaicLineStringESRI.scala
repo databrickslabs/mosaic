@@ -40,6 +40,8 @@ class MosaicLineStringESRI(lineString: OGCLineString) extends MosaicGeometryESRI
 
     override def numPoints: Int = lineString.numPoints()
 
+    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = MosaicLineStringESRI.fromPoints(this.asSeq.map(f))
+
 }
 
 object MosaicLineStringESRI extends GeometryReader {

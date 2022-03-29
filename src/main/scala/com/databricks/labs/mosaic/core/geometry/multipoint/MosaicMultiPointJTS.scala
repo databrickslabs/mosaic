@@ -27,6 +27,8 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
 
     override def flatten: Seq[MosaicGeometry] = asSeq
 
+    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = MosaicMultiPointJTS.fromPoints(this.asSeq.map(f))
+
 }
 
 object MosaicMultiPointJTS extends GeometryReader {

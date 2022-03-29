@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry
 
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
+import com.databricks.labs.mosaic.core.types.model.InternalCoord
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
 
@@ -33,6 +34,8 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def getBoundary: Seq[MosaicPoint]
 
     def getHoles: Seq[Seq[MosaicPoint]]
+
+    def mapCoords(f: (MosaicPoint) => MosaicPoint): MosaicGeometry
 
     def boundary: MosaicGeometry
 
@@ -70,5 +73,9 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
             case "MAX" => unitArray.max
         }
     }
+
+    def getSpatialReference: Int
+
+    def setSpatialReference(srid: Int): Unit
 
 }

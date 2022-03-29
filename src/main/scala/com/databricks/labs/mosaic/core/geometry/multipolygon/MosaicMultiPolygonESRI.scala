@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.core.geometry.multipolygon
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonESRI
+import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonESRI}
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOLYGON
 import com.esri.core.geometry.Polygon
@@ -44,6 +44,15 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
         val n = multiPolygon.numGeometries()
         val boundaries = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getBoundaryPoints
         boundaries.reduce(_ ++ _)
+    }
+
+    override def getPolygons: Seq[MosaicPolygon] = {
+        val n = multiPolygon.numGeometries()
+        for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i))
+    }
+
+    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = {
+//        getPolygons.map {p: MosaicPolygon => p.mapCoords(f)}.asInstanceOf[MosaicMultiPolygonESRI]
     }
 
 }
