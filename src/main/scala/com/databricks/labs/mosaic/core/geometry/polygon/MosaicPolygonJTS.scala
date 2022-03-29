@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry.polygon
 
 import com.databricks.labs.mosaic.core.geometry._
+import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringJTS}
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
@@ -18,23 +19,17 @@ class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with
         new InternalGeometry(POLYGON.id, Array(shell), Array(holes.toArray))
     }
 
-    override def getBoundary: Seq[MosaicPoint] = getBoundaryPoints
+    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(polygon.getBoundary)
 
-    override def getBoundaryPoints: Seq[MosaicPoint] = {
-        val exteriorRing = polygon.getBoundary.getGeometryN(0)
-        MosaicPolygonJTS.getPoints(exteriorRing.asInstanceOf[LinearRing])
-    }
+    override def getShells: Seq[MosaicLineString] = Seq(MosaicLineStringJTS(polygon.getExteriorRing))
 
-    override def getHoles: Seq[Seq[MosaicPoint]] = getHolePoints
-
-    override def getHolePoints: Seq[Seq[MosaicPoint]] = {
-        val boundary = polygon.getBoundary
-        val m = boundary.getNumGeometries
-        val holes = for (i <- 1 until m) yield boundary.getGeometryN(i).asInstanceOf[LinearRing]
-        holes.map(MosaicPolygonJTS.getPoints)
-    }
-
-    override def flatten: Seq[MosaicGeometry] = List(this)
+    override def getHoles: Seq[Seq[MosaicLineString]] =
+        Seq({
+            val boundary = polygon.getBoundary
+            val m = boundary.getNumGeometries
+            val holes = for (i <- 1 until m) yield MosaicLineStringJTS(boundary.getGeometryN(i).asInstanceOf[LinearRing])
+            holes
+        })
 
     override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = {
         val gf = new GeometryFactory()

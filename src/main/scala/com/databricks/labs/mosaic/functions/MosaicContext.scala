@@ -282,14 +282,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => PointIndexLonLat(exprs(0), exprs(1), exprs(2), indexSystem.name)
         )
         registry.registerFunction(
-          FunctionIdentifier("point_index", database),
-          PointIndexLonLat.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => PointIndex(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
-        )
-        registry.registerFunction(
-          FunctionIdentifier("point_index", database),
-          PointIndex.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => PointIndex(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          FunctionIdentifier("point_index_geom", database),
+          PointIndexGeom.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => PointIndexGeom(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("polyfill", database),
@@ -391,10 +386,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(MosaicFill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
         def mosaicfill(geom: Column, resolution: Int): Column =
             ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
-        def point_index(point: Column, resolution: Column): Column =
-            ColumnAdapter(PointIndex(point.expr, resolution.expr, indexSystem.name, geometryAPI.name))
-        def point_index(point: Column, resolution: Int): Column =
-            ColumnAdapter(PointIndex(point.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
+        def point_index_geom(point: Column, resolution: Column): Column =
+            ColumnAdapter(PointIndexGeom(point.expr, resolution.expr, indexSystem.name, geometryAPI.name))
+        def point_index_geom(point: Column, resolution: Int): Column =
+            ColumnAdapter(PointIndexGeom(point.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
         def point_index_lonlat(lon: Column, lat: Column, resolution: Column): Column =
             ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, resolution.expr, indexSystem.name))
         def point_index_lonlat(lon: Column, lat: Column, resolution: Int): Column =

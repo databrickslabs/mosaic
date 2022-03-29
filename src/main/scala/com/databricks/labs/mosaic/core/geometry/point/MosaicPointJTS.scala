@@ -33,11 +33,7 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
         new InternalGeometry(POINT.id, Array(shell), Array(Array(Array())))
     }
 
-    override def getBoundary: Seq[MosaicPoint] = Seq(this)
-
-    override def getHoles: Seq[Seq[MosaicPoint]] = Nil
-
-    override def flatten: Seq[MosaicGeometry] = List(this)
+    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(point.getBoundary)
 
     override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = f(this)
 

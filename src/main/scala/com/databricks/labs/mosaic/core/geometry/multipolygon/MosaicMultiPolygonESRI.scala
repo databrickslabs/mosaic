@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry.multipolygon
 
 import com.databricks.labs.mosaic.core.geometry._
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonESRI}
@@ -21,29 +22,27 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
         new InternalGeometry(MULTIPOLYGON.id, boundaries, holes)
     }
 
-    override def getBoundary: Seq[MosaicPoint] = getBoundaryPoints
-
-    override def getHoles: Seq[Seq[MosaicPoint]] = getHolePoints
-
-    override def getHolePoints: Seq[Seq[MosaicPoint]] = {
-        val n = multiPolygon.numGeometries()
-        val holeGroups = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getHolePoints
-        holeGroups.reduce(_ ++ _)
-    }
+    override def getBoundary: MosaicGeometry = MosaicGeometryESRI(multiPolygon.boundary())
 
     override def getLength: Double = MosaicGeometryESRI(multiPolygon.boundary()).getLength
-
-    override def flatten: Seq[MosaicGeometry] = asSeq
 
     override def asSeq: Seq[MosaicGeometry] =
         for (i <- 0 until multiPolygon.numGeometries()) yield MosaicGeometryESRI(multiPolygon.geometryN(i))
 
-    override def numPoints: Int = getHolePoints.length + getBoundaryPoints.length
+    override def numPoints: Int = {
+        getHolePoints.map(_.length).sum + getShellPoints.map(_.length).sum
+    }
 
-    override def getBoundaryPoints: Seq[MosaicPoint] = {
+    override def getHoles: Seq[Seq[MosaicLineString]] = {
         val n = multiPolygon.numGeometries()
-        val boundaries = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getBoundaryPoints
-        boundaries.reduce(_ ++ _)
+        val holes = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getHoles
+        holes.flatten
+    }
+
+    override def getShells: Seq[MosaicLineString] = {
+        val n = multiPolygon.numGeometries()
+        val shells = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getShells
+        shells.flatten
     }
 
     override def getPolygons: Seq[MosaicPolygon] = {

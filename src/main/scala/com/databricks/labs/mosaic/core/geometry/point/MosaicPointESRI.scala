@@ -42,13 +42,9 @@ class MosaicPointESRI(point: OGCPoint) extends MosaicGeometryESRI(point) with Mo
         }
     }
 
-    override def getBoundary: Seq[MosaicPoint] = Seq(this)
-
-    override def getHoles: Seq[Seq[MosaicPoint]] = Nil
+    override def getBoundary: MosaicGeometry = MosaicGeometryESRI(point.boundary())
 
     override def getLength: Double = 0.0
-
-    override def flatten: Seq[MosaicGeometry] = List(this)
 
     override def numPoints: Int = 1
 

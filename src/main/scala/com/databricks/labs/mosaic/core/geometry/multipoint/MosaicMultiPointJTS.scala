@@ -17,15 +17,11 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
         new InternalGeometry(MULTIPOINT.id, Array(points.toArray), Array(Array(Array())))
     }
 
-    override def getBoundary: Seq[MosaicPoint] = asSeq
-
     override def asSeq: Seq[MosaicPoint] = {
         for (i <- 0 until multiPoint.getNumPoints) yield MosaicPointJTS(multiPoint.getGeometryN(i).getCoordinates.head)
     }
 
-    override def getHoles: Seq[Seq[MosaicPoint]] = Nil
-
-    override def flatten: Seq[MosaicGeometry] = asSeq
+    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(multiPoint.getBoundary)
 
     override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = MosaicMultiPointJTS.fromPoints(this.asSeq.map(f))
 
