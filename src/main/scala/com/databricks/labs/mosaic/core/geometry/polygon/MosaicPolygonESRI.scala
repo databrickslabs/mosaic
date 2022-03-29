@@ -45,7 +45,7 @@ class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon)
 
     override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = {
         val sr = SpatialReference.create(getSpatialReference)
-        val boundaries = Array(getBoundaryPoints.map(f).map { p: MosaicPoint => InternalCoord(p.asSeq) }.toArray)
+        val boundaries = Array(getShells.map(f).map { p: MosaicPoint => InternalCoord(p.asSeq) }.toArray)
         val holes = Array(getHolePoints.map { h => h.map(f).map { p: MosaicPoint => InternalCoord(p.asSeq) }.toArray }.toArray)
         val polygon = MosaicMultiPolygonESRI.createPolygon(boundaries, holes)
         MosaicGeometryESRI(new OGCPolygon(polygon, sr))
