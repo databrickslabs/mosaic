@@ -35,10 +35,9 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def translate(xd: Double, yd: Double): MosaicGeometry = {
         val tr = new Transformation2D
         tr.setShift(xd, yd)
-        geom.setSpatialReference(MosaicGeometryESRI.defaultSpatialReference)
         val esriGeom = geom.getEsriGeometry
         esriGeom.applyTransformation(tr)
-        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryESRI.defaultSpatialReference))
+        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, geom.getEsriSpatialReference))
     }
 
     override def reduceFromMulti: MosaicGeometry = MosaicGeometryESRI(geom.reduceFromMulti())
@@ -47,20 +46,18 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def scale(xd: Double, yd: Double): MosaicGeometry = {
         val tr = new Transformation2D
         tr.setScale(xd, yd)
-        geom.setSpatialReference(MosaicGeometryESRI.defaultSpatialReference)
         val esriGeom = geom.getEsriGeometry
         esriGeom.applyTransformation(tr)
-        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryESRI.defaultSpatialReference))
+        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, geom.getEsriSpatialReference))
     }
 
     // noinspection DuplicatedCode
     override def rotate(td: Double): MosaicGeometry = {
         val tr = new Transformation2D
         tr.setRotate(td)
-        geom.setSpatialReference(MosaicGeometryESRI.defaultSpatialReference)
         val esriGeom = geom.getEsriGeometry
         esriGeom.applyTransformation(tr)
-        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryESRI.defaultSpatialReference))
+        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, geom.getEsriSpatialReference))
     }
 
     override def getAPI: String = "OGC"

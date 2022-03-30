@@ -49,22 +49,34 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def getAPI: String = "JTS"
 
-    override def getCentroid: MosaicPointJTS = new MosaicPointJTS(geom.getCentroid)
+    override def getCentroid: MosaicPointJTS = {
+        val centroid = geom.getCentroid
+        centroid.setSRID(geom.getSRID)
+        MosaicPointJTS(centroid)
+    }
 
     override def isEmpty: Boolean = geom.isEmpty
 
     override def boundary: MosaicGeometryJTS = MosaicGeometryJTS(geom.getBoundary)
 
-    override def buffer(distance: Double): MosaicGeometryJTS = MosaicGeometryJTS(geom.buffer(distance))
+    override def buffer(distance: Double): MosaicGeometryJTS = {
+        val buffered = geom.buffer(distance)
+        buffered.setSRID(geom.getSRID)
+        MosaicGeometryJTS(buffered)
+    }
 
-    override def simplify(tolerance: Double = 1e-8): MosaicGeometryJTS =
+    override def simplify(tolerance: Double = 1e-8): MosaicGeometryJTS = {
+        val simplified = DouglasPeuckerSimplifier.simplify(geom, tolerance)
+        simplified.setSRID(geom.getSRID)
         MosaicGeometryJTS(
-          DouglasPeuckerSimplifier.simplify(geom, tolerance)
+          simplified
         )
+    }
 
     override def intersection(other: MosaicGeometry): MosaicGeometryJTS = {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
         val intersection = this.geom.intersection(otherGeom)
+        intersection.setSRID(geom.getSRID)
         MosaicGeometryJTS(intersection)
     }
 
@@ -78,6 +90,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
     override def union(other: MosaicGeometry): MosaicGeometry = {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
         val union = this.geom.union(otherGeom)
+        union.setSRID(geom.getSRID)
         MosaicGeometryJTS(union)
     }
 
@@ -102,7 +115,11 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def distance(geom2: MosaicGeometry): Double = getGeom.distance(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
 
-    override def convexHull: MosaicGeometryJTS = MosaicGeometryJTS(geom.convexHull())
+    override def convexHull: MosaicGeometryJTS = {
+        val hull = geom.convexHull()
+        hull.setSRID(geom.getSRID)
+        MosaicGeometryJTS(hull)
+    }
 
     override def toWKT: String = new WKTWriter().write(geom)
 
@@ -167,7 +184,10 @@ object MosaicGeometryJTS extends GeometryReader {
                         MosaicPolygonJTS(firstChip)
                     case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.getGeometryType).id == MULTIPOLYGON.id =>
                         MosaicMultiPolygonJTS(firstChip)
-                    case None => MosaicPolygonJTS.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryJTS]
+                    case None                                                                                            =>
+                        val emptyPolygon = MosaicPolygonJTS.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryJTS]
+                        emptyPolygon.setSpatialReference(geom.getSRID)
+                        emptyPolygon
                 }
         }
     }

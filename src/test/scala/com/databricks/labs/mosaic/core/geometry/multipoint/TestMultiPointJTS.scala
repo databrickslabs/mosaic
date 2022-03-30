@@ -40,4 +40,45 @@ class TestMultiPointJTS extends AnyFlatSpec {
         multiPoint.equals(MosaicMultiPointJTS.fromInternal(multiPoint.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
     }
 
+    "MosaicMultiPointJTS" should "be instantiable from a Seq of MosaicPointJTS" in {
+        val multiPointReference = MosaicMultiPointJTS.fromWKT("MULTIPOINT (1 1, 2 2, 3 3)")
+        val pointsSeq = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
+            .map(MosaicPointJTS.fromWKT)
+            .map(_.asInstanceOf[MosaicPointJTS])
+        val multiPointTest = MosaicMultiPointJTS.fromPoints(pointsSeq)
+        multiPointReference.equals(multiPointTest) shouldBe true
+    }
+
+    "MosaicMultiPointJTS" should "return a Seq of MosaicPointJTS object when calling asSeq" in {
+        val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT (1 1, 2 2, 3 3)").asInstanceOf[MosaicMultiPointJTS]
+        val pointsSeqReference = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
+            .map(MosaicPointJTS.fromWKT)
+            .map(_.asInstanceOf[MosaicPointJTS])
+        val pointSeqTest = multiPoint.asSeq.map(_.asInstanceOf[MosaicPointJTS])
+        val results = pointsSeqReference
+            .zip(pointSeqTest)
+            .map { case (a: MosaicPointJTS, b: MosaicPointJTS) => a.equals(b) }
+        results should contain only true
+    }
+
+    "MosaicMultiPointJTS" should "return a Seq of MosaicPointJTS object with the correct SRID when calling asSeq" in {
+        val srid = 32632
+        val multiPoint = MosaicMultiPointJTS
+            .fromWKT("MULTIPOINT (1 1, 2 2, 3 3)")
+            .asInstanceOf[MosaicMultiPointJTS]
+        multiPoint.setSpatialReference(srid)
+        val pointsSeqReference = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
+            .map(MosaicPointJTS.fromWKT)
+            .map(_.asInstanceOf[MosaicPointJTS])
+        pointsSeqReference.foreach(_.setSpatialReference(srid))
+
+        val pointSeqTest = multiPoint.asSeq.map(_.asInstanceOf[MosaicPointJTS])
+        pointSeqTest.map(_.getSpatialReference) should contain only srid
+
+        val results = pointsSeqReference
+            .zip(pointSeqTest)
+            .map { case (a: MosaicPointJTS, b: MosaicPointJTS) => a.getSpatialReference == b.getSpatialReference }
+        results should contain only true
+    }
+
 }

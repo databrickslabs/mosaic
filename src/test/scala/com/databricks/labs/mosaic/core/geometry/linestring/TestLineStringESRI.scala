@@ -41,4 +41,6 @@ class TestLineStringESRI extends AnyFlatSpec {
         lineString.equals(MosaicLineStringESRI.fromInternal(lineString.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
     }
 
+//    "MosaicLineStringESRI" should "read all supported formats" in {}
+
 }

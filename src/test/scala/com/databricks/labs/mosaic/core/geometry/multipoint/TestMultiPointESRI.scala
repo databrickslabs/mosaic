@@ -40,4 +40,45 @@ class TestMultiPointESRI extends AnyFlatSpec {
         multiPoint.equals(MosaicMultiPointESRI.fromInternal(multiPoint.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
     }
 
+    "MosaicMultiPointESRI" should "be instantiable from a Seq of MosaicPointESRI" in {
+        val multiPointReference = MosaicMultiPointESRI.fromWKT("MULTIPOINT (1 1, 2 2, 3 3)")
+        val pointsSeq = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
+            .map(MosaicPointESRI.fromWKT)
+            .map(_.asInstanceOf[MosaicPointESRI])
+        val multiPointTest = MosaicMultiPointESRI.fromPoints(pointsSeq)
+        multiPointReference.equals(multiPointTest) shouldBe true
+    }
+
+    "MosaicMultiPointESRI" should "return a Seq of MosaicPointESRI object when calling asSeq" in {
+        val multiPoint = MosaicMultiPointESRI.fromWKT("MULTIPOINT (1 1, 2 2, 3 3)").asInstanceOf[MosaicMultiPointESRI]
+        val pointsSeqReference = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
+            .map(MosaicPointESRI.fromWKT)
+            .map(_.asInstanceOf[MosaicPointESRI])
+        val pointSeqTest = multiPoint.asSeq.map(_.asInstanceOf[MosaicPointESRI])
+        val results = pointsSeqReference
+            .zip(pointSeqTest)
+            .map { case (a: MosaicPointESRI, b: MosaicPointESRI) => a.equals(b) }
+        results should contain only true
+    }
+
+    "MosaicMultiPointESRI" should "return a Seq of MosaicPointESRI object with the correct SRID when calling asSeq" in {
+        val srid = 32632
+        val multiPoint = MosaicMultiPointESRI
+            .fromWKT("MULTIPOINT (1 1, 2 2, 3 3)")
+            .asInstanceOf[MosaicMultiPointESRI]
+        multiPoint.setSpatialReference(srid)
+        val pointsSeqReference = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
+            .map(MosaicPointESRI.fromWKT)
+            .map(_.asInstanceOf[MosaicPointESRI])
+        pointsSeqReference.foreach(_.setSpatialReference(srid))
+        val pointSeqTest = multiPoint.asSeq.map(_.asInstanceOf[MosaicPointESRI])
+
+        pointSeqTest.map(_.getSpatialReference) should contain only srid
+
+        val results = pointsSeqReference
+            .zip(pointSeqTest)
+            .map { case (a: MosaicPointESRI, b: MosaicPointESRI) => a.getSpatialReference == b.getSpatialReference }
+        results should contain only true
+    }
+
 }

@@ -60,7 +60,7 @@ object H3IndexSystem extends IndexSystem with Serializable {
         val centroid = geometry.getCentroid
         val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
         val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
-        val boundary = indexGeom.getBoundary
+        val boundary = indexGeom.getShellPoints.head
 
         // Hexagons have only 3 diameters.
         // Computing them manually and selecting the maximum.

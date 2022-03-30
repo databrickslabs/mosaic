@@ -29,7 +29,11 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
         new InternalGeometry(POINT.id, Array(shell), Array(Array(Array())))
     }
 
-    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(point.getBoundary)
+    override def getBoundary: MosaicGeometry = {
+        val geom = point.getBoundary
+        geom.setSRID(point.getSRID)
+        MosaicGeometryJTS(geom)
+    }
 
     override def getGeom: Point = point
 

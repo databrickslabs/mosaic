@@ -24,7 +24,11 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
     }
 
     override def asSeq: Seq[MosaicPoint] = {
-        for (i <- 0 until multiPoint.getNumPoints) yield MosaicPointJTS(multiPoint.getGeometryN(i))
+        for (i <- 0 until multiPoint.getNumPoints) yield {
+            val geom = multiPoint.getGeometryN(i)
+            geom.setSRID(multiPoint.getSRID)
+            MosaicPointJTS(geom)
+        }
     }
 
 }
