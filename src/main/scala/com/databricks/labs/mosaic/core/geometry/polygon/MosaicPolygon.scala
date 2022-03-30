@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry.polygon
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 
 trait MosaicPolygon extends MosaicGeometry {
@@ -10,5 +11,7 @@ trait MosaicPolygon extends MosaicGeometry {
     override def flatten: Seq[MosaicGeometry] = List(this)
 
     override def getShellPoints: Seq[Seq[MosaicPoint]] = getShells.map(_.asSeq)
+
+    def asSeq: Seq[MosaicLineString]
 
 }

@@ -66,11 +66,12 @@ object MosaicLineStringJTS extends GeometryReader {
     def apply(geometry: Geometry): MosaicLineStringJTS = {
         GeometryTypeEnum.fromString(geometry.getGeometryType) match {
             case LINESTRING => new MosaicLineStringJTS(geometry.asInstanceOf[LineString])
-            case LINEARRING => new MosaicLineStringJTS(
-                  new GeometryFactory().createLineString(
-                    geometry.asInstanceOf[LinearRing].getCoordinates
-                  )
+            case LINEARRING =>
+                val newGeom = new GeometryFactory().createLineString(
+                  geometry.asInstanceOf[LinearRing].getCoordinates
                 )
+                newGeom.setSRID(geometry.getSRID)
+                new MosaicLineStringJTS(newGeom)
         }
     }
 

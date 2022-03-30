@@ -44,14 +44,14 @@ class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon)
         )
 
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
-        def toInternalCoordArray(s: Seq[MosaicGeometry]): Array[InternalCoord] =
-            s.map(g => InternalCoord(g.asInstanceOf[MosaicPointESRI].asSeq)).toArray
-        val sr = SpatialReference.create(getSpatialReference)
-        val shells = Array(toInternalCoordArray(getShells.map(_.mapXY(f))))
-        val holes = Array(getHoles.map(_.map(_.mapXY(f))).map(toInternalCoordArray).toArray)
-        val mosaicPolygon = MosaicMultiPolygonESRI.createPolygon(shells, holes)
-        MosaicGeometryESRI(new OGCPolygon(mosaicPolygon, sr))
+        val shellTransformed = getShells.head.asInstanceOf[MosaicLineStringESRI].mapXY(f).asInstanceOf[MosaicLineStringESRI]
+        val holesTransformed = getHoles.head.map(_.asInstanceOf[MosaicLineStringESRI].mapXY(f).asInstanceOf[MosaicLineStringESRI])
+        val newGeom = MosaicPolygonESRI.fromLines(Seq(shellTransformed) ++ holesTransformed)
+        newGeom.setSpatialReference(getSpatialReference)
+        newGeom
     }
+
+    override def asSeq: Seq[MosaicLineString] = getShells ++ getHoles.flatten
 
 }
 
@@ -79,7 +79,7 @@ object MosaicPolygonESRI extends GeometryReader {
         MosaicGeometryESRI(new OGCPolygon(polygon, sr))
     }
 
-    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value = POLYGON): MosaicGeometry = {
         require(geomType.id == POLYGON.id)
         val sr = SpatialReference.create(lines.head.getSpatialReference)
         val boundary = lines.head.asSeq.map(_.coord).map(InternalCoord(_)).toArray
