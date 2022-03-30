@@ -33,7 +33,7 @@ class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with
     }
 
     override def getHoles: Seq[Seq[MosaicLineString]] =
-        Seq(for (i <- 1 until polygon.getNumInteriorRing) yield {
+        Seq(for (i <- 0 until polygon.getNumInteriorRing) yield {
             val ring = polygon.getInteriorRingN(i)
             ring.setSRID(polygon.getSRID)
             MosaicLineStringJTS(ring)
@@ -42,7 +42,7 @@ class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
         val shellTransformed = getShells.head.asInstanceOf[MosaicLineStringJTS].mapXY(f).asInstanceOf[MosaicLineStringJTS]
         val holesTransformed = getHoles.head.map(_.asInstanceOf[MosaicLineStringJTS].mapXY(f).asInstanceOf[MosaicLineStringJTS])
-        val newGeom = MosaicPolygonESRI.fromLines(Seq(shellTransformed) ++ holesTransformed)
+        val newGeom = MosaicPolygonJTS.fromLines(Seq(shellTransformed) ++ holesTransformed)
         newGeom.setSpatialReference(getSpatialReference)
         newGeom
     }

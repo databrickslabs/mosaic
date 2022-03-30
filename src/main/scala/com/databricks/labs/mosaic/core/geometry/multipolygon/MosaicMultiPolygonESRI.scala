@@ -3,11 +3,11 @@ package com.databricks.labs.mosaic.core.geometry.multipolygon
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
-import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
+import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
 import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonESRI}
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOLYGON
-import com.esri.core.geometry.Polygon
+import com.esri.core.geometry.{Polygon, SpatialReference}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPolygon}
 
 import org.apache.spark.sql.catalyst.InternalRow
@@ -26,9 +26,6 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
 
     override def getLength: Double = MosaicGeometryESRI(multiPolygon.boundary()).getLength
 
-    override def asSeq: Seq[MosaicGeometry] =
-        for (i <- 0 until multiPolygon.numGeometries()) yield MosaicGeometryESRI(multiPolygon.geometryN(i))
-
     override def numPoints: Int = {
         getHolePoints.map(_.length).sum + getShellPoints.map(_.length).sum
     }
@@ -45,7 +42,14 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
         shells.flatten
     }
 
-    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = ???
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        MosaicMultiPolygonESRI.fromPolygons(
+          asSeq.map(_.asInstanceOf[MosaicPolygonESRI].mapXY(f).asInstanceOf[MosaicPolygonESRI])
+        )
+    }
+
+    override def asSeq: Seq[MosaicGeometry] =
+        for (i <- 0 until multiPolygon.numGeometries()) yield MosaicGeometryESRI(multiPolygon.geometryN(i))
 
 }
 
@@ -56,6 +60,21 @@ object MosaicMultiPolygonESRI extends GeometryReader {
         val polygon = createPolygon(internalGeom.boundaries, internalGeom.holes)
         val ogcMultiLineString = new OGCMultiPolygon(polygon, MosaicGeometryESRI.defaultSpatialReference)
         MosaicMultiPolygonESRI(ogcMultiLineString)
+    }
+
+    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
+        throw new UnsupportedOperationException("fromPoints is not intended for creating MultiPolygons")
+    }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
+        throw new UnsupportedOperationException("fromLines is not intended for creating MultiPolygons")
+
+    def fromPolygons(polygons: Seq[MosaicPolygon], geomType: GeometryTypeEnum.Value = MULTIPOLYGON): MosaicGeometry = {
+
+        val sr = SpatialReference.create(polygons.head.getSpatialReference)
+        val internal = polygons.map(_.toInternal)
+        val newMultiPolygon = createPolygon(internal.flatMap(_.boundaries).toArray, internal.flatMap(_.holes).toArray)
+        MosaicMultiPolygonESRI(new OGCMultiPolygon(newMultiPolygon, sr))
     }
 
     // noinspection ZeroIndexToHead
@@ -90,13 +109,6 @@ object MosaicMultiPolygonESRI extends GeometryReader {
     }
 
     def apply(multiPolygon: OGCGeometry): MosaicMultiPolygonESRI = new MosaicMultiPolygonESRI(multiPolygon.asInstanceOf[OGCMultiPolygon])
-
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
-        throw new UnsupportedOperationException("fromPoints is not intended for creating MultiPolygons")
-    }
-
-    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
-        throw new UnsupportedOperationException("fromLines is not intended for creating MultiPolygons")
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)
 

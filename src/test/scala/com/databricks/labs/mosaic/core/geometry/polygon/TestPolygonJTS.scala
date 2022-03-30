@@ -114,10 +114,12 @@ class TestPolygonJTS extends AnyFlatSpec {
         // MosaicPolygon
         polygon.flatten.head.getSpatialReference shouldBe srid
         polygon.getShellPoints.head.head.getSpatialReference shouldBe srid
+        polygon.getHolePoints.head.head.head.getSpatialReference shouldBe srid
 
         // MosaicPolygonJTS
         polygon.asSeq.head.getSpatialReference shouldBe srid
         polygon.getBoundary.getSpatialReference shouldBe srid
+        polygon.getHoles.head.head.getSpatialReference shouldBe srid
         polygon.getShells.head.getSpatialReference shouldBe srid
         polygon.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
     }
