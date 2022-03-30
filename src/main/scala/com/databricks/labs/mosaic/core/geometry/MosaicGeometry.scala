@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.geometry
 
+import org.locationtech.proj4j.{CoordinateTransformFactory, CRSFactory, ProjCoordinate}
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.types.model.InternalCoord
@@ -86,6 +87,28 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
             case "MIN" => coordArray.min
             case "MAX" => coordArray.max
         }
+    }
+
+    def transformCRSXY(sridTo: Int, sridFrom: Option[Int] = None): MosaicGeometry = {
+
+        val crsFactory = new CRSFactory
+        val crsFrom = crsFactory.createFromName(f"epsg:${sridFrom.getOrElse(getSpatialReference)}")
+        val crsTo = crsFactory.createFromName(f"epsg:$sridTo")
+
+        val ctFactory = new CoordinateTransformFactory
+        val trans = ctFactory.createTransform(crsFrom, crsTo)
+
+        val pIn = new ProjCoordinate
+        val pOut = new ProjCoordinate
+
+        def mapper(x: Double, y: Double): (Double, Double) = {
+            pIn.setValue(x, y)
+            trans.transform(pIn, pOut)
+            (pOut.x, pOut.y)
+        }
+        val mosaicGeometry = mapXY(mapper)
+        mosaicGeometry.setSpatialReference(sridTo)
+        mosaicGeometry
     }
 
     def getSpatialReference: Int
