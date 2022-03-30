@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry.polygon
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.MosaicGeometryESRI.spatialReference
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometryESRI.defaultSpatialReference
 import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringESRI}
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonESRI
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
@@ -43,12 +43,14 @@ class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon)
           for (i <- 0 until polygon.numInteriorRing()) yield MosaicLineStringESRI(polygon.interiorRingN(i))
         )
 
-    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = {
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        def toInternalCoordArray(s: Seq[MosaicGeometry]): Array[InternalCoord] =
+            s.map(g => InternalCoord(g.asInstanceOf[MosaicPointESRI].asSeq)).toArray
         val sr = SpatialReference.create(getSpatialReference)
-        val boundaries = Array(getShells.map(f).map { p: MosaicPoint => InternalCoord(p.asSeq) }.toArray)
-        val holes = Array(getHolePoints.map { h => h.map(f).map { p: MosaicPoint => InternalCoord(p.asSeq) }.toArray }.toArray)
-        val polygon = MosaicMultiPolygonESRI.createPolygon(boundaries, holes)
-        MosaicGeometryESRI(new OGCPolygon(polygon, sr))
+        val shells = Array(toInternalCoordArray(getShells.map(_.mapXY(f))))
+        val holes = Array(getHoles.map(_.map(_.mapXY(f))).map(toInternalCoordArray).toArray)
+        val mosaicPolygon = MosaicMultiPolygonESRI.createPolygon(shells, holes)
+        MosaicGeometryESRI(new OGCPolygon(mosaicPolygon, sr))
     }
 
 }
@@ -66,14 +68,14 @@ object MosaicPolygonESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
         val polygon = MosaicMultiPolygonESRI.createPolygon(internalGeom.boundaries, internalGeom.holes)
-        MosaicGeometryESRI(new OGCPolygon(polygon, spatialReference))
+        MosaicGeometryESRI(new OGCPolygon(polygon, defaultSpatialReference))
     }
 
     override def fromPoints(inPoints: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = POLYGON): MosaicGeometry = {
         require(geomType.id == POLYGON.id)
         val boundary = inPoints.map(_.coord).map(InternalCoord(_)).toArray
         val polygon = MosaicMultiPolygonESRI.createPolygon(Array(boundary), Array(Array(Array())))
-        MosaicGeometryESRI(new OGCPolygon(polygon, spatialReference))
+        MosaicGeometryESRI(new OGCPolygon(polygon, defaultSpatialReference))
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)

@@ -6,6 +6,7 @@ import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointE
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.LINESTRING
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString}
+import com.esri.core.geometry.SpatialReference
 
 import org.apache.spark.sql.catalyst.InternalRow
 
@@ -29,7 +30,8 @@ class MosaicLineStringESRI(lineString: OGCLineString) extends MosaicGeometryESRI
 
     override def numPoints: Int = lineString.numPoints()
 
-    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = MosaicLineStringESRI.fromPoints(this.asSeq.map(f))
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry =
+        MosaicLineStringESRI.fromPoints(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointESRI]))
 
 }
 
@@ -42,21 +44,28 @@ object MosaicLineStringESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
         val polyline = MosaicMultiLineStringESRI.createPolyline(internalGeom.boundaries)
-        val ogcLineString = new OGCLineString(polyline, 0, MosaicGeometryESRI.spatialReference)
+        val ogcLineString = new OGCLineString(polyline, 0, MosaicGeometryESRI.defaultSpatialReference)
         MosaicLineStringESRI(ogcLineString)
-    }
-
-    def apply(ogcGeometry: OGCGeometry): MosaicLineStringESRI = {
-        new MosaicLineStringESRI(ogcGeometry.asInstanceOf[OGCLineString])
     }
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicGeometry = {
         require(geomType.id == LINESTRING.id)
+        fromPoints(points.map(_.asInstanceOf[MosaicPointESRI]))
+    }
+
+    private def fromPoints(points: Seq[MosaicPointESRI]): MosaicGeometry = {
+        val spatialReference = SpatialReference.create(points.head.getSpatialReference)
         val polyline = MosaicMultiLineStringESRI.createPolyline(
-          Array(points.map(c => InternalCoord(Seq(c.coord.getX, c.coord.getY))).toArray)
+          Array(points.map(c => InternalCoord(Seq(c.coord.getX, c.coord.getY))).toArray),
+          dontClose = true
         )
-        val ogcLineString = new OGCLineString(polyline, 0, MosaicGeometryESRI.spatialReference)
+        val ogcLineString = new OGCLineString(polyline, 0, spatialReference)
         MosaicLineStringESRI(ogcLineString)
+
+    }
+
+    def apply(ogcGeometry: OGCGeometry): MosaicLineStringESRI = {
+        new MosaicLineStringESRI(ogcGeometry.asInstanceOf[OGCLineString])
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)

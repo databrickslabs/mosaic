@@ -24,22 +24,19 @@ class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with
     override def getShells: Seq[MosaicLineString] = Seq(MosaicLineStringJTS(polygon.getExteriorRing))
 
     override def getHoles: Seq[Seq[MosaicLineString]] =
-        Seq({
-            val boundary = polygon.getBoundary
-            val m = boundary.getNumGeometries
-            val holes = for (i <- 1 until m) yield MosaicLineStringJTS(boundary.getGeometryN(i).asInstanceOf[LinearRing])
-            holes
-        })
+        Seq(for (i <- 1 until polygon.getNumInteriorRing) yield MosaicLineStringJTS(polygon.getInteriorRingN(i)))
 
-    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = {
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
         val gf = new GeometryFactory()
-        val shell = gf.createLinearRing(getBoundaryPoints.map(f).map(_.coord).toArray)
-        val holes = getHolePoints
-            .map { h: Seq[MosaicPoint] => h.map(f).map(_.coord) }
-            .map { h: Seq[Coordinate] => gf.createLinearRing(h.toArray) }
+        val shell = gf.createLinearRing(
+          getShells.head.mapXY(f).asInstanceOf[MosaicLineStringJTS].getGeom.asInstanceOf[LineString].getCoordinateSequence
+        )
+        val holes = getHoles.head
+            .map(_.mapXY(f).asInstanceOf[MosaicLineStringJTS].getGeom.asInstanceOf[LineString].getCoordinateSequence)
+            .map(gf.createLinearRing)
             .toArray
-
         val geom = gf.createPolygon(shell, holes)
+        geom.setSRID(getSpatialReference)
         MosaicPolygonJTS(geom)
     }
 
@@ -52,7 +49,7 @@ object MosaicPolygonJTS extends GeometryReader {
     }
 
     def getPoints(linearRing: LinearRing): Seq[MosaicPoint] = {
-        linearRing.getCoordinates.map(MosaicPointJTS(_))
+        linearRing.getCoordinates.map(MosaicPointJTS(_, linearRing.getSRID))
     }
 
     override def fromInternal(row: InternalRow): MosaicGeometry = {

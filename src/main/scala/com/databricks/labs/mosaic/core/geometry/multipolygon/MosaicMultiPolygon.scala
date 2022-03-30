@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.core.geometry.multipolygon
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygon
 
 trait MosaicMultiPolygon extends MosaicGeometry {
 
@@ -13,7 +12,5 @@ trait MosaicMultiPolygon extends MosaicGeometry {
     override def getShellPoints: Seq[Seq[MosaicPoint]] = getShells.map(_.asSeq)
 
     override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]] = getHoles.map(_.map(_.asSeq))
-
-    def getPolygons: Seq[MosaicPolygon]
 
 }

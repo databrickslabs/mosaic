@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.geometry
 
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 
@@ -20,5 +21,7 @@ trait GeometryReader {
     def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry
 
     def fromKryo(row: InternalRow): MosaicGeometry
+
+    val defaultSpatialReferenceId: Int = 4326
 
 }

@@ -44,6 +44,8 @@ class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicGeometryJT
         holes.flatten
     }
 
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = ???
+
 }
 
 object MosaicMultiPolygonJTS extends GeometryReader {

@@ -44,7 +44,7 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def getHoles: Seq[Seq[MosaicLineString]]
 
-    def mapCoords(f: (MosaicPoint) => MosaicPoint): MosaicGeometry
+    def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry
 
     def boundary: MosaicGeometry
 

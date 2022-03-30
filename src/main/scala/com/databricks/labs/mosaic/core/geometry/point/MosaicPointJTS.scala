@@ -22,10 +22,6 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
             Seq(getX, getY, getZ)
         }
 
-    override def getX: Double = point.getX
-
-    override def getY: Double = point.getY
-
     override def getZ: Double = point.getCoordinate.z
 
     override def toInternal: InternalGeometry = {
@@ -35,7 +31,19 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
 
     override def getBoundary: MosaicGeometry = MosaicGeometryJTS(point.getBoundary)
 
-    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = f(this)
+    override def getGeom: Point = point
+
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        val (x_, y_) = f(getX, getY)
+        MosaicPointJTS(
+          new Coordinate(x_, y_),
+          point.getSRID
+        )
+    }
+
+    override def getX: Double = point.getX
+
+    override def getY: Double = point.getY
 
 }
 
@@ -44,14 +52,17 @@ object MosaicPointJTS extends GeometryReader {
     def apply(geom: Geometry): MosaicPointJTS = new MosaicPointJTS(geom.asInstanceOf[Point])
 
     def apply(geoCoord: GeoCoord): MosaicPointJTS = {
-        this.apply(new Coordinate(geoCoord.lng, geoCoord.lat))
+        this.apply(new Coordinate(geoCoord.lng, geoCoord.lat), defaultSpatialReferenceId)
     }
 
-    def apply(coord: Coordinate): MosaicPointJTS = {
+    def apply(coord: Coordinate, srid: Int): MosaicPointJTS = {
         val gf = new GeometryFactory()
-        new MosaicPointJTS(gf.createPoint(coord))
+        val point = gf.createPoint(coord)
+        point.setSRID(srid)
+        new MosaicPointJTS(point)
     }
 
+    // TODO add metadata to InternalGeometry for spatial reference and pick it up here
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val gf = new GeometryFactory()
         val internalGeom = InternalGeometry(row)
@@ -63,7 +74,9 @@ object MosaicPointJTS extends GeometryReader {
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = POINT): MosaicGeometry = {
         require(geomType.id == POINT.id)
         val gf = new GeometryFactory()
-        val point = gf.createPoint(points.head.coord)
+        val mosaicPoint = points.head
+        val point = gf.createPoint(mosaicPoint.coord)
+        point.setSRID(mosaicPoint.getSpatialReference)
         new MosaicPointJTS(point)
     }
 

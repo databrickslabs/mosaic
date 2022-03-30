@@ -48,7 +48,12 @@ class MosaicPointESRI(point: OGCPoint) extends MosaicGeometryESRI(point) with Mo
 
     override def numPoints: Int = 1
 
-    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = f(this)
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        val (x_, y_) = f(getX, getY)
+        MosaicPointESRI(
+          new OGCPoint(new Point(x_, y_), point.getEsriSpatialReference)
+        )
+    }
 
 }
 
@@ -63,6 +68,7 @@ object MosaicPointESRI extends GeometryReader {
     def apply(point: OGCGeometry): MosaicPointESRI = new MosaicPointESRI(point.asInstanceOf[OGCPoint])
 
     // noinspection ZeroIndexToHead
+    // TODO add metadata to InternalGeometry for spatial reference and pick it up here
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
         require(internalGeom.typeId == POINT.id)
@@ -70,25 +76,30 @@ object MosaicPointESRI extends GeometryReader {
         val coordinate = internalGeom.boundaries.head.head
         val point =
             if (coordinate.coords.length == 2) {
-                new OGCPoint(new Point(coordinate.coords(0), coordinate.coords(1)), MosaicGeometryESRI.spatialReference)
+                new OGCPoint(new Point(coordinate.coords(0), coordinate.coords(1)), MosaicGeometryESRI.defaultSpatialReference)
             } else {
                 new OGCPoint(
                   new Point(coordinate.coords(0), coordinate.coords(1), coordinate.coords(2)),
-                  MosaicGeometryESRI.spatialReference
+                  MosaicGeometryESRI.defaultSpatialReference
                 )
             }
         new MosaicPointESRI(point)
     }
 
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = POINT): MosaicGeometry = {
+    override def fromPoints(
+        points: Seq[MosaicPoint],
+        geomType: GeometryTypeEnum.Value = POINT
+    ): MosaicGeometry = {
         require(geomType.id == POINT.id)
 
         val mosaicPoint = points.head
+        // TODO does this survive when converted to MosaicPoint?
+        val spatialReference = SpatialReference.create(mosaicPoint.getSpatialReference)
         val point =
             if (mosaicPoint.asSeq.length == 2) {
-                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY), MosaicGeometryESRI.spatialReference)
+                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY), spatialReference)
             } else {
-                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY, mosaicPoint.getZ), MosaicGeometryESRI.spatialReference)
+                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY, mosaicPoint.getZ), spatialReference)
             }
         new MosaicPointESRI(point)
     }

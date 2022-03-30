@@ -147,7 +147,7 @@ object MosaicGeometryJTS extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometryJTS = MosaicGeometryJTS(new GeoJsonReader().read(geoJson))
 
     def apply(geom: Geometry): MosaicGeometryJTS = {
-        geom.setSRID(4326)
+//        geom.setSRID(4326)
         GeometryTypeEnum.fromString(geom.getGeometryType) match {
             case POINT              => MosaicPointJTS(geom)
             case MULTIPOINT         => MosaicMultiPointJTS(geom)

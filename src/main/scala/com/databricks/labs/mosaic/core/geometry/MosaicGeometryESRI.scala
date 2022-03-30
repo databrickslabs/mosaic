@@ -35,10 +35,10 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def translate(xd: Double, yd: Double): MosaicGeometry = {
         val tr = new Transformation2D
         tr.setShift(xd, yd)
-        geom.setSpatialReference(MosaicGeometryESRI.spatialReference)
+        geom.setSpatialReference(MosaicGeometryESRI.defaultSpatialReference)
         val esriGeom = geom.getEsriGeometry
         esriGeom.applyTransformation(tr)
-        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryESRI.spatialReference))
+        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryESRI.defaultSpatialReference))
     }
 
     override def reduceFromMulti: MosaicGeometry = MosaicGeometryESRI(geom.reduceFromMulti())
@@ -47,20 +47,20 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def scale(xd: Double, yd: Double): MosaicGeometry = {
         val tr = new Transformation2D
         tr.setScale(xd, yd)
-        geom.setSpatialReference(MosaicGeometryESRI.spatialReference)
+        geom.setSpatialReference(MosaicGeometryESRI.defaultSpatialReference)
         val esriGeom = geom.getEsriGeometry
         esriGeom.applyTransformation(tr)
-        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryESRI.spatialReference))
+        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryESRI.defaultSpatialReference))
     }
 
     // noinspection DuplicatedCode
     override def rotate(td: Double): MosaicGeometry = {
         val tr = new Transformation2D
         tr.setRotate(td)
-        geom.setSpatialReference(MosaicGeometryESRI.spatialReference)
+        geom.setSpatialReference(MosaicGeometryESRI.defaultSpatialReference)
         val esriGeom = geom.getEsriGeometry
         esriGeom.applyTransformation(tr)
-        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryESRI.spatialReference))
+        MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, MosaicGeometryESRI.defaultSpatialReference))
     }
 
     override def getAPI: String = "OGC"
@@ -162,7 +162,7 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
 object MosaicGeometryESRI extends GeometryReader {
 
-    val spatialReference: SpatialReference = SpatialReference.create(4326)
+    val defaultSpatialReference: SpatialReference = SpatialReference.create(defaultSpatialReferenceId)
 
     @transient val kryo = new Kryo()
     kryo.register(classOf[Array[Byte]])

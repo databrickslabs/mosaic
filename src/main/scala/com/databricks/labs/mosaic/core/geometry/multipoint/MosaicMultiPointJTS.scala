@@ -17,13 +17,15 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
         new InternalGeometry(MULTIPOINT.id, Array(points.toArray), Array(Array(Array())))
     }
 
-    override def asSeq: Seq[MosaicPoint] = {
-        for (i <- 0 until multiPoint.getNumPoints) yield MosaicPointJTS(multiPoint.getGeometryN(i).getCoordinates.head)
-    }
-
     override def getBoundary: MosaicGeometry = MosaicGeometryJTS(multiPoint.getBoundary)
 
-    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = MosaicMultiPointJTS.fromPoints(this.asSeq.map(f))
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        MosaicMultiPointJTS.fromPoints(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointJTS]))
+    }
+
+    override def asSeq: Seq[MosaicPoint] = {
+        for (i <- 0 until multiPoint.getNumPoints) yield MosaicPointJTS(multiPoint.getGeometryN(i))
+    }
 
 }
 
@@ -43,12 +45,15 @@ object MosaicMultiPointJTS extends GeometryReader {
     }
 
     // noinspection ZeroIndexToHead
-    override def fromPoints(inPoints: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = MULTIPOINT): MosaicGeometry = {
-        val gf = new GeometryFactory()
+    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = MULTIPOINT): MosaicGeometry = {
         require(geomType.id == MULTIPOINT.id)
+        fromPoints(points.map(_.asInstanceOf[MosaicPointJTS]))
+    }
 
-        val points = inPoints.map(p => gf.createPoint(p.coord)).toArray
-        val multiPoint = gf.createMultiPoint(points)
+    private def fromPoints(points: Seq[MosaicPointJTS]): MosaicMultiPointJTS = {
+        val gf = new GeometryFactory()
+        val pointGeometries = points.map(_.getGeom).toArray
+        val multiPoint = gf.createMultiPoint(pointGeometries)
         new MosaicMultiPointJTS(multiPoint)
     }
 

@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
-import com.esri.core.geometry.{MultiPoint, Point}
+import com.esri.core.geometry.{MultiPoint, Point, SpatialReference}
 import com.esri.core.geometry.ogc._
 
 import org.apache.spark.sql.catalyst.InternalRow
@@ -27,7 +27,9 @@ class MosaicMultiPointESRI(multiPoint: OGCMultiPoint) extends MosaicGeometryESRI
 
     override def numPoints: Int = multiPoint.numGeometries()
 
-    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = MosaicMultiPointESRI.fromPoints(this.asSeq.map(f))
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        MosaicMultiPointESRI.fromPoints(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointESRI]))
+    }
 
 }
 
@@ -50,15 +52,19 @@ object MosaicMultiPointESRI extends GeometryReader {
             case _ => throw new UnsupportedOperationException("Only 2D and 3D points supported.")
         }
 
-        val ogcMultiPoint = new OGCMultiPoint(multiPoint, MosaicGeometryESRI.spatialReference)
+        val ogcMultiPoint = new OGCMultiPoint(multiPoint, MosaicGeometryESRI.defaultSpatialReference)
         new MosaicMultiPointESRI(ogcMultiPoint)
     }
 
     // noinspection ZeroIndexToHead
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = MULTIPOINT): MosaicGeometry = {
         require(geomType.id == MULTIPOINT.id)
+        fromPoints(points.map(_.asInstanceOf[MosaicPointESRI]))
+    }
 
+    private def fromPoints(points: Seq[MosaicPointESRI]): MosaicGeometry = {
         val multiPoint = new MultiPoint()
+        val spatialReference = SpatialReference.create(points.head.getSpatialReference)
         val dim = points.head.asSeq.length
 
         dim match {
@@ -67,8 +73,9 @@ object MosaicMultiPointESRI extends GeometryReader {
             case _ => throw new UnsupportedOperationException("Only 2D and 3D points supported.")
         }
 
-        val ogcMultiPoint = new OGCMultiPoint(multiPoint, MosaicGeometryESRI.spatialReference)
+        val ogcMultiPoint = new OGCMultiPoint(multiPoint, spatialReference)
         new MosaicMultiPointESRI(ogcMultiPoint)
+
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)

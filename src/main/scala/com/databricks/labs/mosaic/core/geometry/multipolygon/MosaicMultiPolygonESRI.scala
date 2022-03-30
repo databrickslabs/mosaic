@@ -45,14 +45,7 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
         shells.flatten
     }
 
-    override def getPolygons: Seq[MosaicPolygon] = {
-        val n = multiPolygon.numGeometries()
-        for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i))
-    }
-
-    override def mapCoords(f: MosaicPoint => MosaicPoint): MosaicGeometry = {
-//        getPolygons.map {p: MosaicPolygon => p.mapCoords(f)}.asInstanceOf[MosaicMultiPolygonESRI]
-    }
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = ???
 
 }
 
@@ -61,7 +54,7 @@ object MosaicMultiPolygonESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
         val polygon = createPolygon(internalGeom.boundaries, internalGeom.holes)
-        val ogcMultiLineString = new OGCMultiPolygon(polygon, MosaicGeometryESRI.spatialReference)
+        val ogcMultiLineString = new OGCMultiPolygon(polygon, MosaicGeometryESRI.defaultSpatialReference)
         MosaicMultiPolygonESRI(ogcMultiLineString)
     }
 

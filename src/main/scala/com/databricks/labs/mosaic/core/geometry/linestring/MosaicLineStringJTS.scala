@@ -20,12 +20,20 @@ class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(line
 
     override def getBoundary: MosaicGeometry = MosaicGeometryJTS(lineString.getBoundary)
 
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        MosaicLineStringJTS.fromPoints(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointJTS]))
+    }
+
 }
 
 object MosaicLineStringJTS extends GeometryReader {
 
     def getPoints(lineString: LineString): Seq[MosaicPoint] = {
-        for (i <- 0 until lineString.getNumPoints) yield new MosaicPointJTS(lineString.getPointN(i))
+        for (i <- 0 until lineString.getNumPoints) yield {
+            val point = lineString.getPointN(i)
+            point.setSRID(lineString.getSRID)
+            new MosaicPointJTS(point)
+        }
     }
 
     override def fromInternal(row: InternalRow): MosaicGeometry = {
@@ -37,8 +45,14 @@ object MosaicLineStringJTS extends GeometryReader {
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicGeometry = {
         require(geomType.id == LINESTRING.id)
+        fromPoints(points.map(_.asInstanceOf[MosaicPointJTS]))
+    }
+
+    private def fromPoints(points: Seq[MosaicPointJTS]): MosaicGeometry = {
         val gf = new GeometryFactory()
+        val srid = points.head.getSpatialReference
         val lineString = gf.createLineString(points.map(_.coord).toArray)
+        lineString.setSRID(srid)
         MosaicLineStringJTS(lineString)
     }
 

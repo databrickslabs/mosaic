@@ -29,6 +29,10 @@ class MosaicMultiLineStringJTS(multiLineString: MultiLineString) extends MosaicG
         for (i <- 0 until multiLineString.getNumGeometries)
             yield new MosaicLineStringJTS(multiLineString.getGeometryN(i).asInstanceOf[LineString])
 
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        MosaicMultiLineStringJTS.fromLines(asSeq.map(_.mapXY(f).asInstanceOf[MosaicLineStringJTS]))
+    }
+
 }
 
 object MosaicMultiLineStringJTS extends GeometryReader {
@@ -46,6 +50,14 @@ object MosaicMultiLineStringJTS extends GeometryReader {
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = MULTILINESTRING): MosaicGeometry = {
         throw new UnsupportedOperationException("fromPoints is not intended for creating MultiLineStrings")
+    }
+
+    private def fromLines(lines: Seq[MosaicLineStringJTS]): MosaicMultiLineStringJTS = {
+        val sr = lines.head.getSpatialReference
+        val gf = new GeometryFactory()
+        val geom = gf.createMultiLineString(lines.map(_.getGeom.asInstanceOf[LineString]).toArray)
+        geom.setSRID(sr)
+        MosaicMultiLineStringJTS(geom)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
