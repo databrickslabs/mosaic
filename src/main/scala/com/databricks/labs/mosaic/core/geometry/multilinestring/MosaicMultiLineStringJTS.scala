@@ -20,14 +20,21 @@ class MosaicMultiLineStringJTS(multiLineString: MultiLineString) extends MosaicG
         new InternalGeometry(MULTILINESTRING.id, shells.toArray, Array(Array(Array())))
     }
 
-    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(multiLineString.getBoundary)
+    override def getBoundary: MosaicGeometry = {
+        val shellGeom = multiLineString.getBoundary
+        shellGeom.setSRID(multiLineString.getSRID)
+        MosaicGeometryJTS(shellGeom)
+    }
 
     override def getShells: Seq[MosaicLineString] =
         for (i <- 0 until multiLineString.getNumGeometries) yield MosaicLineStringJTS(multiLineString.getGeometryN(i))
 
     override def asSeq: Seq[MosaicLineString] =
-        for (i <- 0 until multiLineString.getNumGeometries)
-            yield new MosaicLineStringJTS(multiLineString.getGeometryN(i).asInstanceOf[LineString])
+        for (i <- 0 until multiLineString.getNumGeometries) yield {
+            val geom = multiLineString.getGeometryN(i).asInstanceOf[LineString]
+            geom.setSRID(multiLineString.getSRID)
+            new MosaicLineStringJTS(geom)
+        }
 
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
         MosaicMultiLineStringJTS.fromLines(asSeq.map(_.mapXY(f).asInstanceOf[MosaicLineStringJTS]))
