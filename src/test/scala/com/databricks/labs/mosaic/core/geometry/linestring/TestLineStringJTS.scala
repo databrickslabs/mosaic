@@ -110,4 +110,22 @@ class TestLineStringJTS extends AnyFlatSpec {
         lineString.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
     }
 
+    "MosaicPolygonJTS" should "correctly apply CRS transformation" in {
+        val sridSource = 4326
+        val sridTarget = 27700
+        val testLine = MosaicLineStringJTS
+            .fromWKT(
+              "LINESTRING(-0.1367293 51.5166525, -0.1370977 51.517082, -0.1380077 51.5186537, -0.1375356 51.518824)"
+            )
+            .asInstanceOf[MosaicLineStringJTS]
+        testLine.setSpatialReference(sridSource)
+        val expectedResult = MosaicLineStringJTS
+            .fromWKT(
+              "LINESTRING(529382.90 181393.19, 529356.12 181440.30, 529288.54 181613.47, 529320.81 181633.24)"
+            )
+            .asInstanceOf[MosaicLineStringJTS]
+        val testResult = testLine.transformCRSXY(sridTarget).asInstanceOf[MosaicLineStringJTS]
+        expectedResult.distance(testResult) should be < 0.001d
+    }
+
 }

@@ -124,4 +124,23 @@ class TestPolygonESRI extends AnyFlatSpec {
         polygon.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
     }
 
+    "MosaicPolygonESRI" should "correctly apply CRS transformation" in {
+        val sridSource = 4326
+        val sridTarget = 27700
+        val testPolygon = MosaicPolygonESRI
+            .fromWKT(
+              "POLYGON((-0.1367293 51.5166525, -0.1370977 51.517082, -0.1380077 51.5186537, -0.1375356 51.518824, -0.1371474 51.5184174, -0.1361386 51.5167553, -0.1367293 51.5166525))"
+            )
+            .asInstanceOf[MosaicPolygonESRI]
+        testPolygon.setSpatialReference(sridSource)
+        val expectedResult = MosaicPolygonESRI
+            .fromWKT(
+              "POLYGON((529382.90 181393.19, 529356.12 181440.30, 529288.54 181613.47, 529320.81 181633.24, 529348.89 181588.71, 529423.59 181405.67, 529382.90 181393.19))"
+            )
+            .asInstanceOf[MosaicPolygonESRI]
+        val testResult = testPolygon.transformCRSXY(sridTarget).asInstanceOf[MosaicPolygonESRI]
+        val intersection = expectedResult.intersection(testResult)
+        intersection.getArea shouldBe expectedResult.getArea +- 1d
+    }
+
 }
