@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.core.geometry
 
 import java.nio.ByteBuffer
 
-import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringESRI
+import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringESRI}
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.multipoint.MosaicMultiPointESRI
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonESRI
@@ -203,6 +203,10 @@ object MosaicGeometryESRI extends GeometryReader {
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
         reader(geomType.id).fromPoints(points, geomType)
+    }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
+        reader(geomType.id).fromLines(lines, geomType)
     }
 
     def reader(geomTypeId: Int): GeometryReader =

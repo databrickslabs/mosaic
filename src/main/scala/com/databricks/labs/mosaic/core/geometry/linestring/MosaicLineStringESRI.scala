@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.core.geometry.linestring
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
-import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.LINESTRING
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString}
 import com.esri.core.geometry.SpatialReference
@@ -63,6 +63,9 @@ object MosaicLineStringESRI extends GeometryReader {
         MosaicLineStringESRI(ogcLineString)
 
     }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
+        throw new UnsupportedOperationException("fromLines is not intended for creating LineStrings")
 
     def apply(ogcGeometry: OGCGeometry): MosaicLineStringESRI = {
         new MosaicLineStringESRI(ogcGeometry.asInstanceOf[OGCLineString])

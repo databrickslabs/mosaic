@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.geometry
 
-import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
+import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringJTS}
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.multipoint.MosaicMultiPointJTS
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
@@ -194,6 +194,10 @@ object MosaicGeometryJTS extends GeometryReader {
 
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometryJTS = {
         reader(geomType.id).fromPoints(points, geomType).asInstanceOf[MosaicGeometryJTS]
+    }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometryJTS = {
+        reader(geomType.id).fromLines(lines, geomType).asInstanceOf[MosaicGeometryJTS]
     }
 
     override def fromInternal(row: InternalRow): MosaicGeometryJTS = {

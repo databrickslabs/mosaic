@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.geometry.MosaicGeometryESRI.defaultSpatia
 import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringESRI}
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonESRI
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
-import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.esri.core.geometry.ogc._
 import com.esri.core.geometry.SpatialReference
@@ -73,9 +73,19 @@ object MosaicPolygonESRI extends GeometryReader {
 
     override def fromPoints(inPoints: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = POLYGON): MosaicGeometry = {
         require(geomType.id == POLYGON.id)
+        val sr = SpatialReference.create(inPoints.head.getSpatialReference)
         val boundary = inPoints.map(_.coord).map(InternalCoord(_)).toArray
         val polygon = MosaicMultiPolygonESRI.createPolygon(Array(boundary), Array(Array(Array())))
-        MosaicGeometryESRI(new OGCPolygon(polygon, defaultSpatialReference))
+        MosaicGeometryESRI(new OGCPolygon(polygon, sr))
+    }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
+        require(geomType.id == POLYGON.id)
+        val sr = SpatialReference.create(lines.head.getSpatialReference)
+        val boundary = lines.head.asSeq.map(_.coord).map(InternalCoord(_)).toArray
+        val holes = lines.tail.map({ h: MosaicLineString => h.asSeq.map(_.coord).map(InternalCoord(_)).toArray }).toArray
+        val polygon = MosaicMultiPolygonESRI.createPolygon(Array(boundary), Array(holes))
+        MosaicGeometryESRI(new OGCPolygon(polygon, sr))
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)

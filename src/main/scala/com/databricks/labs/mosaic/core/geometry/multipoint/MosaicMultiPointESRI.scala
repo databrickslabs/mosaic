@@ -1,8 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry.multipoint
 
 import com.databricks.labs.mosaic.core.geometry._
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
-import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
 import com.esri.core.geometry.{MultiPoint, Point, SpatialReference}
 import com.esri.core.geometry.ogc._
@@ -77,6 +78,9 @@ object MosaicMultiPointESRI extends GeometryReader {
         new MosaicMultiPointESRI(ogcMultiPoint)
 
     }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
+        throw new UnsupportedOperationException("fromLines is not intended for creating MultiPoints")
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)
 

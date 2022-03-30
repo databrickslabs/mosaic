@@ -1,7 +1,8 @@
 package com.databricks.labs.mosaic.core.geometry.point
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
 import com.esri.core.geometry.{Point, SpatialReference}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCPoint}
@@ -103,6 +104,9 @@ object MosaicPointESRI extends GeometryReader {
             }
         new MosaicPointESRI(point)
     }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
+        throw new UnsupportedOperationException("fromLines is not intended for creating Points")
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)
 

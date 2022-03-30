@@ -1,7 +1,8 @@
 package com.databricks.labs.mosaic.core.geometry.point
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
 import com.esotericsoftware.kryo.io.Input
 import com.uber.h3core.util.GeoCoord
@@ -83,6 +84,9 @@ object MosaicPointJTS extends GeometryReader {
         point.setSRID(mosaicPoint.getSpatialReference)
         new MosaicPointJTS(point)
     }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
+        throw new UnsupportedOperationException("fromLines is not intended for creating LineStrings")
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 

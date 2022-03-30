@@ -84,10 +84,11 @@ object MosaicMultiLineStringESRI extends GeometryReader {
         throw new UnsupportedOperationException("fromPoints is not intended for creating MultiLineStrings")
     }
 
-    private def fromLines(lines: Seq[MosaicLineStringESRI]): MosaicMultiLineStringESRI = {
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value = MULTILINESTRING): MosaicGeometry = {
+        require(geomType == MULTILINESTRING)
         val sr = SpatialReference.create(lines.head.getSpatialReference)
         val polyline = new Polyline
-        lines.foreach(l => polyline.add(l.getGeom.getEsriGeometry.asInstanceOf[Polyline], true))
+        lines.foreach(l => polyline.add(l.asInstanceOf[MosaicLineStringESRI].getGeom.getEsriGeometry.asInstanceOf[Polyline], true))
         val geom = new OGCMultiLineString(polyline, sr)
         MosaicMultiLineStringESRI(geom)
     }

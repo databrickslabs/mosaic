@@ -52,10 +52,11 @@ object MosaicMultiLineStringJTS extends GeometryReader {
         throw new UnsupportedOperationException("fromPoints is not intended for creating MultiLineStrings")
     }
 
-    private def fromLines(lines: Seq[MosaicLineStringJTS]): MosaicMultiLineStringJTS = {
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value = MULTILINESTRING): MosaicGeometry = {
+        require(geomType == MULTILINESTRING)
         val sr = lines.head.getSpatialReference
         val gf = new GeometryFactory()
-        val geom = gf.createMultiLineString(lines.map(_.getGeom.asInstanceOf[LineString]).toArray)
+        val geom = gf.createMultiLineString(lines.map(_.asInstanceOf[MosaicLineStringJTS].getGeom.asInstanceOf[LineString]).toArray)
         geom.setSRID(sr)
         MosaicMultiLineStringJTS(geom)
     }

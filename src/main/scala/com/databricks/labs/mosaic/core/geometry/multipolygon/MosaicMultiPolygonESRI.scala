@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonESRI}
-import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOLYGON
 import com.esri.core.geometry.Polygon
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPolygon}
@@ -94,6 +94,9 @@ object MosaicMultiPolygonESRI extends GeometryReader {
     override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
         throw new UnsupportedOperationException("fromPoints is not intended for creating MultiPolygons")
     }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
+        throw new UnsupportedOperationException("fromLines is not intended for creating MultiPolygons")
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)
 

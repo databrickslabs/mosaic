@@ -2,8 +2,9 @@ package com.databricks.labs.mosaic.core.geometry.polygon
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringJTS}
+import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
-import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.esotericsoftware.kryo.io.Input
 import org.locationtech.jts.geom._
@@ -66,7 +67,19 @@ object MosaicPolygonJTS extends GeometryReader {
         val gf = new GeometryFactory()
         val shell = points.map(_.coord).toArray
         val polygon = gf.createPolygon(shell)
+        polygon.setSRID(points.head.getSpatialReference)
         new MosaicPolygonJTS(polygon)
+    }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
+        require(geomType.id == POLYGON.id)
+        val gf = new GeometryFactory()
+        val sr = lines.head.getSpatialReference
+        val shell = gf.createLinearRing(lines.head.asSeq.map(_.coord).toArray)
+        val holes = lines.tail.map({ h: MosaicLineString => h.asSeq.map(_.coord).toArray }).map(gf.createLinearRing).toArray
+        val polygon = gf.createPolygon(shell, holes)
+        polygon.setSRID(sr)
+        MosaicGeometryJTS(polygon)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)

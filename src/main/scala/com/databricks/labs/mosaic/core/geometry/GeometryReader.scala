@@ -20,6 +20,8 @@ trait GeometryReader {
 
     def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry
 
+    def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry
+
     def fromKryo(row: InternalRow): MosaicGeometry
 
     val defaultSpatialReferenceId: Int = 4326

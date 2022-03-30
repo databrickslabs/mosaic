@@ -70,6 +70,9 @@ object MosaicMultiPolygonJTS extends GeometryReader {
         throw new UnsupportedOperationException("fromPoints is not intended for creating MultiPolygons")
     }
 
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
+        throw new UnsupportedOperationException("fromLines is not intended for creating MultiPolygons")
+
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 
     override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)

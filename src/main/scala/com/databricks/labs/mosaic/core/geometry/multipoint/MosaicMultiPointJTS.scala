@@ -1,8 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry.multipoint
 
 import com.databricks.labs.mosaic.core.geometry._
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
-import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
 import com.esotericsoftware.kryo.io.Input
 import org.locationtech.jts.geom._
@@ -65,6 +66,9 @@ object MosaicMultiPointJTS extends GeometryReader {
         multiPoint.setSRID(pointGeometries.head.getSRID)
         new MosaicMultiPointJTS(multiPoint)
     }
+
+    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
+        throw new UnsupportedOperationException("fromLines is not intended for creating MultiPoints")
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 
