@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry.multipoint
 
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointESRI
+import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonESRI
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -79,6 +80,26 @@ class TestMultiPointESRI extends AnyFlatSpec {
             .zip(pointSeqTest)
             .map { case (a: MosaicPointESRI, b: MosaicPointESRI) => a.getSpatialReference == b.getSpatialReference }
         results should contain only true
+    }
+
+    "MosaicMultiPointESRI" should "maintain SRID across operations" in {
+        val srid = 32632
+        val multiPoint = MosaicMultiPointESRI.fromWKT("MULTIPOINT (1 1, 2 2, 3 3)").asInstanceOf[MosaicMultiPointESRI]
+        val anotherPoint = MosaicPointESRI.fromWKT("POINT(1 1)").asInstanceOf[MosaicPointESRI]
+        val poly = MosaicPolygonESRI.fromWKT("POLYGON ((0 1,3 0,4 3,0 4,0 1))")
+        multiPoint.setSpatialReference(srid)
+        multiPoint.getBoundary.getSpatialReference shouldBe srid
+        multiPoint.getCentroid.getSpatialReference shouldBe srid
+        multiPoint.translate(2d, 2d).getSpatialReference shouldBe srid
+        multiPoint.rotate(45).getSpatialReference shouldBe srid
+        multiPoint.scale(2d, 2d).getSpatialReference shouldBe srid
+        multiPoint.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
+        multiPoint.reduceFromMulti.getSpatialReference shouldBe srid
+        multiPoint.buffer(2d).getSpatialReference shouldBe srid
+        multiPoint.simplify(0.001).getSpatialReference shouldBe srid
+        multiPoint.union(anotherPoint).getSpatialReference shouldBe srid
+        multiPoint.intersection(poly).getSpatialReference shouldBe srid
+        multiPoint.convexHull.getSpatialReference shouldBe srid
     }
 
 }

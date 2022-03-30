@@ -17,7 +17,11 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
         new InternalGeometry(MULTIPOINT.id, Array(points.toArray), Array(Array(Array())))
     }
 
-    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(multiPoint.getBoundary)
+    override def getBoundary: MosaicGeometry = {
+        val boundary = multiPoint.getBoundary
+        boundary.setSRID(multiPoint.getSRID)
+        MosaicGeometryJTS(boundary)
+    }
 
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
         MosaicMultiPointJTS.fromPoints(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointJTS]))
@@ -58,6 +62,7 @@ object MosaicMultiPointJTS extends GeometryReader {
         val gf = new GeometryFactory()
         val pointGeometries = points.map(_.getGeom).toArray
         val multiPoint = gf.createMultiPoint(pointGeometries)
+        multiPoint.setSRID(pointGeometries.head.getSRID)
         new MosaicMultiPointJTS(multiPoint)
     }
 
