@@ -44,19 +44,24 @@ class TestPointESRI extends AnyFlatSpec {
         val point = MosaicPointESRI.fromWKT("POINT(1 1)").asInstanceOf[MosaicPointESRI]
         val anotherPoint = MosaicPointESRI.fromWKT("POINT(1 1)").asInstanceOf[MosaicPointESRI]
         val poly = MosaicPolygonESRI.fromWKT("POLYGON ((0 1,3 0,4 3,0 4,0 1))")
+
         point.setSpatialReference(srid)
-        point.getBoundary.getSpatialReference shouldBe srid
+
+        // geometry
+        point.buffer(2d).getSpatialReference shouldBe srid
+        point.convexHull.getSpatialReference shouldBe srid
         point.getCentroid.getSpatialReference shouldBe srid
-        point.translate(2d, 2d).getSpatialReference shouldBe srid
+        point.intersection(poly).getSpatialReference shouldBe srid
+        point.reduceFromMulti.getSpatialReference shouldBe srid
         point.rotate(45).getSpatialReference shouldBe srid
         point.scale(2d, 2d).getSpatialReference shouldBe srid
-        point.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
-        point.reduceFromMulti.getSpatialReference shouldBe srid
-        point.buffer(2d).getSpatialReference shouldBe srid
         point.simplify(0.001).getSpatialReference shouldBe srid
+        point.translate(2d, 2d).getSpatialReference shouldBe srid
         point.union(anotherPoint).getSpatialReference shouldBe srid
-        point.intersection(poly).getSpatialReference shouldBe srid
-        point.convexHull.getSpatialReference shouldBe srid
+
+        // point
+        point.getBoundary.getSpatialReference shouldBe srid
+        point.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
     }
 
 }

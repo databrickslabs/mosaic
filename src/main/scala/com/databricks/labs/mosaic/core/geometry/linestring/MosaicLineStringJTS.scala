@@ -18,7 +18,11 @@ class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(line
         new InternalGeometry(LINESTRING.id, Array(shell), Array(Array(Array())))
     }
 
-    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(lineString.getBoundary)
+    override def getBoundary: MosaicGeometry = {
+        val geom = lineString.getBoundary
+        geom.setSRID(lineString.getSRID)
+        MosaicGeometryJTS(geom)
+    }
 
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
         MosaicLineStringJTS.fromPoints(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointJTS]))

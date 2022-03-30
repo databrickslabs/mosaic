@@ -185,7 +185,10 @@ object MosaicGeometryESRI extends GeometryReader {
                         MosaicPolygonESRI(firstChip)
                     case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == MULTIPOLYGON.id =>
                         MosaicMultiPolygonESRI(firstChip)
-                    case None => MosaicPolygonESRI.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryESRI]
+                    case None                                                                                           =>
+                        val emptyPolygon = MosaicPolygonESRI.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryESRI]
+                        emptyPolygon.setSpatialReference(geom.getEsriSpatialReference.getID)
+                        emptyPolygon
                 }
         }
 

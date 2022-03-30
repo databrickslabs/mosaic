@@ -87,19 +87,29 @@ class TestMultiPointJTS extends AnyFlatSpec {
         val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT (1 1, 2 2, 3 3)").asInstanceOf[MosaicMultiPointJTS]
         val anotherPoint = MosaicPointJTS.fromWKT("POINT(1 1)").asInstanceOf[MosaicPointJTS]
         val poly = MosaicPolygonJTS.fromWKT("POLYGON ((0 1,3 0,4 3,0 4,0 1))")
+
         multiPoint.setSpatialReference(srid)
-        multiPoint.getBoundary.getSpatialReference shouldBe srid
+
+        // MosaicGeometryJTS
+        multiPoint.buffer(2d).getSpatialReference shouldBe srid
+        multiPoint.convexHull.getSpatialReference shouldBe srid
         multiPoint.getCentroid.getSpatialReference shouldBe srid
-        multiPoint.translate(2d, 2d).getSpatialReference shouldBe srid
+        multiPoint.intersection(poly).getSpatialReference shouldBe srid
+        multiPoint.reduceFromMulti.getSpatialReference shouldBe srid
         multiPoint.rotate(45).getSpatialReference shouldBe srid
         multiPoint.scale(2d, 2d).getSpatialReference shouldBe srid
-        multiPoint.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
-        multiPoint.reduceFromMulti.getSpatialReference shouldBe srid
-        multiPoint.buffer(2d).getSpatialReference shouldBe srid
         multiPoint.simplify(0.001).getSpatialReference shouldBe srid
+        multiPoint.translate(2d, 2d).getSpatialReference shouldBe srid
         multiPoint.union(anotherPoint).getSpatialReference shouldBe srid
-        multiPoint.intersection(poly).getSpatialReference shouldBe srid
-        multiPoint.convexHull.getSpatialReference shouldBe srid
+
+        // MosaicMultiPoint
+        multiPoint.asSeq.head.getSpatialReference shouldBe srid
+        multiPoint.flatten.head.getSpatialReference shouldBe srid
+        multiPoint.getShellPoints.head.head.getSpatialReference shouldBe srid
+
+        // MosaicMultiPointJTS
+        multiPoint.getBoundary.getSpatialReference shouldBe srid
+        multiPoint.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
     }
 
 }
