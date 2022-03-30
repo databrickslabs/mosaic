@@ -112,19 +112,4 @@ class TestMultiPointJTS extends AnyFlatSpec {
         multiPoint.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
     }
 
-    "MosaicPointJTS" should "correctly apply CRS transformation" in {
-        val sridSource = 4326
-        val sridTarget = 27700
-        val testPoint = MosaicPointJTS.fromWKT("POINT(-0.1390688 51.5178267)").asInstanceOf[MosaicPointJTS]
-        testPoint.setSpatialReference(sridSource)
-        val expectedResult = MosaicPointJTS.fromWKT("POINT(529217.26 181519.64)").asInstanceOf[MosaicPointJTS]
-        val testResult = testPoint.transformCRSXY(sridTarget).asInstanceOf[MosaicPointJTS]
-        val comparison = {
-            expectedResult.asSeq
-                .zip(testResult.asSeq)
-                .map({ case (a: Double, b: Double) => math.abs(a - b) <= 0.01 })
-        }
-        comparison.take(2) should contain only true
-    }
-
 }
