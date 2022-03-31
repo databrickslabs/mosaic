@@ -3,20 +3,36 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{
+    Attribute,
+    AttributeReference,
+    Expression,
+    ExpressionInfo,
+    NamedExpression,
+    NullIntolerant,
+    UnaryExpression
+}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
-import org.apache.spark.sql.types.{DataType, DoubleType}
+import org.apache.spark.sql.types.{DataType, DoubleType, IntegerType, Metadata}
 
-case class ST_Length(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
+case class ST_SRID(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
-    def dataType: DataType = DoubleType
+    def dataType: DataType = IntegerType
 
     def child: Expression = inputGeom
 
     override def nullSafeEval(input1: Any): Any = {
+        val attr = new AttributeReference(
+          inputGeom.nodeName,
+          inputGeom.dataType,
+          true,
+          Metadata.empty
+        )(NamedExpression.newExprId, Seq.empty[String])
+
+//        inputGeom.references
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-        geom.getLength
+        geom.getSpatialReference
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
@@ -37,12 +53,12 @@ case class ST_Length(inputGeom: Expression, geometryAPIName: String) extends Una
               geometryAPIName match {
                   case "ESRI" => s"""
                                     |$inCode
-                                    |${ev.value} = $geomInRef.getEsriGeometry().calculateLength2D();
+                                    |${ev.value} = $geomInRef.getEsriSpatialReference().getID();
                                     |""".stripMargin
                   case "JTS"  => s"""
                                    |try {
                                    |$inCode
-                                   |${ev.value} = $geomInRef.getLength();
+                                   |${ev.value} = $geomInRef.getSRID();
                                    |} catch (Exception e) {
                                    | throw e;
                                    |}
@@ -56,22 +72,22 @@ case class ST_Length(inputGeom: Expression, geometryAPIName: String) extends Una
 
 }
 
-object ST_Length {
+object ST_SRID {
 
     /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[ST_Length].getCanonicalName,
+          classOf[ST_SRID].getCanonicalName,
           db.orNull,
-          name,
+          "st_srid",
           """
-            |    _FUNC_(expr1) - Returns the length of the given geometry.
+            |    _FUNC_(expr1) - Returns the Spatial Reference Identifier for a given geometry.
             """.stripMargin,
           "",
           """
             |    Examples:
             |      > SELECT _FUNC_(a);
-            |        0.245
+            |        27700
             |  """.stripMargin,
           "",
           "misc_funcs",
