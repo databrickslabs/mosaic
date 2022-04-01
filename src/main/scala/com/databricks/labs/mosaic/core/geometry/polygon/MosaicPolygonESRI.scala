@@ -25,7 +25,7 @@ class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon)
         val shell = ringToInternalCoords(boundary)
         val holes = for (i <- 0 until polygon.numInteriorRing()) yield ringToInternalCoords(polygon.interiorRingN(i))
 
-        new InternalGeometry(POLYGON.id, Array(shell), Array(holes.toArray))
+        new InternalGeometry(POLYGON.id, getSpatialReference, Array(shell), Array(holes.toArray))
     }
 
     override def getBoundary: MosaicGeometry = MosaicGeometryESRI(polygon.boundary())
@@ -68,7 +68,13 @@ object MosaicPolygonESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
         val polygon = MosaicMultiPolygonESRI.createPolygon(internalGeom.boundaries, internalGeom.holes)
-        MosaicGeometryESRI(new OGCPolygon(polygon, defaultSpatialReference))
+        val spatialReference =
+            if (internalGeom.srid != 0) {
+                SpatialReference.create(internalGeom.srid)
+            } else {
+                MosaicGeometryESRI.defaultSpatialReference
+            }
+        MosaicGeometryESRI(new OGCPolygon(polygon, spatialReference))
     }
 
     override def fromPoints(inPoints: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = POLYGON): MosaicGeometry = {

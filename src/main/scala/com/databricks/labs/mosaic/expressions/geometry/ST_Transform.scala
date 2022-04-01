@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, 
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
-case class ST_SetSRID(inputGeom: Expression, srid: Expression, geometryAPIName: String)
+case class ST_Transform(inputGeom: Expression, srid: Expression, geometryAPIName: String)
     extends BinaryExpression
       with NullIntolerant
       with CodegenFallback {
@@ -19,8 +19,8 @@ case class ST_SetSRID(inputGeom: Expression, srid: Expression, geometryAPIName: 
         }
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-        geom.setSpatialReference(input2.asInstanceOf[Int])
-        geometryAPI.serialize(geom, dataType)
+        val transformedGeom = geom.transformCRSXY(input2.asInstanceOf[Int])
+        geometryAPI.serialize(transformedGeom, dataType)
     }
 
     /** Output Data Type */
@@ -80,22 +80,21 @@ case class ST_SetSRID(inputGeom: Expression, srid: Expression, geometryAPIName: 
         copy(inputGeom = newLeft, srid = newRight)
 
 }
-
-object ST_SetSRID {
+object ST_Transform {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[ST_SetSRID].getCanonicalName,
+          classOf[ST_Transform].getCanonicalName,
           db.orNull,
-          "ST_SetSRID",
+          "ST_Transform",
           """
-            |    _FUNC_(expr1) - Assigns a spatial reference system to the geometry.
+            |    _FUNC_(expr1, expr2) - Reproject a geometry to a different spatial reference system.
             """.stripMargin,
           "",
           """
             |    Examples:
-            |      > SELECT _FUNC_(a);
+            |      > SELECT _FUNC_(a, b);
             |        POINT (1 1)
             |  """.stripMargin,
           "",

@@ -32,7 +32,7 @@ class MosaicPointESRI(point: OGCPoint) extends MosaicGeometryESRI(point) with Mo
 
     override def toInternal: InternalGeometry = {
         val shell = Array(InternalCoord(coord))
-        new InternalGeometry(POINT.id, Array(shell), Array(Array(Array())))
+        new InternalGeometry(POINT.id, getSpatialReference, Array(shell), Array(Array(Array())))
     }
 
     override def coord: Coordinate = {
@@ -75,13 +75,19 @@ object MosaicPointESRI extends GeometryReader {
         require(internalGeom.typeId == POINT.id)
 
         val coordinate = internalGeom.boundaries.head.head
+        val spatialReference =
+            if (internalGeom.srid != 0) {
+                SpatialReference.create(internalGeom.srid)
+            } else {
+                MosaicGeometryESRI.defaultSpatialReference
+            }
         val point =
             if (coordinate.coords.length == 2) {
-                new OGCPoint(new Point(coordinate.coords(0), coordinate.coords(1)), MosaicGeometryESRI.defaultSpatialReference)
+                new OGCPoint(new Point(coordinate.coords(0), coordinate.coords(1)), spatialReference)
             } else {
                 new OGCPoint(
                   new Point(coordinate.coords(0), coordinate.coords(1), coordinate.coords(2)),
-                  MosaicGeometryESRI.defaultSpatialReference
+                  spatialReference
                 )
             }
         new MosaicPointESRI(point)

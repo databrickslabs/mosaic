@@ -13,4 +13,14 @@ class TestCRSExpressions extends AnyFlatSpec with CRSExpressionsBehaviours with 
         it should behave like extractSRID(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
+    "ST_SetSRID" should "set the correct SRID for the input geometry" in {
+        it should behave like assignSRID(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like assignSRID(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
+    "ST_Transform" should "correctly reproject geometries into a new coordinate reference system" in {
+        it should behave like reprojectGeometries(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like reprojectGeometries(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
 }

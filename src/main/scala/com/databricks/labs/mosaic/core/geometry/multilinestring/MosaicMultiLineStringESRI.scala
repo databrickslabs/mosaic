@@ -19,7 +19,7 @@ class MosaicMultiLineStringESRI(multiLineString: OGCMultiLineString)
             val lineString = multiLineString.geometryN(i).asInstanceOf[OGCLineString]
             MosaicLineStringESRI(lineString).toInternal.boundaries.head
         }
-        new InternalGeometry(MULTILINESTRING.id, shells.toArray, Array(Array(Array())))
+        new InternalGeometry(MULTILINESTRING.id, getSpatialReference, shells.toArray, Array(Array(Array())))
     }
 
     override def getLength: Double = multiLineString.length()
@@ -47,7 +47,13 @@ object MosaicMultiLineStringESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
         val polygon = createPolyline(internalGeom.boundaries)
-        val ogcMultiLineString = new OGCMultiLineString(polygon, MosaicGeometryESRI.defaultSpatialReference)
+        val spatialReference =
+            if (internalGeom.srid != 0) {
+                SpatialReference.create(internalGeom.srid)
+            } else {
+                MosaicGeometryESRI.defaultSpatialReference
+            }
+        val ogcMultiLineString = new OGCMultiLineString(polygon, spatialReference)
         MosaicMultiLineStringESRI(ogcMultiLineString)
     }
 

@@ -19,7 +19,7 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
         val polygons = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).toInternal
         val boundaries = polygons.map(_.boundaries.head).toArray
         val holes = polygons.flatMap(_.holes).toArray
-        new InternalGeometry(MULTIPOLYGON.id, boundaries, holes)
+        new InternalGeometry(MULTIPOLYGON.id, getSpatialReference, boundaries, holes)
     }
 
     override def getBoundary: MosaicGeometry = MosaicGeometryESRI(multiPolygon.boundary())
@@ -58,7 +58,13 @@ object MosaicMultiPolygonESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
         val polygon = createPolygon(internalGeom.boundaries, internalGeom.holes)
-        val ogcMultiLineString = new OGCMultiPolygon(polygon, MosaicGeometryESRI.defaultSpatialReference)
+        val spatialReference =
+            if (internalGeom.srid != 0) {
+                SpatialReference.create(internalGeom.srid)
+            } else {
+                MosaicGeometryESRI.defaultSpatialReference
+            }
+        val ogcMultiLineString = new OGCMultiPolygon(polygon, spatialReference)
         MosaicMultiPolygonESRI(ogcMultiLineString)
     }
 

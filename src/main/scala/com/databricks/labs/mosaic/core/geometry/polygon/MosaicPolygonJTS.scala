@@ -17,7 +17,7 @@ class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with
         val boundary = polygon.getBoundary
         val shell = boundary.getGeometryN(0).getCoordinates.map(InternalCoord(_))
         val holes = for (i <- 1 until boundary.getNumGeometries) yield boundary.getGeometryN(i).getCoordinates.map(InternalCoord(_))
-        new InternalGeometry(POLYGON.id, Array(shell), Array(holes.toArray))
+        new InternalGeometry(POLYGON.id, getSpatialReference, Array(shell), Array(holes.toArray))
     }
 
     override def getBoundary: MosaicGeometry = {
@@ -67,6 +67,7 @@ object MosaicPolygonJTS extends GeometryReader {
         val shell = gf.createLinearRing(internalGeom.boundaries.head.map(_.toCoordinate))
         val holes = internalGeom.holes.head.map(ring => ring.map(_.toCoordinate)).map(gf.createLinearRing)
         val geometry = gf.createPolygon(shell, holes)
+        geometry.setSRID(internalGeom.srid)
         MosaicGeometryJTS(geometry)
     }
 

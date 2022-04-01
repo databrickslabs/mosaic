@@ -148,7 +148,7 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def toWKB: Array[Byte] = geom.asBinary().array()
 
-    override def getSpatialReference: Int = geom.getEsriSpatialReference.getID
+    override def getSpatialReference: Int = if (geom.esriSR == null) 0 else geom.getEsriSpatialReference.getID
 
     override def setSpatialReference(srid: Int): Unit = {
         val sr = SpatialReference.create(srid)

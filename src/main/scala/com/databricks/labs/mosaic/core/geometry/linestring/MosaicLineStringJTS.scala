@@ -15,7 +15,7 @@ class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(line
 
     override def toInternal: InternalGeometry = {
         val shell = lineString.getCoordinates.map(InternalCoord(_))
-        new InternalGeometry(LINESTRING.id, Array(shell), Array(Array(Array())))
+        new InternalGeometry(LINESTRING.id, getSpatialReference, Array(shell), Array(Array(Array())))
     }
 
     override def getBoundary: MosaicGeometry = {
@@ -44,6 +44,7 @@ object MosaicLineStringJTS extends GeometryReader {
         val internalGeom = InternalGeometry(row)
         val gf = new GeometryFactory()
         val lineString = gf.createLineString(internalGeom.boundaries.head.map(_.toCoordinate))
+        lineString.setSRID(internalGeom.srid)
         MosaicLineStringJTS(lineString)
     }
 

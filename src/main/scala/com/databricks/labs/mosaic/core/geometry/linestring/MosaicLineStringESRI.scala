@@ -21,7 +21,7 @@ class MosaicLineStringESRI(lineString: OGCLineString) extends MosaicGeometryESRI
             val point = lineString.pointN(i)
             InternalCoord(MosaicPointESRI(point).coord)
         }
-        new InternalGeometry(LINESTRING.id, Array(shell.toArray), Array(Array(Array())))
+        new InternalGeometry(LINESTRING.id, getSpatialReference, Array(shell.toArray), Array(Array(Array())))
     }
 
     override def getBoundary: MosaicGeometry = MosaicGeometryESRI(lineString.boundary())
@@ -44,7 +44,13 @@ object MosaicLineStringESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
         val polyline = MosaicMultiLineStringESRI.createPolyline(internalGeom.boundaries)
-        val ogcLineString = new OGCLineString(polyline, 0, MosaicGeometryESRI.defaultSpatialReference)
+        val spatialReference =
+            if (internalGeom.srid != 0) {
+                SpatialReference.create(internalGeom.srid)
+            } else {
+                MosaicGeometryESRI.defaultSpatialReference
+            }
+        val ogcLineString = new OGCLineString(polyline, 0, spatialReference)
         MosaicLineStringESRI(ogcLineString)
     }
 

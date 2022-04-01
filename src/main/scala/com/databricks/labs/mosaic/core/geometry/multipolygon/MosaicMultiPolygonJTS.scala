@@ -18,7 +18,7 @@ class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicGeometryJT
         val polygons = for (i <- 0 until n) yield MosaicPolygonJTS(multiPolygon.getGeometryN(i)).toInternal
         val boundaries = polygons.map(_.boundaries.head).toArray
         val holes = polygons.flatMap(_.holes).toArray
-        new InternalGeometry(MULTIPOLYGON.id, boundaries, holes)
+        new InternalGeometry(MULTIPOLYGON.id, getSpatialReference, boundaries, holes)
     }
 
     override def getBoundary: MosaicGeometry = {
@@ -73,6 +73,7 @@ object MosaicMultiPolygonJTS extends GeometryReader {
             gf.createPolygon(shell, holes)
         }
         val multiPolygon = gf.createMultiPolygon(polygons)
+        multiPolygon.setSRID(internalGeom.srid)
         MosaicMultiPolygonJTS(multiPolygon)
     }
 

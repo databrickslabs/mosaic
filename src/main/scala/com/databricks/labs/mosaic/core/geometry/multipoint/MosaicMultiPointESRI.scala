@@ -15,7 +15,7 @@ class MosaicMultiPointESRI(multiPoint: OGCMultiPoint) extends MosaicGeometryESRI
     // noinspection DuplicatedCode
     override def toInternal: InternalGeometry = {
         val points = asSeq.map(_.coord).map(InternalCoord(_))
-        new InternalGeometry(MULTIPOINT.id, Array(points.toArray), Array(Array(Array())))
+        new InternalGeometry(MULTIPOINT.id, getSpatialReference, Array(points.toArray), Array(Array(Array())))
     }
 
     override def asSeq: Seq[MosaicPoint] = {
@@ -46,6 +46,12 @@ object MosaicMultiPointESRI extends GeometryReader {
         val multiPoint = new MultiPoint()
         val coordsCollection = internalGeom.boundaries.head.map(_.coords)
         val dim = coordsCollection.head.length
+        val spatialReference =
+            if (internalGeom.srid != 0) {
+                SpatialReference.create(internalGeom.srid)
+            } else {
+                MosaicGeometryESRI.defaultSpatialReference
+            }
 
         dim match {
             case 2 => coordsCollection.foreach(coords => multiPoint.add(new Point(coords(0), coords(1))))
@@ -53,7 +59,7 @@ object MosaicMultiPointESRI extends GeometryReader {
             case _ => throw new UnsupportedOperationException("Only 2D and 3D points supported.")
         }
 
-        val ogcMultiPoint = new OGCMultiPoint(multiPoint, MosaicGeometryESRI.defaultSpatialReference)
+        val ogcMultiPoint = new OGCMultiPoint(multiPoint, spatialReference)
         new MosaicMultiPointESRI(ogcMultiPoint)
     }
 

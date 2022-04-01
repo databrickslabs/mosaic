@@ -2,18 +2,12 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
+import com.databricks.labs.mosaic.sql.MosaicSQLExceptions
 
-import org.apache.spark.sql.catalyst.expressions.{
-    Attribute,
-    AttributeReference,
-    Expression,
-    ExpressionInfo,
-    NamedExpression,
-    NullIntolerant,
-    UnaryExpression
-}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
-import org.apache.spark.sql.types.{DataType, DoubleType, IntegerType, Metadata}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodegenFallback, ExprCode}
+import org.apache.spark.sql.types._
 
 case class ST_SRID(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
@@ -21,15 +15,20 @@ case class ST_SRID(inputGeom: Expression, geometryAPIName: String) extends Unary
 
     def child: Expression = inputGeom
 
-    override def nullSafeEval(input1: Any): Any = {
-        val attr = new AttributeReference(
-          inputGeom.nodeName,
-          inputGeom.dataType,
-          true,
-          Metadata.empty
-        )(NamedExpression.newExprId, Seq.empty[String])
+    def getInputType: String =
+        inputGeom.dataType match {
+            case StringType           => "WKT"
+            case BinaryType           => "WKB"
+            case HexType              => "HEX"
+            case JSONType             => "GEOJSON"
+            case InternalGeometryType => "COORDS"
+            case _                    => ???
+        }
 
-//        inputGeom.references
+    override def nullSafeEval(input1: Any): Any = {
+        if (!List(InternalGeometryType, JSONType).contains(inputGeom.dataType)) {
+            throw MosaicSQLExceptions.GeometryEncodingNotSupported(List("GEOJSON", "COORDS"), getInputType)
+        }
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geom = geometryAPI.geometry(input1, inputGeom.dataType)
         geom.getSpatialReference
@@ -37,7 +36,7 @@ case class ST_SRID(inputGeom: Expression, geometryAPIName: String) extends Unary
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = ST_Length(asArray(0), geometryAPIName)
+        val res = ST_SRID(asArray(0), geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -47,13 +46,20 @@ case class ST_SRID(inputGeom: Expression, geometryAPIName: String) extends Unary
           ctx,
           ev,
           leftEval => {
+              if (!List(InternalGeometryType, JSONType).contains(inputGeom.dataType)) {
+                  throw MosaicSQLExceptions.GeometryEncodingNotSupported(List("GEOJSON", "COORDS"), getInputType)
+              }
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
 
               geometryAPIName match {
                   case "ESRI" => s"""
                                     |$inCode
+                                    |if ($geomInRef.esriSR == null) {
+                                    |${ev.value} = 0;
+                                    |} else {
                                     |${ev.value} = $geomInRef.getEsriSpatialReference().getID();
+                                    |}
                                     |""".stripMargin
                   case "JTS"  => s"""
                                    |try {

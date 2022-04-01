@@ -27,7 +27,7 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
 
     override def toInternal: InternalGeometry = {
         val shell = Array(InternalCoord(point.getCoordinate))
-        new InternalGeometry(POINT.id, Array(shell), Array(Array(Array())))
+        new InternalGeometry(POINT.id, getSpatialReference, Array(shell), Array(Array(Array())))
     }
 
     override def getBoundary: MosaicGeometry = {
@@ -67,12 +67,12 @@ object MosaicPointJTS extends GeometryReader {
         new MosaicPointJTS(point)
     }
 
-    // TODO add metadata to InternalGeometry for spatial reference and pick it up here
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val gf = new GeometryFactory()
         val internalGeom = InternalGeometry(row)
         val coordinate = internalGeom.boundaries.head.head
         val point = gf.createPoint(coordinate.toCoordinate)
+        point.setSRID(internalGeom.srid)
         new MosaicPointJTS(point)
     }
 

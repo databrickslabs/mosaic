@@ -256,6 +256,16 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           ST_SRID.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_SRID(exprs(0), geometryAPI.name)
         )
+        registry.registerFunction(
+          FunctionIdentifier("st_setsrid", database),
+          ST_SetSRID.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_SetSRID(exprs(0), exprs(1), geometryAPI.name)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("st_transform", database),
+          ST_Transform.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_Transform(exprs(0), exprs(1), geometryAPI.name)
+        )
 
         /** Aggregators */
         registry.registerFunction(
@@ -369,6 +379,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, geometryAPI.name))
         def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))
         def st_srid(geom: Column): Column = ColumnAdapter(ST_SRID(geom.expr, geometryAPI.name))
+        def st_setsrid(geom: Column, srid: Column): Column = ColumnAdapter(ST_SetSRID(geom.expr, srid.expr, geometryAPI.name))
+        def st_transform(geom: Column, srid: Column): Column = ColumnAdapter(ST_Transform(geom.expr, srid.expr, geometryAPI.name))
 
         /** Aggregators */
         def st_intersects_aggregate(leftIndex: Column, rightIndex: Column): Column =
