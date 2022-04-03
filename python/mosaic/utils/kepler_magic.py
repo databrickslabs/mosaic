@@ -5,7 +5,8 @@ from keplergl import KeplerGl
 from pyspark.sql.functions import col, conv, lower
 
 from mosaic.config import config
-from mosaic.api.functions import st_centroid2D, st_astext
+from mosaic.api.functions import st_centroid2D
+from mosaic.api.accessors import st_astext
 from mosaic.resources import mosaic_logo_b64str
 from mosaic.utils.kepler_config import mosaic_kepler_config
 
