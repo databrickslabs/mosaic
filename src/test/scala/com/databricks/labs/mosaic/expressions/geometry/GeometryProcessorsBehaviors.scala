@@ -412,4 +412,60 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         result.collect().length > 0 shouldBe true
     }
 
+    def bufferCalculation(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val referenceGeoms: immutable.Seq[MosaicGeometry] =
+            mocks.wkt_rows.sortBy(_.head.asInstanceOf[Int])
+                .map(_(1).asInstanceOf[String])
+                .map(mc.getGeometryAPI.geometry(_, "WKT"))
+
+        val expected = referenceGeoms.map(_.buffer(1).getLength)
+        val result = mocks.getWKTRowsDf
+            .orderBy("id")
+            .select(st_length(st_buffer($"wkt", lit(1))))
+            .as[Double]
+            .collect()
+
+        result.zip(expected).foreach { case (l, r) => math.abs(l - r) should be < 1e-8 }
+
+        mocks.getWKTRowsDf.createOrReplaceTempView("source")
+
+        val sqlResult = spark
+            .sql("select id, st_length(st_buffer(wkt, 1)) from source")
+            .orderBy("id")
+            .drop("id")
+            .as[Double]
+            .collect()
+
+        sqlResult.zip(expected).foreach { case (l, r) => math.abs(l - r) should be < 1e-8 }
+    }
+
+    def bufferCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val result = mocks.getWKTRowsDf
+            .select(st_length(st_buffer($"wkt", lit(1))))
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+    }
+
 }
