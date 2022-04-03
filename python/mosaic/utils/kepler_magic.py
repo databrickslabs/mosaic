@@ -5,7 +5,7 @@ from keplergl import KeplerGl
 from pyspark.sql.functions import col, conv, lower
 
 from mosaic.config import config
-from mosaic.functions import st_astext, st_centroid2D
+from .context import api
 from mosaic.resources import mosaic_logo_b64str
 from mosaic.utils.kepler_config import mosaic_kepler_config
 
@@ -53,7 +53,7 @@ class MosaicKepler(Magics):
             mosaic_kepler_config["config"]["mapState"]["longitude"] = centroid[1] # se to centrodi of a geom
         elif feature_type == "geometry":
             tmp_sdf = spark.createDataFrame(pandasData.iloc[:1])
-            centroid = tmp_sdf.select(st_centroid2D(F.col(feature_name))).limit(1).collect()[0][0]
+            centroid = tmp_sdf.select(api.st_centroid2D(F.col(feature_name))).limit(1).collect()[0][0]
             mosaic_kepler_config["config"]["mapState"]["latitude"] = centroid[1] # set to centroid of a geom
             mosaic_kepler_config["config"]["mapState"]["longitude"] = centroid[0] # se to centrodi of a geom
 
@@ -80,7 +80,7 @@ class MosaicKepler(Magics):
             if feature_col_dt[1] == "bigint":
                 data = data.withColumn(feature_name, F.lower(F.conv(F.col(feature_name), 10, 16)))
         elif feature_type == "geometry":
-            data = data.withColumn(feature_name, st_astext(F.col(feature_name)))
+            data = data.withColumn(feature_name, api.st_astext(F.col(feature_name)))
         else:
             raise Exception(f"Usupported geometry type: {feature_type}.")
 
