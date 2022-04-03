@@ -89,6 +89,27 @@ def st_convexhull(geom: ColumnOrName) -> Column:
         "st_convexhull", pyspark_to_java_column(geom)
     )
 
+def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
+    """
+    Compute the buffered geometry based on geom and radius.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+    radius : Column
+        The radius of buffering
+
+    Returns
+    -------
+    Column
+        A geometry
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_buffer", pyspark_to_java_column(geom), pyspark_to_java_column(radius)
+    )
+
 
 def st_dump(geom: ColumnOrName) -> Column:
     """
