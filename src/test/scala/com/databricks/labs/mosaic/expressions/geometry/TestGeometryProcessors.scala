@@ -38,4 +38,9 @@ class TestGeometryProcessors extends AnyFlatSpec with GeometryProcessorsBehavior
         it should behave like convexHullGeneration(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
+    "ST_Buffer" should "compute the buffer geometry for any geometry API" in {
+        it should behave like bufferCalculation(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like bufferCalculation(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
 }
