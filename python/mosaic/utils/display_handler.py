@@ -1,4 +1,3 @@
-import IPython.display as ipydisplay
 import py4j.java_gateway
 from pyspark.sql import DataFrame, SparkSession
 

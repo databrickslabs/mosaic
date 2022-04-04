@@ -14,7 +14,7 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     """
     Enable Mosaic functions.
 
-    Use this function at the start of your workflow to ensure all of the required dependencies are installed and
+    Use this function at the start of your workflow to ensure all the required dependencies are installed and
     Mosaic is configured according to your needs.
 
     Parameters
