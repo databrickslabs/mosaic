@@ -2,11 +2,11 @@ import inspect
 from typing import overload
 
 from pyspark.sql import Column
-from pyspark.sql.functions import col, _to_java_column as pyspark_to_java_column
+from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
+from pyspark.sql.functions import col
 
 from mosaic.config import config
 from mosaic.utils.types import ColumnOrName, as_typed_col
-
 
 #####################
 # Spatial functions #
@@ -445,6 +445,7 @@ def flatten_polygons(geom: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
         "flatten_polygons", pyspark_to_java_column(geom)
     )
+
 
 def point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """

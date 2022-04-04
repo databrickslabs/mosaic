@@ -1,7 +1,7 @@
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import DataFrame
 
-from mosaic import MosaicFrame, displayMosaic
+from mosaic import MosaicFrame, displayMosaic, MosaicKepler
 from test.utils import MosaicTestCase
 
 

@@ -1,8 +1,8 @@
 import os
 import sys
+from importlib.metadata import version
 
 from py4j.protocol import Py4JJavaError
-from importlib.metadata import version
 
 
 class MosaicLibraryHandler:
