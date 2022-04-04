@@ -116,9 +116,9 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
     override def distance(geom2: MosaicGeometry): Double = getGeom.distance(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
 
     override def convexHull: MosaicGeometryJTS = {
-        val hull = geom.convexHull()
-        hull.setSRID(geom.getSRID)
-        MosaicGeometryJTS(hull)
+        val convexHull = geom.convexHull()
+        convexHull.setSRID(geom.getSRID)
+        MosaicGeometryJTS(convexHull)
     }
 
     override def toWKT: String = new WKTWriter().write(geom)

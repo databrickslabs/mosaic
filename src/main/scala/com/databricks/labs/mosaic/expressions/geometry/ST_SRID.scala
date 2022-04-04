@@ -2,33 +2,19 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
-import com.databricks.labs.mosaic.sql.MosaicSQLExceptions
 
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodegenFallback, ExprCode}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
 
-case class ST_SRID(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
+case class ST_SRID(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant with RequiresCRS {
 
     def dataType: DataType = IntegerType
 
     def child: Expression = inputGeom
 
-    def getInputType: String =
-        inputGeom.dataType match {
-            case StringType           => "WKT"
-            case BinaryType           => "WKB"
-            case HexType              => "HEX"
-            case JSONType             => "GEOJSON"
-            case InternalGeometryType => "COORDS"
-            case _                    => ???
-        }
-
     override def nullSafeEval(input1: Any): Any = {
-        if (!List(InternalGeometryType, JSONType).contains(inputGeom.dataType)) {
-            throw MosaicSQLExceptions.GeometryEncodingNotSupported(List("GEOJSON", "COORDS"), getInputType)
-        }
+        checkEncoding(inputGeom.dataType)
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geom = geometryAPI.geometry(input1, inputGeom.dataType)
         geom.getSpatialReference
@@ -46,9 +32,7 @@ case class ST_SRID(inputGeom: Expression, geometryAPIName: String) extends Unary
           ctx,
           ev,
           leftEval => {
-              if (!List(InternalGeometryType, JSONType).contains(inputGeom.dataType)) {
-                  throw MosaicSQLExceptions.GeometryEncodingNotSupported(List("GEOJSON", "COORDS"), getInputType)
-              }
+              checkEncoding(inputGeom.dataType)
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
 

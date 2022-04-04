@@ -62,7 +62,7 @@ object MosaicMultiPointJTS extends GeometryReader {
 
     private def fromPoints(points: Seq[MosaicPointJTS]): MosaicMultiPointJTS = {
         val gf = new GeometryFactory()
-        val pointGeometries = points.map(_.getGeom).toArray
+        val pointGeometries = points.map(_.getGeom.asInstanceOf[Point]).toArray
         val multiPoint = gf.createMultiPoint(pointGeometries)
         multiPoint.setSRID(pointGeometries.head.getSRID)
         new MosaicMultiPointJTS(multiPoint)

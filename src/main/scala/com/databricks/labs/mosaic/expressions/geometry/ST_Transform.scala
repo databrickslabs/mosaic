@@ -1,8 +1,6 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
-import com.databricks.labs.mosaic.sql.MosaicSQLExceptions
 
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -11,12 +9,11 @@ import org.apache.spark.sql.types._
 case class ST_Transform(inputGeom: Expression, srid: Expression, geometryAPIName: String)
     extends BinaryExpression
       with NullIntolerant
-      with CodegenFallback {
+      with CodegenFallback
+      with RequiresCRS {
 
     override def nullSafeEval(input1: Any, input2: Any): Any = {
-        if (!List(InternalGeometryType, JSONType).contains(inputGeom.dataType)) {
-            throw MosaicSQLExceptions.GeometryEncodingNotSupported(List("GEOJSON", "COORDS"), getInputType)
-        }
+        checkEncoding(inputGeom.dataType)
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geom = geometryAPI.geometry(input1, inputGeom.dataType)
         val transformedGeom = geom.transformCRSXY(input2.asInstanceOf[Int])
@@ -26,19 +23,9 @@ case class ST_Transform(inputGeom: Expression, srid: Expression, geometryAPIName
     /** Output Data Type */
     override def dataType: DataType = inputGeom.dataType
 
-    def getInputType: String =
-        inputGeom.dataType match {
-            case StringType           => "WKT"
-            case BinaryType           => "WKB"
-            case HexType              => "HEX"
-            case JSONType             => "GEOJSON"
-            case InternalGeometryType => "COORDS"
-            case _                    => ???
-        }
-
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = ST_SetSRID(asArray(0), asArray(1), geometryAPIName)
+        val res = ST_Transform(asArray(0), asArray(1), geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -52,9 +39,7 @@ case class ST_Transform(inputGeom: Expression, srid: Expression, geometryAPIName
 //            ctx,
 //            ev,
 //            leftEval => {
-//                if (List(InternalGeometryType, JSONType).contains(inputGeom.dataType)) {
-//                    throw MosaicSQLExceptions.GeometryEncodingNotSupported(List("GEOJSON", "COORDS"), getInputType)
-//                }
+//                checkEncoding(inputGeom.dataType)
 //                val geometryAPI = GeometryAPI.apply(geometryAPIName)
 //                val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
 //

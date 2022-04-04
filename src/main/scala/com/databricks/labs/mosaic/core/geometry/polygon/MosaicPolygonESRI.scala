@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.core.geometry.polygon
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.MosaicGeometryESRI.defaultSpatialReference
 import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringESRI}
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonESRI
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}

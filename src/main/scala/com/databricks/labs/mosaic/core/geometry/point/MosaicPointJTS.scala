@@ -23,6 +23,10 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
             Seq(getX, getY, getZ)
         }
 
+    override def getX: Double = point.getX
+
+    override def getY: Double = point.getY
+
     override def getZ: Double = point.getCoordinate.z
 
     override def toInternal: InternalGeometry = {
@@ -36,8 +40,6 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
         MosaicGeometryJTS(geom)
     }
 
-    override def getGeom: Point = point
-
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
         val (x_, y_) = f(getX, getY)
         MosaicPointJTS(
@@ -45,10 +47,6 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
           point.getSRID
         )
     }
-
-    override def getX: Double = point.getX
-
-    override def getY: Double = point.getY
 
 }
 

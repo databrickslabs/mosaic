@@ -69,7 +69,6 @@ object MosaicPointESRI extends GeometryReader {
     def apply(point: OGCGeometry): MosaicPointESRI = new MosaicPointESRI(point.asInstanceOf[OGCPoint])
 
     // noinspection ZeroIndexToHead
-    // TODO add metadata to InternalGeometry for spatial reference and pick it up here
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
         require(internalGeom.typeId == POINT.id)
@@ -100,7 +99,6 @@ object MosaicPointESRI extends GeometryReader {
         require(geomType.id == POINT.id)
 
         val mosaicPoint = points.head
-        // TODO does this survive when converted to MosaicPoint?
         val spatialReference = SpatialReference.create(mosaicPoint.getSpatialReference)
         val point =
             if (mosaicPoint.asSeq.length == 2) {

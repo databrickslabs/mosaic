@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry
 
-import org.locationtech.proj4j.{CoordinateTransformFactory, CRSFactory, ProjCoordinate}
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-import com.databricks.labs.mosaic.core.types.model.InternalCoord
+
+import org.locationtech.proj4j.{CoordinateTransformFactory, CRSFactory, ProjCoordinate}
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
 

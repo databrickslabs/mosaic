@@ -13,7 +13,6 @@
         <spec2.version>4.2.0</spec2.version>
     </properties>
 
-
     <dependencies>
         <dependency>
             <groupId>org.scala-lang</groupId>
