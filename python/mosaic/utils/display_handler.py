@@ -10,16 +10,16 @@ class DisplayHandler:
     ScalaOptionClass: py4j.java_gateway.JavaClass
     ScalaOptionObject: py4j.java_gateway.JavaObject
     in_databricks: bool
-    display_function = None
+    dataframe_display_function = None
 
     def __init__(self, spark: SparkSession):
         try:
             from PythonShellImpl import PythonShell
 
-            self.display_function = PythonShell.display
+            self.dataframe_display_function = PythonShell.display
             self.in_databricks = True
         except ImportError:
-            self.display_function = self.basic_display
+            self.dataframe_display_function = lambda df: DataFrame.show(df)
             self.in_databricks = False
         sc = spark.sparkContext
         self.ScalaOptionClass = getattr(sc._jvm.scala, "Option$")
@@ -28,11 +28,7 @@ class DisplayHandler:
             sc._jvm.com.databricks.labs.mosaic.sql, "Prettifier"
         )
 
-    @staticmethod
-    def basic_display(df: DataFrame):
-        df.show()
-
-    def display(self, df: DataFrame):
+    def display_dataframe(self, df: DataFrame):
         prettifier = self.PrettifierModule
         pretty_jdf = (
             prettifier.prettified(df._jdf, self.ScalaOptionObject.apply(None))
@@ -40,10 +36,10 @@ class DisplayHandler:
             else prettifier.prettifiedMosaicFrame(df._mosaicFrame)
         )
         pretty_df = DataFrame(pretty_jdf, config.sql_context)
-        self.display_function(pretty_df)
+        self.dataframe_display_function(pretty_df)
 
 
 def displayMosaic(df: DataFrame):
     if not hasattr(config, "display_handler"):
         config.display_handler = DisplayHandler(config.mosaic_spark)
-    config.display_handler.display(df)
+    config.display_handler.display_dataframe(df)
