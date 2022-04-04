@@ -7,9 +7,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, conv, lower
 from pyspark.sql.utils import AnalysisException, ParseException
 
+from mosaic.config import config
 from mosaic.api.accessors import st_astext
 from mosaic.api.functions import st_centroid2D
-from mosaic.config import config
 from mosaic.resources import mosaic_logo_b64str
 from mosaic.utils.kepler_config import mosaic_kepler_config
 
@@ -36,7 +36,7 @@ class MosaicKepler(Magics):
             ga_script_redacted,
             flags=re.DOTALL,
         )
-        config.display_handler.display_html(async_script_redacted)
+        config.notebook_utils.displayHTML(async_script_redacted)
 
     @staticmethod
     def get_spark_df(table_name):
@@ -123,5 +123,5 @@ class MosaicKepler(Magics):
             f"<img src='data:image/png;base64, {mosaic_logo_b64str}' height='20px'>"
         )
 
-        config.display_handler.display_html(logo_html)
+        config.notebook_utils.displayHTML(logo_html)
         self.displayKepler(m1, 800, 1200)
