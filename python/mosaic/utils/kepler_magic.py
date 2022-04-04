@@ -7,9 +7,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, conv, lower
 from pyspark.sql.utils import AnalysisException, ParseException
 
-from mosaic.config import config
 from mosaic.api.accessors import st_astext
 from mosaic.api.functions import st_centroid2D
+from mosaic.config import config
 from mosaic.resources import mosaic_logo_b64str
 from mosaic.utils.kepler_config import mosaic_kepler_config
 

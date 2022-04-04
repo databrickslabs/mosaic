@@ -56,4 +56,5 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     config.ipython_hook = get_ipython()
     if config.ipython_hook:
         from mosaic.utils.kepler_magic import MosaicKepler
+
         config.ipython_hook.register_magics(MosaicKepler)

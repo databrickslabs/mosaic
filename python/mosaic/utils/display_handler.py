@@ -1,8 +1,8 @@
+import IPython.display as ipydisplay
 import py4j.java_gateway
 from pyspark.sql import DataFrame, SparkSession
 
 from mosaic.config import config
-import IPython.display as ipydisplay
 
 
 class DisplayHandler:
