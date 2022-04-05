@@ -74,17 +74,20 @@ object MosaicPointJTS extends GeometryReader {
         new MosaicPointJTS(point)
     }
 
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = POINT): MosaicGeometry = {
-        require(geomType.id == POINT.id)
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POINT): MosaicPointJTS = {
         val gf = new GeometryFactory()
-        val mosaicPoint = points.head
-        val point = gf.createPoint(mosaicPoint.coord)
-        point.setSRID(mosaicPoint.getSpatialReference)
-        new MosaicPointJTS(point)
+        val spatialReference = geomSeq.head.getSpatialReference
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POINT                         =>
+                val extractedPoint = geomSeq.head.asInstanceOf[MosaicPoint]
+                gf.createPoint(extractedPoint.coord)
+            case other: GeometryTypeEnum.Value => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
+        }
+        newGeom.setSRID(spatialReference)
+        MosaicPointJTS(newGeom)
     }
-
-    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
-        throw new UnsupportedOperationException("fromLines is not intended for creating LineStrings")
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 

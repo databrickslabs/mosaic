@@ -44,7 +44,7 @@ class TestPolygonJTS extends AnyFlatSpec {
         val pointSeq = Seq("POINT (30 10)", "POINT (40 40)", "POINT (20 40)", "POINT (10 20)")
             .map(MosaicPointJTS.fromWKT)
             .map(_.asInstanceOf[MosaicPointJTS])
-        val polygonTest = MosaicPolygonJTS.fromPoints(pointSeq)
+        val polygonTest = MosaicPolygonJTS.fromSeq(pointSeq)
         polygonReference.equals(polygonTest) shouldBe true
     }
 
@@ -53,7 +53,7 @@ class TestPolygonJTS extends AnyFlatSpec {
         val linesSeq = Seq("LINESTRING (35 10, 45 45, 15 40, 10 20)", "LINESTRING (20 30, 35 35, 30 20)")
             .map(MosaicLineStringJTS.fromWKT)
             .map(_.asInstanceOf[MosaicLineStringJTS])
-        val polygonTest = MosaicPolygonJTS.fromLines(linesSeq)
+        val polygonTest = MosaicPolygonJTS.fromSeq(linesSeq)
         polygonReference.equals(polygonTest) shouldBe true
     }
 

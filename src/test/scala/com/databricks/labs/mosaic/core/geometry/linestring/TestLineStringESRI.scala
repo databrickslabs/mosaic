@@ -48,7 +48,7 @@ class TestLineStringESRI extends AnyFlatSpec {
         val pointsSeq = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
             .map(MosaicLineStringESRI.fromWKT)
             .map(_.asInstanceOf[MosaicPointESRI])
-        val lineStringTest = MosaicLineStringESRI.fromPoints(pointsSeq)
+        val lineStringTest = MosaicLineStringESRI.fromSeq(pointsSeq)
         lineStringReference.equals(lineStringTest) shouldBe true
     }
 

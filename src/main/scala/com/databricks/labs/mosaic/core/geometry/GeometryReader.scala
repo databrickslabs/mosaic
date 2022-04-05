@@ -18,9 +18,7 @@ trait GeometryReader {
 
     def fromHEX(hex: String): MosaicGeometry
 
-    def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry
-
-    def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry
+    def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value): MosaicGeometry
 
     def fromKryo(row: InternalRow): MosaicGeometry
 

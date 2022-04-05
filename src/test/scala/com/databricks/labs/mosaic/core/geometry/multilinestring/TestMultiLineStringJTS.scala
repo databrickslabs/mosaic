@@ -47,7 +47,7 @@ class TestMultiLineStringJTS extends AnyFlatSpec {
         val multiLinesSeq = Seq("LINESTRING (10 10, 20 20, 10 40)", "LINESTRING (40 40, 30 30, 40 20, 30 10)")
             .map(MosaicLineStringJTS.fromWKT)
             .map(_.asInstanceOf[MosaicLineStringJTS])
-        val multiLineStringTest = MosaicMultiLineStringJTS.fromLines(multiLinesSeq)
+        val multiLineStringTest = MosaicMultiLineStringJTS.fromSeq(multiLinesSeq)
         multiLineStringReference.equals(multiLineStringTest) shouldBe true
     }
 

@@ -192,12 +192,8 @@ object MosaicGeometryJTS extends GeometryReader {
         }
     }
 
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometryJTS = {
-        reader(geomType.id).fromPoints(points, geomType).asInstanceOf[MosaicGeometryJTS]
-    }
-
-    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometryJTS = {
-        reader(geomType.id).fromLines(lines, geomType).asInstanceOf[MosaicGeometryJTS]
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value): MosaicGeometryJTS = {
+        reader(geomType.id).fromSeq(geomSeq, geomType).asInstanceOf[MosaicGeometryJTS]
     }
 
     override def fromInternal(row: InternalRow): MosaicGeometryJTS = {

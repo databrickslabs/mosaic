@@ -46,7 +46,7 @@ class TestMultiPointJTS extends AnyFlatSpec {
         val pointsSeq = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
             .map(MosaicPointJTS.fromWKT)
             .map(_.asInstanceOf[MosaicPointJTS])
-        val multiPointTest = MosaicMultiPointJTS.fromPoints(pointsSeq)
+        val multiPointTest = MosaicMultiPointJTS.fromSeq(pointsSeq)
         multiPointReference.equals(multiPointTest) shouldBe true
     }
 

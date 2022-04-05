@@ -2,8 +2,8 @@ package com.databricks.labs.mosaic.core.geometry.point
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
+import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POINT, POLYGON}
 import com.esri.core.geometry.{Point, SpatialReference}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCPoint}
 import com.uber.h3core.util.GeoCoord
@@ -92,25 +92,21 @@ object MosaicPointESRI extends GeometryReader {
         new MosaicPointESRI(point)
     }
 
-    override def fromPoints(
-        points: Seq[MosaicPoint],
-        geomType: GeometryTypeEnum.Value = POINT
-    ): MosaicGeometry = {
-        require(geomType.id == POINT.id)
-
-        val mosaicPoint = points.head
-        val spatialReference = SpatialReference.create(mosaicPoint.getSpatialReference)
-        val point =
-            if (mosaicPoint.asSeq.length == 2) {
-                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY), spatialReference)
-            } else {
-                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY, mosaicPoint.getZ), spatialReference)
-            }
-        new MosaicPointESRI(point)
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POINT): MosaicPointESRI = {
+        val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POINT                         =>
+                val extractedPoint = geomSeq.head.asInstanceOf[MosaicPoint]
+                extractedPoint.asSeq.length match {
+                    case 3 => new OGCPoint(new Point(extractedPoint.getX, extractedPoint.getY, extractedPoint.getZ), spatialReference)
+                    case 2 => new OGCPoint(new Point(extractedPoint.getX, extractedPoint.getY), spatialReference)
+                }
+            case other: GeometryTypeEnum.Value => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
+        }
+        MosaicPointESRI(newGeom)
     }
-
-    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
-        throw new UnsupportedOperationException("fromLines is not intended for creating Points")
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)
 

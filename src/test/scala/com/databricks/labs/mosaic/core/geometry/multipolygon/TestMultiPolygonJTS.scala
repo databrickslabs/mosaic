@@ -48,7 +48,7 @@ class TestMultiPolygonJTS extends AnyFlatSpec {
         )
             .map(MosaicPolygonJTS.fromWKT)
             .map(_.asInstanceOf[MosaicPolygonJTS])
-        val multiPolygonTest = MosaicMultiPolygonJTS.fromPolygons(polygonSeq)
+        val multiPolygonTest = MosaicMultiPolygonJTS.fromSeq(polygonSeq)
         multiPolygonReference.equals(multiPolygonTest) shouldBe true
     }
 

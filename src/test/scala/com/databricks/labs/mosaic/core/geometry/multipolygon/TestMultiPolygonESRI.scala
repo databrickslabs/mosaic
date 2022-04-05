@@ -48,7 +48,7 @@ class TestMultiPolygonESRI extends AnyFlatSpec {
         )
             .map(MosaicPolygonESRI.fromWKT)
             .map(_.asInstanceOf[MosaicPolygonESRI])
-        val multiPolygonTest = MosaicMultiPolygonESRI.fromPolygons(polygonSeq)
+        val multiPolygonTest = MosaicMultiPolygonESRI.fromSeq(polygonSeq)
         multiPolygonReference.equals(multiPolygonTest) shouldBe true
     }
 

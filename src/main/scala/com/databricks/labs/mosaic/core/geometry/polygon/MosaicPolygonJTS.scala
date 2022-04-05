@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, Mo
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
 import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POINT, POLYGON}
 import com.esotericsoftware.kryo.io.Input
 import org.locationtech.jts.geom._
 
@@ -42,7 +42,7 @@ class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
         val shellTransformed = getShells.head.asInstanceOf[MosaicLineStringJTS].mapXY(f).asInstanceOf[MosaicLineStringJTS]
         val holesTransformed = getHoles.head.map(_.asInstanceOf[MosaicLineStringJTS].mapXY(f).asInstanceOf[MosaicLineStringJTS])
-        val newGeom = MosaicPolygonJTS.fromLines(Seq(shellTransformed) ++ holesTransformed)
+        val newGeom = MosaicPolygonJTS.fromSeq(Seq(shellTransformed) ++ holesTransformed)
         newGeom.setSpatialReference(getSpatialReference)
         newGeom
     }
@@ -71,27 +71,29 @@ object MosaicPolygonJTS extends GeometryReader {
         MosaicGeometryJTS(geometry)
     }
 
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = POLYGON): MosaicGeometry = {
-        require(geomType.id == POLYGON.id)
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POLYGON): MosaicPolygonJTS = {
         val gf = new GeometryFactory()
-        val shell = points.map(_.coord).toArray ++ Array(points.head.coord)
-        val polygon = gf.createPolygon(shell)
-        polygon.setSRID(points.head.getSpatialReference)
-        new MosaicPolygonJTS(polygon)
-    }
-
-    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value = POLYGON): MosaicGeometry = {
-        require(geomType.id == POLYGON.id)
-        val gf = new GeometryFactory()
-        val sr = lines.head.getSpatialReference
-        val shell = gf.createLinearRing(lines.head.asSeq.map(_.coord).toArray ++ Array(lines.head.asSeq.head.coord))
-        val holes = lines.tail
-            .map({ h: MosaicLineString => h.asSeq.map(_.coord).toArray ++ Array(h.asSeq.head.coord) })
-            .map(gf.createLinearRing)
-            .toArray
-        val polygon = gf.createPolygon(shell, holes)
-        polygon.setSRID(sr)
-        MosaicGeometryJTS(polygon)
+        val spatialReference = geomSeq.head.getSpatialReference
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POINT                         =>
+                val extractedPoints = geomSeq.map(_.asInstanceOf[MosaicPointJTS])
+                val exteriorRing = extractedPoints.map(_.coord).toArray ++ Array(extractedPoints.head.coord)
+                gf.createPolygon(exteriorRing)
+            case LINESTRING                    =>
+                val extractedLines = geomSeq.map(_.asInstanceOf[MosaicLineStringJTS])
+                val exteriorRing =
+                    gf.createLinearRing(extractedLines.head.asSeq.map(_.coord).toArray ++ Array(extractedLines.head.asSeq.head.coord))
+                val holes = extractedLines.tail
+                    .map({ h: MosaicLineStringJTS => h.asSeq.map(_.coord).toArray ++ Array(h.asSeq.head.coord) })
+                    .map(gf.createLinearRing)
+                    .toArray
+                gf.createPolygon(exteriorRing, holes)
+            case other: GeometryTypeEnum.Value => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
+        }
+        newGeom.setSRID(spatialReference)
+        MosaicPolygonJTS(newGeom)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)

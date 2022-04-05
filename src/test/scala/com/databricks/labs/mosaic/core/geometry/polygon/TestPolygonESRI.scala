@@ -44,7 +44,7 @@ class TestPolygonESRI extends AnyFlatSpec {
         val pointSeq = Seq("POINT (30 10)", "POINT (40 40)", "POINT (20 40)", "POINT (10 20)")
             .map(MosaicPointESRI.fromWKT)
             .map(_.asInstanceOf[MosaicPointESRI])
-        val polygonTest = MosaicPolygonESRI.fromPoints(pointSeq)
+        val polygonTest = MosaicPolygonESRI.fromSeq(pointSeq)
         polygonReference.equals(polygonTest) shouldBe true
     }
 
@@ -53,7 +53,7 @@ class TestPolygonESRI extends AnyFlatSpec {
         val linesSeq = Seq("LINESTRING (35 10, 45 45, 15 40, 10 20)", "LINESTRING (20 30, 35 35, 30 20)")
             .map(MosaicLineStringESRI.fromWKT)
             .map(_.asInstanceOf[MosaicLineStringESRI])
-        val polygonTest = MosaicPolygonESRI.fromLines(linesSeq)
+        val polygonTest = MosaicPolygonESRI.fromSeq(linesSeq)
         polygonReference.equals(polygonTest) shouldBe true
     }
 

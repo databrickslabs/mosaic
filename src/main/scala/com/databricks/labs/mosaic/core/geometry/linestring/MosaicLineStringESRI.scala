@@ -3,8 +3,8 @@ package com.databricks.labs.mosaic.core.geometry.linestring
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
-import com.databricks.labs.mosaic.core.types.model._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.LINESTRING
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POINT}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString}
 import com.esri.core.geometry.SpatialReference
 
@@ -31,7 +31,7 @@ class MosaicLineStringESRI(lineString: OGCLineString) extends MosaicGeometryESRI
     override def numPoints: Int = lineString.numPoints()
 
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry =
-        MosaicLineStringESRI.fromPoints(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointESRI]))
+        MosaicLineStringESRI.fromSeq(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointESRI]))
 
 }
 
@@ -54,27 +54,34 @@ object MosaicLineStringESRI extends GeometryReader {
         MosaicLineStringESRI(ogcLineString)
     }
 
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicGeometry = {
-        require(geomType.id == LINESTRING.id)
-        fromPoints(points.map(_.asInstanceOf[MosaicPointESRI]))
-    }
-
-    private def fromPoints(points: Seq[MosaicPointESRI]): MosaicGeometry = {
-        val spatialReference = SpatialReference.create(points.head.getSpatialReference)
-        val polyline = MosaicMultiLineStringESRI.createPolyline(
-          Array(points.map(c => InternalCoord(Seq(c.coord.getX, c.coord.getY))).toArray),
-          dontClose = true
-        )
-        val ogcLineString = new OGCLineString(polyline, 0, spatialReference)
-        MosaicLineStringESRI(ogcLineString)
-
-    }
-
-    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
-        throw new UnsupportedOperationException("fromLines is not intended for creating LineStrings")
-
     def apply(ogcGeometry: OGCGeometry): MosaicLineStringESRI = {
         new MosaicLineStringESRI(ogcGeometry.asInstanceOf[OGCLineString])
+    }
+
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicLineStringESRI = {
+        val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POINT                                                =>
+                val extractedPoints = geomSeq.map(_.asInstanceOf[MosaicPointESRI])
+                new OGCLineString(
+                  MosaicMultiLineStringESRI.createPolyline(
+                    Array(extractedPoints.map(c => InternalCoord(Seq(c.coord.getX, c.coord.getY))).toArray),
+                    dontClose = true
+                  ),
+                  0,
+                  spatialReference
+                )
+            case other: GeometryTypeEnum.Value if other == LINESTRING =>
+                // scalastyle:off throwerror
+                throw new NotImplementedError(
+                  s"Joining a sequence of ${other.toString} to create a ${geomType.toString} geometry is not yet supported"
+                )
+            // scalastyle:on throwerror
+            case other: GeometryTypeEnum.Value                        => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
+        }
+        MosaicLineStringESRI(newGeom)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)

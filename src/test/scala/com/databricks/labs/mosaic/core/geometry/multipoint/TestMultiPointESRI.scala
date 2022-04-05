@@ -46,7 +46,7 @@ class TestMultiPointESRI extends AnyFlatSpec {
         val pointsSeq = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
             .map(MosaicPointESRI.fromWKT)
             .map(_.asInstanceOf[MosaicPointESRI])
-        val multiPointTest = MosaicMultiPointESRI.fromPoints(pointsSeq)
+        val multiPointTest = MosaicMultiPointESRI.fromSeq(pointsSeq)
         multiPointReference.equals(multiPointTest) shouldBe true
     }
 

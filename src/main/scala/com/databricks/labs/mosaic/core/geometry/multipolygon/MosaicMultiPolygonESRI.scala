@@ -5,8 +5,8 @@ import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
 import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonESRI}
-import com.databricks.labs.mosaic.core.types.model._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOLYGON
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOLYGON, POLYGON}
 import com.esri.core.geometry.{Polygon, SpatialReference}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPolygon}
 
@@ -46,7 +46,7 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
     }
 
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
-        MosaicMultiPolygonESRI.fromPolygons(
+        MosaicMultiPolygonESRI.fromSeq(
           asSeq.map(_.asInstanceOf[MosaicPolygonESRI].mapXY(f).asInstanceOf[MosaicPolygonESRI])
         )
     }
@@ -101,19 +101,18 @@ object MosaicMultiPolygonESRI extends GeometryReader {
 
     def apply(multiPolygon: OGCGeometry): MosaicMultiPolygonESRI = new MosaicMultiPolygonESRI(multiPolygon.asInstanceOf[OGCMultiPolygon])
 
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
-        throw new UnsupportedOperationException("fromPoints is not intended for creating MultiPolygons")
-    }
-
-    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
-        throw new UnsupportedOperationException("fromLines is not intended for creating MultiPolygons")
-
-    def fromPolygons(polygons: Seq[MosaicPolygon], geomType: GeometryTypeEnum.Value = MULTIPOLYGON): MosaicGeometry = {
-
-        val sr = SpatialReference.create(polygons.head.getSpatialReference)
-        val internal = polygons.map(_.toInternal)
-        val newMultiPolygon = createPolygon(internal.flatMap(_.boundaries).toArray, internal.flatMap(_.holes).toArray)
-        MosaicMultiPolygonESRI(new OGCMultiPolygon(newMultiPolygon, sr))
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = MULTIPOLYGON): MosaicMultiPolygonESRI = {
+        val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POLYGON                       =>
+                val extractedPolys = geomSeq.map(_.toInternal)
+                val newMultiPolygon = createPolygon(extractedPolys.flatMap(_.boundaries).toArray, extractedPolys.flatMap(_.holes).toArray)
+                new OGCMultiPolygon(newMultiPolygon, spatialReference)
+            case other: GeometryTypeEnum.Value => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
+        }
+        MosaicMultiPolygonESRI(newGeom)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)

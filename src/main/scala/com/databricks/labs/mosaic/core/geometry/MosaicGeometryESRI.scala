@@ -201,12 +201,8 @@ object MosaicGeometryESRI extends GeometryReader {
 
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryESRI(OGCGeometry.fromGeoJson(geoJson))
 
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
-        reader(geomType.id).fromPoints(points, geomType)
-    }
-
-    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
-        reader(geomType.id).fromLines(lines, geomType)
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value): MosaicGeometryESRI = {
+        reader(geomType.id).fromSeq(geomSeq, geomType).asInstanceOf[MosaicGeometryESRI]
     }
 
     def reader(geomTypeId: Int): GeometryReader =

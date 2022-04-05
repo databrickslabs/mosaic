@@ -43,7 +43,7 @@ class TestLineStringJTS extends AnyFlatSpec {
         val pointsSeq = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
             .map(MosaicLineStringJTS.fromWKT)
             .map(_.asInstanceOf[MosaicPointJTS])
-        val lineStringTest = MosaicLineStringJTS.fromPoints(pointsSeq)
+        val lineStringTest = MosaicLineStringJTS.fromSeq(pointsSeq)
         lineStringReference.equals(lineStringTest) shouldBe true
     }
 

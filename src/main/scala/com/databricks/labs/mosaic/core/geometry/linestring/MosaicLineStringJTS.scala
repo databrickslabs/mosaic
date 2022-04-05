@@ -2,8 +2,8 @@ package com.databricks.labs.mosaic.core.geometry.linestring
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
-import com.databricks.labs.mosaic.core.types.model._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINEARRING, LINESTRING}
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINEARRING, LINESTRING, POINT}
 import com.esotericsoftware.kryo.io.Input
 import org.locationtech.jts.geom._
 
@@ -25,7 +25,7 @@ class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(line
     }
 
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
-        MosaicLineStringJTS.fromPoints(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointJTS]))
+        MosaicLineStringJTS.fromSeq(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointJTS]))
     }
 
 }
@@ -48,21 +48,26 @@ object MosaicLineStringJTS extends GeometryReader {
         MosaicLineStringJTS(lineString)
     }
 
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicGeometry = {
-        require(geomType.id == LINESTRING.id)
-        fromPoints(points.map(_.asInstanceOf[MosaicPointJTS]))
-    }
-
-    private def fromPoints(points: Seq[MosaicPointJTS]): MosaicGeometry = {
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicLineStringJTS = {
         val gf = new GeometryFactory()
-        val srid = points.head.getSpatialReference
-        val lineString = gf.createLineString(points.map(_.coord).toArray)
-        lineString.setSRID(srid)
-        MosaicLineStringJTS(lineString)
+        val spatialReference = geomSeq.head.getSpatialReference
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POINT                                                =>
+                val extractedPoints = geomSeq.map(_.asInstanceOf[MosaicPointJTS])
+                gf.createLineString(extractedPoints.map(_.coord).toArray)
+            case other: GeometryTypeEnum.Value if other == LINESTRING =>
+                // scalastyle:off throwerror
+                throw new NotImplementedError(
+                  s"Joining a sequence of ${other.toString} to create a ${geomType.toString} geometry is not yet supported"
+                )
+            // scalastyle:on throwerror
+            case other: GeometryTypeEnum.Value                        => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
+        }
+        newGeom.setSRID(spatialReference)
+        MosaicLineStringJTS(newGeom)
     }
-
-    override def fromLines(lines: Seq[MosaicLineString], geomType: GeometryTypeEnum.Value): MosaicGeometry =
-        throw new UnsupportedOperationException("fromLines is not intended for creating LineStrings")
 
     def apply(geometry: Geometry): MosaicLineStringJTS = {
         GeometryTypeEnum.fromString(geometry.getGeometryType) match {
