@@ -269,11 +269,16 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           FunctionIdentifier("mosaic_explode", database),
           MosaicExplode.registryExpressionInfo(database),
           (exprs: Seq[Expression]) =>
-              MosaicExplode(
-                struct(ColumnAdapter(exprs(0)), ColumnAdapter(exprs(1)), ColumnAdapter(exprs(2))).expr,
-                indexSystem.name,
-                geometryAPI.name
-              )
+              exprs match {
+                  case e if e.length == 2 =>
+                      MosaicExplode(struct(ColumnAdapter(e(0)), ColumnAdapter(e(1)), lit(true)).expr, indexSystem.name, geometryAPI.name)
+                  case e if e.length == 3 =>
+                      MosaicExplode(
+                        struct(ColumnAdapter(e(0)), ColumnAdapter(e(1)), ColumnAdapter(e(1))).expr,
+                        indexSystem.name,
+                        geometryAPI.name
+                      )
+              }
         )
         registry.registerFunction(
           FunctionIdentifier("mosaicfill", database),
