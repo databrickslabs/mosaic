@@ -43,12 +43,13 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
             case (StringType, IntegerType, BooleanType)           => Seq(StringType, IntegerType, BooleanType)
             case (HexType, IntegerType, BooleanType)              => Seq(HexType, IntegerType, BooleanType)
             case (InternalGeometryType, IntegerType, BooleanType) => Seq(InternalGeometryType, IntegerType, BooleanType)
-            case _ => throw new IllegalArgumentException(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}).")
+            case _                                                =>
+                throw new IllegalArgumentException(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}).")
         }
 
-    override def first: Expression = resolution
+    override def first: Expression = geom
 
-    override def second: Expression = geom
+    override def second: Expression = resolution
 
     override def third: Expression = keepCoreGeom
 
@@ -70,7 +71,7 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
       * @param input1
       *   Any instance containing the geometry.
       * @param input2
-      *   Any instance containing the resolution      
+      *   Any instance containing the resolution
       * @param input3
       *   Any instance defining if core chips should be geometries or nulls
       * @return
