@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{JTS, ESRI}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkSuite
@@ -31,6 +31,11 @@ class TestMosaicExplode extends AnyFlatSpec with MosaicExplodeBehaviors with Spa
     "Mosaic_Explode" should "decompose coords geometries for any index system and any geometry API" in {
         it should behave like coordsDecompose(MosaicContext.build(H3IndexSystem, ESRI), spark)
         it should behave like coordsDecompose(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
+    "Mosaic_Explode" should "decompose lines and multilines for any index system and any geometry API" in {
+        it should behave like lineDecompose(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like lineDecompose(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
 }

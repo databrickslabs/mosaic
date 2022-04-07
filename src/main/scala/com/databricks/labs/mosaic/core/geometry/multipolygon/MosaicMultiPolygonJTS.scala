@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry.multipolygon
 
 import com.databricks.labs.mosaic.core.geometry._
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
 import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
@@ -20,33 +21,28 @@ class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicGeometryJT
         new InternalGeometry(MULTIPOLYGON.id, boundaries, holes)
     }
 
-    override def getBoundary: Seq[MosaicPoint] = getBoundaryPoints
+    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(multiPolygon.getBoundary)
 
-    override def getBoundaryPoints: Seq[MosaicPoint] = {
+    override def getShells: Seq[MosaicLineString] = {
         val n = multiPolygon.getNumGeometries
-        val boundaries = for (i <- 0 until n) yield {
+        val shells = for (i <- 0 until n) yield {
             val polygon = MosaicPolygonJTS(multiPolygon.getGeometryN(i).asInstanceOf[Polygon])
-            polygon.getBoundaryPoints
+            polygon.getShells
         }
-        boundaries.reduce(_ ++ _)
+        shells.flatten
     }
-
-    override def getHoles: Seq[Seq[MosaicPoint]] = getHolePoints
-
-    override def getHolePoints: Seq[Seq[MosaicPoint]] = {
-        val n = multiPolygon.getNumGeometries
-        val holeGroups = for (i <- 0 until n) yield {
-            val polygon = MosaicPolygonJTS(multiPolygon.getGeometryN(i).asInstanceOf[Polygon])
-            polygon.getHolePoints
-        }
-        val holePoints = holeGroups.reduce(_ ++ _)
-        holePoints
-    }
-
-    override def flatten: Seq[MosaicGeometry] = asSeq
 
     override def asSeq: Seq[MosaicGeometry] =
         for (i <- 0 until multiPolygon.getNumGeometries) yield MosaicGeometryJTS(multiPolygon.getGeometryN(i))
+
+    override def getHoles: Seq[Seq[MosaicLineString]] = {
+        val n = multiPolygon.getNumGeometries
+        val holes = for (i <- 0 until n) yield {
+            val polygon = MosaicPolygonJTS(multiPolygon.getGeometryN(i).asInstanceOf[Polygon])
+            polygon.getHoles
+        }
+        holes.flatten
+    }
 
 }
 

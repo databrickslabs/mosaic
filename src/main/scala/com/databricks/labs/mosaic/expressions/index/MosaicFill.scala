@@ -4,6 +4,8 @@ import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{H3IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.types._
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
 import org.locationtech.jts.geom.Geometry
 
 import org.apache.spark.sql.catalyst.InternalRow
@@ -46,6 +48,8 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
 
     override def right: Expression = resolution
 
+    override def left: Expression = geom
+
     /** Expression output DataType. */
     override def dataType: DataType = MosaicType
 
@@ -77,7 +81,12 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
         val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geometry = geometryAPI.geometry(input1, left.dataType)
-        val chips = Mosaic.mosaicFill(geometry, resolution, keepCoreGeom = true, indexSystem, geometryAPI)
+
+        val chips = GeometryTypeEnum.fromString(geometry.getGeometryType) match {
+            case LINESTRING      => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
+            case MULTILINESTRING => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
+            case _               => Mosaic.mosaicFill(geometry, resolution, keepCoreGeom = true, indexSystem, geometryAPI)
+        }
 
         val serialized = InternalRow.fromSeq(
           Seq(
@@ -87,8 +96,6 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
 
         serialized
     }
-
-    override def left: Expression = geom
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])

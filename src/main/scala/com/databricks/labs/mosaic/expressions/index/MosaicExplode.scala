@@ -6,6 +6,8 @@ import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystemID
 import com.databricks.labs.mosaic.core.types._
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
 import org.locationtech.jts.geom.Geometry
 
 import org.apache.spark.sql.catalyst.InternalRow
@@ -26,10 +28,10 @@ case class MosaicExplode(pair: Expression, indexSystemName: String, geometryAPIN
 
     override def elementSchema: StructType = MosaicExplode.elementSchemaImpl(child)
 
-    override def child: Expression = pair
-
     override def eval(input: InternalRow): TraversableOnce[InternalRow] =
         MosaicExplode.evalImpl(input, child, indexSystemName, geometryAPIName)
+
+    override def child: Expression = pair
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = MosaicExplode.makeCopyImpl(newArgs, this, indexSystemName, geometryAPIName)
 
@@ -54,8 +56,8 @@ object MosaicExplode {
       *   Struct containing a geometry and a resolution.
       * @return
       *   A set of serialized
-      *   [[com.databricks.labs.mosaic.core.types.model.MosaicChip]]. This set will
-      *   be used to generate new rows of data.
+      *   [[com.databricks.labs.mosaic.core.types.model.MosaicChip]]. This set
+      *   will be used to generate new rows of data.
       */
     def evalImpl(input: InternalRow, child: Expression, indexSystemName: String, geometryAPIName: String): TraversableOnce[InternalRow] = {
         val inputData = child.eval(input).asInstanceOf[InternalRow]
@@ -68,7 +70,11 @@ object MosaicExplode {
         val resolution = inputData.getInt(1)
         val keepCoreGeom = inputData.getBoolean(2)
 
-        val chips = Mosaic.mosaicFill(geometry, resolution, keepCoreGeom, indexSystem, geometryAPI)
+        val chips = GeometryTypeEnum.fromString(geometry.getGeometryType) match {
+            case LINESTRING      => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
+            case MULTILINESTRING => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
+            case _               => Mosaic.mosaicFill(geometry, resolution, keepCoreGeom, indexSystem, geometryAPI)
+        }
 
         chips.map(row => InternalRow.fromSeq(Seq(row.serialize)))
     }

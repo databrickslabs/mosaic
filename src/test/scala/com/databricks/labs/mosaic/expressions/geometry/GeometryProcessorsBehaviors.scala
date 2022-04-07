@@ -208,7 +208,7 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         val referenceGeoms: immutable.Seq[MosaicGeometry] =
             mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
 
-        val coords = referenceGeoms.head.getBoundary
+        val coords = referenceGeoms.head.getShells
         val pointsWKT = coords.map(_.toWKT)
         val pointWKTCompared = pointsWKT.zip(pointsWKT.tail)
         val expected = coords.zip(coords.tail).map({ case (a, b) => a.distance(b) })
@@ -235,7 +235,7 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         val referenceGeoms: immutable.Seq[MosaicGeometry] =
             mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
 
-        val coords = referenceGeoms.head.getBoundary
+        val coords = referenceGeoms.head.getShells
         val df = coords.map(_.toWKT).toDF("point")
 
         val result = df

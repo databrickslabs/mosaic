@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.codegen
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{JTS, ESRI}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkCodeGenSuite
