@@ -66,8 +66,9 @@ object MosaicExplode {
         val geometry = geometryAPI.geometry(inputData, geomType)
 
         val resolution = inputData.getInt(1)
+        val keepCoreGeom = inputData.getBoolean(2)
 
-        val chips = Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
+        val chips = Mosaic.mosaicFill(geometry, resolution, keepCoreGeom, indexSystem, geometryAPI)
 
         chips.map(row => InternalRow.fromSeq(Seq(row.serialize)))
     }

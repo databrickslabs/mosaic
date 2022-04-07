@@ -107,12 +107,17 @@ object H3IndexSystem extends IndexSystem with Serializable {
     override def getBorderChips(
         geometry: MosaicGeometry,
         borderIndices: util.List[java.lang.Long],
+        keepCoreGeom: Boolean,
         geometryAPI: GeometryAPI
     ): Seq[MosaicChip] = {
         val intersections = for (index <- borderIndices.asScala) yield {
             val indexGeom = indexToGeometry(index, geometryAPI)
-            val chip = MosaicChip(isCore = false, index, indexGeom)
-            chip.intersection(geometry)
+            val intersect = geometry.intersection(indexGeom)
+            val isCore = intersect.equals(indexGeom)
+
+            val chipGeom = if (!isCore || keepCoreGeom) intersect else null
+
+            MosaicChip(isCore = isCore, index, chipGeom)
         }
         intersections.filterNot(_.isEmpty)
     }
@@ -142,8 +147,11 @@ object H3IndexSystem extends IndexSystem with Serializable {
       * @return
       *   A core area representation via [[MosaicChip]] set.
       */
-    override def getCoreChips(coreIndices: util.List[lang.Long]): Seq[MosaicChip] = {
-        coreIndices.asScala.map(MosaicChip(true, _, null))
+    override def getCoreChips(coreIndices: util.List[lang.Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
+        coreIndices.asScala.map(index => {
+            val indexGeom = if (keepCoreGeom) indexToGeometry(index, geometryAPI) else null
+            MosaicChip(isCore = true, index, indexGeom)
+        })
     }
 
     /**

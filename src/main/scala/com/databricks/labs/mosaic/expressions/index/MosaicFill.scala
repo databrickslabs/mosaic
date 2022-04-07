@@ -70,13 +70,14 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
       *   [[com.databricks.labs.mosaic.core.types.model.MosaicChip]].
       */
     // noinspection DuplicatedCode
-    override def nullSafeEval(input1: Any, input2: Any): Any = {
+    override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
         val resolution: Int = H3IndexSystem.getResolution(input2)
+        val keepCoreGeom: Int = H3IndexSystem.getResolution(keepCoreGeom)
 
         val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geometry = geometryAPI.geometry(input1, left.dataType)
-        val chips = Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
+        val chips = Mosaic.mosaicFill(geometry, resolution, keepCoreGeom = true, indexSystem, geometryAPI)
 
         val serialized = InternalRow.fromSeq(
           Seq(
