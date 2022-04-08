@@ -1,15 +1,15 @@
 import re
-
 import h3
+import pandas as pd
 from IPython.core.magic import Magics, cell_magic, magics_class
 from keplergl import KeplerGl
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, conv, lower
 from pyspark.sql.utils import AnalysisException, ParseException
 
+from mosaic.config import config
 from mosaic.api.accessors import st_astext
 from mosaic.api.functions import st_centroid2D
-from mosaic.config import config
 from mosaic.resources import mosaic_logo_b64str
 from mosaic.utils.kepler_config import mosaic_kepler_config
 
@@ -41,15 +41,17 @@ class MosaicKepler(Magics):
     @staticmethod
     def get_spark_df(table_name):
         try:
-            data = config.mosaic_spark.read.table(table_name)  # if spark dataframe
-        except (AnalysisException, ParseException):
+            table = config.ipython_hook.ev(table_name)
+            if isinstance(table, pd.DataFrame): # pandas dataframe
+                data = config.mosaic_spark.createDataFrame(table)
+            elif isinstance(table, DataFrame): # spark dataframe
+                data = table
+            else: # table name
+                data = config.mosaic_spark.read.table(table)
+        except NameError:
             try:
-                eval_df = eval(table_name)  # if pandas dataframe
-                if isinstance(eval_df, DataFrame):
-                    data = eval_df
-                else:
-                    data = config.mosaic_spark.createDataFrame(eval_df)
-            except (NameError, TypeError):
+                data = config.mosaic_spark.read.table(table_name)
+            except:
                 raise Exception(f"Table name reference invalid.")
         return data
 
