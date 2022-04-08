@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.geometry.point
 
+import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonESRI
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -36,6 +37,46 @@ class TestPointESRI extends AnyFlatSpec {
         point.equals(MosaicPointESRI.fromHEX(point.toHEX)) shouldBe true
         point.equals(MosaicPointESRI.fromJSON(point.toJSON)) shouldBe true
         point.equals(MosaicPointESRI.fromInternal(point.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
+    }
+
+    "MosaicPointESRI" should "maintain SRID across operations" in {
+        val srid = 32632
+        val point = MosaicPointESRI.fromWKT("POINT(1 1)").asInstanceOf[MosaicPointESRI]
+        val anotherPoint = MosaicPointESRI.fromWKT("POINT(1 1)").asInstanceOf[MosaicPointESRI]
+        val poly = MosaicPolygonESRI.fromWKT("POLYGON ((0 1,3 0,4 3,0 4,0 1))")
+
+        point.setSpatialReference(srid)
+
+        // geometry
+        point.buffer(2d).getSpatialReference shouldBe srid
+        point.convexHull.getSpatialReference shouldBe srid
+        point.getCentroid.getSpatialReference shouldBe srid
+        point.intersection(poly).getSpatialReference shouldBe srid
+        point.reduceFromMulti.getSpatialReference shouldBe srid
+        point.rotate(45).getSpatialReference shouldBe srid
+        point.scale(2d, 2d).getSpatialReference shouldBe srid
+        point.simplify(0.001).getSpatialReference shouldBe srid
+        point.translate(2d, 2d).getSpatialReference shouldBe srid
+        point.union(anotherPoint).getSpatialReference shouldBe srid
+
+        // point
+        point.getBoundary.getSpatialReference shouldBe srid
+        point.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
+    }
+
+    "MosaicPointESRI" should "correctly apply CRS transformation" in {
+        val sridSource = 4326
+        val sridTarget = 27700
+        val testPoint = MosaicPointESRI.fromWKT("POINT(-0.1390688 51.5178267)").asInstanceOf[MosaicPointESRI]
+        testPoint.setSpatialReference(sridSource)
+        val expectedResult = MosaicPointESRI.fromWKT("POINT(529217.26 181519.64)").asInstanceOf[MosaicPointESRI]
+        val testResult = testPoint.transformCRSXY(sridTarget).asInstanceOf[MosaicPointESRI]
+        val comparison = {
+            expectedResult.asSeq
+                .zip(testResult.asSeq)
+                .map({ case (a: Double, b: Double) => math.abs(a - b) <= 0.01 })
+        }
+        comparison should contain only true
     }
 
 }

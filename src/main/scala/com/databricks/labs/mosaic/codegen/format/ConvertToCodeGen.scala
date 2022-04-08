@@ -27,11 +27,11 @@ object ConvertToCodeGen {
 
               geometryAPI.name match {
                   case n if n == ESRI.name => s"""
-                                                |$inCode
-                                                |$outCode
-                                                |${ev.value} = $geomOutRef;
-                                                |""".stripMargin
-                  case n if n == JTS.name => s"""
+                                                 |$inCode
+                                                 |$outCode
+                                                 |${ev.value} = $geomOutRef;
+                                                 |""".stripMargin
+                  case n if n == JTS.name  => s"""
                                                 |try {
                                                 |$inCode
                                                 |$outCode
@@ -49,7 +49,7 @@ object ConvertToCodeGen {
     def readGeometryCode(ctx: CodegenContext, eval: String, inputDataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
         val geometryCodeGen = geometryAPI.name match {
             case n if n == ESRI.name => MosaicGeometryIOCodeGenESRI
-            case n if n == JTS.name => MosaicGeometryIOCodeGenJTS
+            case n if n == JTS.name  => MosaicGeometryIOCodeGenJTS
         }
         // noinspection ScalaStyle
         inputDataType match {
@@ -66,7 +66,7 @@ object ConvertToCodeGen {
     def writeGeometryCode(ctx: CodegenContext, eval: String, outputDataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
         val geometryCodeGen = geometryAPI.name match {
             case n if n == ESRI.name => MosaicGeometryIOCodeGenESRI
-            case n if n == JTS.name => MosaicGeometryIOCodeGenJTS
+            case n if n == JTS.name  => MosaicGeometryIOCodeGenJTS
         }
         // noinspection ScalaStyle
         outputDataType match {

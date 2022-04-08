@@ -48,10 +48,10 @@ case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: Str
 
               geometryAPIName match {
                   case "ESRI" => s"""
-                                   |$code
-                                   |${ev.value} = $result;
-                                   |""".stripMargin
-                  case "JTS" => s"""
+                                    |$code
+                                    |${ev.value} = $result;
+                                    |""".stripMargin
+                  case "JTS"  => s"""
                                    |try {
                                    |$code
                                    |${ev.value} = $result;
@@ -74,7 +74,7 @@ object ST_Rotate {
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
         new ExpressionInfo(
-          classOf[ST_Length].getCanonicalName,
+          classOf[ST_Rotate].getCanonicalName,
           db.orNull,
           name,
           """

@@ -1,13 +1,13 @@
 package com.databricks.labs.mosaic.core.geometry.polygon
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.MosaicGeometryESRI.spatialReference
 import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringESRI}
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonESRI
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
-import com.databricks.labs.mosaic.core.types.model._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POINT, POLYGON}
 import com.esri.core.geometry.ogc._
+import com.esri.core.geometry.SpatialReference
 
 import org.apache.spark.sql.catalyst.InternalRow
 
@@ -24,7 +24,7 @@ class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon)
         val shell = ringToInternalCoords(boundary)
         val holes = for (i <- 0 until polygon.numInteriorRing()) yield ringToInternalCoords(polygon.interiorRingN(i))
 
-        new InternalGeometry(POLYGON.id, Array(shell), Array(holes.toArray))
+        new InternalGeometry(POLYGON.id, getSpatialReference, Array(shell), Array(holes.toArray))
     }
 
     override def getBoundary: MosaicGeometry = MosaicGeometryESRI(polygon.boundary())
@@ -42,6 +42,16 @@ class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon)
           for (i <- 0 until polygon.numInteriorRing()) yield MosaicLineStringESRI(polygon.interiorRingN(i))
         )
 
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        val shellTransformed = getShells.head.asInstanceOf[MosaicLineStringESRI].mapXY(f).asInstanceOf[MosaicLineStringESRI]
+        val holesTransformed = getHoles.head.map(_.asInstanceOf[MosaicLineStringESRI].mapXY(f).asInstanceOf[MosaicLineStringESRI])
+        val newGeom = MosaicPolygonESRI.fromSeq(Seq(shellTransformed) ++ holesTransformed)
+        newGeom.setSpatialReference(getSpatialReference)
+        newGeom
+    }
+
+    override def asSeq: Seq[MosaicLineString] = getShells ++ getHoles.flatten
+
 }
 
 object MosaicPolygonESRI extends GeometryReader {
@@ -57,14 +67,35 @@ object MosaicPolygonESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
         val polygon = MosaicMultiPolygonESRI.createPolygon(internalGeom.boundaries, internalGeom.holes)
+        val spatialReference =
+            if (internalGeom.srid != 0) {
+                SpatialReference.create(internalGeom.srid)
+            } else {
+                MosaicGeometryESRI.defaultSpatialReference
+            }
         MosaicGeometryESRI(new OGCPolygon(polygon, spatialReference))
     }
 
-    override def fromPoints(inPoints: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = POLYGON): MosaicGeometry = {
-        require(geomType.id == POLYGON.id)
-        val boundary = inPoints.map(_.coord).map(InternalCoord(_)).toArray
-        val polygon = MosaicMultiPolygonESRI.createPolygon(Array(boundary), Array(Array(Array())))
-        MosaicGeometryESRI(new OGCPolygon(polygon, spatialReference))
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POLYGON): MosaicPolygonESRI = {
+        val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POINT                         =>
+                val extractedPoints = geomSeq.map(_.asInstanceOf[MosaicPointESRI])
+                val exteriorRing = extractedPoints.map(_.coord).map(InternalCoord(_)).toArray
+                val polygon = MosaicMultiPolygonESRI.createPolygon(Array(exteriorRing), Array(Array(Array())))
+                new OGCPolygon(polygon, spatialReference)
+            case LINESTRING                    =>
+                val extractedLines = geomSeq.map(_.asInstanceOf[MosaicLineStringESRI])
+                val exteriorRing = extractedLines.head.asSeq.map(_.coord).map(InternalCoord(_)).toArray
+                val holes =
+                    extractedLines.tail.map({ h: MosaicLineStringESRI => h.asSeq.map(_.coord).map(InternalCoord(_)).toArray }).toArray
+                val polygon = MosaicMultiPolygonESRI.createPolygon(Array(exteriorRing), Array(holes))
+                new OGCPolygon(polygon, spatialReference)
+            case other: GeometryTypeEnum.Value => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
+        }
+        MosaicPolygonESRI(newGeom)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)

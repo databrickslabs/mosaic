@@ -1,8 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry.point
 
 import com.databricks.labs.mosaic.core.geometry._
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.types.model._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POINT, POLYGON}
 import com.esri.core.geometry.{Point, SpatialReference}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCPoint}
 import com.uber.h3core.util.GeoCoord
@@ -31,7 +32,7 @@ class MosaicPointESRI(point: OGCPoint) extends MosaicGeometryESRI(point) with Mo
 
     override def toInternal: InternalGeometry = {
         val shell = Array(InternalCoord(coord))
-        new InternalGeometry(POINT.id, Array(shell), Array(Array(Array())))
+        new InternalGeometry(POINT.id, getSpatialReference, Array(shell), Array(Array(Array())))
     }
 
     override def coord: Coordinate = {
@@ -47,6 +48,13 @@ class MosaicPointESRI(point: OGCPoint) extends MosaicGeometryESRI(point) with Mo
     override def getLength: Double = 0.0
 
     override def numPoints: Int = 1
+
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        val (x_, y_) = f(getX, getY)
+        MosaicPointESRI(
+          new OGCPoint(new Point(x_, y_), point.getEsriSpatialReference)
+        )
+    }
 
 }
 
@@ -66,29 +74,38 @@ object MosaicPointESRI extends GeometryReader {
         require(internalGeom.typeId == POINT.id)
 
         val coordinate = internalGeom.boundaries.head.head
+        val spatialReference =
+            if (internalGeom.srid != 0) {
+                SpatialReference.create(internalGeom.srid)
+            } else {
+                MosaicGeometryESRI.defaultSpatialReference
+            }
         val point =
             if (coordinate.coords.length == 2) {
-                new OGCPoint(new Point(coordinate.coords(0), coordinate.coords(1)), MosaicGeometryESRI.spatialReference)
+                new OGCPoint(new Point(coordinate.coords(0), coordinate.coords(1)), spatialReference)
             } else {
                 new OGCPoint(
                   new Point(coordinate.coords(0), coordinate.coords(1), coordinate.coords(2)),
-                  MosaicGeometryESRI.spatialReference
+                  spatialReference
                 )
             }
         new MosaicPointESRI(point)
     }
 
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = POINT): MosaicGeometry = {
-        require(geomType.id == POINT.id)
-
-        val mosaicPoint = points.head
-        val point =
-            if (mosaicPoint.asSeq.length == 2) {
-                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY), MosaicGeometryESRI.spatialReference)
-            } else {
-                new OGCPoint(new Point(mosaicPoint.getX, mosaicPoint.getY, mosaicPoint.getZ), MosaicGeometryESRI.spatialReference)
-            }
-        new MosaicPointESRI(point)
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POINT): MosaicPointESRI = {
+        val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POINT                         =>
+                val extractedPoint = geomSeq.head.asInstanceOf[MosaicPoint]
+                extractedPoint.asSeq.length match {
+                    case 3 => new OGCPoint(new Point(extractedPoint.getX, extractedPoint.getY, extractedPoint.getZ), spatialReference)
+                    case 2 => new OGCPoint(new Point(extractedPoint.getX, extractedPoint.getY), spatialReference)
+                }
+            case other: GeometryTypeEnum.Value => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
+        }
+        MosaicPointESRI(newGeom)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)

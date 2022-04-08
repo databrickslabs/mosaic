@@ -1,12 +1,9 @@
-import inspect
-from typing import overload
-
 from pyspark.sql import Column
-from pyspark.sql.functions import col, _to_java_column as pyspark_to_java_column
+from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
+from pyspark.sql.functions import col
 
 from mosaic.config import config
 from mosaic.utils.types import ColumnOrName, as_typed_col
-
 
 #####################
 # Spatial functions #
@@ -107,6 +104,81 @@ def st_dump(geom: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "st_dump", pyspark_to_java_column(geom)
+    )
+
+
+def st_srid(geom: ColumnOrName) -> Column:
+    """
+    Looks up the Coordinate Reference System well-known identifier for `geom`.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+
+    Returns
+    -------
+    Column (IntegerType)
+        The SRID of the provided geometry.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_srid", pyspark_to_java_column(geom)
+    )
+
+
+def st_setsrid(geom: ColumnOrName, srid: ColumnOrName) -> Column:
+    """
+    Sets the Coordinate Reference System well-known identifier for `geom`.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+    srid : Column (IntegerType)
+        The spatial reference identifier of `geom`, expressed as an integer,
+        e.g. 4326 for EPSG:4326 / WGS84
+
+    Returns
+    -------
+    Column
+        The input geometry with a new SRID set.
+
+    Notes
+    -----
+    ST_SetSRID does not transform the coordinates of `geom`,
+    rather it tells Mosaic the SRID in which the current coordinates are expressed.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_setsrid", pyspark_to_java_column(geom), pyspark_to_java_column(srid)
+    )
+
+
+def st_transform(geom: ColumnOrName, srid: ColumnOrName) -> Column:
+    """
+    Transforms the horizontal (XY) coordinates of `geom` from the current reference system to that described by `srid`.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+    srid : Column (IntegerType)
+        The target spatial reference system for `geom`, expressed as an integer,
+        e.g. 3857 for EPSG:3857 / Pseudo-Mercator
+
+    Returns
+    -------
+    Column
+        The transformed geometry.
+
+    Notes
+    -----
+    If `geom` does not have an associated SRID, use ST_SetSRID to set this before calling ST_Transform.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_transform", pyspark_to_java_column(geom), pyspark_to_java_column(srid)
     )
 
 
@@ -445,6 +517,7 @@ def flatten_polygons(geom: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
         "flatten_polygons", pyspark_to_java_column(geom)
     )
+
 
 def point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """

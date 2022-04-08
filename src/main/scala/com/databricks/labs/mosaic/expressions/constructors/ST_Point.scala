@@ -27,7 +27,7 @@ case class ST_Point(xVal: Expression, yVal: Expression) extends BinaryExpression
     override def nullSafeEval(input1: Any, input2: Any): Any = {
         val coordArray = Seq(input1, input2).map(_.asInstanceOf[Double])
         val coord = InternalCoord(ArrayData.toArrayData(coordArray))
-        val point = new InternalGeometry(GeometryTypeEnum.POINT.id, Array(Array(coord)), Array(Array()))
+        val point = new InternalGeometry(GeometryTypeEnum.POINT.id, 0, Array(Array(coord)), Array(Array()))
         point.serialize
     }
 

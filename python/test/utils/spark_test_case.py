@@ -1,7 +1,7 @@
 import unittest
+from importlib.metadata import version
 
 from pyspark.sql import SparkSession
-from importlib.metadata import version
 
 
 class SparkTestCase(unittest.TestCase):

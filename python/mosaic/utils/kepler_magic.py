@@ -1,5 +1,4 @@
 import re
-
 import h3
 import pandas as pd
 from IPython.core.magic import Magics, cell_magic, magics_class

@@ -241,6 +241,163 @@ st_dump
     +-------------+
 
 
+st_srid
+*******
+
+.. function:: st_srid(geom)
+
+    Looks up the Coordinate Reference System well-known identifier (SRID) for `geom`.
+
+    :param geom: Geometry
+    :type geom: Column
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> json_geom = '{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'
+    >>> df = spark.createDataFrame([{'json': json_geom}])
+    >>> df.select(st_srid(as_json('json'))).show(1)
+    +----------------------+
+    |st_srid(as_json(json))|
+    +----------------------+
+    |                  4326|
+    +----------------------+
+
+   .. code-tab:: scala
+
+    >>> val df =
+    >>>    List("""{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}""")
+    >>>    .toDF("json")
+    >>> df.select(st_srid(as_json($"json"))).show(1)
+    +----------------------+
+    |st_srid(as_json(json))|
+    +----------------------+
+    |                  4326|
+    +----------------------+
+
+   .. code-tab:: sql
+
+    >>> select st_srid(as_json('{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'))
+    +------------+
+    |st_srid(...)|
+    +------------+
+    |4326        |
+    +------------+
+
+.. note::
+    ST_SRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.
+
+
+st_setsrid
+**********
+
+.. function:: st_setsrid(geom, srid)
+
+    Sets the Coordinate Reference System well-known identifier (SRID) for `geom`.
+
+    :param geom: Geometry
+    :type geom: Column
+    :param srid: The spatial reference identifier of `geom`, expressed as an integer, e.g. `4326` for EPSG:4326 / WGS84
+    :type srid: Column (IntegerType)
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+    >>> df.select(st_setsrid(st_geomfromwkt('wkt'), lit(4326))).show(1)
+    +---------------------------------+
+    |st_setsrid(convert_to(wkt), 4326)|
+    +---------------------------------+
+    |             {2, 4326, [[[10.0...|
+    +---------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
+    >>> df.select(st_setsrid(st_geomfromwkt($"wkt"), lit(4326))).show
+    +---------------------------------+
+    |st_setsrid(convert_to(wkt), 4326)|
+    +---------------------------------+
+    |             {2, 4326, [[[10.0...|
+    +---------------------------------+
+
+   .. code-tab:: sql
+
+    >>> select st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326)
+    +---------------------------------+
+    |st_setsrid(convert_to(wkt), 4326)|
+    +---------------------------------+
+    |             {2, 4326, [[[10.0...|
+    +---------------------------------+
+
+
+.. note::
+    ST_SetSRID does not transform the coordinates of `geom`,
+    rather it tells Mosaic the SRID in which the current coordinates are expressed.
+    ST_SetSRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.
+
+
+st_transform
+************
+
+.. function:: st_transform(geom, srid)
+
+    Transforms the horizontal (XY) coordinates of `geom` from the current reference system to that described by `srid`.
+
+    :param geom: Geometry
+    :type geom: Column
+    :param srid: Target spatial reference system for `geom`, expressed as an integer, e.g. `3857` for EPSG:3857 / Pseudo-Mercator
+    :type srid: Column (IntegerType)
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = (
+    >>>   spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+    >>>   .withColumn('geom', st_setsrid(st_geomfromwkt('wkt'), lit(4326)))
+    >>> )
+    >>> df.select(st_astext(st_transform('geom', lit(3857)))).show(1, False)
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
+    >>>   .withColumn("geom", st_setsrid(st_geomfromwkt($"wkt"), lit(4326)))
+    >>> df.select(st_astext(st_transform($"geom", lit(3857)))).show(1, false)
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> select st_astext(st_transform(st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326), 3857))
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+.. note::
+    If `geom` does not have an associated SRID, use ST_SetSRID to set this before calling ST_Transform.
+
+
+
 st_translate
 ************
 
@@ -780,7 +937,7 @@ flatten_polygons
     >>>
 
 point_index_lonlat
-***********
+******************
 
 .. function:: point_index_lonlat(lon, lat, resolution)
 
@@ -948,7 +1105,7 @@ mosaicfill
 mosaic_explode
 **************
 
-.. function:: mosaicfill(geometry, resolution)
+.. function:: mosaic_explode(geometry, resolution)
 
     Returns the set of Mosaic chips covering the input `geometry` at `resolution`.
 
