@@ -52,7 +52,7 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
             .setIndexResolution(3)
             .applyIndex()
 
-        val mdf2 = MosaicFrame(polyDf(spark), "geometry")
+        val mdf2 = MosaicFrame(polyDf(spark).limit(1), "geometry")
             .setIndexResolution(3)
             .applyIndex()
 
