@@ -34,33 +34,6 @@ case class ST_Transform(inputGeom: Expression, srid: Expression, geometryAPIName
 
     override def right: Expression = srid
 
-//    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
-//        nullSafeCodeGen(
-//            ctx,
-//            ev,
-//            leftEval => {
-//                checkEncoding(inputGeom.dataType)
-//                val geometryAPI = GeometryAPI.apply(geometryAPIName)
-//                val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-//
-//                geometryAPIName match {
-//                    case "ESRI" => s"""
-//                                      |$inCode
-//                                      |${ev.value} = $geomInRef.setEsriSpatialReference().getID();
-//                                      |""".stripMargin
-//                    case "JTS" => s"""
-//                                     |try {
-//                                     |$inCode
-//                                     |${ev.value} = $geomInRef.setSRID($);
-//                                     |} catch (Exception e) {
-//                                     | throw e;
-//                                     |}
-//                                     |""".stripMargin
-//
-//                }
-//            }
-//        )
-
     override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
         copy(inputGeom = newLeft, srid = newRight)
 

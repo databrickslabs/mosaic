@@ -16,7 +16,7 @@ trait RequiresCRS {
             case HexType              => "HEX"
             case JSONType             => "GEOJSON"
             case InternalGeometryType => "COORDS"
-            case _                    => ???
+            case _                    => throw new Error("Format not supported!")
         }
 
     def checkEncoding(dataType: DataType): Unit = {
