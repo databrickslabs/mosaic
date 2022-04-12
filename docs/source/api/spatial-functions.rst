@@ -901,7 +901,7 @@ mosaicfill
     >>> df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
     >>> df.select(mosaicfill('wkt', lit(0))).printSchema()
     root
-     |-- h3_mosaicfill(wkt, 0): mosaic (nullable = true)
+     |-- mosaicfill(wkt, 0): mosaic (nullable = true)
      |    |-- chips: array (nullable = true)
      |    |    |-- element: mosaic_chip (containsNull = true)
      |    |    |    |-- is_core: boolean (nullable = true)
@@ -911,7 +911,7 @@ mosaicfill
 
     >>> df.select(mosaicfill('wkt', lit(0))).show()
     +---------------------+
-    |h3_mosaicfill(wkt, 0)|
+    |mosaicfill(wkt, 0)   |
     +---------------------+
     | {[{false, 5774810...|
     +---------------------+
@@ -921,7 +921,7 @@ mosaicfill
     >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
     >>> df.select(mosaicfill($"wkt", lit(0))).printSchema
     root
-     |-- h3_mosaicfill(wkt, 0): mosaic (nullable = true)
+     |-- mosaicfill(wkt, 0): mosaic (nullable = true)
      |    |-- chips: array (nullable = true)
      |    |    |-- element: mosaic_chip (containsNull = true)
      |    |    |    |-- is_core: boolean (nullable = true)
@@ -930,7 +930,7 @@ mosaicfill
 
     >>> df.select(mosaicfill($"wkt", lit(0))).show()
     +---------------------+
-    |h3_mosaicfill(wkt, 0)|
+    |mosaicfill(wkt, 0)   |
     +---------------------+
     | {[{false, 5774810...|
     +---------------------+
@@ -939,7 +939,7 @@ mosaicfill
 
     >>> SELECT mosaicfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
     +---------------------+
-    |h3_mosaicfill(wkt, 0)|
+    |mosaicfill(wkt, 0)   |
     +---------------------+
     | {[{false, 5774810...|
     +---------------------+
