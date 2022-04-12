@@ -110,7 +110,7 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
     }
 
     override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
-        copy(geom = newFirst, resolution = newSecond)
+        copy(geom = newFirst, resolution = newSecond, keepCoreGeom = newThird)
 
 }
 
