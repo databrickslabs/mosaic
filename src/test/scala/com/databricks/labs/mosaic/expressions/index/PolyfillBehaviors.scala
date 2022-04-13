@@ -20,7 +20,7 @@ trait PolyfillBehaviors {
 
         val mosaics = boroughs
             .select(
-              polyfill(col("wkt"), 11)
+              mosaic_polyfill(col("wkt"), 11)
             )
             .collect()
 
@@ -30,7 +30,7 @@ trait PolyfillBehaviors {
 
         val mosaics2 = spark
             .sql("""
-                   |select polyfill(wkt, 11) from boroughs
+                   |select mosaic_polyfill(wkt, 11) from boroughs
                    |""".stripMargin)
             .collect()
 
@@ -46,7 +46,7 @@ trait PolyfillBehaviors {
 
         val mosaics = boroughs
             .select(
-              polyfill(convert_to(col("wkt"), "wkb"), 11)
+              mosaic_polyfill(convert_to(col("wkt"), "wkb"), 11)
             )
             .collect()
 
@@ -56,7 +56,7 @@ trait PolyfillBehaviors {
 
         val mosaics2 = spark
             .sql("""
-                   |select polyfill(convert_to_wkb(wkt), 11) from boroughs
+                   |select mosaic_polyfill(convert_to_wkb(wkt), 11) from boroughs
                    |""".stripMargin)
             .collect()
 
@@ -72,7 +72,7 @@ trait PolyfillBehaviors {
 
         val mosaics = boroughs
             .select(
-              polyfill(convert_to(col("wkt"), "hex"), 11)
+              mosaic_polyfill(convert_to(col("wkt"), "hex"), 11)
             )
             .collect()
 
@@ -82,7 +82,7 @@ trait PolyfillBehaviors {
 
         val mosaics2 = spark
             .sql("""
-                   |select polyfill(convert_to_hex(wkt), 11) from boroughs
+                   |select mosaic_polyfill(convert_to_hex(wkt), 11) from boroughs
                    |""".stripMargin)
             .collect()
 
@@ -98,7 +98,7 @@ trait PolyfillBehaviors {
 
         val mosaics = boroughs
             .select(
-              polyfill(convert_to(col("wkt"), "coords"), 11)
+              mosaic_polyfill(convert_to(col("wkt"), "coords"), 11)
             )
             .collect()
 
@@ -108,7 +108,7 @@ trait PolyfillBehaviors {
 
         val mosaics2 = spark
             .sql("""
-                   |select polyfill(convert_to_coords(wkt), 11) from boroughs
+                   |select mosaic_polyfill(convert_to_coords(wkt), 11) from boroughs
                    |""".stripMargin)
             .collect()
 

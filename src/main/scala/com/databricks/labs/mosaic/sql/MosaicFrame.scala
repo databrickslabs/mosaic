@@ -293,10 +293,10 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
                 else trimmedDf
                     .select(
                       trimmedDf.col("*"),
-                      mosaicfill(geometryColumn, resolution).as(indexColumnName)
+                      mosaic_fill(geometryColumn, resolution).as(indexColumnName)
                     )
 
-            case GeometryTypeEnum.POINT => trimmedDf.select(trimmedDf.col("*"), point_index_geom(geometryColumn, resolution).as(indexColumnName))
+            case GeometryTypeEnum.POINT => trimmedDf.select(trimmedDf.col("*"), mosaic_point_index_geom(geometryColumn, resolution).as(indexColumnName))
             case _                      => trimmedDf
         }
         indexedDf.addMosaicColumnMetadata(indexId, indexColumnName, explodePolyFillIndexes)

@@ -53,10 +53,10 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
     /** Expression output DataType. */
     override def dataType: DataType = MosaicType
 
-    override def toString: String = s"h3_mosaicfill($geom, $resolution)"
+    override def toString: String = s"mosaic_fill($geom, $resolution)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "h3_mosaicfill"
+    override def prettyName: String = "mosaic_fill"
 
     /**
       * Type-wise differences in evaluation are only present on the input data
@@ -113,7 +113,7 @@ object MosaicFill {
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[IndexGeometry].getCanonicalName,
+          classOf[MosaicIndexToGeometry].getCanonicalName,
           db.orNull,
           "mosaic_fill",
           """

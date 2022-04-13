@@ -31,8 +31,8 @@ object Mosaic {
                 geometry.boundary.buffer(radius * 1.01).simplify(0.01 * radius)
             }
 
-        val coreIndices = indexSystem.polyfill(carvedGeometry, resolution)
-        val borderIndices = indexSystem.polyfill(borderGeometry, resolution)
+        val coreIndices = indexSystem.mosaic_polyfill(carvedGeometry, resolution)
+        val borderIndices = indexSystem.mosaic_polyfill(borderGeometry, resolution)
 
         val coreChips = indexSystem.getCoreChips(coreIndices)
         val borderChips = indexSystem.getBorderChips(geometry, borderIndices, geometryAPI)

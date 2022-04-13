@@ -114,9 +114,9 @@ def st_distance(geom1: "ColumnOrName", geom2: "ColumnOrName"):
     pyspark_to_java_column(geom2)
   )
 
-def mosaicfill(inGeom: "ColumnOrName", resolution: "ColumnOrName"):
+def mosaic_fill(inGeom: "ColumnOrName", resolution: "ColumnOrName"):
   return _mosaic_invoke_function(
-    "mosaicfill", 
+    "mosaic_fill",
     mosaicContext, 
     pyspark_to_java_column(inGeom), 
     pyspark_to_java_column(resolution)
@@ -131,9 +131,9 @@ def point_index(lat: "ColumnOrName", lng: "ColumnOrName", resolution: "ColumnOrN
     pyspark_to_java_column(resolution)
   )
 
-def polyfill(inGeom: "ColumnOrName", resolution: "ColumnOrName"):
+def mosaic_polyfill(inGeom: "ColumnOrName", resolution: "ColumnOrName"):
   return _mosaic_invoke_function(
-    "polyfill", 
+    "mosaic_polyfill",
     mosaicContext, 
     pyspark_to_java_column(inGeom), 
     pyspark_to_java_column(resolution)

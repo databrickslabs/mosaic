@@ -145,7 +145,7 @@ object MosaicExplode {
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[IndexGeometry].getCanonicalName,
+          classOf[MosaicIndexToGeometry].getCanonicalName,
           db.orNull,
           "mosaic_explode",
           """

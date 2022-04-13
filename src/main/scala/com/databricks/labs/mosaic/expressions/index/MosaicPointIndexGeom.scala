@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, 
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
-case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
+case class MosaicPointIndexGeom(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
     extends BinaryExpression
       with NullIntolerant
       with CodegenFallback {
@@ -19,7 +19,7 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemN
     override def dataType: DataType = LongType
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "point_index_geom"
+    override def prettyName: String = "mosaic_point_index_geom"
 
     /**
       * Computes the H3 index corresponding to the provided POINT geometry.
@@ -45,11 +45,11 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemN
         }
     }
 
-    override def toString: String = s"point_index_geom($geom, $resolution)"
+    override def toString: String = s"mosaic_point_index_geom($geom, $resolution)"
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = PointIndexGeom(asArray(0), asArray(1), indexSystemName, geometryAPIName)
+        val res = MosaicPointIndexGeom(asArray(0), asArray(1), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -63,14 +63,14 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemN
 
 }
 
-object PointIndexGeom {
+object MosaicPointIndexGeom {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[PointIndexGeom].getCanonicalName,
+          classOf[MosaicPointIndexGeom].getCanonicalName,
           db.orNull,
-          "point_index_geom",
+          "mosaic_point_index_geom",
           """
             |    _FUNC_(geom, resolution) - Returns the h3 index of a point geometry at resolution.
             """.stripMargin,

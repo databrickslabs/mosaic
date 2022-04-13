@@ -54,7 +54,7 @@ object H3IndexSystem extends IndexSystem with Serializable {
       *   A resolution to be used to get the centroid index geometry.
       * @return
       *   An optimal radius to buffer the geometry in order to avoid blind spots
-      *   when performing polyfill.
+      *   when performing mosaic_polyfill.
       */
     override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = {
         val centroid = geometry.getCentroid
@@ -90,7 +90,7 @@ object H3IndexSystem extends IndexSystem with Serializable {
     }
 
     /**
-      * H3 polyfill logic is based on the centroid point of the individual index
+      * H3 mosaic_polyfill logic is based on the centroid point of the individual index
       * geometry. Blind spots do occur near the boundary of the geometry.
       *
       * @param geometry
@@ -100,7 +100,7 @@ object H3IndexSystem extends IndexSystem with Serializable {
       * @return
       *   A set of indices representing the input geometry.
       */
-    override def polyfill(geometry: MosaicGeometry, resolution: Int): util.List[java.lang.Long] = {
+    override def mosaic_polyfill(geometry: MosaicGeometry, resolution: Int): util.List[java.lang.Long] = {
         if (geometry.isEmpty) Seq.empty[java.lang.Long].asJava
         else {
             val shellPoints = geometry.getShellPoints

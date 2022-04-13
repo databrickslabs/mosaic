@@ -68,7 +68,7 @@ trait IndexSystem extends Serializable {
       *   A resolution to be used to get the centroid index geometry.
       * @return
       *   An optimal radius to buffer the geometry in order to avoid blind spots
-      *   when performing polyfill.
+      *   when performing mosaic_polyfill.
       */
     def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double
 
@@ -86,7 +86,7 @@ trait IndexSystem extends Serializable {
       * @return
       *   A set of indices representing the input geometry.
       */
-    def polyfill(geometry: MosaicGeometry, resolution: Int): util.List[java.lang.Long]
+    def mosaic_polyfill(geometry: MosaicGeometry, resolution: Int): util.List[java.lang.Long]
 
     /**
       * Return a set of [[MosaicChip]] instances computed based on the geometry

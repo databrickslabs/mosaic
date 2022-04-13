@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.expressions.index.IndexGeometry
+import com.databricks.labs.mosaic.expressions.index.MosaicIndexToGeometry
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
@@ -75,7 +75,7 @@ object ST_IntersectsAggregate {
 
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[IndexGeometry].getCanonicalName,
+          classOf[MosaicIndexToGeometry].getCanonicalName,
           db.orNull,
           "st_intersects_aggregate",
           """

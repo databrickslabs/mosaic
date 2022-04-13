@@ -519,7 +519,7 @@ def flatten_polygons(geom: ColumnOrName) -> Column:
     )
 
 
-def point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+def mosaic_point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
     Returns the `resolution` grid index associated with the input geometry `geom`.
 
@@ -534,13 +534,13 @@ def point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "point_index_geom",
+        "mosaic_point_index_geom",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
     )
 
 
-def point_index_lonlat(
+def mosaic_point_index_lonlat(
     lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
 ) -> Column:
     """
@@ -558,20 +558,20 @@ def point_index_lonlat(
 
     """
     return config.mosaic_context.invoke_function(
-        "point_index_lonlat",
+        "mosaic_point_index_lonlat",
         pyspark_to_java_column(as_typed_col(lon, "double")),
         pyspark_to_java_column(as_typed_col(lat, "double")),
         pyspark_to_java_column(resolution),
     )
 
 
-def index_geometry(index_id: ColumnOrName) -> Column:
+def mosaic_index_to_geometry(index_id: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
-        "index_geometry", pyspark_to_java_column(index_id)
+        "mosaic_index_to_geometry", pyspark_to_java_column(index_id)
     )
 
 
-def polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+def mosaic_polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
     Returns the set of grid indices covering the input geometry `geom` at resolution `resolution`.
 
@@ -586,7 +586,7 @@ def polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "polyfill",
+        "mosaic_polyfill",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
     )
@@ -618,7 +618,7 @@ def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     )
 
 
-def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+def mosaic_fill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
     Generates:
     - a set of core indices that are fully contained by `geom`; and
@@ -638,7 +638,7 @@ def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "mosaicfill",
+        "mosaic_fill",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
     )

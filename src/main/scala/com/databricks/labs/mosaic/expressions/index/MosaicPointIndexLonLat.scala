@@ -6,7 +6,7 @@ import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression,
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
-case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expression, indexSystemName: String)
+case class MosaicPointIndexLonLat(lon: Expression, lat: Expression, resolution: Expression, indexSystemName: String)
     extends TernaryExpression
       with ExpectsInputTypes
       with NullIntolerant
@@ -17,10 +17,10 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
     /** Expression output DataType. */
     override def dataType: DataType = LongType
 
-    override def toString: String = s"point_index_lonlat($lon, $lat, $resolution)"
+    override def toString: String = s"mosaic_point_index_lonlat($lon, $lat, $resolution)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "point_index_lonlat"
+    override def prettyName: String = "mosaic_point_index_lonlat"
 
     /**
       * Computes the H3 index corresponding to the provided lat and long
@@ -47,7 +47,7 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = PointIndexLonLat(asArray(0), asArray(1), asArray(2), indexSystemName)
+        val res = MosaicPointIndexLonLat(asArray(0), asArray(1), asArray(2), indexSystemName)
         res.copyTagsFrom(this)
         res
     }
@@ -63,14 +63,14 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
 
 }
 
-object PointIndexLonLat {
+object MosaicPointIndexLonLat {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[PointIndexLonLat].getCanonicalName,
+          classOf[MosaicPointIndexLonLat].getCanonicalName,
           db.orNull,
-          "point_index_lonlat",
+          "mosaic_point_index_lonlat",
           """
             |    _FUNC_(lon, lat, resolution) - Returns the h3 index of a point(lon, lat) at resolution.
             """.stripMargin,

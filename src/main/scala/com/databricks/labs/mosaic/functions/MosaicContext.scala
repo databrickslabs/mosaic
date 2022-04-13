@@ -34,7 +34,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     ): Unit = {
         val registry = spark.sessionState.functionRegistry
 
-        /** IndexSystem and GeometryAPI Agnostic methods */
+        /** GeometryAPI Agnostic methods */
         registry.registerFunction(
           FunctionIdentifier("as_hex", database),
           AsHex.registryExpressionInfo(database),
@@ -64,11 +64,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
                   case e if e.length == 2 => ST_MakePolygon(e.head, e.last)
               }
         )
-        registry.registerFunction(
-          FunctionIdentifier("index_geometry", database),
-          IndexGeometry.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => IndexGeometry(exprs(0), indexSystem.name, geometryAPI.name)
-        )
+
 
         /** GeometryAPI Specific */
         registry.registerFunction(
@@ -287,24 +283,29 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
               MosaicExplode(struct(ColumnAdapter(exprs(0)), ColumnAdapter(exprs(1))).expr, indexSystem.name, geometryAPI.name)
         )
         registry.registerFunction(
-          FunctionIdentifier("mosaicfill", database),
+          FunctionIdentifier("mosaic_fill", database),
           MosaicFill.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => MosaicFill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
         registry.registerFunction(
-          FunctionIdentifier("point_index_lonlat", database),
-          PointIndexLonLat.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => PointIndexLonLat(exprs(0), exprs(1), exprs(2), indexSystem.name)
+          FunctionIdentifier("mosaic_polyfill", database),
+          MosaicPolyfill.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => MosaicPolyfill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
         registry.registerFunction(
-          FunctionIdentifier("point_index_geom", database),
-          PointIndexGeom.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => PointIndexGeom(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          FunctionIdentifier("mosaic_point_index_lonlat", database),
+          MosaicPointIndexLonLat.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => MosaicPointIndexLonLat(exprs(0), exprs(1), exprs(2), indexSystem.name)
         )
         registry.registerFunction(
-          FunctionIdentifier("polyfill", database),
-          Polyfill.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => Polyfill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          FunctionIdentifier("mosaic_point_index_geom", database),
+          MosaicPointIndexGeom.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => MosaicPointIndexGeom(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("mosaic_index_to_geometry", database),
+          MosaicIndexToGeometry.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => MosaicIndexToGeometry(exprs(0), indexSystem.name, geometryAPI.name)
         )
 
         // DataType keywords are needed at checkInput execution time.
@@ -400,23 +401,23 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(MosaicExplode(struct(geom, resolution).expr, indexSystem.name, geometryAPI.name))
         def mosaic_explode(geom: Column, resolution: Int): Column =
             ColumnAdapter(MosaicExplode(struct(geom, lit(resolution)).expr, indexSystem.name, geometryAPI.name))
-        def mosaicfill(geom: Column, resolution: Column): Column =
+        def mosaic_fill(geom: Column, resolution: Column): Column =
             ColumnAdapter(MosaicFill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
-        def mosaicfill(geom: Column, resolution: Int): Column =
+        def mosaic_fill(geom: Column, resolution: Int): Column =
             ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
-        def point_index_geom(point: Column, resolution: Column): Column =
-            ColumnAdapter(PointIndexGeom(point.expr, resolution.expr, indexSystem.name, geometryAPI.name))
-        def point_index_geom(point: Column, resolution: Int): Column =
-            ColumnAdapter(PointIndexGeom(point.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
-        def point_index_lonlat(lon: Column, lat: Column, resolution: Column): Column =
-            ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, resolution.expr, indexSystem.name))
-        def point_index_lonlat(lon: Column, lat: Column, resolution: Int): Column =
-            ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, lit(resolution).expr, indexSystem.name))
-        def polyfill(geom: Column, resolution: Column): Column =
-            ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
-        def polyfill(geom: Column, resolution: Int): Column =
-            ColumnAdapter(Polyfill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
-        def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
+        def mosaic_point_index_geom(point: Column, resolution: Column): Column =
+            ColumnAdapter(MosaicPointIndexGeom(point.expr, resolution.expr, indexSystem.name, geometryAPI.name))
+        def mosaic_point_index_geom(point: Column, resolution: Int): Column =
+            ColumnAdapter(MosaicPointIndexGeom(point.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
+        def mosaic_point_index_lonlat(lon: Column, lat: Column, resolution: Column): Column =
+            ColumnAdapter(MosaicPointIndexLonLat(lon.expr, lat.expr, resolution.expr, indexSystem.name))
+        def mosaic_point_index_lonlat(lon: Column, lat: Column, resolution: Int): Column =
+            ColumnAdapter(MosaicPointIndexLonLat(lon.expr, lat.expr, lit(resolution).expr, indexSystem.name))
+        def mosaic_polyfill(geom: Column, resolution: Column): Column =
+            ColumnAdapter(MosaicPolyfill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
+        def mosaic_polyfill(geom: Column, resolution: Int): Column =
+            ColumnAdapter(MosaicPolyfill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
+        def mosaic_index_to_geometry(indexID: Column): Column = ColumnAdapter(MosaicIndexToGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
 
         // Not specific to Mosaic
         def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))

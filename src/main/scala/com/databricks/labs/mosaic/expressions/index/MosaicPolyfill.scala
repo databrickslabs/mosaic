@@ -25,7 +25,7 @@ import org.apache.spark.sql.types._
   """,
   since = "1.0"
 )
-case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
+case class MosaicPolyfill(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
     extends BinaryExpression
       with ExpectsInputTypes
       with NullIntolerant
@@ -46,13 +46,13 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
     /** Expression output DataType. */
     override def dataType: DataType = ArrayType(LongType)
 
-    override def toString: String = s"h3_polyfill($geom, $resolution)"
+    override def toString: String = s"mosaic_polyfill($geom, $resolution)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "h3_polyfill"
+    override def prettyName: String = "mosaic_polyfill"
 
     /**
-      * Generates a set of indices corresponding to H3 polyfill call over the
+      * Generates a set of indices corresponding to mosaic_polyfill call over the
       * input geometry.
       *
       * @param input1
@@ -69,7 +69,7 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
         val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geometry = geometryAPI.geometry(input1, left.dataType)
-        val indices = indexSystem.polyfill(geometry, resolution)
+        val indices = indexSystem.mosaic_polyfill(geometry, resolution)
 
         val serialized = ArrayData.toArrayData(indices.toArray)
         serialized
@@ -79,7 +79,7 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = Polyfill(asArray(0), asArray(1), indexSystemName, geometryAPIName)
+        val res = MosaicPolyfill(asArray(0), asArray(1), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -89,14 +89,14 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
 
 }
 
-object Polyfill {
+object MosaicPolyfill {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[Polyfill].getCanonicalName,
+          classOf[MosaicPolyfill].getCanonicalName,
           db.orNull,
-          "polyfill",
+          "mosaic_polyfill",
           """
             |    _FUNC_(geometry, resolution) - Returns the 1 set representation of geometry at resolution.
             """.stripMargin,

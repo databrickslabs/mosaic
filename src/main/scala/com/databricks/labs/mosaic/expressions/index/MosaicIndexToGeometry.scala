@@ -16,7 +16,7 @@ import org.apache.spark.sql.types._
   """,
   since = "1.0"
 )
-case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryAPIName: String)
+case class MosaicIndexToGeometry(indexID: Expression, indexSystemName: String, geometryAPIName: String)
     extends UnaryExpression
       with NullIntolerant
       with CodegenFallback {
@@ -25,10 +25,10 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
     // Return WKB, if other type is required call ConvertTO
     override def dataType: DataType = BinaryType
 
-    override def toString: String = s"index_geometry($indexID)"
+    override def toString: String = s"mosaic_index_to_geometry($indexID)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "index_geometry"
+    override def prettyName: String = "mosaic_index_to_geometry"
 
     /**
       * Computes the H3 index corresponding to the provided lat and long
@@ -48,7 +48,7 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val arg1 = newArgs.head.asInstanceOf[Expression]
-        val res = IndexGeometry(arg1, indexSystemName, geometryAPIName)
+        val res = MosaicIndexToGeometry(arg1, indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -59,14 +59,14 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
 
 }
 
-object IndexGeometry {
+object MosaicIndexToGeometry {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[IndexGeometry].getCanonicalName,
+          classOf[MosaicIndexToGeometry].getCanonicalName,
           db.orNull,
-          "index_geometry",
+          "mosaic_index_to_geometry",
           """
             |    _FUNC_(indexID, indexSystem) - Returns the geometry representing the index.
             """.stripMargin,

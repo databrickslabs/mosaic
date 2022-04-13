@@ -104,8 +104,8 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
             .select(
               mean(
                 st_area(
-                  index_geometry(
-                    point_index_lonlat(
+                  mosaic_index_to_geometry(
+                    mosaic_point_index_lonlat(
                       col("centroid").getItem("x"),
                       col("centroid").getItem("y"),
                       lit(resolution)

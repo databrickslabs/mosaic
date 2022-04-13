@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkSuite
 import org.scalatest.flatspec.AnyFlatSpec
 
-class TestPolyfill extends AnyFlatSpec with PolyfillBehaviors with SparkSuite {
+class TestMosaicPolyfill extends AnyFlatSpec with PolyfillBehaviors with SparkSuite {
 
     "Polyfill" should "fill wkt geometries for any index system and any geometry API" in {
         it should behave like wktPolyfill(MosaicContext.build(H3IndexSystem, ESRI), spark)

@@ -936,10 +936,10 @@ flatten_polygons
 
     >>>
 
-point_index_lonlat
+mosaic_point_index_lonlat
 ******************
 
-.. function:: point_index_lonlat(lon, lat, resolution)
+.. function:: mosaic_point_index_lonlat(lon, lat, resolution)
 
     Returns the `resolution` grid index associated with 
     the input `lon` and `lat` coordinates.
@@ -958,7 +958,7 @@ point_index_lonlat
    .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-    >>> df.select(point_index_lonlat('lon', 'lat', lit(10))).show(1, False)
+    >>> df.select(mosaic_point_index_lonlat('lon', 'lat', lit(10))).show(1, False)
     +----------------------------+
     |h3_point_index(lon, lat, 10)|
     +----------------------------+
@@ -968,7 +968,7 @@ point_index_lonlat
    .. code-tab:: scala
 
     >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
-    >>> df.select(point_index_lonlat($"lon", $"lat", lit(10))).show()
+    >>> df.select(mosaic_point_index_lonlat($"lon", $"lat", lit(10))).show()
     +----------------------------+
     |h3_point_index(lat, lon, 10)|
     +----------------------------+
@@ -977,7 +977,7 @@ point_index_lonlat
 
    .. code-tab:: sql
 
-    >>> SELECT point_index_lonlat(30d, 10d, 10)
+    >>> SELECT mosaic_point_index_lonlat(30d, 10d, 10)
     +----------------------------+
     |h3_point_index(lat, lon, 10)|
     +----------------------------+
@@ -985,10 +985,10 @@ point_index_lonlat
     +----------------------------+
 
 
-polyfill
+mosaic_polyfill
 ********
 
-.. function:: polyfill(geometry, resolution)
+.. function:: mosaic_polyfill(geometry, resolution)
 
     Returns the set of grid indices covering the input `geometry` at `resolution`.
 
@@ -1006,9 +1006,9 @@ polyfill
     >>> df = spark.createDataFrame([{
         'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'
         }])
-    >>> df.select(polyfill('wkt', lit(0))).show(1, False)
+    >>> df.select(mosaic_polyfill('wkt', lit(0))).show(1, False)
     +------------------------------------------------------------+
-    |h3_polyfill(wkt, 0)                                         |
+    |mosaic_polyfill(wkt, 0)                                     |
     +------------------------------------------------------------+
     |[577586652210266111, 578360708396220415, 577269992861466623]|
     +------------------------------------------------------------+
@@ -1016,27 +1016,27 @@ polyfill
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-    >>> df.select(polyfill($"wkt", lit(0))).show(false)
+    >>> df.select(mosaic_polyfill($"wkt", lit(0))).show(false)
     +------------------------------------------------------------+
-    |h3_polyfill(wkt, 0)                                         |
+    |mosaic_polyfill(wkt, 0)                                     |
     +------------------------------------------------------------+
     |[577586652210266111, 578360708396220415, 577269992861466623]|
     +------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    >>> SELECT polyfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
+    >>> SELECT mosaic_polyfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
     +------------------------------------------------------------+
-    |h3_polyfill(wkt, 0)                                         |
+    |mosaic_polyfill(wkt, 0)                                     |
     +------------------------------------------------------------+
     |[577586652210266111, 578360708396220415, 577269992861466623]|
     +------------------------------------------------------------+
 
 
-mosaicfill
+mosaic_fill
 **********
 
-.. function:: mosaicfill(geometry, resolution)
+.. function:: mosaic_fill(geometry, resolution)
 
     Generates:
     - a set of core indices that are fully contained by `geometry`; and
@@ -1056,9 +1056,9 @@ mosaicfill
    .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
-    >>> df.select(mosaicfill('wkt', lit(0))).printSchema()
+    >>> df.select(mosaic_fill('wkt', lit(0))).printSchema()
     root
-     |-- h3_mosaicfill(wkt, 0): mosaic (nullable = true)
+     |-- mosaic_fill(wkt, 0): mosaic (nullable = true)
      |    |-- chips: array (nullable = true)
      |    |    |-- element: mosaic_chip (containsNull = true)
      |    |    |    |-- is_core: boolean (nullable = true)
@@ -1066,9 +1066,9 @@ mosaicfill
      |    |    |    |-- wkb: binary (nullable = true)
 
 
-    >>> df.select(mosaicfill('wkt', lit(0))).show()
+    >>> df.select(mosaic_fill('wkt', lit(0))).show()
     +---------------------+
-    |h3_mosaicfill(wkt, 0)|
+    |mosaic_fill(wkt, 0)|
     +---------------------+
     | {[{false, 5774810...|
     +---------------------+
@@ -1076,27 +1076,27 @@ mosaicfill
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-    >>> df.select(mosaicfill($"wkt", lit(0))).printSchema
+    >>> df.select(mosaic_fill($"wkt", lit(0))).printSchema
     root
-     |-- h3_mosaicfill(wkt, 0): mosaic (nullable = true)
+     |-- mosaic_fill(wkt, 0): mosaic (nullable = true)
      |    |-- chips: array (nullable = true)
      |    |    |-- element: mosaic_chip (containsNull = true)
      |    |    |    |-- is_core: boolean (nullable = true)
      |    |    |    |-- h3: long (nullable = true)
      |    |    |    |-- wkb: binary (nullable = true)
 
-    >>> df.select(mosaicfill($"wkt", lit(0))).show()
+    >>> df.select(mosaic_fill($"wkt", lit(0))).show()
     +---------------------+
-    |h3_mosaicfill(wkt, 0)|
+    |mosaic_fill(wkt, 0)  |
     +---------------------+
     | {[{false, 5774810...|
     +---------------------+
 
    .. code-tab:: sql
 
-    >>> SELECT mosaicfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
+    >>> SELECT mosaic_fill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
     +---------------------+
-    |h3_mosaicfill(wkt, 0)|
+    |mosaic_fill(wkt, 0)  |
     +---------------------+
     | {[{false, 5774810...|
     +---------------------+

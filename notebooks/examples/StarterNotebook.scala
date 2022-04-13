@@ -19,7 +19,7 @@ display(polygons1)
 
 display(
   polygons1.select(
-    polyfill(col("wkb_polygon"), 10)
+    mosaic_polyfill(col("wkb_polygon"), 10)
   )
 )
 

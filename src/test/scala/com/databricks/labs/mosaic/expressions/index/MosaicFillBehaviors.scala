@@ -20,7 +20,7 @@ trait MosaicFillBehaviors {
 
         val mosaics = boroughs
             .select(
-              mosaicfill(col("wkt"), 11)
+              mosaic_fill(col("wkt"), 11)
             )
             .collect()
 
@@ -30,7 +30,7 @@ trait MosaicFillBehaviors {
 
         val mosaics2 = spark
             .sql("""
-                   |select mosaicfill(wkt, 11) from boroughs
+                   |select mosaic_fill(wkt, 11) from boroughs
                    |""".stripMargin)
             .collect()
 
@@ -46,7 +46,7 @@ trait MosaicFillBehaviors {
 
         val mosaics = boroughs
             .select(
-              mosaicfill(convert_to(col("wkt"), "wkb"), 11)
+              mosaic_fill(convert_to(col("wkt"), "wkb"), 11)
             )
             .collect()
 
@@ -56,7 +56,7 @@ trait MosaicFillBehaviors {
 
         val mosaics2 = spark
             .sql("""
-                   |select mosaicfill(convert_to_wkb(wkt), 11) from boroughs
+                   |select mosaic_fill(convert_to_wkb(wkt), 11) from boroughs
                    |""".stripMargin)
             .collect()
 
@@ -72,7 +72,7 @@ trait MosaicFillBehaviors {
 
         val mosaics = boroughs
             .select(
-              mosaicfill(convert_to(col("wkt"), "hex"), 11)
+              mosaic_fill(convert_to(col("wkt"), "hex"), 11)
             )
             .collect()
 
@@ -82,7 +82,7 @@ trait MosaicFillBehaviors {
 
         val mosaics2 = spark
             .sql("""
-                   |select mosaicfill(convert_to_hex(wkt), 11) from boroughs
+                   |select mosaic_fill(convert_to_hex(wkt), 11) from boroughs
                    |""".stripMargin)
             .collect()
 
@@ -98,7 +98,7 @@ trait MosaicFillBehaviors {
 
         val mosaics = boroughs
             .select(
-              mosaicfill(convert_to(col("wkt"), "coords"), 11)
+              mosaic_fill(convert_to(col("wkt"), "coords"), 11)
             )
             .collect()
 
@@ -108,7 +108,7 @@ trait MosaicFillBehaviors {
 
         val mosaics2 = spark
             .sql("""
-                   |select mosaicfill(convert_to_coords(wkt), 11) from boroughs
+                   |select mosaic_fill(convert_to_coords(wkt), 11) from boroughs
                    |""".stripMargin)
             .collect()
 
