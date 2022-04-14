@@ -519,7 +519,7 @@ def polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     )
 
 
-def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: bool = True) -> Column:
     """
     Generates:
     - a set of core indices that are fully contained by `geom`; and
@@ -531,21 +531,23 @@ def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     ----------
     geom : Column
     resolution : Column (IntegerType)
+    keep_core_geometries : bool
 
     Returns
     -------
     Column (StructType[is_core: BooleanType, h3: LongType, wkb: BinaryType])
-        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips.
+        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips
+        if keep_core_geometries is set to False.
 
     """
     return config.mosaic_context.invoke_function(
         "mosaic_explode",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
+        keep_core_geometries
     )
 
-
-def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: bool = True) -> Column:
     """
     Generates:
     - a set of core indices that are fully contained by `geom`; and
@@ -557,15 +559,18 @@ def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     ----------
     geom : Column
     resolution : Column (IntegerType)
+    keep_core_geometries : bool
 
     Returns
     -------
     Column (ArrayType[StructType[is_core: BooleanType, h3: LongType, wkb: BinaryType]])
-        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips.
+        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips
+        if keep_core_geometries is set to False.
 
     """
     return config.mosaic_context.invoke_function(
         "mosaicfill",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
+        keep_core_geometries
     )

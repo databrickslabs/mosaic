@@ -63,6 +63,8 @@ class TestFunctions(MosaicTestCase):
             .withColumn("polyfill", api.polyfill("wkt", lit(1)))
             .withColumn("mosaic_explode", api.mosaic_explode("wkt", lit(1)))
             .withColumn("mosaicfill", api.mosaicfill("wkt", lit(1)))
+            .withColumn("mosaic_explode_no_core_chips", api.mosaic_explode("wkt", lit(1), False))
+            .withColumn("mosaicfill_no_core_chips", api.mosaicfill("wkt", lit(1), False))
         )
 
         self.assertEqual(result.count(), 1)
