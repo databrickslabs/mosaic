@@ -1,8 +1,8 @@
 import inspect
-from typing import overload
+from typing import overload, Any
 
 from pyspark.sql import Column
-from pyspark.sql.functions import col, _to_java_column as pyspark_to_java_column
+from pyspark.sql.functions import lit, _to_java_column as pyspark_to_java_column
 
 from mosaic.config import config
 from mosaic.utils.types import ColumnOrName, as_typed_col
@@ -547,7 +547,7 @@ def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geome
         keep_core_geometries
     )
 
-def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: bool = True) -> Column:
+def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True) -> Column:
     """
     Generates:
     - a set of core indices that are fully contained by `geom`; and
@@ -568,9 +568,13 @@ def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometrie
         if keep_core_geometries is set to False.
 
     """
+
+    if(type(keep_core_geometries) == bool):
+        keep_core_geometries = lit(keep_core_geometries)
+
     return config.mosaic_context.invoke_function(
         "mosaicfill",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
-        keep_core_geometries
+        pyspark_to_java_column(keep_core_geometries)
     )
