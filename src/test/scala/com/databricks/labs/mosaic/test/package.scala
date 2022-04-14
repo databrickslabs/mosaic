@@ -201,5 +201,21 @@ package object test {
             df
         }
 
+        def sentinelDf(sparkSession: SparkSession): DataFrame = {
+            val mosaicContext: MosaicContext = MosaicContext.build(H3, ESRI)
+            sparkSession.read
+                .format("binaryFile")
+                .option("pathGlobFilter", "*.tif")
+                .load("src/test/resources/sentinel")
+        }
+
+        def modisDf(sparkSession: SparkSession): DataFrame = {
+            val mosaicContext: MosaicContext = MosaicContext.build(H3, ESRI)
+            sparkSession.read
+                .format("binaryFile")
+                .option("pathGlobFilter", "*.TIF")
+                .load("src/test/resources/modis")
+        }
+
     }
 }
