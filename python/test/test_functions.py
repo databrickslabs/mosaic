@@ -57,7 +57,9 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_zmin", api.st_zmin("wkt"))
             .withColumn("st_zmax", api.st_zmax("wkt"))
             .withColumn("flatten_polygons", api.flatten_polygons("wkt"))
-            .withColumn("point_index_lonlat", api.point_index_lonlat(lit(1), lit(1), lit(1)))
+            .withColumn(
+                "point_index_lonlat", api.point_index_lonlat(lit(1), lit(1), lit(1))
+            )
             .withColumn("point_index_geom", api.point_index_geom("point_wkt", lit(1)))
             .withColumn("index_geometry", api.index_geometry(lit(1)))
             .withColumn("polyfill", api.polyfill("wkt", lit(1)))
@@ -66,6 +68,13 @@ class TestFunctions(MosaicTestCase):
             .withColumn("mosaic_explode_no_core_chips", api.mosaic_explode("wkt", lit(1), False))
             .withColumn("mosaicfill_no_core_chips", api.mosaicfill("wkt", lit(1), False))
             .withColumn("mosaicfill_no_core_chips_bool", api.mosaicfill("wkt", lit(1), lit(False)))
+            .withColumn(
+                "geom_with_srid", api.st_setsrid(api.st_geomfromwkt("wkt"), lit(4326))
+            )
+            .withColumn("srid_check", api.st_srid("geom_with_srid"))
+            .withColumn(
+                "transformed_geom", api.st_transform("geom_with_srid", lit(3857))
+            )
         )
 
         self.assertEqual(result.count(), 1)

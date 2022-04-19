@@ -1,9 +1,10 @@
 package com.databricks.labs.mosaic.core.geometry.multipoint
 
 import com.databricks.labs.mosaic.core.geometry._
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
-import com.databricks.labs.mosaic.core.types.model._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOINT, POINT}
 import com.esotericsoftware.kryo.io.Input
 import org.locationtech.jts.geom._
 
@@ -14,14 +15,26 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
     // noinspection DuplicatedCode
     override def toInternal: InternalGeometry = {
         val points = asSeq.map(_.coord).map(InternalCoord(_))
-        new InternalGeometry(MULTIPOINT.id, Array(points.toArray), Array(Array(Array())))
+        new InternalGeometry(MULTIPOINT.id, getSpatialReference, Array(points.toArray), Array(Array(Array())))
+    }
+
+    override def getBoundary: MosaicGeometry = {
+        val boundary = multiPoint.getBoundary
+        boundary.setSRID(multiPoint.getSRID)
+        MosaicGeometryJTS(boundary)
+    }
+
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        MosaicMultiPointJTS.fromSeq(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointJTS]))
     }
 
     override def asSeq: Seq[MosaicPoint] = {
-        for (i <- 0 until multiPoint.getNumPoints) yield MosaicPointJTS(multiPoint.getGeometryN(i).getCoordinates.head)
+        for (i <- 0 until multiPoint.getNumPoints) yield {
+            val geom = multiPoint.getGeometryN(i)
+            geom.setSRID(multiPoint.getSRID)
+            MosaicPointJTS(geom)
+        }
     }
-
-    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(multiPoint.getBoundary)
 
 }
 
@@ -37,17 +50,23 @@ object MosaicMultiPointJTS extends GeometryReader {
 
         val points = internalGeom.boundaries.head.map(p => gf.createPoint(p.toCoordinate))
         val multiPoint = gf.createMultiPoint(points)
+        multiPoint.setSRID(internalGeom.srid)
         new MosaicMultiPointJTS(multiPoint)
     }
 
-    // noinspection ZeroIndexToHead
-    override def fromPoints(inPoints: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = MULTIPOINT): MosaicGeometry = {
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = MULTIPOINT): MosaicMultiPointJTS = {
         val gf = new GeometryFactory()
-        require(geomType.id == MULTIPOINT.id)
-
-        val points = inPoints.map(p => gf.createPoint(p.coord)).toArray
-        val multiPoint = gf.createMultiPoint(points)
-        new MosaicMultiPointJTS(multiPoint)
+        val spatialReference = geomSeq.head.getSpatialReference
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POINT                         =>
+                val extractedPoints = geomSeq.map(_.asInstanceOf[MosaicPointJTS])
+                gf.createMultiPoint(extractedPoints.map(_.getGeom.asInstanceOf[Point]).toArray)
+            case other: GeometryTypeEnum.Value => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
+        }
+        newGeom.setSRID(spatialReference)
+        MosaicMultiPointJTS(newGeom)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)

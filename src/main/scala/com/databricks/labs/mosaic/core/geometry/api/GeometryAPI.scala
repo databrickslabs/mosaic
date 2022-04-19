@@ -28,7 +28,7 @@ abstract class GeometryAPI(
         }
     }
 
-    def geometry(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = reader.fromPoints(points, geomType)
+    def geometry(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = reader.fromSeq(points, geomType)
 
     /**
       * Constructs an instance of [[MosaicGeometry]] based on an instance of
@@ -102,13 +102,13 @@ object GeometryAPI extends Serializable {
 
     def apply(name: String): GeometryAPI =
         name match {
-            case "JTS" => JTS
+            case "JTS"  => JTS
             case "ESRI" => ESRI
         }
 
     def getReader(name: String): GeometryReader =
         name match {
-            case "JTS" => MosaicGeometryJTS
+            case "JTS"  => MosaicGeometryJTS
             case "ESRI" => MosaicGeometryESRI
         }
 

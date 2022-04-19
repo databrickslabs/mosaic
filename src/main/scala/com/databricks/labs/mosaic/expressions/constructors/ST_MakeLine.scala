@@ -59,6 +59,7 @@ case class ST_MakeLine(geoms: Expression, geometryAPIName: String) extends Unary
     def reduceGeoms(leftGeom: InternalGeometry, rightGeom: InternalGeometry): InternalGeometry =
         new InternalGeometry(
           GeometryTypeEnum.LINESTRING.id,
+          leftGeom.srid,
           Array(leftGeom.boundaries.flatMap(_.toList) ++ rightGeom.boundaries.flatMap(_.toList)),
           Array(Array())
         )

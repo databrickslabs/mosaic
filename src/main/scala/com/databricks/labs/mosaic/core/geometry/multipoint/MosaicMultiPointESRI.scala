@@ -1,10 +1,11 @@
 package com.databricks.labs.mosaic.core.geometry.multipoint
 
 import com.databricks.labs.mosaic.core.geometry._
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
-import com.databricks.labs.mosaic.core.types.model._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
-import com.esri.core.geometry.{MultiPoint, Point}
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTIPOINT, POINT}
+import com.esri.core.geometry.{MultiPoint, Point, SpatialReference}
 import com.esri.core.geometry.ogc._
 
 import org.apache.spark.sql.catalyst.InternalRow
@@ -14,7 +15,7 @@ class MosaicMultiPointESRI(multiPoint: OGCMultiPoint) extends MosaicGeometryESRI
     // noinspection DuplicatedCode
     override def toInternal: InternalGeometry = {
         val points = asSeq.map(_.coord).map(InternalCoord(_))
-        new InternalGeometry(MULTIPOINT.id, Array(points.toArray), Array(Array(Array())))
+        new InternalGeometry(MULTIPOINT.id, getSpatialReference, Array(points.toArray), Array(Array(Array())))
     }
 
     override def asSeq: Seq[MosaicPoint] = {
@@ -27,11 +28,15 @@ class MosaicMultiPointESRI(multiPoint: OGCMultiPoint) extends MosaicGeometryESRI
 
     override def numPoints: Int = multiPoint.numGeometries()
 
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        MosaicMultiPointESRI.fromSeq(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointESRI]))
+    }
+
 }
 
 object MosaicMultiPointESRI extends GeometryReader {
 
-    def apply(multiPoint: OGCGeometry): MosaicGeometryESRI = new MosaicMultiPointESRI(multiPoint.asInstanceOf[OGCMultiPoint])
+    def apply(multiPoint: OGCGeometry): MosaicMultiPointESRI = new MosaicMultiPointESRI(multiPoint.asInstanceOf[OGCMultiPoint])
 
     // noinspection ZeroIndexToHead
     override def fromInternal(row: InternalRow): MosaicGeometry = {
@@ -41,6 +46,12 @@ object MosaicMultiPointESRI extends GeometryReader {
         val multiPoint = new MultiPoint()
         val coordsCollection = internalGeom.boundaries.head.map(_.coords)
         val dim = coordsCollection.head.length
+        val spatialReference =
+            if (internalGeom.srid != 0) {
+                SpatialReference.create(internalGeom.srid)
+            } else {
+                MosaicGeometryESRI.defaultSpatialReference
+            }
 
         dim match {
             case 2 => coordsCollection.foreach(coords => multiPoint.add(new Point(coords(0), coords(1))))
@@ -48,25 +59,26 @@ object MosaicMultiPointESRI extends GeometryReader {
             case _ => throw new UnsupportedOperationException("Only 2D and 3D points supported.")
         }
 
-        val ogcMultiPoint = new OGCMultiPoint(multiPoint, MosaicGeometryESRI.spatialReference)
+        val ogcMultiPoint = new OGCMultiPoint(multiPoint, spatialReference)
         new MosaicMultiPointESRI(ogcMultiPoint)
     }
 
-    // noinspection ZeroIndexToHead
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value = MULTIPOINT): MosaicGeometry = {
-        require(geomType.id == MULTIPOINT.id)
-
-        val multiPoint = new MultiPoint()
-        val dim = points.head.asSeq.length
-
-        dim match {
-            case 2 => points.foreach(point => multiPoint.add(new Point(point.asSeq(0), point.asSeq(1))))
-            case 3 => points.foreach(point => multiPoint.add(new Point(point.asSeq(0), point.asSeq(1), point.asSeq(2))))
-            case _ => throw new UnsupportedOperationException("Only 2D and 3D points supported.")
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = MULTIPOINT): MosaicMultiPointESRI = {
+        val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POINT                         =>
+                val multiPoint = new MultiPoint()
+                val extractedPoints = geomSeq.map(_.asInstanceOf[MosaicPointESRI])
+                extractedPoints.head.asSeq.length match {
+                    case 2 => extractedPoints.foreach(p => multiPoint.add(new Point(p.asSeq(0), p.asSeq(1))))
+                    case 3 => extractedPoints.foreach(p => multiPoint.add(new Point(p.asSeq(0), p.asSeq(1), p.asSeq(2))))
+                }
+                new OGCMultiPoint(multiPoint, spatialReference)
+            case other: GeometryTypeEnum.Value => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
         }
-
-        val ogcMultiPoint = new OGCMultiPoint(multiPoint, MosaicGeometryESRI.spatialReference)
-        new MosaicMultiPointESRI(ogcMultiPoint)
+        MosaicMultiPointESRI(newGeom)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)

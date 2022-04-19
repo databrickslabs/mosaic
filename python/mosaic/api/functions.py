@@ -1,8 +1,6 @@
-import inspect
-from typing import overload, Any
-
 from pyspark.sql import Column
-from pyspark.sql.functions import lit, _to_java_column as pyspark_to_java_column
+from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
+from pyspark.sql.functions import lit
 
 from mosaic.config import config
 from mosaic.utils.types import ColumnOrName, as_typed_col
@@ -107,6 +105,81 @@ def st_dump(geom: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "st_dump", pyspark_to_java_column(geom)
+    )
+
+
+def st_srid(geom: ColumnOrName) -> Column:
+    """
+    Looks up the Coordinate Reference System well-known identifier for `geom`.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+
+    Returns
+    -------
+    Column (IntegerType)
+        The SRID of the provided geometry.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_srid", pyspark_to_java_column(geom)
+    )
+
+
+def st_setsrid(geom: ColumnOrName, srid: ColumnOrName) -> Column:
+    """
+    Sets the Coordinate Reference System well-known identifier for `geom`.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+    srid : Column (IntegerType)
+        The spatial reference identifier of `geom`, expressed as an integer,
+        e.g. 4326 for EPSG:4326 / WGS84
+
+    Returns
+    -------
+    Column
+        The input geometry with a new SRID set.
+
+    Notes
+    -----
+    ST_SetSRID does not transform the coordinates of `geom`,
+    rather it tells Mosaic the SRID in which the current coordinates are expressed.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_setsrid", pyspark_to_java_column(geom), pyspark_to_java_column(srid)
+    )
+
+
+def st_transform(geom: ColumnOrName, srid: ColumnOrName) -> Column:
+    """
+    Transforms the horizontal (XY) coordinates of `geom` from the current reference system to that described by `srid`.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+    srid : Column (IntegerType)
+        The target spatial reference system for `geom`, expressed as an integer,
+        e.g. 3857 for EPSG:3857 / Pseudo-Mercator
+
+    Returns
+    -------
+    Column
+        The transformed geometry.
+
+    Notes
+    -----
+    If `geom` does not have an associated SRID, use ST_SetSRID to set this before calling ST_Transform.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_transform", pyspark_to_java_column(geom), pyspark_to_java_column(srid)
     )
 
 
@@ -446,6 +519,7 @@ def flatten_polygons(geom: ColumnOrName) -> Column:
         "flatten_polygons", pyspark_to_java_column(geom)
     )
 
+
 def point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
     Returns the `resolution` grid index associated with the input geometry `geom`.
@@ -519,7 +593,7 @@ def polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     )
 
 
-def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: bool = True) -> Column:
+def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
     Generates:
     - a set of core indices that are fully contained by `geom`; and
@@ -531,23 +605,21 @@ def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geome
     ----------
     geom : Column
     resolution : Column (IntegerType)
-    keep_core_geometries : bool
 
     Returns
     -------
     Column (StructType[is_core: BooleanType, h3: LongType, wkb: BinaryType])
-        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips
-        if keep_core_geometries is set to False.
+        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips.
 
     """
     return config.mosaic_context.invoke_function(
         "mosaic_explode",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
-        keep_core_geometries
     )
 
-def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True) -> Column:
+
+def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
     Generates:
     - a set of core indices that are fully contained by `geom`; and
@@ -559,22 +631,15 @@ def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometrie
     ----------
     geom : Column
     resolution : Column (IntegerType)
-    keep_core_geometries : bool
 
     Returns
     -------
     Column (ArrayType[StructType[is_core: BooleanType, h3: LongType, wkb: BinaryType]])
-        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips
-        if keep_core_geometries is set to False.
+        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips.
 
     """
-
-    if(type(keep_core_geometries) == bool):
-        keep_core_geometries = lit(keep_core_geometries)
-
     return config.mosaic_context.invoke_function(
         "mosaicfill",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
-        pyspark_to_java_column(keep_core_geometries)
     )

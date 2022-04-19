@@ -12,6 +12,7 @@ class InternalGeometryType
       Array(
         // StructField("typeName", StringType),
         StructField("type_id", IntegerType),
+        StructField("srid", IntegerType),
         StructField("boundary", BoundaryType),
         StructField("holes", HolesType)
       )

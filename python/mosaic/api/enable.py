@@ -7,7 +7,6 @@ from pyspark.sql import SparkSession
 from mosaic.config import config
 from mosaic.core.library_handler import MosaicLibraryHandler
 from mosaic.core.mosaic_context import MosaicContext
-from mosaic.utils.kepler_magic import MosaicKepler
 from mosaic.utils.notebook_utils import NotebookUtils
 
 
@@ -15,7 +14,7 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     """
     Enable Mosaic functions.
 
-    Use this function at the start of your workflow to ensure all of the required dependencies are installed and
+    Use this function at the start of your workflow to ensure all the required dependencies are installed and
     Mosaic is configured according to your needs.
 
     Parameters
@@ -56,4 +55,5 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     config.notebook_utils = dbutils.notebook if dbutils else NotebookUtils
     config.ipython_hook = get_ipython()
     if config.ipython_hook:
+        from mosaic.utils.kepler_magic import MosaicKepler
         config.ipython_hook.register_magics(MosaicKepler)

@@ -758,6 +758,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
 
         val hexDf: DataFrame = getHexRowsDf
             .orderBy("id")
+            .where(!st_geometrytype(as_hex($"hex")).isin("MultiLineString", "MultiPolygon"))
             .withColumn("geojson", convert_to(as_hex($"hex"), "geojson"))
             .select(
               convert_to($"geojson", "coords").alias("coords")
@@ -779,6 +780,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
 
         val right = getWKTRowsDf
             .orderBy("id")
+            .where(!st_geometrytype($"wkt").isin("MultiLineString", "MultiPolygon"))
             .withColumn("coords", convert_to($"wkt", "coords"))
             .select("coords")
             .collect()

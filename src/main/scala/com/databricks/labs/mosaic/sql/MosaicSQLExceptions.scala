@@ -42,4 +42,10 @@ object MosaicSQLExceptions {
           s"Joins between $geometryType and $otherGeometryType are not supported with MosaicFrames."
         )
 
+    def GeometryEncodingNotSupported(supportedGeometryEncodings: List[String], suppliedGeometryEncoding: String): Exception =
+        new Exception(
+          s"This expression only supports geometries encoded as ${supportedGeometryEncodings.mkString(",")}." +
+              s"$suppliedGeometryEncoding was supplied as input."
+        )
+
 }
