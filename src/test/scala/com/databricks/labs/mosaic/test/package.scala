@@ -201,5 +201,12 @@ package object test {
             df
         }
 
+        def netCDFDf(sparkSession: SparkSession): DataFrame = {
+            sparkSession.read
+                .format("binaryFile")
+                .option("pathGlobFilter", "*.nc")
+                .load("src/test/resources/binary")
+        }
+
     }
 }
