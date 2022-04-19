@@ -53,14 +53,50 @@ trait MosaicExplodeBehaviors {
         )
         val df = spark.createDataFrame(rdd, schema)
 
-        val emptyChips = df
+        val noEmptyChips = df
           .select(
-              mosaic_explode(col("wkt"), 4)
+              mosaic_explode(col("wkt"), 4, true)
           )
           .filter(col("index.wkb").isNull)
           .count()
 
-        emptyChips should equal(0)
+        noEmptyChips should equal(0)
+
+        val emptyChips = df
+          .select(
+              mosaic_explode(col("wkt"), 4, false)
+          )
+          .filter(col("index.wkb").isNull)
+
+        emptyChips.collect().length should be > 0
+    }
+
+    def wktDecomposeKeepCoreParamExpression(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+        mosaicContext.register(spark)
+
+        val rdd = spark.sparkContext.makeRDD(Seq(
+            Row("POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))")
+        ))
+        val schema = StructType(
+            List(
+                StructField("wkt", StringType)
+            )
+        )
+        val df = spark.createDataFrame(rdd, schema)
+
+        val noEmptyChips = df
+          .select(
+              expr("mosaic_explode(wkt, 4, true)")
+          )
+        noEmptyChips.collect().length should be > 0
+
+        val noEmptyChips_2 = df
+          .select(
+              expr("mosaic_explode(wkt, 4, false)")
+          )
+        noEmptyChips_2.collect().length should be > 0
     }
 
     def lineDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {

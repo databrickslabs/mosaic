@@ -413,10 +413,14 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(MosaicExplode(struct(geom, resolution, lit(true)).expr, indexSystem.name, geometryAPI.name))
         def mosaic_explode(geom: Column, resolution: Column, keepCoreGeometries: Boolean): Column =
             ColumnAdapter(MosaicExplode(struct(geom, resolution, lit(keepCoreGeometries)).expr, indexSystem.name, geometryAPI.name))
+        def mosaic_explode(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
+            ColumnAdapter(MosaicExplode(struct(geom, resolution, keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
         def mosaic_explode(geom: Column, resolution: Int): Column =
             ColumnAdapter(MosaicExplode(struct(geom, lit(resolution), lit(true)).expr, indexSystem.name, geometryAPI.name))
         def mosaic_explode(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
             ColumnAdapter(MosaicExplode(struct(geom, lit(resolution), lit(keepCoreGeometries)).expr, indexSystem.name, geometryAPI.name))
+        def mosaic_explode(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
+            ColumnAdapter(MosaicExplode(struct(geom, lit(resolution), keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
         def mosaicfill(geom: Column, resolution: Column): Column =
             ColumnAdapter(MosaicFill(geom.expr, resolution.expr, lit(true).expr, indexSystem.name, geometryAPI.name))
         def mosaicfill(geom: Column, resolution: Int): Column =

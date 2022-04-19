@@ -93,14 +93,15 @@ object MosaicExplode {
         val fields = child.dataType.asInstanceOf[StructType].fields
         val geomType = fields.head
         val resolutionType = fields(1)
+        val keepCoreGeom = fields(2)
 
-        (geomType.dataType, resolutionType.dataType) match {
-            case (BinaryType, IntegerType)           => TypeCheckResult.TypeCheckSuccess
-            case (StringType, IntegerType)           => TypeCheckResult.TypeCheckSuccess
-            case (HexType, IntegerType)              => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, IntegerType) => TypeCheckResult.TypeCheckSuccess
+        (geomType.dataType, resolutionType.dataType, keepCoreGeom.dataType) match {
+            case (BinaryType, IntegerType, BooleanType)           => TypeCheckResult.TypeCheckSuccess
+            case (StringType, IntegerType, BooleanType)           => TypeCheckResult.TypeCheckSuccess
+            case (HexType, IntegerType, BooleanType)              => TypeCheckResult.TypeCheckSuccess
+            case (InternalGeometryType, IntegerType, BooleanType) => TypeCheckResult.TypeCheckSuccess
             case _                                   => TypeCheckResult.TypeCheckFailure(
-                  s"Input to h3 mosaic explode should be (geometry, resolution) pair. " +
+                  s"Input to h3 mosaic explode should be (geometry, resolution, keepCoreGeom) pair. " +
                       s"Geometry type can be WKB, WKT, Hex or Coords. Provided type was: ${child.dataType.catalogString}"
                 )
         }
@@ -123,14 +124,15 @@ object MosaicExplode {
         val fields = child.dataType.asInstanceOf[StructType].fields
         val geomType = fields.head
         val resolutionType = fields(1)
+        val keepCoreGeom = fields(2)
 
-        (geomType.dataType, resolutionType.dataType) match {
-            case (BinaryType, IntegerType)           => StructType(Array(StructField("index", ChipType)))
-            case (StringType, IntegerType)           => StructType(Array(StructField("index", ChipType)))
-            case (HexType, IntegerType)              => StructType(Array(StructField("index", ChipType)))
-            case (InternalGeometryType, IntegerType) => StructType(Array(StructField("index", ChipType)))
+        (geomType.dataType, resolutionType.dataType, keepCoreGeom.dataType) match {
+            case (BinaryType, IntegerType, BooleanType)           => StructType(Array(StructField("index", ChipType)))
+            case (StringType, IntegerType, BooleanType)           => StructType(Array(StructField("index", ChipType)))
+            case (HexType, IntegerType, BooleanType)              => StructType(Array(StructField("index", ChipType)))
+            case (InternalGeometryType, IntegerType, BooleanType) => StructType(Array(StructField("index", ChipType)))
             case _                                   => throw new Error(
-                  s"Input to h3 mosaic explode should be (geometry, resolution) pair. " +
+                  s"Input to h3 mosaic explode should be (geometry, resolution, keepCoreGeom) pair. " +
                       s"Geometry type can be WKB, WKT, Hex or Coords. Provided type was: ${child.dataType.catalogString}"
                 )
         }
@@ -150,14 +152,14 @@ object MosaicExplode {
           db.orNull,
           "mosaic_explode",
           """
-            |    _FUNC_(struct(geometry, resolution)) - Generates the h3 mosaic chips for the input geometry
-            |    at a given resolution. Geometry and resolution are provided via struct wrapper to ensure 
+            |    _FUNC_(struct(geometry, resolution, keepCoreGeom)) - Generates the h3 mosaic chips for the input
+            |    geometry at a given resolution. Geometry and resolution are provided via struct wrapper to ensure
             |    UnaryExpression API is respected.
             """.stripMargin,
           "",
           """
             |    Examples:
-            |      > SELECT _FUNC_(a, b);
+            |      > SELECT _FUNC_(a, b, c);
             |        {index_id, is_border, chip_geom}
             |        {index_id, is_border, chip_geom}
             |        ...
