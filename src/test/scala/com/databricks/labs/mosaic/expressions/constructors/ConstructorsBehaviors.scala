@@ -1,12 +1,19 @@
 package com.databricks.labs.mosaic.expressions.constructors
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
+import com.databricks.labs.mosaic.core.types.model.CDMVariable
+
+//import com.databricks.labs.mosaic.expressions.format.CDMAttributeSchema
 import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.test.mocks.netCDFDf
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
@@ -116,10 +123,10 @@ trait ConstructorsBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
 
         val geometries = List(
-            "POINT (30 10)",
-            "MULTIPOINT (10 40, 40 30, 20 20, 30 10)",
-            "LINESTRING (30 10, 10 30, 40 40)",
-            "MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))"
+          "POINT (30 10)",
+          "MULTIPOINT (10 40, 40 30, 20 20, 30 10)",
+          "LINESTRING (30 10, 10 30, 40 40)",
+          "MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))"
         )
 
         val rows = geometries.map(s => Row(s))
@@ -212,6 +219,19 @@ trait ConstructorsBehaviors { this: AnyFlatSpec =>
         ).map(mc.getGeometryAPI.geometry(_, "WKT")).sortBy(_.getArea)
 
         right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
+    }
+
+    def attributesFromNetCDF(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+
+        val dfOut = netCDFDf(spark).withColumn("attributes", cdmAttributes($"content"))
+        dfOut.select("attributes.variables").as[Array[CDMVariable]].collect.head.length shouldBe 6
+        dfOut.count shouldBe 10
+
     }
 
 }

@@ -11,7 +11,16 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <spec2.version>4.2.0</spec2.version>
+        <netcdfJavaVersion>5.5.3</netcdfJavaVersion>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>unidata-all</id>
+            <name>Unidata All</name>
+            <url>https://artifacts.unidata.ucar.edu/repository/unidata-all/</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -100,6 +109,12 @@
             <groupId>org.locationtech.proj4j</groupId>
             <artifactId>proj4j</artifactId>
             <version>1.1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.ucar</groupId>
+            <artifactId>cdm-core</artifactId>
+            <version>${netcdfJavaVersion}</version>
+            <scope>compile</scope>
         </dependency>
 
     </dependencies>

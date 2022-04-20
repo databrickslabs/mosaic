@@ -38,4 +38,9 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
         it should behave like createST_MakePolygonWithHoles(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
+    "CDMAttributes" should "extract the attributes of a set of netCDF files" in {
+        it should behave like attributesFromNetCDF(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like attributesFromNetCDF(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
 }
