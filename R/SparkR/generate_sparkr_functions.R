@@ -140,3 +140,30 @@ methods <- lapply(function_data, function(x){build_method(parser(x))})
 writeLines(paste0(generics, collapse="\n"), genericFileConn)
 writeLines(paste0(methods, collapse="\n"), methodsFileConn)
 closeAllConnections()
+
+
+scala_file = file("~/Documents/mosaic/src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala")
+
+scala_file = readLines(scala_file)
+closeAllConnections()
+# find where the methods start
+start_string = "    object functions extends Serializable {"
+start_index = grep(start_string, scala_file, fixed=T) + 1
+# find the methods end - will be the next curly bracket
+for(i in start_index : length(scala_file)){
+  if(grepl("}", scala_file[i], fixed=T)){
+    break
+  }
+}
+methods_to_bind = scala_file[start_index:i]
+# remove any line that doesn't start with def
+def_mask = grepl("def ", methods_to_bind, fixed = T)
+methods_to_bind = methods_to_bind[def_mask]
+# parse the string to get just the function_name(input:type...) pattern
+methods_to_bind = unlist(lapply(methods_to_bind, function(x){
+  substr(x
+         , regexpr("def ", x, fixed=T)[1]+4 # get the starting point to account for whitespace
+         , regexpr("): ", x, fixed=T)[1] # get the end point of where the return is.
+         )
+  }
+  ))
