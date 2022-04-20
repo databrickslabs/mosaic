@@ -289,7 +289,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
                       MosaicExplode(struct(ColumnAdapter(e(0)), ColumnAdapter(e(1)), lit(true)).expr, indexSystem.name, geometryAPI.name)
                   case e if e.length == 3 =>
                       MosaicExplode(
-                        struct(ColumnAdapter(e(0)), ColumnAdapter(e(1)), ColumnAdapter(e(1))).expr,
+                        struct(ColumnAdapter(e(0)), ColumnAdapter(e(1)), ColumnAdapter(e(2))).expr,
                         indexSystem.name,
                         geometryAPI.name
                       )
@@ -426,13 +426,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def mosaicfill(geom: Column, resolution: Int): Column =
             ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, lit(true).expr, indexSystem.name, geometryAPI.name))
         def mosaicfill(geom: Column, resolution: Column, keepCoreGeometries: Boolean): Column =
-          ColumnAdapter(MosaicFill(geom.expr, resolution.expr, lit(keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(MosaicFill(geom.expr, resolution.expr, lit(keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
         def mosaicfill(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
-          ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, lit(keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, lit(keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
         def mosaicfill(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
-          ColumnAdapter(MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name))
         def mosaicfill(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
-          ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name))
         def point_index_geom(point: Column, resolution: Column): Column =
             ColumnAdapter(PointIndexGeom(point.expr, resolution.expr, indexSystem.name, geometryAPI.name))
         def point_index_geom(point: Column, resolution: Int): Column =
