@@ -101,7 +101,18 @@ build_column_specifiers <- function(input){
 build_method<-function(input){
   function_name = input$function_name
   arg_names = lapply(input$args, function(x){c(x[1])})
-  args = lapply(input$args, function(x){c(x[1], paste0("'", x[2], "'"))})
+  #this handles converting non-Column arguments to their R equivalents
+  argument_parser <- function(x){
+    if(x[2] == 'Int'){
+      x[2] = "numeric"
+    }
+    else if(x[2] == 'String'){
+      x[2] = "character"
+    }
+    x
+  }
+  args = lapply(input$args, argument_parser)
+  args = lapply(args, function(x){c(x[1], paste0("'", x[2], "'"))})
   args = lapply(args, function(x){paste0(x,  collapse= ' = ')})
   column_specifiers <- build_column_specifiers(input)
   paste0(

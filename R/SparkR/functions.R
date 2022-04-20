@@ -184,7 +184,7 @@ setMethod(
               f = "convert_to"
               ,signature(
                    inGeom = 'Column'
-                   ,outDataType = 'String'
+                   ,outDataType = 'character'
                 )
               ,function(inGeom,outDataType) {
                   jc <- sparkR.callJMethod(functions, "convert_to", inGeom@jc, outDataType@jc )
@@ -469,7 +469,7 @@ setMethod(
               f = "mosaic_explode"
               ,signature(
                    geom = 'Column'
-                   ,resolution = 'Int'
+                   ,resolution = 'numeric'
                 )
               ,function(geom,resolution) {
                   jc <- sparkR.callJMethod(functions, "mosaic_explode", geom@jc, resolution@jc )
@@ -491,7 +491,7 @@ setMethod(
               f = "mosaicfill"
               ,signature(
                    geom = 'Column'
-                   ,resolution = 'Int'
+                   ,resolution = 'numeric'
                 )
               ,function(geom,resolution) {
                   jc <- sparkR.callJMethod(functions, "mosaicfill", geom@jc, resolution@jc )
@@ -513,7 +513,7 @@ setMethod(
               f = "point_index_geom"
               ,signature(
                    point = 'Column'
-                   ,resolution = 'Int'
+                   ,resolution = 'numeric'
                 )
               ,function(point,resolution) {
                   jc <- sparkR.callJMethod(functions, "point_index_geom", point@jc, resolution@jc )
@@ -537,7 +537,7 @@ setMethod(
               ,signature(
                    lon = 'Column'
                    ,lat = 'Column'
-                   ,resolution = 'Int'
+                   ,resolution = 'numeric'
                 )
               ,function(lon,lat,resolution) {
                   jc <- sparkR.callJMethod(functions, "point_index_lonlat", lon@jc, lat@jc, resolution@jc )
@@ -559,7 +559,7 @@ setMethod(
               f = "polyfill"
               ,signature(
                    geom = 'Column'
-                   ,resolution = 'Int'
+                   ,resolution = 'numeric'
                 )
               ,function(geom,resolution) {
                   jc <- sparkR.callJMethod(functions, "polyfill", geom@jc, resolution@jc )
