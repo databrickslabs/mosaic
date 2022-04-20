@@ -1,9 +1,10 @@
 package com.databricks.labs.mosaic.expressions.format
 
+import collection.JavaConverters._
 import java.util.UUID
-
-import com.databricks.labs.mosaic.core.types.model.{CDMAttribute, CDMDescription, CDMVariable}
 import ucar.{ma2, nc2}
+
+import com.databricks.labs.mosaic.core.types.model.{CDMAttribute, CDMStructure, CDMVariableAttributes}
 
 class CDMParser(bytes: Array[Byte]) {
 
@@ -12,11 +13,26 @@ class CDMParser(bytes: Array[Byte]) {
     val nc2variables: Array[nc2.Variable] = ncFile.getVariables.asScala.toArray
     val variableNames: Array[String] = nc2variables.map(_.getShortName)
 
+    val permittedDataTypes: List[ma2.DataType] =
+        List(
+          ma2.DataType.BYTE,
+          ma2.DataType.UBYTE,
+          ma2.DataType.STRING,
+          ma2.DataType.CHAR,
+          ma2.DataType.INT,
+          ma2.DataType.UINT,
+          ma2.DataType.LONG,
+          ma2.DataType.ULONG,
+          ma2.DataType.FLOAT,
+          ma2.DataType.DOUBLE
+        )
+
     def attributes(v: String): Array[CDMAttribute] =
         ncFile
             .findVariable(v)
             .attributes
             .asScala
+            .filter(a => permittedDataTypes.contains(a.getDataType))
             .map(a =>
                 (a.getShortName, a.getDataType) match {
                     case (n: String, ma2.DataType.BYTE | ma2.DataType.UBYTE)   => CDMAttribute.fromTypedValue[Byte](n, a.getValue(0))
@@ -30,6 +46,6 @@ class CDMParser(bytes: Array[Byte]) {
             )
             .toArray
 
-    def description: CDMDescription = CDMDescription(nc2variables.map(v => CDMVariable(v.getShortName, attributes(v.getFullName))))
+    def description: CDMStructure = CDMStructure(nc2variables.map(v => CDMVariableAttributes(v.getShortName, attributes(v.getFullName))))
 
 }

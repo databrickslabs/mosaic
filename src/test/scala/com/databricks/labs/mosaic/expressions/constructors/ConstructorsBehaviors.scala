@@ -4,7 +4,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-import com.databricks.labs.mosaic.core.types.model.CDMVariable
+import com.databricks.labs.mosaic.core.types.model.CDMVariableAttributes
 
 //import com.databricks.labs.mosaic.expressions.format.CDMAttributeSchema
 import com.databricks.labs.mosaic.functions.MosaicContext
@@ -221,16 +221,28 @@ trait ConstructorsBehaviors { this: AnyFlatSpec =>
         right.zip(left).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def attributesFromNetCDF(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def structureFromNetCDF(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
 
         val mc = mosaicContext
         val sc = spark
         import mc.functions._
         import sc.implicits._
 
-        val dfOut = netCDFDf(spark).withColumn("attributes", cdmAttributes($"content"))
-        dfOut.select("attributes.variables").as[Array[CDMVariable]].collect.head.length shouldBe 6
+        val dfOut = netCDFDf(spark).withColumn("structure", get_cmd_structure($"content"))
+        dfOut.select("structure.variables").as[Array[CDMVariableAttributes]].collect.head.length shouldBe 6
         dfOut.count shouldBe 10
+
+    }
+
+    def contentFromNetCDF(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+//        val mc = mosaicContext
+//        val sc = spark
+//        import mc.functions._
+//        import sc.implicits._
+//
+//        val dfOut = netCDFDf(spark).withColumn("data", cdmContent($"content"))
+//        dfOut.show(truncate = false)
+//        dfOut.printSchema
 
     }
 

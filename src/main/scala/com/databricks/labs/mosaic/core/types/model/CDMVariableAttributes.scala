@@ -4,7 +4,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.unsafe.types.UTF8String
 
-case class CDMVariable(
+case class CDMVariableAttributes(
     variable: String,
     attributes: Array[CDMAttribute]
 ) {
