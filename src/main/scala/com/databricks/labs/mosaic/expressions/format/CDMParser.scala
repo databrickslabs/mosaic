@@ -3,37 +3,11 @@ package com.databricks.labs.mosaic.expressions.format
 import java.util.UUID
 
 import com.databricks.labs.mosaic.core.types.model.{CDMAttribute, CDMDescription, CDMVariable}
-
-import collection.JavaConverters._
-
 import ucar.{ma2, nc2}
-import ucar.nc2.NetcdfFile
 
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.types.DataType
-import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
+class CDMParser(bytes: Array[Byte]) {
 
-case class CDMAttributes(inContent: Expression) extends UnaryExpression with NullIntolerant with CodegenFallback {
-
-    private lazy val encoder = ExpressionEncoder[CDMDescription]()
-    override lazy val dataType: DataType = encoder.schema
-
-    override def child: Expression = inContent
-
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inContent = newChild)
-
-    override def nullSafeEval(input: Any): Any = {
-        val bytes = input.asInstanceOf[Array[Byte]]
-        val parser = new CDMParser(bytes)
-        parser.description.serialize
-    }
-
-}
-
-private class CDMParser(bytes: Array[Byte]) {
-
-    val ncFile: NetcdfFile = nc2.NetcdfFiles.openInMemory(UUID.randomUUID.toString, bytes)
+    val ncFile: nc2.NetcdfFile = nc2.NetcdfFiles.openInMemory(UUID.randomUUID.toString, bytes)
 
     val nc2variables: Array[nc2.Variable] = ncFile.getVariables.asScala.toArray
     val variableNames: Array[String] = nc2variables.map(_.getShortName)
