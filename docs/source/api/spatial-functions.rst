@@ -1036,7 +1036,7 @@ polyfill
 mosaicfill
 **********
 
-.. function:: mosaicfill(geometry, resolution)
+.. function:: mosaicfill(geometry, resolution, keep_core_geometries)
 
     Generates:
     - a set of core indices that are fully contained by `geometry`; and
@@ -1048,6 +1048,8 @@ mosaicfill
     :type geometry: Column
     :param resolution: Index resolution
     :type resolution: Column: Integer
+    :param keep_core_geometries: Whether to keep the core geometries or set them to null
+    :type keep_core_geometries: Column: Boolean
     :rtype: Column: ArrayType[MosaicType]
 
     :example:
@@ -1105,7 +1107,7 @@ mosaicfill
 mosaic_explode
 **************
 
-.. function:: mosaic_explode(geometry, resolution)
+.. function:: mosaic_explode(geometry, resolution, keep_core_geometries)
 
     Returns the set of Mosaic chips covering the input `geometry` at `resolution`.
 
@@ -1115,6 +1117,8 @@ mosaic_explode
     :type geometry: Column
     :param resolution: Index resolution
     :type resolution: Column: Integer
+    :param keep_core_geometries: Whether to keep the core geometries or set them to null
+    :type keep_core_geometries: Column: Boolean
     :rtype: Column: MosaicType
 
     :example:
