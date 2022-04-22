@@ -5,7 +5,7 @@ import scala.collection.mutable
 
 import com.databricks.labs.mosaic.core.types.cdm.{CDMArray2d, CDMArray3d, CDMVariableAttributes}
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks.netCDFDf
+import com.databricks.labs.mosaic.test.mocks.{gribDf, netCDFDf, zarrDf}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -256,6 +256,32 @@ trait ConstructorsBehaviors { this: AnyFlatSpec =>
         example.length shouldBe 1
         example.head.length shouldBe 3600
         example.head.head.length shouldBe 7200
+
+    }
+
+    def structureFromGRIB(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+
+        val dfOut = gribDf(spark).withColumn("structure", get_cdm_structure($"content"))
+        dfOut.select("structure.variables").as[Array[CDMVariableAttributes]].collect.head.length shouldBe 6
+        dfOut.count shouldBe 10
+
+    }
+
+    def structureFromZarr(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+
+        val dfOut = zarrDf(spark).withColumn("structure", get_cdm_structure($"content"))
+        dfOut.select("structure.variables").as[Array[CDMVariableAttributes]].collect.head.length shouldBe 6
+        dfOut.count shouldBe 10
 
     }
 

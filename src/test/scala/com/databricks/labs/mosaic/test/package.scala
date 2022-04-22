@@ -205,7 +205,21 @@ package object test {
             sparkSession.read
                 .format("binaryFile")
                 .option("pathGlobFilter", "*.nc")
-                .load("src/test/resources/binary")
+                .load("src/test/resources/binary/netcdf-coral")
+        }
+
+        def gribDf(sparkSession: SparkSession): DataFrame = {
+            sparkSession.read
+                .format("binaryFile")
+                .option("pathGlobFilter", "*.grib")
+                .load("src/test/resources/binary/grib-cams")
+        }
+
+        def zarrDf(sparkSession: SparkSession): DataFrame = {
+            sparkSession.read
+                .format("binaryFile")
+                .option("pathGlobFilter", "*.zip")
+                .load("src/test/resources/binary/zarr-example")
         }
 
     }
