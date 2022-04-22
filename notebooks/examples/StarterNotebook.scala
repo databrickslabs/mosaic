@@ -12,6 +12,22 @@ val silver_data_location = s"Users/${username}/geospatial/workshop/data/silver"
 
 // COMMAND ----------
 
+case class Row(id: Int, wkt: String)
+
+val df_left = spark.createDataset(Seq(
+  Row(1, "POLYGON (0 0, 0 2, 1 2, 1 0, 0 0)") // Rectangle h=1, w=2
+))
+
+val df_right = spark.createDataset(Seq(
+  Row(1, "POLYGON (0 0, 0 1, 1 1, 1 0, 0 0)") // Rectangle h=1, w=1
+))
+
+val df_expected = spark.createDataset(Seq(
+  Row(1, "POLYGON (0 0, 0 1, 1 1, 1 0, 0 0)") // Rectangle h=1, w=1
+))
+
+// COMMAND ----------
+
 val polygons1 = spark.read.format("delta").load(s"/${silver_data_location}/h3/neighbourhoods/random/dataset_1_decomposed")
 display(polygons1)
 

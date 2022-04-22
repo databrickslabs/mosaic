@@ -1,5 +1,10 @@
 # Databricks notebook source
-# MAGIC %run "./../setup/EnableMosaic"
+# MAGIC %pip install folium
+
+# COMMAND ----------
+
+from mosaic import enable_mosaic
+enable_mosaic(spark, dbutils)
 
 # COMMAND ----------
 
@@ -38,11 +43,11 @@ metadata_path = f'dbfs:/tmp/mosaic_exmaple/{environment}/metadata'
 
 # COMMAND ----------
 
-dbutils.fs.rm(raw_path, True)
-dbutils.fs.rm(bronze_path, True)
-dbutils.fs.rm(silver_path, True)
-dbutils.fs.rm(gold_path, True)
-dbutils.fs.rm(metadata_path, True)
+# dbutils.fs.rm(raw_path, True)
+# dbutils.fs.rm(bronze_path, True)
+# dbutils.fs.rm(silver_path, True)
+# dbutils.fs.rm(gold_path, True)
+# dbutils.fs.rm(metadata_path, True)
 
 # COMMAND ----------
 
@@ -310,17 +315,50 @@ def clean_yellow_taxi_trip(df):
 
 df = spark.table(f"{bronze_db}.taxi_zones")
 
+# COMMAND ----------
+
+
 
 # COMMAND ----------
+
+from mosaic import st_geomfromgeojson, st_aswkb
 
 def clean_taxi_zones(df):
   return (df
           .select("type", f.explode(f.col("features")).alias("feature"))
-          .select("type", f.col("feature.properties").alias("properties"), f.col("feature.geometry").alias("geometry"))
+          .select("type", f.col("feature.properties").alias("properties"), f.to_json(f.col("feature.geometry")).alias("json_geometry"))
+          .withColumn("geometry", st_aswkb(st_geomfromgeojson("json_geometry")))
          )
 
 display(clean_taxi_zones(spark.table(f"{bronze_db}.taxi_zones")))
 
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Plot example
+
+# COMMAND ----------
+
+tmp = clean_taxi_zones(spark.table(f"{bronze_db}.taxi_zones")).cache()
+
+# COMMAND ----------
+
+import folium
+
+# Collect the geojson column from the dataset into a list
+def plot_geojsons(df, column_name):
+  geojsons = df.select(column_name).collect()
+
+  m = folium.Map(location=[0, 0], zoom_start=2)
+  for row in geojsons:
+    folium.GeoJson(row[column_name], name="geojson").add_to(m)
+    
+  return m
+
+# COMMAND ----------
+
+plot_geojsons(tmp.limit(10), "json_geometry")
 
 # COMMAND ----------
 
