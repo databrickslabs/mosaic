@@ -1,14 +1,13 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC ## Enable Mosaic in the notebook
-# MAGIC To get started, you'll need to attach the JAR to your cluster and import instances as in the cell below.
+# MAGIC To get started, you'll need to attach the wheel to your cluster and import instances as in the cell below.
 
 # COMMAND ----------
 
 from pyspark.sql.functions import *
-from mosaic import enable_mosaic
-enable_mosaic(spark, dbutils)
-from mosaic import *
+import mosaic as mos
+mos.enable_mosaic(spark, dbutils)
 
 # COMMAND ----------
 
@@ -17,16 +16,15 @@ from mosaic import *
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC With the functionallity Mosaic brings we can easily load GeoJSON files using spark. </br>
+# MAGIC With the functionality Mosaic brings we can easily load GeoJSON files using spark. </br>
 # MAGIC In the past this required GeoPandas in python and conversion to spark dataframe. </br>
-# MAGIC Scala and SQL were hard to demo. </br>
 
 # COMMAND ----------
 
 neighbourhoods = (
   spark.read.format("json")
     .load("dbfs:/FileStore/shared_uploads/stuart.lynn@databricks.com/NYC_Taxi_Zones.geojson")
-    .withColumn("geometry", st_astext(st_geomfromgeojson(to_json(col("geometry")))))
+    .withColumn("geometry", mos.st_astext(mos.st_geomfromgeojson(mos.to_json(col("geometry")))))
     .select("properties.*", "geometry")
     .drop("shape_area", "shape_leng")
 )
@@ -49,8 +47,10 @@ display(
 
 display(
   neighbourhoods
-    .withColumn("calculatedArea", st_area(col("geometry")))
-    .withColumn("calculatedLength", st_length(col("geometry")))
+    .withColumn("calculatedArea", mos.st_area(col("geometry")))
+    .withColumn("calculatedLength", mos.st_length(col("geometry")))
+    # Note: The unit of measure of the area and length depends on the CRS used.
+    # For GPS locations it will be square radians and radians
     .select("geometry", "calculatedArea", "calculatedLength")
 )
 
@@ -74,8 +74,8 @@ tripsTable = spark.table("delta.`/databricks-datasets/nyctaxi/tables/nyctaxi_yel
 trips = (
   tripsTable
     .drop("vendorId", "rateCodeId", "store_and_fwd_flag", "payment_type")
-    .withColumn("pickup_geom", st_astext(st_point(col("pickup_longitude"), col("pickup_latitude"))))
-    .withColumn("dropoff_geom", st_astext(st_point(col("dropoff_longitude"), col("dropoff_latitude"))))
+    .withColumn("pickup_geom", mos.st_astext(mos.st_point(col("pickup_longitude"), col("pickup_latitude"))))
+    .withColumn("dropoff_geom", mos.st_astext(mos.st_point(col("dropoff_longitude"), col("dropoff_latitude"))))
 )
 
 # COMMAND ----------
@@ -140,8 +140,8 @@ display(
 # COMMAND ----------
 
 tripsWithIndex = (trips
-  .withColumn("pickup_h3", point_index(col("pickup_geom"), lit(9)))
-  .withColumn("dropoff_h3", point_index(col("dropoff_geom"), lit(9)))
+  .withColumn("pickup_h3", mos.point_index(col("pickup_geom"), lit(9)))
+  .withColumn("dropoff_h3", mos.point_index(col("dropoff_geom"), lit(9)))
 )
 
 # COMMAND ----------
@@ -151,7 +151,7 @@ tripsWithIndex = (trips
 
 # COMMAND ----------
 
-neighbourhoodsWithIndex = neighbourhoods.withColumn("mosaic_index", mosaic_explode(col("geometry"), lit(9)))
+neighbourhoodsWithIndex = neighbourhoods.withColumn("mosaic_index", mos.mosaic_explode(col("geometry"), lit(9)))
 
 # COMMAND ----------
 
@@ -172,7 +172,7 @@ withPickupZone = (
     pickupNeighbourhoods,
     tripsWithIndex["pickup_h3"] == pickupNeighbourhoods["mosaic_index.index_id"]
   ).where(
-    col("mosaic_index.is_core") | st_contains(col("mosaic_index.wkb"), col("pickup_geom"))
+    col("mosaic_index.is_core") | mos.st_contains(col("mosaic_index.wkb"), col("pickup_geom"))
   ).select(
     "trip_distance", "pickup_geom", "pickup_zone", "dropoff_geom", "pickup_h3", "dropoff_h3"
   )
@@ -194,11 +194,11 @@ withDropoffZone = (
     dropoffNeighbourhoods,
     withPickupZone["dropoff_h3"] == dropoffNeighbourhoods["mosaic_index.index_id"]
   ).where(
-    col("mosaic_index.is_core") | st_contains(col("mosaic_index.wkb"), col("dropoff_geom"))
+    col("mosaic_index.is_core") | mos.st_contains(col("mosaic_index.wkb"), col("dropoff_geom"))
   ).select(
     "trip_distance", "pickup_geom", "pickup_zone", "dropoff_geom", "dropoff_zone", "pickup_h3", "dropoff_h3"
   )
-  .withColumn("trip_line", st_astext(st_makeline(array(st_geomfromwkt(col("pickup_geom")), st_geomfromwkt(col("dropoff_geom"))))))
+  .withColumn("trip_line", mos.st_astext(mos.st_makeline(array(mos.st_geomfromwkt(col("pickup_geom")), mos.st_geomfromwkt(col("dropoff_geom"))))))
 )
 
 display(withDropoffZone)
