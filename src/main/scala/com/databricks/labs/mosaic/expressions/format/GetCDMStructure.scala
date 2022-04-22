@@ -1,11 +1,11 @@
 package com.databricks.labs.mosaic.expressions.format
 
-import com.databricks.labs.mosaic.core.types.model.CDMStructure
+import com.databricks.labs.mosaic.core.types.cdm.CDMStructure
 
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.types.DataType
+import org.apache.spark.sql.types._
 
 case class GetCDMStructure(binaryFileContent: Expression) extends UnaryExpression with NullIntolerant with CodegenFallback {
 

@@ -1,10 +1,10 @@
 package com.databricks.labs.mosaic.expressions.format
 
 import collection.JavaConverters._
+import com.databricks.labs.mosaic.core.types.cdm._
 import java.util.UUID
+import scala.reflect.ClassTag
 import ucar.{ma2, nc2}
-
-import com.databricks.labs.mosaic.core.types.model.{CDMAttribute, CDMStructure, CDMVariableAttributes}
 
 class CDMParser(bytes: Array[Byte]) {
 
@@ -46,6 +46,26 @@ class CDMParser(bytes: Array[Byte]) {
             )
             .toArray
 
-    def description: CDMStructure = CDMStructure(nc2variables.map(v => CDMVariableAttributes(v.getShortName, attributes(v.getFullName))))
+    def description: CDMStructure =
+        CDMStructure(nc2variables.map(v => CDMVariableAttributes(v.getShortName, v.getRank, v.getDataType.name, attributes(v.getFullName))))
+
+    def variable(v: String): nc2.Variable = ncFile.findVariable(v)
+
+    def read[T: ClassTag](v: String): CDMArray = {
+        variable(v).getRank match {
+            case 1 => CDMArray1d[T](
+                  variable(v).read.copyToNDJavaArray
+                      .asInstanceOf[Array[T]]
+                )
+            case 2 => CDMArray2d[T](
+                  variable(v).read.copyToNDJavaArray
+                      .asInstanceOf[Array[Array[T]]]
+                )
+            case 3 => CDMArray3d[T](
+                  variable(v).read.copyToNDJavaArray
+                      .asInstanceOf[Array[Array[Array[T]]]]
+                )
+        }
+    }
 
 }

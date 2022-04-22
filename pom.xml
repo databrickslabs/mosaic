@@ -116,6 +116,18 @@
             <version>${netcdfJavaVersion}</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>edu.ucar</groupId>
+            <artifactId>grib</artifactId>
+            <version>${netcdfJavaVersion}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>edu.ucar</groupId>
+            <artifactId>cdm-zarr</artifactId>
+            <version>${netcdfJavaVersion}</version>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
 

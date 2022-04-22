@@ -2,18 +2,15 @@ package com.databricks.labs.mosaic.expressions.constructors
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
-import com.databricks.labs.mosaic.core.types.model.CDMVariableAttributes
-
-//import com.databricks.labs.mosaic.expressions.format.CDMAttributeSchema
+import com.databricks.labs.mosaic.core.types.cdm.{CDMArray2d, CDMArray3d, CDMVariableAttributes}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.netCDFDf
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.{Row, SparkSession}
-import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
@@ -228,21 +225,37 @@ trait ConstructorsBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val dfOut = netCDFDf(spark).withColumn("structure", get_cmd_structure($"content"))
+        val dfOut = netCDFDf(spark).withColumn("structure", get_cdm_structure($"content"))
         dfOut.select("structure.variables").as[Array[CDMVariableAttributes]].collect.head.length shouldBe 6
         dfOut.count shouldBe 10
 
     }
 
     def contentFromNetCDF(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-//        val mc = mosaicContext
-//        val sc = spark
-//        import mc.functions._
-//        import sc.implicits._
-//
-//        val dfOut = netCDFDf(spark).withColumn("data", cdmContent($"content"))
-//        dfOut.show(truncate = false)
-//        dfOut.printSchema
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+
+        val dfOut = netCDFDf(spark)
+            .withColumn("structure", get_cdm_structure($"content"))
+            .withColumn("time", get_cdm_content($"content", "time", 1, "int"))
+            .withColumn("lat", get_cdm_content($"content", "lat", 1, "float"))
+            .withColumn("lon", get_cdm_content($"content", "lat", 1, "float"))
+            .withColumn("bleaching_alert_area", get_cdm_content($"content", "bleaching_alert_area", 3, "byte"))
+
+        dfOut.count shouldBe 10
+
+        val example = dfOut
+            .select("bleaching_alert_area")
+            .collect
+            .head
+            .asInstanceOf[GenericRowWithSchema]
+            .getAs[mutable.WrappedArray[mutable.WrappedArray[mutable.WrappedArray[Byte]]]](0)
+
+        example.length shouldBe 1
+        example.head.length shouldBe 3600
+        example.head.head.length shouldBe 7200
 
     }
 

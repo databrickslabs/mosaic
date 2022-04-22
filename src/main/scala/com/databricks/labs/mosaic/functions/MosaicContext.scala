@@ -341,8 +341,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_makepolygon(boundaryRing: Column): Column = ColumnAdapter(ST_MakePolygon(boundaryRing.expr, array().expr))
         def st_makepolygon(boundaryRing: Column, holeRingArray: Column): Column =
             ColumnAdapter(ST_MakePolygon(boundaryRing.expr, holeRingArray.expr))
-        def get_cmd_structure(binaryFileContent: Column): Column = ColumnAdapter(GetCDMStructure(binaryFileContent.expr))
-//        def cdmSContent(binaryFileContent: Column): Column = ColumnAdapter(CDMContent(binaryFileContent.expr))
+        def get_cdm_structure(binaryFileContent: Column): Column = ColumnAdapter(GetCDMStructure(binaryFileContent.expr))
+        def get_cdm_content(binaryFileContent: Column, variable: String, rank: Int, dType: String): Column =
+            ColumnAdapter(GetCDMContent(binaryFileContent.expr, variable, rank, dType))
 
         /** GeometryAPI Specific */
         def flatten_polygons(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
