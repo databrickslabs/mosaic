@@ -1,14 +1,49 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC ## Enable Mosaic in the notebook
-# MAGIC To get started, you'll need to attach the JAR to your cluster and import instances as in the cell below.
+# MAGIC To get started, you'll need to attach the wheel to your cluster and import instances as in the cell below.
 
 # COMMAND ----------
 
 from pyspark.sql.functions import *
-from mosaic import enable_mosaic
-enable_mosaic(spark, dbutils)
-from mosaic import *
+import mosaic as mos
+mos.enable_mosaic(spark, dbutils)
+
+# COMMAND ----------
+
+user_name = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
+
+raw_path = f"dbfs:/tmp/mosaic/{user_name}"
+raw_taxi_zones_path = f"{raw_path}/taxi_zones"
+
+print(f"The raw data will be stored in {raw_path}")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Download taxi zones GeoJSON
+
+# COMMAND ----------
+
+import requests
+import os
+import pathlib
+
+taxi_zones_url = 'https://data.cityofnewyork.us/api/geospatial/d3c5-ddgc?method=export&format=GeoJSON' 
+
+# The DBFS file system is mounted under /dbfs/ directory on Databricks cluster nodes
+
+
+local_taxi_zones_path = pathlib.Path(raw_taxi_zones_path.replace('dbfs:/', '/dbfs/'))
+local_taxi_zones_path.mkdir(parents=True, exist_ok=True)
+
+req = requests.get(taxi_zones_url)
+with open(local_taxi_zones_path / f'nyc_taxi_zones.geojson', 'wb') as f:
+  f.write(req.content)
+
+# COMMAND ----------
+
+display(dbutils.fs.ls(raw_taxi_zones_path))
 
 # COMMAND ----------
 
@@ -17,18 +52,19 @@ from mosaic import *
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC With the functionallity Mosaic brings we can easily load GeoJSON files using spark. </br>
+# MAGIC With the functionality Mosaic brings we can easily load GeoJSON files using spark. </br>
 # MAGIC In the past this required GeoPandas in python and conversion to spark dataframe. </br>
-# MAGIC Scala and SQL were hard to demo. </br>
 
 # COMMAND ----------
 
 neighbourhoods = (
-  spark.read.format("json")
-    .load("dbfs:/FileStore/shared_uploads/stuart.lynn@databricks.com/NYC_Taxi_Zones.geojson")
-    .withColumn("geometry", st_astext(st_geomfromgeojson(to_json(col("geometry")))))
-    .select("properties.*", "geometry")
-    .drop("shape_area", "shape_leng")
+  spark.read
+    .option("multiline", "true")
+    .format("json")
+    .load(raw_taxi_zones_path)
+    .select("type", explode(col("features")).alias("feature"))
+    .select("type", col("feature.properties").alias("properties"), to_json(col("feature.geometry")).alias("json_geometry"))
+    .withColumn("geometry", mos.st_aswkt(mos.st_geomfromgeojson("json_geometry")))
 )
 
 display(
@@ -49,8 +85,10 @@ display(
 
 display(
   neighbourhoods
-    .withColumn("calculatedArea", st_area(col("geometry")))
-    .withColumn("calculatedLength", st_length(col("geometry")))
+    .withColumn("calculatedArea", mos.st_area(col("geometry")))
+    .withColumn("calculatedLength", mos.st_length(col("geometry")))
+    # Note: The unit of measure of the area and length depends on the CRS used.
+    # For GPS locations it will be square radians and radians
     .select("geometry", "calculatedArea", "calculatedLength")
 )
 
@@ -74,8 +112,8 @@ tripsTable = spark.table("delta.`/databricks-datasets/nyctaxi/tables/nyctaxi_yel
 trips = (
   tripsTable
     .drop("vendorId", "rateCodeId", "store_and_fwd_flag", "payment_type")
-    .withColumn("pickup_geom", st_astext(st_point(col("pickup_longitude"), col("pickup_latitude"))))
-    .withColumn("dropoff_geom", st_astext(st_point(col("dropoff_longitude"), col("dropoff_latitude"))))
+    .withColumn("pickup_geom", mos.st_astext(mos.st_point(col("pickup_longitude"), col("pickup_latitude"))))
+    .withColumn("dropoff_geom", mos.st_astext(mos.st_point(col("dropoff_longitude"), col("dropoff_latitude"))))
 )
 
 # COMMAND ----------
@@ -108,23 +146,19 @@ display(trips.select("pickup_geom", "dropoff_geom"))
 
 from mosaic import MosaicFrame
 
-mosaicFrame = MosaicFrame(neighbourhoods, "geometry")
-mosaicFrame.get_optimal_resolution(0.75)
+neighbourhoods_mosaic_frame = MosaicFrame(neighbourhoods, "geometry")
+optimal_resolution = neighbourhoods_mosaic_frame.get_optimal_resolution(0.75)
+
+print(f"Optimal resolution is {optimal_resolution}")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC It is worth noting that not each resolution will yield performance improvements. </br>
-# MAGIC By a rule of thumb it is always better to under index than over index - if not sure select a lower resolution. </br>
+# MAGIC Not every resolution will yield performance improvements. </br>
+# MAGIC By a rule of thumb it is always better to under-index than over-index - if not sure select a lower resolution. </br>
 # MAGIC Higher resolutions are needed when we have very imballanced geometries with respect to their size or with respect to the number of vertices. </br>
 # MAGIC In such case indexing with more indices will considerably increase the parallel nature of the operations. </br>
 # MAGIC You can think of Mosaic as a way to partition an overly complex row into multiple rows that have a balanced amount of computation each.
-
-# COMMAND ----------
-
-display(
-  mosaicFrame.get_resolution_metrics(0.75)
-)
 
 # COMMAND ----------
 
@@ -140,9 +174,13 @@ display(
 # COMMAND ----------
 
 tripsWithIndex = (trips
-  .withColumn("pickup_h3", point_index(col("pickup_geom"), lit(9)))
-  .withColumn("dropoff_h3", point_index(col("dropoff_geom"), lit(9)))
+  .withColumn("pickup_h3", mos.point_index_geom(col("pickup_geom"), lit(optimal_resolution)))
+  .withColumn("dropoff_h3", mos.point_index_geom(col("dropoff_geom"), lit(optimal_resolution)))
 )
+
+# COMMAND ----------
+
+display(tripsWithIndex)
 
 # COMMAND ----------
 
@@ -151,7 +189,20 @@ tripsWithIndex = (trips
 
 # COMMAND ----------
 
-neighbourhoodsWithIndex = neighbourhoods.withColumn("mosaic_index", mosaic_explode(col("geometry"), lit(9)))
+neighbourhoodsWithIndex = (neighbourhoods
+                           
+                           # We break down the original geometry in multiple smoller mosaic chips, each with its
+                           # own index
+                           .withColumn("mosaic_index", mos.mosaic_explode(col("geometry"), lit(optimal_resolution)))
+                           
+                           # We don't need the original geometry any more, since we have broken it down into 
+                           # Smaller mosaic chips.
+                           .drop("json_geometry", "geometry")
+                          )
+
+# COMMAND ----------
+
+display(neighbourhoodsWithIndex)
 
 # COMMAND ----------
 
@@ -165,14 +216,17 @@ neighbourhoodsWithIndex = neighbourhoods.withColumn("mosaic_index", mosaic_explo
 
 # COMMAND ----------
 
-pickupNeighbourhoods = neighbourhoodsWithIndex.select(col("zone").alias("pickup_zone"), col("mosaic_index"))
+pickupNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.borough").alias("pickup_zone"), col("mosaic_index"))
 
 withPickupZone = (
   tripsWithIndex.join(
     pickupNeighbourhoods,
     tripsWithIndex["pickup_h3"] == pickupNeighbourhoods["mosaic_index.index_id"]
   ).where(
-    col("mosaic_index.is_core") | st_contains(col("mosaic_index.wkb"), col("pickup_geom"))
+    # If the borough is a core chip (the chip is fully contained within the geometry), then we do not need
+    # to perform any intersection, because any point matching the same index will certainly be contained in 
+    # the borough. Otherwise we need to perform an st_contains operation on the chip geometry.
+    col("mosaic_index.is_core") | mos.st_contains(col("mosaic_index.wkb"), col("pickup_geom"))
   ).select(
     "trip_distance", "pickup_geom", "pickup_zone", "dropoff_geom", "pickup_h3", "dropoff_h3"
   )
@@ -187,18 +241,18 @@ display(withPickupZone)
 
 # COMMAND ----------
 
-dropoffNeighbourhoods = neighbourhoodsWithIndex.select(col("zone").alias("dropoff_zone"), col("mosaic_index"))
+dropoffNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.borough").alias("dropoff_zone"), col("mosaic_index"))
 
 withDropoffZone = (
   withPickupZone.join(
     dropoffNeighbourhoods,
     withPickupZone["dropoff_h3"] == dropoffNeighbourhoods["mosaic_index.index_id"]
   ).where(
-    col("mosaic_index.is_core") | st_contains(col("mosaic_index.wkb"), col("dropoff_geom"))
+    col("mosaic_index.is_core") | mos.st_contains(col("mosaic_index.wkb"), col("dropoff_geom"))
   ).select(
     "trip_distance", "pickup_geom", "pickup_zone", "dropoff_geom", "dropoff_zone", "pickup_h3", "dropoff_h3"
   )
-  .withColumn("trip_line", st_astext(st_makeline(array(st_geomfromwkt(col("pickup_geom")), st_geomfromwkt(col("dropoff_geom"))))))
+  .withColumn("trip_line", mos.st_astext(mos.st_makeline(array(mos.st_geomfromwkt(col("pickup_geom")), mos.st_geomfromwkt(col("dropoff_geom"))))))
 )
 
 display(withDropoffZone)
