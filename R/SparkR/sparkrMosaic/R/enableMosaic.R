@@ -1,3 +1,18 @@
+
+#' Enable Databricks Mosaic in SparkR
+#'
+#' enableMosaic activates the context dependent Databricks Mosaic functions, giving control over the geometry API and index system used.
+#'
+#' @param geometryAPI character, default="ESRI"
+#' @param indexSystem character, default="H3"
+#'
+#' @return None
+#' @export
+#'
+#' @examples
+#' enableMosaic()
+#' enableMosaic("ESRI", "H3")
+#' enableMosaic("ESRI", "BNG") # Not yet supported
 enableMosaic <- function(
   geometryAPI="ESRI"
   ,indexSystem="H3"

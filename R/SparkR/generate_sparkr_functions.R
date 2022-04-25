@@ -1,3 +1,6 @@
+#!/usr/bin/env Rscript
+library(methods)
+
 parser <- function(x){
   #split on left bracket to get name
   splitted = strsplit(x, "(", fixed=T)[[1]]
@@ -104,9 +107,10 @@ get_function_names <- function(scala_file_path){
 }
 
 ########################################################################
-main <- function(){
+main <- function(scala_file_path){
+
   # this assumes working directoy is the SparkR folder
-  scala_file_path="../../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
+  #scala_file_path="../../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
   function_data = get_function_names(scala_file_path)
 
   genericFileConn = file("generics.R")
@@ -120,11 +124,17 @@ main <- function(){
   
   package.skeleton(
     name="sparkrMosaic"
-    ,force=T
     ,code_files=c("generics.R", "functions.R","enableMosaic.R")
   )
 }
 
-if (sys.nframe() == 0){
-  main()
+args <- commandArgs(trailingOnly = T)
+if (length(args) >  1){
+  stop("Please only provide a single argument to generate_sparkr_functions.R")
 }
+main(args[1])
+
+#if (sys.nframe() == 0){
+#  
+#  main()
+#}#

@@ -1,0 +1,14 @@
+Package: sparkrMosaic
+Type: Package
+Title: Databricks Mosaic in SparkR
+Version: 0.1
+Date: 2022-04-25
+Author: robert.whiffin@databricks.com
+Maintainer: robert.whiffin@databricks.com
+Description: Brings the scala APIs from Databricks Mosaic for geospatial support in Spark into R via the SparkR APIs.
+License: MIT + File
+Imports: methods
+Collate:
+  generics.R
+  functions.R
+  enableMosaic.R
