@@ -104,15 +104,26 @@ get_function_names <- function(scala_file_path){
 }
 
 ########################################################################
-main <- function(scala_file_path){
+main <- function(){
+  # this assumes working directoy is the SparkR folder
+  scala_file_path="../../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
   function_data = get_function_names(scala_file_path)
-  package.skeleton(name="sparkrMosaic")
-  genericFileConn = file("sparkrMosaic/R/generics.R")
-  methodsFileConn = file("sparkrMosaic/R/functions.R")
+
+  genericFileConn = file("generics.R")
+  methodsFileConn = file("functions.R")
   
   generics <- lapply(function_data, function(x){build_generic(parser(x))})
   methods <- lapply(function_data, function(x){build_method(parser(x))})
   writeLines(paste0(generics, collapse="\n"), genericFileConn)
   writeLines(paste0(methods, collapse="\n"), methodsFileConn)
   closeAllConnections()
+  
+  package.skeleton(
+    name="sparkrMosaic"
+    ,code_files=c("generics.R", "functions.R")
+  )
+}
+
+if (sys.nframe() == 0){
+  main()
 }
