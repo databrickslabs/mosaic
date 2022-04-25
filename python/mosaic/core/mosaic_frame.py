@@ -60,10 +60,13 @@ class MosaicFrame(DataFrame):
         """
         optionClass = getattr(self.sc._jvm.scala, "Option$")
         optionModule = getattr(optionClass, "MODULE$")
+        sampleStrategyClass = getattr(self.sc._jvm.com.databricks.labs.mosaic.sql, "SampleStrategy")
         if sample_rows:
-            return self._mosaicFrame.getOptimalResolution(optionModule.apply(None), optionModule.apply(sample_rows))
+            sampleStrategy = sampleStrategyClass(optionModule.apply(None), optionModule.apply(sample_rows))
+            return self._mosaicFrame.getOptimalResolution(sampleStrategy)
         if sample_fraction:
-            return self._mosaicFrame.getOptimalResolution(optionModule.apply(sample_fraction), optionModule.apply(None))
+            sampleStrategy = sampleStrategyClass(optionModule.apply(sample_fraction), optionModule.apply(None))
+            return self._mosaicFrame.getOptimalResolution(sampleStrategy)
         return self._mosaicFrame.getOptimalResolution()
     
     def get_resolution_metrics(
