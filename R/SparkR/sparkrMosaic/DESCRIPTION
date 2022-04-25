@@ -11,3 +11,4 @@ Imports: methods
 Collate:
   generics.R
   functions.R
+  enableMosaic.R

@@ -120,7 +120,8 @@ main <- function(){
   
   package.skeleton(
     name="sparkrMosaic"
-    ,code_files=c("generics.R", "functions.R")
+    ,force=T
+    ,code_files=c("generics.R", "functions.R","enableMosaic.R")
   )
 }
 

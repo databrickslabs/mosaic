@@ -17,6 +17,8 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
+[Previously saved workspace restored]
+
 > parser <- function(x){
 +   #split on left bracket to get name
 +   splitted = strsplit(x, "(", fixed=T)[[1]]
@@ -139,7 +141,8 @@ Type 'q()' to quit R.
 +   
 +   package.skeleton(
 +     name="sparkrMosaic"
-+     ,code_files=c("generics.R", "functions.R")
++     ,force=T
++     ,code_files=c("generics.R", "functions.R","enableMosaic.R")
 +   )
 + }
 > 
@@ -216,4 +219,4 @@ In .Internal(gc(verbose, reset, full)) :
 > 
 > proc.time()
    user  system elapsed 
-  0.417   0.135   0.591 
+  0.429   0.151   0.637 
