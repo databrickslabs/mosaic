@@ -16,6 +16,10 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
         getOptimalResolution(SampleStrategy(sampleFraction = Some(sampleFraction)))
     }
 
+    def getOptimalResolution(sampleRows: Int): Int = {
+        getOptimalResolution(SampleStrategy(sampleRows = Some(sampleRows)))
+    }
+
     def getOptimalResolution(sampleStrategy: SampleStrategy): Int = {
         val ss = SparkSession.builder().getOrCreate()
         import ss.implicits._
@@ -29,7 +33,7 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
         metrics(midInd)._1
     }
 
-    def getResolutionMetrics(sampleStrategy: SampleStrategy, lowerLimit: Int = 5, upperLimit: Int = 500): DataFrame = {
+    def getResolutionMetrics(sampleStrategy: SampleStrategy = SampleStrategy(), lowerLimit: Int = 5, upperLimit: Int = 500): DataFrame = {
         val mosaicContext = MosaicContext.context
         import mosaicContext.functions._
         val spark = SparkSession.builder().getOrCreate()
