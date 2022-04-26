@@ -51,7 +51,7 @@ jobs:
       run: cp python/dist/*.whl staging
     - name: Build sparkrMosaic package
       run: |
-        cd ../R/SparkR
+        cd R/SparkR
         Rscript --vanilla build-r-package.R
         cp sparkrMosaic*.tar.gz /staging
     - uses: actions/upload-artifact@v2
