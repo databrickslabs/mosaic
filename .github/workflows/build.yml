@@ -14,6 +14,7 @@ jobs:
       matrix:
         python: [3.8.10]
         spark: [3.2.1]
+        R:  [4.1.3]
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -50,7 +51,7 @@ jobs:
       run: cp python/dist/*.whl staging
     - name: Build sparkrMosaic package
       run: |
-        cd R/sparkrMosaic
+        cd ../R/sparkrMosaic
         Rscript --vanilla build-r-package.R
         cp sparkrMosaic*.tar.gz /staging
     - uses: actions/upload-artifact@v2
