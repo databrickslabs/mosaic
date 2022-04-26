@@ -1,7 +1,7 @@
 from typing import Optional
 
 from py4j.java_gateway import JavaClass, JavaObject
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SQLContext
 
 from mosaic.config import config
 
@@ -71,7 +71,7 @@ class MosaicFrame(DataFrame):
     
     def get_resolution_metrics(
             self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None
-        ) -> int:
+        ) -> "DataFrame":
         """
         Analyzes the geometries in the currently selected geometry column and provide statistics
         about grid-index resolutions to help the end user select the optimal resolution in an
@@ -101,11 +101,14 @@ class MosaicFrame(DataFrame):
         defaultHighCount = getattr(analyzer, "getResolutionMetrics$default$3")()
         if sample_rows:
             sampleStrategy = sampleStrategyClass(optionModule.apply(None), optionModule.apply(sample_rows))
-            return self._mosaicFrame.analyzer().getResolutionMetrics(sampleStrategy, defaultLowCount, defaultHighCount)
+            df = self._mosaicFrame.analyzer().getResolutionMetrics(sampleStrategy, defaultLowCount, defaultHighCount)
+            return DataFrame(df, SQLContext(self.sc))
         if sample_fraction:
             sampleStrategy = sampleStrategyClass(optionModule.apply(sample_fraction), optionModule.apply(None))
-            return self._mosaicFrame.analyzer().getResolutionMetrics(sampleStrategy, defaultLowCount, defaultHighCount)
-        return self._mosaicFrame.analyzer().getResolutionMetrics(defaultSampleStrategy, defaultLowCount, defaultHighCount)
+            df = self._mosaicFrame.analyzer().getResolutionMetrics(sampleStrategy, defaultLowCount, defaultHighCount)
+            return DataFrame(df, SQLContext(self.sc))
+        df = self._mosaicFrame.analyzer().getResolutionMetrics(defaultSampleStrategy, defaultLowCount, defaultHighCount)
+        return DataFrame(df, SQLContext(self.sc))
 
     def set_index_resolution(self, resolution: int) -> "MosaicFrame":
         """
