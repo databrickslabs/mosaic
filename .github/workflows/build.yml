@@ -53,7 +53,7 @@ jobs:
    #  run: cp python/dist/*.whl staging
 
     - name: Setup R build environment
-    - run: |
+      run: |
         sudo apt-get update && sudo apt-get install curl libcurl4-openssl-dev pkg-config
         mkdir -p /usr/local/lib/R/site-library
         sudo chown -R $USER: /usr/local/lib/R/site-library
