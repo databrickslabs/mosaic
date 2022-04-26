@@ -59,46 +59,49 @@ class MosaicFrame(DataFrame):
         """
         optionClass = getattr(self.sc._jvm.scala, "Option$")
         optionModule = getattr(optionClass, "MODULE$")
+        sampleStrategyClass = getattr(self.sc._jvm.com.databricks.labs.mosaic.sql, "SampleStrategy")
         if sample_rows:
-            return self._mosaicFrame.getOptimalResolution(optionModule.apply(None), optionModule.apply(sample_rows))
+            sampleStrategy = sampleStrategyClass(optionModule.apply(None), optionModule.apply(sample_rows))
+            return self._mosaicFrame.analyzer().getOptimalResolution(sampleStrategy)
         if sample_fraction:
-            return self._mosaicFrame.getOptimalResolution(optionModule.apply(sample_fraction), optionModule.apply(None))
-        return self._mosaicFrame.getOptimalResolution()
+            sampleStrategy = sampleStrategyClass(optionModule.apply(sample_fraction), optionModule.apply(None))
+            return self._mosaicFrame.analyzer().getOptimalResolution(sampleStrategy)
+        return self._mosaicFrame.analyzer().getOptimalResolution()
 
     def get_resolution_metrics(
             self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None
         ) -> int:
-            """
-            Analyzes the geometries in the currently selected geometry column and provide statistics
-            about grid-index resolutions to help the end user select the optimal resolution in an
-            informed manner.
+        """
+        Analyzes the geometries in the currently selected geometry column and provide statistics
+        about grid-index resolutions to help the end user select the optimal resolution in an
+        informed manner.
 
-            Provide either `sample_rows` or `sample_fraction` parameters to control how much data is passed to the analyzer.
-            (Providing too little data to the analyzer may result in a `NotEnoughGeometriesException`)
+        Provide either `sample_rows` or `sample_fraction` parameters to control how much data is passed to the analyzer.
+        (Providing too little data to the analyzer may result in a `NotEnoughGeometriesException`)
 
-            Parameters
-            ----------
-            sample_rows: int, optional
-                The number of rows to sample.
-            sample_fraction: float, optional
-                The proportion of rows to sample.
+        Parameters
+        ----------
+        sample_rows: int, optional
+            The number of rows to sample.
+        sample_fraction: float, optional
+            The proportion of rows to sample.
 
-            Returns
-            -------
-            DataFrame
-                A dataframe containing statistics for different available resolutions.
-            """
-            optionClass = getattr(self.sc._jvm.scala, "Option$")
-            optionModule = getattr(optionClass, "MODULE$")
-            sampleStrategyClass = getattr(self.sc._jvm.com.databricks.labs.mosaic.sql, "SampleStrategy")
-            if sample_rows:
-                sampleStrategy = sampleStrategyClass(optionModule.apply(None), optionModule.apply(sample_rows))
-                return self._mosaicFrame.analyzer().getResolutionMetrics(sampleStrategy)
-            if sample_fraction:
-                sampleStrategy = sampleStrategyClass(optionModule.apply(sample_fraction), optionModule.apply(None))
-                return self._mosaicFrame.analyzer().getResolutionMetrics(sampleStrategy)
-            sampleStrategy = sampleStrategyClass(optionModule.apply(None), optionModule.apply(None))
+        Returns
+        -------
+        DataFrame
+            A dataframe containing statistics for different available resolutions.
+        """
+        optionClass = getattr(self.sc._jvm.scala, "Option$")
+        optionModule = getattr(optionClass, "MODULE$")
+        sampleStrategyClass = getattr(self.sc._jvm.com.databricks.labs.mosaic.sql, "SampleStrategy")
+        if sample_rows:
+            sampleStrategy = sampleStrategyClass(optionModule.apply(None), optionModule.apply(sample_rows))
             return self._mosaicFrame.analyzer().getResolutionMetrics(sampleStrategy)
+        if sample_fraction:
+            sampleStrategy = sampleStrategyClass(optionModule.apply(sample_fraction), optionModule.apply(None))
+            return self._mosaicFrame.analyzer().getResolutionMetrics(sampleStrategy)
+        sampleStrategy = sampleStrategyClass(optionModule.apply(None), optionModule.apply(None))
+        return self._mosaicFrame.analyzer().getResolutionMetrics(sampleStrategy)
 
     def set_index_resolution(self, resolution: int) -> "MosaicFrame":
         """
