@@ -126,7 +126,7 @@ main <- function(scala_file_path){
   genericFileConn <- file("sparkrMosaic/R/generics.R")
   functionsFileConn <- file("sparkrMosaic/R/functions.R")
   
-  functions_header <- "#' @include generics.R\nlibrary(SparkR)\n\nNULL"
+  functions_header <- "#' @include generics.R\n\nNULL"
   
   generics <- lapply(function_data, function(x){build_generic(parser(x))})
   functions <- lapply(function_data, function(x){build_method(parser(x))})
