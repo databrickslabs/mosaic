@@ -126,14 +126,3 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
     }
 
 }
-
-case class SampleStrategy(sampleFraction: Option[Double] = None, sampleRows: Option[Int] = None) {
-    def transformer(df: DataFrame): DataFrame = {
-        (sampleFraction, sampleRows) match {
-            case (Some(d), None)    => df.sample(d)
-            case (None, Some(l))    => df.limit(l)
-            case (Some(_), Some(l)) => df.limit(l)
-            case _                  => df
-        }
-    }
-}
