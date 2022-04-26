@@ -9,11 +9,24 @@ system_cmd <- paste0(c("Rscript --vanilla generate_sparkr_functions.R", scala_fi
 
 system(system_cmd)
 
-# Increment the version number in the DESCRIPTION.TEMPLATE and copy into the package folder
+# Increment the minor version number in the DESCRIPTION.TEMPLATE and copy into the package folder
 
-# Update the 
+increment_minor_version_number <- function(){
+  description_file <- file("sparkrMosaic/DESCRIPTION")
+  description <- readLines(description_file)
+  
+  version_index <- grep("Version", description, fixed=T)
+  version_details <- strsplit(description[version_index], ".", fixed=T)
+  minor_number <- as.integer(version_details[[1]][2])
+  minor_number <- minor_number + 1
+  version_details[[1]][2] <- as.character(minor_number)
+  version_details <- paste0(unlist(version_details), collapse = ".")
+  description[version_index] = version_details
+  writeLines(description, description_file)
+  closeAllConnections()
+}
 
-
+increment_minor_version_number()
 
 #system("R CMD build sparkrMosaic")
 devtools::document("sparkrMosaic")
