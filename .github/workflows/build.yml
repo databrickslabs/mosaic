@@ -31,10 +31,6 @@ jobs:
       run: |
         mkdir staging
         cp target/mosaic*.jar staging
-#    - name: Copy Scala artifacts to python package
-#      run: |
-#        mkdir -p python/mosaic/lib
-#        cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib/
     - name: Configure python interpreter
       uses: actions/setup-python@v2
       with:
@@ -43,14 +39,14 @@ jobs:
       run: |
         cd python
         pip install build wheel pyspark==${{ matrix.spark }}
-   #    pip install .
-   #- name: Test and build python package
-   #  run: |
-   #    cd python 
-   #    python -m unittest
-   #    python -m build
-   #- name: Copy python artifacts to GH Actions run
-   #  run: cp python/dist/*.whl staging
+        pip install .
+    - name: Test and build python package
+     run: |
+       cd python 
+       python -m unittest
+       python -m build
+    - name: Copy python artifacts to GH Actions run
+      run: cp python/dist/*.whl staging
 
     - name: Setup R build environment
       run: |
