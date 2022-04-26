@@ -26,7 +26,7 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
       - name: Test and build the scala JAR
-        run: mvn -q clean install -DskipTests
+        run: mvn -q clean install
       - name: Copy Scala artifacts to GH Actions run
         run: |
           mkdir staging
@@ -47,7 +47,6 @@ jobs:
           python -m build
       - name: Copy python artifacts to GH Actions run
         run: cp python/dist/*.whl staging
-
       - name: Setup R build environment
         run: |
           sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config
