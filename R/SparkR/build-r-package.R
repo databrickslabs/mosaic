@@ -1,7 +1,8 @@
 lib_path<-"temp/R/libraries"
-install.packages("devtools", lib=lib_path)
-install.packages("roxygen", lib=lib_path)
-install.packages("SparkR", lib=lib_path)
+repo<-"https://cran.ma.imperial.ac.uk/"
+install.packages("devtools", lib=lib_path, repos=repo)
+install.packages("roxygen", lib=lib_path, repos=repo)
+install.packages("SparkR", lib=lib_path, repos=repo)
 .libPaths(lib_path)
 library(devtools)
 library(roxygen2)
