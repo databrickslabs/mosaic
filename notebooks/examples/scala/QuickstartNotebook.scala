@@ -1,5 +1,21 @@
 // Databricks notebook source
 // MAGIC %md
+// MAGIC ## Setup NYC taxi zones
+// MAGIC In order to setup the data please run the notebook available at "../../data/DownloadNYCTaxiZones". </br>
+// MAGIC DownloadNYCTaxiZones notebook will make sure we have New York City Taxi zone shapes available in our environment.
+
+// COMMAND ----------
+
+val user_name = dbutils.notebook.getContext.userName.get
+
+val raw_path = s"dbfs:/tmp/mosaic/$user_name"
+val raw_taxi_zones_path = s"$raw_path/taxi_zones"
+
+print(s"The raw data is stored in $raw_path")
+
+// COMMAND ----------
+
+// MAGIC %md
 // MAGIC ## Enable Mosaic in the notebook
 // MAGIC To get started, you'll need to attach the JAR to your cluster and import instances as in the cell below.
 
@@ -20,19 +36,19 @@ import org.apache.spark.sql.functions._
 // COMMAND ----------
 
 // MAGIC %md
-// MAGIC With the functionallity Mosaic brings we can easily load GeoJSON files using spark. </br>
+// MAGIC With the functionality Mosaic brings we can easily load GeoJSON files using spark. </br>
 // MAGIC In the past this required GeoPandas in python and conversion to spark dataframe. </br>
-// MAGIC Scala and SQL were hard to demo. </br>
 
 // COMMAND ----------
 
-
 val neighbourhoods = (
-  spark.read.format("json")
-    .load("dbfs:/FileStore/shared_uploads/stuart.lynn@databricks.com/NYC_Taxi_Zones.geojson")
-    .withColumn("geometry", st_astext(st_geomfromgeojson(to_json(col("geometry")))))
-    .select("properties.*", "geometry")
-    .drop("shape_area", "shape_leng")
+  spark.read
+    .option("multiline", "true")
+    .format("json")
+    .load(raw_taxi_zones_path)
+    .select(col("type"), explode(col("features")).alias("feature"))
+    .select(col("type"), col("feature.properties").alias("properties"), to_json(col("feature.geometry")).alias("json_geometry"))
+    .withColumn("geometry", st_aswkt(st_geomfromgeojson(col("json_geometry"))))
 )
 
 display(
@@ -55,6 +71,8 @@ display(
   neighbourhoods
     .withColumn("calculatedArea", st_area(col("geometry")))
     .withColumn("calculatedLength", st_length(col("geometry")))
+    // Note: The unit of measure of the area and length depends on the CRS used.
+    // For GPS locations it will be square radians and radians
     .select("geometry", "calculatedArea", "calculatedLength")
 )
 
@@ -108,31 +126,28 @@ display(trips.select("pickup_geom", "dropoff_geom"))
 
 // COMMAND ----------
 
-import com.databricks.labs.mosaic.sql.MosaicAnalyzer
 import com.databricks.labs.mosaic.sql.MosaicFrame
-
 
 val mosaicFrame = MosaicFrame(neighbourhoods)
   .setGeometryColumn("geometry")
 
-val analyzer = new MosaicAnalyzer(mosaicFrame)
+val optimalResolution = mosaicFrame.getOptimalResolution(0.75)
 
-analyzer.getOptimalResolution(0.5)
+println(s"Optimal resolution is $optimalResolution")
 
 // COMMAND ----------
 
 // MAGIC %md
-// MAGIC It is worth noting that not each resolution will yield performance improvements. </br>
-// MAGIC By a rule of thumb it is always better to under index than over index - if not sure select a lower resolution. </br>
+// MAGIC Not every resolution will yield performance improvements. </br>
+// MAGIC By a rule of thumb it is always better to under-index than over-index - if not sure select a lower resolution. </br>
 // MAGIC Higher resolutions are needed when we have very imballanced geometries with respect to their size or with respect to the number of vertices. </br>
 // MAGIC In such case indexing with more indices will considerably increase the parallel nature of the operations. </br>
 // MAGIC You can think of Mosaic as a way to partition an overly complex row into multiple rows that have a balanced amount of computation each.
 
 // COMMAND ----------
 
-import com.databricks.labs.mosaic.sql.SampleStrategy
 display(
-  analyzer.getResolutionMetrics(SampleStrategy())
+  mosaicFrame.analyzer.getResolutionMetrics()
 )
 
 // COMMAND ----------
@@ -149,8 +164,10 @@ display(
 // COMMAND ----------
 
 val tripsWithIndex = trips
-  .withColumn("pickup_h3", point_index(col("pickup_geom"), lit(9)))
-  .withColumn("dropoff_h3", point_index(col("dropoff_geom"), lit(9)))
+  .withColumn("pickup_h3", point_index_geom(col("pickup_geom"), lit(optimalResolution)))
+  .withColumn("dropoff_h3", point_index_geom(col("dropoff_geom"), lit(optimalResolution)))
+
+display(tripsWithIndex)
 
 // COMMAND ----------
 
@@ -160,7 +177,14 @@ val tripsWithIndex = trips
 // COMMAND ----------
 
 val neighbourhoodsWithIndex = neighbourhoods
-  .withColumn("mosaic_index", mosaic_explode(col("geometry"), lit(9)))
+   // We break down the original geometry in multiple smoller mosaic chips, each with its
+   // own index
+   .withColumn("mosaic_index", mosaic_explode(col("geometry"), lit(optimal_resolution)))
+   // We don't need the original geometry any more, since we have broken it down into
+   // Smaller mosaic chips.
+   .drop("json_geometry", "geometry")
+
+display(neighbourhoodsWithIndex)
 
 // COMMAND ----------
 
@@ -174,13 +198,16 @@ val neighbourhoodsWithIndex = neighbourhoods
 
 // COMMAND ----------
 
-val pickupNeighbourhoods = neighbourhoodsWithIndex.select(col("zone").alias("pickup_zone"), col("mosaic_index"))
+val pickupNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.borough").alias("pickup_zone"), col("mosaic_index"))
 
 val withPickupZone = 
   tripsWithIndex.join(
     pickupNeighbourhoods,
     tripsWithIndex.col("pickup_h3") === pickupNeighbourhoods.col("mosaic_index.index_id")
   ).where(
+    // If the borough is a core chip (the chip is fully contained within the geometry), then we do not need
+    // to perform any intersection, because any point matching the same index will certainly be contained in
+    // the borough. Otherwise we need to perform an st_contains operation on the chip geometry.
     col("mosaic_index.is_core") || st_contains(col("mosaic_index.wkb"), col("pickup_geom"))
   ).select(
     "trip_distance", "pickup_geom", "pickup_zone", "dropoff_geom", "pickup_h3", "dropoff_h3"
@@ -195,7 +222,7 @@ display(withPickupZone)
 
 // COMMAND ----------
 
-val dropoffNeighbourhoods = neighbourhoodsWithIndex.select(col("zone").alias("dropoff_zone"), col("mosaic_index"))
+val dropoffNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.borough").alias("dropoff_zone"), col("mosaic_index"))
 
 val withDropoffZone = 
   withPickupZone.join(
@@ -237,7 +264,3 @@ withDropoffZone.createOrReplaceTempView("withDropoffZone")
 // MAGIC %python
 // MAGIC %%mosaic_kepler
 // MAGIC "withDropoffZone" "pickup_h3" "h3" 5000
-
-// COMMAND ----------
-
-

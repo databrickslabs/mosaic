@@ -1,19 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Enable Mosaic in the notebook
-# MAGIC To get started, you'll need to attach the wheel to your cluster and import instances as in the cell below.
-
-# COMMAND ----------
-
-from pyspark.sql.functions import *
-import mosaic as mos
-mos.enable_mosaic(spark, dbutils)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Setup temporary data location
-# MAGIC We will setup a temporary location to store our New York City Neighbourhood shapes. </br>
+# MAGIC ## Setup NYC taxi zones
+# MAGIC In order to setup the data please run the notebook available at "../../data/DownloadNYCTaxiZones". </br>
+# MAGIC DownloadNYCTaxiZones notebook will make sure we have New York City Taxi zone shapes available in our environment.
 
 # COMMAND ----------
 
@@ -22,34 +11,19 @@ user_name = dbutils.notebook.entry_point.getDbutils().notebook().getContext().us
 raw_path = f"dbfs:/tmp/mosaic/{user_name}"
 raw_taxi_zones_path = f"{raw_path}/taxi_zones"
 
-print(f"The raw data will be stored in {raw_path}")
+print(f"The raw data is stored in {raw_path}")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Download taxi zones GeoJSON
+# MAGIC ## Enable Mosaic in the notebook
+# MAGIC To get started, you'll need to attach the wheel to your cluster and import instances as in the cell below.
 
 # COMMAND ----------
 
-import requests
-import os
-import pathlib
-
-taxi_zones_url = 'https://data.cityofnewyork.us/api/geospatial/d3c5-ddgc?method=export&format=GeoJSON'
-
-# The DBFS file system is mounted under /dbfs/ directory on Databricks cluster nodes
-
-
-local_taxi_zones_path = pathlib.Path(raw_taxi_zones_path.replace('dbfs:/', '/dbfs/'))
-local_taxi_zones_path.mkdir(parents=True, exist_ok=True)
-
-req = requests.get(taxi_zones_url)
-with open(local_taxi_zones_path / f'nyc_taxi_zones.geojson', 'wb') as f:
-  f.write(req.content)
-
-# COMMAND ----------
-
-display(dbutils.fs.ls(raw_taxi_zones_path))
+from pyspark.sql.functions import *
+import mosaic as mos
+mos.enable_mosaic(spark, dbutils)
 
 # COMMAND ----------
 
