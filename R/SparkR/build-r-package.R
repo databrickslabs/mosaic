@@ -1,6 +1,9 @@
+install.packages("devtools")
+install.packages("roxygen")
+install.packages("SparkR")
 library(devtools)
 library(roxygen2)
-library(SparkR, lib.loc = c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
+library(SparkR)
 
 # Increment the minor version number in the DESCRIPTION.TEMPLATE and copy into the package folder
 increment_minor_version_number <- function(){
