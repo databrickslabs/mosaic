@@ -5,7 +5,7 @@ Authors@R:
     person("Robert", "Whiffin", , "robert.whiffin@databricks.com", role = c("aut", "cre")
            )
 Description: This package extends SparkR to bring the Databricks Mosaic for geospatial processing APIs into SparkR.
-License: use_mit_license()
+License: Databricks
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
@@ -14,5 +14,8 @@ Collate:
     'generics.R'
     'functions.R'
 Imports:
-  SparkR
-  
+  SparkR,
+  methods
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
