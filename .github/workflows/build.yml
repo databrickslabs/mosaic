@@ -41,10 +41,10 @@ jobs:
           pip install build wheel pyspark==${{ matrix.spark }}
           pip install .
       - name: Test and build python package
-      run: |
-        cd python 
-        python -m unittest
-        python -m build
+        run: |
+          cd python 
+          python -m unittest
+          python -m build
       - name: Copy python artifacts to GH Actions run
         run: cp python/dist/*.whl staging
 
