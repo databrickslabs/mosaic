@@ -11,6 +11,12 @@ mos.enable_mosaic(spark, dbutils)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Setup temporary data location
+# MAGIC We will setup a temporary location to store our New York City Neighbourhood shapes. </br>
+
+# COMMAND ----------
+
 user_name = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
 
 raw_path = f"dbfs:/tmp/mosaic/{user_name}"
@@ -147,7 +153,7 @@ display(trips.select("pickup_geom", "dropoff_geom"))
 from mosaic import MosaicFrame
 
 neighbourhoods_mosaic_frame = MosaicFrame(neighbourhoods, "geometry")
-optimal_resolution = neighbourhoods_mosaic_frame.get_optimal_resolution(0.75)
+optimal_resolution = neighbourhoods_mosaic_frame.get_optimal_resolution(sample_fraction=0.75)
 
 print(f"Optimal resolution is {optimal_resolution}")
 
@@ -163,7 +169,7 @@ print(f"Optimal resolution is {optimal_resolution}")
 # COMMAND ----------
 
 display(
-  mosaicFrame.get_resolution_metrics(0.75)
+  neighbourhoods_mosaic_frame.get_resolution_metrics(sample_rows=150)
 )
 
 # COMMAND ----------
@@ -265,10 +271,6 @@ display(withDropoffZone)
 
 # COMMAND ----------
 
-withDropoffZone.createOrReplaceTempView("withDropoffZone")
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Visualise the results in Kepler
 
@@ -283,7 +285,7 @@ withDropoffZone.createOrReplaceTempView("withDropoffZone")
 
 # MAGIC %python
 # MAGIC %%mosaic_kepler
-# MAGIC "withDropoffZone" "pickup_h3" "h3" 5000
+# MAGIC withDropoffZone "pickup_h3" "h3" 5000
 
 # COMMAND ----------
 
