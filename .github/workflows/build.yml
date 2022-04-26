@@ -23,7 +23,7 @@ jobs:
         java-version: '8'
         distribution: 'zulu'
     - name: Test and build the scala JAR
-      run: mvn -q clean install
+      run: mvn -q clean install -DskipTests
     - name: Copy Scala artifacts to GH Actions run
       run: |
         mkdir staging
@@ -40,21 +40,22 @@ jobs:
       run: |
         cd python
         pip install build wheel pyspark==${{ matrix.spark }}
-        pip install .
-    - name: Test and build python package
-      run: |
-        cd python 
-        python -m unittest
-        python -m build
-    - name: Copy python artifacts to GH Actions run
-      run: cp python/dist/*.whl staging
+   #    pip install .
+   #- name: Test and build python package
+   #  run: |
+   #    cd python 
+   #    python -m unittest
+   #    python -m build
+   #- name: Copy python artifacts to GH Actions run
+   #  run: cp python/dist/*.whl staging
 
     - name: install R
-      uses: actions/checkout@v2
       uses: r-lib/actions/setup-r@v2
+      with: 
+        r-version: '3.2.1' # The R version to download (if necessary) and use.
+    - name: install R dependencies
       uses: r-lib/actions/setup-r-dependencies@v2
       with:
-        r-version: '3.2.1' # The R version to download (if necessary) and use.
         extra-packages: |
           any::devtools
           any::methods
