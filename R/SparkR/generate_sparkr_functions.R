@@ -59,7 +59,16 @@ build_method<-function(input){
   args = lapply(args, function(x){c(x[1], paste0("'", x[2], "'"))})
   args = lapply(args, function(x){paste0(x,  collapse= ' = ')})
   column_specifiers <- build_column_specifiers(input)
-  paste0(
+  docstring <- paste0(
+    c(paste0(c("#'", function_name), collapse=" "),
+      "#' See \\url{https://databrickslabs.github.io/mosaic/} for full documentation",
+      paste0(c("#' @name", function_name), collapse=" "),
+      paste0(c("#' @rdname", function_name), collapse=" "),
+      paste0(c("#' @exportMethod", function_name), collapse=" ")
+      )
+    ,collapse="\n"
+  )
+  function_def <- paste0(
     'setMethod(
               f = "',function_name, '"
               ,signature(
@@ -71,16 +80,17 @@ build_method<-function(input){
                   column(jc)
                   }
               )')
+  paste0(c(docstring, function_def, "\n\n\n"), collapse="\n")
   
 }
 ############################################################
 
 ############################################################
 get_function_names <- function(scala_file_path){
-  #scala_file = file("~/Documents/mosaic/src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala")
-  scala_file = file(scala_file_path)
+  #scala_file_path = "~/Documents/mosaic/src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
+  scala_file_object = file(scala_file_path)
   
-  scala_file = readLines(scala_file)
+  scala_file = readLines(scala_file_object)
   closeAllConnections()
   # find where the methods start
   start_string = "    object functions extends Serializable {"
@@ -113,24 +123,31 @@ main <- function(scala_file_path){
   #scala_file_path="../../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
   function_data = get_function_names(scala_file_path)
 
-  genericFileConn = file("generics.R")
-  methodsFileConn = file("functions.R")
+  genericFileConn <- file("sparkrMosaic/R/generics.R")
+  functionsFileConn <- file("sparkrMosaic/R/functions.R")
+  
+  functions_header <- "#' @include generics.R \n\nNULL"
   
   generics <- lapply(function_data, function(x){build_generic(parser(x))})
-  methods <- lapply(function_data, function(x){build_method(parser(x))})
+  functions <- lapply(function_data, function(x){build_method(parser(x))})
+  functions <- append(functions_header, functions)
   writeLines(paste0(generics, collapse="\n"), genericFileConn)
-  writeLines(paste0(methods, collapse="\n"), methodsFileConn)
+  writeLines(paste0(functions, collapse="\n"), functionsFileConn)
   closeAllConnections()
   
-  package.skeleton(
-    name="sparkrMosaic"
-    ,code_files=c("generics.R", "functions.R","enableMosaic.R")
-  )
+  # copy enableMosaic and column to directory
+  file.copy("enableMosaic.R", "sparkrMosaic/R/enableMosaic.R", overwrite=T)
+  #file.copy("column.R", "sparkrMosaic/R/column.R", overwrite=T)
+  
+  #package.skeleton(
+  #  name="sparkrMosaic"
+  #  ,code_files=c("generics.R", "functions.R","enableMosaic.R")
+  #)
 }
 
 args <- commandArgs(trailingOnly = T)
-if (length(args) >  1){
-  stop("Please only provide a single argument to generate_sparkr_functions.R")
+if (length(args) !=  1){
+  stop("Please provide the MosaicContext.scala file path to generate_sparkr_functions.R")
 }
 main(args[1])
 
