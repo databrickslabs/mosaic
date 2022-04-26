@@ -54,7 +54,7 @@ jobs:
 
     - name: Setup R build environment
       run: |
-        sudo apt-get update && sudo apt-get install curl libcurl4-openssl-dev pkg-config
+        sudo apt-get update && sudo apt-get install curl libcurl4-openssl-dev pkg-config r-cran-devtools r-cran-roxygen2
         mkdir -p /usr/local/lib/R/site-library
         sudo chown -R $USER: /usr/local/lib/R/site-library
     - name: Build R package

@@ -1,14 +1,9 @@
-# lib_path<-"temp/R/libraries"
-# repo<-"https://cran.ma.imperial.ac.uk/"
 repo<-"https://cran.rstudio.com/"
-# install.packages("devtools", lib=lib_path, repos=repo)
-# install.packages("roxygen", lib=lib_path, repos=repo)
-# install.packages("SparkR", lib=lib_path, repos=repo)
-# .libPaths(lib_path)
-install.packages("devtools", repos=repo)
-install.packages("roxygen2", repos=repo)
+
+# install.packages("devtools", repos=repo)
+# install.packages("roxygen2", repos=repo)
 devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
-# install.packages("SparkR", repos=repo)
+
 library(devtools)
 library(roxygen2)
 library(SparkR)
