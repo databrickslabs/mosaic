@@ -6,7 +6,7 @@ repo<-"https://cran.rstudio.com/"
 # install.packages("SparkR", lib=lib_path, repos=repo)
 # .libPaths(lib_path)
 install.packages("devtools", repos=repo)
-install.packages("roxygen", repos=repo)
+install.packages("roxygen2", repos=repo)
 install.packages("SparkR", repos=repo)
 library(devtools)
 library(roxygen2)
