@@ -59,7 +59,7 @@ jobs:
         mkdir -p /usr/local/lib/R/site-library
         sudo chown -R $USER: /usr/local/lib/R/site-library
         Rscript --vanilla build-r-package.R
-        cp sparkrMosaic*.tar.gz /staging
+        cp sparkrMosaic*.tar.gz staging
     - uses: actions/upload-artifact@v2
       with:
         name: artefacts
