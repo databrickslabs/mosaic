@@ -31,10 +31,10 @@ jobs:
       run: |
         mkdir staging
         cp target/mosaic*.jar staging
-    - name: Copy Scala artifacts to python package
-      run: |
-        mkdir -p python/mosaic/lib
-        cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib/
+#    - name: Copy Scala artifacts to python package
+#      run: |
+#        mkdir -p python/mosaic/lib
+#        cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib/
     - name: Configure python interpreter
       uses: actions/setup-python@v2
       with:
@@ -52,15 +52,18 @@ jobs:
    #- name: Copy python artifacts to GH Actions run
    #  run: cp python/dist/*.whl staging
 
-    - name: Build sparkrMosaic package
-      run: |
+    - name: Setup R build environment
+    - run: |
         sudo apt-get update && sudo apt-get install curl libcurl4-openssl-dev pkg-config
-        cd R/SparkR
         mkdir -p /usr/local/lib/R/site-library
         sudo chown -R $USER: /usr/local/lib/R/site-library
+    - name: Build R package
+      run: |
+        cd R/SparkR
         Rscript --vanilla build-r-package.R
-        cp sparkrMosaic*.tar.gz staging
-    - uses: actions/upload-artifact@v2
+    - name: Copy R artifacts to GH Actions run
+      run: cp R/SparkR/*.tar.gz staging
+    - uses: actions/upload-artifact@v3
       with:
-        name: artefacts
-        path: staging
+        name: artifacts
+        path: staging/*
