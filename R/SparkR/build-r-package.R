@@ -2,7 +2,7 @@
 setwd("/Users/robert.whiffin/Documents/mosaic/R/SparkR")
 library(devtools)
 library(roxygen2)
-devtools::create("sparkrMosaic")
+#devtools::create("sparkrMosaic")
 scala_file_path <- "/Users/robert.whiffin/Documents/mosaic/src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
 
 system_cmd <- paste0(c("Rscript --vanilla generate_sparkr_functions.R", scala_file_path), collapse = " ")
@@ -32,6 +32,7 @@ increment_minor_version_number()
 devtools::document("sparkrMosaic")
 
 
+
 devtools::build("sparkrMosaic")
 #
 
@@ -45,16 +46,19 @@ spark = sparkR.session(
   ,sparkJars = "/Users/robert.whiffin/Downloads/artefacts/mosaic-0.1.0-SNAPSHOT-jar-with-dependencies.jar"
 )
 
-geometry_api <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.geometry.api.GeometryAPI", methodName="apply", "ESRI")
-index_system_id <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemID", methodName="apply", "H3")
-indexing_system <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemID", methodName="getIndexSystem", index_system_id)
-mosaic_context <- sparkR.newJObject(x="com.databricks.labs.mosaic.functions.MosaicContext", indexing_system, geometry_api)
-functions <- sparkR.callJMethod(mosaic_context, "functions")
+#geometry_api <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.geometry.api.GeometryAPI", methodName="apply", "ESRI")
+#index_system_id <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemID", methodName="apply", "H3")
+#indexing_system <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemID", methodName="getIndexSystem", index_system_id)
+#mosaic_context <- sparkR.newJObject(x="com.databricks.labs.mosaic.functions.MosaicContext", indexing_system, geometry_api)
+#functions <- sparkR.callJMethod(mosaic_context, "functions")
+#
+#
+#
+#source("sparkrMosaic/R/generics.R")
+#source("sparkrMosaic/R/functions.R")
+devtools::load_all("sparkrMosaic")
 
-
-
-source("sparkrMosaic/R/generics.R")
-source("sparkrMosaic/R/functions.R")
+enableMosaic()
 
 sdf = SparkR::createDataFrame(
   data.frame(

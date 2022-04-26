@@ -1,5 +1,5 @@
-#' @include generics.R 
-#' @import SparkR::column
+#' @include generics.R
+#' @importClassesFrom SparkR column
 
 NULL
 #' as_hex
