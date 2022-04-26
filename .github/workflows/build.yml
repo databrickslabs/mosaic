@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - sparkr
   pull_request:
     branches:
       - '**'
@@ -47,6 +48,11 @@ jobs:
         python -m build
     - name: Copy python artifacts to GH Actions run
       run: cp python/dist/*.whl staging
+    - name: Build sparkrMosaic package
+      run: |
+        cd R/sparkrMosaic
+        Rscript --vanilla build-r-package.R
+        cp sparkrMosaic*.tar.gz /staging
     - uses: actions/upload-artifact@v2
       with:
         name: artefacts
