@@ -1,7 +1,8 @@
-install.packages("devtools", lib="/temp/R/libraries")
-install.packages("roxygen", lib="/temp/R/libraries")
-install.packages("SparkR", lib="/temp/R/libraries")
-.libPaths("/temp/R/libraries")
+lib_path<-"temp/R/libraries"
+install.packages("devtools", lib=lib_path)
+install.packages("roxygen", lib=lib_path)
+install.packages("SparkR", lib=lib_path)
+.libPaths(lib_path)
 library(devtools)
 library(roxygen2)
 library(SparkR)

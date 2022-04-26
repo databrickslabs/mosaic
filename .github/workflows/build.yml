@@ -53,7 +53,7 @@ jobs:
     - name: Build sparkrMosaic package
       run: |
         cd R/SparkR
-        mkdir -p /temp/R/libraries
+        mkdir -p temp/R/libraries
         Rscript --vanilla build-r-package.R
         cp sparkrMosaic*.tar.gz /staging
     - uses: actions/upload-artifact@v2
