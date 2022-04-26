@@ -52,7 +52,7 @@ jobs:
 
     - name: Build sparkrMosaic package
       run: |
-        sudo apt-get update && sudo apt-get install curl libcurl4
+        sudo apt-get update && sudo apt-get install curl libcurl4-openssl-dev pkg-config
         cd R/SparkR
         mkdir -p temp/R/libraries
         Rscript --vanilla build-r-package.R
