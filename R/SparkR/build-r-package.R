@@ -1,6 +1,3 @@
-install.packages("devtools")
-install.packages("roxygen")
-
 library(devtools)
 library(roxygen2)
 library(SparkR, lib.loc = c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
