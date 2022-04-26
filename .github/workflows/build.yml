@@ -54,7 +54,7 @@ jobs:
       run: |
         sudo apt-get update && sudo apt-get install curl libcurl4-openssl-dev pkg-config
         cd R/SparkR
-        mkdir -p temp/R/libraries
+        mkdir -p /usr/local/lib/R/site-library
         Rscript --vanilla build-r-package.R
         cp sparkrMosaic*.tar.gz /staging
     - uses: actions/upload-artifact@v2
