@@ -65,7 +65,7 @@ build_method<-function(input){
       paste0(c("#' @name", function_name), collapse=" "),
       paste0(c("#' @rdname", function_name), collapse=" "),
       paste0(c("#' @exportMethod", function_name), collapse=" ")
-      )
+    )
     ,collapse="\n"
   )
   function_def <- paste0(
@@ -84,6 +84,29 @@ build_method<-function(input){
   
 }
 ############################################################
+# write tests
+
+write_tests <- function(input){
+  function_name = input$function_name
+  arg_names = lapply(input$args, function(x){c(x[1])})
+  file_name = paste0(c("sparkrMosaic/tests/", function_name, ".R"), collapse = '')
+  
+  test_name = paste0("test__", function_name)
+  function_signature = paste0(
+    "function(spark_df, "
+    , paste(arg_names, sep=', ', collapse=", ") ,")" 
+  )
+  function_body <- paste0(
+    "{\n",
+    "\tSparkR::withColumn(spark_df, ",
+    paste(arg_names, sep=', ', collapse=", "),
+    ")\n}"
+  )
+  full_test <- paste0(test_name, " <- ",function_signature, function_body)
+  testFileConn <- file(file_name)
+  writeLines(full_test, testFileConn)
+  closeAllConnections()
+}
 
 ############################################################
 get_function_names <- function(scala_file_path){
@@ -110,27 +133,34 @@ get_function_names <- function(scala_file_path){
     substr(x
            , regexpr("def ", x, fixed=T)[1]+4 # get the starting point to account for whitespace
            , regexpr("): ", x, fixed=T)[1] # get the end point of where the return is.
-           )
-    }
-    ))
+    )
+  }
+  ))
   methods_to_bind
 }
 
 ########################################################################
 main <- function(scala_file_path){
-
+  
   # this assumes working directoy is the SparkR folder
   #scala_file_path="../../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
   function_data = get_function_names(scala_file_path)
-
+  parsed <- lapply(function_data, parser)
+  
+  
+  
+  
   genericFileConn <- file("sparkrMosaic/R/generics.R")
   functionsFileConn <- file("sparkrMosaic/R/functions.R")
   
   functions_header <- "#' @include generics.R\n\nNULL"
   
-  generics <- lapply(function_data, function(x){build_generic(parser(x))})
-  functions <- lapply(function_data, function(x){build_method(parser(x))})
+  generics <- lapply(parsed, build_generic)
+  functions <- lapply(parsed, build_method)
   functions <- append(functions_header, functions)
+  #write tests
+  lapply(parsed, write_tests)
+  
   writeLines(paste0(generics, collapse="\n"), genericFileConn)
   writeLines(paste0(functions, collapse="\n"), functionsFileConn)
   closeAllConnections()
