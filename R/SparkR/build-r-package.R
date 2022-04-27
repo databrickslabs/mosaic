@@ -7,6 +7,7 @@ devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
 library(devtools)
 library(roxygen2)
 library(SparkR)
+SparkR::install.spark()
 
 
 build_sparkr_mosaic <- function(){
@@ -21,11 +22,11 @@ build_sparkr_mosaic <- function(){
   # run check
   devtools::check("sparkrMosaic")
   
-  # build package
-  devtools::build("sparkrMosaic")
-  
-  # test
-  devtools::test("sparkrMosaic")
+  ## build package
+  #devtools::build("sparkrMosaic")
+  #
+  ## test
+  #devtools::test("sparkrMosaic")
 }
 
 
