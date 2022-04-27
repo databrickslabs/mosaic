@@ -2,12 +2,18 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_contains}
 \alias{st_contains}
+\alias{st_contains,Column,Column-method}
 \title{st_contains
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_contains(geom1, geom2)
 
 \S4method{st_contains}{Column,Column}(geom1, geom2)
+}
+\arguments{
+\item{geom1}{Column}
+
+\item{geom2}{Column}
 }
 \description{
 st_contains

@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_area}
 \alias{st_area}
+\alias{st_area,Column-method}
 \title{st_area
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_area(geom)
 
 \S4method{st_area}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_area

@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_geometrytype}
 \alias{st_geometrytype}
+\alias{st_geometrytype,Column-method}
 \title{st_geometrytype
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_geometrytype(geom)
 
 \S4method{st_geometrytype}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_geometrytype

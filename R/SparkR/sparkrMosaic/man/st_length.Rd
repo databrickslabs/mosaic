@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_length}
 \alias{st_length}
+\alias{st_length,Column-method}
 \title{st_length
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_length(geom)
 
 \S4method{st_length}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_length

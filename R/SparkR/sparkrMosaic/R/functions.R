@@ -2,10 +2,11 @@
 
 NULL
 #' as_hex
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name as_hex
 #' @rdname as_hex
 #' @exportMethod as_hex
+#' @param  inGeom Column
 setMethod(
               f = "as_hex"
               ,signature(
@@ -21,10 +22,11 @@ setMethod(
 
 
 #' as_json
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name as_json
 #' @rdname as_json
 #' @exportMethod as_json
+#' @param  inGeom Column
 setMethod(
               f = "as_json"
               ,signature(
@@ -40,10 +42,12 @@ setMethod(
 
 
 #' st_point
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_point
 #' @rdname st_point
 #' @exportMethod st_point
+#' @param  xVal Column
+#' @param  yVal Column
 setMethod(
               f = "st_point"
               ,signature(
@@ -60,10 +64,11 @@ setMethod(
 
 
 #' st_makeline
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_makeline
 #' @rdname st_makeline
 #' @exportMethod st_makeline
+#' @param  points Column
 setMethod(
               f = "st_makeline"
               ,signature(
@@ -79,10 +84,11 @@ setMethod(
 
 
 #' st_makepolygon
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_makepolygon
 #' @rdname st_makepolygon
 #' @exportMethod st_makepolygon
+#' @param  boundaryRing Column
 setMethod(
               f = "st_makepolygon"
               ,signature(
@@ -98,10 +104,12 @@ setMethod(
 
 
 #' st_makepolygon
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_makepolygon
 #' @rdname st_makepolygon
 #' @exportMethod st_makepolygon
+#' @param  boundaryRing Column
+#' @param  holeRingArray Column
 setMethod(
               f = "st_makepolygon"
               ,signature(
@@ -118,10 +126,11 @@ setMethod(
 
 
 #' flatten_polygons
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name flatten_polygons
 #' @rdname flatten_polygons
 #' @exportMethod flatten_polygons
+#' @param  geom Column
 setMethod(
               f = "flatten_polygons"
               ,signature(
@@ -137,10 +146,11 @@ setMethod(
 
 
 #' st_xmax
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_xmax
 #' @rdname st_xmax
 #' @exportMethod st_xmax
+#' @param  geom Column
 setMethod(
               f = "st_xmax"
               ,signature(
@@ -156,10 +166,11 @@ setMethod(
 
 
 #' st_xmin
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_xmin
 #' @rdname st_xmin
 #' @exportMethod st_xmin
+#' @param  geom Column
 setMethod(
               f = "st_xmin"
               ,signature(
@@ -175,10 +186,11 @@ setMethod(
 
 
 #' st_ymax
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_ymax
 #' @rdname st_ymax
 #' @exportMethod st_ymax
+#' @param  geom Column
 setMethod(
               f = "st_ymax"
               ,signature(
@@ -194,10 +206,11 @@ setMethod(
 
 
 #' st_ymin
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_ymin
 #' @rdname st_ymin
 #' @exportMethod st_ymin
+#' @param  geom Column
 setMethod(
               f = "st_ymin"
               ,signature(
@@ -213,10 +226,11 @@ setMethod(
 
 
 #' st_zmax
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_zmax
 #' @rdname st_zmax
 #' @exportMethod st_zmax
+#' @param  geom Column
 setMethod(
               f = "st_zmax"
               ,signature(
@@ -232,10 +246,11 @@ setMethod(
 
 
 #' st_zmin
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_zmin
 #' @rdname st_zmin
 #' @exportMethod st_zmin
+#' @param  geom Column
 setMethod(
               f = "st_zmin"
               ,signature(
@@ -251,10 +266,11 @@ setMethod(
 
 
 #' st_isvalid
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_isvalid
 #' @rdname st_isvalid
 #' @exportMethod st_isvalid
+#' @param  geom Column
 setMethod(
               f = "st_isvalid"
               ,signature(
@@ -270,10 +286,11 @@ setMethod(
 
 
 #' st_geometrytype
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_geometrytype
 #' @rdname st_geometrytype
 #' @exportMethod st_geometrytype
+#' @param  geom Column
 setMethod(
               f = "st_geometrytype"
               ,signature(
@@ -289,10 +306,11 @@ setMethod(
 
 
 #' st_area
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_area
 #' @rdname st_area
 #' @exportMethod st_area
+#' @param  geom Column
 setMethod(
               f = "st_area"
               ,signature(
@@ -308,10 +326,11 @@ setMethod(
 
 
 #' st_centroid2D
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_centroid2D
 #' @rdname st_centroid2D
 #' @exportMethod st_centroid2D
+#' @param  geom Column
 setMethod(
               f = "st_centroid2D"
               ,signature(
@@ -327,10 +346,11 @@ setMethod(
 
 
 #' st_centroid3D
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_centroid3D
 #' @rdname st_centroid3D
 #' @exportMethod st_centroid3D
+#' @param  geom Column
 setMethod(
               f = "st_centroid3D"
               ,signature(
@@ -346,10 +366,12 @@ setMethod(
 
 
 #' convert_to
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name convert_to
 #' @rdname convert_to
 #' @exportMethod convert_to
+#' @param  inGeom Column
+#' @param  outDataType character
 setMethod(
               f = "convert_to"
               ,signature(
@@ -366,10 +388,11 @@ setMethod(
 
 
 #' st_geomfromwkt
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_geomfromwkt
 #' @rdname st_geomfromwkt
 #' @exportMethod st_geomfromwkt
+#' @param  inGeom Column
 setMethod(
               f = "st_geomfromwkt"
               ,signature(
@@ -385,10 +408,11 @@ setMethod(
 
 
 #' st_geomfromwkb
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_geomfromwkb
 #' @rdname st_geomfromwkb
 #' @exportMethod st_geomfromwkb
+#' @param  inGeom Column
 setMethod(
               f = "st_geomfromwkb"
               ,signature(
@@ -404,10 +428,11 @@ setMethod(
 
 
 #' st_geomfromgeojson
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_geomfromgeojson
 #' @rdname st_geomfromgeojson
 #' @exportMethod st_geomfromgeojson
+#' @param  inGeom Column
 setMethod(
               f = "st_geomfromgeojson"
               ,signature(
@@ -423,10 +448,11 @@ setMethod(
 
 
 #' st_aswkt
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_aswkt
 #' @rdname st_aswkt
 #' @exportMethod st_aswkt
+#' @param  geom Column
 setMethod(
               f = "st_aswkt"
               ,signature(
@@ -442,10 +468,11 @@ setMethod(
 
 
 #' st_astext
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_astext
 #' @rdname st_astext
 #' @exportMethod st_astext
+#' @param  geom Column
 setMethod(
               f = "st_astext"
               ,signature(
@@ -461,10 +488,11 @@ setMethod(
 
 
 #' st_aswkb
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_aswkb
 #' @rdname st_aswkb
 #' @exportMethod st_aswkb
+#' @param  geom Column
 setMethod(
               f = "st_aswkb"
               ,signature(
@@ -480,10 +508,11 @@ setMethod(
 
 
 #' st_asbinary
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_asbinary
 #' @rdname st_asbinary
 #' @exportMethod st_asbinary
+#' @param  geom Column
 setMethod(
               f = "st_asbinary"
               ,signature(
@@ -499,10 +528,11 @@ setMethod(
 
 
 #' st_asgeojson
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_asgeojson
 #' @rdname st_asgeojson
 #' @exportMethod st_asgeojson
+#' @param  geom Column
 setMethod(
               f = "st_asgeojson"
               ,signature(
@@ -518,10 +548,11 @@ setMethod(
 
 
 #' st_dump
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_dump
 #' @rdname st_dump
 #' @exportMethod st_dump
+#' @param  geom Column
 setMethod(
               f = "st_dump"
               ,signature(
@@ -537,10 +568,11 @@ setMethod(
 
 
 #' st_length
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_length
 #' @rdname st_length
 #' @exportMethod st_length
+#' @param  geom Column
 setMethod(
               f = "st_length"
               ,signature(
@@ -556,10 +588,11 @@ setMethod(
 
 
 #' st_perimeter
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_perimeter
 #' @rdname st_perimeter
 #' @exportMethod st_perimeter
+#' @param  geom Column
 setMethod(
               f = "st_perimeter"
               ,signature(
@@ -575,10 +608,12 @@ setMethod(
 
 
 #' st_distance
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_distance
 #' @rdname st_distance
 #' @exportMethod st_distance
+#' @param  geom1 Column
+#' @param  geom2 Column
 setMethod(
               f = "st_distance"
               ,signature(
@@ -595,10 +630,12 @@ setMethod(
 
 
 #' st_contains
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_contains
 #' @rdname st_contains
 #' @exportMethod st_contains
+#' @param  geom1 Column
+#' @param  geom2 Column
 setMethod(
               f = "st_contains"
               ,signature(
@@ -615,10 +652,13 @@ setMethod(
 
 
 #' st_translate
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_translate
 #' @rdname st_translate
 #' @exportMethod st_translate
+#' @param  geom1 Column
+#' @param  xd Column
+#' @param  yd Column
 setMethod(
               f = "st_translate"
               ,signature(
@@ -636,10 +676,13 @@ setMethod(
 
 
 #' st_scale
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_scale
 #' @rdname st_scale
 #' @exportMethod st_scale
+#' @param  geom1 Column
+#' @param  xd Column
+#' @param  yd Column
 setMethod(
               f = "st_scale"
               ,signature(
@@ -657,10 +700,12 @@ setMethod(
 
 
 #' st_rotate
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_rotate
 #' @rdname st_rotate
 #' @exportMethod st_rotate
+#' @param  geom1 Column
+#' @param  td Column
 setMethod(
               f = "st_rotate"
               ,signature(
@@ -677,10 +722,11 @@ setMethod(
 
 
 #' st_convexhull
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_convexhull
 #' @rdname st_convexhull
 #' @exportMethod st_convexhull
+#' @param  geom Column
 setMethod(
               f = "st_convexhull"
               ,signature(
@@ -696,10 +742,11 @@ setMethod(
 
 
 #' st_numpoints
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_numpoints
 #' @rdname st_numpoints
 #' @exportMethod st_numpoints
+#' @param  geom Column
 setMethod(
               f = "st_numpoints"
               ,signature(
@@ -715,10 +762,12 @@ setMethod(
 
 
 #' st_intersects
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_intersects
 #' @rdname st_intersects
 #' @exportMethod st_intersects
+#' @param  left Column
+#' @param  right Column
 setMethod(
               f = "st_intersects"
               ,signature(
@@ -735,10 +784,12 @@ setMethod(
 
 
 #' st_intersection
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_intersection
 #' @rdname st_intersection
 #' @exportMethod st_intersection
+#' @param  left Column
+#' @param  right Column
 setMethod(
               f = "st_intersection"
               ,signature(
@@ -755,10 +806,11 @@ setMethod(
 
 
 #' st_srid
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_srid
 #' @rdname st_srid
 #' @exportMethod st_srid
+#' @param  geom Column
 setMethod(
               f = "st_srid"
               ,signature(
@@ -774,10 +826,12 @@ setMethod(
 
 
 #' st_setsrid
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_setsrid
 #' @rdname st_setsrid
 #' @exportMethod st_setsrid
+#' @param  geom Column
+#' @param  srid Column
 setMethod(
               f = "st_setsrid"
               ,signature(
@@ -794,10 +848,12 @@ setMethod(
 
 
 #' st_transform
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_transform
 #' @rdname st_transform
 #' @exportMethod st_transform
+#' @param  geom Column
+#' @param  srid Column
 setMethod(
               f = "st_transform"
               ,signature(
@@ -814,10 +870,12 @@ setMethod(
 
 
 #' st_intersects_aggregate
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_intersects_aggregate
 #' @rdname st_intersects_aggregate
 #' @exportMethod st_intersects_aggregate
+#' @param  leftIndex Column
+#' @param  rightIndex Column
 setMethod(
               f = "st_intersects_aggregate"
               ,signature(
@@ -834,10 +892,12 @@ setMethod(
 
 
 #' st_intersection_aggregate
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name st_intersection_aggregate
 #' @rdname st_intersection_aggregate
 #' @exportMethod st_intersection_aggregate
+#' @param  leftIndex Column
+#' @param  rightIndex Column
 setMethod(
               f = "st_intersection_aggregate"
               ,signature(
@@ -854,10 +914,12 @@ setMethod(
 
 
 #' mosaic_explode
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name mosaic_explode
 #' @rdname mosaic_explode
 #' @exportMethod mosaic_explode
+#' @param  geom Column
+#' @param  resolution Column
 setMethod(
               f = "mosaic_explode"
               ,signature(
@@ -874,10 +936,12 @@ setMethod(
 
 
 #' mosaic_explode
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name mosaic_explode
 #' @rdname mosaic_explode
 #' @exportMethod mosaic_explode
+#' @param  geom Column
+#' @param  resolution numeric
 setMethod(
               f = "mosaic_explode"
               ,signature(
@@ -894,10 +958,12 @@ setMethod(
 
 
 #' mosaicfill
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name mosaicfill
 #' @rdname mosaicfill
 #' @exportMethod mosaicfill
+#' @param  geom Column
+#' @param  resolution Column
 setMethod(
               f = "mosaicfill"
               ,signature(
@@ -914,10 +980,12 @@ setMethod(
 
 
 #' mosaicfill
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name mosaicfill
 #' @rdname mosaicfill
 #' @exportMethod mosaicfill
+#' @param  geom Column
+#' @param  resolution numeric
 setMethod(
               f = "mosaicfill"
               ,signature(
@@ -934,10 +1002,12 @@ setMethod(
 
 
 #' point_index_geom
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name point_index_geom
 #' @rdname point_index_geom
 #' @exportMethod point_index_geom
+#' @param  point Column
+#' @param  resolution Column
 setMethod(
               f = "point_index_geom"
               ,signature(
@@ -954,10 +1024,12 @@ setMethod(
 
 
 #' point_index_geom
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name point_index_geom
 #' @rdname point_index_geom
 #' @exportMethod point_index_geom
+#' @param  point Column
+#' @param  resolution numeric
 setMethod(
               f = "point_index_geom"
               ,signature(
@@ -974,10 +1046,13 @@ setMethod(
 
 
 #' point_index_lonlat
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name point_index_lonlat
 #' @rdname point_index_lonlat
 #' @exportMethod point_index_lonlat
+#' @param  lon Column
+#' @param  lat Column
+#' @param  resolution Column
 setMethod(
               f = "point_index_lonlat"
               ,signature(
@@ -995,10 +1070,13 @@ setMethod(
 
 
 #' point_index_lonlat
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name point_index_lonlat
 #' @rdname point_index_lonlat
 #' @exportMethod point_index_lonlat
+#' @param  lon Column
+#' @param  lat Column
+#' @param  resolution numeric
 setMethod(
               f = "point_index_lonlat"
               ,signature(
@@ -1016,10 +1094,12 @@ setMethod(
 
 
 #' polyfill
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name polyfill
 #' @rdname polyfill
 #' @exportMethod polyfill
+#' @param  geom Column
+#' @param  resolution Column
 setMethod(
               f = "polyfill"
               ,signature(
@@ -1036,10 +1116,12 @@ setMethod(
 
 
 #' polyfill
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name polyfill
 #' @rdname polyfill
 #' @exportMethod polyfill
+#' @param  geom Column
+#' @param  resolution numeric
 setMethod(
               f = "polyfill"
               ,signature(
@@ -1056,10 +1138,11 @@ setMethod(
 
 
 #' index_geometry
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name index_geometry
 #' @rdname index_geometry
 #' @exportMethod index_geometry
+#' @param  indexID Column
 setMethod(
               f = "index_geometry"
               ,signature(
@@ -1075,10 +1158,11 @@ setMethod(
 
 
 #' try_sql
+
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @name try_sql
 #' @rdname try_sql
 #' @exportMethod try_sql
+#' @param  inCol Column
 setMethod(
               f = "try_sql"
               ,signature(

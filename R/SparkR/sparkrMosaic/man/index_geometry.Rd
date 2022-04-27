@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{index_geometry}
 \alias{index_geometry}
+\alias{index_geometry,Column-method}
 \title{index_geometry
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 index_geometry(indexID)
 
 \S4method{index_geometry}{Column}(indexID)
+}
+\arguments{
+\item{indexID}{Column}
 }
 \description{
 index_geometry

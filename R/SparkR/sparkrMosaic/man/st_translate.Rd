@@ -2,12 +2,20 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_translate}
 \alias{st_translate}
+\alias{st_translate,Column,Column,Column-method}
 \title{st_translate
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_translate(geom1, xd, yd)
 
 \S4method{st_translate}{Column,Column,Column}(geom1, xd, yd)
+}
+\arguments{
+\item{geom1}{Column}
+
+\item{xd}{Column}
+
+\item{yd}{Column}
 }
 \description{
 st_translate

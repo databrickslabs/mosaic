@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_srid}
 \alias{st_srid}
+\alias{st_srid,Column-method}
 \title{st_srid
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_srid(geom)
 
 \S4method{st_srid}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_srid

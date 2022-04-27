@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_aswkb}
 \alias{st_aswkb}
+\alias{st_aswkb,Column-method}
 \title{st_aswkb
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_aswkb(geom)
 
 \S4method{st_aswkb}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_aswkb

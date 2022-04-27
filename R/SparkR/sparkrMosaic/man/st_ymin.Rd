@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_ymin}
 \alias{st_ymin}
+\alias{st_ymin,Column-method}
 \title{st_ymin
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_ymin(geom)
 
 \S4method{st_ymin}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_ymin

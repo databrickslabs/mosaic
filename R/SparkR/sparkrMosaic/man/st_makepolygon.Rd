@@ -2,6 +2,8 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_makepolygon}
 \alias{st_makepolygon}
+\alias{st_makepolygon,Column,ANY-method}
+\alias{st_makepolygon,Column,Column-method}
 \title{st_makepolygon
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
@@ -12,6 +14,11 @@ st_makepolygon(boundaryRing, holeRingArray)
 \S4method{st_makepolygon}{Column,ANY}(boundaryRing)
 
 \S4method{st_makepolygon}{Column,Column}(boundaryRing, holeRingArray)
+}
+\arguments{
+\item{boundaryRing}{Column}
+
+\item{holeRingArray}{Column}
 }
 \description{
 st_makepolygon

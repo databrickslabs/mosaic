@@ -2,12 +2,18 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_intersection}
 \alias{st_intersection}
+\alias{st_intersection,Column,Column-method}
 \title{st_intersection
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_intersection(left, right)
 
 \S4method{st_intersection}{Column,Column}(left, right)
+}
+\arguments{
+\item{left}{Column}
+
+\item{right}{Column}
 }
 \description{
 st_intersection

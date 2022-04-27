@@ -2,6 +2,8 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{point_index_lonlat}
 \alias{point_index_lonlat}
+\alias{point_index_lonlat,Column,Column,Column-method}
+\alias{point_index_lonlat,Column,Column,numeric-method}
 \title{point_index_lonlat
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
@@ -12,6 +14,13 @@ point_index_lonlat(lon, lat, resolution)
 \S4method{point_index_lonlat}{Column,Column,Column}(lon, lat, resolution)
 
 \S4method{point_index_lonlat}{Column,Column,numeric}(lon, lat, resolution)
+}
+\arguments{
+\item{lon}{Column}
+
+\item{lat}{Column}
+
+\item{resolution}{numeric}
 }
 \description{
 point_index_lonlat

@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_isvalid}
 \alias{st_isvalid}
+\alias{st_isvalid,Column-method}
 \title{st_isvalid
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_isvalid(geom)
 
 \S4method{st_isvalid}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_isvalid

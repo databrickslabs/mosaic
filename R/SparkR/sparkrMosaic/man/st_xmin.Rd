@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_xmin}
 \alias{st_xmin}
+\alias{st_xmin,Column-method}
 \title{st_xmin
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_xmin(geom)
 
 \S4method{st_xmin}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_xmin

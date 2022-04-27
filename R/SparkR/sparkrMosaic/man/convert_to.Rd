@@ -2,12 +2,18 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{convert_to}
 \alias{convert_to}
+\alias{convert_to,Column,character-method}
 \title{convert_to
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 convert_to(inGeom, outDataType)
 
 \S4method{convert_to}{Column,character}(inGeom, outDataType)
+}
+\arguments{
+\item{inGeom}{Column}
+
+\item{outDataType}{character}
 }
 \description{
 convert_to

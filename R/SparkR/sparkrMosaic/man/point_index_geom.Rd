@@ -2,6 +2,8 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{point_index_geom}
 \alias{point_index_geom}
+\alias{point_index_geom,Column,Column-method}
+\alias{point_index_geom,Column,numeric-method}
 \title{point_index_geom
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
@@ -12,6 +14,11 @@ point_index_geom(point, resolution)
 \S4method{point_index_geom}{Column,Column}(point, resolution)
 
 \S4method{point_index_geom}{Column,numeric}(point, resolution)
+}
+\arguments{
+\item{point}{Column}
+
+\item{resolution}{numeric}
 }
 \description{
 point_index_geom

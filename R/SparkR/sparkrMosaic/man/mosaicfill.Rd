@@ -2,6 +2,8 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{mosaicfill}
 \alias{mosaicfill}
+\alias{mosaicfill,Column,Column-method}
+\alias{mosaicfill,Column,numeric-method}
 \title{mosaicfill
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
@@ -12,6 +14,11 @@ mosaicfill(geom, resolution)
 \S4method{mosaicfill}{Column,Column}(geom, resolution)
 
 \S4method{mosaicfill}{Column,numeric}(geom, resolution)
+}
+\arguments{
+\item{geom}{Column}
+
+\item{resolution}{numeric}
 }
 \description{
 mosaicfill

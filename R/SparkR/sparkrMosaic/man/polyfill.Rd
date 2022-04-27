@@ -2,6 +2,8 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{polyfill}
 \alias{polyfill}
+\alias{polyfill,Column,Column-method}
+\alias{polyfill,Column,numeric-method}
 \title{polyfill
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
@@ -12,6 +14,11 @@ polyfill(geom, resolution)
 \S4method{polyfill}{Column,Column}(geom, resolution)
 
 \S4method{polyfill}{Column,numeric}(geom, resolution)
+}
+\arguments{
+\item{geom}{Column}
+
+\item{resolution}{numeric}
 }
 \description{
 polyfill

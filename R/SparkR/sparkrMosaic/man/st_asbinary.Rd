@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_asbinary}
 \alias{st_asbinary}
+\alias{st_asbinary,Column-method}
 \title{st_asbinary
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_asbinary(geom)
 
 \S4method{st_asbinary}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_asbinary

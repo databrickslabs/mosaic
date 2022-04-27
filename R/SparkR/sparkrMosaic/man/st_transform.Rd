@@ -2,12 +2,18 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_transform}
 \alias{st_transform}
+\alias{st_transform,Column,Column-method}
 \title{st_transform
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_transform(geom, srid)
 
 \S4method{st_transform}{Column,Column}(geom, srid)
+}
+\arguments{
+\item{geom}{Column}
+
+\item{srid}{Column}
 }
 \description{
 st_transform

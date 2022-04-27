@@ -2,6 +2,8 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{mosaic_explode}
 \alias{mosaic_explode}
+\alias{mosaic_explode,Column,Column-method}
+\alias{mosaic_explode,Column,numeric-method}
 \title{mosaic_explode
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
@@ -12,6 +14,11 @@ mosaic_explode(geom, resolution)
 \S4method{mosaic_explode}{Column,Column}(geom, resolution)
 
 \S4method{mosaic_explode}{Column,numeric}(geom, resolution)
+}
+\arguments{
+\item{geom}{Column}
+
+\item{resolution}{numeric}
 }
 \description{
 mosaic_explode

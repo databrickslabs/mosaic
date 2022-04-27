@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{try_sql}
 \alias{try_sql}
+\alias{try_sql,Column-method}
 \title{try_sql
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 try_sql(inCol)
 
 \S4method{try_sql}{Column}(inCol)
+}
+\arguments{
+\item{inCol}{Column}
 }
 \description{
 try_sql

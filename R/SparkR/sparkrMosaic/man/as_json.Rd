@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{as_json}
 \alias{as_json}
+\alias{as_json,Column-method}
 \title{as_json
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 as_json(inGeom)
 
 \S4method{as_json}{Column}(inGeom)
+}
+\arguments{
+\item{inGeom}{Column}
 }
 \description{
 as_json

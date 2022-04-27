@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_numpoints}
 \alias{st_numpoints}
+\alias{st_numpoints,Column-method}
 \title{st_numpoints
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_numpoints(geom)
 
 \S4method{st_numpoints}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_numpoints

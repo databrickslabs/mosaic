@@ -2,12 +2,18 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_point}
 \alias{st_point}
+\alias{st_point,Column,Column-method}
 \title{st_point
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_point(xVal, yVal)
 
 \S4method{st_point}{Column,Column}(xVal, yVal)
+}
+\arguments{
+\item{xVal}{Column}
+
+\item{yVal}{Column}
 }
 \description{
 st_point

@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{flatten_polygons}
 \alias{flatten_polygons}
+\alias{flatten_polygons,Column-method}
 \title{flatten_polygons
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 flatten_polygons(geom)
 
 \S4method{flatten_polygons}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 flatten_polygons

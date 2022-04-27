@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_perimeter}
 \alias{st_perimeter}
+\alias{st_perimeter,Column-method}
 \title{st_perimeter
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_perimeter(geom)
 
 \S4method{st_perimeter}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_perimeter

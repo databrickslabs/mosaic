@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_convexhull}
 \alias{st_convexhull}
+\alias{st_convexhull,Column-method}
 \title{st_convexhull
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_convexhull(geom)
 
 \S4method{st_convexhull}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_convexhull

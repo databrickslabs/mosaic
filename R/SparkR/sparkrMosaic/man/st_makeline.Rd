@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_makeline}
 \alias{st_makeline}
+\alias{st_makeline,Column-method}
 \title{st_makeline
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_makeline(points)
 
 \S4method{st_makeline}{Column}(points)
+}
+\arguments{
+\item{points}{Column}
 }
 \description{
 st_makeline

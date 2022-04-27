@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_zmin}
 \alias{st_zmin}
+\alias{st_zmin,Column-method}
 \title{st_zmin
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_zmin(geom)
 
 \S4method{st_zmin}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_zmin

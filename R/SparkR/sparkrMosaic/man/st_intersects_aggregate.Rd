@@ -2,12 +2,18 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_intersects_aggregate}
 \alias{st_intersects_aggregate}
+\alias{st_intersects_aggregate,Column,Column-method}
 \title{st_intersects_aggregate
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_intersects_aggregate(leftIndex, rightIndex)
 
 \S4method{st_intersects_aggregate}{Column,Column}(leftIndex, rightIndex)
+}
+\arguments{
+\item{leftIndex}{Column}
+
+\item{rightIndex}{Column}
 }
 \description{
 st_intersects_aggregate

@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{as_hex}
 \alias{as_hex}
+\alias{as_hex,Column-method}
 \title{as_hex
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 as_hex(inGeom)
 
 \S4method{as_hex}{Column}(inGeom)
+}
+\arguments{
+\item{inGeom}{Column}
 }
 \description{
 as_hex

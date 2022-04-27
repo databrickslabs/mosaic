@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_astext}
 \alias{st_astext}
+\alias{st_astext,Column-method}
 \title{st_astext
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_astext(geom)
 
 \S4method{st_astext}{Column}(geom)
+}
+\arguments{
+\item{geom}{Column}
 }
 \description{
 st_astext

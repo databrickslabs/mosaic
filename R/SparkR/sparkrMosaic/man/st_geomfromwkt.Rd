@@ -2,12 +2,16 @@
 % Please edit documentation in R/generics.R, R/functions.R
 \name{st_geomfromwkt}
 \alias{st_geomfromwkt}
+\alias{st_geomfromwkt,Column-method}
 \title{st_geomfromwkt
 See \url{https://databrickslabs.github.io/mosaic/} for full documentation}
 \usage{
 st_geomfromwkt(inGeom)
 
 \S4method{st_geomfromwkt}{Column}(inGeom)
+}
+\arguments{
+\item{inGeom}{Column}
 }
 \description{
 st_geomfromwkt

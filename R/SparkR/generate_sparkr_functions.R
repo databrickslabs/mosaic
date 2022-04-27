@@ -56,16 +56,21 @@ build_method<-function(input){
     }
     x
   }
+  # convert scala type to R types
   args = lapply(input$args, argument_parser)
+  # take a copy for building the docs
+  param_args = args
+  # wrap the strings in speech marks
   args = lapply(args, function(x){c(x[1], paste0("'", x[2], "'"))})
+  # collapse down to a single string
   args = lapply(args, function(x){paste0(x,  collapse= ' = ')})
   column_specifiers <- build_column_specifiers(input)
   docstring <- paste0(
     c(paste0(c("#'", function_name), collapse=" "),
       "\n#' See \\url{https://databrickslabs.github.io/mosaic/} for full documentation",
-      paste0(c("#' @name", function_name), collapse=" "),
       paste0(c("#' @rdname", function_name), collapse=" "),
-      paste0(c("#' @exportMethod", function_name), collapse=" ")
+      paste0(c("#' @exportMethod", function_name), collapse=" "),
+      paste0(sapply(sapply(param_args, function(x){paste(x, collapse=" ")}), function(x){paste("#' @param ", x)}) , collapse="\n") 
     )
     ,collapse="\n"
   )
