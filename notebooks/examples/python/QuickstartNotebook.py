@@ -1,13 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Enable Mosaic in the notebook
-# MAGIC To get started, you'll need to attach the wheel to your cluster and import instances as in the cell below.
-
-# COMMAND ----------
-
-from pyspark.sql.functions import *
-import mosaic as mos
-mos.enable_mosaic(spark, dbutils)
+# MAGIC ## Setup NYC taxi zones
+# MAGIC In order to setup the data please run the notebook available at "../../data/DownloadNYCTaxiZones". </br>
+# MAGIC DownloadNYCTaxiZones notebook will make sure we have New York City Taxi zone shapes available in our environment.
 
 # COMMAND ----------
 
@@ -16,34 +11,19 @@ user_name = dbutils.notebook.entry_point.getDbutils().notebook().getContext().us
 raw_path = f"dbfs:/tmp/mosaic/{user_name}"
 raw_taxi_zones_path = f"{raw_path}/taxi_zones"
 
-print(f"The raw data will be stored in {raw_path}")
+print(f"The raw data is stored in {raw_path}")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Download taxi zones GeoJSON
+# MAGIC ## Enable Mosaic in the notebook
+# MAGIC To get started, you'll need to attach the wheel to your cluster and import instances as in the cell below.
 
 # COMMAND ----------
 
-import requests
-import os
-import pathlib
-
-taxi_zones_url = 'https://data.cityofnewyork.us/api/geospatial/d3c5-ddgc?method=export&format=GeoJSON'
-
-# The DBFS file system is mounted under /dbfs/ directory on Databricks cluster nodes
-
-
-local_taxi_zones_path = pathlib.Path(raw_taxi_zones_path.replace('dbfs:/', '/dbfs/'))
-local_taxi_zones_path.mkdir(parents=True, exist_ok=True)
-
-req = requests.get(taxi_zones_url)
-with open(local_taxi_zones_path / f'nyc_taxi_zones.geojson', 'wb') as f:
-  f.write(req.content)
-
-# COMMAND ----------
-
-display(dbutils.fs.ls(raw_taxi_zones_path))
+from pyspark.sql.functions import *
+import mosaic as mos
+mos.enable_mosaic(spark, dbutils)
 
 # COMMAND ----------
 
@@ -147,7 +127,7 @@ display(trips.select("pickup_geom", "dropoff_geom"))
 from mosaic import MosaicFrame
 
 neighbourhoods_mosaic_frame = MosaicFrame(neighbourhoods, "geometry")
-optimal_resolution = neighbourhoods_mosaic_frame.get_optimal_resolution(0.75)
+optimal_resolution = neighbourhoods_mosaic_frame.get_optimal_resolution(sample_fraction=0.75)
 
 print(f"Optimal resolution is {optimal_resolution}")
 
@@ -163,7 +143,7 @@ print(f"Optimal resolution is {optimal_resolution}")
 # COMMAND ----------
 
 display(
-  mosaicFrame.get_resolution_metrics(0.75)
+  neighbourhoods_mosaic_frame.get_resolution_metrics(sample_rows=150)
 )
 
 # COMMAND ----------
@@ -265,10 +245,6 @@ display(withDropoffZone)
 
 # COMMAND ----------
 
-withDropoffZone.createOrReplaceTempView("withDropoffZone")
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Visualise the results in Kepler
 
@@ -283,7 +259,7 @@ withDropoffZone.createOrReplaceTempView("withDropoffZone")
 
 # MAGIC %python
 # MAGIC %%mosaic_kepler
-# MAGIC "withDropoffZone" "pickup_h3" "h3" 5000
+# MAGIC withDropoffZone "pickup_h3" "h3" 5000
 
 # COMMAND ----------
 
