@@ -4,7 +4,8 @@ library(devtools)
 library(roxygen2)
 Sys.setenv("SPARK_HOME"="/usr/local/Cellar/apache-spark/3.2.1/libexec")
 Sys.setenv("JAVA_HOME"="/usr/local/Cellar/openjdk@8/1.8.0+312/libexec/openjdk.jdk/Contents/Home")
-library(SparkR, lib.loc = c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
+.libPaths(c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
+library(SparkR)
 
 # Increment the minor version number in the DESCRIPTION.TEMPLATE and copy into the package folder
 
@@ -37,7 +38,7 @@ build_sparkr_mosaic <- function(){
   increment_minor_version_number()
   
   # run check
-  # devtools::check("sparkrMosaic")
+  devtools::check("sparkrMosaic")
   
   # build package
   devtools::build("sparkrMosaic")
