@@ -47,6 +47,11 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     _ = MosaicLibraryHandler(config.mosaic_spark)
     config.mosaic_context = MosaicContext(config.mosaic_spark)
 
+    # Register SQL functions
+    optionClass = getattr(spark._sc._jvm.scala, "Option$")
+    optionModule = getattr(optionClass, "MODULE$")
+    config.mosaic_context._context.register(spark._jsparkSession, optionModule.apply(None))
+
     # Not yet added to the pyspark API
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=FutureWarning)
