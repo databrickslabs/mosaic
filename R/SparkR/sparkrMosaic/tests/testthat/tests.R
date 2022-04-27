@@ -3,14 +3,14 @@ testthat::expect_equal(1.0, {
   print("LOOK HERE____LOOK HERE____LOOK HERE____LOOK HERE____LOOK HERE____")
   print("Beginning test, directory is")
   print(system("pwd"))
-  mosaic_jar <- list.files("../../../staging")
+  mosaic_jar <- list.files("/home/runner/work/staging/")
   mosaic_jar <- mosaic_jar[grep("SNAPSHOT-jar-with-dependencies.jar", mosaic_jar, fixed=T)]
   print("LOOK HERE____LOOK HERE____LOOK HERE____LOOK HERE____LOOK HERE____")
   print("Looking for mosaic jar in")
   print(mosaic_jar)
   spark = sparkR.session(
     master <- "local[*]"
-    ,sparkJars <- paste0("../../../staging/", mosaic_jar)
+    ,sparkJars <- paste0("/home/runner/work/staging/", mosaic_jar)
   )
   
   enableMosaic()
