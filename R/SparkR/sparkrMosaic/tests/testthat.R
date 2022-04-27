@@ -1,4 +1,4 @@
 library(testthat)
-library(sparkrMosaic)
 library(SparkR)
+library(sparkrMosaic)
 test_check("sparkrMosaic")

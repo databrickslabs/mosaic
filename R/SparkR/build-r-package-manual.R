@@ -2,7 +2,9 @@
 setwd("/Users/robert.whiffin/Documents/mosaic/R/SparkR")
 library(devtools)
 library(roxygen2)
-library(SparkR)
+Sys.setenv("SPARK_HOME"="/usr/local/Cellar/apache-spark/3.2.1/libexec")
+Sys.setenv("JAVA_HOME"="/usr/local/Cellar/openjdk@8/1.8.0+312/libexec/openjdk.jdk/Contents/Home")
+library(SparkR, lib.loc = c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
 
 # Increment the minor version number in the DESCRIPTION.TEMPLATE and copy into the package folder
 
@@ -47,9 +49,7 @@ build_sparkr_mosaic <- function(){
 
 
 
-Sys.setenv("SPARK_HOME"="/usr/local/Cellar/apache-spark/3.2.1/libexec")
-Sys.setenv("JAVA_HOME"="/usr/local/Cellar/openjdk@8/1.8.0+312/libexec/openjdk.jdk/Contents/Home")
-library(SparkR, lib.loc = c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
+
 spark = sparkR.session(
   master = "local[*]"
   ,sparkJars = "/Users/robert.whiffin/Downloads/artefacts/mosaic-*-SNAPSHOT-jar-with-dependencies.jar"

@@ -89,23 +89,29 @@ build_method<-function(input){
 write_tests <- function(input){
   function_name = input$function_name
   arg_names = lapply(input$args, function(x){c(x[1])})
-  file_name = paste0(c("sparkrMosaic/tests/", function_name, ".R"), collapse = '')
   
+  # name of test
   test_name = paste0("test__", function_name)
+  # define function signature
   function_signature = paste0(
     "function(spark_df, "
     , paste(arg_names, sep=', ', collapse=", ") ,")" 
   )
+  # wrap colnames in "column()"
+  wrapped_args <- paste(sapply(arg_names, function(x){paste0("column('", x, "')")}), sep=', ', collapse=", ")
+  # function body
   function_body <- paste0(
     "{\n",
     "\tSparkR::withColumn(spark_df, ",
-    paste(arg_names, sep=', ', collapse=", "),
-    ")\n}"
+    paste0("'",function_name,"', "),
+    function_name,
+    "(",
+    wrapped_args,
+    "))\n}"
   )
+  # bring it all together
   full_test <- paste0(test_name, " <- ",function_signature, function_body)
-  testFileConn <- file(file_name)
-  writeLines(full_test, testFileConn)
-  closeAllConnections()
+  full_test
 }
 
 ############################################################
@@ -147,19 +153,18 @@ main <- function(scala_file_path){
   function_data = get_function_names(scala_file_path)
   parsed <- lapply(function_data, parser)
   
-  
-  
-  
-  genericFileConn <- file("sparkrMosaic/R/generics.R")
-  functionsFileConn <- file("sparkrMosaic/R/functions.R")
-  
+
   functions_header <- "#' @include generics.R\n\nNULL"
   
   generics <- lapply(parsed, build_generic)
   functions <- lapply(parsed, build_method)
   functions <- append(functions_header, functions)
   #write tests
-  lapply(parsed, write_tests)
+  #tests <- lapply(parsed, write_tests)
+  
+  genericFileConn <- file("sparkrMosaic/R/generics.R")
+  functionsFileConn <- file("sparkrMosaic/R/functions.R")
+  #testsFileConn = file("sparkrMosaic/tests/testthat/tests.R")
   
   writeLines(paste0(generics, collapse="\n"), genericFileConn)
   writeLines(paste0(functions, collapse="\n"), functionsFileConn)
@@ -167,12 +172,8 @@ main <- function(scala_file_path){
   
   # copy enableMosaic and column to directory
   file.copy("enableMosaic.R", "sparkrMosaic/R/enableMosaic.R", overwrite=T)
-  #file.copy("column.R", "sparkrMosaic/R/column.R", overwrite=T)
   
-  #package.skeleton(
-  #  name="sparkrMosaic"
-  #  ,code_files=c("generics.R", "functions.R","enableMosaic.R")
-  #)
+
 }
 
 args <- commandArgs(trailingOnly = T)
@@ -180,8 +181,3 @@ if (length(args) !=  1){
   stop("Please provide the MosaicContext.scala file path to generate_sparkr_functions.R")
 }
 main(args[1])
-
-#if (sys.nframe() == 0){
-#  
-#  main()
-#}#

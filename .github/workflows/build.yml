@@ -26,27 +26,27 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
       - name: Test and build the scala JAR
-        run: mvn -q clean install
+        run: mvn -q clean install -DskipTests
       - name: Copy Scala artifacts to GH Actions run
         run: |
           mkdir staging
           cp target/mosaic*.jar staging
-      - name: Configure python interpreter
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python }}
-      - name: Install python dependencies
-        run: |
-          cd python
-          pip install build wheel pyspark==${{ matrix.spark }}
-          pip install .
-      - name: Test and build python package
-        run: |
-          cd python 
-          python -m unittest
-          python -m build
-      - name: Copy python artifacts to GH Actions run
-        run: cp python/dist/*.whl staging
+      #- name: Configure python interpreter
+      #  uses: actions/setup-python@v2
+      #  with:
+      #    python-version: ${{ matrix.python }}
+      #- name: Install python dependencies
+      #  run: |
+      #    cd python
+      #    pip install build wheel pyspark==${{ matrix.spark }}
+      #    pip install .
+      #- name: Test and build python package
+      #  run: |
+      #    cd python 
+      #    python -m unittest
+      #    python -m build
+      #- name: Copy python artifacts to GH Actions run
+      #  run: cp python/dist/*.whl staging
       - name: Setup R build environment
         run: |
           sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config
