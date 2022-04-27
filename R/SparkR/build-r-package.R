@@ -20,13 +20,13 @@ build_sparkr_mosaic <- function(){
   #devtools::document("sparkrMosaic")
 
   # run check
-  devtools::check("sparkrMosaic")
+  #devtools::check("sparkrMosaic")
   
   ## test
   #devtools::test("sparkrMosaic")
   
   ## build package
-  # devtools::build("sparkrMosaic")
+  devtools::build("sparkrMosaic")
   #
   
 }
