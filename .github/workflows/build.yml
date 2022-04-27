@@ -30,6 +30,7 @@ jobs:
       - name: Copy Scala artifacts to GH Actions run
         run: |
           mkdir staging
+          pwd
           cp target/mosaic*.jar staging
       #- name: Configure python interpreter
       #  uses: actions/setup-python@v2
