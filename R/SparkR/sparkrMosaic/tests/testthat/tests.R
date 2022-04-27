@@ -4,10 +4,12 @@ testthat::expect_equal(1.0, {
   mosaic_jar <- list.files(staging_dir)
   mosaic_jar <- mosaic_jar[grep("SNAPSHOT-jar-with-dependencies.jar", mosaic_jar, fixed=T)]
   print("Looking for mosaic jar in")
-  print(mosaic_jar)
+  mosaic_jar_path = paste0(staging_dir, mosaic_jar)
+  
+  print(mosaic_jar_path)
   spark = sparkR.session(
-    master <- "local[*]"
-    ,sparkJars <- paste0(staging_dir, mosaic_jar)
+    master = "local[*]"
+    ,sparkJars = mosaic_jar_path
   )
   
   enableMosaic()

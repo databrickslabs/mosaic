@@ -53,7 +53,7 @@ build_sparkr_mosaic <- function(){
 
 spark = sparkR.session(
   master = "local[*]"
-  ,sparkJars = "/Users/robert.whiffin/Downloads/artefacts/mosaic-*-SNAPSHOT-jar-with-dependencies.jar"
+  ,sparkJars = "/Users/robert.whiffin/Downloads/artefacts/mosaic-0.1.0-SNAPSHOT-jar-with-dependencies.jar"
 )
 
 #geometry_api <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.geometry.api.GeometryAPI", methodName="apply", "ESRI")
