@@ -26,7 +26,7 @@ build_sparkr_mosaic <- function(){
   #devtools::test("sparkrMosaic")
   
   ## build package
-  #devtools::build("sparkrMosaic")
+  # devtools::build("sparkrMosaic")
   #
   
 }

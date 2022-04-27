@@ -8,8 +8,10 @@ testthat::expect_equal(1.0, {
   
   print(mosaic_jar_path)
   spark = sparkR.session(
-    master = "local[*]"
+    master = "local[1]"
     ,sparkJars = mosaic_jar_path
+   # ,sparkJars = "/Users/robert.whiffin/Downloads/artefacts/mosaic-0.1.0-SNAPSHOT-jar-with-dependencies.jar"
+    ,sparkConfig=list("spark.sparkr.use.daemon"="false")
   )
   
   enableMosaic()
