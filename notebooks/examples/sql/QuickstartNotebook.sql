@@ -1,17 +1,30 @@
 -- Databricks notebook source
 -- MAGIC %md
--- MAGIC ## Enable Mosaic in the notebook
--- MAGIC To get started, you'll need to attach the JAR to your cluster and import instances as in the cell below.
+-- MAGIC ## Setup NYC taxi zones
+-- MAGIC In order to setup the data please run the notebook available at "../../data/DownloadNYCTaxiZones". </br>
+-- MAGIC DownloadNYCTaxiZones notebook will make sure we have New York City Taxi zone shapes available in our environment.
 
 -- COMMAND ----------
 
--- MAGIC %scala
--- MAGIC import com.databricks.labs.mosaic.functions.MosaicContext
--- MAGIC import com.databricks.labs.mosaic.H3
--- MAGIC import com.databricks.labs.mosaic.ESRI
+-- MAGIC %python
+-- MAGIC user_name = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
 -- MAGIC 
--- MAGIC val mosaicContext = MosaicContext.build(H3, ESRI)
--- MAGIC mosaicContext.register(spark)
+-- MAGIC raw_path = f"dbfs:/tmp/mosaic/{user_name}"
+-- MAGIC raw_taxi_zones_path = f"{raw_path}/taxi_zones"
+-- MAGIC 
+-- MAGIC print(f"The raw data is stored in {raw_path}")
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Enable Mosaic in the notebook
+-- MAGIC To get started, you'll need to attach the JAR to your cluster and import instances as in the cell below. </br>
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC import mosaic as mos
+-- MAGIC mos.enable_mosaic(spark, dbutils)
 
 -- COMMAND ----------
 
@@ -26,15 +39,32 @@
 
 -- COMMAND ----------
 
-create table if not exists taxi_zones
-using json
-location "dbfs:/FileStore/shared_uploads/stuart.lynn@databricks.com/NYC_Taxi_Zones.geojson"
+-- MAGIC %python
+-- MAGIC # Note: Here we are using python as a proxy to programmatically
+-- MAGIC # pass the location of our data source for taxi zones.
+-- MAGIC spark.sql(f"drop table if exists taxi_zones;")
+-- MAGIC spark.sql(
+-- MAGIC   f"""
+-- MAGIC      create table if not exists taxi_zones
+-- MAGIC      using json
+-- MAGIC      options (multiline = true)
+-- MAGIC      location "{raw_taxi_zones_path}";
+-- MAGIC      """
+-- MAGIC )
 
 -- COMMAND ----------
 
-create table if not exists neighbourhoods as (
-  select properties.*, st_astext(st_geomfromgeojson(to_json(geometry))) as geometry 
-  from taxi_zones
+create or replace temp view neighbourhoods as (
+  select
+    type,
+    feature.properties as properties,
+    st_astext(st_geomfromgeojson(to_json(feature.geometry))) as geometry 
+  from (
+    select
+      type,
+      explode(features) as feature
+    from taxi_zones
+  )
 );
 select * from neighbourhoods;
 
@@ -71,7 +101,7 @@ location "/databricks-datasets/nyctaxi/tables/nyctaxi_yellow"
 
 -- COMMAND ----------
 
-create temp view trips as (
+create or replace temp view trips as (
   select 
     trip_distance,
     pickup_datetime,
@@ -110,17 +140,13 @@ select * from trips
 
 -- COMMAND ----------
 
--- MAGIC %scala
--- MAGIC import com.databricks.labs.mosaic.sql.MosaicAnalyzer
--- MAGIC import com.databricks.labs.mosaic.sql.MosaicFrame
+-- MAGIC %python
+-- MAGIC from mosaic import MosaicFrame
 -- MAGIC 
+-- MAGIC neighbourhoods_mosaic_frame = MosaicFrame(spark.read.table("neighbourhoods"), "geometry")
+-- MAGIC optimal_resolution = neighbourhoods_mosaic_frame.get_optimal_resolution(sample_fraction=0.75)
 -- MAGIC 
--- MAGIC val mosaicFrame = MosaicFrame(neighbourhoods)
--- MAGIC   .setGeometryColumn("geometry")
--- MAGIC 
--- MAGIC val analyzer = new MosaicAnalyzer(mosaicFrame)
--- MAGIC 
--- MAGIC analyzer.getOptimalResolution(0.5)
+-- MAGIC print(f"Optimal resolution is {optimal_resolution}")
 
 -- COMMAND ----------
 
@@ -133,10 +159,9 @@ select * from trips
 
 -- COMMAND ----------
 
--- MAGIC %scala
--- MAGIC import com.databricks.labs.mosaic.sql.SampleStrategy
+-- MAGIC %python
 -- MAGIC display(
--- MAGIC   analyzer.getResolutionMetrics(SampleStrategy())
+-- MAGIC   neighbourhoods_mosaic_frame.get_resolution_metrics(sample_rows=150)
 -- MAGIC )
 
 -- COMMAND ----------
@@ -155,8 +180,8 @@ select * from trips
 create or replace temp view tripsWithIndex as (
   select 
     *,
-    point_index(pickup_geom, 9) as pickup_h3,
-    point_index(dropoff_geom, 9) as dropoff_h3,
+    point_index_geom(pickup_geom, 9) as pickup_h3,
+    point_index_geom(dropoff_geom, 9) as dropoff_h3,
     st_makeline(array(pickup_geom, dropoff_geom)) as trip_line
   from trips
 )
@@ -168,7 +193,7 @@ create or replace temp view tripsWithIndex as (
 
 -- COMMAND ----------
 
-create temp view neighbourhoodsWithIndex as (
+create or replace temp view neighbourhoodsWithIndex as (
   select 
     *,
     mosaic_explode(geometry, 9) as mosaic_index
@@ -193,7 +218,7 @@ create or replace temp view withPickupZone as (
   from tripsWithIndex
   join (
     select 
-      zone as pickup_zone,
+      properties.zone as pickup_zone,
       mosaic_index
     from neighbourhoodsWithIndex
   )
@@ -215,7 +240,7 @@ create or replace temp view withDropoffZone as (
   from withPickupZone
   join (
     select 
-      zone as dropoff_zone,
+      properties.zone as dropoff_zone,
       mosaic_index
     from neighbourhoodsWithIndex
   )
@@ -239,14 +264,8 @@ select * from withDropoffZone;
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC from mosaic import enable_mosaic
--- MAGIC enable_mosaic(spark, dbutils)
-
--- COMMAND ----------
-
--- MAGIC %python
 -- MAGIC %%mosaic_kepler
--- MAGIC "withDropoffZone" "pickup_h3" "h3" 5000
+-- MAGIC "withDropoffZone" "pickup_h3" "h3" 5000 
 
 -- COMMAND ----------
 
