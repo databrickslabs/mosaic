@@ -22,7 +22,8 @@ build_generic <- function(input){
   function_name = input$function_name
   args = lapply(input$args, function(x){x[1]})
   paste0(
-    'setGeneric(
+    '#\' @rdname ', function_name, ' 
+    setGeneric(
         name="',function_name,'"
             ,def=function(',paste0(args, collapse=','), ')  {standardGeneric("',function_name, '")}
               )
@@ -61,7 +62,7 @@ build_method<-function(input){
   column_specifiers <- build_column_specifiers(input)
   docstring <- paste0(
     c(paste0(c("#'", function_name), collapse=" "),
-      "#' See \\url{https://databrickslabs.github.io/mosaic/} for full documentation",
+      "\n#' See \\url{https://databrickslabs.github.io/mosaic/} for full documentation",
       paste0(c("#' @name", function_name), collapse=" "),
       paste0(c("#' @rdname", function_name), collapse=" "),
       paste0(c("#' @exportMethod", function_name), collapse=" ")
