@@ -26,7 +26,6 @@ sdf <- SparkR::createDataFrame(
   )
 )
 
-
 sdf <- withColumn(sdf, "st_area", st_area(column("wkt")))
 sdf <- withColumn(sdf, "st_length", st_length(column("wkt")))
 sdf <- withColumn(sdf, "st_perimeter", st_perimeter(column("wkt")))
@@ -51,14 +50,14 @@ sdf <- withColumn(sdf, "st_zmin", st_zmin(column("wkt")))
 sdf <- withColumn(sdf, "st_zmax", st_zmax(column("wkt")))
 sdf <- withColumn(sdf, "flatten_polygons", flatten_polygons(column("wkt")))
 sdf <- withColumn(sdf, "point_index_lonlat", point_index_lonlat(lit(1), lit(1), lit(1L)))
-sdf <- withColumn(sdf, "point_index_geom", point_index_geom(column("point_wkt"), lit(1)))
-sdf <- withColumn(sdf, "index_geometry", index_geometry(lit(1)))
+sdf <- withColumn(sdf, "point_index_geom", point_index_geom(column("point_wkt"), lit(1L)))
+sdf <- withColumn(sdf, "index_geometry", index_geometry( SparkR::cast(lit(1), "long")))
 sdf <- withColumn(sdf, "polyfill", polyfill(column("wkt"), lit(1L)))
 sdf <- withColumn(sdf, "mosaic_explode", mosaic_explode(column("wkt"), lit(1L)))
 sdf <- withColumn(sdf, "mosaicfill", mosaicfill(column("wkt"), lit(1L)))
-sdf <- withColumn(sdf, "geom_with_srid", st_setsrid(st_geomfromwkt(column("wkt")), lit(4326)))
+sdf <- withColumn(sdf, "geom_with_srid", st_setsrid(st_geomfromwkt(column("wkt")), lit(4326L)))
 sdf <- withColumn(sdf, "srid_check", st_srid(column("geom_with_srid")))
-sdf <- withColumn(sdf, "transformed_geom", st_transform(column("geom_with_srid"), lit(3857)))
+sdf <- withColumn(sdf, "transformed_geom", st_transform(column("geom_with_srid"), lit(3857L)))
 
 if (nrow(SparkR::collect(sdf)) == 1.0){
   q(save="no", status=0)
