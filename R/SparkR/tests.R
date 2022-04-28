@@ -1,7 +1,7 @@
-devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
+#devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
 
 library(SparkR)
-SparkR::install.spark()
+#SparkR::install.spark()
 
 # find the sparkrMosaic tar
 file_list <- list.files()
