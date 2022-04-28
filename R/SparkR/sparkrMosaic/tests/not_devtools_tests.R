@@ -1,19 +1,23 @@
 #Sys.setenv("SPARK_HOME"="/usr/local/Cellar/apache-spark/3.2.1/libexec")
 #Sys.setenv("JAVA_HOME"="/usr/local/Cellar/openjdk@8/1.8.0+312/libexec/openjdk.jdk/Contents/Home")
 #.libPaths(c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
+devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
+
 library(SparkR)
+SparkR::install.spark()
+
 install.packages("sparkrMosaic_0.4.tar.gz", repos=NULL)
 library(sparkrMosaic)
-#staging_dir = "/home/runner/work/mosaic/mosaic/staging/"
-#mosaic_jar <- list.files(staging_dir)
-#mosaic_jar <- mosaic_jar[grep("SNAPSHOT-jar-with-dependencies.jar", mosaic_jar, fixed=T)]
-#print("Looking for mosaic jar in")
-#mosaic_jar_path = paste0(staging_dir, mosaic_jar)
-#print(mosaic_jar_path)
+staging_dir = "/home/runner/work/mosaic/mosaic/staging/"
+mosaic_jar <- list.files(staging_dir)
+mosaic_jar <- mosaic_jar[grep("SNAPSHOT-jar-with-dependencies.jar", mosaic_jar, fixed=T)]
+print("Looking for mosaic jar in")
+mosaic_jar_path = paste0(staging_dir, mosaic_jar)
+print(mosaic_jar_path)
 
 spark = sparkR.session(
   master = "local[*]"
-  ,sparkJars = "/Users/robert.whiffin/Downloads/artefacts/mosaic-0.1.0-SNAPSHOT-jar-with-dependencies.jar"
+  ,sparkJars = mosaic_jar_path
 )
 
 enableMosaic()
