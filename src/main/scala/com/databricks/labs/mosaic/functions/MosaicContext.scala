@@ -237,6 +237,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_ConvexHull(exprs(0), geometryAPI.name)
         )
         registry.registerFunction(
+          FunctionIdentifier("st_buffer", database),
+          ST_Buffer.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_Buffer(exprs(0), exprs(1), geometryAPI.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_numpoints", database),
           ST_NumPoints.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_NumPoints(exprs(0), geometryAPI.name)
@@ -388,6 +393,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_Scale(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
         def st_rotate(geom1: Column, td: Column): Column = ColumnAdapter(ST_Rotate(geom1.expr, td.expr, geometryAPI.name))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))
+        def st_buffer(geom: Column, radius: Column): Column = ColumnAdapter(ST_Buffer(geom.expr, radius.expr, geometryAPI.name))
+        def st_buffer(geom: Column, radius: Double): Column = ColumnAdapter(ST_Buffer(geom.expr, lit(radius).expr, geometryAPI.name))
         def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
         def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, geometryAPI.name))
         def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))
@@ -467,12 +474,12 @@ object MosaicContext {
 
     def geometryAPI: GeometryAPI = context.getGeometryAPI
 
+    def indexSystem: IndexSystem = context.getIndexSystem
+
     def context: MosaicContext =
         instance match {
             case Some(context) => context
             case None          => throw new IllegalStateException("MosaicContext was not built.")
         }
-
-    def indexSystem: IndexSystem = context.getIndexSystem
 
 }
