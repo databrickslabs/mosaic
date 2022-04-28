@@ -28,10 +28,10 @@ build_sparkr_mosaic <- function(){
   ## build package
   devtools::build("sparkrMosaic")
   
+  
   # run test
   system_cmd <- "Rscript --vanilla tests.R"
   system(system_cmd)
-  
 }
 
 
