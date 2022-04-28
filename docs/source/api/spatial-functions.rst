@@ -47,6 +47,54 @@ st_area
 
 .. note:: Results of this function are always expressed in the original units of the input geometry.
 
+
+
+
+st_buffer
+*********
+
+.. function:: st_buffer(col)
+
+    Buffer the input geometry by radius `radius` and return a new, buffered geometry.
+
+    :param col: Geometry
+    :type col: Column
+    :param radius: Double
+    :type radius: Column (DoubleType)
+    :rtype: Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_buffer('wkt', lit(2.))).show()
+    +--------------------+
+    | st_buffer(wkt, 2.0)|
+    +--------------------+
+    |POLYGON ((29.1055...|
+    +--------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_buffer($"wkt", 2d)).show()
+    +--------------------+
+    | st_buffer(wkt, 2.0)|
+    +--------------------+
+    |POLYGON ((29.1055...|
+    +--------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_buffer("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d)
+    +--------------------+
+    | st_buffer(wkt, 2.0)|
+    +--------------------+
+    |POLYGON ((29.1055...|
+    +--------------------+
+
 st_perimeter
 ************
 
