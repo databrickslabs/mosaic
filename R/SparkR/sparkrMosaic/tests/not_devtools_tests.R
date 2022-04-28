@@ -1,8 +1,8 @@
-Sys.setenv("SPARK_HOME"="/usr/local/Cellar/apache-spark/3.2.1/libexec")
-Sys.setenv("JAVA_HOME"="/usr/local/Cellar/openjdk@8/1.8.0+312/libexec/openjdk.jdk/Contents/Home")
-.libPaths(c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
+#Sys.setenv("SPARK_HOME"="/usr/local/Cellar/apache-spark/3.2.1/libexec")
+#Sys.setenv("JAVA_HOME"="/usr/local/Cellar/openjdk@8/1.8.0+312/libexec/openjdk.jdk/Contents/Home")
+#.libPaths(c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
 library(SparkR)
-install.packages("/Users/robert.whiffin/Documents/mosaic/R/SparkR/sparkrMosaic_0.4.tar.gz", repos=NULL)
+install.packages("sparkrMosaic_0.4.tar.gz", repos=NULL)
 library(sparkrMosaic)
 #staging_dir = "/home/runner/work/mosaic/mosaic/staging/"
 #mosaic_jar <- list.files(staging_dir)
