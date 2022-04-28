@@ -1,6 +1,3 @@
-#Sys.setenv("SPARK_HOME"="/usr/local/Cellar/apache-spark/3.2.1/libexec")
-#Sys.setenv("JAVA_HOME"="/usr/local/Cellar/openjdk@8/1.8.0+312/libexec/openjdk.jdk/Contents/Home")
-#.libPaths(c(file.path(Sys.getenv("SPARK_HOME"), "R", "lib")))
 devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
 
 library(SparkR)
@@ -62,6 +59,8 @@ sdf <- withColumn(sdf, "mosaicfill", mosaicfill(column("wkt"), lit(1L)))
 sdf <- withColumn(sdf, "geom_with_srid", st_setsrid(st_geomfromwkt(column("wkt")), lit(4326)))
 sdf <- withColumn(sdf, "srid_check", st_srid(column("geom_with_srid")))
 sdf <- withColumn(sdf, "transformed_geom", st_transform(column("geom_with_srid"), lit(3857)))
-as.double(SparkR::count(sdf)) == 1.0
+if (as.double(SparkR::count(sdf)) == 1.0){
+  q(save="no", status=0)
+} else  q(save="no", status=1)
 
 
