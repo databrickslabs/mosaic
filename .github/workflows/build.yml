@@ -25,7 +25,7 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
       - name: Test and build the scala JAR
-        run: mvn -q clean install -DskipTests
+        run: mvn -q clean install
       - name: Copy Scala artifacts to GH Actions run
         run: |
           mkdir staging
