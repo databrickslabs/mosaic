@@ -56,12 +56,7 @@ jobs:
         run: |
           cd R/SparkR
           Rscript --vanilla build-r-package.R
-          Rscript --vanilla sparkrMosaic/tests/tests.R
-          if (($? != 0))
-          then
-            exit 1
-          fi
-
+          ./run_test.sh
       - name: Copy R artifacts to GH Actions run
         run: cp R/SparkR/*.tar.gz staging
       - uses: actions/upload-artifact@v3
