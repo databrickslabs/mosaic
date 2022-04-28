@@ -10,7 +10,7 @@ import org.locationtech.jts.geom.Geometry
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{
-    BinaryExpression,
+    TernaryExpression,
     ExpectsInputTypes,
     Expression,
     ExpressionDescription,
@@ -30,33 +30,36 @@ import org.apache.spark.sql.types._
   """,
   since = "1.0"
 )
-case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
-    extends BinaryExpression
+case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Expression, indexSystemName: String, geometryAPIName: String)
+    extends TernaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
 
     // noinspection DuplicatedCode
     override def inputTypes: Seq[DataType] =
-        (left.dataType, right.dataType) match {
-            case (BinaryType, IntegerType)           => Seq(BinaryType, IntegerType)
-            case (StringType, IntegerType)           => Seq(StringType, IntegerType)
-            case (HexType, IntegerType)              => Seq(HexType, IntegerType)
-            case (InternalGeometryType, IntegerType) => Seq(InternalGeometryType, IntegerType)
-            case _ => throw new IllegalArgumentException(s"Not supported data type: (${left.dataType}, ${right.dataType}).")
+        (first.dataType, second.dataType, third.dataType) match {
+            case (BinaryType, IntegerType, BooleanType)           => Seq(BinaryType, IntegerType, BooleanType)
+            case (StringType, IntegerType, BooleanType)           => Seq(StringType, IntegerType, BooleanType)
+            case (HexType, IntegerType, BooleanType)              => Seq(HexType, IntegerType, BooleanType)
+            case (InternalGeometryType, IntegerType, BooleanType) => Seq(InternalGeometryType, IntegerType, BooleanType)
+            case _                                                =>
+                throw new IllegalArgumentException(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}).")
         }
 
-    override def right: Expression = resolution
+    override def first: Expression = geom
 
-    override def left: Expression = geom
+    override def second: Expression = resolution
+
+    override def third: Expression = keepCoreGeom
 
     /** Expression output DataType. */
     override def dataType: DataType = MosaicType
 
-    override def toString: String = s"h3_mosaicfill($geom, $resolution)"
+    override def toString: String = s"mosaicfill($geom, $resolution, $keepCoreGeom)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "h3_mosaicfill"
+    override def prettyName: String = "mosaicfill"
 
     /**
       * Type-wise differences in evaluation are only present on the input data
@@ -69,22 +72,25 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
       *   Any instance containing the geometry.
       * @param input2
       *   Any instance containing the resolution
+      * @param input3
+      *   Any instance defining if core chips should be geometries or nulls
       * @return
       *   A set of serialized
       *   [[com.databricks.labs.mosaic.core.types.model.MosaicChip]].
       */
     // noinspection DuplicatedCode
-    override def nullSafeEval(input1: Any, input2: Any): Any = {
+    override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
         val resolution: Int = H3IndexSystem.getResolution(input2)
+        val keepCoreGeom: Boolean = input3.asInstanceOf[Boolean]
 
         val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         val geometryAPI = GeometryAPI(geometryAPIName)
-        val geometry = geometryAPI.geometry(input1, left.dataType)
+        val geometry = geometryAPI.geometry(input1, first.dataType)
 
         val chips = GeometryTypeEnum.fromString(geometry.getGeometryType) match {
             case LINESTRING      => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
             case MULTILINESTRING => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
-            case _               => Mosaic.mosaicFill(geometry, resolution, indexSystem, geometryAPI)
+            case _               => Mosaic.mosaicFill(geometry, resolution, keepCoreGeom, indexSystem, geometryAPI)
         }
 
         val serialized = InternalRow.fromSeq(
@@ -97,14 +103,14 @@ case class MosaicFill(geom: Expression, resolution: Expression, indexSystemName:
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = MosaicFill(asArray(0), asArray(1), indexSystemName, geometryAPIName)
+        val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
+        val res = MosaicFill(asArray(0), asArray(1), asArray(2), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
 
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
-        copy(geom = newLeft, resolution = newRight)
+    override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
+        copy(geom = newFirst, resolution = newSecond, keepCoreGeom = newThird)
 
 }
 
@@ -115,14 +121,14 @@ object MosaicFill {
         new ExpressionInfo(
           classOf[IndexGeometry].getCanonicalName,
           db.orNull,
-          "mosaic_fill",
+          "mosaicfill",
           """
-            |    _FUNC_(geometry, resolution) - Returns the 2 set representation of geometry at resolution.
+            |    _FUNC_(geometry, resolution, keepCoreGeom) - Returns the 2 set representation of geometry at resolution.
             """.stripMargin,
           "",
           """
             |    Examples:
-            |      > SELECT _FUNC_(a, b);
+            |      > SELECT _FUNC_(a, b, c);
             |        [{index_id, is_border, chip_geom}, {index_id, is_border, chip_geom}, ..., {index_id, is_border, chip_geom}]
             |  """.stripMargin,
           "",

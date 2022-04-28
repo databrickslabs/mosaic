@@ -115,4 +115,31 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
+
+    def wktMosaicFillKeepCoreGeom(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+        mosaicContext.register(spark)
+
+        val boroughs: DataFrame = getBoroughs
+
+        val mosaics = boroughs
+          .select(
+              mosaicfill(col("wkt"), 11, true)
+          )
+          .collect()
+
+        boroughs.collect().length shouldEqual mosaics.length
+
+        boroughs.createOrReplaceTempView("boroughs")
+
+        val mosaics2 = spark
+          .sql("""
+                 |select mosaicfill(wkt, 11, true) from boroughs
+                 |""".stripMargin)
+          .collect()
+
+        boroughs.collect().length shouldEqual mosaics2.length
+    }
+
 }

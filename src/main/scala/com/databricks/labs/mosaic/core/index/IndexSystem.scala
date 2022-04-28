@@ -100,7 +100,7 @@ trait IndexSystem extends Serializable {
       * @return
       *   A border area representation via [[MosaicChip]] set.
       */
-    def getBorderChips(geometry: MosaicGeometry, borderIndices: util.List[java.lang.Long], geometryAPI: GeometryAPI): Seq[MosaicChip]
+    def getBorderChips(geometry: MosaicGeometry, borderIndices: util.List[java.lang.Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip]
 
     /**
       * Return a set of [[MosaicChip]] instances computed based on the core
@@ -113,7 +113,7 @@ trait IndexSystem extends Serializable {
       * @return
       *   A core area representation via [[MosaicChip]] set.
       */
-    def getCoreChips(coreIndices: util.List[java.lang.Long]): Seq[MosaicChip]
+    def getCoreChips(coreIndices: util.List[java.lang.Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip]
 
     /**
       * Get the geometry corresponding to the index with the input id.

@@ -18,26 +18,6 @@ import org.apache.spark.sql.catalyst.InternalRow
 case class MosaicChip(isCore: Boolean, index: Long, geom: MosaicGeometry) {
 
     /**
-      * Perform an intersection with a geometry, and if intersection is non
-      * empty and the chip is not a core set chip then extract the chip
-      * geometry.
-      *
-      * @param other
-      *   Geometry instance.
-      * @return
-      *   A Mosaic Chip instance.
-      */
-    def intersection(other: MosaicGeometry): MosaicChip = {
-        val intersect = other.intersection(geom)
-        val isCore = intersect.equals(geom)
-        if (isCore) {
-            MosaicChip(isCore, index, null)
-        } else {
-            MosaicChip(isCore, index, intersect)
-        }
-    }
-
-    /**
       * Indicates whether the chip is outside of the representation of the
       * geometry it was generated to represent (ie false positive index).
       */

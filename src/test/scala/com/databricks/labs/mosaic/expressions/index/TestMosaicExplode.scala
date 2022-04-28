@@ -13,6 +13,16 @@ class TestMosaicExplode extends AnyFlatSpec with MosaicExplodeBehaviors with Spa
         it should behave like wktDecompose(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
+    "Mosaic_Explode" should "decompose wkt geometries for any index system and any geometry API with SQL expr" in {
+        it should behave like wktDecomposeKeepCoreParamExpression(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like wktDecomposeKeepCoreParamExpression(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
+    "Mosaic_Explode" should "decompose wkt geometries with no null for any index system and any geometry API" in {
+        it should behave like wktDecomposeNoNulls(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like wktDecomposeNoNulls(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
     "Mosaic_Explode" should "decompose wkb geometries for any index system and any geometry API" in {
         it should behave like wkbDecompose(MosaicContext.build(H3IndexSystem, ESRI), spark)
         it should behave like wkbDecompose(MosaicContext.build(H3IndexSystem, JTS), spark)
