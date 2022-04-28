@@ -17,14 +17,8 @@ build_sparkr_mosaic <- function(){
   system(system_cmd)
   
   # build doc
-  #devtools::document("sparkrMosaic")
+  devtools::document("sparkrMosaic")
 
-  # run check
-  #devtools::check("sparkrMosaic")
-  
-  ## test
-  #devtools::test("sparkrMosaic")
-  
   ## build package
   devtools::build("sparkrMosaic")
   
