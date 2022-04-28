@@ -1528,7 +1528,7 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 <h2 id="mosaicfill">mosaicfill<a class="headerlink" href="#mosaicfill" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">mosaicfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">mosaicfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates:
 - a set of core indices that are fully contained by <cite>geometry</cite>; and
 - a set of border indices and sub-polygons that are partially contained by the input.</p>
@@ -1538,6 +1538,7 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
+<li><p><strong>keep_core_geometries</strong> (<em>Column: Boolean</em>) – Whether to keep the core geometries or set them to null</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -1551,7 +1552,7 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 <div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-21-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-21-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-21-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-21-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-21-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-21-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-21-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-21-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span><span class="p">}])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">printSchema</span><span class="p">()</span>
 <span class="go">root</span>
-<span class="go"> |-- h3_mosaicfill(wkt, 0): mosaic (nullable = true)</span>
+<span class="go"> |-- mosaicfill(wkt, 0): mosaic (nullable = true)</span>
 <span class="go"> |    |-- chips: array (nullable = true)</span>
 <span class="go"> |    |    |-- element: mosaic_chip (containsNull = true)</span>
 <span class="go"> |    |    |    |-- is_core: boolean (nullable = true)</span>
@@ -1561,7 +1562,7 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+---------------------+</span>
-<span class="go">|h3_mosaicfill(wkt, 0)|</span>
+<span class="go">|mosaicfill(wkt, 0)   |</span>
 <span class="go">+---------------------+</span>
 <span class="go">| {[{false, 5774810...|</span>
 <span class="go">+---------------------+</span>
@@ -1570,7 +1571,7 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 </div><div aria-labelledby="tab-21-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-21-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span><span class="w"></span>
 <span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">,</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">printSchema</span><span class="w"></span>
 <span class="n">root</span><span class="w"></span>
-<span class="w"> </span><span class="o">|--</span><span class="w"> </span><span class="n">h3_mosaicfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">):</span><span class="w"> </span><span class="n">mosaic</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
+<span class="w"> </span><span class="o">|--</span><span class="w"> </span><span class="n">mosaicfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">):</span><span class="w"> </span><span class="n">mosaic</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
 <span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">chips</span><span class="p">:</span><span class="w"> </span><span class="n">array</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
 <span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">element</span><span class="p">:</span><span class="w"> </span><span class="n">mosaic_chip</span><span class="w"> </span><span class="p">(</span><span class="n">containsNull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
 <span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">is_core</span><span class="p">:</span><span class="w"> </span><span class="n">boolean</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
@@ -1579,7 +1580,7 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 
 <span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="n">$</span><span class="s">"wkt"</span><span class="p">,</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
 <span class="o">+---------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="n">h3_mosaicfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="n">mosaicfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">   </span><span class="o">|</span><span class="w"></span>
 <span class="o">+---------------------+</span><span class="w"></span>
 <span class="o">|</span><span class="w"> </span><span class="p">{[{</span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="mi">5774810</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
 <span class="o">+---------------------+</span><span class="w"></span>
@@ -1587,7 +1588,7 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 </div>
 </div><div aria-labelledby="tab-21-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-21-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; SELECT mosaicfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
 +---------------------+
-|h3_mosaicfill(wkt, 0)|
+|mosaicfill(wkt, 0)   |
 +---------------------+
 | {[{false, 5774810...|
 +---------------------+
@@ -1599,7 +1600,7 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 <h2 id="mosaic-explode">mosaic_explode<a class="headerlink" href="#mosaic-explode" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="mosaic_explode">
-<span class="sig-name descname"><span class="pre">mosaic_explode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mosaic_explode" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">mosaic_explode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mosaic_explode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the set of Mosaic chips covering the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
 <p>In contrast to <span class="xref std std-ref">mosaic_fill</span>, <cite>mosaic_explode</cite> generates one result row per chip.</p>
 <dl class="field-list simple">
@@ -1607,6 +1608,7 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
+<li><p><strong>keep_core_geometries</strong> (<em>Column: Boolean</em>) – Whether to keep the core geometries or set them to null</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
