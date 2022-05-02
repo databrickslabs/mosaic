@@ -26,6 +26,9 @@ Both the .whl and JAR can be found in the 'Releases' section of the Mosaic GitHu
 
 Instructions for how to attach libraries to a Databricks cluster can be found [here](https://docs.databricks.com/libraries/cluster-libraries.html).
 
+### Releases
+You can access the latest artifacts and binaries [here](https://github.com/databrickslabs/mosaic/releases).
+
 ### Ecosystem
 Mosaic is intended to augment the existing system and unlock the potential by integrating spark, delta and 3rd party frameworks into the Lakehouse architecture.
 
