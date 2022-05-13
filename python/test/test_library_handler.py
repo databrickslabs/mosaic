@@ -9,7 +9,6 @@ class TestMosaicLibraryHandler(SparkTestCase):
         handler = MosaicLibraryHandler(self.spark)
         self.assertFalse(handler.auto_attach_enabled)
 
-    @unittest.skip("broken in github actions")
     def test_mosaic_library_location(self):
         handler = MosaicLibraryHandler(self.spark)
         self.assertEqual(self.library_location, handler.mosaic_library_location)
