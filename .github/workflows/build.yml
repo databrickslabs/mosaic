@@ -23,6 +23,10 @@ jobs:
         distribution: 'zulu'
     - name: Test and build the scala JAR
       run: mvn -q clean install
+    - name: Copy Scala artifacts to GH Actions run
+      run: |
+        mkdir staging
+        cp target/mosaic*.jar staging
     - name: Configure python interpreter
       uses: actions/setup-python@v2
       with:
