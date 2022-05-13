@@ -1,8 +1,6 @@
-# from importlib.metadata import version
 import importlib.metadata
 import importlib.resources
 import os
-import sys
 
 from py4j.protocol import Py4JJavaError
 
