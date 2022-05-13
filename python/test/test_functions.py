@@ -65,11 +65,22 @@ class TestFunctions(MosaicTestCase):
             .withColumn("index_geometry", api.index_geometry(lit(1)))
             .withColumn("polyfill", api.polyfill("wkt", lit(1)))
             .withColumn("mosaic_explode", api.mosaic_explode("wkt", lit(1)))
-            .withColumn("mosaic_explode_no_core_chips", api.mosaic_explode("wkt", lit(1), lit(False)))
-            .withColumn("mosaic_explode_no_core_chips_bool", api.mosaic_explode("wkt", lit(1), False))
+            .withColumn(
+                "mosaic_explode_no_core_chips",
+                api.mosaic_explode("wkt", lit(1), lit(False)),
+            )
+            .withColumn(
+                "mosaic_explode_no_core_chips_bool",
+                api.mosaic_explode("wkt", lit(1), False),
+            )
             .withColumn("mosaicfill", api.mosaicfill("wkt", lit(1)))
-            .withColumn("mosaicfill_no_core_chips", api.mosaicfill("wkt", lit(1), False))
-            .withColumn("mosaicfill_no_core_chips_bool", api.mosaicfill("wkt", lit(1), lit(False)))
+            .withColumn(
+                "mosaicfill_no_core_chips", api.mosaicfill("wkt", lit(1), False)
+            )
+            .withColumn(
+                "mosaicfill_no_core_chips_bool",
+                api.mosaicfill("wkt", lit(1), lit(False)),
+            )
             .withColumn(
                 "geom_with_srid", api.st_setsrid(api.st_geomfromwkt("wkt"), lit(4326))
             )

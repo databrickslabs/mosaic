@@ -1,3 +1,5 @@
+import unittest
+
 from .context import MosaicLibraryHandler
 from .utils import SparkTestCase
 
