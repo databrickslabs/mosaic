@@ -50,7 +50,9 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     # Register SQL functions
     optionClass = getattr(spark._sc._jvm.scala, "Option$")
     optionModule = getattr(optionClass, "MODULE$")
-    config.mosaic_context._context.register(spark._jsparkSession, optionModule.apply(None))
+    config.mosaic_context._context.register(
+        spark._jsparkSession, optionModule.apply(None)
+    )
 
     # Not yet added to the pyspark API
     with warnings.catch_warnings():
@@ -61,4 +63,5 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     config.ipython_hook = get_ipython()
     if config.ipython_hook:
         from mosaic.utils.kepler_magic import MosaicKepler
+
         config.ipython_hook.register_magics(MosaicKepler)

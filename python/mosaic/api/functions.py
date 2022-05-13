@@ -1,10 +1,11 @@
+from typing import Any
+
 from pyspark.sql import Column
 from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
 from pyspark.sql.functions import lit
-from typing import Any
+
 from mosaic.config import config
 from mosaic.utils.types import ColumnOrName, as_typed_col
-
 
 #####################
 # Spatial functions #
@@ -86,6 +87,7 @@ def st_convexhull(geom: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
         "st_convexhull", pyspark_to_java_column(geom)
     )
+
 
 def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
     """
@@ -614,7 +616,9 @@ def polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     )
 
 
-def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True) -> Column:
+def mosaic_explode(
+    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+) -> Column:
     """
     Generates:
     - a set of core indices that are fully contained by `geom`; and
@@ -635,18 +639,20 @@ def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geome
         if keep_core_geometries is set to False.
 
     """
-    if(type(keep_core_geometries) == bool):
+    if type(keep_core_geometries) == bool:
         keep_core_geometries = lit(keep_core_geometries)
 
     return config.mosaic_context.invoke_function(
         "mosaic_explode",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
-        pyspark_to_java_column(keep_core_geometries)
+        pyspark_to_java_column(keep_core_geometries),
     )
 
 
-def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True) -> Column:
+def mosaicfill(
+    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+) -> Column:
     """
     Generates:
     - a set of core indices that are fully contained by `geom`; and
@@ -668,12 +674,12 @@ def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometrie
 
     """
 
-    if(type(keep_core_geometries) == bool):
+    if type(keep_core_geometries) == bool:
         keep_core_geometries = lit(keep_core_geometries)
 
     return config.mosaic_context.invoke_function(
         "mosaicfill",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
-        pyspark_to_java_column(keep_core_geometries)
+        pyspark_to_java_column(keep_core_geometries),
     )
