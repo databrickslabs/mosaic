@@ -16,8 +16,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: list /lib
-      run: ls -lah python/mosaic/lib/
 #     - name: Configure JDK
 #       uses: actions/setup-java@v2
 #       with:
@@ -29,15 +27,17 @@ jobs:
 #       run: |
 #         mkdir staging
 #         cp target/mosaic*.jar staging
-#     - name: Configure python interpreter
-#       uses: actions/setup-python@v2
-#       with:
-#         python-version: ${{ matrix.python }}
-#     - name: Install python dependencies
-#       run: |
-#         cd python
-#         pip install build wheel pyspark==${{ matrix.spark }}
-#         pip install .
+    - name: Configure python interpreter
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+    - name: Install python dependencies
+      run: |
+        cd python
+        pip install build wheel pyspark==${{ matrix.spark }}
+        pip install .
+    - name: list /lib
+      run: ls -lah python/mosaic/lib/
 #     - name: Test and build python package
 #       run: |
 #         cd python 
