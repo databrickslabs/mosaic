@@ -1,6 +1,8 @@
+from typing import Any
+
 from pyspark.sql import Column
 from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
-from pyspark.sql.functions import col
+from pyspark.sql.functions import lit
 
 from mosaic.config import config
 from mosaic.utils.types import ColumnOrName, as_typed_col
@@ -84,6 +86,28 @@ def st_convexhull(geom: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "st_convexhull", pyspark_to_java_column(geom)
+    )
+
+
+def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
+    """
+    Compute the buffered geometry based on geom and radius.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+    radius : Column
+        The radius of buffering
+
+    Returns
+    -------
+    Column
+        A geometry
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_buffer", pyspark_to_java_column(geom), pyspark_to_java_column(radius)
     )
 
 
@@ -592,7 +616,9 @@ def polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     )
 
 
-def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+def mosaic_explode(
+    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+) -> Column:
     """
     Generates:
     - a set of core indices that are fully contained by `geom`; and
@@ -604,21 +630,29 @@ def mosaic_explode(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     ----------
     geom : Column
     resolution : Column (IntegerType)
+    keep_core_geometries : Column (BooleanType) | bool
 
     Returns
     -------
     Column (StructType[is_core: BooleanType, h3: LongType, wkb: BinaryType])
-        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips.
+        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips
+        if keep_core_geometries is set to False.
 
     """
+    if type(keep_core_geometries) == bool:
+        keep_core_geometries = lit(keep_core_geometries)
+
     return config.mosaic_context.invoke_function(
         "mosaic_explode",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
+        pyspark_to_java_column(keep_core_geometries),
     )
 
 
-def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+def mosaicfill(
+    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+) -> Column:
     """
     Generates:
     - a set of core indices that are fully contained by `geom`; and
@@ -630,15 +664,22 @@ def mosaicfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     ----------
     geom : Column
     resolution : Column (IntegerType)
+    keep_core_geometries : Column (BooleanType) | bool
 
     Returns
     -------
     Column (ArrayType[StructType[is_core: BooleanType, h3: LongType, wkb: BinaryType]])
-        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips.
+        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips
+        if keep_core_geometries is set to False.
 
     """
+
+    if type(keep_core_geometries) == bool:
+        keep_core_geometries = lit(keep_core_geometries)
+
     return config.mosaic_context.invoke_function(
         "mosaicfill",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
+        pyspark_to_java_column(keep_core_geometries),
     )

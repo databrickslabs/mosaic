@@ -27,7 +27,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+**/lib/*.jar
 lib64/
 parts/
 sdist/

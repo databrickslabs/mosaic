@@ -47,6 +47,54 @@ st_area
 
 .. note:: Results of this function are always expressed in the original units of the input geometry.
 
+
+
+
+st_buffer
+*********
+
+.. function:: st_buffer(col)
+
+    Buffer the input geometry by radius `radius` and return a new, buffered geometry.
+
+    :param col: Geometry
+    :type col: Column
+    :param radius: Double
+    :type radius: Column (DoubleType)
+    :rtype: Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_buffer('wkt', lit(2.))).show()
+    +--------------------+
+    | st_buffer(wkt, 2.0)|
+    +--------------------+
+    |POLYGON ((29.1055...|
+    +--------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_buffer($"wkt", 2d)).show()
+    +--------------------+
+    | st_buffer(wkt, 2.0)|
+    +--------------------+
+    |POLYGON ((29.1055...|
+    +--------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_buffer("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d)
+    +--------------------+
+    | st_buffer(wkt, 2.0)|
+    +--------------------+
+    |POLYGON ((29.1055...|
+    +--------------------+
+
 st_perimeter
 ************
 
@@ -1036,7 +1084,7 @@ polyfill
 mosaicfill
 **********
 
-.. function:: mosaicfill(geometry, resolution)
+.. function:: mosaicfill(geometry, resolution, keep_core_geometries)
 
     Generates:
     - a set of core indices that are fully contained by `geometry`; and
@@ -1048,6 +1096,8 @@ mosaicfill
     :type geometry: Column
     :param resolution: Index resolution
     :type resolution: Column: Integer
+    :param keep_core_geometries: Whether to keep the core geometries or set them to null
+    :type keep_core_geometries: Column: Boolean
     :rtype: Column: ArrayType[MosaicType]
 
     :example:
@@ -1058,7 +1108,7 @@ mosaicfill
     >>> df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
     >>> df.select(mosaicfill('wkt', lit(0))).printSchema()
     root
-     |-- h3_mosaicfill(wkt, 0): mosaic (nullable = true)
+     |-- mosaicfill(wkt, 0): mosaic (nullable = true)
      |    |-- chips: array (nullable = true)
      |    |    |-- element: mosaic_chip (containsNull = true)
      |    |    |    |-- is_core: boolean (nullable = true)
@@ -1068,7 +1118,7 @@ mosaicfill
 
     >>> df.select(mosaicfill('wkt', lit(0))).show()
     +---------------------+
-    |h3_mosaicfill(wkt, 0)|
+    |mosaicfill(wkt, 0)   |
     +---------------------+
     | {[{false, 5774810...|
     +---------------------+
@@ -1078,7 +1128,7 @@ mosaicfill
     >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
     >>> df.select(mosaicfill($"wkt", lit(0))).printSchema
     root
-     |-- h3_mosaicfill(wkt, 0): mosaic (nullable = true)
+     |-- mosaicfill(wkt, 0): mosaic (nullable = true)
      |    |-- chips: array (nullable = true)
      |    |    |-- element: mosaic_chip (containsNull = true)
      |    |    |    |-- is_core: boolean (nullable = true)
@@ -1087,7 +1137,7 @@ mosaicfill
 
     >>> df.select(mosaicfill($"wkt", lit(0))).show()
     +---------------------+
-    |h3_mosaicfill(wkt, 0)|
+    |mosaicfill(wkt, 0)   |
     +---------------------+
     | {[{false, 5774810...|
     +---------------------+
@@ -1096,7 +1146,7 @@ mosaicfill
 
     >>> SELECT mosaicfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
     +---------------------+
-    |h3_mosaicfill(wkt, 0)|
+    |mosaicfill(wkt, 0)   |
     +---------------------+
     | {[{false, 5774810...|
     +---------------------+
@@ -1105,7 +1155,7 @@ mosaicfill
 mosaic_explode
 **************
 
-.. function:: mosaic_explode(geometry, resolution)
+.. function:: mosaic_explode(geometry, resolution, keep_core_geometries)
 
     Returns the set of Mosaic chips covering the input `geometry` at `resolution`.
 
@@ -1115,6 +1165,8 @@ mosaic_explode
     :type geometry: Column
     :param resolution: Index resolution
     :type resolution: Column: Integer
+    :param keep_core_geometries: Whether to keep the core geometries or set them to null
+    :type keep_core_geometries: Column: Boolean
     :rtype: Column: MosaicType
 
     :example:

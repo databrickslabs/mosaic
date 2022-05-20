@@ -1,8 +1,9 @@
+from test.utils import MosaicTestCase
+
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import DataFrame
 
 from mosaic import MosaicFrame, displayMosaic
-from test.utils import MosaicTestCase
 
 
 class TestMosaicFrame(MosaicTestCase):

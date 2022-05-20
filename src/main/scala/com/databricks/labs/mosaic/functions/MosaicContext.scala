@@ -237,6 +237,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_ConvexHull(exprs(0), geometryAPI.name)
         )
         registry.registerFunction(
+          FunctionIdentifier("st_buffer", database),
+          ST_Buffer.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_Buffer(exprs(0), exprs(1), geometryAPI.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_numpoints", database),
           ST_NumPoints.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_NumPoints(exprs(0), geometryAPI.name)
@@ -284,12 +289,25 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           FunctionIdentifier("mosaic_explode", database),
           MosaicExplode.registryExpressionInfo(database),
           (exprs: Seq[Expression]) =>
-              MosaicExplode(struct(ColumnAdapter(exprs(0)), ColumnAdapter(exprs(1))).expr, indexSystem.name, geometryAPI.name)
+              exprs match {
+                  case e if e.length == 2 =>
+                      MosaicExplode(struct(ColumnAdapter(e(0)), ColumnAdapter(e(1)), lit(true)).expr, indexSystem.name, geometryAPI.name)
+                  case e if e.length == 3 =>
+                      MosaicExplode(
+                        struct(ColumnAdapter(e(0)), ColumnAdapter(e(1)), ColumnAdapter(e(2))).expr,
+                        indexSystem.name,
+                        geometryAPI.name
+                      )
+              }
         )
         registry.registerFunction(
           FunctionIdentifier("mosaicfill", database),
           MosaicFill.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => MosaicFill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) =>
+              exprs match {
+                  case e if e.length == 2 => MosaicFill(e(0), e(1), lit(true).expr, indexSystem.name, geometryAPI.name)
+                  case e if e.length == 3 => MosaicFill(e(0), e(1), e(2), indexSystem.name, geometryAPI.name)
+              }
         )
         registry.registerFunction(
           FunctionIdentifier("point_index_lonlat", database),
@@ -375,6 +393,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_Scale(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
         def st_rotate(geom1: Column, td: Column): Column = ColumnAdapter(ST_Rotate(geom1.expr, td.expr, geometryAPI.name))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))
+        def st_buffer(geom: Column, radius: Column): Column = ColumnAdapter(ST_Buffer(geom.expr, radius.expr, geometryAPI.name))
+        def st_buffer(geom: Column, radius: Double): Column = ColumnAdapter(ST_Buffer(geom.expr, lit(radius).expr, geometryAPI.name))
         def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
         def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, geometryAPI.name))
         def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))
@@ -397,13 +417,29 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
         /** IndexSystem and GeometryAPI Specific methods */
         def mosaic_explode(geom: Column, resolution: Column): Column =
-            ColumnAdapter(MosaicExplode(struct(geom, resolution).expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(MosaicExplode(struct(geom, resolution, lit(true)).expr, indexSystem.name, geometryAPI.name))
+        def mosaic_explode(geom: Column, resolution: Column, keepCoreGeometries: Boolean): Column =
+            ColumnAdapter(MosaicExplode(struct(geom, resolution, lit(keepCoreGeometries)).expr, indexSystem.name, geometryAPI.name))
+        def mosaic_explode(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
+            ColumnAdapter(MosaicExplode(struct(geom, resolution, keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
         def mosaic_explode(geom: Column, resolution: Int): Column =
-            ColumnAdapter(MosaicExplode(struct(geom, lit(resolution)).expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(MosaicExplode(struct(geom, lit(resolution), lit(true)).expr, indexSystem.name, geometryAPI.name))
+        def mosaic_explode(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
+            ColumnAdapter(MosaicExplode(struct(geom, lit(resolution), lit(keepCoreGeometries)).expr, indexSystem.name, geometryAPI.name))
+        def mosaic_explode(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
+            ColumnAdapter(MosaicExplode(struct(geom, lit(resolution), keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
         def mosaicfill(geom: Column, resolution: Column): Column =
-            ColumnAdapter(MosaicFill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(MosaicFill(geom.expr, resolution.expr, lit(true).expr, indexSystem.name, geometryAPI.name))
         def mosaicfill(geom: Column, resolution: Int): Column =
-            ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, lit(true).expr, indexSystem.name, geometryAPI.name))
+        def mosaicfill(geom: Column, resolution: Column, keepCoreGeometries: Boolean): Column =
+            ColumnAdapter(MosaicFill(geom.expr, resolution.expr, lit(keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
+        def mosaicfill(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
+            ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, lit(keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
+        def mosaicfill(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
+            ColumnAdapter(MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name))
+        def mosaicfill(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
+            ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name))
         def point_index_geom(point: Column, resolution: Column): Column =
             ColumnAdapter(PointIndexGeom(point.expr, resolution.expr, indexSystem.name, geometryAPI.name))
         def point_index_geom(point: Column, resolution: Int): Column =
@@ -438,12 +474,12 @@ object MosaicContext {
 
     def geometryAPI: GeometryAPI = context.getGeometryAPI
 
+    def indexSystem: IndexSystem = context.getIndexSystem
+
     def context: MosaicContext =
         instance match {
             case Some(context) => context
             case None          => throw new IllegalStateException("MosaicContext was not built.")
         }
-
-    def indexSystem: IndexSystem = context.getIndexSystem
 
 }

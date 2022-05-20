@@ -1,5 +1,5 @@
 # Databricks
-![mosaic-logo](src/main/resources/mosaic_logo.png)
+![mosaic-logo](../src/main/resources/mosaic_logo.png)
 
 An extension to the [Apache Spark](https://spark.apache.org/) framework that allows easy and fast processing of very large geospatial datasets.
 

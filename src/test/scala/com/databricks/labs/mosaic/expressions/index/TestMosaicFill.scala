@@ -28,4 +28,9 @@ class TestMosaicFill extends AnyFlatSpec with MosaicFillBehaviors with SparkSuit
         it should behave like coordsMosaicFill(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
+    "MosaicFill" should "fill wkt geometries with keepCoreGeom parameter" in {
+        it should behave like wktMosaicFillKeepCoreGeom(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like wktMosaicFillKeepCoreGeom(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
 }

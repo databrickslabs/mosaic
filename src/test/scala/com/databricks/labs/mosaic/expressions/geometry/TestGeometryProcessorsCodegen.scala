@@ -55,4 +55,11 @@ class TestGeometryProcessorsCodegen extends AnyFlatSpec with GeometryProcessorsB
         it should behave like transformationsCodegen(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
+    "ST_ buffer" should "execute without errors for any index system and any geometry API" in {
+        it should behave like bufferCalculation(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like bufferCalculation(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like bufferCodegen(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like bufferCodegen(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
 }
