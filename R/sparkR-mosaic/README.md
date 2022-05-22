@@ -27,3 +27,6 @@ library(sparkrMosaic)
 ### Example notebooks
 This repository contains several example notebooks in `notebooks/examples`. You can import them into your Databricks workspace using the instructions [here](https://docs.databricks.com/notebooks/notebooks-manage.html#import-a-notebook).
 
+### Contributing to the R bindings for Mosaic
+
+See the [contributing](./CONTRIBUTING.md) section. 
