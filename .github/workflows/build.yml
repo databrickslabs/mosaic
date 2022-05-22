@@ -52,8 +52,8 @@ jobs:
       - name: Build R package
         run: |
           cd R/sparkR-mosaic
-          mkdir -p /usr/local/lib/R/site-library
-          sudo chown -R $USER: /usr/local/lib/R/site-library
+          mkdir -p /usr/lib/R/site-library
+          sudo chown -R $USER: /usr/lib/R/site-library
           Rscript --vanilla build-r-package.R
       - name: Copy R artifacts to GH Actions run
         run: cp R/sparkR-mosaic/*.tar.gz staging
