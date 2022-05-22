@@ -51,12 +51,12 @@ jobs:
           sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config
       - name: Build R package
         run: |
-          cd R/SparkR
+          cd R/SparkR-Mosaic
           mkdir -p /usr/local/lib/R/site-library
           sudo chown -R $USER: /usr/local/lib/R/site-library
           Rscript --vanilla build-r-package.R
       - name: Copy R artifacts to GH Actions run
-        run: cp R/SparkR/*.tar.gz staging
+        run: cp R/SparkR-Mosaic/*.tar.gz staging
       - uses: actions/upload-artifact@v3
         with:
           name: artefacts
