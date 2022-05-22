@@ -89,36 +89,7 @@ build_method<-function(input){
   paste0(c(docstring, function_def, "\n\n\n"), collapse="\n")
   
 }
-############################################################
-# write tests
 
-write_tests <- function(input){
-  function_name = input$function_name
-  arg_names = lapply(input$args, function(x){c(x[1])})
-  
-  # name of test
-  test_name = paste0("test__", function_name)
-  # define function signature
-  function_signature = paste0(
-    "function(spark_df, "
-    , paste(arg_names, sep=', ', collapse=", ") ,")" 
-  )
-  # wrap colnames in "column()"
-  wrapped_args <- paste(sapply(arg_names, function(x){paste0("column('", x, "')")}), sep=', ', collapse=", ")
-  # function body
-  function_body <- paste0(
-    "{\n",
-    "\tSparkR::withColumn(spark_df, ",
-    paste0("'",function_name,"', "),
-    function_name,
-    "(",
-    wrapped_args,
-    "))\n}"
-  )
-  # bring it all together
-  full_test <- paste0(test_name, " <- ",function_signature, function_body)
-  full_test
-}
 
 ############################################################
 get_function_names <- function(scala_file_path){
@@ -165,12 +136,9 @@ main <- function(scala_file_path){
   generics <- lapply(parsed, build_generic)
   functions <- lapply(parsed, build_method)
   functions <- append(functions_header, functions)
-  #write tests
-  #tests <- lapply(parsed, write_tests)
   
   genericFileConn <- file("sparkrMosaic/R/generics.R")
   functionsFileConn <- file("sparkrMosaic/R/functions.R")
-  #testsFileConn = file("sparkrMosaic/tests/testthat/tests.R")
   
   writeLines(paste0(generics, collapse="\n"), genericFileConn)
   writeLines(paste0(functions, collapse="\n"), functionsFileConn)
