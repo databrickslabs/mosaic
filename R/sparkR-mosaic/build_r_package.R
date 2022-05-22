@@ -16,20 +16,12 @@ build_sparkr_mosaic <- function(){
   system_cmd <- paste0(c("Rscript --vanilla generate_sparkr_functions.R", scala_file_path), collapse = " ")
   system(system_cmd)
 
-  # copy enableMosaic functions in sparkrMosaic
-  system_cmd <- "cp enableMosaic.R ./sparkrMosaic/R/enableMosaic.R"
-  system(system_cmd)
-
   # build doc
   devtools::document("sparkrMosaic")
 
   ## build package
   devtools::build("sparkrMosaic")
   
-  
-  # run test
-  system_cmd <- "Rscript --vanilla tests.R"
-  system(system_cmd)
 }
 
 

@@ -55,6 +55,10 @@ jobs:
           mkdir -p /usr/lib/R/site-library
           sudo chown -R $USER: /usr/lib/R/site-library
           Rscript --vanilla build_r_package.R
+      - name: Test R package
+        run: |
+          cd R/sparkR-mosaic
+          Rscript --vanilla tests.R
       - name: Copy R artifacts to GH Actions run
         run: cp R/sparkR-mosaic/*.tar.gz staging
       - uses: actions/upload-artifact@v3
