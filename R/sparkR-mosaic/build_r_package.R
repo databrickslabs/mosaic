@@ -15,7 +15,11 @@ build_sparkr_mosaic <- function(){
   scala_file_path <- "../../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
   system_cmd <- paste0(c("Rscript --vanilla generate_sparkr_functions.R", scala_file_path), collapse = " ")
   system(system_cmd)
-  
+
+  # copy enableMosaic functions in sparkrMosaic
+  system_cmd <- "cp enableMosaic.R ./sparkrMosaic/R/enableMosaic.R"
+  system(system_cmd)
+
   # build doc
   devtools::document("sparkrMosaic")
 
