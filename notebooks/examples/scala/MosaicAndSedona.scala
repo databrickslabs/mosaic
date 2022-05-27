@@ -39,6 +39,7 @@ val df = spark.createDataFrame(Seq(Tuple1("POLYGON ((30 10, 40 40, 20 40, 10 20,
 df
    .withColumn("mosaic_area", st_area($"wkt"))                      // Mosaic
    .withColumn("sedona_area", expr("ST_Area(ST_GeomFromWKT(wkt))")) // Sedona
+   .withColumn("sedona_n_points", expr("ST_NPoints(ST_GeomFromWKT(wkt))")) // Sedona
    .show()
 
 // COMMAND ----------

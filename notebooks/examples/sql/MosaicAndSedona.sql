@@ -35,7 +35,8 @@
 -- COMMAND ----------
 
 SELECT 
-  mosaic.ST_Area(wkt) as mosaic_area,           -- Mosaic
-  ST_Area(ST_GeomFromWKT(wkt)) as sedona_area,  -- Sedona
+  mosaic.ST_Area(wkt) as mosaic_area,                  -- Mosaic
+  ST_Area(ST_GeomFromWKT(wkt)) as sedona_area,         -- Sedona
+  ST_NPoints(ST_GeomFromWKT(wkt)) as sedona_n_points,  -- Sedona
   wkt
 FROM sample
