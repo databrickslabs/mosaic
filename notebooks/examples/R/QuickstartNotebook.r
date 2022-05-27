@@ -193,7 +193,7 @@ display(neighbourhoodsWithIndex)
 # COMMAND ----------
 
 pickupNeighbourhoods <- neighbourhoodsWithIndex %>% 
-  select(
+  SparkR::select(
     column("properties.borough") %>% alias("pickup_zone")
     , column("mosaic_index")
   )
@@ -209,7 +209,7 @@ withPickupZone <-
     # the borough. Otherwise we need to perform an st_contains operation on the chip geometry.
     column("mosaic_index.is_core") | st_contains(column("mosaic_index.wkb"), column("pickup_geom"))
   ) %>% 
-  select(
+  SparkR::select(
       column("trip_distance")
     , column("pickup_geom")
     , column("pickup_zone")
@@ -230,7 +230,7 @@ display(withPickupZone)
 
 dropoffNeighbourhoods <-
   neighbourhoodsWithIndex %>% 
-   select(
+   SparkR::select(
      column("properties.borough") %>% alias("dropoff_zone")
      , column("mosaic_index")
    )
@@ -244,7 +244,7 @@ withDropoffZone =
   where(
     column("mosaic_index.is_core") | st_contains(column("mosaic_index.wkb"), column("dropoff_geom"))
   ) %>% 
-  select(
+  SparkR::select(
       column("trip_distance")
     , column("pickup_geom")
     , column("pickup_zone")
@@ -286,6 +286,11 @@ display(withDropoffZone)
 
 # COMMAND ----------
 
+# We are using a temp view to pass the dataframe from R to python
+withDropoffZone %>% createOrReplaceTempView("withDropoffZone")
+
+# COMMAND ----------
+
 # MAGIC %python
 # MAGIC %%mosaic_kepler
-# MAGIC withDropoffZone "pickup_h3" "h3" 5000
+# MAGIC "withDropoffZone" "pickup_h3" "h3" 5000
