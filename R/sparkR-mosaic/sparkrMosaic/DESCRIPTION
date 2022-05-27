@@ -1,0 +1,21 @@
+Package: sparkrMosaic
+Title: SparkR bindings for Databricks Mosaic
+Version: 0.1.0
+Authors@R: 
+    person("Robert", "Whiffin", , "robert.whiffin@databricks.com", role = c("aut", "cre")
+           )
+Description: This package extends SparkR to bring the Databricks Mosaic for geospatial processing APIs into SparkR.
+License: Databricks
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.0
+Collate: 
+    'enableMosaic.R'
+    'generics.R'
+    'functions.R'
+Imports:
+  SparkR,
+  methods
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
