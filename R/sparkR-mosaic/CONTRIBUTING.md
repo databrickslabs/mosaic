@@ -8,6 +8,14 @@ In order to generate the R files, run
 Rscript --vanilla build_r_package.R
 ```
 
+You can run the integration tests with
+
+```shell
+Rscript --vanilla tests.R
+```
+
+The unit tests are developed in the Scala codebase.
+
 This will generate all the necessary R files in `sparkrMosaic/R/`.
 
 ## Style guide
