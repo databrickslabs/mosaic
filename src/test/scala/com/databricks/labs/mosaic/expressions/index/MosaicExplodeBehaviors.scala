@@ -4,10 +4,10 @@ import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.{getBoroughs, getWKTRowsDf}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
+import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
 
 trait MosaicExplodeBehaviors {
     this: AnyFlatSpec =>
@@ -17,7 +17,7 @@ trait MosaicExplodeBehaviors {
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
             .select(
@@ -43,59 +43,61 @@ trait MosaicExplodeBehaviors {
         import mc.functions._
         mosaicContext.register(spark)
 
-        val rdd = spark.sparkContext.makeRDD(Seq(
+        val rdd = spark.sparkContext.makeRDD(
+          Seq(
             Row("POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))")
-        ))
+          )
+        )
         val schema = StructType(
-            List(
-                StructField("wkt", StringType)
-            )
+          List(
+            StructField("wkt", StringType)
+          )
         )
         val df = spark.createDataFrame(rdd, schema)
 
         val noEmptyChips = df
-          .select(
-              mosaic_explode(col("wkt"), 4, true)
-          )
-          .filter(col("index.wkb").isNull)
-          .count()
+            .select(
+              mosaic_explode(col("wkt"), 4, keepCoreGeometries = true)
+            )
+            .filter(col("index.wkb").isNull)
+            .count()
 
         noEmptyChips should equal(0)
 
         val emptyChips = df
-          .select(
-              mosaic_explode(col("wkt"), 4, false)
-          )
-          .filter(col("index.wkb").isNull)
+            .select(
+              mosaic_explode(col("wkt"), 4, keepCoreGeometries = false)
+            )
+            .filter(col("index.wkb").isNull)
 
         emptyChips.collect().length should be > 0
     }
 
     def wktDecomposeKeepCoreParamExpression(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
-        import mc.functions._
         mosaicContext.register(spark)
 
-        val rdd = spark.sparkContext.makeRDD(Seq(
+        val rdd = spark.sparkContext.makeRDD(
+          Seq(
             Row("POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))")
-        ))
+          )
+        )
         val schema = StructType(
-            List(
-                StructField("wkt", StringType)
-            )
+          List(
+            StructField("wkt", StringType)
+          )
         )
         val df = spark.createDataFrame(rdd, schema)
 
         val noEmptyChips = df
-          .select(
+            .select(
               expr("mosaic_explode(wkt, 4, true)")
-          )
+            )
         noEmptyChips.collect().length should be > 0
 
         val noEmptyChips_2 = df
-          .select(
+            .select(
               expr("mosaic_explode(wkt, 4, false)")
-          )
+            )
         noEmptyChips_2.collect().length should be > 0
     }
 
@@ -104,11 +106,11 @@ trait MosaicExplodeBehaviors {
         import mc.functions._
         mosaicContext.register(spark)
 
-        val wktRows: DataFrame = getWKTRowsDf
+        val wktRows: DataFrame = getWKTRowsDf(mc)
 
         val mosaics = wktRows
             .select(
-                mosaic_explode(col("wkt"), 4)
+              mosaic_explode(col("wkt"), 4)
             )
             .collect()
 
@@ -131,7 +133,7 @@ trait MosaicExplodeBehaviors {
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
             .select(
@@ -157,7 +159,7 @@ trait MosaicExplodeBehaviors {
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
             .select(
@@ -183,7 +185,7 @@ trait MosaicExplodeBehaviors {
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
             .select(

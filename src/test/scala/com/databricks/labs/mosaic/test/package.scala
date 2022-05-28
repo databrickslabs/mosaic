@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic
 
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 
 import org.apache.spark.sql.functions._
@@ -123,18 +124,44 @@ package object test {
               )
             )
 
-        def polyDf(sparkSession: SparkSession): DataFrame = {
-            val mosaicContext: MosaicContext = MosaicContext.build(H3, ESRI)
-            import mosaicContext.functions.st_geomfromgeojson
-            sparkSession.read
+        def polyDf(sparkSession: SparkSession, mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+            import mc.functions._
+
+            val indexSystem = mc.getIndexSystem
+            val df = sparkSession.read
                 .json("src/test/resources/NYC_Taxi_Zones.geojson")
                 .withColumn("geometry", st_geomfromgeojson(to_json(col("geometry"))))
+            indexSystem match {
+                case H3IndexSystem  => df
+                case BNGIndexSystem => df
+                        .withColumn("greenwich", st_point(lit(0.0098), lit(51.4934)))
+                        .withColumn(
+                          "geometry",
+                          st_translate(
+                            col("geometry"),
+                            st_xmax(col("greenwich")) - st_xmax(col("geometry")),
+                            st_ymax(col("greenwich")) - st_ymax(col("geometry"))
+                          )
+                        )
+                        .withColumn(
+                          "geometry",
+                          st_setsrid(col("geometry"), lit(4326))
+                        )
+                        .withColumn(
+                          "geometry",
+                          st_transform(col("geometry"), lit(27700))
+                        )
+                        .drop("greenwich")
+            }
         }
 
-        def pointDf(sparkSession: SparkSession): DataFrame = {
-            val mosaicContext: MosaicContext = MosaicContext.build(H3, ESRI)
-            import mosaicContext.functions.st_point
-            sparkSession.read
+        def pointDf(sparkSession: SparkSession, mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+            import mc.functions._
+
+            val indexSystem = mc.getIndexSystem
+            val df = sparkSession.read
                 .options(
                   Map(
                     "header" -> "true",
@@ -143,9 +170,35 @@ package object test {
                 )
                 .csv("src/test/resources/nyctaxi_yellow_trips.csv")
                 .withColumn("geometry", st_point(col("pickup_longitude"), col("pickup_latitude")))
+            indexSystem match {
+                case H3IndexSystem  => df
+                case BNGIndexSystem => df
+                        .withColumn("greenwich", st_point(lit(0.0098), lit(51.4934)))
+                        .withColumn(
+                          "geometry",
+                          st_translate(
+                            col("geometry"),
+                            st_xmax(col("greenwich")) - st_xmax(col("geometry")),
+                            st_ymax(col("greenwich")) - st_ymax(col("geometry"))
+                          )
+                        )
+                        .withColumn(
+                          "geometry",
+                          st_setsrid(col("geometry"), lit(4326))
+                        )
+                        .withColumn(
+                          "geometry",
+                          st_transform(col("geometry"), lit(27700))
+                        )
+                        .drop("greenwich")
+            }
         }
 
-        def getHexRowsDf: DataFrame = {
+        def getHexRowsDf(mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+            import mc.functions._
+
+            val indexSystem = mc.getIndexSystem
             val spark = SparkSession.builder().getOrCreate()
             val rows = hex_rows.map { x => Row(x: _*) }
             val rdd = spark.sparkContext.makeRDD(rows)
@@ -156,10 +209,35 @@ package object test {
               )
             )
             val df = spark.createDataFrame(rdd, schema)
-            df
+            indexSystem match {
+                case H3IndexSystem  => df
+                case BNGIndexSystem => df
+                        .withColumn("greenwich", st_point(lit(0.0098), lit(51.4934)))
+                        .withColumn(
+                          "hex",
+                          st_translate(
+                            col("hex"),
+                            st_xmax(col("greenwich")) - st_xmax(col("hex")),
+                            st_ymax(col("greenwich")) - st_ymax(col("hex"))
+                          )
+                        )
+                        .withColumn(
+                          "hex",
+                          st_setsrid(st_geomfromwkt(st_aswkt(col("hex"))), lit(4326))
+                        )
+                        .withColumn(
+                          "hex",
+                          convert_to(st_transform(col("hex"), lit(27700)), "hex")
+                        )
+                        .drop("greenwich")
+            }
         }
 
-        def getWKTRowsDf: DataFrame = {
+        def getWKTRowsDf(mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+            import mc.functions._
+
+            val indexSystem = mc.getIndexSystem
             val spark = SparkSession.builder().getOrCreate()
             val rows = wkt_rows.map { x => Row(x: _*) }
             val rdd = spark.sparkContext.makeRDD(rows)
@@ -170,10 +248,35 @@ package object test {
               )
             )
             val df = spark.createDataFrame(rdd, schema)
-            df
+            indexSystem match {
+                case H3IndexSystem  => df
+                case BNGIndexSystem => df
+                        .withColumn("greenwich", st_point(lit(0.0098), lit(51.4934)))
+                        .withColumn(
+                          "wkt",
+                          st_translate(
+                            col("wkt"),
+                            st_xmax(col("greenwich")) - st_xmax(col("wkt")),
+                            st_ymax(col("greenwich")) - st_ymax(col("wkt"))
+                          )
+                        )
+                        .withColumn(
+                          "wkt",
+                          st_setsrid(st_geomfromwkt(col("wkt")), lit(4326))
+                        )
+                        .withColumn(
+                          "wkt",
+                          st_aswkt(st_transform(col("wkt"), lit(27700)))
+                        )
+                        .drop("greenwich")
+            }
         }
 
-        def getBoroughs: DataFrame = {
+        def getBoroughs(mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+            import mc.functions._
+
+            val indexSystem = mc.getIndexSystem
             val spark = SparkSession.builder().getOrCreate()
             val rows = wkt_rows_boroughs.map { x => Row(x: _*) }
             val rdd = spark.sparkContext.makeRDD(rows)
@@ -184,10 +287,35 @@ package object test {
               )
             )
             val df = spark.createDataFrame(rdd, schema)
-            df
+            indexSystem match {
+                case H3IndexSystem  => df
+                case BNGIndexSystem => df
+                        .withColumn("greenwich", st_point(lit(0.0098), lit(51.4934)))
+                        .withColumn(
+                          "wkt",
+                          st_translate(
+                            col("wkt"),
+                            st_xmax(col("greenwich")) - st_xmax(col("wkt")),
+                            st_ymax(col("greenwich")) - st_ymax(col("wkt"))
+                          )
+                        )
+                        .withColumn(
+                          "wkt",
+                          st_setsrid(st_geomfromwkt(col("wkt")), lit(4326))
+                        )
+                        .withColumn(
+                          "wkt",
+                          st_aswkt(st_transform(col("wkt"), lit(27700)))
+                        )
+                        .drop("greenwich")
+            }
         }
 
-        def getGeoJSONDf: DataFrame = {
+        def getGeoJSONDf(mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+            import mc.functions._
+
+            val indexSystem = mc.getIndexSystem
             val spark = SparkSession.builder().getOrCreate()
             val rows = geoJSON_rows.map { x => Row(x: _*) }
             val rdd = spark.sparkContext.makeRDD(rows)
@@ -198,7 +326,28 @@ package object test {
               )
             )
             val df = spark.createDataFrame(rdd, schema)
-            df
+            indexSystem match {
+                case H3IndexSystem  => df
+                case BNGIndexSystem => df
+                        .withColumn("greenwich", st_point(lit(0.0098), lit(51.4934)))
+                        .withColumn(
+                          "geojson",
+                          st_translate(
+                            col("geojson"),
+                            st_xmax(col("greenwich")) - st_xmax(col("geojson")),
+                            st_ymax(col("greenwich")) - st_ymax(col("geojson"))
+                          )
+                        )
+                        .withColumn(
+                          "geojson",
+                          st_setsrid(st_geomfromwkt(col("geojson")), lit(4326))
+                        )
+                        .withColumn(
+                          "geojson",
+                          st_asgeojson(st_transform(col("geojson"), lit(27700)))
+                        )
+                        .drop("greenwich")
+            }
         }
 
     }

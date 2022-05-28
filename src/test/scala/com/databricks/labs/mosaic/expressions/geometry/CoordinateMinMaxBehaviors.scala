@@ -20,7 +20,7 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf.orderBy("id")
+        val df = getWKTRowsDf(mc).orderBy("id")
         val results = df
             .select(st_xmin(col("wkt")))
             .as[Double]
@@ -46,7 +46,7 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf.orderBy("id")
+        val df = getWKTRowsDf(mc).orderBy("id")
         val result = df
             .select(st_xmin(col("wkt")))
             .as[Double]
@@ -71,7 +71,7 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf.orderBy("id")
+        val df = getWKTRowsDf(mc).orderBy("id")
         val results = df.select(st_xmax(col("wkt"))).as[Double].collect()
         val expected = List(40.0, 2.0, 110.0, 45.0, -75.78033, 40.0, 40.0, 40.0)
 
@@ -93,7 +93,7 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf.orderBy("id")
+        val df = getWKTRowsDf(mc).orderBy("id")
         val result = df
             .select(st_xmax(col("wkt")))
             .as[Double]
@@ -118,7 +118,7 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf.orderBy("id")
+        val df = getWKTRowsDf(mc).orderBy("id")
         val results = df.select(st_ymin(col("wkt"))).as[Double].collect()
         val expected = List(10.0, 0.0, 10.0, 5.0, 35.18937, 10.0, 10.0, 10.0)
 
@@ -140,7 +140,7 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf.orderBy("id")
+        val df = getWKTRowsDf(mc).orderBy("id")
         val result = df
             .select(st_ymin(col("wkt")))
             .as[Double]
@@ -165,7 +165,7 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf.orderBy("id")
+        val df = getWKTRowsDf(mc).orderBy("id")
         val results = df.select(st_ymax(col("wkt"))).as[Double].collect()
         val expected = List(40.0, 2.0, 110.0, 60.0, 35.18937, 40.0, 40.0, 40.0)
 
@@ -187,7 +187,7 @@ trait CoordinateMinMaxBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf.orderBy("id")
+        val df = getWKTRowsDf(mc).orderBy("id")
         val result = df
             .select(st_ymax(col("wkt")))
             .as[Double]

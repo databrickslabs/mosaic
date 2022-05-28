@@ -17,7 +17,7 @@ trait AsHexCodegenBehaviors { this: AnyFlatSpec =>
         val mc = mosaicContext
         import mc.functions._
 
-        val hexDf: DataFrame = getHexRowsDf.withColumn("asHex", as_hex(col("hex")))
+        val hexDf: DataFrame = getHexRowsDf(mc).withColumn("asHex", as_hex(col("hex")))
         val queryExecution = hexDf.queryExecution
         val plan = queryExecution.executedPlan
 

@@ -15,7 +15,7 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val left = boroughs
             .select(
@@ -79,7 +79,7 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val left = boroughs
             .select(
