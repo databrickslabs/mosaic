@@ -3,7 +3,6 @@ package com.databricks.labs.mosaic.core.index
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.MosaicChip
-import java.{lang, util}
 
 /**
   * Defines the API that all index systems need to respect for Mosaic to support
@@ -12,16 +11,28 @@ import java.{lang, util}
 trait IndexSystem extends Serializable {
 
     /**
-     * Get the k ring of indices around the provided index id.
-     *
-     * @param index
-     *   Index ID to be used as a center of k ring.
-     * @param n
-     *   Number of k rings to be generated around the input index.
-     * @return
-     *   A collection of index IDs forming a k ring.
-     */
-    def kRing(index: Long, n: Int): util.List[lang.Long]
+      * Get the k ring of indices around the provided index id.
+      *
+      * @param index
+      *   Index ID to be used as a center of k ring.
+      * @param n
+      *   Number of k rings to be generated around the input index.
+      * @return
+      *   A collection of index IDs forming a k ring.
+      */
+    def kRing(index: Long, n: Int): Seq[Long]
+
+    /**
+      * Get the k disk of indices around the provided index id.
+      *
+      * @param index
+      *   Index ID to be used as a center of k disk.
+      * @param n
+      *   Distance of k disk to be generated around the input index.
+      * @return
+      *   A collection of index IDs forming a k disk.
+      */
+    def kDisk(index: Long, n: Int): Seq[Long]
 
     def minResolution: Int
 
@@ -86,13 +97,11 @@ trait IndexSystem extends Serializable {
       * @return
       *   A set of indices representing the input geometry.
       */
-    def polyfill(geometry: MosaicGeometry, resolution: Int): util.List[java.lang.Long]
+    def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI] = None): Seq[Long]
 
     /**
-      * Return a set of [[MosaicChip]] instances computed based on the geometry
-      * and border indices. Each chip is computed via intersection between the
-      * input geometry and individual index geometry.
-      *
+      * @see
+      *   [[IndexSystem.getBorderChips()]]
       * @param geometry
       *   Input geometry whose border is being represented.
       * @param borderIndices
@@ -100,7 +109,23 @@ trait IndexSystem extends Serializable {
       * @return
       *   A border area representation via [[MosaicChip]] set.
       */
-    def getBorderChips(geometry: MosaicGeometry, borderIndices: util.List[java.lang.Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip]
+    def getBorderChips(
+        geometry: MosaicGeometry,
+        borderIndices: Seq[Long],
+        keepCoreGeom: Boolean,
+        geometryAPI: GeometryAPI
+    ): Seq[MosaicChip] = {
+        val intersections = for (index <- borderIndices) yield {
+            val indexGeom = indexToGeometry(index, geometryAPI)
+            val intersect = geometry.intersection(indexGeom)
+            val isCore = intersect.equals(indexGeom)
+
+            val chipGeom = if (!isCore || keepCoreGeom) intersect else null
+
+            MosaicChip(isCore = isCore, index, chipGeom)
+        }
+        intersections.filterNot(_.isEmpty)
+    }
 
     /**
       * Return a set of [[MosaicChip]] instances computed based on the core
@@ -113,7 +138,7 @@ trait IndexSystem extends Serializable {
       * @return
       *   A core area representation via [[MosaicChip]] set.
       */
-    def getCoreChips(coreIndices: util.List[java.lang.Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip]
+    def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip]
 
     /**
       * Get the geometry corresponding to the index with the input id.

@@ -36,11 +36,10 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
       *   H3 index id in Long.
       */
     override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
-        val resolution: Int = H3IndexSystem.getResolution(input3)
+        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+        val resolution: Int = indexSystem.getResolution(input3)
         val lon: Double = input1.asInstanceOf[Double]
         val lat: Double = input2.asInstanceOf[Double]
-
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
 
         indexSystem.pointToIndex(lon, lat, resolution)
     }

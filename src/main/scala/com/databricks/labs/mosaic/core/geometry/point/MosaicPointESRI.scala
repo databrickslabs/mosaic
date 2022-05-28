@@ -1,9 +1,8 @@
 package com.databricks.labs.mosaic.core.geometry.point
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.types.model._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POINT, POLYGON}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
 import com.esri.core.geometry.{Point, SpatialReference}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCPoint}
 import com.uber.h3core.util.GeoCoord
@@ -23,10 +22,6 @@ class MosaicPointESRI(point: OGCPoint) extends MosaicGeometryESRI(point) with Mo
         } else {
             Seq(getX, getY)
         }
-
-    override def getX: Double = point.X()
-
-    override def getY: Double = point.Y()
 
     override def getZ: Double = point.Z()
 
@@ -56,6 +51,10 @@ class MosaicPointESRI(point: OGCPoint) extends MosaicGeometryESRI(point) with Mo
         )
     }
 
+    override def getX: Double = point.X()
+
+    override def getY: Double = point.Y()
+
 }
 
 object MosaicPointESRI extends GeometryReader {
@@ -64,6 +63,18 @@ object MosaicPointESRI extends GeometryReader {
         MosaicPointESRI(
           new OGCPoint(new Point(geoCoord.lng, geoCoord.lat), SpatialReference.create(4326))
         )
+    }
+
+    def apply(coords: Seq[Double]): MosaicPointESRI = {
+        if (coords.length == 3) {
+            MosaicPointESRI(
+              new OGCPoint(new Point(coords(0), coords(1), coords(2)), SpatialReference.create(4326))
+            )
+        } else {
+            MosaicPointESRI(
+              new OGCPoint(new Point(coords(0), coords(1)), SpatialReference.create(4326))
+            )
+        }
     }
 
     def apply(point: OGCGeometry): MosaicPointESRI = new MosaicPointESRI(point.asInstanceOf[OGCPoint])

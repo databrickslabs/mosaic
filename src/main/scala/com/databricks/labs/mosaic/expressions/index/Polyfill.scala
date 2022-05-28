@@ -64,12 +64,11 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
       */
     // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val resolution: Int = H3IndexSystem.getResolution(input2)
-
         val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+        val resolution: Int = indexSystem.getResolution(input2)
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geometry = geometryAPI.geometry(input1, left.dataType)
-        val indices = indexSystem.polyfill(geometry, resolution)
+        val indices = indexSystem.polyfill(geometry, resolution, Some(geometryAPI))
 
         val serialized = ArrayData.toArrayData(indices.toArray)
         serialized
