@@ -8,5 +8,6 @@ package object mosaic {
     val JTS: GeometryAPI = mosaic.core.geometry.api.GeometryAPI.JTS
     val ESRI: GeometryAPI = mosaic.core.geometry.api.GeometryAPI.ESRI
     val H3: IndexSystem = mosaic.core.index.H3IndexSystem
+    val BNG: IndexSystem = mosaic.core.index.BNGIndexSystem
 
 }
