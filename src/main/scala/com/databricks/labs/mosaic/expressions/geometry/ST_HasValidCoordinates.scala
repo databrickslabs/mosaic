@@ -13,11 +13,12 @@ case class ST_HasValidCoordinates(
     inputGeom: Expression,
     crsCode: Expression,
     which: Expression,
-    geometryAPIName: String,
-    crsBoundsProvider: CRSBoundsProvider
+    geometryAPIName: String
 ) extends TernaryExpression
       with CodegenFallback
       with NullIntolerant {
+
+    val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(GeometryAPI(geometryAPIName))
 
     override def first: Expression = inputGeom
 
@@ -45,7 +46,7 @@ case class ST_HasValidCoordinates(
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = ST_IsValid(asArray(0), geometryAPIName)
+        val res = ST_HasValidCoordinates(asArray(0), asArray(1), asArray(2), geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -68,16 +69,16 @@ object ST_HasValidCoordinates {
               |    valid coordinates with respect to provided crs code and
               |    the type of bounds.
             """.stripMargin,
-            "",
-            """
-              |    Examples:
-              |      > SELECT _FUNC_(geom, EPSG:4326, bounds);
-              |        true
-              |  """.stripMargin,
-            "",
-            "misc_funcs",
-            "1.0",
-            "",
-            "built-in"
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(geom, EPSG:4326, bounds);
+            |        true
+            |  """.stripMargin,
+          "",
+          "misc_funcs",
+          "1.0",
+          "",
+          "built-in"
         )
 }
