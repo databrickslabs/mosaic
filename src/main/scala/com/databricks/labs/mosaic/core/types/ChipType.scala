@@ -14,5 +14,9 @@ class ChipType()
         StructField("wkb", BinaryType)
       )
     ) {
+
     override def simpleString: String = "CHIP"
+
+    override def typeName: String = "struct"
+
 }

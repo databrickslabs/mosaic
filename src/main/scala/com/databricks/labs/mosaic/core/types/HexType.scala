@@ -13,5 +13,9 @@ class HexType()
         StructField("hex", StringType)
       )
     ) {
+
     override def simpleString: String = "HEX"
+
+    override def typeName: String = "struct"
+
 }
