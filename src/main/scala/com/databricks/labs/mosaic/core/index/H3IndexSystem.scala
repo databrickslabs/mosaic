@@ -170,7 +170,7 @@ object H3IndexSystem extends IndexSystem with Serializable {
 
     override def minResolution: Int = 0
 
-    override def maxResolution: Int = 16
+    override def maxResolution: Int = 15
 
     /**
       * Get the k disk of indices around the provided index id.
@@ -186,4 +186,5 @@ object H3IndexSystem extends IndexSystem with Serializable {
         h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).toSeq.map(_.toLong)
     }
 
+    override def resolutions: Seq[Int] = minResolution to maxResolution
 }

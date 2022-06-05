@@ -83,10 +83,6 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         }
     }
 
-    def indexDigits(index: Long): Seq[Int] = {
-        index.toString.map(_.asDigit)
-    }
-
     /**
       * A radius of minimal enclosing circle is always smaller than the largest
       * side of the skewed hexagon. Since H3 is generating hexagons that take
@@ -105,7 +101,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       *   when performing polyfill.
       */
     override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = {
-        val size = (10 ^ 6 - 10 ^ math.abs(resolution)) * (5 * 10 ^ (1 - math.abs(resolution)))
+        val size = getEdgeSize(resolution)
         size * math.sqrt(2)
     }
 
@@ -146,6 +142,21 @@ object BNGIndexSystem extends IndexSystem with Serializable {
     }
 
     /**
+      * @see
+      *   [[IndexSystem.getCoreChips()]]
+      * @param coreIndices
+      *   Indices corresponding to the core area of the input geometry.
+      * @return
+      *   A core area representation via [[MosaicChip]] set.
+      */
+    override def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
+        coreIndices.map(index => {
+            val indexGeom = if (keepCoreGeom) indexToGeometry(index, geometryAPI) else null
+            MosaicChip(isCore = true, index, indexGeom)
+        })
+    }
+
+    /**
       * Boundary that is returned by H3 isn't valid from JTS perspective since
       * it does not form a LinearRing (ie first point == last point). The first
       * point of the boundary is appended to the end of the boundary to form a
@@ -159,7 +170,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
     override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
         val digits = indexDigits(index)
         val resolution = getResolution(digits)
-        val edgeSize = getEdgeSize(digits, resolution)
+        val edgeSize = getEdgeSize(resolution)
         val x = getX(digits, edgeSize)
         val y = getY(digits, edgeSize)
         val p1 = geometryAPI.fromCoords(Seq(x, y))
@@ -169,18 +180,58 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         geometryAPI.geometry(Seq(p1, p2, p3, p4, p1), POLYGON)
     }
 
-    def getX(digits: Seq[Int], edgeSize: Int): Int = {
-        val n = digits.length
-        val k = (n - 6) / 2
-        val xDigits = digits.slice(1, 3) ++ digits.slice(6, 6 + k)
-        xDigits.mkString.toInt * edgeSize
+    /**
+      * Returns the index system ID instance that uniquely identifies an index
+      * system. This instance is used to select appropriate Mosaic expressions.
+      *
+      * @return
+      *   An instance of [[IndexSystemID]]
+      */
+    override def getIndexSystemID: IndexSystemID = BNG
+
+    /**
+      * Get the k ring of indices around the provided index id.
+      *
+      * @param index
+      *   Index ID to be used as a center of k ring.
+      * @param n
+      *   Number of k rings to be generated around the input index.
+      * @return
+      *   A collection of index IDs forming a k ring.
+      */
+    override def kRing(index: Long, n: Int): Seq[Long] = {
+        if (n == 1) {
+            Seq(index) ++ kDisk(index, 1)
+        } else {
+            Seq(index) ++ (1 to n).flatMap(kDisk(index, _))
+        }
     }
 
-    def getY(digits: Seq[Int], edgeSize: Int): Int = {
-        val n = digits.length
-        val k = (n - 6) / 2
-        val yDigits = digits.slice(3, 5) ++ digits.slice(6 + k, 6 + 2 * k)
-        yDigits.mkString.toInt * edgeSize
+    /**
+      * Get the k disk of indices around the provided index id.
+      *
+      * @param index
+      *   Index ID to be used as a center of k disk.
+      * @param k
+      *   Distance of k disk to be generated around the input index.
+      * @return
+      *   A collection of index IDs forming a k disk.
+      */
+    override def kDisk(index: Long, k: Int): Seq[Long] = {
+        val digits = indexDigits(index)
+        val resolution = getResolution(digits)
+        val edgeSize = getEdgeSize(resolution)
+        val x = getX(digits, edgeSize)
+        val y = getY(digits, edgeSize)
+        val bottom = (0 until 2 * k).map(c => (x + (c - k) * edgeSize, y - k * edgeSize))
+        val right = (0 until 2 * k).map(c => (x + k * edgeSize, y + (c - k) * edgeSize))
+        val top = (0 until 2 * k).map(c => (x + (k - c) * edgeSize, y + k * edgeSize))
+        val left = (0 until 2 * k).map(c => (x - k * edgeSize, y + (k - c) * edgeSize))
+        (bottom ++ right ++ top ++ left).map { case (x, y) => pointToIndex(x, y, resolution) }.filter(BNGIndexSystem.isValid)
+    }
+
+    def indexDigits(index: Long): Seq[Int] = {
+        index.toString.map(_.asDigit)
     }
 
     def getResolution(digits: Seq[Int]): Int = {
@@ -198,49 +249,39 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         }
     }
 
-    def getEdgeSize(digits: Seq[Int], resolution: Int): Int = {
-        if (digits.length < 6) {
+    def getEdgeSize(resolution: Int): Int = {
+        if (resolution == -1) {
             500000 // 500km resolution
         } else {
-            val q = digits(5)
             val multiplier =
-                if (q > 0) { 5 }
+                if (resolution < 0) { 5 }
                 else { 1 }
             val edgeSize = multiplier * math.pow(10, 6 - resolution)
             edgeSize.toInt
         }
     }
 
-    /**
-      * Get the k disk of indices around the provided index id.
-      *
-      * @param index
-      *   Index ID to be used as a center of k disk.
-      * @param k
-      *   Distance of k disk to be generated around the input index.
-      * @return
-      *   A collection of index IDs forming a k disk.
-      */
-    override def kDisk(index: Long, k: Int): Seq[Long] = {
-        val digits = indexDigits(index)
-        val resolution = getResolution(digits)
-        val edgeSize = getEdgeSize(digits, resolution)
-        val x = getX(digits, edgeSize)
-        val y = getY(digits, edgeSize)
-        val bottom = (0 until 2 * k).map(c => (x + (c - k) * edgeSize, y - k * edgeSize))
-        val right = (0 until 2 * k).map(c => (x + k * edgeSize, y + (c - k) * edgeSize))
-        val top = (0 until 2 * k).map(c => (x + (k - c) * edgeSize, y + k * edgeSize))
-        val left = (0 until 2 * k).map(c => (x - k * edgeSize, y + (k - c) * edgeSize))
-        (bottom ++ right ++ top ++ left).map { case (x, y) => pointToIndex(x, y, resolution) }.filter(BNGIndexSystem.isValid)
-    }
-
     def isValid(index: Long): Boolean = {
         val digits = indexDigits(index)
         val resolution = getResolution(digits)
-        val edgeSize = getEdgeSize(digits, resolution)
+        val edgeSize = getEdgeSize(resolution)
         val x = getX(digits, edgeSize)
         val y = getY(digits, edgeSize)
         x >= 0 && x <= 700000 && y >= 0 && y <= 1300000
+    }
+
+    def getX(digits: Seq[Int], edgeSize: Int): Int = {
+        val n = digits.length
+        val k = (n - 6) / 2
+        val xDigits = digits.slice(1, 3) ++ digits.slice(6, 6 + k)
+        xDigits.mkString.toInt * edgeSize
+    }
+
+    def getY(digits: Seq[Int], edgeSize: Int): Int = {
+        val n = digits.length
+        val k = (n - 6) / 2
+        val yDigits = digits.slice(3, 5) ++ digits.slice(6 + k, 6 + 2 * k)
+        yDigits.mkString.toInt * edgeSize
     }
 
     /**
@@ -256,16 +297,18 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       *   Index ID in this index system.
       */
     override def pointToIndex(eastings: Double, northings: Double, resolution: Int): Long = {
-        val eLetter: Int = math.floor(eastings / 100000).toInt
-        val nLetter: Int = math.floor(northings / 100000).toInt
+        val eastingsInt = eastings.toInt
+        val northingsInt = northings.toInt
+        val eLetter: Int = math.floor(eastingsInt / 100000).toInt
+        val nLetter: Int = math.floor(northingsInt / 100000).toInt
 
         val offset: Int = if (resolution < -1) 1 else 0
         val divisor: Double = if (resolution < 0) math.pow(10, 6 - math.abs(resolution) + 1) else math.pow(10, 6 - resolution)
-        val quadrant: Int = getQuadrant(resolution, eastings, northings, divisor)
+        val quadrant: Int = getQuadrant(resolution, eastingsInt, northingsInt, divisor)
         val nPositions: Int = math.abs(resolution) - offset
 
-        val eBin: Int = math.floor((eastings % 100000) / divisor).toInt
-        val nBin: Int = math.floor((northings % 100000) / divisor).toInt
+        val eBin: Int = math.floor((eastingsInt % 100000) / divisor).toInt
+        val nBin: Int = math.floor((northingsInt % 100000) / divisor).toInt
 
         val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#)(#...#)(#...#)
         val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#)(#...#)(#...#)
@@ -300,48 +343,6 @@ object BNGIndexSystem extends IndexSystem with Serializable {
     }
 
     /**
-      * @see
-      *   [[IndexSystem.getCoreChips()]]
-      * @param coreIndices
-      *   Indices corresponding to the core area of the input geometry.
-      * @return
-      *   A core area representation via [[MosaicChip]] set.
-      */
-    override def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
-        coreIndices.map(index => {
-            val indexGeom = if (keepCoreGeom) indexToGeometry(index, geometryAPI) else null
-            MosaicChip(isCore = true, index, indexGeom)
-        })
-    }
-
-    /**
-      * Returns the index system ID instance that uniquely identifies an index
-      * system. This instance is used to select appropriate Mosaic expressions.
-      *
-      * @return
-      *   An instance of [[IndexSystemID]]
-      */
-    override def getIndexSystemID: IndexSystemID = BNG
-
-    /**
-      * Get the k ring of indices around the provided index id.
-      *
-      * @param index
-      *   Index ID to be used as a center of k ring.
-      * @param n
-      *   Number of k rings to be generated around the input index.
-      * @return
-      *   A collection of index IDs forming a k ring.
-      */
-    override def kRing(index: Long, n: Int): Seq[Long] = {
-        if (n == 1) {
-            Seq(index) ++ kDisk(index, 1)
-        } else {
-            Seq(index) ++ (1 to n).flatMap(kDisk(index, _))
-        }
-    }
-
-    /**
       * BNG resolution can only be an Int value between 0 and 6. Traditional
       * resolutions only support base 10 edge size of the index. In addition to
       * 0 to 6 resolution, there are mid way resolutions that split index into
@@ -355,22 +356,14 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       *   Int value representing the resolution.
       */
     override def getResolution(res: Any): Int = {
-        Try({
-            val resolution = res.asInstanceOf[Int]
-            allowedResolutions.contains(res.asInstanceOf[Int])
-            resolution
-        }) match {
-            case Success(value) => value
-            case _              => Try({
-                    val resolutionName = res.asInstanceOf[String]
-                    val resolution = resolutionMap(resolutionName)
-                    resolution
-                }) match {
-                    case Success(value) => value
-                    case _              => throw new IllegalStateException(s"BNG resolution not supported; found $res")
-                }
+        (Try(res.asInstanceOf[Int]), Try(res.asInstanceOf[String])) match {
+            case (Success(value), _) if allowedResolutions.contains(value) => value
+            case (_, Success(value)) if resolutionMap.contains(value)      => resolutionMap(value)
+            case _ => throw new IllegalStateException(s"BNG resolution not supported; found $res")
         }
     }
+
+    override def resolutions: Seq[Int] = (minResolution until 0) ++ (1 to maxResolution)
 
     override def minResolution: Int = -6
 

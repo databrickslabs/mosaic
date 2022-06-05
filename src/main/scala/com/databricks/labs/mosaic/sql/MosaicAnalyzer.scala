@@ -16,10 +16,6 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
         getOptimalResolution(SampleStrategy(sampleFraction = Some(sampleFraction)))
     }
 
-    def getOptimalResolution(sampleRows: Int): Int = {
-        getOptimalResolution(SampleStrategy(sampleRows = Some(sampleRows)))
-    }
-
     def getOptimalResolution(sampleStrategy: SampleStrategy): Int = {
         val ss = SparkSession.builder().getOrCreate()
         import ss.implicits._
@@ -52,9 +48,7 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
             .collect()
             .head
 
-        val minResolution = mosaicContext.getIndexSystem.minResolution
-        val maxResolution = mosaicContext.getIndexSystem.maxResolution
-        val meanIndexAreas = for (i <- minResolution until maxResolution) yield (i, getMeanIndexArea(sampleStrategy, i))
+        val meanIndexAreas = for (i <- mosaicContext.getIndexSystem.resolutions) yield (i, getMeanIndexArea(sampleStrategy, i))
 
         if (percentiles.anyNull) {
             throw MosaicSQLExceptions.NotEnoughGeometriesException
@@ -121,8 +115,14 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
 
         Try(meanIndexAreaDf.as[Double].collect.head) match {
             case Success(result) => result
-            case Failure(_)      => throw MosaicSQLExceptions.NotEnoughGeometriesException
+            case Failure(e)      =>
+                e
+                throw MosaicSQLExceptions.NotEnoughGeometriesException
         }
+    }
+
+    def getOptimalResolution(sampleRows: Int): Int = {
+        getOptimalResolution(SampleStrategy(sampleRows = Some(sampleRows)))
     }
 
 }

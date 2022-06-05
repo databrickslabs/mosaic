@@ -67,7 +67,7 @@ object MosaicExplode {
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geometry = geometryAPI.geometry(inputData, geomType)
 
-        val resolution = inputData.getInt(1)
+        val resolution = indexSystem.getResolution(inputData.getInt(1))
         val keepCoreGeom = inputData.getBoolean(2)
 
         val chips = GeometryTypeEnum.fromString(geometry.getGeometryType) match {
@@ -101,7 +101,7 @@ object MosaicExplode {
             case (HexType, IntegerType, BooleanType)              => TypeCheckResult.TypeCheckSuccess
             case (InternalGeometryType, IntegerType, BooleanType) => TypeCheckResult.TypeCheckSuccess
             case _                                   => TypeCheckResult.TypeCheckFailure(
-                  s"Input to h3 mosaic explode should be (geometry, resolution, keepCoreGeom) pair. " +
+                  s"Input to mosaic explode should be (geometry, resolution, keepCoreGeom) pair. " +
                       s"Geometry type can be WKB, WKT, Hex or Coords. Provided type was: ${child.dataType.catalogString}"
                 )
         }
@@ -132,7 +132,7 @@ object MosaicExplode {
             case (HexType, IntegerType, BooleanType)              => StructType(Array(StructField("index", ChipType)))
             case (InternalGeometryType, IntegerType, BooleanType) => StructType(Array(StructField("index", ChipType)))
             case _                                   => throw new Error(
-                  s"Input to h3 mosaic explode should be (geometry, resolution, keepCoreGeom) pair. " +
+                  s"Input to mosaic explode should be (geometry, resolution, keepCoreGeom) pair. " +
                       s"Geometry type can be WKB, WKT, Hex or Coords. Provided type was: ${child.dataType.catalogString}"
                 )
         }
@@ -152,7 +152,7 @@ object MosaicExplode {
           db.orNull,
           "mosaic_explode",
           """
-            |    _FUNC_(struct(geometry, resolution, keepCoreGeom)) - Generates the h3 mosaic chips for the input
+            |    _FUNC_(struct(geometry, resolution, keepCoreGeom)) - Generates the mosaic chips for the input
             |    geometry at a given resolution. Geometry and resolution are provided via struct wrapper to ensure
             |    UnaryExpression API is respected.
             """.stripMargin,

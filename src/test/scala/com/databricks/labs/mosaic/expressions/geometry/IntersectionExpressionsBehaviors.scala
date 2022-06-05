@@ -10,7 +10,7 @@ import org.apache.spark.sql.functions._
 
 trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
 
-    def intersects(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def intersects(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
@@ -20,7 +20,7 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
         val left = boroughs
             .select(
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), 11).alias("left_index"),
+              mosaic_explode(col("wkt"), resolution).alias("left_index"),
               col("wkt").alias("left_wkt")
             )
 
@@ -31,7 +31,7 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
             )
             .select(
               col("id").alias("right_id"),
-              mosaic_explode(col("wkt"), 11).alias("right_index"),
+              mosaic_explode(col("wkt"), resolution).alias("right_index"),
               col("wkt").alias("right_wkt")
             )
 
@@ -74,7 +74,7 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
 
     }
 
-    def intersection(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def intersection(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
@@ -85,7 +85,7 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
             .select(
               col("wkt"),
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), 9).alias("left_index"),
+              mosaic_explode(col("wkt"), resolution).alias("left_index"),
               col("wkt").alias("left_wkt")
             )
 
@@ -97,7 +97,7 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
             .select(
               col("wkt"),
               col("id").alias("right_id"),
-              mosaic_explode(col("wkt"), 9).alias("right_index"),
+              mosaic_explode(col("wkt"), resolution).alias("right_index"),
               col("wkt").alias("right_wkt")
             )
 

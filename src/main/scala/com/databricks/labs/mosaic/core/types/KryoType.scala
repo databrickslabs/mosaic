@@ -9,5 +9,5 @@ class KryoType()
         StructField("kryo", BinaryType)
       )
     ) {
-    override def typeName: String = "struct"
+    override def typeName: String = "KRYO"
 }

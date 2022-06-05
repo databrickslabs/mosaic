@@ -38,6 +38,8 @@ trait IndexSystem extends Serializable {
 
     def maxResolution: Int
 
+    def resolutions: Seq[Int]
+
     /**
       * Returns the name of the IndexSystem.
       *

@@ -12,5 +12,5 @@ class MosaicType()
         StructField("chips", ArrayType(ChipType))
       )
     ) {
-    override def typeName: String = "struct"
+    override def typeName: String = "MOSAIC"
 }

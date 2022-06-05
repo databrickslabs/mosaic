@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.codegen.format
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{JTS, ESRI}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.types._
 
 import org.apache.spark.sql.catalyst.expressions.codegen._
@@ -22,24 +22,30 @@ object ConvertToCodeGen {
           ctx,
           ev,
           eval => {
-              val (inCode, geomInRef) = readGeometryCode(ctx, eval, inputDataType, geometryAPI)
-              val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataType, geometryAPI)
+              if (inputDataType.typeName == outputDataType.typeName) {
+                  s"""
+                     |${ev.value} = $eval;
+                     |""".stripMargin
+              } else {
+                  val (inCode, geomInRef) = readGeometryCode(ctx, eval, inputDataType, geometryAPI)
+                  val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataType, geometryAPI)
 
-              geometryAPI.name match {
-                  case n if n == ESRI.name => s"""
-                                                 |$inCode
-                                                 |$outCode
-                                                 |${ev.value} = $geomOutRef;
-                                                 |""".stripMargin
-                  case n if n == JTS.name  => s"""
-                                                |try {
-                                                |$inCode
-                                                |$outCode
-                                                |${ev.value} = $geomOutRef;
-                                                |} catch (Exception e) {
-                                                | throw e;
-                                                |}
-                                                |""".stripMargin
+                  geometryAPI.name match {
+                      case n if n == ESRI.name => s"""
+                                                     |$inCode
+                                                     |$outCode
+                                                     |${ev.value} = $geomOutRef;
+                                                     |""".stripMargin
+                      case n if n == JTS.name  => s"""
+                                                    |try {
+                                                    |$inCode
+                                                    |$outCode
+                                                    |${ev.value} = $geomOutRef;
+                                                    |} catch (Exception e) {
+                                                    | throw e;
+                                                    |}
+                                                    |""".stripMargin
+                  }
               }
           }
         )

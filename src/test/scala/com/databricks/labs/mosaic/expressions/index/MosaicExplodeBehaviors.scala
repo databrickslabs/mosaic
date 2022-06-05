@@ -12,7 +12,7 @@ import org.apache.spark.sql.types._
 trait MosaicExplodeBehaviors {
     this: AnyFlatSpec =>
 
-    def wktDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def wktDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
@@ -21,31 +21,31 @@ trait MosaicExplodeBehaviors {
 
         val mosaics = boroughs
             .select(
-              mosaic_explode(col("wkt"), 11)
+              mosaic_explode(col("wkt"), resolution)
             )
             .collect()
 
-        boroughs.collect().length should be < mosaics.length
+        boroughs.collect().length should be <= mosaics.length
 
         boroughs.createOrReplaceTempView("boroughs")
 
         val mosaics2 = spark
-            .sql("""
-                   |select mosaic_explode(wkt, 11) from boroughs
+            .sql(s"""
+                   |select mosaic_explode(wkt, $resolution) from boroughs
                    |""".stripMargin)
             .collect()
 
-        boroughs.collect().length should be < mosaics2.length
+        boroughs.collect().length should be <= mosaics2.length
     }
 
-    def wktDecomposeNoNulls(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def wktDecomposeNoNulls(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
 
         val rdd = spark.sparkContext.makeRDD(
           Seq(
-            Row("POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))")
+            Row("POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0))")
           )
         )
         val schema = StructType(
@@ -57,7 +57,7 @@ trait MosaicExplodeBehaviors {
 
         val noEmptyChips = df
             .select(
-              mosaic_explode(col("wkt"), 4, keepCoreGeometries = true)
+              mosaic_explode(col("wkt"), resolution, keepCoreGeometries = true)
             )
             .filter(col("index.wkb").isNull)
             .count()
@@ -66,19 +66,19 @@ trait MosaicExplodeBehaviors {
 
         val emptyChips = df
             .select(
-              mosaic_explode(col("wkt"), 4, keepCoreGeometries = false)
+              mosaic_explode(col("wkt"), resolution, keepCoreGeometries = false)
             )
             .filter(col("index.wkb").isNull)
 
         emptyChips.collect().length should be > 0
     }
 
-    def wktDecomposeKeepCoreParamExpression(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def wktDecomposeKeepCoreParamExpression(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         mosaicContext.register(spark)
 
         val rdd = spark.sparkContext.makeRDD(
           Seq(
-            Row("POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))")
+              Row("POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0))")
           )
         )
         val schema = StructType(
@@ -90,27 +90,27 @@ trait MosaicExplodeBehaviors {
 
         val noEmptyChips = df
             .select(
-              expr("mosaic_explode(wkt, 4, true)")
+              expr(s"mosaic_explode(wkt, $resolution, true)")
             )
         noEmptyChips.collect().length should be > 0
 
         val noEmptyChips_2 = df
             .select(
-              expr("mosaic_explode(wkt, 4, false)")
+              expr(s"mosaic_explode(wkt, $resolution, false)")
             )
         noEmptyChips_2.collect().length should be > 0
     }
 
-    def lineDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def lineDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
 
-        val wktRows: DataFrame = getWKTRowsDf(mc)
+        val wktRows: DataFrame = getWKTRowsDf(mc).where(col("wkt").contains("LINESTRING"))
 
         val mosaics = wktRows
             .select(
-              mosaic_explode(col("wkt"), 4)
+              mosaic_explode(col("wkt"), resolution)
             )
             .collect()
 
@@ -119,8 +119,8 @@ trait MosaicExplodeBehaviors {
         wktRows.createOrReplaceTempView("wkt_rows")
 
         val mosaics2 = spark
-            .sql("""
-                   |select mosaic_explode(wkt, 4) from wkt_rows
+            .sql(s"""
+                   |select mosaic_explode(wkt, $resolution) from wkt_rows
                    |""".stripMargin)
             .collect()
 
@@ -128,7 +128,7 @@ trait MosaicExplodeBehaviors {
 
     }
 
-    def wkbDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def wkbDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
@@ -137,7 +137,7 @@ trait MosaicExplodeBehaviors {
 
         val mosaics = boroughs
             .select(
-              mosaic_explode(convert_to(col("wkt"), "wkb"), 11)
+              mosaic_explode(convert_to(col("wkt"), "wkb"), resolution)
             )
             .collect()
 
@@ -146,15 +146,15 @@ trait MosaicExplodeBehaviors {
         boroughs.createOrReplaceTempView("boroughs")
 
         val mosaics2 = spark
-            .sql("""
-                   |select mosaic_explode(convert_to_wkb(wkt), 11) from boroughs
+            .sql(s"""
+                   |select mosaic_explode(convert_to_wkb(wkt), $resolution) from boroughs
                    |""".stripMargin)
             .collect()
 
         boroughs.collect().length should be < mosaics2.length
     }
 
-    def hexDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def hexDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
@@ -163,7 +163,7 @@ trait MosaicExplodeBehaviors {
 
         val mosaics = boroughs
             .select(
-              mosaic_explode(convert_to(col("wkt"), "hex"), 11)
+              mosaic_explode(convert_to(col("wkt"), "hex"), resolution)
             )
             .collect()
 
@@ -172,15 +172,15 @@ trait MosaicExplodeBehaviors {
         boroughs.createOrReplaceTempView("boroughs")
 
         val mosaics2 = spark
-            .sql("""
-                   |select mosaic_explode(convert_to_hex(wkt), 11) from boroughs
+            .sql(s"""
+                   |select mosaic_explode(convert_to_hex(wkt), $resolution) from boroughs
                    |""".stripMargin)
             .collect()
 
         boroughs.collect().length should be < mosaics2.length
     }
 
-    def coordsDecompose(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def coordsDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
@@ -189,7 +189,7 @@ trait MosaicExplodeBehaviors {
 
         val mosaics = boroughs
             .select(
-              mosaic_explode(convert_to(col("wkt"), "coords"), 11)
+              mosaic_explode(convert_to(col("wkt"), "coords"), resolution)
             )
             .collect()
 
@@ -198,8 +198,8 @@ trait MosaicExplodeBehaviors {
         boroughs.createOrReplaceTempView("boroughs")
 
         val mosaics2 = spark
-            .sql("""
-                   |select mosaic_explode(convert_to_coords(wkt), 11) from boroughs
+            .sql(s"""
+                   |select mosaic_explode(convert_to_coords(wkt), $resolution) from boroughs
                    |""".stripMargin)
             .collect()
 
