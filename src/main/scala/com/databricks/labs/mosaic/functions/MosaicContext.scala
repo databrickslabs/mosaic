@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.functions
 
+import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.expressions.constructors._
@@ -16,6 +17,8 @@ import org.apache.spark.sql.functions._
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends Serializable {
 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
+
+    val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
 
     /**
       * Registers required parsers for SQL for Mosaic functionality.
@@ -271,6 +274,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           ST_Transform.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_Transform(exprs(0), exprs(1), geometryAPI.name)
         )
+        registry.registerFunction(
+            FunctionIdentifier("st_hasvalidcoordinates", database),
+            ST_HasValidCoordinates.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_HasValidCoordinates(exprs(0), exprs(1), exprs(2), geometryAPI.name, crsBoundsProvider)
+        )
 
         /** Aggregators */
         registry.registerFunction(
@@ -400,6 +408,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))
         def st_srid(geom: Column): Column = ColumnAdapter(ST_SRID(geom.expr, geometryAPI.name))
         def st_setsrid(geom: Column, srid: Column): Column = ColumnAdapter(ST_SetSRID(geom.expr, srid.expr, geometryAPI.name))
+        def st_hasvalidcoordinates(geom: Column, crsCode: Column, which: Column): Column =
+            ColumnAdapter(ST_HasValidCoordinates(geom.expr, crsCode.expr, which.expr, geometryAPI.name, crsBoundsProvider))
         def st_transform(geom: Column, srid: Column): Column = ColumnAdapter(ST_Transform(geom.expr, srid.expr, geometryAPI.name))
 
         /** Aggregators */
@@ -472,14 +482,14 @@ object MosaicContext {
         context
     }
 
-    def geometryAPI: GeometryAPI = context.getGeometryAPI
-
-    def indexSystem: IndexSystem = context.getIndexSystem
-
     def context: MosaicContext =
         instance match {
             case Some(context) => context
             case None          => throw new IllegalStateException("MosaicContext was not built.")
         }
+
+    def geometryAPI: GeometryAPI = context.getGeometryAPI
+
+    def indexSystem: IndexSystem = context.getIndexSystem
 
 }

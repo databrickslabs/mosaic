@@ -30,7 +30,7 @@ case class CRSBoundsProvider(private val lookup: Map[(String, Int), (CRSBounds, 
       *   an instance of [[CRSBounds]] corresponding to supplied (crs_dataset,
       *   id) pair.
       */
-    def boundary(dataset: String, id: Int): CRSBounds = {
+    def bounds(dataset: String, id: Int): CRSBounds = {
         require(lookup.contains((dataset, id)), s"Requested CRS does not have boundaries defined: ${(dataset, id)}")
         lookup((dataset, id))._1
     }
@@ -48,7 +48,7 @@ case class CRSBoundsProvider(private val lookup: Map[(String, Int), (CRSBounds, 
       *   an instance of [[CRSBounds]] corresponding to supplied (crs_dataset,
       *   id) pair.
       */
-    def reprojectedBoundary(dataset: String, id: Int): CRSBounds = {
+    def reprojectedBounds(dataset: String, id: Int): CRSBounds = {
         require(lookup.contains((dataset, id)), s"Requested CRS does not have boundaries defined: ${(dataset, id)}")
         lookup((dataset, id))._2
     }
