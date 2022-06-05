@@ -105,7 +105,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
       *   A converted representation of the input geometry.
       */
     override def nullSafeEval(input: Any): Any = {
-        if (inGeometry.dataType.typeName == getOutType.typeName) {
+        if (inGeometry.dataType.simpleString == getOutType.simpleString) {
             input
         } else {
             val geometryAPI = GeometryAPI(geometryAPIName)

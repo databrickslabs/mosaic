@@ -13,5 +13,5 @@ class JSONType()
         StructField("json", StringType)
       )
     ) {
-    override def typeName: String = "GEOJSON"
+    override def simpleString: String = "GEOJSON"
 }

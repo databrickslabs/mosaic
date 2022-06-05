@@ -22,7 +22,7 @@ object ConvertToCodeGen {
           ctx,
           ev,
           eval => {
-              if (inputDataType.typeName == outputDataType.typeName) {
+              if (inputDataType.simpleString == outputDataType.simpleString) {
                   s"""
                      |${ev.value} = $eval;
                      |""".stripMargin
