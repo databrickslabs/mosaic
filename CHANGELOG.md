@@ -1,6 +1,9 @@
+## v0.1.1
+- Enable notebook-scoped library installation via `%pip` magic.
+
 ## v0.1.0
 - Add indexing support for h3
-- Add Mosaic logic 
+- Add Mosaic logic
 - Move to spark 3.2
 - Add documentation
 - Add python bindings

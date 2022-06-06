@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.databricks.labs</groupId>
     <artifactId>mosaic</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -243,25 +243,6 @@
                                 </resource>
                             </resources>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>createThriftDir</id>
-                        <phase>process-resources</phase>
-                        <configuration>
-                            <tasks>
-                                <delete dir="${basedir}/python/mosaic/lib"/>
-                                <mkdir dir="${basedir}/python/mosaic/lib"/>
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>

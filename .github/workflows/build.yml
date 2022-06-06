@@ -27,10 +27,6 @@ jobs:
       run: |
         mkdir staging
         cp target/mosaic*.jar staging
-    - name: Copy Scala artifacts to python package
-      run: |
-        mkdir -p python/mosaic/lib
-        cp target/mosaic-*-jar-with-dependencies.jar python/mosaic/lib/
     - name: Configure python interpreter
       uses: actions/setup-python@v2
       with:
