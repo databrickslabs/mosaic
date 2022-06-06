@@ -114,8 +114,7 @@ class MosaicKepler(Magics):
             if field.dataType.typeName() in ["string", "long", "integer", "double"]
         ]
         data = data.select(*allowed_schema)
-        to_render = data.limit(limit_ctn).cache()
-        pandas_data = to_render.limit(limit_ctn).toPandas()
+        pandas_data = data.limit(limit_ctn).toPandas()
 
         self.set_centroid(pandas_data, feature_type, feature_name)
 
