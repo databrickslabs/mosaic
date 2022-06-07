@@ -17,7 +17,7 @@ import org.locationtech.jts.geom.Geometry
   */
 object BNGIndexSystem extends IndexSystem with Serializable {
 
-    val quadrants = Seq("", "SW", "NW", "SE", "NE")
+    val quadrants = Seq("", "SW", "NW", "NE", "SE")
     val allowedResolutions = Set(1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6)
     val resolutionMap =
         Map(
@@ -72,12 +72,12 @@ object BNGIndexSystem extends IndexSystem with Serializable {
             val prefix = letterMap(digits.slice(3, 5).mkString.toInt)(digits.slice(1, 3).mkString.toInt)(0).toString
             prefix
         } else {
-            val quadrant = digits(5)
+            val quadrant = digits.last
             val prefix = letterMap(digits.slice(3, 5).mkString.toInt)(digits.slice(1, 3).mkString.toInt)
-            val coords = digits.drop(6)
+            val coords = digits.drop(5).dropRight(1)
             val k = coords.length / 2
-            val xStr = if (coords.isEmpty) "" else coords.slice(0, k).mkString
-            val yStr = if (coords.isEmpty) "" else coords.slice(k, 2 * k).mkString
+        val xStr = if (coords.isEmpty) "" else coords.slice(0, k).mkString.padTo(k, "0")
+            val yStr = if (coords.isEmpty) "" else coords.slice(k, 2 * k).mkString.padTo(k, "0")
             val qStr = quadrants(quadrant)
             s"$prefix$xStr$yStr$qStr"
         }
@@ -102,7 +102,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       */
     override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = {
         val size = getEdgeSize(resolution)
-        size * math.sqrt(2)
+        size * math.sqrt(2) / 2
     }
 
     /**
@@ -238,9 +238,9 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         if (digits.length < 6) {
             -1 // 500km resolution
         } else {
-            val quadrant = digits(5)
+            val quadrant = digits.last
             val n = digits.length
-            val k = (n - 5) / 2
+            val k = (n - 6) / 2
             if (quadrant > 0) {
                 -(k + 1)
             } else {
@@ -273,14 +273,14 @@ object BNGIndexSystem extends IndexSystem with Serializable {
     def getX(digits: Seq[Int], edgeSize: Int): Int = {
         val n = digits.length
         val k = (n - 6) / 2
-        val xDigits = digits.slice(1, 3) ++ digits.slice(6, 6 + k)
+        val xDigits = digits.slice(1, 3) ++ digits.slice(5, 5 + k)
         xDigits.mkString.toInt * edgeSize
     }
 
     def getY(digits: Seq[Int], edgeSize: Int): Int = {
         val n = digits.length
         val k = (n - 6) / 2
-        val yDigits = digits.slice(3, 5) ++ digits.slice(6 + k, 6 + 2 * k)
+        val yDigits = digits.slice(3, 5) ++ digits.slice(5 + k, 5 + 2 * k)
         yDigits.mkString.toInt * edgeSize
     }
 
@@ -310,16 +310,16 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         val eBin: Int = math.floor((eastingsInt % 100000) / divisor).toInt
         val nBin: Int = math.floor((northingsInt % 100000) / divisor).toInt
 
-        val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#)(#...#)(#...#)
-        val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#)(#...#)(#...#)
-        val nLetterShift = math.pow(10, 1 + 2 * nPositions - 2) // (##)(#)(#...#)(#...#)
-        val quadrantShift = math.pow(10, 2 * nPositions - 2) // (#)(#...#)(#...#)
-        val eShift = math.pow(10, nPositions - 1) // (#...#)(#...#)
+        val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#...#)(#...#)(#)
+        val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#...#)(#...#)(#)
+        val nLetterShift = math.pow(10, 1 + 2 * nPositions - 2) // (##)(#...#)(#...#)(#)
+        val eShift = math.pow(10, nPositions) // (#...#)(#...#)(#)
+        val nShift = 10
         val id =
             if (resolution == -1) {
                 (idPlaceholder + eLetter * eLetterShift) / 100 + quadrant
             } else {
-                idPlaceholder + eLetter * eLetterShift + nLetter * nLetterShift + quadrant * quadrantShift + eBin * eShift + nBin
+                idPlaceholder + eLetter * eLetterShift + nLetter * nLetterShift + eBin * eShift + nBin * nShift + quadrant
             }
         id.toLong
     }
@@ -334,8 +334,8 @@ object BNGIndexSystem extends IndexSystem with Serializable {
                 (eDecimal, nDecimal) match {
                     case (e, n) if e < 0.5 & n < 0.5 => 1 // SW
                     case (e, _) if e < 0.5           => 2 // NW
-                    case (_, n) if n < 0.5           => 3 // SE
-                    case _                           => 4 // NE
+                    case (_, n) if n < 0.5           => 3 // NE
+                    case _                           => 4 // SE
                 }
             } else 0
         }
@@ -363,7 +363,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         }
     }
 
-    override def resolutions: Seq[Int] = (minResolution until 0) ++ (1 to maxResolution)
+    override def resolutions: Seq[Int] = allowedResolutions.toSeq
 
     override def minResolution: Int = -6
 

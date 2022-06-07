@@ -8,6 +8,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.{BooleanType, DataType}
+import org.apache.spark.unsafe.types.UTF8String
 
 case class ST_HasValidCoordinates(
     inputGeom: Expression,
@@ -31,8 +32,8 @@ case class ST_HasValidCoordinates(
     override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geomIn = geometryAPI.geometry(input1, inputGeom.dataType)
-        val crsCodeIn = input2.asInstanceOf[String].split(":")
-        val whichIn = input3.asInstanceOf[String]
+        val crsCodeIn = input2.asInstanceOf[UTF8String].toString.split(":")
+        val whichIn = input3.asInstanceOf[UTF8String].toString
         val crsBounds = whichIn.toLowerCase(Locale.ROOT) match {
             case "bounds"             => crsBoundsProvider.bounds(crsCodeIn(0), crsCodeIn(1).toInt)
             case "reprojected_bounds" => crsBoundsProvider.reprojectedBounds(crsCodeIn(0), crsCodeIn(1).toInt)
