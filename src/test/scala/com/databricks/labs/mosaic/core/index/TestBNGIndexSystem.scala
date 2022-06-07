@@ -14,11 +14,11 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         val indexRes6 = BNGIndexSystem.pointToIndex(538825, 179111, 6)
 
         indexRes1 shouldBe 105010
-        indexRes2 shouldBe 10501037
-        indexRes3 shouldBe 1050103879
-        indexRes4 shouldBe 105010388791L
-        indexRes5 shouldBe 10501038827911L
-        indexRes6 shouldBe 1050103882579111L
+        indexRes2 shouldBe 10501370
+        indexRes3 shouldBe 1050138790
+        indexRes4 shouldBe 105013887910L
+        indexRes5 shouldBe 10501388279110L
+        indexRes6 shouldBe 1050138825791110L
 
         BNGIndexSystem.format(indexRes1) shouldBe "TQ"
         BNGIndexSystem.format(indexRes2) shouldBe "TQ37"
@@ -37,12 +37,12 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         val indexResN5 = BNGIndexSystem.pointToIndex(538825, 179111, -5)
         val indexResN6 = BNGIndexSystem.pointToIndex(538825, 179111, -6)
 
-        indexResN1 shouldBe 1053
+        indexResN1 shouldBe 1054
         indexResN2 shouldBe 105012
-        indexResN3 shouldBe 10501437
-        indexResN4 shouldBe 1050133879L
-        indexResN5 shouldBe 105011388791L
-        indexResN6 shouldBe 10501338827911L
+        indexResN3 shouldBe 10501373
+        indexResN4 shouldBe 1050138794L
+        indexResN5 shouldBe 105013887911L
+        indexResN6 shouldBe 10501388279114L
 
         BNGIndexSystem.format(indexResN1) shouldBe "T"
         BNGIndexSystem.format(indexResN2) shouldBe "TQNW"
@@ -54,7 +54,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
     }
 
     "KDisk" should "generate index IDs for positive resolutions." in {
-        val index = 1050103879
+        val index = 1050138790
         val kDisk1 = BNGIndexSystem.kDisk(index, 1).map(BNGIndexSystem.format)
         val kDisk2 = BNGIndexSystem.kDisk(index, 2).map(BNGIndexSystem.format)
         val kDisk3 = BNGIndexSystem.kDisk(index, 3).map(BNGIndexSystem.format)
@@ -79,7 +79,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
     }
 
     "KRing" should "generate index IDs for positive resolutions." in {
-        val index = 1050103879
+        val index = 1050138790
         val kRing1 = BNGIndexSystem.kRing(index, 1).map(BNGIndexSystem.format)
         val kRing2 = BNGIndexSystem.kRing(index, 2).map(BNGIndexSystem.format)
         val kRing3 = BNGIndexSystem.kRing(index, 3).map(BNGIndexSystem.format)

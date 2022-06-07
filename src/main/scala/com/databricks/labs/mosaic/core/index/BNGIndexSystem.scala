@@ -76,8 +76,8 @@ object BNGIndexSystem extends IndexSystem with Serializable {
             val prefix = letterMap(digits.slice(3, 5).mkString.toInt)(digits.slice(1, 3).mkString.toInt)
             val coords = digits.drop(5).dropRight(1)
             val k = coords.length / 2
-        val xStr = if (coords.isEmpty) "" else coords.slice(0, k).mkString.padTo(k, "0")
-            val yStr = if (coords.isEmpty) "" else coords.slice(k, 2 * k).mkString.padTo(k, "0")
+            val xStr = if (coords.isEmpty) "" else coords.slice(0, k).padTo(k, 0).mkString
+            val yStr = if (coords.isEmpty) "" else coords.slice(k, 2 * k).padTo(k, 0).mkString
             val qStr = quadrants(quadrant)
             s"$prefix$xStr$yStr$qStr"
         }
@@ -257,6 +257,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
                 if (resolution < 0) { 5 }
                 else { 1 }
             val edgeSize = multiplier * math.pow(10, 6 - resolution)
+            require(edgeSize<500000, "Invalid edge size. Index format not supported.")
             edgeSize.toInt
         }
     }
@@ -332,10 +333,12 @@ object BNGIndexSystem extends IndexSystem with Serializable {
                 val eDecimal = eQ - math.floor(eQ)
                 val nDecimal = nQ - math.floor(nQ)
                 (eDecimal, nDecimal) match {
+                    //quadrant traversal SW->NW->NE->SE for
+                    // better space-filling
                     case (e, n) if e < 0.5 & n < 0.5 => 1 // SW
                     case (e, _) if e < 0.5           => 2 // NW
-                    case (_, n) if n < 0.5           => 3 // NE
-                    case _                           => 4 // SE
+                    case (_, n) if n < 0.5           => 4 // SE
+                    case _                           => 3 // NE
                 }
             } else 0
         }
