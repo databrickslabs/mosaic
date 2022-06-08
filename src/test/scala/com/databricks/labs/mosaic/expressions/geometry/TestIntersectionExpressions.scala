@@ -18,8 +18,8 @@ class TestIntersectionExpressions extends AnyFlatSpec with IntersectionExpressio
     "ST_IntersectionAggregate" should "compute the intersection via aggregate expression" in {
         it should behave like intersection(MosaicContext.build(H3IndexSystem, ESRI), spark, 9)
         it should behave like intersection(MosaicContext.build(H3IndexSystem, JTS), spark, 9)
-        it should behave like intersection(MosaicContext.build(BNGIndexSystem, ESRI), spark, 5)
-        it should behave like intersection(MosaicContext.build(BNGIndexSystem, JTS), spark, 5)
+        it should behave like intersection(MosaicContext.build(BNGIndexSystem, ESRI), spark, 4)
+        it should behave like intersection(MosaicContext.build(BNGIndexSystem, JTS), spark, 4)
     }
 
 }

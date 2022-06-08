@@ -256,7 +256,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
             val multiplier =
                 if (resolution < 0) { 5 }
                 else { 1 }
-            val edgeSize = multiplier * math.pow(10, 6 - resolution)
+            val edgeSize = multiplier * math.pow(10, 6 - math.abs(resolution))
             require(edgeSize<500000, "Invalid edge size. Index format not supported.")
             edgeSize.toInt
         }
