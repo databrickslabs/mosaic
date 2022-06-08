@@ -45,7 +45,7 @@ st_area
     |       550.0|
     +------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_area(column("wkt"))))
@@ -105,7 +105,7 @@ st_buffer
     |POLYGON ((29.1055...|
     +--------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_buffer(column("wkt"), lit(2))))
@@ -157,7 +157,7 @@ st_perimeter
     +-----------------+
     |96.34413615167959|
     +-----------------+
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_perimeter(column("wkt"))))
@@ -214,7 +214,7 @@ st_length
     +-----------------+
     |96.34413615167959|
     +-----------------+
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_length(column("wkt"))))
@@ -273,7 +273,7 @@ st_convexhull
     |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
     +---------------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
     >>> showDF(select(df, st_convexhull(column("wkt"))))
@@ -335,7 +335,7 @@ st_dump
     |POINT (20 20)|
     |POINT (30 10)|
     +-------------+
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
     >>> showDF(select(df, st_dump(column("wkt"))))
@@ -395,7 +395,7 @@ st_srid
     |4326        |
     +------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> json_geom <- '{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'
     >>> df <- createDataFrame(data.frame(json=json_geom))
@@ -455,7 +455,7 @@ st_setsrid
     |             {2, 4326, [[[10.0...|
     +---------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
     >>> showDF(select(df, st_setsrid(st_geomfromwkt(column("wkt")), lit(4326L))))
@@ -520,7 +520,7 @@ st_transform
     |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
    
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
     >>> df <- withColumn(df, 'geom', st_setsrid(st_geomfromwkt(column('wkt')), lit(4326L)))
@@ -584,7 +584,7 @@ st_translate
     |MULTIPOINT ((20 35), (50 25), (30 15), (40 5))|
     +----------------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
     >>> showDF(select(df, st_translate(column('wkt'), lit(10), lit(-5))))
@@ -642,7 +642,7 @@ st_scale
     |POLYGON ((15 20, 20 80, 10 80, 5 40, 15 20))|
     +--------------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_scale(column('wkt'), lit(0.5), lit(2))), truncate=F)
@@ -700,7 +700,7 @@ st_rotate
     |POLYGON ((-30 -10, -40 -40, -20 -40, -10 -20, -30 -10))|
     +-------------------------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_rotate(column("wkt"), lit(pi))), truncate=F)
@@ -739,7 +739,7 @@ st_centroid2D
 
    .. code-tab:: sql
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_centroid2D(column("wkt"))), truncate=F)
@@ -829,7 +829,7 @@ st_isvalid
     |          false|
     +---------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_isvalid(column("wkt"))), truncate=F)
@@ -894,7 +894,7 @@ st_geometrytype
     |             POLYGON|
     +--------------------+
    
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_geometrytype(column("wkt"))), truncate=F)
@@ -948,7 +948,7 @@ st_xmin
     |             10.0|
     +-----------------+
    
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_xmin(column("wkt"))), truncate=F)
@@ -1001,7 +1001,7 @@ st_xmax
     |             40.0|
     +-----------------+
    
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_xmax(column("wkt"))), truncate=F)
@@ -1054,7 +1054,7 @@ st_ymin
     |             10.0|
     +-----------------+
    
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_ymin(column("wkt"))), truncate=F)
@@ -1107,7 +1107,7 @@ st_ymax
     |             40.0|
     +-----------------+
    
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_ymax(column("wkt"))), truncate=F)
@@ -1189,7 +1189,7 @@ flatten_polygons
     |POLYGON ((15 5, 40 10, 10 20, 5 10, 15 5))|
     +------------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
     >>> showDF(select(df, flatten_polygons(column("wkt"))), truncate=F)
@@ -1248,7 +1248,7 @@ point_index_lonlat
     |623385352048508927          |
     +----------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
     >>> showDF(select(df, point_index_lonlat(column("lon"), column("lat"), lit(10L))), truncate=F)
@@ -1306,7 +1306,7 @@ polyfill
     |[577586652210266111, 578360708396220415, 577269992861466623]|
     +------------------------------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
     >>> showDF(select(df, polyfill(column("wkt"), lit(0L))), truncate=F)
@@ -1387,7 +1387,7 @@ mosaicfill
     | {[{false, 5774810...|
     +---------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
     >>> schema(select(df, mosaicfill(column("wkt"), lit(0L))))

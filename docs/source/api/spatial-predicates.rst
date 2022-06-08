@@ -48,7 +48,7 @@ st_distance
     |      15.652475842498529|
     +------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(point = c( "POINT (5 5)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_distance(column("poly"), column("point"))))
@@ -106,7 +106,7 @@ st_contains
     |                    true|
     +------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(point = c( "POINT (25 15)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_contains(column("poly"), column("point"))))
