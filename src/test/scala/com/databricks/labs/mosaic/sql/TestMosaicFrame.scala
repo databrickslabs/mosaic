@@ -41,8 +41,8 @@ class TestMosaicFrame extends AnyFlatSpec with MosaicFrameBehaviors with SparkSu
     "MosaicFrame" should "suggest an appropriate resolution to index a set of polygon geometries" in {
         it should behave like testGetOptimalResolution(spark, MosaicContext.build(H3IndexSystem, ESRI), 3, 9)
         it should behave like testGetOptimalResolution(spark, MosaicContext.build(H3IndexSystem, JTS), 3, 9)
-        it should behave like testGetOptimalResolution(spark, MosaicContext.build(BNGIndexSystem, ESRI), 2, 3)
-        it should behave like testGetOptimalResolution(spark, MosaicContext.build(BNGIndexSystem, JTS), 2, 3)
+        it should behave like testGetOptimalResolution(spark, MosaicContext.build(BNGIndexSystem, ESRI), 2, -5)
+        it should behave like testGetOptimalResolution(spark, MosaicContext.build(BNGIndexSystem, JTS), 2, -5)
     }
     "MosaicFrame" should "allow users to generate indexes at a number of different resolutions" in {
         it should behave like testMultiplePointIndexResolutions(spark, MosaicContext.build(H3IndexSystem, ESRI), 6, 10)
