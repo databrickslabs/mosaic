@@ -519,12 +519,12 @@ st_transform
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-   
+
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
     >>> df <- withColumn(df, 'geom', st_setsrid(st_geomfromwkt(column('wkt')), lit(4326L)))
-    >>> 
+    >>>
     >>> showDF(select(df, st_astext(st_transform(column('geom'), lit(3857L)))), truncate=F)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |
@@ -739,7 +739,7 @@ st_centroid2D
 
    .. code-tab:: sql
 
-   .. code-tab:: r R
+   .. code-tab:: r
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_centroid2D(column("wkt"))), truncate=F)
@@ -893,7 +893,7 @@ st_geometrytype
     +--------------------+
     |             POLYGON|
     +--------------------+
-   
+
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
@@ -947,7 +947,7 @@ st_xmin
     +-----------------+
     |             10.0|
     +-----------------+
-   
+
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
@@ -1000,7 +1000,7 @@ st_xmax
     +-----------------+
     |             40.0|
     +-----------------+
-   
+
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
@@ -1053,7 +1053,7 @@ st_ymin
     +-----------------+
     |             10.0|
     +-----------------+
-   
+
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
@@ -1106,7 +1106,7 @@ st_ymax
     +-----------------+
     |             40.0|
     +-----------------+
-   
+
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
@@ -1205,7 +1205,7 @@ point_index_lonlat
 
 .. function:: point_index_lonlat(lon, lat, resolution)
 
-    Returns the `resolution` grid index associated with 
+    Returns the `resolution` grid index associated with
     the input `lon` and `lat` coordinates.
 
     :param lon: Longitude
@@ -1476,7 +1476,7 @@ mosaic_explode
     |  false|578360708396220415|[01 03 00 00 00 0...|
     +-------+------------------+--------------------+
 
-   .. code-tab:: $
+   .. code-tab:: r
 
     >>> df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
     >>> showDF(select(df, mosaic_explode(column("wkt"), lit(0L))))
