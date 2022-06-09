@@ -48,6 +48,16 @@ st_distance
     |      15.652475842498529|
     +------------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(point = c( "POINT (5 5)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_distance(column("poly"), column("point"))))
+    +------------------------+
+    |st_distance(poly, point)|
+    +------------------------+
+    |      15.652475842498529|
+    +------------------------+
+
 .. note:: Results of this function are always expressed in the original units of the input geometries.
 
 
@@ -94,4 +104,14 @@ st_contains
     |st_contains(poly, point)|
     +------------------------+
     |                    true|
+    +------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(point = c( "POINT (25 15)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_contains(column("poly"), column("point"))))
+    +------------------------+
+    |st_distance(poly, point)|
+    +------------------------+
+    |      15.652475842498529|
     +------------------------+
