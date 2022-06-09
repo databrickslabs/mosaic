@@ -739,7 +739,7 @@ st_centroid2D
 
    .. code-tab:: sql
 
-   .. code-tab:: r
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_centroid2D(column("wkt"))), truncate=F)
@@ -1413,7 +1413,7 @@ mosaic_explode
 
     Returns the set of Mosaic chips covering the input `geometry` at `resolution`.
 
-    In contrast to :ref:`mosaic_fill`, `mosaic_explode` generates one result row per chip.
+    In contrast to :ref:`mosaicfill`, `mosaic_explode` generates one result row per chip.
 
     :param geometry: Geometry
     :type geometry: Column
@@ -1476,7 +1476,7 @@ mosaic_explode
     |  false|578360708396220415|[01 03 00 00 00 0...|
     +-------+------------------+--------------------+
 
-   .. code-tab:: r
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
     >>> showDF(select(df, mosaic_explode(column("wkt"), lit(0L))))
