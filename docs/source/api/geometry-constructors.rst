@@ -47,7 +47,7 @@ st_point
     |{1, [[[30.0, 10.0]]], [[]]}|
     +---------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
     >>> showDF(select(df, alias(st_point(column("lon"), column("lat")), "point_geom")), truncate=F)
@@ -122,7 +122,7 @@ st_makeline
     |{3, [[[40.0, 40.0], [30.0, 10.0], [10.0, 30.0]]], [[]]}|
     +-------------------------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(lon = c(30.0, 10.0, 40.0), lat = c(10.0, 30.0, 40.0)))
     >>> df <- select(df, alias(st_point(column("lon"), column("lat")), "point_geom"))
@@ -180,7 +180,7 @@ st_makepolygon
     |{5, [[[30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0]]], [[]]}|
     +-----------------------------------------------------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame('wkt' = 'LINESTRING (30 10, 40 40, 20 40, 10 20, 30 10)'))
     >>> showDF(select(df, alias(st_makepolygon(st_geomfromwkt(column('wkt'))), 'polygon_geom')), truncate=F)
@@ -233,7 +233,7 @@ st_geomfromwkt
     |{3, [[[30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0]]], [[[]]]}|
     +-------------------------------------------------------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame('wkt' = 'LINESTRING (30 10, 40 40, 20 40, 10 20, 30 10)'))
     >>> showDF(select(df, alias(st_geomfromwkt(column('wkt')), 'linestring')), truncate=F)
@@ -289,7 +289,7 @@ st_geomfromwkb
     |{1, [[[-75.78033, 35.18937]]], [[[]]]}|
     +--------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame('wkt'= "POINT (-75.78033 35.18937)"))
     >>> showDF(select(df, st_geomfromwkb(st_aswkb(column("wkt")))), truncate=F)
@@ -371,7 +371,7 @@ st_geomfromgeojson
     |{1, [[[-75.78033, 35.18937]]], [[[]]]}|
     +--------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> geojson <- '{
             "type":"Point",

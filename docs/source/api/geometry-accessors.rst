@@ -45,7 +45,7 @@ st_asbinary
     |[01 01 00 00 00 0...|
     +--------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
     >>> showDF(select(df, alias(st_asbinary(column("wkt")), "wkb")))
@@ -101,7 +101,7 @@ st_asgeojson
     |{{"type":"Point","coordinates":[30,10],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}}|
     +------------------------------------------------------------------------------------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
     >>> showDF(select(df, alias(st_asgeojson(column("wkt")), "json")), truncate=F)
@@ -155,7 +155,7 @@ st_astext
     |POINT (30 10)|
     +-------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
     >>> showDF(select(df, alias(st_astext(st_point(column("lon"), column("lat"))), "wkt")), truncate=F)
@@ -211,7 +211,7 @@ st_aswkb
     |[01 01 00 00 00 0...|
     +--------------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
     >>> showDF(select(df, alias(st_aswkb(column("wkt")), "wkb")))
@@ -266,7 +266,7 @@ st_aswkt
     |POINT (30 10)|
     +-------------+
 
-   .. code-tab:: R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
     >>> showDF(select(df, alias(st_aswkt(st_point(column("lon"), column("lat"))), "wkt")), truncate=F)
