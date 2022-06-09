@@ -59,19 +59,34 @@ st_intersection_aggregate
 
    .. code-tab:: sql
 
-    >>> SELECT st_area("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
-    +------------+
-    |st_area(wkt)|
-    +------------+
-    |       550.0|
-    +------------+
+    >>> WITH l AS (SELECT mosaic_explode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
+        r AS (SELECT mosaic_explode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
+        SELECT st_astext(st_intersection_aggregate(l.left_index, r.right_index))
+        FROM l INNER JOIN r on l.left_index.index_id = r.right_index.index_id
+    +--------------------------------------------------------------+
+    |convert_to(st_intersection_aggregate(left_index, right_index))|
+    +--------------------------------------------------------------+
+    |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))                           |
+    +--------------------------------------------------------------+
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_area(column("wkt"))))
-    +------------+
-    |st_area(wkt)|
-    +------------+
-    |       550.0|
-    +------------+
+    >>> df.l <- select(
+          createDataFrame(data.frame(geom = "POLYGON ((0 0, 0 3, 3 3, 3 0))")),
+          alias(mosaic_explode(column("geom"), lit(1L)), "left_index")
+        )
+    >>> df.r <- select(
+          createDataFrame(data.frame(geom = "POLYGON ((2 2, 2 4, 4 4, 4 2))")),
+          alias(mosaic_explode(column("geom"), lit(1L)), "right_index")
+        )
+    >>> showDF(
+          select(
+            join(df.l, df.r, df.l$left_index.index_id == df.r$right_index.index_id),
+            st_astext(st_intersection_aggregate(column("left_index"), column("right_index")))
+          ), truncate=F
+        )
+    +--------------------------------------------------------------+
+    |convert_to(st_intersection_aggregate(left_index, right_index))|
+    +--------------------------------------------------------------+
+    |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))                           |
+    +--------------------------------------------------------------+
