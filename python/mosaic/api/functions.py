@@ -320,6 +320,25 @@ def st_centroid3D(geom: ColumnOrName) -> Column:
     )
 
 
+def st_numpoints(geom: ColumnOrName) -> Column:
+    """
+    Returns the number of points in `geom`.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+
+    Returns
+    -------
+    Column (IntegerType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_numpoints", pyspark_to_java_column(geom)
+    )
+
+
 def st_isvalid(geom: ColumnOrName) -> Column:
     """
     Returns true if the geometry `geom` is valid.

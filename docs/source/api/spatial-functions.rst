@@ -58,8 +58,6 @@ st_area
 .. note:: Results of this function are always expressed in the original units of the input geometry.
 
 
-
-
 st_buffer
 *********
 
@@ -759,6 +757,60 @@ st_centroid3D
     :param col: Geometry
     :type col: Column
     :rtype: Column: StructType[x: DoubleType, y: DoubleType, z: DoubleType]
+
+
+st_numpoints
+************
+
+.. function:: st_numpoints(col)
+
+    Returns the number of points in `geom`.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column: IntegerType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_numpoints('wkt')).show()
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_numpoints($"wkt")).show()
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_numpoints("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_numpoints(column("wkt"))))
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
 
 
 st_isvalid

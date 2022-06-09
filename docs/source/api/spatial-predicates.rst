@@ -53,7 +53,65 @@ st_contains
     >>> df <- createDataFrame(data.frame(point = c( "POINT (25 15)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_contains(column("poly"), column("point"))))
     +------------------------+
-    |st_distance(poly, point)|
+    |st_contains(poly, point)|
     +------------------------+
-    |      15.652475842498529|
+    |                    true|
     +------------------------+
+
+
+st_intersects
+*************
+
+.. function:: st_intersects(geom1, geom2)
+
+    Returns true if the geometry `geom1` intersects `geom2`.
+
+    :param geom1: Geometry
+    :type geom1: Column
+    :param geom2: Geometry
+    :type geom2: Column
+    :rtype: Column: BooleanType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'p1': 'POLYGON ((0 0, 0 3, 3 3, 3 0))', 'p2': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
+    >>> df.select(st_intersects(col('p1'), col('p2'))).show(1, False)
+    +---------------------+
+    |st_intersects(p1, p2)|
+    +---------------------+
+    |                 true|
+    +---------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")).toDF("p1", "p2")
+    >>> df.select(st_intersects($"p1", $"p2")).show(false)
+    +---------------------+
+    |st_intersects(p1, p2)|
+    +---------------------+
+    |                 true|
+    +---------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_intersects("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")
+    +---------------------+
+    |st_intersects(p1, p2)|
+    +---------------------+
+    |                 true|
+    +---------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(p1 = "POLYGON ((0 0, 0 3, 3 3, 3 0))", p2 = "POLYGON ((2 2, 2 4, 4 4, 4 2))"))
+    >>> showDF(select(df, st_intersects(column("p1"), column("p2"))), truncate=F)
+    +---------------------+
+    |st_intersects(p1, p2)|
+    +---------------------+
+    |                 true|
+    +---------------------+
+
+.. note:: Intersection logic will be dependent on the chosen geometry API (ESRI or JTS).

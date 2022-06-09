@@ -1,4 +1,6 @@
-from pyspark.sql.functions import col, lit
+import random
+
+from pyspark.sql.functions import abs, col, first, lit, sqrt
 
 from .context import api
 from .utils import MosaicTestCase
@@ -45,12 +47,12 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_rotate", api.st_rotate("wkt", lit(1)))
             .withColumn("st_centroid2D", api.st_centroid2D("wkt"))
             .withColumn("st_centroid3D", api.st_centroid3D("wkt"))
+            .withColumn("st_numpoints", api.st_numpoints("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
             .withColumn("st_isvalid", api.st_isvalid("wkt"))
             .withColumn("st_intersects", api.st_intersects("wkt", "wkt"))
             .withColumn("st_intersection", api.st_intersection("wkt", "wkt"))
             .withColumn("st_geometrytype", api.st_geometrytype("wkt"))
-            .withColumn("st_isvalid", api.st_isvalid("wkt"))
             .withColumn("st_xmin", api.st_xmin("wkt"))
             .withColumn("st_xmax", api.st_xmax("wkt"))
             .withColumn("st_ymin", api.st_ymin("wkt"))
@@ -91,3 +93,55 @@ class TestFunctions(MosaicTestCase):
         )
 
         self.assertEqual(result.count(), 1)
+
+    def test_aggregation_functions(self):
+        left_df = (
+            self.generate_input_polygon_collection()
+            .limit(1)
+            .select(
+                col("location_id").alias("left_id"),
+                api.mosaic_explode(col("geometry"), lit(11)).alias("left_index"),
+                col("geometry").alias("left_geom"),
+            )
+        )
+
+        right_df = (
+            self.generate_input_polygon_collection()
+            .limit(1)
+            .select(
+                col("location_id"),
+                api.st_translate(
+                    col("geometry"),
+                    sqrt(api.st_area(col("geometry")) * random.random() * 0.1),
+                    sqrt(api.st_area(col("geometry")) * random.random() * 0.1),
+                ).alias("geometry"),
+            )
+            .select(
+                col("location_id").alias("right_id"),
+                api.mosaic_explode(col("geometry"), lit(11)).alias("right_index"),
+                col("geometry").alias("right_geom"),
+            )
+        )
+
+        result = (
+            left_df.drop("wkt")
+            .join(right_df, col("left_index.index_id") == col("right_index.index_id"))
+            .groupBy("left_id", "right_id")
+            .agg(
+                api.st_intersection_aggregate(
+                    col("left_index"), col("right_index")
+                ).alias("agg_intersection"),
+                first("left_geom").alias("left_geom"),
+                first("right_geom").alias("right_geom"),
+            )
+            .withColumn("agg_area", api.st_area(col("agg_intersection")))
+            .withColumn(
+                "flat_intersection",
+                api.st_intersection(col("left_geom"), col("right_geom")),
+            )
+            .withColumn("flat_area", api.st_area(col("flat_intersection")))
+            .withColumn(
+                "comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)
+            )  # ESRI Spatial tolerance
+        )
+        self.assertTrue(result.select("comparison").collect()[0]["comparison"])
