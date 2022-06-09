@@ -29,7 +29,6 @@ Documentation
    usage/installation
    usage/quickstart
    usage/grid-indexes
-   usage/join-optimizations
    api/geometry-constructors
    api/geometry-accessors
    api/spatial-functions

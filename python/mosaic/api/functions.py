@@ -344,28 +344,24 @@ def st_isvalid(geom: ColumnOrName) -> Column:
     )
 
 
-def st_intersects(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
+def st_distance(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
     """
-    Returns true if the geometry `left_geom` intersects `right_geom`.
+    Compute the distance between `geom1` and `geom2`.
 
     Parameters
     ----------
-    left_geom : Column
-    right_geom : Column
+    geom1 : Column
+    geom2 : Column
 
     Returns
     -------
-    Column (BooleanType)
-
-    Notes
-    -----
-    Intersection logic will be dependent on the chosen geometry API (ESRI or JTS).
+    Column (DoubleType)
 
     """
     return config.mosaic_context.invoke_function(
-        "st_intersects",
-        pyspark_to_java_column(left_geom),
-        pyspark_to_java_column(right_geom),
+        "st_distance",
+        pyspark_to_java_column(geom1),
+        pyspark_to_java_column(geom2),
     )
 
 
