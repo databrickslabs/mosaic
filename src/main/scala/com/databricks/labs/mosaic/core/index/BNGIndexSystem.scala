@@ -105,6 +105,19 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         size * math.sqrt(2) / 2
     }
 
+    def getEdgeSize(resolution: Int): Int = {
+        if (resolution == -1) {
+            500000 // 500km resolution
+        } else {
+            val multiplier =
+                if (resolution < 0) { 5 }
+                else { 1 }
+            val edgeSize = multiplier * math.pow(10, 6 - math.abs(resolution))
+            require(edgeSize < 500000, "Invalid edge size. Index format not supported.")
+            edgeSize.toInt
+        }
+    }
+
     /**
       * H3 polyfill logic is based on the centroid point of the individual index
       * geometry. Blind spots do occur near the boundary of the geometry.
@@ -227,7 +240,9 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         val right = (0 until 2 * k).map(c => (x + k * edgeSize, y + (c - k) * edgeSize))
         val top = (0 until 2 * k).map(c => (x + (k - c) * edgeSize, y + k * edgeSize))
         val left = (0 until 2 * k).map(c => (x - k * edgeSize, y + (k - c) * edgeSize))
-        (bottom ++ right ++ top ++ left).map { case (x, y) => pointToIndex(x, y, resolution) }.filter(BNGIndexSystem.isValid)
+        val neighbours = (bottom ++ right ++ top ++ left).map { case (x, y) => pointToIndex(x, y, resolution) }
+        val result = neighbours.filter(BNGIndexSystem.isValid)
+        result
     }
 
     def indexDigits(index: Long): Seq[Int] = {
@@ -242,23 +257,10 @@ object BNGIndexSystem extends IndexSystem with Serializable {
             val n = digits.length
             val k = (n - 6) / 2
             if (quadrant > 0) {
-                -(k + 1)
+                -(k + 2)
             } else {
                 k + 1
             }
-        }
-    }
-
-    def getEdgeSize(resolution: Int): Int = {
-        if (resolution == -1) {
-            500000 // 500km resolution
-        } else {
-            val multiplier =
-                if (resolution < 0) { 5 }
-                else { 1 }
-            val edgeSize = multiplier * math.pow(10, 6 - math.abs(resolution))
-            require(edgeSize<500000, "Invalid edge size. Index format not supported.")
-            edgeSize.toInt
         }
     }
 
@@ -271,18 +273,24 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         x >= 0 && x <= 700000 && y >= 0 && y <= 1300000
     }
 
-    def getX(digits: Seq[Int], edgeSize: Int): Int = {
-        val n = digits.length
-        val k = (n - 6) / 2
-        val xDigits = digits.slice(1, 3) ++ digits.slice(5, 5 + k)
-        xDigits.mkString.toInt * edgeSize
-    }
-
     def getY(digits: Seq[Int], edgeSize: Int): Int = {
         val n = digits.length
         val k = (n - 6) / 2
         val yDigits = digits.slice(3, 5) ++ digits.slice(5 + k, 5 + 2 * k)
-        yDigits.mkString.toInt * edgeSize
+        val quadrant = digits.last
+        val edgeSizeAdj = if (quadrant > 0) 2 * edgeSize else edgeSize
+        val yOffset = if (quadrant == 2 || quadrant == 3) edgeSize else 0
+        yDigits.mkString.toInt * edgeSizeAdj + yOffset
+    }
+
+    def getX(digits: Seq[Int], edgeSize: Int): Int = {
+        val n = digits.length
+        val k = (n - 6) / 2
+        val xDigits = digits.slice(1, 3) ++ digits.slice(5, 5 + k)
+        val quadrant = digits.last
+        val edgeSizeAdj = if (quadrant > 0) 2 * edgeSize else edgeSize
+        val xOffset = if (quadrant == 3 || quadrant == 4) edgeSize else 0
+        xDigits.mkString.toInt * edgeSizeAdj + xOffset
     }
 
     /**
@@ -333,7 +341,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
                 val eDecimal = eQ - math.floor(eQ)
                 val nDecimal = nQ - math.floor(nQ)
                 (eDecimal, nDecimal) match {
-                    //quadrant traversal SW->NW->NE->SE for
+                    // quadrant traversal SW->NW->NE->SE for
                     // better space-filling
                     case (e, n) if e < 0.5 & n < 0.5 => 1 // SW
                     case (e, _) if e < 0.5           => 2 // NW
