@@ -123,17 +123,22 @@ class TestFunctions(MosaicTestCase):
             )
         )
 
-        result = (
+        intersections_result = (
             left_df.drop("wkt")
             .join(right_df, col("left_index.index_id") == col("right_index.index_id"))
             .groupBy("left_id", "right_id")
             .agg(
+                api.st_intersects_aggregate(
+                    col("left_index"), col("right_index")
+                ).alias("agg_intersects"),
                 api.st_intersection_aggregate(
                     col("left_index"), col("right_index")
                 ).alias("agg_intersection"),
                 first("left_geom").alias("left_geom"),
                 first("right_geom").alias("right_geom"),
             )
+            .withColumn("flat_intersects", api.st_intersects(col("left_geom"), col("right_geom")))
+            .withColumn("comparison_intersects", col("agg_intersects") == col("flat_intersects"))
             .withColumn("agg_area", api.st_area(col("agg_intersection")))
             .withColumn(
                 "flat_intersection",
@@ -141,7 +146,9 @@ class TestFunctions(MosaicTestCase):
             )
             .withColumn("flat_area", api.st_area(col("flat_intersection")))
             .withColumn(
-                "comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)
+                "comparison_intersection", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)
             )  # ESRI Spatial tolerance
         )
-        self.assertTrue(result.select("comparison").collect()[0]["comparison"])
+
+        self.assertTrue(intersections_result.select("comparison_intersects").collect()[0]["comparison_intersects"])
+        self.assertTrue(intersections_result.select("comparison_intersection").collect()[0]["comparison_intersection"])

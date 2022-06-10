@@ -14,7 +14,7 @@ def st_intersection_aggregate(
 ) -> Column:
     """
     Computes the intersection of all `leftIndex` : `rightIndex` pairs
-    and aggregates these to produce a single geometry.
+    and unions these to produce a single geometry.
 
     Parameters
     ----------
@@ -31,6 +31,31 @@ def st_intersection_aggregate(
     """
     return config.mosaic_context.invoke_function(
         "st_intersection_aggregate",
+        pyspark_to_java_column(leftIndex),
+        pyspark_to_java_column(rightIndex),
+    )
+
+
+def st_intersects_aggregate(
+    leftIndex: ColumnOrName, rightIndex: ColumnOrName
+) -> Column:
+    """
+    Tests if any `leftIndex` : `rightIndex` pairs intersect.
+
+    Parameters
+    ----------
+    leftIndex : Column
+        The index field of the left-hand geometry
+    rightIndex : Column
+        The index field of the right-hand geometry
+
+    Returns
+    -------
+    Column (BooleanType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_intersects_aggregate",
         pyspark_to_java_column(leftIndex),
         pyspark_to_java_column(rightIndex),
     )
