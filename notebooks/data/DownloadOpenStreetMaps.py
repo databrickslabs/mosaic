@@ -33,6 +33,9 @@ import requests
 import os
 import pathlib
 import pyspark.sql.functions as f
+import mosaic as mos
+
+mos.enable_mosaic(spark, dbutils)
 
 # See available regions on https://download.geofabrik.de/
 region = "italy"
@@ -183,7 +186,7 @@ relations.groupBy("_visible").count().display()
 
 # COMMAND ----------
 
-import pyspark.sql.functions as f
+
 
 nodes_clean = (nodes
                .withColumnRenamed("_id", "id")
@@ -221,11 +224,6 @@ relations_tags.write.format("delta").mode("overwrite").save(f"{raw_path}/osm_sil
 relations_tags = spark.read.format("delta").load(f"{raw_path}/osm_silver/relations_tags")
 nodes_clean = spark.read.format("delta").load(f"{raw_path}/osm_silver/nodes_clean")
 
-
-# COMMAND ----------
-
-import mosaic as mos
-mos.enable_mosaic(spark, dbutils)
 
 # COMMAND ----------
 
@@ -272,7 +270,56 @@ way_lines = spark.read.format("delta").load(f"{raw_path}/osm_silver/way_lines")
 
 # COMMAND ----------
 
-relations
+# MAGIC %md
+# MAGIC ## Simple Buildings (Not multi-ploygons)
+
+# COMMAND ----------
+
+ways_tags = (ways
+            .select(
+              f.col("_id").alias("id"),
+              f.explode_outer("tag")
+             )
+             .select(f.col("id"), f.col("col._k").alias("key"), f.col("col._v").alias("value"))
+            )
+  
+ways_tags.write.format("delta").mode("overwrite").option("overwriteSchema", True).save(f"{raw_path}/osm_silver/ways_tags")
+
+
+# COMMAND ----------
+
+ways_tags = spark.read.format("delta").load(f"{raw_path}/osm_silver/ways_tags")
+
+# COMMAND ----------
+
+simple_buildings = (way_lines
+                    .join(ways_tags.filter(f.col("key") == "building"), "id")
+                    .withColumnRenamed("value", "building")
+                    
+                    # A valid polygon needs at least 3 vertices + a closing point
+                    .filter(f.size(f.col("line.boundary")[0]) >= 4)
+                           
+                     # Build the polygon
+                     .withColumn("polygon", mos.st_makepolygon("line"))
+
+#                      # Filter valid polygons
+#                      .withColumn("is_valid", f.expr("try_sql(st_isvalid(polygon))"))
+#                      .filter(f.col("is_valid.status") == "OK")
+#                      .filter(f.col("is_valid.result"))
+                    .drop("line", "key")
+                   )
+
+simple_buildings.write.format("delta").mode("overwrite").option("overwriteSchema", True).save(f"{raw_path}/osm_silver/simple_buildings")
+# simple_buildings.display()
+
+# COMMAND ----------
+
+simple_buildings = spark.read.format("delta").load(f"{raw_path}/osm_silver/simple_buildings")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Multipolygons (from relations)
 
 # COMMAND ----------
 
@@ -313,17 +360,38 @@ relations_polygons = spark.read.format("delta").load(f"{raw_path}/osm_silver/rel
 
 # COMMAND ----------
 
+(relations_polygons
+   # Only inner and outer. There might be none types
+   .filter(f.col("role").isin("outer", "inner"))
+
+   # A valid polygon needs at least 3 vertices + a closing point
+   .filter(f.size(f.col("line.boundary")[0]) >= 4)
+
+   .groupBy("id")
+   .pivot("role")
+   .agg(f.collect_list("line"))
+
+    .select(f.size("outer"), f.size("inner"), f.col("id"))
+).display()
+
+# TODO: fix polygons with multiple outer lines
+
+# COMMAND ----------
+
 relations_multipolygons = (relations_polygons
                            # Only inner and outer. There might be none types
                            .filter(f.col("role").isin("inner", "outer"))
                            
-                           # A valid polygon needs at least 3 vertices + a closing one
+                           # A valid polygon needs at least 3 vertices + a closing point
                            .filter(f.size(f.col("line.boundary")[0]) >= 4)
                            
                            # Divide inner and outer lines
                            .groupBy("id")
                            .pivot("role")
                            .agg(f.collect_list("line"))
+                           
+                           # There should be exactly one outer line
+                           .filter(f.size("outer") == 1)
                            .withColumn("outer", f.col("outer")[0])
                            
                            # Build the polygon
@@ -333,7 +401,6 @@ relations_multipolygons = (relations_polygons
                            .withColumn("is_valid", f.expr("try_sql(st_isvalid(polygon))"))
                            .filter(f.col("is_valid.status") == "OK")
                            .filter(f.col("is_valid.result"))
-                           
                            
                            # Drop extra columns
                            .drop("inner", "outer", "is_valid")
@@ -354,7 +421,16 @@ relations_multipolygons = spark.read.format("delta").load(f"{raw_path}/osm_silve
 # COMMAND ----------
 
 tmp = (relations_multipolygons
-#        .withColumn("centroid", mos.st_centroid2D("polygon"))
+       .union(simple_buildings.select("id", "polygon"))
+       .withColumn("centroid", mos.st_centroid2D("polygon"))
+       
+       .cache()
+       
+       # Trieste
+       .filter(f.col("centroid.x").between(13.7399, 13.803))
+       .filter(f.col("centroid.y").between(45.6106, 45.6436))
+       
+       
 #        .withColumn("centroid", f.expr("try_sql(st_centroid2D(polygon))"))
 
 #        .withColumn("h3", mos.point_index_lonlat("centroid.x", "centroid.y", f.lit(7)))
@@ -374,7 +450,13 @@ tmp.count()
 
 # MAGIC %python
 # MAGIC %%mosaic_kepler
-# MAGIC tmp "polygon" "geometry" 500
+# MAGIC tmp "polygon" "geometry" 10000
+
+# COMMAND ----------
+
+# MAGIC %python
+# MAGIC %%mosaic_kepler
+# MAGIC tmp "polygon" "geometry" 1000
 
 # COMMAND ----------
 
