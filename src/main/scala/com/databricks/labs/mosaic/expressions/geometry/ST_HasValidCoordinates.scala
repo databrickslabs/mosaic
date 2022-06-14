@@ -73,7 +73,7 @@ object ST_HasValidCoordinates {
           "",
           """
             |    Examples:
-            |      > SELECT _FUNC_(geom, EPSG:4326, bounds);
+            |      > SELECT _FUNC_(geom, 'EPSG:4326', 'bounds');
             |        true
             |  """.stripMargin,
           "",

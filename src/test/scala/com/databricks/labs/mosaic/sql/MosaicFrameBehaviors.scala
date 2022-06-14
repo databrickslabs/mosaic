@@ -187,7 +187,7 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
             MosaicSQLExceptions.NoGeometryColumnSet.getMessage
         the[Exception] thrownBy pointMdf.setIndexResolution(resolution) should have message
             MosaicSQLExceptions
-                .BadIndexResolution(mosaicContext.getIndexSystem.minResolution, mosaicContext.getIndexSystem.maxResolution)
+                .BadIndexResolution(mosaicContext.getIndexSystem.resolutions)
                 .getMessage
         the[Exception] thrownBy pointMdf
             .setGeometryColumn("geometry")

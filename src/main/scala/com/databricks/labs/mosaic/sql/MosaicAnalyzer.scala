@@ -115,8 +115,7 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
 
         Try(meanIndexAreaDf.as[Double].collect.head) match {
             case Success(result) => result
-            case Failure(e)      =>
-                e
+            case Failure(_)      =>
                 throw MosaicSQLExceptions.NotEnoughGeometriesException
         }
     }

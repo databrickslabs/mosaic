@@ -34,11 +34,16 @@ trait IndexSystem extends Serializable {
       */
     def kDisk(index: Long, n: Int): Seq[Long]
 
-    def minResolution: Int
-
-    def maxResolution: Int
-
-    def resolutions: Seq[Int]
+    /**
+     * Returns the set of supported resolutions for the
+     * given index system. This doesnt have to be a
+     * continuous set of values. Only values provided
+     * in this set are considered valid.
+     *
+     * @return
+     *   A set of supported resolutions.
+     */
+    def resolutions: Set[Int]
 
     /**
       * Returns the name of the IndexSystem.

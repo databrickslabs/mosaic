@@ -27,9 +27,9 @@ object MosaicSQLExceptions {
               "and setIndexResolution to update this value"
         )
 
-    def BadIndexResolution(resMin: Int, resMax: Int): Exception =
+    def BadIndexResolution(resolutions: Set[Int]): Exception =
         new Exception(
-          s"Resolution supplied to setIndexResolution must be between $resMin and $resMax inclusive."
+          s"Resolution supplied to setIndexResolution must be in the set of values: $resolutions."
         )
 
     def MosaicFrameNotIndexed: Exception =

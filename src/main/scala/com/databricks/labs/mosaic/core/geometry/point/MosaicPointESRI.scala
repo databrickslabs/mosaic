@@ -61,18 +61,18 @@ object MosaicPointESRI extends GeometryReader {
 
     def apply(geoCoord: GeoCoord): MosaicPointESRI = {
         MosaicPointESRI(
-          new OGCPoint(new Point(geoCoord.lng, geoCoord.lat), SpatialReference.create(4326))
+          new OGCPoint(new Point(geoCoord.lng, geoCoord.lat), SpatialReference.create(defaultSpatialReferenceId))
         )
     }
 
     def apply(coords: Seq[Double]): MosaicPointESRI = {
         if (coords.length == 3) {
             MosaicPointESRI(
-              new OGCPoint(new Point(coords(0), coords(1), coords(2)), SpatialReference.create(4326))
+              new OGCPoint(new Point(coords(0), coords(1), coords(2)), SpatialReference.create(defaultSpatialReferenceId))
             )
         } else {
             MosaicPointESRI(
-              new OGCPoint(new Point(coords(0), coords(1)), SpatialReference.create(4326))
+              new OGCPoint(new Point(coords(0), coords(1)), SpatialReference.create(defaultSpatialReferenceId))
             )
         }
     }

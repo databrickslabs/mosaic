@@ -10,15 +10,33 @@ import com.databricks.labs.mosaic.core.types.model.MosaicChip
 import org.locationtech.jts.geom.Geometry
 
 /**
-  * Implements the [[IndexSystem]] via BNG java implementation.
+  * Implements the [[IndexSystem]] via BNG (British National Grid) java
+  * implementation. BNG index system covers the EPSG:27700 bounds. The index
+  * system is represented as a square grid, where x and y coordinates are
+  * provided as eastings and northings. The index system supports representation
+  * of index ids as integers and as strings. The index system supports providing
+  * resolutions as integer numbers and as as string cell size descriptors (eg.
+  * 500m for resolution where cell edge is 500 meters long). Negative resolution
+  * values represent resolutions for quad tree representations where each cell
+  * is split into orientation quadrants. Orientation quadrants represent
+  * south-east, north-east, south-west and north-west orientations.
   *
   * @see
   *   [[https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid]]
   */
 object BNGIndexSystem extends IndexSystem with Serializable {
 
+    /**
+      * Quadrant encodings. The order is determined in a way that preserves
+      * similarity to space filling curves.
+      */
     val quadrants = Seq("", "SW", "NW", "NE", "SE")
-    val allowedResolutions = Set(1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6)
+
+    /**
+      * Resolution mappings from string names to integer encodings. Resolutions
+      * are uses as integers in any index math so we need to convert sizes to
+      * corresponding index resolutions.
+      */
     val resolutionMap =
         Map(
           "500km" -> -1,
@@ -34,6 +52,10 @@ object BNGIndexSystem extends IndexSystem with Serializable {
           "5m" -> -6,
           "1m" -> 6
         )
+
+    /**
+      * Mapping from string names to edge sizes expressed in eastings/northings.
+      */
     val sizeMap =
         Map(
           "500km" -> 500000,
@@ -49,6 +71,13 @@ object BNGIndexSystem extends IndexSystem with Serializable {
           "5m" -> 5,
           "1m" -> 1
         )
+
+    /**
+      * Matrix representing a mapping between letter portions of the eastings
+      * and northings coordinates to a letter pair. Given th small area of
+      * coverage of this index system having a lookup is more efficient than
+      * performing any math transformations between ints and chars.
+      */
     val letterMap =
         Seq(
           Seq("SV", "SW", "SX", "SY", "SZ", "TV", "TW"),
@@ -66,6 +95,19 @@ object BNGIndexSystem extends IndexSystem with Serializable {
           Seq("HL", "HM", "HN", "HO", "HP", "JL", "JM")
         )
 
+    /**
+      * Provides a string representation from an integer representation of a BNG
+      * index id. The string representations follows letter prefix followed by
+      * easting bin, followed by nothings bin and finally (for quad tree
+      * resolutions) followed by quadrant suffix.
+      * @param index
+      *   Integer id to be formatted.
+      * @return
+      *   A string representation of the index id -
+      *   "(prefix)(estings_bin)(northins_bin)(suffix)". E.g. SW123987NW where
+      *   SW is the prefix, 123 is eastings bin, 987 is northings bin and NW is
+      *   suffix.
+      */
     def format(index: Long): String = {
         val digits = indexDigits(index)
         if (digits.length < 6) {
@@ -103,19 +145,6 @@ object BNGIndexSystem extends IndexSystem with Serializable {
     override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = {
         val size = getEdgeSize(resolution)
         size * math.sqrt(2) / 2
-    }
-
-    def getEdgeSize(resolution: Int): Int = {
-        if (resolution == -1) {
-            500000 // 500km resolution
-        } else {
-            val multiplier =
-                if (resolution < 0) { 5 }
-                else { 1 }
-            val edgeSize = multiplier * math.pow(10, 6 - math.abs(resolution))
-            require(edgeSize < 500000, "Invalid edge size. Index format not supported.")
-            edgeSize.toInt
-        }
     }
 
     /**
@@ -194,6 +223,101 @@ object BNGIndexSystem extends IndexSystem with Serializable {
     }
 
     /**
+      * Returns index as a sequence of digits.
+      * @param index
+      *   Index to be split into digits.
+      * @return
+      *   Index digits.
+      */
+    def indexDigits(index: Long): Seq[Int] = {
+        index.toString.map(_.asDigit)
+    }
+
+    /**
+      * Returns edge size for a given index resolution.
+      * @param resolution
+      *   Resolution at which we need to compute the edge size.
+      * @return
+      *   Edge size for the given resolution.
+      */
+    def getEdgeSize(resolution: Int): Int = {
+        if (resolution == -1) {
+            500000 // 500km resolution
+        } else {
+            val multiplier =
+                if (resolution < 0) { 5 }
+                else { 1 }
+            val edgeSize = multiplier * math.pow(10, 6 - math.abs(resolution))
+            require(edgeSize < 500000, "Invalid edge size. Index format not supported.")
+            edgeSize.toInt
+        }
+    }
+
+    /**
+      * Computes the resolution based on the index digits.
+      * @param digits
+      *   Index digits.
+      * @return
+      *   Resolution that results in this length of digits.
+      */
+    def getResolution(digits: Seq[Int]): Int = {
+        if (digits.length < 6) {
+            -1 // 500km resolution
+        } else {
+            val quadrant = digits.last
+            val n = digits.length
+            val k = (n - 6) / 2
+            if (quadrant > 0) {
+                -(k + 2)
+            } else {
+                k + 1
+            }
+        }
+    }
+
+    /**
+      * Y coordinate based on the digits of the index and the edge size. Y
+      * coordinate is rounded to the edge size precision. Y coordinate
+      * corresponds to northings coordinate.
+      * @param digits
+      *   Index digits.
+      * @param edgeSize
+      *   Index edge size.
+      * @return
+      *   Y coordinate.
+      */
+    def getY(digits: Seq[Int], edgeSize: Int): Int = {
+        val n = digits.length
+        val k = (n - 6) / 2
+        val yDigits = digits.slice(3, 5) ++ digits.slice(5 + k, 5 + 2 * k)
+        val quadrant = digits.last
+        val edgeSizeAdj = if (quadrant > 0) 2 * edgeSize else edgeSize
+        val yOffset = if (quadrant == 2 || quadrant == 3) edgeSize else 0
+        yDigits.mkString.toInt * edgeSizeAdj + yOffset
+    }
+
+    /**
+      * X coordinate based on the digits of the index and the edge size. X
+      * coordinate is rounded to the edge size precision. X coordinate
+      * corresponds to eastings coordinate.
+      * @param digits
+      *   Index digits.
+      * @param edgeSize
+      *   Index edge size.
+      * @return
+      *   X coordinate.
+      */
+    def getX(digits: Seq[Int], edgeSize: Int): Int = {
+        val n = digits.length
+        val k = (n - 6) / 2
+        val xDigits = digits.slice(1, 3) ++ digits.slice(5, 5 + k)
+        val quadrant = digits.last
+        val edgeSizeAdj = if (quadrant > 0) 2 * edgeSize else edgeSize
+        val xOffset = if (quadrant == 3 || quadrant == 4) edgeSize else 0
+        xDigits.mkString.toInt * edgeSizeAdj + xOffset
+    }
+
+    /**
       * Returns the index system ID instance that uniquely identifies an index
       * system. This instance is used to select appropriate Mosaic expressions.
       *
@@ -245,25 +369,13 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         result
     }
 
-    def indexDigits(index: Long): Seq[Int] = {
-        index.toString.map(_.asDigit)
-    }
-
-    def getResolution(digits: Seq[Int]): Int = {
-        if (digits.length < 6) {
-            -1 // 500km resolution
-        } else {
-            val quadrant = digits.last
-            val n = digits.length
-            val k = (n - 6) / 2
-            if (quadrant > 0) {
-                -(k + 2)
-            } else {
-                k + 1
-            }
-        }
-    }
-
+    /**
+      * Checks if the provided index is within bounds of the index system.
+      * @param index
+      *   Index id to be checked.
+      * @return
+      *   Boolean representing validity.
+      */
     def isValid(index: Long): Boolean = {
         val digits = indexDigits(index)
         val resolution = getResolution(digits)
@@ -271,26 +383,6 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         val x = getX(digits, edgeSize)
         val y = getY(digits, edgeSize)
         x >= 0 && x <= 700000 && y >= 0 && y <= 1300000
-    }
-
-    def getY(digits: Seq[Int], edgeSize: Int): Int = {
-        val n = digits.length
-        val k = (n - 6) / 2
-        val yDigits = digits.slice(3, 5) ++ digits.slice(5 + k, 5 + 2 * k)
-        val quadrant = digits.last
-        val edgeSizeAdj = if (quadrant > 0) 2 * edgeSize else edgeSize
-        val yOffset = if (quadrant == 2 || quadrant == 3) edgeSize else 0
-        yDigits.mkString.toInt * edgeSizeAdj + yOffset
-    }
-
-    def getX(digits: Seq[Int], edgeSize: Int): Int = {
-        val n = digits.length
-        val k = (n - 6) / 2
-        val xDigits = digits.slice(1, 3) ++ digits.slice(5, 5 + k)
-        val quadrant = digits.last
-        val edgeSizeAdj = if (quadrant > 0) 2 * edgeSize else edgeSize
-        val xOffset = if (quadrant == 3 || quadrant == 4) edgeSize else 0
-        xDigits.mkString.toInt * edgeSizeAdj + xOffset
     }
 
     /**
@@ -333,6 +425,22 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         id.toLong
     }
 
+    /**
+      * Computes the quadrant based on the resolution, coordinates and a
+      * divisor.
+      * @param resolution
+      *   Resolution of the index system.
+      * @param eastings
+      *   X coordinate of the point.
+      * @param northings
+      *   Y coordinate of the point.
+      * @param divisor
+      *   Divisor is equal to edge size for positive index resolutions and is
+      *   equal to 2x of the edge size for negative index resolutions.
+      * @return
+      *   An integer representing the quadrant. 0 is reserved for resolutions
+      *   that do not have quadrant representation.
+      */
     def getQuadrant(resolution: Int, eastings: Double, northings: Double, divisor: Double): Int = {
         val quadrant: Int = {
             if (resolution < 0) {
@@ -368,16 +476,22 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       */
     override def getResolution(res: Any): Int = {
         (Try(res.asInstanceOf[Int]), Try(res.asInstanceOf[String])) match {
-            case (Success(value), _) if allowedResolutions.contains(value) => value
-            case (_, Success(value)) if resolutionMap.contains(value)      => resolutionMap(value)
+            case (Success(value), _) if resolutions.contains(value)   => value
+            case (_, Success(value)) if resolutionMap.contains(value) => resolutionMap(value)
             case _ => throw new IllegalStateException(s"BNG resolution not supported; found $res")
         }
     }
 
-    override def resolutions: Seq[Int] = allowedResolutions.toSeq
-
-    override def minResolution: Int = -6
-
-    override def maxResolution: Int = 6
+    /**
+      * Resolutions in BNG are split into positive and negative resolutions.
+      * Positive resolutions represent grids which cells have lengths in base
+      * 10. Negative resolution represent grids which cells have lengths in base
+      * 50. Negative resolutions correspond to a quad tree inside the base 10
+      * BNG grid where each cell is split into SouthEast, NorthEast, SouthWest
+      * and NorthWest quadrants.
+      * @return
+      *   A set of supported resolutions.
+      */
+    override def resolutions: Set[Int] = Set(1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6)
 
 }

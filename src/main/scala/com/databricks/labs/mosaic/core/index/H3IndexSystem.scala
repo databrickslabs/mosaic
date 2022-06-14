@@ -168,10 +168,6 @@ object H3IndexSystem extends IndexSystem with Serializable {
         h3.kRing(index, n).asScala.map(_.toLong)
     }
 
-    override def minResolution: Int = 0
-
-    override def maxResolution: Int = 15
-
     /**
       * Get the k disk of indices around the provided index id.
       *
@@ -186,5 +182,15 @@ object H3IndexSystem extends IndexSystem with Serializable {
         h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).toSeq.map(_.toLong)
     }
 
-    override def resolutions: Seq[Int] = minResolution to maxResolution
+    /**
+      * H3 supports resolutions ranging from 0 until 15. Resolution 0 represents
+      * the most coarse resolution where the surface of the earth is split into
+      * 122 hexagons. Resolution 15 represents the mre fine grained resolution.
+      * @see
+      *   https://h3geo.org/docs/core-library/restable/
+      * @return
+      *   A set of supported resolutions.
+      */
+    override def resolutions: Set[Int] = (0 to 15).toSet
+
 }
