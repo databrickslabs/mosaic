@@ -58,6 +58,17 @@ object MosaicPointJTS extends GeometryReader {
         this.apply(new Coordinate(geoCoord.lng, geoCoord.lat), defaultSpatialReferenceId)
     }
 
+    def apply(coords: Seq[Double]): MosaicPointJTS = {
+        val gf = new GeometryFactory()
+        if (coords.length == 3) {
+            val point = gf.createPoint(new Coordinate(coords(0), coords(1), coords(2)))
+            new MosaicPointJTS(point)
+        } else {
+            val point = gf.createPoint(new Coordinate(coords(0), coords(1)))
+            new MosaicPointJTS(point)
+        }
+    }
+
     def apply(coord: Coordinate, srid: Int): MosaicPointJTS = {
         val gf = new GeometryFactory()
         val point = gf.createPoint(coord)

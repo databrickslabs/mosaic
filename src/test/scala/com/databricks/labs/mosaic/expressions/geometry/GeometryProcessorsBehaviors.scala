@@ -31,25 +31,32 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
 
         // TODO break into two for line segment vs. polygons
 
-        val referenceGeoms: immutable.Seq[MosaicGeometry] =
-            mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
+        val expected = mocks
+            .getWKTRowsDf(mc)
+            .orderBy("id")
+            .select("wkt")
+            .as[String]
+            .collect()
+            .map(wkt => mc.getGeometryAPI.geometry(wkt, "WKT").getLength)
 
-        val expected = referenceGeoms.map(_.getLength)
-        val result = mocks.getWKTRowsDf
+        val result = mocks
+            .getWKTRowsDf(mc)
+            .orderBy("id")
             .select(st_length($"wkt"))
             .as[Double]
             .collect()
 
         result.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
-        val result2 = mocks.getWKTRowsDf
+        val result2 = mocks
+            .getWKTRowsDf(mc)
             .select(st_perimeter($"wkt"))
             .as[Double]
             .collect()
 
         result2.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
-        mocks.getWKTRowsDf.createOrReplaceTempView("source")
+        mocks.getWKTRowsDf(mc).createOrReplaceTempView("source")
 
         val sqlResult = spark
             .sql("select st_length(wkt) from source")
@@ -75,7 +82,8 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
 
         // TODO break into two for line segment vs. polygons
 
-        val result = mocks.getWKTRowsDf
+        val result = mocks
+            .getWKTRowsDf(mc)
             .select(st_length($"wkt"))
             .as[Double]
 
@@ -99,18 +107,23 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val referenceGeoms: immutable.Seq[MosaicGeometry] =
-            mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
+        val expected = mocks
+            .getWKTRowsDf(mc)
+            .orderBy("id")
+            .select("wkt")
+            .as[String]
+            .collect()
+            .map(wkt => mc.getGeometryAPI.geometry(wkt, "WKT").getArea)
 
-        val expected = referenceGeoms.map(_.getArea)
-        val result = mocks.getWKTRowsDf
+        val result = mocks
+            .getWKTRowsDf(mc)
             .select(st_area($"wkt"))
             .as[Double]
             .collect()
 
         result.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
-        mocks.getWKTRowsDf.createOrReplaceTempView("source")
+        mocks.getWKTRowsDf(mc).createOrReplaceTempView("source")
 
         val sqlResult = spark
             .sql("select st_area(wkt) from source")
@@ -127,7 +140,8 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val result = mocks.getWKTRowsDf
+        val result = mocks
+            .getWKTRowsDf(mc)
             .select(st_area($"wkt"))
 
         val queryExecution = result.queryExecution
@@ -150,11 +164,17 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val referenceGeoms: immutable.Seq[MosaicGeometry] =
-            mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
+        val expected = mocks
+            .getWKTRowsDf(mc)
+            .orderBy("id")
+            .select("wkt")
+            .as[String]
+            .collect()
+            .map(wkt => mc.getGeometryAPI.geometry(wkt, "WKT").getCentroid)
+            .map(c => (c.getX, c.getY))
 
-        val expected = referenceGeoms.map(_.getCentroid.coord).map(c => (c.x, c.y))
-        val result = mocks.getWKTRowsDf
+        val result = mocks
+            .getWKTRowsDf(mc)
             .select(st_centroid2D($"wkt").alias("coord"))
             .selectExpr("coord.*")
             .as[(Double, Double)]
@@ -162,7 +182,7 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
 
         result.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
-        mocks.getWKTRowsDf.createOrReplaceTempView("source")
+        mocks.getWKTRowsDf(mc).createOrReplaceTempView("source")
 
         val sqlResult = spark
             .sql("""with subquery (
@@ -181,7 +201,8 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val result = mocks.getWKTRowsDf
+        val result = mocks
+            .getWKTRowsDf(mc)
             .select(st_centroid2D($"wkt").alias("coord"))
             .selectExpr("coord.*")
 
@@ -205,8 +226,13 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val referenceGeoms: immutable.Seq[MosaicGeometry] =
-            mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
+        val referenceGeoms = mocks
+            .getWKTRowsDf(mc)
+            .orderBy("id")
+            .select("wkt")
+            .as[String]
+            .collect()
+            .map(wkt => mc.getGeometryAPI.geometry(wkt, "WKT"))
 
         val coords = referenceGeoms.head.getShells
         val pointsWKT = coords.map(_.toWKT)
@@ -233,7 +259,7 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         mosaicContext.register(spark)
 
         val referenceGeoms: immutable.Seq[MosaicGeometry] =
-            mocks.wkt_rows.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
+            mocks.wkt_rows_epsg4326.map(_(1).asInstanceOf[String]).map(mc.getGeometryAPI.geometry(_, "WKT"))
 
         val coords = referenceGeoms.head.getShells
         val df = coords.map(_.toWKT).toDF("point")
@@ -419,13 +445,18 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val referenceGeoms: immutable.Seq[MosaicGeometry] =
-            mocks.wkt_rows.sortBy(_.head.asInstanceOf[Int])
-                .map(_(1).asInstanceOf[String])
-                .map(mc.getGeometryAPI.geometry(_, "WKT"))
+
+
+        val referenceGeoms = mocks.getWKTRowsDf(mc)
+            .orderBy("id")
+            .select("wkt")
+            .as[String]
+            .collect()
+            .map(mc.getGeometryAPI.geometry(_, "WKT"))
 
         val expected = referenceGeoms.map(_.buffer(1).getLength)
-        val result = mocks.getWKTRowsDf
+        val result = mocks
+            .getWKTRowsDf(mc)
             .orderBy("id")
             .select(st_length(st_buffer($"wkt", lit(1))))
             .as[Double]
@@ -433,7 +464,7 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
 
         result.zip(expected).foreach { case (l, r) => math.abs(l - r) should be < 1e-8 }
 
-        mocks.getWKTRowsDf.createOrReplaceTempView("source")
+        mocks.getWKTRowsDf(mc).createOrReplaceTempView("source")
 
         val sqlResult = spark
             .sql("select id, st_length(st_buffer(wkt, 1)) from source")
@@ -452,7 +483,8 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val result = mocks.getWKTRowsDf
+        val result = mocks
+            .getWKTRowsDf(mc)
             .select(st_length(st_buffer($"wkt", lit(1))))
 
         val queryExecution = result.queryExecution

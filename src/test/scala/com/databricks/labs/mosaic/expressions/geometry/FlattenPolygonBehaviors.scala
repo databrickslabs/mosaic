@@ -16,7 +16,7 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf.withColumn("wkb", convert_to(col("wkt"), "wkb"))
+        val df = getWKTRowsDf(mc).withColumn("wkb", convert_to(col("wkt"), "wkb"))
 
         val flattened = df
             .withColumn(
@@ -65,7 +65,7 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf
+        val df = getWKTRowsDf(mc)
 
         val flattened = df
             .withColumn(
@@ -114,7 +114,7 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf
+        val df = getWKTRowsDf(mc)
             .withColumn("coords", convert_to(col("wkt"), "coords"))
 
         val flattened = df
@@ -174,7 +174,7 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf
+        val df = getWKTRowsDf(mc)
             .withColumn("hex", convert_to(col("wkt"), "hex"))
 
         val flattened = df

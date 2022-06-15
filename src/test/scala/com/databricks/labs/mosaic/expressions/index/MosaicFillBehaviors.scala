@@ -11,16 +11,16 @@ import org.apache.spark.sql.functions.col
 trait MosaicFillBehaviors {
     this: AnyFlatSpec =>
 
-    def wktMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def wktMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
             .select(
-              mosaicfill(col("wkt"), 11)
+              mosaicfill(col("wkt"), resolution)
             )
             .collect()
 
@@ -29,24 +29,24 @@ trait MosaicFillBehaviors {
         boroughs.createOrReplaceTempView("boroughs")
 
         val mosaics2 = spark
-            .sql("""
-                   |select mosaicfill(wkt, 11) from boroughs
+            .sql(s"""
+                   |select mosaicfill(wkt, $resolution) from boroughs
                    |""".stripMargin)
             .collect()
 
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def wkbMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def wkbMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
             .select(
-              mosaicfill(convert_to(col("wkt"), "wkb"), 11)
+              mosaicfill(convert_to(col("wkt"), "wkb"), resolution)
             )
             .collect()
 
@@ -55,24 +55,24 @@ trait MosaicFillBehaviors {
         boroughs.createOrReplaceTempView("boroughs")
 
         val mosaics2 = spark
-            .sql("""
-                   |select mosaicfill(convert_to_wkb(wkt), 11) from boroughs
+            .sql(s"""
+                   |select mosaicfill(convert_to_wkb(wkt), $resolution) from boroughs
                    |""".stripMargin)
             .collect()
 
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def hexMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def hexMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
             .select(
-              mosaicfill(convert_to(col("wkt"), "hex"), 11)
+              mosaicfill(convert_to(col("wkt"), "hex"), resolution)
             )
             .collect()
 
@@ -81,24 +81,24 @@ trait MosaicFillBehaviors {
         boroughs.createOrReplaceTempView("boroughs")
 
         val mosaics2 = spark
-            .sql("""
-                   |select mosaicfill(convert_to_hex(wkt), 11) from boroughs
+            .sql(s"""
+                   |select mosaicfill(convert_to_hex(wkt), $resolution) from boroughs
                    |""".stripMargin)
             .collect()
 
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def coordsMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def coordsMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
             .select(
-              mosaicfill(convert_to(col("wkt"), "coords"), 11)
+              mosaicfill(convert_to(col("wkt"), "coords"), resolution)
             )
             .collect()
 
@@ -107,25 +107,24 @@ trait MosaicFillBehaviors {
         boroughs.createOrReplaceTempView("boroughs")
 
         val mosaics2 = spark
-            .sql("""
-                   |select mosaicfill(convert_to_coords(wkt), 11) from boroughs
+            .sql(s"""
+                   |select mosaicfill(convert_to_coords(wkt), $resolution) from boroughs
                    |""".stripMargin)
             .collect()
 
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-
-    def wktMosaicFillKeepCoreGeom(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def wktMosaicFillKeepCoreGeom(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
           .select(
-              mosaicfill(col("wkt"), 11, true)
+              mosaicfill(col("wkt"), resolution, keepCoreGeometries = true)
           )
           .collect()
 
@@ -134,8 +133,8 @@ trait MosaicFillBehaviors {
         boroughs.createOrReplaceTempView("boroughs")
 
         val mosaics2 = spark
-          .sql("""
-                 |select mosaicfill(wkt, 11, true) from boroughs
+          .sql(s"""
+                 |select mosaicfill(wkt, $resolution, true) from boroughs
                  |""".stripMargin)
           .collect()
 

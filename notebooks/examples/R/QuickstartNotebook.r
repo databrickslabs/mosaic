@@ -194,7 +194,7 @@ display(neighbourhoodsWithIndex)
 
 pickupNeighbourhoods <- neighbourhoodsWithIndex %>% 
   SparkR::select(
-    column("properties.borough") %>% alias("pickup_zone")
+    column("properties.zone") %>% alias("pickup_zone")
     , column("mosaic_index")
   )
 
@@ -231,7 +231,7 @@ display(withPickupZone)
 dropoffNeighbourhoods <-
   neighbourhoodsWithIndex %>% 
    SparkR::select(
-     column("properties.borough") %>% alias("dropoff_zone")
+     column("properties.zone") %>% alias("dropoff_zone")
      , column("mosaic_index")
    )
 

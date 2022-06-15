@@ -1,26 +1,29 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.test.mocks
 import com.databricks.labs.mosaic.test.mocks._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
+import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions._
 
 trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
 
-    def intersects(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def intersects(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val left = boroughs
             .select(
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), 11).alias("left_index"),
+              mosaic_explode(col("wkt"), resolution).alias("left_index"),
               col("wkt").alias("left_wkt")
             )
 
@@ -31,7 +34,7 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
             )
             .select(
               col("id").alias("right_id"),
-              mosaic_explode(col("wkt"), 11).alias("right_index"),
+              mosaic_explode(col("wkt"), resolution).alias("right_index"),
               col("wkt").alias("right_wkt")
             )
 
@@ -74,18 +77,43 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
 
     }
 
-    def intersection(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def intersectsCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val result = mocks
+            .getWKTRowsDf(mc)
+            .select(st_intersects($"wkt", $"wkt"))
+            .as[Boolean]
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+    }
+
+    def intersection(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
 
-        val boroughs: DataFrame = getBoroughs
+        val boroughs: DataFrame = getBoroughs(mc)
 
         val left = boroughs
             .select(
               col("wkt"),
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), 9).alias("left_index"),
+              mosaic_explode(col("wkt"), resolution).alias("left_index"),
               col("wkt").alias("left_wkt")
             )
 
@@ -97,7 +125,7 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
             .select(
               col("wkt"),
               col("id").alias("right_id"),
-              mosaic_explode(col("wkt"), 9).alias("right_index"),
+              mosaic_explode(col("wkt"), resolution).alias("right_index"),
               col("wkt").alias("right_wkt")
             )
 
@@ -122,6 +150,31 @@ trait IntersectionExpressionsBehaviors { this: AnyFlatSpec =>
             .withColumn("comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)) // ESRI Spatial tolerance
 
         result.select("comparison").collect().map(_.getBoolean(0)).forall(identity) shouldBe true
+    }
+
+    def intersectionCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val result = mocks
+            .getWKTRowsDf(mc)
+            .select(st_intersection($"wkt", $"wkt"))
+            .as[String]
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
     }
 
 }

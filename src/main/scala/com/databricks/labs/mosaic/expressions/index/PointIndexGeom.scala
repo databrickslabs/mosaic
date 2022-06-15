@@ -22,21 +22,21 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemN
     override def prettyName: String = "point_index_geom"
 
     /**
-      * Computes the H3 index corresponding to the provided POINT geometry.
+      * Computes the index corresponding to the provided POINT geometry.
       *
       * @param input1
       *   Any instance containing a point geometry.
       * @param input2
       *   Any instance containing resolution.
       * @return
-      *   H3 index id in Long.
+      *   Index id in Long.
       */
     override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val resolution: Int = H3IndexSystem.getResolution(input2)
+        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+        val resolution: Int = indexSystem.getResolution(input2)
         val geometryAPI = GeometryAPI(geometryAPIName)
         val rowGeom = geometryAPI.geometry(input1, geom.dataType)
         val geomType = GeometryTypeEnum.fromString(rowGeom.getGeometryType)
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         geomType match {
             case GeometryTypeEnum.POINT =>
                 val point = rowGeom.asInstanceOf[MosaicPoint]
@@ -72,7 +72,7 @@ object PointIndexGeom {
           db.orNull,
           "point_index_geom",
           """
-            |    _FUNC_(geom, resolution) - Returns the h3 index of a point geometry at resolution.
+            |    _FUNC_(geom, resolution) - Returns the index of a point geometry at resolution.
             """.stripMargin,
           "",
           """

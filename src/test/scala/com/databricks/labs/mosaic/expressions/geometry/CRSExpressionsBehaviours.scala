@@ -72,7 +72,7 @@ trait CRSExpressionsBehaviours { this: AnyFlatSpec =>
 
         val refSrid = 27700
 
-        val sourceDf = mocks.getWKTRowsDf
+        val sourceDf = mocks.getWKTRowsDf(mc)
             .withColumn("internal", convert_to($"wkt", "COORDS"))
 
         val result = sourceDf
