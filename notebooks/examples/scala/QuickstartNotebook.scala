@@ -198,7 +198,7 @@ display(neighbourhoodsWithIndex)
 
 // COMMAND ----------
 
-val pickupNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.borough").alias("pickup_zone"), col("mosaic_index"))
+val pickupNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.zone").alias("pickup_zone"), col("mosaic_index"))
 
 val withPickupZone = 
   tripsWithIndex.join(
@@ -222,7 +222,7 @@ display(withPickupZone)
 
 // COMMAND ----------
 
-val dropoffNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.borough").alias("dropoff_zone"), col("mosaic_index"))
+val dropoffNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.zone").alias("dropoff_zone"), col("mosaic_index"))
 
 val withDropoffZone = 
   withPickupZone.join(
