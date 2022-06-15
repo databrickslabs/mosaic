@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{H3IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.IndexSystemID
 import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
 
 import org.apache.spark.sql.catalyst.expressions.{
@@ -46,13 +46,13 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
     /** Expression output DataType. */
     override def dataType: DataType = ArrayType(LongType)
 
-    override def toString: String = s"h3_polyfill($geom, $resolution)"
+    override def toString: String = s"polyfill($geom, $resolution)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "h3_polyfill"
+    override def prettyName: String = "polyfill"
 
     /**
-      * Generates a set of indices corresponding to H3 polyfill call over the
+      * Generates a set of indices corresponding to polyfill call over the
       * input geometry.
       *
       * @param input1
@@ -60,7 +60,7 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
       * @param input2
       *   Any instance containing the resolution.
       * @return
-      *   A set of H3 indices.
+      *   A set of indices.
       */
     // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any): Any = {
