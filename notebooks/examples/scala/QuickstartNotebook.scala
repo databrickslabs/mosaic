@@ -179,7 +179,7 @@ display(tripsWithIndex)
 val neighbourhoodsWithIndex = neighbourhoods
    // We break down the original geometry in multiple smoller mosaic chips, each with its
    // own index
-   .withColumn("mosaic_index", mosaic_explode(col("geometry"), lit(optimal_resolution)))
+   .withColumn("mosaic_index", mosaic_explode(col("geometry"), lit(optimalResolution)))
    // We don't need the original geometry any more, since we have broken it down into
    // Smaller mosaic chips.
    .drop("json_geometry", "geometry")
