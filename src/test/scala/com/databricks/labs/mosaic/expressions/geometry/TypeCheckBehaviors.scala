@@ -22,7 +22,7 @@ trait TypeCheckBehaviors {
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf
+        val df = getWKTRowsDf(mc)
 
         val results = df
             .select(st_geometrytype($"wkt").alias("result"))
@@ -54,7 +54,7 @@ trait TypeCheckBehaviors {
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf
+        val df = getWKTRowsDf(mc)
 
         val result = df
             .crossJoin(df.withColumnRenamed("wkt", "other"))
@@ -81,7 +81,7 @@ trait TypeCheckBehaviors {
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getHexRowsDf.select(as_hex($"hex").alias("hex"))
+        val df = getHexRowsDf(mc).select(as_hex($"hex").alias("hex"))
 
         val results = df
             .select(st_geometrytype($"hex").alias("result"))
@@ -115,7 +115,7 @@ trait TypeCheckBehaviors {
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getHexRowsDf
+        val df = getHexRowsDf(mc)
 
         val result = df
             .crossJoin(df.withColumnRenamed("hex", "other"))

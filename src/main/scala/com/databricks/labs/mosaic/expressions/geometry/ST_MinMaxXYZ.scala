@@ -67,7 +67,7 @@ object ST_MinMaxXYZ {
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
         new ExpressionInfo(
-          classOf[ST_Length].getCanonicalName,
+          classOf[ST_MinMaxXYZ].getCanonicalName,
           db.orNull,
           name,
           """

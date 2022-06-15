@@ -96,6 +96,8 @@ abstract class GeometryAPI(
 
     def fromGeoCoord(point: GeoCoord): MosaicPoint
 
+    def fromCoords(coords: Seq[Double]): MosaicPoint
+
 }
 
 object GeometryAPI extends Serializable {
@@ -118,6 +120,7 @@ object GeometryAPI extends Serializable {
 
         override def fromGeoCoord(point: GeoCoord): MosaicPoint = MosaicPointESRI(point)
 
+        override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointESRI(coords)
     }
 
     object JTS extends GeometryAPI(MosaicGeometryJTS) {
@@ -126,6 +129,7 @@ object GeometryAPI extends Serializable {
 
         override def fromGeoCoord(geoCoord: GeoCoord): MosaicPoint = MosaicPointJTS(geoCoord)
 
+        override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointJTS(coords)
     }
 
 }

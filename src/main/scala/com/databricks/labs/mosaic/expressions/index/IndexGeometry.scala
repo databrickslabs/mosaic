@@ -31,13 +31,13 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
     override def prettyName: String = "index_geometry"
 
     /**
-      * Computes the H3 index corresponding to the provided lat and long
+      * Computes the index corresponding to the provided lat and long
       * coordinates.
       *
       * @param input1
       *   Any instance containing the ID of the index.
       * @return
-      *   H3 index id in Long.
+      *   Index id in Long.
       */
     override def nullSafeEval(input1: Any): Any = {
         val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
