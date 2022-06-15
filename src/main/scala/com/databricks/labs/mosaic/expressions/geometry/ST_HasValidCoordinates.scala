@@ -19,6 +19,7 @@ case class ST_HasValidCoordinates(
       with CodegenFallback
       with NullIntolerant {
 
+    @transient
     val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(GeometryAPI(geometryAPIName))
 
     override def first: Expression = inputGeom
