@@ -32,7 +32,7 @@ df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10
    # Sedona
    .withColumn("sedona_area", f.expr("ST_Area(ST_GeomFromWKT(wkt))"))
    # Sedona function not available in Mosaic
-   .withColumn("sedona_n_points", f.expr("ST_NPoints(ST_GeomFromWKT(wkt))"))
+   .withColumn("sedona_flipped", f.expr("ST_FlipCoordinates(ST_GeomFromWKT(wkt))"))
 ).show()
 
 # COMMAND ----------
