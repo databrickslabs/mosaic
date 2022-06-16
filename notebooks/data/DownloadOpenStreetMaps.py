@@ -182,6 +182,15 @@ ways = spark.read.format("delta").load(f"{raw_path}/osm_bronze/ways")
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC 
+# MAGIC ## TODO: 
+# MAGIC 
+# MAGIC * Check overpass API for the POC
+# MAGIC * Add check for lat-long min max
+
+# COMMAND ----------
+
 relations.groupBy("_visible").count().display()
 
 # COMMAND ----------
