@@ -27,9 +27,26 @@ jobs:
       - name: Test and build the scala JAR
         run: mvn -q clean install
       - name: Generate JaCoCo Badge
+        id: jacoco
         uses: cicirello/jacoco-badge-generator@v2
         with:
           jacoco-csv-file: target/site/jacoco/jacoco.csv
+          generate-branches-badge: true
+      - name: Log coverage percentage
+        run: |
+          echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
+          echo "branch coverage = ${{ steps.jacoco.outputs.branches }}"
+      - name: Commit and push the badge (if it changed)
+        uses: EndBug/add-and-commit@v7
+        with:
+          default_author: github_actions
+          message: 'commit badge'
+          add: '*.svg'
+      - name: Upload JaCoCo coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
       - name: Copy Scala artifacts to GH Actions run
         run: |
           mkdir staging
