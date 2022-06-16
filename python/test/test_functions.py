@@ -50,6 +50,10 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_numpoints", api.st_numpoints("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
             .withColumn("st_isvalid", api.st_isvalid("wkt"))
+            .withColumn(
+                "st_hasvalidcoordinates",
+                api.st_hasvalidcoordinates("wkt", lit("EPSG:2192"), lit("bounds")),
+            )
             .withColumn("st_intersects", api.st_intersects("wkt", "wkt"))
             .withColumn("st_intersection", api.st_intersection("wkt", "wkt"))
             .withColumn("st_geometrytype", api.st_geometrytype("wkt"))
@@ -137,8 +141,13 @@ class TestFunctions(MosaicTestCase):
                 first("left_geom").alias("left_geom"),
                 first("right_geom").alias("right_geom"),
             )
-            .withColumn("flat_intersects", api.st_intersects(col("left_geom"), col("right_geom")))
-            .withColumn("comparison_intersects", col("agg_intersects") == col("flat_intersects"))
+            .withColumn(
+                "flat_intersects",
+                api.st_intersects(col("left_geom"), col("right_geom")),
+            )
+            .withColumn(
+                "comparison_intersects", col("agg_intersects") == col("flat_intersects")
+            )
             .withColumn("agg_area", api.st_area(col("agg_intersection")))
             .withColumn(
                 "flat_intersection",
@@ -146,9 +155,18 @@ class TestFunctions(MosaicTestCase):
             )
             .withColumn("flat_area", api.st_area(col("flat_intersection")))
             .withColumn(
-                "comparison_intersection", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)
+                "comparison_intersection",
+                abs(col("agg_area") - col("flat_area")) <= lit(1e-8),
             )  # ESRI Spatial tolerance
         )
 
-        self.assertTrue(intersections_result.select("comparison_intersects").collect()[0]["comparison_intersects"])
-        self.assertTrue(intersections_result.select("comparison_intersection").collect()[0]["comparison_intersection"])
+        self.assertTrue(
+            intersections_result.select("comparison_intersects").collect()[0][
+                "comparison_intersects"
+            ]
+        )
+        self.assertTrue(
+            intersections_result.select("comparison_intersection").collect()[0][
+                "comparison_intersection"
+            ]
+        )

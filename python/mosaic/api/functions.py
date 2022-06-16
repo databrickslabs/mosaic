@@ -205,7 +205,10 @@ def st_transform(geom: ColumnOrName, srid: ColumnOrName) -> Column:
         "st_transform", pyspark_to_java_column(geom), pyspark_to_java_column(srid)
     )
 
-def st_hasvalidcoordinates(geom: ColumnOrName, crs: ColumnOrName, which: ColumnOrName) -> Column:
+
+def st_hasvalidcoordinates(
+    geom: ColumnOrName, crs: ColumnOrName, which: ColumnOrName
+) -> Column:
     """
     Checks if all points in geometry are valid with respect to crs bounds.
     CRS bounds can be provided either as bounds or as reprojected_bounds.
@@ -227,7 +230,10 @@ def st_hasvalidcoordinates(geom: ColumnOrName, crs: ColumnOrName, which: ColumnO
         BooleanType - true if all points in geometry are within provided bounds.
     """
     return config.mosaic_context.invoke_function(
-        "st_hasvalidcoordinates", pyspark_to_java_column(geom), pyspark_to_java_column(crs), pyspark_to_java_column(which)
+        "st_hasvalidcoordinates",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(crs),
+        pyspark_to_java_column(which),
     )
 
 

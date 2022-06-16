@@ -813,6 +813,65 @@ st_numpoints
     +-----------------+
 
 
+st_hasvalidcoordinates
+**********************
+
+.. function:: st_hasvalidcoordinates(geom, crs, which)
+
+    Checks if all points in `geom` are valid with respect to crs bounds.
+    CRS bounds can be provided either as bounds or as reprojected_bounds.
+
+    :param geom: Geometry
+    :type geom: Column
+    :param crs: CRS name (EPSG ID), e.g. "EPSG:2192"
+    :type crs: Column
+    :param which: Check against geographic `"bounds"` or geometric `"reprojected_bounds"` bounds.
+    :type which: Column
+    :rtype: Column: IntegerType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))'}])
+    >>> df.select(st_hasvalidcoordinates(col('wkt'), lit('EPSG:2192'), lit('bounds'))).show()
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))")).toDF("wkt")
+    >>> df.select(st_hasvalidcoordinates($"wkt", lit("EPSG:2192"), lit("bounds"))).show()
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_hasvalidcoordinates("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))", "EPSG:2192", "bounds")
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))"))
+    >>> showDF(select(df, st_hasvalidcoordinates(column("wkt"), lit("EPSG:2192"), lit("bounds"))), truncate=F)
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |true                                          |
+    +----------------------------------------------+
+
+
 st_isvalid
 **********
 
