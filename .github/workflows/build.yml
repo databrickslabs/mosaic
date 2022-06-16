@@ -26,6 +26,10 @@ jobs:
           distribution: 'zulu'
       - name: Test and build the scala JAR
         run: mvn -q clean install
+      - name: Generate JaCoCo Badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          jacoco-csv-file: target/site/jacoco/jacoco.csv
       - name: Copy Scala artifacts to GH Actions run
         run: |
           mkdir staging
