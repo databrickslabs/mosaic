@@ -9,37 +9,15 @@
 
 // COMMAND ----------
 
-// MAGIC %python
-// MAGIC from pyspark.sql.functions import *
-// MAGIC from mosaic import *
-// MAGIC enable_mosaic(spark, dbutils)
+// MAGIC %run ./setup/setup-python
 
 // COMMAND ----------
 
-import org.apache.spark.sql.functions._
-import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.ESRI
-import com.databricks.labs.mosaic.H3
-
-val mosaicContext: MosaicContext = MosaicContext.build(H3, ESRI)
+// MAGIC %run ./setup/setup-scala
 
 // COMMAND ----------
 
-import mosaicContext.functions._
-import spark.implicits._
-mosaicContext.register(spark)
-
-// COMMAND ----------
-
-// MAGIC %r
-// MAGIC install.packages("/dbfs/FileStore/shared_uploads/stuart.lynn@databricks.com/sparkrMosaic_0_1_0_tar.gz", repos=NULL)
-
-// COMMAND ----------
-
-// MAGIC %r
-// MAGIC library(SparkR)
-// MAGIC library(sparkrMosaic)
-// MAGIC enableMosaic()
+// MAGIC %run ./setup/setup-r
 
 // COMMAND ----------
 
@@ -202,25 +180,6 @@ df.select(st_geomfromwkb(st_aswkb($"wkt"))).show(false)
 
 // COMMAND ----------
 
-import org.locationtech.jts.io.{WKTReader, WKBWriter}
-val reader = new WKTReader()
-val writer = new WKBWriter()
-val geom = reader.read("POINT (-75.78033 35.18937)")
-val bytes = writer.write(geom)
-// BigInt(hex, 16).toByteArray
-
-// COMMAND ----------
-
-val hex = "0000000001C052F1F0ED3D859D4041983D46B26BF8"
-val paddedBytes = new Array[Byte](hex.length / 2)
-val bytes = BigInt(hex, 16).toByteArray
-Array.copy(bytes, 0, paddedBytes, paddedBytes.length - bytes.length, bytes.length)
-
-val df = List((paddedBytes)).toDF("wkb")
-df.select(st_geomfromwkb($"wkb")).show(false)
-
-// COMMAND ----------
-
 // MAGIC %sql
 // MAGIC SELECT st_geomfromwkb(st_aswkb("POINT (-75.78033 35.18937)"))
 
@@ -248,7 +207,7 @@ df.select(st_geomfromwkb($"wkb")).show(false)
 // MAGIC     "crs":{
 // MAGIC         "type":"name",
 // MAGIC         "properties":{
-// MAGIC             "name":"EPSG:0"
+// MAGIC             "name":"EPSG:4326"
 // MAGIC         }
 // MAGIC     }
 // MAGIC }
@@ -267,7 +226,7 @@ val df = List(
       |   "crs":{
       |       "type":"name",
       |       "properties":{
-      |           "name":"EPSG:0"
+      |           "name":"EPSG:4326"
       |       }
       |   }
       |}""".stripMargin)
@@ -292,7 +251,7 @@ df.select(st_geomfromgeojson($"json")).show(false)
 // MAGIC       "crs":{
 // MAGIC           "type":"name",
 // MAGIC           "properties":{
-// MAGIC               "name":"EPSG:0"
+// MAGIC               "name":"EPSG:4326"
 // MAGIC           }
 // MAGIC       }
 // MAGIC   }'
