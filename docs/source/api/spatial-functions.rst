@@ -735,7 +735,20 @@ st_centroid2D
 
    .. code-tab:: scala
 
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_centroid2D($"wkt")).show()
+    +---------------------------------------+
+    |st_centroid(wkt)                       |
+    +---------------------------------------+
+    |{25.454545454545453, 26.96969696969697}|
+
    .. code-tab:: sql
+
+    >>> SELECT st_centroid2D("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +---------------------------------------+
+    |st_centroid(wkt)                       |
+    +---------------------------------------+
+    |{25.454545454545453, 26.96969696969697}|
 
    .. code-tab:: r R
 
@@ -1477,6 +1490,63 @@ point_index_lonlat
 
     >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
     >>> showDF(select(df, point_index_lonlat(column("lon"), column("lat"), lit(10L))), truncate=F)
+    +----------------------------+
+    |h3_point_index(lat, lon, 10)|
+    +----------------------------+
+    |623385352048508927          |
+    +----------------------------+
+
+
+point_index_geom
+****************
+
+.. function:: point_index_geom(geometry, resolution)
+
+    Returns the `resolution` grid index associated
+    with the input geometry `geometry`.
+
+    :param geometry: Geometry
+    :type geometry: Column
+    :param resolution: Index resolution
+    :type resolution: Column: Integer
+    :rtype: Column: LongType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+    >>> df.select(point_index_lonlat(st_point('lon', 'lat'), lit(10))).show(1, False)
+    +----------------------------+
+    |h3_point_index(lon, lat, 10)|
+    +----------------------------+
+    |623385352048508927          |
+    +----------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
+    >>> df.select(point_index_lonlat(st_point($"lon", $"lat"), lit(10))).show()
+    +----------------------------+
+    |h3_point_index(lat, lon, 10)|
+    +----------------------------+
+    |623385352048508927          |
+    +----------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT point_index_lonlat(st_point(30d, 10d), 10)
+    +----------------------------+
+    |h3_point_index(lat, lon, 10)|
+    +----------------------------+
+    |623385352048508927          |
+    +----------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    >>> showDF(select(df, point_index_lonlat(st_point(column("lon"), column("lat")), lit(10L))), truncate=F)
     +----------------------------+
     |h3_point_index(lat, lon, 10)|
     +----------------------------+
