@@ -726,23 +726,23 @@ df.select(point_index_lonlat($"lon", $"lat", lit(10))).show()
 
 // MAGIC %python
 // MAGIC df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-// MAGIC df.select(point_index_lonlat(st_point('lon', 'lat'), lit(10))).show(1, False)
+// MAGIC df.select(point_index_geom(st_point('lon', 'lat'), lit(10))).show(1, False)
 
 // COMMAND ----------
 
 val df = List((30.0, 10.0)).toDF("lon", "lat")
-df.select(point_index_lonlat(st_point($"lon", $"lat"), lit(10))).show()
+df.select(point_index_geom(st_point($"lon", $"lat"), lit(10))).show()
 
 // COMMAND ----------
 
 // MAGIC %sql
-// MAGIC SELECT point_index_lonlat(st_point(30d, 10d), 10)
+// MAGIC SELECT point_index_geom(st_point(30d, 10d), 10)
 
 // COMMAND ----------
 
 // MAGIC %r
 // MAGIC df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
-// MAGIC showDF(select(df, point_index_lonlat(st_point(column("lon"), column("lat")), lit(10L))), truncate=F)
+// MAGIC showDF(select(df, point_index_geom(st_point(column("lon"), column("lat")), lit(10L))), truncate=F)
 
 // COMMAND ----------
 
