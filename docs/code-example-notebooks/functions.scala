@@ -69,6 +69,12 @@ df.select(st_area($"wkt")).show()
 
 // COMMAND ----------
 
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_area(column("wkt"))))
+
+// COMMAND ----------
+
 // MAGIC %md
 // MAGIC ### st_buffer
 
@@ -87,6 +93,12 @@ df.select(st_buffer($"wkt", 2d)).show()
 
 // MAGIC %sql
 // MAGIC SELECT st_buffer("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d)
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_buffer(column("wkt"), lit(2))))
 
 // COMMAND ----------
 
@@ -127,6 +139,18 @@ df.select(st_perimeter($"wkt")).show()
 
 // COMMAND ----------
 
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_length(column("wkt"))))
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_perimeter(column("wkt"))))
+
+// COMMAND ----------
+
 // MAGIC %md 
 // MAGIC ### st_convexhull
 
@@ -145,6 +169,12 @@ df.select(st_convexhull($"wkt")).show(false)
 
 // MAGIC %sql
 // MAGIC SELECT st_convexhull("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+// MAGIC showDF(select(df, st_convexhull(column("wkt"))))
 
 // COMMAND ----------
 
@@ -175,6 +205,12 @@ spark.sql("""SELECT st_dump("MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 
 
 // MAGIC %sql
 // MAGIC SELECT st_dump("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+// MAGIC showDF(select(df, st_dump(column("wkt"))))
 
 // COMMAND ----------
 
@@ -213,6 +249,13 @@ df.select(st_srid(as_json($"json"))).show(1)
 
 // COMMAND ----------
 
+// MAGIC %r
+// MAGIC json_geom <- '{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'
+// MAGIC df <- createDataFrame(data.frame(json=json_geom))
+// MAGIC showDF(select(df, st_srid(as_json(column('json')))))
+
+// COMMAND ----------
+
 // MAGIC %md
 // MAGIC ### st_setsrid
 
@@ -236,6 +279,12 @@ df.select(st_setsrid(st_geomfromwkt($"wkt"), lit(4326))).show
 
 // MAGIC %sql
 // MAGIC select st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326)
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+// MAGIC showDF(select(df, st_setsrid(st_geomfromwkt(column("wkt")), lit(4326L))))
 
 // COMMAND ----------
 
@@ -269,6 +318,13 @@ df.select(st_astext(st_transform($"geom", lit(3857)))).show(1, false)
 
 // COMMAND ----------
 
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+// MAGIC df <- withColumn(df, 'geom', st_setsrid(st_geomfromwkt(column('wkt')), lit(4326L)))
+// MAGIC showDF(select(df, st_astext(st_transform(column('geom'), lit(3857L)))), truncate=F)
+
+// COMMAND ----------
+
 // MAGIC %md 
 // MAGIC ### st_translate
 
@@ -295,6 +351,12 @@ df.select(st_translate($"wkt", lit(10d), lit(-5d))).show(false)
 
 // COMMAND ----------
 
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+// MAGIC showDF(select(df, st_translate(column('wkt'), lit(10), lit(-5))))
+
+// COMMAND ----------
+
 // MAGIC %md 
 // MAGIC ### st_scale
 
@@ -318,6 +380,12 @@ df.select(st_scale($"wkt", lit(0.5), lit(2.0))).show(false)
 
 // MAGIC %sql
 // MAGIC SELECT st_scale("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 0.5d, 2.0d)
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_scale(column('wkt'), lit(0.5), lit(2))), truncate=F)
 
 // COMMAND ----------
 
@@ -349,6 +417,12 @@ df.select(st_rotate($"wkt", lit(Pi))).show(false)
 
 // COMMAND ----------
 
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_rotate(column("wkt"), lit(pi))), truncate=F)
+
+// COMMAND ----------
+
 // MAGIC %md
 // MAGIC ### st_centroid2D
 
@@ -356,13 +430,23 @@ df.select(st_rotate($"wkt", lit(Pi))).show(false)
 
 // MAGIC %python
 // MAGIC df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-// MAGIC df2 = df.select(st_centroid2D('wkt'))
-// MAGIC df2.show(1, False)
+// MAGIC df.select(st_centroid2D('wkt')).show()
 
 // COMMAND ----------
 
-// MAGIC %python
-// MAGIC df2.schema
+val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+df.select(st_centroid2D($"wkt")).show()
+
+// COMMAND ----------
+
+// MAGIC %sql
+// MAGIC SELECT st_centroid2D("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_centroid2D(column("wkt"))), truncate=F)
 
 // COMMAND ----------
 
@@ -430,6 +514,18 @@ df.select(st_isvalid($"wkt")).show()
 
 // COMMAND ----------
 
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_isvalid(column("wkt"))), truncate=F)
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))"))
+// MAGIC showDF(select(df, st_isvalid(column("wkt"))), truncate=F)
+
+// COMMAND ----------
+
 // MAGIC %md
 // MAGIC ### st_geometrytype
 
@@ -451,6 +547,12 @@ df.select(st_geometrytype($"wkt")).show()
 
 // COMMAND ----------
 
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_geometrytype(column("wkt"))), truncate=F)
+
+// COMMAND ----------
+
 // MAGIC %md
 // MAGIC ### st_xmin
 
@@ -469,6 +571,12 @@ df.select(st_xmin($"wkt")).show()
 
 // MAGIC %sql
 // MAGIC SELECT st_xmin("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_xmin(column("wkt"))), truncate=F)
 
 // COMMAND ----------
 
@@ -515,6 +623,12 @@ df.select(st_distance($"poly", $"point")).show()
 
 // MAGIC %sql
 // MAGIC SELECT st_distance("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", "POINT (5 5)")
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(point = c( "POINT (5 5)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_distance(column("poly"), column("point"))))
 
 // COMMAND ----------
 
@@ -572,24 +686,63 @@ df.select(flatten_polygons($"wkt")).show(false)
 
 // COMMAND ----------
 
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
+// MAGIC showDF(select(df, flatten_polygons(column("wkt"))), truncate=F)
+
+// COMMAND ----------
+
 // MAGIC %md
-// MAGIC ### point_index
+// MAGIC ### point_index_lonlat
 
 // COMMAND ----------
 
 // MAGIC %python
 // MAGIC df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-// MAGIC df.select(point_index('lat', 'lon', lit(10))).show(1, False)
+// MAGIC df.select(point_index_lonlat('lon', 'lat', lit(10))).show(1, False)
 
 // COMMAND ----------
 
 val df = List((30.0, 10.0)).toDF("lon", "lat")
-df.select(point_index($"lon", $"lat", lit(10))).show()
+df.select(point_index_lonlat($"lon", $"lat", lit(10))).show()
 
 // COMMAND ----------
 
 // MAGIC %sql
-// MAGIC SELECT point_index(30d, 10d, 10)
+// MAGIC SELECT point_index_lonlat(30d, 10d, 10)
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+// MAGIC showDF(select(df, point_index_lonlat(column("lon"), column("lat"), lit(10L))), truncate=F)
+
+// COMMAND ----------
+
+// MAGIC %md
+// MAGIC ### point_index_geom
+
+// COMMAND ----------
+
+// MAGIC %python
+// MAGIC df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+// MAGIC df.select(point_index_lonlat(st_point('lon', 'lat'), lit(10))).show(1, False)
+
+// COMMAND ----------
+
+val df = List((30.0, 10.0)).toDF("lon", "lat")
+df.select(point_index_lonlat(st_point($"lon", $"lat"), lit(10))).show()
+
+// COMMAND ----------
+
+// MAGIC %sql
+// MAGIC SELECT point_index_lonlat(st_point(30d, 10d), 10)
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+// MAGIC showDF(select(df, point_index_lonlat(st_point(column("lon"), column("lat")), lit(10L))), truncate=F)
 
 // COMMAND ----------
 
@@ -614,6 +767,12 @@ df.select(polyfill($"wkt", lit(0))).show(false)
 
 // COMMAND ----------
 
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+// MAGIC showDF(select(df, polyfill(column("wkt"), lit(0L))), truncate=F)
+
+// COMMAND ----------
+
 // MAGIC %md 
 // MAGIC ### mosaic_explode
 
@@ -632,6 +791,12 @@ df.select(mosaic_explode($"wkt", lit(0))).show()
 
 // MAGIC %sql
 // MAGIC SELECT mosaic_explode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
+// MAGIC showDF(select(df, mosaic_explode(column("wkt"), lit(0L))))
 
 // COMMAND ----------
 
@@ -669,3 +834,10 @@ df.select(mosaic_explode($"wkt", lit(0))).show()
 // MAGIC %python
 // MAGIC df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
 // MAGIC df2 = df.select(mosaicfill('wkt', lit(0)))
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+// MAGIC schema(select(df, mosaicfill(column("wkt"), lit(0L))))
+// MAGIC showDF(select(df, mosaicfill(column("wkt"), lit(0L))))
