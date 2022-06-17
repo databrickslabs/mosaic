@@ -9,37 +9,15 @@
 
 // COMMAND ----------
 
-// MAGIC %python
-// MAGIC from pyspark.sql.functions import *
-// MAGIC from mosaic import *
-// MAGIC enable_mosaic(spark, dbutils)
+// MAGIC %run ./setup/setup-python
 
 // COMMAND ----------
 
-import org.apache.spark.sql.functions._
-import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.ESRI
-import com.databricks.labs.mosaic.H3
-
-val mosaicContext: MosaicContext = MosaicContext.build(H3, ESRI)
+// MAGIC %run ./setup/setup-scala
 
 // COMMAND ----------
 
-import mosaicContext.functions._
-import spark.implicits._
-mosaicContext.register(spark)
-
-// COMMAND ----------
-
-// MAGIC %r
-// MAGIC install.packages("/dbfs/FileStore/shared_uploads/stuart.lynn@databricks.com/sparkrMosaic_0_1_0_tar.gz", repos=NULL)
-
-// COMMAND ----------
-
-// MAGIC %r
-// MAGIC library(SparkR)
-// MAGIC library(sparkrMosaic)
-// MAGIC enableMosaic()
+// MAGIC %run ./setup/setup-r
 
 // COMMAND ----------
 
