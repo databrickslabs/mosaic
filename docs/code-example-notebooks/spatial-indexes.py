@@ -52,9 +52,11 @@ trips.show()
 
 from mosaic import st_geomfromgeojson
 
+user = spark.sql("select current_user() as user").collect()[0]["user"]
+
 neighbourhoods = (
   spark.read.format("json")
-  .load("dbfs:/FileStore/shared_uploads/stuart.lynn@databricks.com/NYC_Taxi_Zones.geojson")
+  .load(f"dbfs:/FileStore/shared_uploads/{user}/NYC_Taxi_Zones.geojson")
   .repartition(sc.defaultParallelism)
   .withColumn("geometry", st_geomfromgeojson(to_json(col("geometry"))))
   .select("properties.*", "geometry")
@@ -87,8 +89,8 @@ help(neighbourhoods_mdf.get_optimal_resolution)
 
 # COMMAND ----------
 
-from mosaic import point_index
-indexed_trips = trips.withColumn("ix", point_index(lng="pickup_longitude", lat="pickup_latitude", resolution=lit(resolution)))
+from mosaic import point_index_lonlat
+indexed_trips = trips.withColumn("ix", point_index_lonlat(lon="pickup_longitude", lat="pickup_latitude", resolution=lit(resolution)))
 indexed_trips.show()
 
 # COMMAND ----------
@@ -102,8 +104,8 @@ indexed_trips.show()
 from mosaic import polyfill
 
 indexed_neighbourhoods = (
-  geoJsonDF
-  .select("*", polyfill("geometry", lit(optimal_resolution)).alias("ix_set"))
+  neighbourhoods
+  .select("*", polyfill("geometry", lit(resolution)).alias("ix_set"))
   .drop("geometry")
 )
 
