@@ -46,6 +46,8 @@ jobs:
         with:
           name: jacoco-report
           path: target/site/jacoco/
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v1
       - name: Copy Scala artifacts to GH Actions run
         run: |
           mkdir staging
