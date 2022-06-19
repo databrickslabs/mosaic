@@ -30,37 +30,8 @@ jobs:
         run: |
           mkdir staging
           cp target/mosaic*.jar staging
-      - name: Configure python interpreter
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python }}
-      - name: Install python dependencies
-        run: |
-          cd python
-          pip install build wheel pyspark==${{ matrix.spark }}
-          pip install .
-      - name: Test and build python package
-        run: |
-          cd python
-          python -m unittest
-          python -m build
-      - name: Copy python artifacts to GH Actions run
-        run: cp python/dist/*.whl staging
-      - name: Setup R build environment
-        run: |
-          sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config
-      - name: Build R package
-        run: |
-          cd R/sparkR-mosaic
-          mkdir -p /usr/lib/R/site-library
-          sudo chown -R $USER: /usr/lib/R/site-library
-          Rscript --vanilla build_r_package.R
-      - name: Test R package
-        run: |
-          cd R/sparkR-mosaic
-          Rscript --vanilla tests.R
-      - name: Copy R artifacts to GH Actions run
-        run: cp R/sparkR-mosaic/*.tar.gz staging
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v1
       - uses: actions/upload-artifact@v3
         with:
           name: artefacts
