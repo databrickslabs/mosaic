@@ -58,6 +58,7 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Spatial aggregation functions" href="spatial-aggregations.html" />
     <link rel="prev" title="Spatial functions" href="spatial-functions.html" />
   
    
@@ -230,13 +231,6 @@
     <li class="md-nav__item">
     
     
-      <a href="../usage/join-optimizations.html" class="md-nav__link">Mosaic optimizations for spatial joins</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
       <a href="geometry-constructors.html" class="md-nav__link">Geometry constructors</a>
       
     
@@ -269,9 +263,9 @@
   <ul class="md-nav__list" data-md-scrollfix="">
         <li class="md-nav__item"><a href="#api-spatial-predicates--page-root" class="md-nav__link">Spatial predicates</a><nav class="md-nav">
               <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#st-distance" class="md-nav__link">st_distance</a>
-        </li>
         <li class="md-nav__item"><a href="#st-contains" class="md-nav__link">st_contains</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-intersects" class="md-nav__link">st_intersects</a>
         </li></ul>
             </nav>
         </li>
@@ -280,6 +274,13 @@
 
   </ul>
 </nav>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="spatial-aggregations.html" class="md-nav__link">Spatial aggregation functions</a>
       
     
     </li>
@@ -299,9 +300,9 @@
   <ul class="md-nav__list" data-md-scrollfix="">
         <li class="md-nav__item"><a href="#api-spatial-predicates--page-root" class="md-nav__link">Spatial predicates</a><nav class="md-nav">
               <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#st-distance" class="md-nav__link">st_distance</a>
-        </li>
         <li class="md-nav__item"><a href="#st-contains" class="md-nav__link">st_contains</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-intersects" class="md-nav__link">st_intersects</a>
         </li></ul>
             </nav>
         </li>
@@ -321,68 +322,6 @@
             
   
 <h1 id="api-spatial-predicates--page-root">Spatial predicates<a class="headerlink" href="#api-spatial-predicates--page-root" title="Permalink to this headline">¶</a></h1>
-
-<h2 id="st-distance">st_distance<a class="headerlink" href="#st-distance" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="st_distance">
-<span class="sig-name descname"><span class="pre">st_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geom2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_distance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the distance between <cite>geom1</cite> and <cite>geom2</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>geom1</strong> (<em>Column</em>) – Geometry</p></li>
-<li><p><strong>geom2</strong> (<em>Column</em>) – Geometry</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column: DoubleType</p>
-</dd>
-<dt class="field-odd">Example</dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-</dd></dl>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-0-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-0-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'point'</span><span class="p">:</span> <span class="s1">'POINT (5 5)'</span><span class="p">,</span> <span class="s1">'poly'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_distance</span><span class="p">(</span><span class="s1">'poly'</span><span class="p">,</span> <span class="s1">'point'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="go">+------------------------+</span>
-<span class="go">|st_distance(poly, point)|</span>
-<span class="go">+------------------------+</span>
-<span class="go">|      15.652475842498529|</span>
-<span class="go">+------------------------+</span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-0-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"POINT (5 5)"</span><span class="p">,</span><span class="w"> </span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"point"</span><span class="p">,</span><span class="w"> </span><span class="s">"poly"</span><span class="p">)</span><span class="w"></span>
-<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_distance</span><span class="p">(</span><span class="n">$</span><span class="s">"poly"</span><span class="p">,</span><span class="w"> </span><span class="n">$</span><span class="s">"point"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
-<span class="o">+------------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="n">st_distance</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span><span class="w"> </span><span class="n">point</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
-<span class="o">+------------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="w">      </span><span class="mf">15.652475842498529</span><span class="o">|</span><span class="w"></span>
-<span class="o">+------------------------+</span><span class="w"></span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-0-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_distance</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">,</span><span class="w"> </span><span class="ss">"POINT (5 5)"</span><span class="p">)</span><span class="w"></span>
-<span class="o">+</span><span class="c1">------------------------+</span>
-<span class="o">|</span><span class="n">st_distance</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span><span class="w"> </span><span class="n">point</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
-<span class="o">+</span><span class="c1">------------------------+</span>
-<span class="o">|</span><span class="w">      </span><span class="mi">15</span><span class="p">.</span><span class="mi">652475842498529</span><span class="o">|</span><span class="w"></span>
-<span class="o">+</span><span class="c1">------------------------+</span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-0-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">point</span> <span class="o">=</span> <span class="nf">c</span><span class="p">(</span> <span class="s">"POINT (5 5)"</span><span class="p">),</span> <span class="n">poly</span> <span class="o">=</span> <span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">))</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">st_distance</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"poly"</span><span class="p">),</span> <span class="nf">column</span><span class="p">(</span><span class="s">"point"</span><span class="p">))))</span>
-<span class="o">+------------------------+</span>
-<span class="o">|</span><span class="nf">st_distance</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span><span class="o">|</span>
-<span class="o">+------------------------+</span>
-<span class="o">|</span>      <span class="m">15.652475842498529</span><span class="o">|</span>
-<span class="o">+------------------------+</span>
-</pre></div>
-</div>
-</div></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Results of this function are always expressed in the original units of the input geometries.</p>
-</div>
-
 
 <h2 id="st-contains">st_contains<a class="headerlink" href="#st-contains" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
@@ -404,7 +343,7 @@
 </dl>
 </dd></dl>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-1-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-1-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-1-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'point'</span><span class="p">:</span> <span class="s1">'POINT (25 15)'</span><span class="p">,</span> <span class="s1">'poly'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-0-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-0-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'point'</span><span class="p">:</span> <span class="s1">'POINT (25 15)'</span><span class="p">,</span> <span class="s1">'poly'</span><span class="p">:</span> <span class="s1">'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'</span><span class="p">}])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_contains</span><span class="p">(</span><span class="s1">'poly'</span><span class="p">,</span> <span class="s1">'point'</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="go">+------------------------+</span>
 <span class="go">|st_contains(poly, point)|</span>
@@ -413,7 +352,7 @@
 <span class="go">+------------------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-1-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"POINT (25 15)"</span><span class="p">,</span><span class="w"> </span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"point"</span><span class="p">,</span><span class="w"> </span><span class="s">"poly"</span><span class="p">)</span><span class="w"></span>
+</div><div aria-labelledby="tab-0-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"POINT (25 15)"</span><span class="p">,</span><span class="w"> </span><span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"point"</span><span class="p">,</span><span class="w"> </span><span class="s">"poly"</span><span class="p">)</span><span class="w"></span>
 <span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_contains</span><span class="p">(</span><span class="n">$</span><span class="s">"poly"</span><span class="p">,</span><span class="w"> </span><span class="n">$</span><span class="s">"point"</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
 <span class="o">+------------------------+</span><span class="w"></span>
 <span class="o">|</span><span class="n">st_contains</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span><span class="w"> </span><span class="n">point</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
@@ -422,7 +361,7 @@
 <span class="o">+------------------------+</span><span class="w"></span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-1-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_contains</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">,</span><span class="w"> </span><span class="ss">"POINT (25 15)"</span><span class="p">)</span><span class="w"></span>
+</div><div aria-labelledby="tab-0-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_contains</span><span class="p">(</span><span class="ss">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">,</span><span class="w"> </span><span class="ss">"POINT (25 15)"</span><span class="p">)</span><span class="w"></span>
 <span class="o">+</span><span class="c1">------------------------+</span>
 <span class="o">|</span><span class="n">st_contains</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span><span class="w"> </span><span class="n">point</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
 <span class="o">+</span><span class="c1">------------------------+</span>
@@ -430,16 +369,78 @@
 <span class="o">+</span><span class="c1">------------------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-1-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">point</span> <span class="o">=</span> <span class="nf">c</span><span class="p">(</span> <span class="s">"POINT (25 15)"</span><span class="p">),</span> <span class="n">poly</span> <span class="o">=</span> <span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">))</span>
+</div><div aria-labelledby="tab-0-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">point</span> <span class="o">=</span> <span class="nf">c</span><span class="p">(</span> <span class="s">"POINT (25 15)"</span><span class="p">),</span> <span class="n">poly</span> <span class="o">=</span> <span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">st_contains</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"poly"</span><span class="p">),</span> <span class="nf">column</span><span class="p">(</span><span class="s">"point"</span><span class="p">))))</span>
 <span class="o">+------------------------+</span>
-<span class="o">|</span><span class="nf">st_distance</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span><span class="o">|</span>
+<span class="o">|</span><span class="nf">st_contains</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span><span class="o">|</span>
 <span class="o">+------------------------+</span>
-<span class="o">|</span>      <span class="m">15.652475842498529</span><span class="o">|</span>
+<span class="o">|</span>                    <span class="n">true</span><span class="o">|</span>
 <span class="o">+------------------------+</span>
 </pre></div>
 </div>
 </div></div>
+
+
+<h2 id="st-intersects">st_intersects<a class="headerlink" href="#st-intersects" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_intersects">
+<span class="sig-name descname"><span class="pre">st_intersects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geom2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_intersects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the geometry <cite>geom1</cite> intersects <cite>geom2</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>geom1</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>geom2</strong> (<em>Column</em>) – Geometry</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: BooleanType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-1-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-1-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-1-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'p1'</span><span class="p">:</span> <span class="s1">'POLYGON ((0 0, 0 3, 3 3, 3 0))'</span><span class="p">,</span> <span class="s1">'p2'</span><span class="p">:</span> <span class="s1">'POLYGON ((2 2, 2 4, 4 4, 4 2))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_intersects</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s1">'p1'</span><span class="p">),</span> <span class="n">col</span><span class="p">(</span><span class="s1">'p2'</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+---------------------+</span>
+<span class="go">|st_intersects(p1, p2)|</span>
+<span class="go">+---------------------+</span>
+<span class="go">|                 true|</span>
+<span class="go">+---------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"POLYGON ((0 0, 0 3, 3 3, 3 0))"</span><span class="p">,</span><span class="w"> </span><span class="s">"POLYGON ((2 2, 2 4, 4 4, 4 2))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"p1"</span><span class="p">,</span><span class="w"> </span><span class="s">"p2"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_intersects</span><span class="p">(</span><span class="n">$</span><span class="s">"p1"</span><span class="p">,</span><span class="w"> </span><span class="n">$</span><span class="s">"p2"</span><span class="p">)).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span><span class="w"></span>
+<span class="o">+---------------------+</span><span class="w"></span>
+<span class="o">|</span><span class="n">st_intersects</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span><span class="w"> </span><span class="n">p2</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+---------------------+</span><span class="w"></span>
+<span class="o">|</span><span class="w">                 </span><span class="kc">true</span><span class="o">|</span><span class="w"></span>
+<span class="o">+---------------------+</span><span class="w"></span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_intersects</span><span class="p">(</span><span class="ss">"POLYGON ((0 0, 0 3, 3 3, 3 0))"</span><span class="p">,</span><span class="w"> </span><span class="ss">"POLYGON ((2 2, 2 4, 4 4, 4 2))"</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+<span class="o">|</span><span class="n">st_intersects</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span><span class="w"> </span><span class="n">p2</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+<span class="o">|</span><span class="w">                 </span><span class="k">true</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">---------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">p1</span> <span class="o">=</span> <span class="s">"POLYGON ((0 0, 0 3, 3 3, 3 0))"</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="s">"POLYGON ((2 2, 2 4, 4 4, 4 2))"</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">st_intersects</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"p1"</span><span class="p">),</span> <span class="nf">column</span><span class="p">(</span><span class="s">"p2"</span><span class="p">))),</span> <span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
+<span class="o">+---------------------+</span>
+<span class="o">|</span><span class="nf">st_intersects</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+---------------------+</span>
+<span class="o">|</span>                 <span class="n">true</span><span class="o">|</span>
+<span class="o">+---------------------+</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Intersection logic will be dependent on the chosen geometry API (ESRI or JTS).</p>
+</div>
 
 
 
@@ -466,6 +467,17 @@
               </div>
             </a>
           
+          
+            <a href="spatial-aggregations.html" title="Spatial aggregation functions"
+               class="md-flex md-footer-nav__link md-footer-nav__link--next"
+               rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
+                class="md-flex__ellipsis"> <span
+                class="md-footer-nav__direction"> Next </span> Spatial aggregation functions </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink"><i
+                class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
           
         </a>
         

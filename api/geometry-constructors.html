@@ -59,7 +59,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Geometry accessors" href="geometry-accessors.html" />
-    <link rel="prev" title="Mosaic optimizations for spatial joins" href="../usage/join-optimizations.html" />
+    <link rel="prev" title="Using grid index systems in Mosaic" href="../usage/grid-indexes.html" />
   
    
 
@@ -231,13 +231,6 @@
     <li class="md-nav__item">
     
     
-      <a href="../usage/join-optimizations.html" class="md-nav__link">Mosaic optimizations for spatial joins</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     <label class="md-nav__link md-nav__link--active" for="__toc"> Geometry constructors </label>
     
@@ -289,6 +282,13 @@
     
     
       <a href="spatial-predicates.html" class="md-nav__link">Spatial predicates</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="spatial-aggregations.html" class="md-nav__link">Spatial aggregation functions</a>
       
     
     </li>
@@ -673,7 +673,7 @@
 <span class="go">        "crs":{</span>
 <span class="go">            "type":"name",</span>
 <span class="go">            "properties":{</span>
-<span class="go">                "name":"EPSG:0"</span>
+<span class="go">                "name":"EPSG:4326"</span>
 <span class="go">            }</span>
 <span class="go">        }</span>
 <span class="go">    }</span>
@@ -696,7 +696,7 @@
 <span class="s">        |   "crs":{</span>
 <span class="s">        |       "type":"name",</span>
 <span class="s">        |       "properties":{</span>
-<span class="s">        |           "name":"EPSG:0"</span>
+<span class="s">        |           "name":"EPSG:4326"</span>
 <span class="s">        |       }</span>
 <span class="s">        |   }</span>
 <span class="s">        |}"""</span><span class="p">.</span><span class="n">stripMargin</span><span class="p">)</span><span class="w"></span>
@@ -710,7 +710,7 @@
 <span class="o">+--------------------------------------+</span><span class="w"></span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-5-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-5-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; SELECT st_geomfromgeojson("{\"type\":\"Point\",\"coordinates\":[-75.78033,35.18937],\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:0\"}}}")
+</div><div aria-labelledby="tab-5-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-5-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; SELECT st_geomfromgeojson("{\"type\":\"Point\",\"coordinates\":[-75.78033,35.18937],\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}}}")
 +--------------------------------------+
 |convert_to(as_json(json))             |
 +--------------------------------------+
@@ -727,7 +727,7 @@
 <span class="s">        "crs":{</span>
 <span class="s">            "type":"name",</span>
 <span class="s">            "properties":{</span>
-<span class="s">                "name":"EPSG:0"</span>
+<span class="s">                "name":"EPSG:4326"</span>
 <span class="s">            }</span>
 <span class="s">        }</span>
 <span class="s">    }'</span>
@@ -754,7 +754,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
           
-            <a href="../usage/join-optimizations.html" title="Mosaic optimizations for spatial joins"
+            <a href="../usage/grid-indexes.html" title="Using grid index systems in Mosaic"
                class="md-flex md-footer-nav__link md-footer-nav__link--prev"
                rel="prev">
               <div class="md-flex__cell md-flex__cell--shrink">
@@ -763,7 +763,7 @@
               <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
                 <span class="md-flex__ellipsis">
                   <span
-                      class="md-footer-nav__direction"> Previous </span> Mosaic optimizations for spatial joins </span>
+                      class="md-footer-nav__direction"> Previous </span> Using grid index systems in Mosaic </span>
               </div>
             </a>
           

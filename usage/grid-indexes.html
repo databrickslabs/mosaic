@@ -59,7 +59,7 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Mosaic optimizations for spatial joins" href="join-optimizations.html" />
+    <link rel="next" title="Geometry constructors" href="../api/geometry-constructors.html" />
     <link rel="prev" title="Quickstart notebook" href="quickstart.html" />
   
    
@@ -263,13 +263,6 @@
     <li class="md-nav__item">
     
     
-      <a href="join-optimizations.html" class="md-nav__link">Mosaic optimizations for spatial joins</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
       <a href="../api/geometry-constructors.html" class="md-nav__link">Geometry constructors</a>
       
     
@@ -292,6 +285,13 @@
     
     
       <a href="../api/spatial-predicates.html" class="md-nav__link">Spatial predicates</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/spatial-aggregations.html" class="md-nav__link">Spatial aggregation functions</a>
       
     
     </li>
@@ -670,26 +670,26 @@ trips.show()
 <div class="ansiout">+---------+-------------------+-------------------+---------------+-------------+----------------+---------------+
 vendor_id|    pickup_datetime|   dropoff_datetime|passenger_count|trip_distance|pickup_longitude|pickup_latitude|
 +---------+-------------------+-------------------+---------------+-------------+----------------+---------------+
-      VTS|2010-02-27 00:58:00|2010-02-27 01:07:00|              1|         1.53|      -73.993507|      40.733387|
-      VTS|2009-05-14 18:37:00|2009-05-14 18:45:00|              1|          2.4|      -73.991153|       40.72974|
-      VTS|2009-10-11 00:48:00|2009-10-11 01:05:00|              1|         4.21|      -74.005193|      40.721045|
-      VTS|2010-02-19 12:59:00|2010-02-19 13:06:00|              4|         1.08|      -74.010147|       40.72597|
-      CMT|2010-05-11 12:45:26|2010-05-11 13:04:11|              1|          3.7|      -74.009204|      40.713216|
-      VTS|2009-12-16 11:03:00|2009-12-16 11:12:00|              1|         2.18|      -73.999928|      40.721773|
-      VTS|2010-02-18 07:45:00|2010-02-18 07:51:00|              1|         0.77|      -74.017235|      40.715668|
-      CMT|2010-09-17 22:27:28|2010-09-17 22:33:06|              1|          1.8|      -74.231578|      40.583343|
-      VTS|2009-05-11 20:59:00|2009-05-11 21:06:00|              1|         1.38|      -73.992268|      40.728883|
-      CMT|2010-06-03 06:43:18|2010-06-03 06:52:02|              1|          2.8|      -74.011603|      40.706008|
-      CMT|2009-05-30 22:50:38|2009-05-30 23:18:24|              1|          4.0|      -74.008459|      40.731229|
-      VTS|2010-02-24 17:22:00|2010-02-24 17:31:00|              1|         2.71|      -74.011938|      40.701655|
-      CMT|2009-12-15 20:10:59|2009-12-15 20:24:43|              1|          1.8|       -73.99516|       40.73184|
-      VTS|2010-06-21 21:02:00|2010-06-21 21:38:00|              1|        19.91|      -74.010312|       40.70506|
-      CMT|2010-02-18 21:02:46|2010-02-18 21:10:11|              1|          1.3|      -73.989271|      40.726147|
-      CMT|2009-12-03 18:51:31|2009-12-03 18:55:44|              1|          0.9|      -73.993241|      40.722358|
-      VTS|2009-10-11 19:17:00|2009-10-11 19:26:00|              1|         1.59|      -74.007627|      40.725195|
-      DDS|2010-05-09 11:42:02|2010-05-09 12:05:29|              1|         11.6|      -74.009373|       40.71052|
-      CMT|2009-05-08 11:31:52|2009-05-08 11:41:24|              1|          0.9|      -73.996071|      40.732786|
-      VTS|2009-04-04 22:28:00|2009-04-04 22:36:00|              1|          1.3|      -73.998395|       40.71833|
+      CMT|2009-01-01 20:07:33|2009-01-01 20:12:28|              1|          0.8|      -74.001041|         40.731|
+      CMT|2009-01-06 15:29:12|2009-01-06 15:51:57|              2|          3.3|      -73.996489|      40.725742|
+      CMT|2010-02-14 17:42:16|2010-02-14 17:55:03|              1|          3.4|      -74.002949|      40.734254|
+      CMT|2010-02-11 18:19:01|2010-02-11 18:27:54|              1|          1.5|      -73.998133|      40.682463|
+      VTS|2009-04-29 12:26:00|2009-04-29 12:35:00|              3|         2.05|      -74.001332|       40.72006|
+      VTS|2009-04-24 15:03:00|2009-04-24 15:23:00|              2|         2.89|      -73.989952|      40.734625|
+      CMT|2010-02-28 13:55:44|2010-02-28 14:02:37|              1|          1.2|      -74.006015|      40.735279|
+      VTS|2009-09-27 08:46:00|2009-09-27 08:59:00|              1|         3.97|      -74.000148|      40.717468|
+      CMT|2010-02-18 09:48:52|2010-02-18 10:08:38|              1|          3.0|      -73.995177|      40.725297|
+      CMT|2009-04-09 20:33:44|2009-04-09 20:39:33|              2|          0.6|      -73.990133|      40.729321|
+      CMT|2010-02-13 22:41:10|2010-02-13 23:07:04|              1|          4.2|      -74.009175|      40.706284|
+      CMT|2009-01-25 20:06:51|2009-01-25 20:12:37|              1|          1.3|      -74.007384|      40.717929|
+      VTS|2010-02-27 18:19:00|2010-02-27 18:38:00|              1|          4.2|      -74.011512|      40.710588|
+      VTS|2010-02-15 10:17:00|2010-02-15 10:24:00|              1|         1.74|      -74.016442|      40.711617|
+      CMT|2009-12-26 18:45:49|2009-12-26 18:59:08|              1|          4.8|       -74.01014|      40.712263|
+      CMT|2009-12-06 01:00:07|2009-12-06 01:11:41|              2|          4.2|      -74.002505|      40.729001|
+      VTS|2009-10-04 14:36:00|2009-10-04 14:42:00|              1|         1.13|      -74.006767|      40.718942|
+      CMT|2009-01-18 00:20:50|2009-01-18 00:36:29|              3|          2.1|      -73.993258|      40.721401|
+      VTS|2009-05-18 13:24:00|2009-05-18 13:33:00|              1|         1.91|      -73.992785|      40.730412|
+      VTS|2009-11-11 21:51:00|2009-11-11 22:13:00|              5|         4.71|      -74.010065|      40.733383|
 +---------+-------------------+-------------------+---------------+-------------+----------------+---------------+
 only showing top 20 rows
 
@@ -701,16 +701,18 @@ only showing top 20 rows
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import st_geomfromgeojson
 
-geoJsonDF = (
+user = spark.sql("select current_user() as user").collect()[0]["user"]
+
+neighbourhoods = (
   spark.read.format("json")
-  .load("dbfs:/FileStore/shared_uploads/stuart.lynn@databricks.com/NYC_Taxi_Zones.geojson")
+  .load(f"dbfs:/FileStore/shared_uploads/{user}/NYC_Taxi_Zones.geojson")
   .repartition(sc.defaultParallelism)
   .withColumn("geometry", st_geomfromgeojson(to_json(col("geometry"))))
   .select("properties.*", "geometry")
   .drop("shape_area", "shape_leng")
 )
 
-geoJsonDF.show()
+neighbourhoods.show()
 </pre></div>
 </div>
 </div>
@@ -732,30 +734,30 @@ geoJsonDF.show()
     line-height: 19px;
   }
 </style>
-<div class="ansiout">+-------------+-----------+--------+--------------------+--------------------+
-      borough|location_id|objectid|                zone|            geometry|
-+-------------+-----------+--------+--------------------+--------------------+
-     Brooklyn|        255|     255|Williamsburg (Nor...|{6, [[[-73.961760...|
-        Bronx|        147|     147|            Longwood|{6, [[[-73.895152...|
-       Queens|        203|     203|            Rosedale|{6, [[[-73.727535...|
-        Bronx|        182|     182|         Parkchester|{6, [[[-73.854651...|
-       Queens|        124|     124|        Howard Beach|{6, [[[-73.850964...|
-       Queens|        101|     101|           Glen Oaks|{6, [[[-73.701347...|
-        Bronx|         81|      81|         Eastchester|{6, [[[-73.823668...|
-     Brooklyn|        178|     178| Ocean Parkway South|{6, [[[-73.970804...|
-     Brooklyn|         72|      72|East Flatbush/Rem...|{6, [[[-73.920213...|
-    Manhattan|        249|     249|        West Village|{6, [[[-74.002506...|
-       Queens|        180|     180|          Ozone Park|{6, [[[-73.841196...|
-    Manhattan|        127|     127|              Inwood|{6, [[[-73.911224...|
-       Queens|          9|       9|          Auburndale|{6, [[[-73.785024...|
-        Bronx|         60|      60|   Crotona Park East|{6, [[[-73.878238...|
-       Queens|        117|     117|     Hammels/Arverne|{6, [[[-73.776358...|
-Staten Island|         84|      84|Eltingville/Annad...|{6, [[[-74.160057...|
-    Manhattan|        153|     153|         Marble Hill|{6, [[[-73.906665...|
-       Queens|        201|     201|       Rockaway Park|{6, [[[-73.818499...|
-       Queens|        129|     129|     Jackson Heights|{6, [[[-73.875865...|
-    Manhattan|        202|     202|    Roosevelt Island|{6, [[[-73.941800...|
-+-------------+-----------+--------+--------------------+--------------------+
+<div class="ansiout">+-------------+-----------+--------+-------------------+--------------------+
+      borough|location_id|objectid|               zone|            geometry|
++-------------+-----------+--------+-------------------+--------------------+
+     Brooklyn|        123|     123|          Homecrest|{6, 4326, [[[-73....|
+    Manhattan|        153|     153|        Marble Hill|{6, 4326, [[[-73....|
+     Brooklyn|        112|     112|         Greenpoint|{6, 4326, [[[-73....|
+    Manhattan|        233|     233|UN/Turtle Bay South|{6, 4326, [[[-73....|
+    Manhattan|         43|      43|       Central Park|{6, 4326, [[[-73....|
+       Queens|        201|     201|      Rockaway Park|{6, 4326, [[[-73....|
+       Queens|        131|     131|    Jamaica Estates|{6, 4326, [[[-73....|
+     Brooklyn|        111|     111|Green-Wood Cemetery|{6, 4326, [[[-73....|
+       Queens|        226|     226|          Sunnyside|{6, 4326, [[[-73....|
+       Queens|        129|     129|    Jackson Heights|{6, 4326, [[[-73....|
+    Manhattan|        120|     120|    Highbridge Park|{6, 4326, [[[-73....|
+     Brooklyn|         76|      76|      East New York|{6, 4326, [[[-73....|
+    Manhattan|         24|      24|       Bloomingdale|{6, 4326, [[[-73....|
+    Manhattan|        202|     202|   Roosevelt Island|{6, 4326, [[[-73....|
+    Manhattan|        100|     100|   Garment District|{6, 4326, [[[-73....|
+Staten Island|        251|     251|        Westerleigh|{6, 4326, [[[-74....|
+    Manhattan|         74|      74|  East Harlem North|{6, 4326, [[[-73....|
+       Queens|         98|      98|      Fresh Meadows|{6, 4326, [[[-73....|
+    Manhattan|        211|     211|               SoHo|{6, 4326, [[[-74....|
+        Bronx|        174|     174|            Norwood|{6, 4326, [[[-73....|
++-------------+-----------+--------+-------------------+--------------------+
 only showing top 20 rows
 
 </div></div>
@@ -767,11 +769,10 @@ only showing top 20 rows
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import MosaicAnalyzer
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import MosaicFrame
 
-analyzer = MosaicAnalyzer()
-optimal_resolution = analyzer.get_optimal_resolution(geoJsonDF, "geometry")
-optimal_resolution
+neighbourhoods_mdf = MosaicFrame(neighbourhoods, "geometry")
+help(neighbourhoods_mdf.get_optimal_resolution)
 </pre></div>
 </div>
 </div>
@@ -793,7 +794,56 @@ optimal_resolution
     line-height: 19px;
   }
 </style>
-<div class="ansiout">Out[4]: 9</div></div>
+<div class="ansiout">Help on method get_optimal_resolution in module mosaic.core.mosaic_frame:
+
+get_optimal_resolution(sample_rows: Union[int, NoneType] = None, sample_fraction: Union[float, NoneType] = None) -&gt; int method of mosaic.core.mosaic_frame.MosaicFrame instance
+    Analyzes the geometries in the currently selected geometry column and proposes an optimal
+    grid-index resolution.
+
+    Provide either `sample_rows` or `sample_fraction` parameters to control how much data is passed to the analyzer.
+    (Providing too little data to the analyzer may result in a `NotEnoughGeometriesException`)
+
+    Parameters
+    ----------
+    sample_rows: int, optional
+        The number of rows to sample.
+    sample_fraction: float, optional
+        The proportion of rows to sample.
+
+    Returns
+    -------
+    int
+        The recommended grid-index resolution to apply to this MosaicFrame.
+
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>(resolution := neighbourhoods_mdf.get_optimal_resolution(sample_fraction=1.))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style scoped="">
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">Out[15]: 9</div></div>
 </div>
 
 
@@ -803,8 +853,8 @@ optimal_resolution
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import point_index
-indexed_trips = trips.withColumn("ix", point_index(lng="pickup_longitude", lat="pickup_latitude", resolution=lit(optimal_resolution)))
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import point_index_lonlat
+indexed_trips = trips.withColumn("ix", point_index_lonlat(lon="pickup_longitude", lat="pickup_latitude", resolution=lit(resolution)))
 indexed_trips.show()
 </pre></div>
 </div>
@@ -831,25 +881,25 @@ indexed_trips.show()
 vendor_id|    pickup_datetime|   dropoff_datetime|passenger_count|trip_distance|pickup_longitude|pickup_latitude|                ix|
 +---------+-------------------+-------------------+---------------+-------------+----------------+---------------+------------------+
       DDS|2009-01-17 18:49:57|2009-01-17 18:56:29|              3|          1.2|      -74.004043|      40.733409|617733151092113407|
+      DDS|2009-12-01 00:47:52|2009-12-01 01:00:16|              1|          3.4|      -73.991702|      40.726342|617733151087132671|
+      CMT|2009-02-09 16:50:21|2009-02-09 17:02:47|              1|          2.6|      -73.999673|      40.733586|617733123805806591|
+      CMT|2009-12-07 07:15:47|2009-12-07 07:32:07|              1|          3.8|       -74.01211|      40.716893|617733151084773375|
       VTS|2009-10-16 22:02:00|2009-10-16 22:08:00|              1|          1.1|      -74.010903|       40.71624|617733151084773375|
+      VTS|2009-12-23 22:13:00|2009-12-23 22:18:00|              1|         0.37|      -74.002343|       40.73366|617733151092113407|
+      VTS|2009-12-12 01:24:00|2009-12-12 01:38:00|              2|         3.55|      -74.002565|      40.728188|617733151091326975|
+      CMT|2009-12-07 13:10:37|2009-12-07 13:13:45|              1|          0.5|      -73.999184|       40.73428|617733123805806591|
       CMT|2009-11-08 22:20:44|2009-11-08 22:31:23|              1|          1.9|      -74.003029|      40.733385|617733151092113407|
+      VTS|2009-12-27 20:01:00|2009-12-27 20:04:00|              1|         1.04|      -74.000227|      40.732603|617733151092375551|
+      VTS|2009-02-13 14:33:00|2009-02-13 14:50:00|              3|         1.59|      -74.006535|      40.732303|617733151092637695|
+      CMT|2009-11-15 21:13:32|2009-11-15 21:25:56|              3|          3.0|      -73.998795|      40.730621|617733151092375551|
       VTS|2009-01-08 18:13:00|2009-01-08 18:33:00|              2|         4.18|        -74.0079|      40.712012|617733151021334527|
+      CMT|2009-11-30 13:30:13|2009-11-30 13:41:55|              1|          1.6|      -74.004487|      40.734072|617733151092637695|
+      CMT|2009-01-11 20:02:22|2009-01-11 20:08:15|              1|          1.0|      -74.004493|      40.713349|617733151020810239|
+      CMT|2009-12-30 18:46:08|2009-12-30 19:02:23|              1|          2.3|      -74.010798|      40.716717|617733151084773375|
       CMT|2009-11-18 21:50:12|2009-11-18 22:05:19|              1|          5.8|      -73.992515|      40.694106|617733151038111743|
-      VTS|2009-12-28 20:34:00|2009-12-28 20:43:00|              5|         1.95|      -74.003597|      40.732455|617733151092113407|
-      CMT|2009-11-13 11:09:32|2009-11-13 11:26:23|              1|          2.5|      -74.003922|      40.725683|617733151080054783|
-      VTS|2009-02-10 08:47:00|2009-02-10 08:52:00|              5|         1.21|      -74.006937|      40.703955|617733151023431679|
-      VTS|2009-12-03 09:39:00|2009-12-03 09:51:00|              1|         4.05|       -73.99822|      40.723497|617733151079792639|
-      VTS|2009-12-09 09:49:00|2009-12-09 09:56:00|              5|         0.68|      -74.017367|      40.704827|617733151011373055|
-      CMT|2009-09-17 20:24:03|2009-09-17 20:30:15|              2|          0.9|      -74.005168|      40.733361|617733151092637695|
-      VTS|2010-10-25 17:51:00|2010-10-25 18:08:00|              1|         5.04|      -74.009903|       40.70333|617733151012683775|
-      CMT|2009-09-14 20:57:01|2009-09-14 21:17:40|              2|          3.5|       -73.99733|       40.72073|617733151089491967|
-      CMT|2009-05-13 11:56:35|2009-05-13 12:18:13|              1|          2.8|      -73.992159|      40.731001|617733151087919103|
-      VTS|2009-09-19 23:04:00|2009-09-19 23:11:00|              5|         1.32|      -73.993007|       40.72802|617733151086870527|
-      DDS|2009-11-11 20:18:05|2009-11-11 20:26:22|              3|          2.1|      -74.013306|      40.707776|617733151012421631|
-      CMT|2009-02-23 15:39:20|2009-02-23 15:41:53|              1|          0.2|       -74.00337|      40.735527|617733150904680447|
-      VTS|2009-05-23 13:13:00|2009-05-23 13:29:00|              1|         4.61|      -74.017047|        40.7054|617733151011373055|
-      CMT|2009-01-07 20:34:48|2009-01-07 20:46:21|              1|          2.1|      -74.007879|      40.730181|617733151091589119|
-      CMT|2009-10-01 22:24:51|2009-10-01 22:30:59|              2|          0.4|      -73.990715|      40.724219|617733151090016255|
+      VTS|2009-11-21 12:51:00|2009-11-21 13:27:00|              1|        14.18|        -73.9923|      40.715218|617733151109414911|
+      CMT|2009-01-20 09:34:49|2009-01-20 09:37:15|              1|          0.4|        -74.0027|      40.733479|617733151092113407|
+      VTS|2009-01-03 07:07:00|2009-01-03 07:18:00|              1|         7.81|      -73.994358|      40.690345|617733151037325311|
 +---------+-------------------+-------------------+---------------+-------------+----------------+---------------+------------------+
 only showing top 20 rows
 
@@ -866,8 +916,8 @@ only showing top 20 rows
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import polyfill
 
 indexed_neighbourhoods = (
-  geoJsonDF
-  .select("*", polyfill("geometry", lit(optimal_resolution)).alias("ix_set"))
+  neighbourhoods
+  .select("*", polyfill("geometry", lit(resolution)).alias("ix_set"))
   .drop("geometry")
 )
 
@@ -893,30 +943,30 @@ indexed_neighbourhoods.show()
     line-height: 19px;
   }
 </style>
-<div class="ansiout">+-------------+-----------+--------+--------------------+--------------------+
-      borough|location_id|objectid|                zone|              ix_set|
-+-------------+-----------+--------+--------------------+--------------------+
-     Brooklyn|        255|     255|Williamsburg (Nor...|[6177331238270402...|
-        Bronx|        147|     147|            Longwood|[6177331231197757...|
-       Queens|        203|     203|            Rosedale|[6177331218140364...|
-        Bronx|        182|     182|         Parkchester|[6177331207798783...|
-       Queens|        124|     124|        Howard Beach|[6177331236427530...|
-       Queens|        101|     101|           Glen Oaks|[6177331217099653...|
-        Bronx|         81|      81|         Eastchester|[6177331206343884...|
-     Brooklyn|        178|     178| Ocean Parkway South|[6177331514952908...|
-     Brooklyn|         72|      72|East Flatbush/Rem...|[6177331520232488...|
-    Manhattan|        249|     249|        West Village|[6177331509046804...|
-       Queens|        180|     180|          Ozone Park|[6177331236393451...|
-    Manhattan|        127|     127|              Inwood|[6177331229842472...|
-       Queens|          9|       9|          Auburndale|[6177331216591093...|
-        Bronx|         60|      60|   Crotona Park East|[6177331231871467...|
-       Queens|        117|     117|     Hammels/Arverne|[6177331353191710...|
-Staten Island|         84|      84|Eltingville/Annad...|[6177331460644536...|
-    Manhattan|        153|     153|         Marble Hill|[6177331229858201...|
-       Queens|        201|     201|       Rockaway Park|[6177331357831659...|
-       Queens|        129|     129|     Jackson Heights|[6177331243222302...|
-    Manhattan|        202|     202|    Roosevelt Island|[6177331237777571...|
-+-------------+-----------+--------+--------------------+--------------------+
+<div class="ansiout">+-------------+-----------+--------+-------------------+--------------------+
+      borough|location_id|objectid|               zone|              ix_set|
++-------------+-----------+--------+-------------------+--------------------+
+     Brooklyn|        123|     123|          Homecrest|[6177331514226769...|
+    Manhattan|        153|     153|        Marble Hill|[6177331229858201...|
+     Brooklyn|        112|     112|         Greenpoint|[6177331237832622...|
+    Manhattan|        233|     233|UN/Turtle Bay South|[6177331238679347...|
+    Manhattan|         43|      43|       Central Park|[6177331225792348...|
+       Queens|        201|     201|      Rockaway Park|[6177331357831659...|
+       Queens|        131|     131|    Jamaica Estates|[6177331242658693...|
+     Brooklyn|        111|     111|Green-Wood Cemetery|[6177331522277212...|
+       Queens|        226|     226|          Sunnyside|[6177331238566625...|
+       Queens|        129|     129|    Jackson Heights|[6177331243222302...|
+    Manhattan|        120|     120|    Highbridge Park|[6177331231976325...|
+     Brooklyn|         76|      76|      East New York|[6177331236938711...|
+    Manhattan|         24|      24|       Bloomingdale|[6177331226458193...|
+    Manhattan|        202|     202|   Roosevelt Island|[6177331237777571...|
+    Manhattan|        100|     100|   Garment District|[6177331509717893...|
+Staten Island|        251|     251|        Westerleigh|[6177331466128588...|
+    Manhattan|         74|      74|  East Harlem North|[6177331226508001...|
+       Queens|         98|      98|      Fresh Meadows|[6177331242448977...|
+    Manhattan|        211|     211|               SoHo|[6177331510784819...|
+        Bronx|        174|     174|            Norwood|[6177331205497159...|
++-------------+-----------+--------+-------------------+--------------------+
 only showing top 20 rows
 
 </div></div>
@@ -956,30 +1006,30 @@ exploded_indexed_neighbourhoods.show()
     line-height: 19px;
   }
 </style>
-<div class="ansiout">+--------+-----------+--------+--------------------+------------------+
- borough|location_id|objectid|                zone|                ix|
-+--------+-----------+--------+--------------------+------------------+
-Brooklyn|        255|     255|Williamsburg (Nor...|617733123827040255|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733124012638207|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733123826253823|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733124013686783|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733123827302399|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733123788767231|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733123789815807|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733123789029375|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733123826778111|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733123788242943|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733123825991679|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733124014211071|
-Brooklyn|        255|     255|Williamsburg (Nor...|617733123818913791|
-   Bronx|        147|     147|            Longwood|617733123119775743|
-   Bronx|        147|     147|            Longwood|617733123112173567|
-   Bronx|        147|     147|            Longwood|617733123111649279|
-   Bronx|        147|     147|            Longwood|617733123110862847|
-   Bronx|        147|     147|            Longwood|617733123123707903|
-   Bronx|        147|     147|            Longwood|617733123111911423|
-   Bronx|        147|     147|            Longwood|617733123124756479|
-+--------+-----------+--------+--------------------+------------------+
+<div class="ansiout">+--------+-----------+--------+---------+------------------+
+ borough|location_id|objectid|     zone|                ix|
++--------+-----------+--------+---------+------------------+
+Brooklyn|        123|     123|Homecrest|617733151422676991|
+Brooklyn|        123|     123|Homecrest|617733151503417343|
+Brooklyn|        123|     123|Homecrest|617733151502893055|
+Brooklyn|        123|     123|Homecrest|617733151502368767|
+Brooklyn|        123|     123|Homecrest|617733151492407295|
+Brooklyn|        123|     123|Homecrest|617733151488737279|
+Brooklyn|        123|     123|Homecrest|617733151484542975|
+Brooklyn|        123|     123|Homecrest|617733151484018687|
+Brooklyn|        123|     123|Homecrest|617733151483494399|
+Brooklyn|        123|     123|Homecrest|617733151425560575|
+Brooklyn|        123|     123|Homecrest|617733151424511999|
+Brooklyn|        123|     123|Homecrest|617733151423463423|
+Brooklyn|        123|     123|Homecrest|617733151511019519|
+Brooklyn|        123|     123|Homecrest|617733151505776639|
+Brooklyn|        123|     123|Homecrest|617733151505252351|
+Brooklyn|        123|     123|Homecrest|617733151504203775|
+Brooklyn|        123|     123|Homecrest|617733151503679487|
+Brooklyn|        123|     123|Homecrest|617733151503155199|
+Brooklyn|        123|     123|Homecrest|617733151502630911|
+Brooklyn|        123|     123|Homecrest|617733151502106623|
++--------+-----------+--------+---------+------------------+
 only showing top 20 rows
 
 </div></div>
@@ -1016,7 +1066,7 @@ joined_df.count()
     line-height: 19px;
   }
 </style>
-<div class="ansiout">Out[8]: 4921410</div></div>
+<div class="ansiout">Out[25]: 4934937</div></div>
 </div>
 
 
@@ -1049,12 +1099,12 @@ joined_df.count()
             </a>
           
           
-            <a href="join-optimizations.html" title="Mosaic optimizations for spatial joins"
+            <a href="../api/geometry-constructors.html" title="Geometry constructors"
                class="md-flex md-footer-nav__link md-footer-nav__link--next"
                rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
                 class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> Mosaic optimizations for spatial joins </span>
+                class="md-footer-nav__direction"> Next </span> Geometry constructors </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink"><i
                 class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
