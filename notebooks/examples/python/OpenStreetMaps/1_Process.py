@@ -1,19 +1,38 @@
 # Databricks notebook source
+# MAGIC %pip install https://github.com/databrickslabs/mosaic/releases/download/v0.1.1/databricks_mosaic-0.1.1-py3-none-any.whl
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC # Process Open Street Maps data
 # MAGIC 
 # MAGIC This notebook creates a [Delta Live Table](https://databricks.com/product/delta-live-tables) data pipeline that processes the OSM data ingested by the [0_Download](./0_Download) notebook.
+# MAGIC 
+# MAGIC ## Setup
+# MAGIC 
+# MAGIC Go to `Workflows` -> `Delta Live Tables` -> `Create pipeline`
+# MAGIC 
+# MAGIC ![create pipeline]()
+# MAGIC 
+# MAGIC * Select this notebook in the Notebook libraries
+# MAGIC * Set the Target database name to `open_street_maps`
+# MAGIC * Set the Pipeline mode to Triggered
+# MAGIC * Set your desired cluster settings 
+# MAGIC * Create the pipeline
+# MAGIC * Run the pipeline
+# MAGIC 
+# MAGIC Delta live tables will run the data transformations defined in this notebook and populate the tables in the target database.
+# MAGIC 
+# MAGIC ![]()
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Setup
+# MAGIC ## Mosaic
 # MAGIC 
-# MAGIC Install and enable [Mosaic](https://github.com/databrickslabs/mosaic)
-
-# COMMAND ----------
-
-# MAGIC %pip install https://github.com/databrickslabs/mosaic/releases/download/v0.1.1/databricks_mosaic-0.1.1-py3-none-any.whl
+# MAGIC This workflow is using [Mosaic](https://github.com/databrickslabs/mosaic) to process the geospatial data.
+# MAGIC 
+# MAGIC You can check out the documentation [here](https://databrickslabs.github.io/mosaic/).
 
 # COMMAND ----------
 
@@ -24,7 +43,7 @@ mos.enable_mosaic(spark, dbutils)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Configure
+# MAGIC ## Configuration
 
 # COMMAND ----------
 
@@ -34,6 +53,11 @@ raw_path = f"dbfs:/tmp/mosaic/open_street_maps/"
 
 # MAGIC %md
 # MAGIC ## DLT Pipeline
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Input (bronze) tables
 
 # COMMAND ----------
 
@@ -55,95 +79,57 @@ def relations():
 def ways():
   return spark.read.format("delta").load(f"{raw_path}/bronze/ways")
 
-    
-@dlt.view()
-def nodes_clean():
-  return (
-    dlt.read("nodes")
-      .withColumnRenamed("_id", "id")
-      .withColumnRenamed("_lat", "lat")
-      .withColumnRenamed("_lon", "lon")
-      .withColumnRenamed("_timestamp", "ts")
-      .drop("_visible", "_version")
-  )
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Lines and polygons
+
+# COMMAND ----------
 
 @dlt.table()
-def ways_coords():
+@dlt.expect("is_valid", "is_valid")
+def lines():
+  
+  # Pre-select node columns
+  nodes = (
+    dlt.read("nodes")
+    .withColumnRenamed("_id", "ref")
+    .withColumnRenamed("_lat", "lat")
+    .withColumnRenamed("_lon", "lon")
+    .select("ref", "lat", "lon")
+  )
+    
   return (
     dlt.read("ways")
+      # Join ways with nodes to get lat and lon for each node
       .select(
         f.col("_id").alias("id"),
         f.col("_timestamp").alias("ts"),
         f.posexplode_outer("nd")
       )
       .select("id", "ts", "pos", f.col("col._ref").alias("ref"))
-      .join(dlt.read("nodes_clean").select(f.col("id").alias("ref"), "lat", "lon"), "ref")
-     )
-
-@dlt.table()
-@dlt.expect("is_valid", "is_valid")
-def way_lines():
-  return (
-    dlt.read("ways_coords")
-             .repartition("id")
-             .sortWithinPartitions("pos")
-             .withColumn("point", mos.st_point("lon", "lat"))
-             .groupBy("id")
-             .agg(f.collect_list("point").alias("points"))
-             .withColumn("line", mos.st_makeline("points"))
-             .withColumn("is_valid", mos.st_isvalid("line"))
-             .drop("points")
-            )
-
-@dlt.table()
-def ways_tags():
-  return (
-    dlt.read("ways")
-      .select(
-        f.col("_id").alias("id"),
-        f.explode_outer("tag")
-       )
-       .select(f.col("id"), f.col("col._k").alias("key"), f.col("col._v").alias("value"))
+      .join(nodes, "ref")
+    
+      # Collect an ordered list of points by way ID
+      .withColumn("point", mos.st_point("lon", "lat"))
+      .repartition("id")
+      .sortWithinPartitions("pos")
+      .groupBy("id")
+      .agg(f.collect_list("point").alias("points"))
+      
+      # Make and validate line
+      .withColumn("line", mos.st_makeline("points"))
+      .withColumn("is_valid", mos.st_isvalid("line"))
+      .drop("points")
     )
 
+  
 @dlt.table()
 @dlt.expect_or_drop("is_valid", "is_valid")
-def simple_buildings():
-  return (
-    dlt.read("way_lines")
-      .join(dlt.read("ways_tags").filter(f.col("key") == "building"), "id")
-      .withColumnRenamed("value", "building")
-
-      # A valid polygon needs at least 3 vertices + a closing point
-      .filter(f.size(f.col("line.boundary")[0]) >= 4)
-
-      # Build the polygon
-      .withColumn("polygon", mos.st_makepolygon("line"))
-
-      .withColumn("is_valid", mos.st_isvalid("polygon"))
-      .drop("line", "key")
-     )
+def polygons():
+  line_roles = ["inner", "outer"]
   
-  
-# Complex polygon objects (using relations)
-
-
-@dlt.table(comment="relation tags")
-def relation_tags():
-  keys_of_interes = ["type", "restriction", "landuse", "name", "network", "route", "ref", "building", "source", "operator", "natural", "website"]
-  return (
-    dlt.read("relations")
-      .withColumnRenamed("_id", "id")
-      .select("id", f.explode_outer("tag"))
-      .withColumn("key", f.col("col._k"))
-      .withColumn("val", f.col("col._v"))
-      .groupBy("id")
-      .pivot("key", keys_of_interes)
-      .agg(f.first("val"))
-    )
-  
-@dlt.table()
-def relation_lines():
   return (
     dlt.read("relations")
 
@@ -154,25 +140,14 @@ def relation_lines():
       .withColumn("member_type", f.col("col._type"))
       .drop("col")
       
-      .filter(f.col("member_type") == "way")
-      .join(dlt.read("way_lines").select(f.col("id").alias("ref"), "line"), "ref")
-      .drop("ref")
-    )
-  
-@dlt.table()
-@dlt.expect_or_drop("is_valid", "is_valid")
-def relation_polygons():
-  line_roles = ["inner", "outer"]
-  return (
-    dlt.read("relation_lines")
-#       .join(dlt.read("relation_tags"), "id")
-    
-#       # Only get polygons
-#       .filter(f.col("type") == "multipolygon")
-    
-      # Only inner and outer roles. There might be none types
+       # Only inner and outer roles from ways.
       .filter(f.col("role").isin(line_roles))
-
+      .filter(f.col("member_type") == "way")
+    
+      # Join with lines to get the lines
+      .join(dlt.read("lines").select(f.col("id").alias("ref"), "line"), "ref")
+      .drop("ref")
+    
       # A valid polygon needs at least 3 vertices + a closing point
       .filter(f.size(f.col("line.boundary")[0]) >= 4)
 
@@ -195,10 +170,71 @@ def relation_polygons():
       .drop("inner", "outer")
   )
   
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Tags
+
+# COMMAND ----------
+
+
+@dlt.table()
+def ways_tags():
+  return (
+    dlt.read("ways")
+      .select(
+        f.col("_id").alias("id"),
+        f.explode_outer("tag")
+       )
+       .select(f.col("id"), f.col("col._k").alias("key"), f.col("col._v").alias("value"))
+    )
+
+  
+@dlt.table(comment="relation tags")
+def relation_tags():
+  keys_of_interes = ["type", "restriction", "landuse", "name", "network", "route", "ref", "building", "source", "operator", "natural", "website"]
+  return (
+    dlt.read("relations")
+      .withColumnRenamed("_id", "id")
+      .select("id", f.explode_outer("tag"))
+      .withColumn("key", f.col("col._k"))
+      .withColumn("val", f.col("col._v"))
+      .groupBy("id")
+      .pivot("key", keys_of_interes)
+      .agg(f.first("val"))
+    )
+  
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Buildings
+
+# COMMAND ----------
+
+@dlt.table()
+@dlt.expect_or_drop("is_valid", "is_valid")
+def simple_buildings():
+  return (
+    dlt.read("lines")
+      .join(dlt.read("ways_tags").filter(f.col("key") == "building"), "id")
+      .withColumnRenamed("value", "building")
+
+      # A valid polygon needs at least 3 vertices + a closing point
+      .filter(f.size(f.col("line.boundary")[0]) >= 4)
+
+      # Build the polygon
+      .withColumn("polygon", mos.st_makepolygon("line"))
+
+      .withColumn("is_valid", mos.st_isvalid("polygon"))
+      .drop("line", "key")
+     )
+
 @dlt.table()
 def complex_buildings():
   return (
-    dlt.read("relation_polygons")
+    dlt.read("polygons")
       .join(dlt.read("relation_tags"), "id")
       
       # Only get polygons
