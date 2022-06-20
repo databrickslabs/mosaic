@@ -325,7 +325,7 @@ st_geomfromgeojson
             "crs":{
                 "type":"name",
                 "properties":{
-                    "name":"EPSG:0"
+                    "name":"EPSG:4326"
                 }
             }
         }
@@ -349,7 +349,7 @@ st_geomfromgeojson
             |   "crs":{
             |       "type":"name",
             |       "properties":{
-            |           "name":"EPSG:0"
+            |           "name":"EPSG:4326"
             |       }
             |   }
             |}""".stripMargin)
@@ -364,7 +364,7 @@ st_geomfromgeojson
 
    .. code-tab:: sql
 
-    >>> SELECT st_geomfromgeojson("{\"type\":\"Point\",\"coordinates\":[-75.78033,35.18937],\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:0\"}}}")
+    >>> SELECT st_geomfromgeojson("{\"type\":\"Point\",\"coordinates\":[-75.78033,35.18937],\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}}}")
     +--------------------------------------+
     |convert_to(as_json(json))             |
     +--------------------------------------+
@@ -382,7 +382,7 @@ st_geomfromgeojson
             "crs":{
                 "type":"name",
                 "properties":{
-                    "name":"EPSG:0"
+                    "name":"EPSG:4326"
                 }
             }
         }'
