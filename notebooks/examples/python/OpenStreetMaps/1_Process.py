@@ -1,4 +1,18 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC # Process Open Street Maps data
+# MAGIC 
+# MAGIC This notebook creates a [Delta Live Table](https://databricks.com/product/delta-live-tables) data pipeline that processes the OSM data ingested by the [0_Download](./0_Download) notebook.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Setup
+# MAGIC 
+# MAGIC Install and enable [Mosaic](https://github.com/databrickslabs/mosaic)
+
+# COMMAND ----------
+
 # MAGIC %pip install https://github.com/databrickslabs/mosaic/releases/download/v0.1.1/databricks_mosaic-0.1.1-py3-none-any.whl
 
 # COMMAND ----------
@@ -9,29 +23,37 @@ mos.enable_mosaic(spark, dbutils)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Configure
+
+# COMMAND ----------
+
+raw_path = f"dbfs:/tmp/mosaic/open_street_maps/"
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## DLT Pipeline
+
+# COMMAND ----------
+
 import dlt
 import pyspark.sql.functions as f
 from pyspark.sql.types import *
 
-user_name = "erni.durdevic@databricks.com" #dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
-
-raw_path = f"dbfs:/tmp/mosaic/{user_name}/open_street_maps/"
-
-
 @dlt.table(comment="OpenStreetMaps nodes")
 def nodes():
-  return spark.read.format("delta").load(f"{raw_path}/osm_bronze/nodes")
+  return spark.read.format("delta").load(f"{raw_path}/bronze/nodes")
 
 
 @dlt.table(comment="OpenStreetMaps relations")
 def relations():
-  return spark.read.format("delta").load(f"{raw_path}/osm_bronze/relations")
+  return spark.read.format("delta").load(f"{raw_path}/bronze/relations")
 
 
 @dlt.table(comment="OpenStreetMaps ways")
 def ways():
-  return spark.read.format("delta").load(f"{raw_path}/osm_bronze/ways")
-
+  return spark.read.format("delta").load(f"{raw_path}/bronze/ways")
 
     
 @dlt.view()
@@ -44,7 +66,7 @@ def nodes_clean():
       .withColumnRenamed("_timestamp", "ts")
       .drop("_visible", "_version")
   )
-  
+
 @dlt.table()
 def ways_coords():
   return (
@@ -171,9 +193,9 @@ def relation_polygons():
       
       # Drop extra columns
       .drop("inner", "outer")
-)
+  )
   
-dlt.table()
+@dlt.table()
 def complex_buildings():
   return (
     dlt.read("relation_polygons")
@@ -181,11 +203,12 @@ def complex_buildings():
       
       # Only get polygons
       .filter(f.col("type") == "multipolygon")
+    
       # Only get buildings
       .filter(f.col("building").isNotNull())
   )
   
-dlt.table()
+@dlt.table()
 def buildings():
   fields = ["id", "building", "polygon"]
   return (
@@ -197,4 +220,35 @@ def buildings():
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ### Building types
 
+# COMMAND ----------
+
+@dlt.table()
+def residential_buildings():
+  return (
+    dlt.read("buildings")
+      .filter(f.col("building").isin(["yes", "residential", "house", "apartments"]))
+  )
+  
+@dlt.table()
+def hospital_buildings():
+  return (
+    dlt.read("buildings")
+      .filter(f.col("building").isin(["hospital"]))
+  )
+  
+@dlt.table()
+def university_buildings():
+  return (
+    dlt.read("buildings")
+      .filter(f.col("building").isin(["university"]))
+  )
+
+@dlt.table()
+def train_station_buildings():
+  return (
+    dlt.read("buildings")
+      .filter(f.col("building").isin(["train_station"]))
+  )
