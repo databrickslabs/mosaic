@@ -171,7 +171,7 @@ ways = (spark
       .load(f"{raw_path}/raw/", schema = ways_schema)
      )
 
-ways.write.format("delta").mode("overwrite").save(f"{raw_path}/osm_bronze/ways")
+ways.write.format("delta").mode("overwrite").save(f"{raw_path}/bronze/ways")
 
 # COMMAND ----------
 
@@ -208,7 +208,7 @@ relations = (spark
       .options(rowTag="relation") # Only extract relations
       .load(f"{raw_path}/raw/", schema=relations_schema)
      )
-relations.write.format("delta").mode("overwrite").save(f"{raw_path}/osm_bronze/relations")
+relations.write.format("delta").mode("overwrite").save(f"{raw_path}/bronze/relations")
 
 # COMMAND ----------
 
