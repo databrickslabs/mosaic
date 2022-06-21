@@ -36,4 +36,18 @@ class TestFlattenPolygon extends AnyFlatSpec with FlattenPolygonBehaviors with S
         it should behave like flattenCOORDSPolygon(MosaicContext.build(BNGIndexSystem, JTS), spark)
     }
 
+    "Flatten Polygons Expression" should "fail data type check for unexpected data type." in {
+        it should behave like failDataTypeCheck(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like failDataTypeCheck(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like failDataTypeCheck(MosaicContext.build(BNGIndexSystem, ESRI), spark)
+        it should behave like failDataTypeCheck(MosaicContext.build(BNGIndexSystem, JTS), spark)
+    }
+
+    "Flatten Polygons Expression" should "have correct auxiliary methods implementation." in {
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, JTS), spark)
+    }
+
 }

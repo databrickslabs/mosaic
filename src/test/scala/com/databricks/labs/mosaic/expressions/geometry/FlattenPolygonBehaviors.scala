@@ -1,13 +1,14 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
+import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
+import org.apache.spark.sql.{AnalysisException, SparkSession}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
 import org.locationtech.jts.io.{WKBReader, WKTReader}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.col
 
 trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
 
@@ -227,6 +228,60 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
             .map(g => new WKTReader().read(g.get(0).asInstanceOf[String]))
 
         sqlFlattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
+    }
+
+    def failDataTypeCheck(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+        mosaicContext.register(spark)
+
+        val df = getWKTRowsDf(mc)
+            .withColumn("hex", struct(lit(1), convert_to(col("wkt"), "hex")))
+
+        an[AnalysisException] should be thrownBy {
+            df.withColumn(
+              "hex",
+              flatten_polygons(col("hex"))
+            ).select("hex")
+        }
+
+    }
+
+    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+        mosaicContext.register(spark)
+
+        val df = getWKTRowsDf(mc)
+            .withColumn("hex", convert_to(col("wkt"), "hex"))
+            .withColumn("wkb", convert_to(col("wkt"), "wkb"))
+            .withColumn("coords", convert_to(col("wkt"), "coords"))
+
+        val wktFlatten = FlattenPolygons(df.col("wkt").expr, mosaicContext.getGeometryAPI.name)
+        val wkbFlatten = FlattenPolygons(df.col("wkb").expr, mosaicContext.getGeometryAPI.name)
+        val hexFlatten = FlattenPolygons(df.col("hex").expr, mosaicContext.getGeometryAPI.name)
+        val coordsFlatten = FlattenPolygons(df.col("coords").expr, mosaicContext.getGeometryAPI.name)
+
+        wktFlatten.elementSchema.head.dataType shouldEqual StringType
+        wkbFlatten.elementSchema.head.dataType shouldEqual BinaryType
+        hexFlatten.elementSchema.head.dataType shouldEqual HexType
+        coordsFlatten.elementSchema.head.dataType shouldEqual InternalGeometryType
+
+        wktFlatten.collectionType shouldEqual StringType
+        wkbFlatten.collectionType shouldEqual BinaryType
+        hexFlatten.collectionType shouldEqual HexType
+        coordsFlatten.collectionType shouldEqual InternalGeometryType
+
+        wktFlatten.position shouldEqual false
+        wkbFlatten.position shouldEqual false
+        hexFlatten.position shouldEqual false
+        coordsFlatten.position shouldEqual false
+
+        noException should be thrownBy wktFlatten.makeCopy(Array(wktFlatten.child))
+        noException should be thrownBy wkbFlatten.makeCopy(Array(wktFlatten.child))
+        noException should be thrownBy hexFlatten.makeCopy(Array(wktFlatten.child))
+        noException should be thrownBy coordsFlatten.makeCopy(Array(wktFlatten.child))
+
     }
 
 }

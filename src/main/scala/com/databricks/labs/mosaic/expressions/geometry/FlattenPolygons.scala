@@ -12,7 +12,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
-case class FlattenPolygons(pair: Expression, geometryAPIName: String)
+case class FlattenPolygons(geom: Expression, geometryAPIName: String)
     extends UnaryExpression
       with CollectionGenerator
       with CodegenFallback {
@@ -32,13 +32,13 @@ case class FlattenPolygons(pair: Expression, geometryAPIName: String)
 
     override def elementSchema: StructType = FlattenPolygons.elementSchemaImpl(child)
 
-    override def child: Expression = pair
+    override def child: Expression = geom
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = FlattenPolygons.evalImpl(input, child, geometryAPIName)
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = FlattenPolygons.makeCopyImpl(newArgs, this, geometryAPIName)
 
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(pair = newChild)
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(geom = newChild)
 
 }
 
@@ -59,32 +59,7 @@ object FlattenPolygons {
     def evalImpl(input: InternalRow, child: Expression, geometryAPIName: String): TraversableOnce[InternalRow] = {
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geometry = geometryAPI.geometry(input, child.dataType)
-        val output = geometry.flatten
-
-        child.dataType match {
-            case _: BinaryType           => // WKB case
-                output.map(g => InternalRow.fromSeq(Seq(g.toWKB)))
-            case _: StringType           => // WTK case
-                output.map(g => InternalRow.fromSeq(Seq(UTF8String.fromString(g.toWKT))))
-            case _: HexType              => // HEX case
-                output.map(g =>
-                    InternalRow.fromSeq(
-                      Seq(
-                        InternalRow.fromSeq(Seq(UTF8String.fromString(g.toHEX)))
-                      )
-                    )
-                )
-            case _: JSONType             => // GEOJSON case
-                output.map(g =>
-                    InternalRow.fromSeq(
-                      Seq(
-                        InternalRow.fromSeq(Seq(UTF8String.fromString(g.toJSON)))
-                      )
-                    )
-                )
-            case _: InternalGeometryType => // COORDS case
-                output.map(g => InternalRow.fromSeq(Seq(g.toInternal.serialize)))
-        }
+        geometry.flatten.map(g => InternalRow.fromSeq(Seq(geometryAPI.serialize(g, child.dataType))))
     }
 
     /**
