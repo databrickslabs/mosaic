@@ -30,6 +30,7 @@ Documentation
    usage/quickstart
    usage/grid-indexes
    usage/join-optimizations
+   usage/automatic-sql-registration
    api/geometry-constructors
    api/geometry-accessors
    api/spatial-functions
