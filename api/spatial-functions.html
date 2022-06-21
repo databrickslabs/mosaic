@@ -231,6 +231,13 @@
     <li class="md-nav__item">
     
     
+      <a href="../usage/automatic-sql-registration.html" class="md-nav__link">Automatic SQL registration</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
       <a href="geometry-constructors.html" class="md-nav__link">Geometry constructors</a>
       
     
@@ -1213,6 +1220,7 @@ ST_SetSRID can only operate on geometries encoded in GeoJSON or the Mosaic inter
 <span class="o">|</span><span class="n">st_centroid</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="w">                       </span><span class="o">|</span><span class="w"></span>
 <span class="o">+---------------------------------------+</span><span class="w"></span>
 <span class="o">|</span><span class="p">{</span><span class="mf">25.454545454545453</span><span class="p">,</span><span class="w"> </span><span class="mf">26.96969696969697</span><span class="p">}</span><span class="o">|</span><span class="w"></span>
+<span class="o">+---------------------------------------+</span><span class="w"></span>
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-12-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-12-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; SELECT st_centroid2D("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
@@ -1220,6 +1228,7 @@ ST_SetSRID can only operate on geometries encoded in GeoJSON or the Mosaic inter
 |st_centroid(wkt)                       |
 +---------------------------------------+
 |{25.454545454545453, 26.96969696969697}|
++---------------------------------------+
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-12-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-12-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span> <span class="o">=</span> <span class="s">"POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"</span><span class="p">))</span>
