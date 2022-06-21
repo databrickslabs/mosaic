@@ -47,7 +47,7 @@ case class ST_HasValidCoordinates(
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
+        val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
         val res = ST_HasValidCoordinates(asArray(0), asArray(1), asArray(2), geometryAPIName)
         res.copyTagsFrom(this)
         res

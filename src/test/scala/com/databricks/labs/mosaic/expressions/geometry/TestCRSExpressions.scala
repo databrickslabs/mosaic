@@ -29,4 +29,18 @@ class TestCRSExpressions extends AnyFlatSpec with CRSExpressionsBehaviours with 
         it should behave like reprojectGeometries(MosaicContext.build(BNGIndexSystem, JTS), spark)
     }
 
+    "ST_HasValidCoordinates" should "correctly run checks for valid coordinates" in {
+        it should behave like testHasValidCoordinates(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like testHasValidCoordinates(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like testHasValidCoordinates(MosaicContext.build(BNGIndexSystem, ESRI), spark)
+        it should behave like testHasValidCoordinates(MosaicContext.build(BNGIndexSystem, JTS), spark)
+    }
+
+    "CRS Expressions" should "correctly implement auxiliary methods." in {
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, JTS), spark)
+    }
+
 }
