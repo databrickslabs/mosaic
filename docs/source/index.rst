@@ -29,6 +29,7 @@ Documentation
    usage/installation
    usage/quickstart
    usage/grid-indexes
+   usage/automatic-sql-registration
    api/geometry-constructors
    api/geometry-accessors
    api/spatial-functions

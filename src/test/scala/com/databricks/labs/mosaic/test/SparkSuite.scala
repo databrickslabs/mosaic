@@ -65,6 +65,13 @@ trait SparkSuite extends TestSuite with BeforeAndAfterAll {
         (ret, (end - start) / 1000000000.0)
     }
 
+    def withConf(newConf: SparkConf): SparkSession = {
+        stopSpark()
+        conf = newConf
+        startSpark()
+        _spark
+    }
+
     protected object testImplicits extends SQLImplicits {
         protected override def _sqlContext: SQLContext = _spark.sqlContext
     }
