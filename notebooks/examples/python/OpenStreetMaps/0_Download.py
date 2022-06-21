@@ -32,7 +32,7 @@
 raw_path = f"dbfs:/tmp/mosaic/open_street_maps/"
 
 # Define which region to download
-regions = ['europe'] # other regions = ['italy', 'germany', 'france']
+regions = ['italy'] # See available regions few cells below
 
 print(f"The raw Open Street Maps data for {regions} will be stored in {raw_path}")
 
@@ -50,7 +50,6 @@ import pathlib
 
 # The DBFS file system is mounted under /dbfs/ directory on Databricks cluster nodes
 local_osm_path = pathlib.Path(raw_path.replace("dbfs:/", "/dbfs/"))
-local_osm_path.mkdir(parents=True, exist_ok=True)
 
 (local_osm_path / "raw").mkdir(parents=True, exist_ok=True)
 
@@ -91,10 +90,9 @@ for region in regions:
   with requests.get(osm_url, stream=True) as r:
     r.raise_for_status()
     with open(compressed_osm_file, 'wb') as f:
-      for chunk in r.iter_content(chunk_size=512*2014):
+      for chunk in r.iter_content(chunk_size=512*1024):
         f.write(chunk)
 
-        
 
 # COMMAND ----------
 
@@ -137,6 +135,7 @@ nodes = (spark
      )
 
 nodes.write.format("delta").mode("overwrite").save(f"{raw_path}/bronze/nodes")
+
 
 # COMMAND ----------
 
