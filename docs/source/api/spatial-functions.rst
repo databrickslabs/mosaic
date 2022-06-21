@@ -58,8 +58,6 @@ st_area
 .. note:: Results of this function are always expressed in the original units of the input geometry.
 
 
-
-
 st_buffer
 *********
 
@@ -737,8 +735,8 @@ st_centroid2D
 
    .. code-tab:: scala
 
-    >>> val df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_centroid2D('wkt')).show()
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_centroid2D($"wkt")).show()
     +---------------------------------------+
     |st_centroid(wkt)                       |
     +---------------------------------------+
@@ -774,6 +772,119 @@ st_centroid3D
     :param col: Geometry
     :type col: Column
     :rtype: Column: StructType[x: DoubleType, y: DoubleType, z: DoubleType]
+
+
+st_numpoints
+************
+
+.. function:: st_numpoints(col)
+
+    Returns the number of points in `geom`.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column: IntegerType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_numpoints('wkt')).show()
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_numpoints($"wkt")).show()
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_numpoints("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_numpoints(column("wkt"))))
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+
+st_hasvalidcoordinates
+**********************
+
+.. function:: st_hasvalidcoordinates(geom, crs, which)
+
+    Checks if all points in `geom` are valid with respect to crs bounds.
+    CRS bounds can be provided either as bounds or as reprojected_bounds.
+
+    :param geom: Geometry
+    :type geom: Column
+    :param crs: CRS name (EPSG ID), e.g. "EPSG:2192"
+    :type crs: Column
+    :param which: Check against geographic `"bounds"` or geometric `"reprojected_bounds"` bounds.
+    :type which: Column
+    :rtype: Column: IntegerType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))'}])
+    >>> df.select(st_hasvalidcoordinates(col('wkt'), lit('EPSG:2192'), lit('bounds'))).show()
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))")).toDF("wkt")
+    >>> df.select(st_hasvalidcoordinates($"wkt", lit("EPSG:2192"), lit("bounds"))).show()
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_hasvalidcoordinates("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))", "EPSG:2192", "bounds")
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))"))
+    >>> showDF(select(df, st_hasvalidcoordinates(column("wkt"), lit("EPSG:2192"), lit("bounds"))), truncate=F)
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |true                                          |
+    +----------------------------------------------+
 
 
 st_isvalid
@@ -1156,6 +1267,120 @@ st_zmax
     :rtype: Column: DoubleType
 
 
+st_distance
+***********
+
+.. function:: st_distance(geom1, geom2)
+
+    Compute the distance between `geom1` and `geom2`.
+
+    :param geom1: Geometry
+    :type geom1: Column
+    :param geom2: Geometry
+    :type geom2: Column
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'point': 'POINT (5 5)', 'poly': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_distance('poly', 'point')).show()
+    +------------------------+
+    |st_distance(poly, point)|
+    +------------------------+
+    |      15.652475842498529|
+    +------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POINT (5 5)", "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("point", "poly")
+    >>> df.select(st_distance($"poly", $"point")).show()
+    +------------------------+
+    |st_distance(poly, point)|
+    +------------------------+
+    |      15.652475842498529|
+    +------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_distance("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", "POINT (5 5)")
+    +------------------------+
+    |st_distance(poly, point)|
+    +------------------------+
+    |      15.652475842498529|
+    +------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(point = c( "POINT (5 5)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_distance(column("poly"), column("point"))))
+    +------------------------+
+    |st_distance(poly, point)|
+    +------------------------+
+    |      15.652475842498529|
+    +------------------------+
+
+.. note:: Results of this function are always expressed in the original units of the input geometries.
+
+
+st_intersection
+***************
+
+.. function:: st_intersection(geom1, geom2)
+
+    Returns a geometry representing the intersection of `left_geom` and `right_geom`.
+
+    :param geom1: Geometry
+    :type geom1: Column
+    :param geom2: Geometry
+    :type geom2: Column
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'p1': 'POLYGON ((0 0, 0 3, 3 3, 3 0))', 'p2': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
+    >>> df.select(st_intersection(col('p1'), col('p2'))).show(1, False)
+    +-----------------------------------+
+    |st_intersection(p1, p2)            |
+    +-----------------------------------+
+    |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))|
+    +-----------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")).toDF("p1", "p2")
+    >>> df.select(st_intersection($"p1", $"p2")).show(false)
+    +-----------------------------------+
+    |st_intersection(p1, p2)            |
+    +-----------------------------------+
+    |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))|
+    +-----------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_intersection("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")
+    +-----------------------------------+
+    |st_intersection(p1, p2)            |
+    +-----------------------------------+
+    |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))|
+    +-----------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(p1 = "POLYGON ((0 0, 0 3, 3 3, 3 0))", p2 = "POLYGON ((2 2, 2 4, 4 4, 4 2))"))
+    >>> showDF(select(df, st_intersection(column("p1"), column("p2"))), truncate=F)
+    +-----------------------------------+
+    |st_intersection(p1, p2)            |
+    +-----------------------------------+
+    |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))|
+    +-----------------------------------+
+
+
 flatten_polygons
 ****************
 
@@ -1238,40 +1463,97 @@ point_index_lonlat
 
     >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
     >>> df.select(point_index_lonlat('lon', 'lat', lit(10))).show(1, False)
-    +----------------------------+
-    |h3_point_index(lon, lat, 10)|
-    +----------------------------+
-    |623385352048508927          |
-    +----------------------------+
+    +--------------------------------+
+    |point_index_lonlat(lon, lat, 10)|
+    +--------------------------------+
+    |              623385352048508927|
+    +--------------------------------+
 
    .. code-tab:: scala
 
     >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
     >>> df.select(point_index_lonlat($"lon", $"lat", lit(10))).show()
-    +----------------------------+
-    |h3_point_index(lat, lon, 10)|
-    +----------------------------+
-    |623385352048508927          |
-    +----------------------------+
+    +--------------------------------+
+    |point_index_lonlat(lon, lat, 10)|
+    +--------------------------------+
+    |              623385352048508927|
+    +--------------------------------+
 
    .. code-tab:: sql
 
     >>> SELECT point_index_lonlat(30d, 10d, 10)
-    +----------------------------+
-    |h3_point_index(lat, lon, 10)|
-    +----------------------------+
-    |623385352048508927          |
-    +----------------------------+
+    +--------------------------------+
+    |point_index_lonlat(lon, lat, 10)|
+    +--------------------------------+
+    |              623385352048508927|
+    +--------------------------------+
 
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
     >>> showDF(select(df, point_index_lonlat(column("lon"), column("lat"), lit(10L))), truncate=F)
-    +----------------------------+
-    |h3_point_index(lat, lon, 10)|
-    +----------------------------+
-    |623385352048508927          |
-    +----------------------------+
+    +--------------------------------+
+    |point_index_lonlat(lon, lat, 10)|
+    +--------------------------------+
+    |              623385352048508927|
+    +--------------------------------+
+
+
+point_index_geom
+****************
+
+.. function:: point_index_geom(geometry, resolution)
+
+    Returns the `resolution` grid index associated
+    with the input geometry `geometry`.
+
+    :param geometry: Geometry
+    :type geometry: Column
+    :param resolution: Index resolution
+    :type resolution: Column: Integer
+    :rtype: Column: LongType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+    >>> df.select(point_index_geom(st_point('lon', 'lat'), lit(10))).show(1, False)
+    +----------------------------------------+
+    |point_index_geom(st_point(lon, lat), 10)|
+    +----------------------------------------+
+    |623385352048508927                      |
+    +----------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
+    >>> df.select(point_index_geom(st_point($"lon", $"lat"), lit(10))).show()
+    +----------------------------------------+
+    |point_index_geom(st_point(lon, lat), 10)|
+    +----------------------------------------+
+    |623385352048508927                      |
+    +----------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT point_index_geom(st_point(30d, 10d), 10)
+    +----------------------------------------+
+    |point_index_geom(st_point(lon, lat), 10)|
+    +----------------------------------------+
+    |623385352048508927                      |
+    +----------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    >>> showDF(select(df, point_index_geom(st_point(column("lon"), column("lat")), lit(10L))), truncate=F)
+    +----------------------------------------+
+    |point_index_geom(st_point(lon, lat), 10)|
+    +----------------------------------------+
+    |623385352048508927                      |
+    +----------------------------------------+
 
 
 polyfill

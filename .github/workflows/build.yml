@@ -26,6 +26,8 @@ jobs:
           distribution: 'zulu'
       - name: Test and build the scala JAR
         run: mvn -q clean install
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v1
       - name: Copy Scala artifacts to GH Actions run
         run: |
           mkdir staging

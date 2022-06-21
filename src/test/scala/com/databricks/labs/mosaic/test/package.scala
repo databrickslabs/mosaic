@@ -44,8 +44,9 @@ package object test {
               )
             )
         val hex_rows_epsg27700: List[List[Any]] =
-            hex_rows_epsg4326.map { case id :: hex :: _ =>
-                List(id, JTS.geometry(hex, "HEX").mapXY((x, y) => (math.abs(x) * 1000, math.abs(y) * 1000)).toHEX)
+            hex_rows_epsg4326.map {
+                case id :: hex :: _ => List(id, JTS.geometry(hex, "HEX").mapXY((x, y) => (math.abs(x) * 1000, math.abs(y) * 1000)).toHEX)
+                case _              => throw new Error("Unexpected test data format!")
             }
         val wkt_rows_epsg4326 =
             List(
@@ -153,8 +154,9 @@ package object test {
         // and since EPSG:27700 represents meters from CRS
         // origin we multiply long/lat values by 1000 (arbitrary choice)
         val wkt_rows_boroughs_epsg27700: List[List[Any]] =
-            wkt_rows_boroughs_epsg4326.map { case id :: wkt :: _ =>
-                List(id, JTS.geometry(wkt, "WKT").mapXY((x, y) => (math.abs(x) * 1000, math.abs(y) * 1000)).toWKT)
+            wkt_rows_boroughs_epsg4326.map {
+                case id :: wkt :: _ => List(id, JTS.geometry(wkt, "WKT").mapXY((x, y) => (math.abs(x) * 1000, math.abs(y) * 1000)).toWKT)
+                case _              => throw new Error("Unexpected test data format!")
             }
 
         def polyDf(sparkSession: SparkSession, mosaicContext: MosaicContext): DataFrame = {
