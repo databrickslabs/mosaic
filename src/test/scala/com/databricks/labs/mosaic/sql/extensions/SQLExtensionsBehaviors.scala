@@ -1,9 +1,9 @@
-package com.databricks.labs.mosaic.functions
+package com.databricks.labs.mosaic.sql.extensions
 
+import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getHexRowsDf
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.must.Matchers.noException
-import org.scalatest.matchers.should.Matchers._
+import org.scalatest.matchers.must.Matchers.{be, noException}
 
 import org.apache.spark.sql.SparkSession
 

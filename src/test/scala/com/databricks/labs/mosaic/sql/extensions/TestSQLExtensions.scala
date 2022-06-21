@@ -1,7 +1,8 @@
-package com.databricks.labs.mosaic.functions
+package com.databricks.labs.mosaic.sql.extensions
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkSuite
 import org.apache.spark.SparkConf
 import org.scalatest.flatspec.AnyFlatSpec
@@ -37,6 +38,15 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQL")
         spark = withConf(conf)
         it should behave like sqlRegister(MosaicContext.build(BNGIndexSystem, ESRI), spark)
+
+        conf = new SparkConf(false)
+            .set("spark.databricks.labs.mosaic.index.system", "DummyIndex")
+            .set("spark.databricks.labs.mosaic.geometry.api", "DummyAPI")
+            .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQL")
+        spark = withConf(conf)
+        it should behave like {
+            an[IllegalArgumentException] should be thrownBy spark.sql("""show functions""").collect()
+        }
 
         conf = new SparkConf(false)
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQLDefault")
