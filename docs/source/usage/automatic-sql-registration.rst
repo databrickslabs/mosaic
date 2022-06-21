@@ -2,6 +2,13 @@
 Automatic SQL registration
 ==========================
 
+If you are looking to use only the SQL functions exposed by Mosaic, without the need
+to execute any Python or Scala set-up code, this can be achieved through the automatic SQL
+registration process described on this page.
+
+An example of when this might be useful would be connecting a business intelligence tool
+to your Spark / Databricks cluster to perform spatial queries or integrating Spark
+with a geospatial middleware component such as [Geoserver](https://geoserver.org/).
 
 Pre-requisites
 **************
@@ -23,7 +30,7 @@ Installation
 To install Mosaic on your Databricks cluster, take the following steps:
 
 #. Upload Mosaic jar to a dedicated dbfs location. E.g. dbfs:/FileStore/mosaic/jars/.
-#. Create an init script that fetches mosaic jar and copies it to databricks/jars.
+#. Create an init script that fetches the mosaic jar and copies it to databricks/jars.
 
     .. code-block:: bash
 
@@ -44,8 +51,7 @@ To install Mosaic on your Databricks cluster, take the following steps:
         EOF
 
 #. Configure the init script for the cluster following the instructions `here <https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script>`__.
-#. Configure spark configuration for the cluster following the instructions `here <https://docs.databricks.com/clusters/configure.html#spark-configuration>`__.
-#. Set up the following values:
+#. Add the following spark configuration values for your cluster following the instructions `here <https://docs.databricks.com/clusters/configure.html#spark-configuration>`__.
 
     .. code-block:: bash
 
