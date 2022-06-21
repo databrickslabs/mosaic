@@ -9,6 +9,9 @@ from mosaic.utils.types import ColumnOrName
 ######################
 
 
+__all__ = ["st_intersects", "st_contains"]
+
+
 def st_intersects(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
     """
     Returns true if the geometry `left_geom` intersects `right_geom`.
