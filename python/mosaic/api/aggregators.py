@@ -8,6 +8,8 @@ from mosaic.utils.types import ColumnOrName
 # Spatial aggregators #
 #######################
 
+__all__ = ["st_intersection_aggregate", "st_intersects_aggregate"]
+
 
 def st_intersection_aggregate(
     leftIndex: ColumnOrName, rightIndex: ColumnOrName

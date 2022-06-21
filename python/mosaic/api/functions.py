@@ -11,6 +11,42 @@ from mosaic.utils.types import ColumnOrName, as_typed_col
 # Spatial functions #
 #####################
 
+__all__ = [
+    "st_area",
+    "st_length",
+    "st_perimeter",
+    "st_convexhull",
+    "st_buffer",
+    "st_dump",
+    "st_srid",
+    "st_setsrid",
+    "st_transform",
+    "st_hasvalidcoordinates",
+    "st_translate",
+    "st_scale",
+    "st_rotate",
+    "st_centroid2D",
+    "st_centroid3D",
+    "st_numpoints",
+    "st_isvalid",
+    "st_distance",
+    "st_intersection",
+    "st_geometrytype",
+    "st_xmin",
+    "st_xmax",
+    "st_ymin",
+    "st_ymax",
+    "st_zmin",
+    "st_zmax",
+    "flatten_polygons",
+    "point_index_geom",
+    "point_index_lonlat",
+    "index_geometry",
+    "polyfill",
+    "mosaic_explode",
+    "mosaicfill",
+]
+
 
 def st_area(geom: ColumnOrName) -> Column:
     """

@@ -1,4 +1,4 @@
-name: Build mosaic project
+name: build
 on:
   push:
     branches:
