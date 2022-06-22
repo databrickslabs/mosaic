@@ -9,6 +9,8 @@ import org.apache.spark.sql.types._
 import org.locationtech.jts.io.{WKBReader, WKTReader}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.{col, lit}
 
 trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
 

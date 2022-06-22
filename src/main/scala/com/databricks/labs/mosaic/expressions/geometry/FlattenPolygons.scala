@@ -4,10 +4,9 @@ import scala.collection.TraversableOnce
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types._
-
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo, Literal, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -15,6 +14,7 @@ import org.apache.spark.unsafe.types.UTF8String
 case class FlattenPolygons(geom: Expression, geometryAPIName: String)
     extends UnaryExpression
       with CollectionGenerator
+      with Serializable
       with CodegenFallback {
 
     /** Fixed definitions. */
@@ -58,7 +58,7 @@ object FlattenPolygons {
       */
     def evalImpl(input: InternalRow, child: Expression, geometryAPIName: String): TraversableOnce[InternalRow] = {
         val geometryAPI = GeometryAPI(geometryAPIName)
-        val geometry = geometryAPI.geometry(input, child.dataType)
+        val geometry = geometryAPI.geometry(child.eval(input), child.dataType)
         geometry.flatten.map(g => InternalRow.fromSeq(Seq(geometryAPI.serialize(g, child.dataType))))
     }
 
