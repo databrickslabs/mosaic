@@ -12,7 +12,7 @@
 # MAGIC 
 # MAGIC Go to `Workflows` -> `Delta Live Tables` -> `Create pipeline`
 # MAGIC 
-# MAGIC ![create pipeline]()
+# MAGIC ![create pipeline](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/1_CreatePipelineDLT.png)
 # MAGIC 
 # MAGIC * Select this notebook in the Notebook libraries
 # MAGIC * Set the Target database name to `open_street_maps`
@@ -23,7 +23,7 @@
 # MAGIC 
 # MAGIC Delta live tables will run the data transformations defined in this notebook and populate the tables in the target database.
 # MAGIC 
-# MAGIC ![]()
+# MAGIC ![Pipeline](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/1_Pipeline.png)
 
 # COMMAND ----------
 

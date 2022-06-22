@@ -15,6 +15,8 @@
 # MAGIC 
 # MAGIC This notebook will create one delta table for each of this element types.
 # MAGIC 
+# MAGIC ![Diagram](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/0_Diagram.png)
+# MAGIC 
 # MAGIC ## Note: INSTALL XML libraries before running this notebook!
 # MAGIC 
 # MAGIC From your cluster settings, install from Maven the xml reader library `com.databricks:spark-xml_2.12:0.14.0`
