@@ -57,4 +57,11 @@ class TestGeometryProcessors extends AnyFlatSpec with GeometryProcessorsBehavior
         it should behave like bufferCalculation(MosaicContext.build(BNGIndexSystem, JTS), spark)
     }
 
+    "Geometry Processors" should "implement auxiliary methods correctly" in {
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, JTS), spark)
+    }
+
 }

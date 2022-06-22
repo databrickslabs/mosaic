@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import scala.collection.immutable
-
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
@@ -10,11 +9,10 @@ import org.locationtech.jts.io.{WKTReader, WKTWriter}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers._
-
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.execution.WholeStageCodegenExec
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions.{col, lit}
 
 trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
 
@@ -445,7 +443,11 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         import sc.implicits._
         mosaicContext.register(spark)
 
-
+        noException should be thrownBy {
+            spark.createDataFrame(Seq((1, "POINT (1 1)")))
+                .withColumn("buffered", st_buffer(col("_2"), 1))
+                .count()
+        }
 
         val referenceGeoms = mocks.getWKTRowsDf(mc)
             .orderBy("id")
@@ -498,6 +500,72 @@ trait GeometryProcessorsBehaviors { this: AnyFlatSpec =>
         val (_, code) = codeGenStage.doCodeGen()
 
         noException should be thrownBy CodeGenerator.compile(code)
+    }
+
+    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+        mosaicContext.register(spark)
+
+        val df =  mocks
+            .getWKTRowsDf(mc)
+            .withColumn("geom", st_geomfromwkt(col("wkt")))
+            .withColumn("other", st_buffer(col("wkt"), lit(1)))
+
+        val geometryAPIName = mosaicContext.getGeometryAPI.name
+
+        val stLength = ST_Length(df.col("geom").expr, geometryAPIName)
+        val stArea = ST_Area(df.col("geom").expr, geometryAPIName)
+        val stCentroid2D = ST_Centroid(df.col("geom").expr, geometryAPIName)
+        val stDistance = ST_Distance(df.col("geom").expr, df.col("other").expr, geometryAPIName)
+        val stContains = ST_Contains(df.col("geom").expr, df.col("other").expr, geometryAPIName)
+        val stConvexHull = ST_ConvexHull(df.col("geom").expr, geometryAPIName)
+        val stTranslate = ST_Translate(df.col("geom").expr, lit(1).expr, lit(2).expr, geometryAPIName)
+        val stRotate = ST_Rotate(df.col("geom").expr, lit(1).expr, geometryAPIName)
+        val stScale = ST_Scale(df.col("geom").expr, lit(1).expr, lit(2).expr, geometryAPIName)
+        val stBuffer = ST_Buffer(df.col("geom").expr, lit(1).expr, geometryAPIName)
+
+        stLength.child shouldEqual df.col("geom").expr
+        stArea.child shouldEqual df.col("geom").expr
+        stCentroid2D.child shouldEqual df.col("geom").expr
+        stDistance.left shouldEqual df.col("geom").expr
+        stDistance.right shouldEqual df.col("other").expr
+        stContains.left shouldEqual df.col("geom").expr
+        stContains.right shouldEqual df.col("other").expr
+        stConvexHull.child shouldEqual df.col("geom").expr
+        stTranslate.first shouldEqual df.col("geom").expr
+        stTranslate.second shouldEqual lit(1).expr
+        stTranslate.third shouldEqual lit(2).expr
+        stRotate.left shouldEqual df.col("geom").expr
+        stRotate.right shouldEqual lit(1).expr
+        stScale.first shouldEqual df.col("geom").expr
+        stScale.second shouldEqual lit(1).expr
+        stScale.third shouldEqual lit(2).expr
+        stBuffer.left shouldEqual df.col("geom").expr
+        stBuffer.right shouldEqual lit(1).expr
+
+        noException should be thrownBy stLength.makeCopy(Array(df.col("geom").expr))
+        noException should be thrownBy stArea.makeCopy(Array(df.col("geom").expr))
+        noException should be thrownBy stCentroid2D.makeCopy(Array(df.col("geom").expr))
+        noException should be thrownBy stDistance.makeCopy(Array(df.col("geom").expr, df.col("other").expr))
+        noException should be thrownBy stContains.makeCopy(Array(df.col("geom").expr, df.col("other").expr))
+        noException should be thrownBy stConvexHull.makeCopy(Array(df.col("geom").expr))
+        noException should be thrownBy stTranslate.makeCopy(Array(df.col("geom").expr, lit(1).expr, lit(2).expr))
+        noException should be thrownBy stRotate.makeCopy(Array(df.col("geom").expr, lit(1).expr))
+        noException should be thrownBy stScale.makeCopy(Array(df.col("geom").expr, lit(1).expr, lit(2).expr))
+        noException should be thrownBy stBuffer.makeCopy(Array(df.col("geom").expr, lit(1).expr))
+
+        noException should be thrownBy stLength.withNewChildrenInternal(Seq(df.col("geom").expr).toIndexedSeq)
+        noException should be thrownBy stArea.withNewChildrenInternal(Seq(df.col("geom").expr).toIndexedSeq)
+        noException should be thrownBy stCentroid2D.withNewChildrenInternal(Seq(df.col("geom").expr).toIndexedSeq)
+        noException should be thrownBy stDistance.withNewChildrenInternal(Seq(df.col("geom").expr, df.col("other").expr).toIndexedSeq)
+        noException should be thrownBy stContains.withNewChildrenInternal(Seq(df.col("geom").expr, df.col("other").expr).toIndexedSeq)
+        noException should be thrownBy stConvexHull.withNewChildrenInternal(Seq(df.col("geom").expr).toIndexedSeq)
+        noException should be thrownBy stTranslate.withNewChildrenInternal(Seq(df.col("geom").expr, lit(1).expr, lit(2).expr).toIndexedSeq)
+        noException should be thrownBy stRotate.withNewChildrenInternal(Seq(df.col("geom").expr, lit(1).expr).toIndexedSeq)
+        noException should be thrownBy stScale.withNewChildrenInternal(Seq(df.col("geom").expr, lit(1).expr, lit(2).expr).toIndexedSeq)
+        noException should be thrownBy stBuffer.withNewChildrenInternal(Seq(df.col("geom").expr, lit(1).expr).toIndexedSeq)
+
     }
 
 }

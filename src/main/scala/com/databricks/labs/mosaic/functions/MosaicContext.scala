@@ -283,7 +283,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         /** Aggregators */
         registry.registerFunction(
           FunctionIdentifier("st_intersection_aggregate", database),
-          MosaicExplode.registryExpressionInfo(database),
+          ST_IntersectionAggregate.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_IntersectionAggregate(exprs(0), exprs(1), geometryAPI.name, indexSystem.name)
         )
         registry.registerFunction(
@@ -347,7 +347,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         // Not specific to Mosaic
         registry.registerFunction(
           FunctionIdentifier("try_sql", database),
-          TrySql.registryExpressionInfo(database, "st_length"),
+          TrySql.registryExpressionInfo(database, "try_sql"),
           (exprs: Seq[Expression]) => TrySql(exprs(0))
         )
     }
