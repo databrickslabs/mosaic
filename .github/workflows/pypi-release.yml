@@ -1,0 +1,45 @@
+name: publish python package to test-pypi
+on:
+  push:
+    tags:
+      - 'v*' # only release a versioned tag, such as v.X.Y.Z
+
+jobs:
+  build-n-publish:
+    name: Build project and publish to TestPyPI
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python: [3.8.10]
+        spark: [3.2.1]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Configure JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'zulu'
+      - name: Test and build the scala JAR
+        run: mvn -q -DskipTests clean install
+      - name: Configure python interpreter
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install python dependencies
+        run: |
+          cd python
+          pip install build wheel pyspark==${{ matrix.spark }}
+          pip install .
+      - name: Test and build python package
+        run: |
+          cd python 
+          python -m unittest
+          python -m clean build
+      - name: Publish a Python distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_TOKEN }
+          repository_url: https://test.pypi.org/legacy/
+
