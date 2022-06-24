@@ -20,7 +20,7 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
       - name: Test and build the scala JAR
-        run: mvn -q -DskipTests clean install
+        run: mvn -q clean install
       - name: Configure python interpreter
         uses: actions/setup-python@v2
         with:
@@ -35,11 +35,18 @@ jobs:
           cd python 
           python -m unittest
           python -m build
+#      - name: Publish a Python distribution to PyPI test
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          user: __token__
+#          password: ${{ secrets.TEST_PYPI_TOKEN }}
+#          repository_url: https://test.pypi.org/legacy/
+#          packages_dir: python/dist/
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
-          password: ${{ secrets.TEST_PYPI_TOKEN }}
+          password: ${{ secrets.LABS_PYPI_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
           packages_dir: python/dist/
 
