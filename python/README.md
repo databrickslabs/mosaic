@@ -4,7 +4,7 @@
 An extension to the [Apache Spark](https://spark.apache.org/) framework that allows easy and fast processing of very large geospatial datasets.
 
 [![PyPI version](https://badge.fury.io/py/databricks-mosaic.svg)](https://badge.fury.io/py/databricks-mosaic)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/databricks-mosaic?style=plastic)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/databricks-mosaic?style=flat)
 [![codecov](https://codecov.io/gh/databrickslabs/mosaic/branch/main/graph/badge.svg?token=aEzZ8ITxdg)](https://codecov.io/gh/databrickslabs/mosaic)
 [![build](https://github.com/databrickslabs/mosaic/actions/workflows/build.yml/badge.svg)](https://github.com/databrickslabs/mosaic/actions/workflows/build.yml)
 [![docs](https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml/badge.svg)](https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml)
