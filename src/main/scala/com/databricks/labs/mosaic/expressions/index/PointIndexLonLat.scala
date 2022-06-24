@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.index.{H3IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.IndexSystemID
 
 import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -23,7 +23,7 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
     override def prettyName: String = "point_index_lonlat"
 
     /**
-      * Computes the H3 index corresponding to the provided lat and long
+      * Computes the index corresponding to the provided lat and long
       * coordinates.
       *
       * @param input1
@@ -33,14 +33,13 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
       * @param input3
       *   Any instance containing resolution.
       * @return
-      *   H3 index id in Long.
+      *   Index id in Long.
       */
     override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
-        val resolution: Int = H3IndexSystem.getResolution(input3)
+        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+        val resolution: Int = indexSystem.getResolution(input3)
         val lon: Double = input1.asInstanceOf[Double]
         val lat: Double = input2.asInstanceOf[Double]
-
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
 
         indexSystem.pointToIndex(lon, lat, resolution)
     }
@@ -72,7 +71,7 @@ object PointIndexLonLat {
           db.orNull,
           "point_index_lonlat",
           """
-            |    _FUNC_(lon, lat, resolution) - Returns the h3 index of a point(lon, lat) at resolution.
+            |    _FUNC_(lon, lat, resolution) - Returns the index of a point(lon, lat) at resolution.
             """.stripMargin,
           "",
           """

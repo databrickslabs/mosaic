@@ -20,7 +20,6 @@ print(f"The raw data will be stored in {raw_path}")
 # COMMAND ----------
 
 import requests
-import os
 import pathlib
 
 taxi_zones_url = 'https://data.cityofnewyork.us/api/geospatial/d3c5-ddgc?method=export&format=GeoJSON'

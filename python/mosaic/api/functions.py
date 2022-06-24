@@ -11,6 +11,42 @@ from mosaic.utils.types import ColumnOrName, as_typed_col
 # Spatial functions #
 #####################
 
+__all__ = [
+    "st_area",
+    "st_length",
+    "st_perimeter",
+    "st_convexhull",
+    "st_buffer",
+    "st_dump",
+    "st_srid",
+    "st_setsrid",
+    "st_transform",
+    "st_hasvalidcoordinates",
+    "st_translate",
+    "st_scale",
+    "st_rotate",
+    "st_centroid2D",
+    "st_centroid3D",
+    "st_numpoints",
+    "st_isvalid",
+    "st_distance",
+    "st_intersection",
+    "st_geometrytype",
+    "st_xmin",
+    "st_xmax",
+    "st_ymin",
+    "st_ymax",
+    "st_zmin",
+    "st_zmax",
+    "flatten_polygons",
+    "point_index_geom",
+    "point_index_lonlat",
+    "index_geometry",
+    "polyfill",
+    "mosaic_explode",
+    "mosaicfill",
+]
+
 
 def st_area(geom: ColumnOrName) -> Column:
     """
@@ -206,6 +242,37 @@ def st_transform(geom: ColumnOrName, srid: ColumnOrName) -> Column:
     )
 
 
+def st_hasvalidcoordinates(
+    geom: ColumnOrName, crs: ColumnOrName, which: ColumnOrName
+) -> Column:
+    """
+    Checks if all points in geometry are valid with respect to crs bounds.
+    CRS bounds can be provided either as bounds or as reprojected_bounds.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+    crs : Column (StringType)
+        The spatial reference system for `geom`, expressed as a string,
+        e.g. EPSG:3857
+    which : Column (StringType)
+        Either 'bounds' or 'reprojected_bounds' - controls how the check
+        is executed at runtime.
+
+    Returns
+    -------
+    Column
+        BooleanType - true if all points in geometry are within provided bounds.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_hasvalidcoordinates",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(crs),
+        pyspark_to_java_column(which),
+    )
+
+
 def st_translate(geom: ColumnOrName, xd: ColumnOrName, yd: ColumnOrName) -> Column:
     """
     Translates `geom` to a new location using the distance parameters `xd` and `yd`
@@ -320,6 +387,25 @@ def st_centroid3D(geom: ColumnOrName) -> Column:
     )
 
 
+def st_numpoints(geom: ColumnOrName) -> Column:
+    """
+    Returns the number of points in `geom`.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+
+    Returns
+    -------
+    Column (IntegerType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_numpoints", pyspark_to_java_column(geom)
+    )
+
+
 def st_isvalid(geom: ColumnOrName) -> Column:
     """
     Returns true if the geometry `geom` is valid.
@@ -344,28 +430,24 @@ def st_isvalid(geom: ColumnOrName) -> Column:
     )
 
 
-def st_intersects(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
+def st_distance(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
     """
-    Returns true if the geometry `left_geom` intersects `right_geom`.
+    Compute the distance between `geom1` and `geom2`.
 
     Parameters
     ----------
-    left_geom : Column
-    right_geom : Column
+    geom1 : Column
+    geom2 : Column
 
     Returns
     -------
-    Column (BooleanType)
-
-    Notes
-    -----
-    Intersection logic will be dependent on the chosen geometry API (ESRI or JTS).
+    Column (DoubleType)
 
     """
     return config.mosaic_context.invoke_function(
-        "st_intersects",
-        pyspark_to_java_column(left_geom),
-        pyspark_to_java_column(right_geom),
+        "st_distance",
+        pyspark_to_java_column(geom1),
+        pyspark_to_java_column(geom2),
     )
 
 

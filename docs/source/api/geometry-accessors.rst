@@ -45,6 +45,16 @@ st_asbinary
     |[01 01 00 00 00 0...|
     +--------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
+    >>> showDF(select(df, alias(st_asbinary(column("wkt")), "wkb")))
+    +--------------------+
+    |                 wkb|
+    +--------------------+
+    |[01 01 00 00 00 0...|
+    +--------------------+
+
 
 .. note:: Alias for :ref:`st_aswkb`.
 
@@ -91,6 +101,16 @@ st_asgeojson
     |{{"type":"Point","coordinates":[30,10],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}}|
     +------------------------------------------------------------------------------------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
+    >>> showDF(select(df, alias(st_asgeojson(column("wkt")), "json")), truncate=F)
+    +------------------------------------------------------------------------------------------------+
+    |json                                                                                            |
+    +------------------------------------------------------------------------------------------------+
+    |{{"type":"Point","coordinates":[30,10],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}}|
+    +------------------------------------------------------------------------------------------------+
+
 
 st_astext
 *********
@@ -129,6 +149,16 @@ st_astext
    .. code-tab:: sql
 
     >>> SELECT st_astext(st_point(30.0D, 10.0D)) AS wkt
+    +-------------+
+    |          wkt|
+    +-------------+
+    |POINT (30 10)|
+    +-------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    >>> showDF(select(df, alias(st_astext(st_point(column("lon"), column("lat"))), "wkt")), truncate=F)
     +-------------+
     |          wkt|
     +-------------+
@@ -181,6 +211,16 @@ st_aswkb
     |[01 01 00 00 00 0...|
     +--------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
+    >>> showDF(select(df, alias(st_aswkb(column("wkt")), "wkb")))
+    +--------------------+
+    |                 wkb|
+    +--------------------+
+    |[01 01 00 00 00 0...|
+    +--------------------+
+
 .. note:: Alias for :ref:`st_asbinary`.
 
 st_aswkt
@@ -220,6 +260,16 @@ st_aswkt
    .. code-tab:: sql
 
     >>> SELECT st_aswkt(st_point(30.0D, 10.0D)) AS wkt
+    +-------------+
+    |          wkt|
+    +-------------+
+    |POINT (30 10)|
+    +-------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    >>> showDF(select(df, alias(st_aswkt(st_point(column("lon"), column("lat"))), "wkt")), truncate=F)
     +-------------+
     |          wkt|
     +-------------+

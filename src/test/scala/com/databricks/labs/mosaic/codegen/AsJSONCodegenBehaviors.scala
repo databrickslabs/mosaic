@@ -17,7 +17,7 @@ trait AsJSONCodegenBehaviors { this: AnyFlatSpec =>
         val mc = mosaicContext
         import mc.functions._
 
-        val geoJsonDf: DataFrame = getGeoJSONDf.select(as_json(col("geojson")).getItem("json").alias("geojson"))
+        val geoJsonDf: DataFrame = getGeoJSONDf(mc).select(as_json(col("geojson")).getItem("json").alias("geojson"))
         val queryExecution = geoJsonDf.queryExecution
         val plan = queryExecution.executedPlan
 
