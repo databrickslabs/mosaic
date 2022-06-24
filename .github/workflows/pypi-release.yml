@@ -35,13 +35,6 @@ jobs:
           cd python 
           python -m unittest
           python -m build
-#      - name: Publish a Python distribution to PyPI test
-#        uses: pypa/gh-action-pypi-publish@release/v1
-#        with:
-#          user: __token__
-#          password: ${{ secrets.TEST_PYPI_TOKEN }}
-#          repository_url: https://test.pypi.org/legacy/
-#          packages_dir: python/dist/
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
