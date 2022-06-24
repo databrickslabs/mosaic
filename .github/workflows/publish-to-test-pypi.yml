@@ -21,7 +21,7 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
       - name: Test and build the scala JAR
-        run: mvn -q clean install
+        run: mvn -q -DskipTests clean install
       - name: Configure python interpreter
         uses: actions/setup-python@v2
         with:
