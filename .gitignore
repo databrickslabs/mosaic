@@ -155,3 +155,6 @@ spark-warehouse
 
 # MacOS
 .DS_Store
+
+# RStudio
+.Rproj.user/
