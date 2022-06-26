@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install https://github.com/databrickslabs/mosaic/releases/download/v0.1.1/databricks_mosaic-0.1.1-py3-none-any.whl
+# MAGIC %pip install databricks-mosaic
 
 # COMMAND ----------
 
