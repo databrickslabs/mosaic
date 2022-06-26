@@ -251,6 +251,11 @@ def buildings():
     dlt.read("complex_buildings")
       .select(fields)
       .union(dlt.read("simple_buildings").select(fields))
+      .withColumn("centroid", mos.st_centroid2D("polygon"))
+      .withColumn("centroid_index_res_5", mos.point_index_lonlat("centroid.x", "centroid.y", f.lit(5)))
+      .withColumn("centroid_index_res_6", mos.point_index_lonlat("centroid.x", "centroid.y", f.lit(6)))
+      .withColumn("centroid_index_res_7", mos.point_index_lonlat("centroid.x", "centroid.y", f.lit(7)))
+      .withColumn("centroid_index_res_8", mos.point_index_lonlat("centroid.x", "centroid.y", f.lit(8)))
   )
   
 
