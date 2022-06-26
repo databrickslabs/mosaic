@@ -34,8 +34,6 @@
 raw_path = f"dbfs:/tmp/mosaic/open_street_maps/"
 mirror_index_url = "https://download.geofabrik.de/index-v1-nogeom.json"
 
-print(f"The raw Open Street Maps data for {regions} will be stored in {raw_path}")
-
 # COMMAND ----------
 
 # MAGIC %md
@@ -73,16 +71,19 @@ available_regions
 
 # Define which regions to download
 regions = [
+  'italy'
+  
 #   'africa', 
 #   'antarctica', 
 #   'asia', 
 #   'australia-oceania', 
 #   'central-america', 
-  'europe',
+#   'europe',
 #   'north-america',
 #   'south-america'
 ] # See available regions few cell above
 
+print(f"The raw Open Street Maps data for {regions} will be stored in {raw_path}")
 
 # COMMAND ----------
 
@@ -113,7 +114,7 @@ def download_region(region):
       for chunk in r.iter_content(chunk_size=512*1024):
         f.write(chunk)
 
-with Pool(8) as pool:
+with Pool(4) as pool:
   pool.map(download_region, regions)
 
 # COMMAND ----------
