@@ -32,9 +32,7 @@
 
 # Define where the data will be stored
 raw_path = f"dbfs:/tmp/mosaic/open_street_maps/"
-
-# Define which region to download
-regions = ['italy'] # See available regions few cells below
+mirror_index_url = "https://download.geofabrik.de/index-v1-nogeom.json"
 
 print(f"The raw Open Street Maps data for {regions} will be stored in {raw_path}")
 
@@ -64,7 +62,7 @@ local_osm_path = pathlib.Path(raw_path.replace("dbfs:/", "/dbfs/"))
 
 import requests
 
-resp = requests.get("https://download.geofabrik.de/index-v1-nogeom.json")
+resp = requests.get(mirror_index_url)
 features = resp.json()["features"]
 datasets = list(map(lambda x: x["properties"], features))
 
@@ -73,20 +71,40 @@ available_regions
 
 # COMMAND ----------
 
+# Define which regions to download
+regions = [
+#   'africa', 
+#   'antarctica', 
+#   'asia', 
+#   'australia-oceania', 
+#   'central-america', 
+  'europe',
+#   'north-america',
+#   'south-america'
+] # See available regions few cell above
+
+
+# COMMAND ----------
+
+# Uncomment the following line to clear all raw data
+# dbutils.fs.rm(raw_path + "raw", True)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC 
 # MAGIC ## Download
 # MAGIC 
-# MAGIC Download the region files
+# MAGIC Download the region files concurrently
 
 # COMMAND ----------
 
-for region in regions:
+from multiprocessing import Pool
+
+def download_region(region):
   selected_dataset = list(filter(lambda x: x["id"] == region, datasets))[0]
   compressed_osm_file = local_osm_path / "raw" / f"{region}.osm.bz2"
   osm_url = selected_dataset["urls"]["bz2"]
-
-  print(f"Downloading {region} from {osm_url}")
 
   # Download the file incrementally
   with requests.get(osm_url, stream=True) as r:
@@ -95,6 +113,8 @@ for region in regions:
       for chunk in r.iter_content(chunk_size=512*1024):
         f.write(chunk)
 
+with Pool(8) as pool:
+  pool.map(download_region, regions)
 
 # COMMAND ----------
 
