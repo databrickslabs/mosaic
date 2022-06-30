@@ -54,6 +54,7 @@
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/tabs.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -220,11 +221,23 @@
   <ul class="md-nav__list" data-md-scrollfix="">
         <li class="md-nav__item"><a href="#usage-installation--page-root" class="md-nav__link">Installation guide</a><nav class="md-nav">
               <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#pre-requisites" class="md-nav__link">Pre-requisites</a>
+        <li class="md-nav__item"><a href="#supported-platforms" class="md-nav__link">Supported platforms</a>
         </li>
-        <li class="md-nav__item"><a href="#installation" class="md-nav__link">Installation</a>
+        <li class="md-nav__item"><a href="#package-installation" class="md-nav__link">Package installation</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#installation-from-pypi" class="md-nav__link">Installation from PyPI</a>
         </li>
-        <li class="md-nav__item"><a href="#testing" class="md-nav__link">Testing</a>
+        <li class="md-nav__item"><a href="#installation-from-release-artifacts" class="md-nav__link">Installation from release artifacts</a>
+        </li>
+        <li class="md-nav__item"><a href="#automated-sql-registration" class="md-nav__link">Automated SQL registration</a>
+        </li></ul>
+            </nav>
+        </li>
+        <li class="md-nav__item"><a href="#enabling-the-mosaic-functions" class="md-nav__link">Enabling the Mosaic functions</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#sql-usage" class="md-nav__link">SQL usage</a>
+        </li></ul>
+            </nav>
         </li></ul>
             </nav>
         </li>
@@ -308,11 +321,23 @@
   <ul class="md-nav__list" data-md-scrollfix="">
         <li class="md-nav__item"><a href="#usage-installation--page-root" class="md-nav__link">Installation guide</a><nav class="md-nav">
               <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#pre-requisites" class="md-nav__link">Pre-requisites</a>
+        <li class="md-nav__item"><a href="#supported-platforms" class="md-nav__link">Supported platforms</a>
         </li>
-        <li class="md-nav__item"><a href="#installation" class="md-nav__link">Installation</a>
+        <li class="md-nav__item"><a href="#package-installation" class="md-nav__link">Package installation</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#installation-from-pypi" class="md-nav__link">Installation from PyPI</a>
         </li>
-        <li class="md-nav__item"><a href="#testing" class="md-nav__link">Testing</a>
+        <li class="md-nav__item"><a href="#installation-from-release-artifacts" class="md-nav__link">Installation from release artifacts</a>
+        </li>
+        <li class="md-nav__item"><a href="#automated-sql-registration" class="md-nav__link">Automated SQL registration</a>
+        </li></ul>
+            </nav>
+        </li>
+        <li class="md-nav__item"><a href="#enabling-the-mosaic-functions" class="md-nav__link">Enabling the Mosaic functions</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#sql-usage" class="md-nav__link">SQL usage</a>
+        </li></ul>
+            </nav>
         </li></ul>
             </nav>
         </li>
@@ -333,7 +358,7 @@
   
 <h1 id="usage-installation--page-root">Installation guide<a class="headerlink" href="#usage-installation--page-root" title="Permalink to this headline">¶</a></h1>
 
-<h2 id="pre-requisites">Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this headline">¶</a></h2>
+<h2 id="supported-platforms">Supported platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this headline">¶</a></h2>
 <p>In order to use Mosaic, you must have access to a Databricks cluster running
 Databricks Runtime 10.0 or later. If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
@@ -345,20 +370,69 @@ in our documentation
 <a class="reference external" href="https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions">here</a>.</p>
 
 
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>To install Mosaic on your Databricks cluster, take the following steps:</p>
-<ol class="arabic simple">
-<li><p>Download the Python .whl file (or Scala JAR if you do not intend to use Python) from the ‘Releases’ section of the Mosaic GitHub repository.</p></li>
-<li><p>Attach the file to the cluster following the instructions <a class="reference external" href="https://docs.databricks.com/libraries/cluster-libraries.html#cluster-installed-library">here</a>.</p></li>
-</ol>
+<h2 id="package-installation">Package installation<a class="headerlink" href="#package-installation" title="Permalink to this headline">¶</a></h2>
 
-
-<h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
-<p>To test the installation, create a new Python notebook and import the package as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mosaic</span>
-<span class="n">mosaic</span><span class="o">.</span><span class="n">__version__</span>
+<h3 id="installation-from-pypi">Installation from PyPI<a class="headerlink" href="#installation-from-pypi" title="Permalink to this headline">¶</a></h3>
+<p>Python users can install the library directly from <a class="reference external" href="https://pypi.org/project/databricks-mosaic/">PyPI</a>
+using the instructions <a class="reference external" href="https://docs.databricks.com/libraries/cluster-libraries.html">here</a>
+or from within a Databricks notebook using the <code class="code docutils literal notranslate"><span class="pre">%pip</span></code> magic command, e.g.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%pip install databricks-mosaic
 </pre></div>
 </div>
+
+
+<h3 id="installation-from-release-artifacts">Installation from release artifacts<a class="headerlink" href="#installation-from-release-artifacts" title="Permalink to this headline">¶</a></h3>
+<p>Alternatively, you can access the latest release artifacts <a class="reference external" href="https://github.com/databrickslabs/mosaic/releases">here</a>
+and manually attach the appropriate library to your cluster.</p>
+<p>Which artifact you choose to attach will depend on the language API you intend to use.</p>
+<ul class="simple">
+<li><p>For Python API users, choose the Python .whl file.</p></li>
+<li><p>For Scala users, take the Scala JAR (packaged with all necessary dependencies).</p></li>
+<li><p>For R users, download the Scala JAR and the R bindings library [see the sparkR readme](R/sparkR-mosaic/README.md).</p></li>
+</ul>
+<p>Instructions for how to attach libraries to a Databricks cluster can be found <a class="reference external" href="https://docs.databricks.com/libraries/cluster-libraries.html">here</a>.</p>
+
+
+<h3 id="automated-sql-registration">Automated SQL registration<a class="headerlink" href="#automated-sql-registration" title="Permalink to this headline">¶</a></h3>
+<p>If you would like to use Mosaic’s functions in pure SQL (in a SQL notebook, from a business intelligence tool,
+or via a middleware layer such as Geoserver, perhaps) then you can configure
+“Automatic SQL Registration” using the instructions <a class="reference external" href="https://databrickslabs.github.io/mosaic/usage/automatic-sql-registration.html">here</a>.</p>
+
+
+
+<h2 id="enabling-the-mosaic-functions">Enabling the Mosaic functions<a class="headerlink" href="#enabling-the-mosaic-functions" title="Permalink to this headline">¶</a></h2>
+<p>The mechanism for enabling the Mosaic functions varies by language:</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-0-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mosaic</span> <span class="kn">import</span> <span class="n">enable_mosaic</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-0-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nn">functions</span><span class="p">.</span><span class="nc">MosaicContext</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">H3</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">ESRI</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">mosaicContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MosaicContext</span><span class="p">.</span><span class="n">build</span><span class="p">(</span><span class="nc">H3</span><span class="p">,</span><span class="w"> </span><span class="nc">ESRI</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">mosaicContext</span><span class="p">.</span><span class="nn">functions</span><span class="p">.</span><span class="n">_</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-0-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="nf">library</span><span class="p">(</span><span class="n">sparkrMosaic</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nf">enableMosaic</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></div>
+
+<h3 id="sql-usage">SQL usage<a class="headerlink" href="#sql-usage" title="Permalink to this headline">¶</a></h3>
+<p>If you have not employed <a class="reference internal" href="automatic-sql-registration.html#automatic-sql-registration"><span class="std std-ref">Automatic SQL registration</span></a>, you will need to
+register the Mosaic SQL functions in your SparkSession from a Scala notebook cell:</p>
+<div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nn">functions</span><span class="p">.</span><span class="nc">MosaicContext</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">H3</span>
+<span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">ESRI</span>
+
+<span class="kd">val</span><span class="w"> </span><span class="n">mosaicContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MosaicContext</span><span class="p">.</span><span class="n">build</span><span class="p">(</span><span class="nc">H3</span><span class="p">,</span><span class="w"> </span><span class="nc">ESRI</span><span class="p">)</span><span class="w"></span>
+<span class="n">mosaicContext</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+
 
 
 
