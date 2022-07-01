@@ -1,0 +1,18 @@
+## v0.1.1
+- Enable notebook-scoped library installation via `%pip` magic.
+
+## v0.1.0
+- Add indexing support for h3
+- Add Mosaic logic
+- Move to spark 3.2
+- Add documentation
+- Add python bindings
+- Add scalastyle template
+- Add support for many st_ expressions
+- Add support for Esri Geometries
+- Add support of GeoJSON
+- Add type checks in Catalyst
+- Add Geometry validity expressions
+- Create WKT, WKB and Hex conversion expressions
+- Setup the project
+- Define GitHub templates
