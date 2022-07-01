@@ -19,7 +19,7 @@ trait ValidityBehaviors {
         import sc.implicits._
         mosaicContext.register(spark)
 
-        val df = getWKTRowsDf.orderBy("id")
+        val df = getWKTRowsDf(mc).orderBy("id")
         val results = df.select(st_isvalid(col("wkt"))).as[Boolean].collect().toSeq
 
         all(results) should be(true)

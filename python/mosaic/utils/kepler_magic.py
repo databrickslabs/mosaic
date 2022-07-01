@@ -6,7 +6,6 @@ from IPython.core.magic import Magics, cell_magic, magics_class
 from keplergl import KeplerGl
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, conv, lower
-from pyspark.sql.utils import AnalysisException, ParseException
 
 from mosaic.api.accessors import st_astext
 from mosaic.api.functions import st_centroid2D
@@ -114,8 +113,7 @@ class MosaicKepler(Magics):
             if field.dataType.typeName() in ["string", "long", "integer", "double"]
         ]
         data = data.select(*allowed_schema)
-        to_render = data.limit(limit_ctn).cache()
-        pandas_data = to_render.limit(limit_ctn).toPandas()
+        pandas_data = data.limit(limit_ctn).toPandas()
 
         self.set_centroid(pandas_data, feature_type, feature_name)
 

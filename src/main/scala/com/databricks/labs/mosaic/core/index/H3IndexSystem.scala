@@ -7,7 +7,6 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.databricks.labs.mosaic.core.types.model.MosaicChip
 import com.uber.h3core.H3Core
-import java.{lang, util}
 import org.locationtech.jts.geom.Geometry
 
 /**
@@ -100,8 +99,8 @@ object H3IndexSystem extends IndexSystem with Serializable {
       * @return
       *   A set of indices representing the input geometry.
       */
-    override def polyfill(geometry: MosaicGeometry, resolution: Int): util.List[java.lang.Long] = {
-        if (geometry.isEmpty) Seq.empty[java.lang.Long].asJava
+    override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI] = None): Seq[Long] = {
+        if (geometry.isEmpty) Seq.empty[Long]
         else {
             val shellPoints = geometry.getShellPoints
             val holePoints = geometry.getHolePoints
@@ -110,37 +109,9 @@ object H3IndexSystem extends IndexSystem with Serializable {
                 val holes = holePoints(i).map(_.map(_.geoCoord).asJava).asJava
 
                 val indices = h3.polyfill(boundary, holes, resolution)
-                indices.asScala
-            }).flatten.asJava
+                indices.asScala.map(_.toLong)
+            }).flatten
         }
-    }
-
-    /**
-      * @see
-      *   [[IndexSystem.getBorderChips()]]
-      * @param geometry
-      *   Input geometry whose border is being represented.
-      * @param borderIndices
-      *   Indices corresponding to the border area of the input geometry.
-      * @return
-      *   A border area representation via [[MosaicChip]] set.
-      */
-    override def getBorderChips(
-        geometry: MosaicGeometry,
-        borderIndices: util.List[java.lang.Long],
-        keepCoreGeom: Boolean,
-        geometryAPI: GeometryAPI
-    ): Seq[MosaicChip] = {
-        val intersections = for (index <- borderIndices.asScala) yield {
-            val indexGeom = indexToGeometry(index, geometryAPI)
-            val intersect = geometry.intersection(indexGeom)
-            val isCore = intersect.equals(indexGeom)
-
-            val chipGeom = if (!isCore || keepCoreGeom) intersect else null
-
-            MosaicChip(isCore = isCore, index, chipGeom)
-        }
-        intersections.filterNot(_.isEmpty)
     }
 
     /**
@@ -151,8 +122,8 @@ object H3IndexSystem extends IndexSystem with Serializable {
       * @return
       *   A core area representation via [[MosaicChip]] set.
       */
-    override def getCoreChips(coreIndices: util.List[lang.Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
-        coreIndices.asScala.map(index => {
+    override def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
+        coreIndices.map(index => {
             val indexGeom = if (keepCoreGeom) indexToGeometry(index, geometryAPI) else null
             MosaicChip(isCore = true, index, indexGeom)
         })
@@ -193,12 +164,33 @@ object H3IndexSystem extends IndexSystem with Serializable {
       * @return
       *   A collection of index IDs forming a k ring.
       */
-    override def kRing(index: Long, n: Int): util.List[lang.Long] = {
-        h3.kRing(index, n)
+    override def kRing(index: Long, n: Int): Seq[Long] = {
+        h3.kRing(index, n).asScala.map(_.toLong)
     }
 
-    override def minResolution: Int = 0
+    /**
+      * Get the k disk of indices around the provided index id.
+      *
+      * @param index
+      *   Index ID to be used as a center of k disk.
+      * @param n
+      *   Distance of k disk to be generated around the input index.
+      * @return
+      *   A collection of index IDs forming a k disk.
+      */
+    override def kDisk(index: Long, n: Int): Seq[Long] = {
+        h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).toSeq.map(_.toLong)
+    }
 
-    override def maxResolution: Int = 16
+    /**
+      * H3 supports resolutions ranging from 0 until 15. Resolution 0 represents
+      * the most coarse resolution where the surface of the earth is split into
+      * 122 hexagons. Resolution 15 represents the mre fine grained resolution.
+      * @see
+      *   https://h3geo.org/docs/core-library/restable/
+      * @return
+      *   A set of supported resolutions.
+      */
+    override def resolutions: Set[Int] = (0 to 15).toSet
 
 }

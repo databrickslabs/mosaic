@@ -202,7 +202,7 @@ display(neighbourhoodsWithIndex)
 
 # COMMAND ----------
 
-pickupNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.borough").alias("pickup_zone"), col("mosaic_index"))
+pickupNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.zone").alias("pickup_zone"), col("mosaic_index"))
 
 withPickupZone = (
   tripsWithIndex.join(
@@ -227,7 +227,7 @@ display(withPickupZone)
 
 # COMMAND ----------
 
-dropoffNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.borough").alias("dropoff_zone"), col("mosaic_index"))
+dropoffNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.zone").alias("dropoff_zone"), col("mosaic_index"))
 
 withDropoffZone = (
   withPickupZone.join(

@@ -47,6 +47,16 @@ st_point
     |{1, [[[30.0, 10.0]]], [[]]}|
     +---------------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    >>> showDF(select(df, alias(st_point(column("lon"), column("lat")), "point_geom")), truncate=F)
+    +---------------------------+
+    |point_geom                 |
+    +---------------------------+
+    |{1, [[[30.0, 10.0]]], [[]]}|
+    +---------------------------+
+
 st_makeline
 ***********
 
@@ -112,6 +122,20 @@ st_makeline
     |{3, [[[40.0, 40.0], [30.0, 10.0], [10.0, 30.0]]], [[]]}|
     +-------------------------------------------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lon = c(30.0, 10.0, 40.0), lat = c(10.0, 30.0, 40.0)))
+    >>> df <- select(df, alias(st_point(column("lon"), column("lat")), "point_geom"))
+    >>> df <- groupBy(df)
+    >>> df <- agg(df, alias(collect_list(column("point_geom")), "point_array"))
+    >>> df <- select(df, alias(st_makeline(column("point_array")), "line_geom"))
+    >>> showDF(df, truncate=F)
+    +---------------------------------------------------------------+
+    |line_geom                                                      |
+    +---------------------------------------------------------------+
+    |{3, 4326, [[[30.0, 10.0], [10.0, 30.0], [40.0, 40.0]]], [[[]]]}|
+    +---------------------------------------------------------------+
+
 
 st_makepolygon
 **************
@@ -156,6 +180,16 @@ st_makepolygon
     |{5, [[[30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0]]], [[]]}|
     +-----------------------------------------------------------------------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame('wkt' = 'LINESTRING (30 10, 40 40, 20 40, 10 20, 30 10)'))
+    >>> showDF(select(df, alias(st_makepolygon(st_geomfromwkt(column('wkt'))), 'polygon_geom')), truncate=F)
+    +-----------------------------------------------------------------------------------+
+    |polygon_geom                                                                       |
+    +-----------------------------------------------------------------------------------+
+    |{5, [[[30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0]]], [[]]}|
+    +-----------------------------------------------------------------------------------+
+
 st_geomfromwkt
 **************
 
@@ -193,6 +227,16 @@ st_geomfromwkt
    .. code-tab:: sql
 
     >>> SELECT st_geomfromwkt("LINESTRING (30 10, 40 40, 20 40, 10 20, 30 10)") AS linestring
+    +-------------------------------------------------------------------------------------+
+    | linestring                                                                          |
+    +-------------------------------------------------------------------------------------+
+    |{3, [[[30.0, 10.0], [40.0, 40.0], [20.0, 40.0], [10.0, 20.0], [30.0, 10.0]]], [[[]]]}|
+    +-------------------------------------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame('wkt' = 'LINESTRING (30 10, 40 40, 20 40, 10 20, 30 10)'))
+    >>> showDF(select(df, alias(st_geomfromwkt(column('wkt')), 'linestring')), truncate=F)
     +-------------------------------------------------------------------------------------+
     | linestring                                                                          |
     +-------------------------------------------------------------------------------------+
@@ -245,6 +289,16 @@ st_geomfromwkb
     |{1, [[[-75.78033, 35.18937]]], [[[]]]}|
     +--------------------------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame('wkt'= "POINT (-75.78033 35.18937)"))
+    >>> showDF(select(df, st_geomfromwkb(st_aswkb(column("wkt")))), truncate=F)
+    +--------------------------------------+
+    |convert_to(wkb)                       |
+    +--------------------------------------+
+    |{1, [[[-75.78033, 35.18937]]], [[[]]]}|
+    +--------------------------------------+
+
 st_geomfromgeojson
 ******************
 
@@ -271,7 +325,7 @@ st_geomfromgeojson
             "crs":{
                 "type":"name",
                 "properties":{
-                    "name":"EPSG:0"
+                    "name":"EPSG:4326"
                 }
             }
         }
@@ -295,7 +349,7 @@ st_geomfromgeojson
             |   "crs":{
             |       "type":"name",
             |       "properties":{
-            |           "name":"EPSG:0"
+            |           "name":"EPSG:4326"
             |       }
             |   }
             |}""".stripMargin)
@@ -310,7 +364,30 @@ st_geomfromgeojson
 
    .. code-tab:: sql
 
-    >>> SELECT st_geomfromgeojson("{\"type\":\"Point\",\"coordinates\":[-75.78033,35.18937],\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:0\"}}}")
+    >>> SELECT st_geomfromgeojson("{\"type\":\"Point\",\"coordinates\":[-75.78033,35.18937],\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}}}")
+    +--------------------------------------+
+    |convert_to(as_json(json))             |
+    +--------------------------------------+
+    |{1, [[[-75.78033, 35.18937]]], [[[]]]}|
+    +--------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> geojson <- '{
+            "type":"Point",
+            "coordinates":[
+                -75.78033,
+                35.18937
+            ],
+            "crs":{
+                "type":"name",
+                "properties":{
+                    "name":"EPSG:4326"
+                }
+            }
+        }'
+    >>> df <- createDataFrame(data.frame('json' = geojson))
+    >>> showDF(select(df, st_geomfromgeojson(column('json'))), truncate=F)
     +--------------------------------------+
     |convert_to(as_json(json))             |
     +--------------------------------------+

@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{H3IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.IndexSystemID
 import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
@@ -10,12 +10,12 @@ import org.locationtech.jts.geom.Geometry
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{
-    TernaryExpression,
     ExpectsInputTypes,
     Expression,
     ExpressionDescription,
     ExpressionInfo,
-    NullIntolerant
+    NullIntolerant,
+    TernaryExpression
 }
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -46,8 +46,6 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
             case _                                                =>
                 throw new IllegalArgumentException(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}).")
         }
-
-    override def first: Expression = geom
 
     override def second: Expression = resolution
 
@@ -80,10 +78,10 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
       */
     // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
-        val resolution: Int = H3IndexSystem.getResolution(input2)
+        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+        val resolution: Int = indexSystem.getResolution(input2)
         val keepCoreGeom: Boolean = input3.asInstanceOf[Boolean]
 
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geometry = geometryAPI.geometry(input1, first.dataType)
 
@@ -101,6 +99,8 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
 
         serialized
     }
+
+    override def first: Expression = geom
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])

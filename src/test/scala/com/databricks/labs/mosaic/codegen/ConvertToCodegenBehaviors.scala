@@ -19,7 +19,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf: DataFrame = getHexRowsDf
+        val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("wkb", convert_to(as_hex(col("hex")), "WKB"))
             .select(
@@ -43,7 +43,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mosaicContext.getGeometryAPI.geometry(_, "WKT"))
 
-        val right = getWKTRowsDf
+        val right = getWKTRowsDf(mc)
             .orderBy("id")
             .select("wkt")
             .as[String]
@@ -59,7 +59,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val wktDf = getWKTRowsDf
+        val wktDf = getWKTRowsDf(mc)
             .orderBy("id")
             .withColumn("wkb", convert_to($"wkt", "wkb"))
             .select(
@@ -81,7 +81,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "HEX"))
 
-        val right = getHexRowsDf
+        val right = getHexRowsDf(mc)
             .orderBy("id")
             .select("hex")
             .as[String]
@@ -97,7 +97,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val wktDf = getWKTRowsDf
+        val wktDf = getWKTRowsDf(mc)
             .withColumn("wkb", convert_to($"wkt", "wkb"))
             .select(
               convert_to($"wkb", "coords").alias("coords")
@@ -117,7 +117,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(_.toSeq.head)
 
-        val right = getHexRowsDf
+        val right = getHexRowsDf(mc)
             .withColumn("test", as_hex($"hex"))
             .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
             .select("coords")
@@ -133,7 +133,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val wkbDf: DataFrame = getHexRowsDf
+        val wkbDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .select(convert_to(as_hex($"hex"), "WKB").alias("wkb"))
             .select(
@@ -155,7 +155,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "GEOJSON"))
 
-        val right = getGeoJSONDf
+        val right = getGeoJSONDf(mc)
             .orderBy("id")
             .select(as_json($"geojson").getItem("json").alias("geojson"))
             .select("geojson")
@@ -172,7 +172,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val wktDf: DataFrame = getWKTRowsDf
+        val wktDf: DataFrame = getWKTRowsDf(mc)
             .orderBy("id")
             .select(
               convert_to($"wkt", "WKB").alias("wkb")
@@ -193,7 +193,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "WKB"))
 
-        val right = getHexRowsDf
+        val right = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("wkb", convert_to(as_hex($"hex"), "WKB"))
             .select("wkb")
@@ -211,7 +211,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val wktDf = getWKTRowsDf
+        val wktDf = getWKTRowsDf(mc)
             .orderBy("id")
             .select(
               convert_to($"wkt", "hex").getItem("hex").alias("hex")
@@ -232,7 +232,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "HEX"))
 
-        val right = getHexRowsDf
+        val right = getHexRowsDf(mc)
             .orderBy("id")
             .select("hex")
             .as[String]
@@ -249,7 +249,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val wktDf = getWKTRowsDf
+        val wktDf = getWKTRowsDf(mc)
             .orderBy("id")
             .select(
               convert_to($"wkt", "coords").alias("coords")
@@ -269,7 +269,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(_.toSeq.head)
 
-        val right = getHexRowsDf
+        val right = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
             .select("coords")
@@ -286,7 +286,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val wktDf: DataFrame = getWKTRowsDf
+        val wktDf: DataFrame = getWKTRowsDf(mc)
             .orderBy("id")
             .select(
               convert_to($"wkt", "geojson").getItem("json").alias("geojson")
@@ -307,7 +307,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "GEOJSON"))
 
-        val right = getGeoJSONDf
+        val right = getGeoJSONDf(mc)
             .orderBy("id")
             .select(as_json($"geojson").getItem("json").alias("geojson"))
             .as[String]
@@ -324,7 +324,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf: DataFrame = getHexRowsDf
+        val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("hex", as_hex($"hex"))
             .select(
@@ -346,7 +346,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "WKB"))
 
-        val right = getWKTRowsDf
+        val right = getWKTRowsDf(mc)
             .orderBy("id")
             .withColumn("wkb", convert_to($"wkt", "WKB"))
             .select("wkb")
@@ -364,7 +364,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf: DataFrame = getHexRowsDf
+        val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("hex", as_hex($"hex"))
             .select(
@@ -386,7 +386,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "WKT"))
 
-        val right = getWKTRowsDf
+        val right = getWKTRowsDf(mc)
             .orderBy("id")
             .select("wkt")
             .as[String]
@@ -403,7 +403,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf: DataFrame = getHexRowsDf
+        val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("hex", as_hex($"hex"))
             .select(
@@ -424,7 +424,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(_.toSeq.head)
 
-        val right = getWKTRowsDf
+        val right = getWKTRowsDf(mc)
             .orderBy("id")
             .withColumn("coords", convert_to($"wkt", "coords"))
             .select("coords")
@@ -441,7 +441,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf: DataFrame = getHexRowsDf
+        val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("hex", as_hex($"hex"))
             .select(
@@ -463,7 +463,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "GEOJSON"))
 
-        val right = getGeoJSONDf
+        val right = getGeoJSONDf(mc)
             .orderBy("id")
             .select("geojson")
             .as[String]
@@ -480,7 +480,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf: DataFrame = getHexRowsDf
+        val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
             .select(
@@ -502,7 +502,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "WKB"))
 
-        val right = getWKTRowsDf
+        val right = getWKTRowsDf(mc)
             .orderBy("id")
             .withColumn("wkb", convert_to($"wkt", "WKB"))
             .select("wkb")
@@ -520,7 +520,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf: DataFrame = getHexRowsDf
+        val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
             .select(
@@ -544,7 +544,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mosaicContext.getGeometryAPI.geometry(_, "WKT"))
 
-        val right = getWKTRowsDf
+        val right = getWKTRowsDf(mc)
             .orderBy("id")
             .select("wkt")
             .as[String]
@@ -560,7 +560,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val wktDf = getWKTRowsDf
+        val wktDf = getWKTRowsDf(mc)
             .orderBy("id")
             .withColumn("coords", convert_to($"wkt", "coords"))
             .select(
@@ -582,7 +582,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "HEX"))
 
-        val right = getHexRowsDf
+        val right = getHexRowsDf(mc)
             .orderBy("id")
             .select("hex")
             .as[String]
@@ -599,7 +599,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val wkbDf: DataFrame = getHexRowsDf
+        val wkbDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
             .select(
@@ -621,7 +621,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "GEOJSON"))
 
-        val right = getGeoJSONDf
+        val right = getGeoJSONDf(mc)
             .orderBy("id")
             .select(as_json($"geojson").getItem("json").alias("geojson"))
             .select("geojson")
@@ -638,7 +638,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf: DataFrame = getHexRowsDf
+        val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("geojson", convert_to(as_hex($"hex"), "geojson"))
             .select(
@@ -660,7 +660,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "WKB"))
 
-        val right = getWKTRowsDf
+        val right = getWKTRowsDf(mc)
             .orderBy("id")
             .withColumn("wkb", convert_to($"wkt", "WKB"))
             .select("wkb")
@@ -678,7 +678,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf: DataFrame = getHexRowsDf
+        val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("geojson", convert_to(as_hex($"hex"), "geojson"))
             .select(
@@ -700,7 +700,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "WKT"))
 
-        val right = getWKTRowsDf
+        val right = getWKTRowsDf(mc)
             .orderBy("id")
             .select("wkt")
             .as[String]
@@ -717,7 +717,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf = getHexRowsDf
+        val hexDf = getHexRowsDf(mc)
             .orderBy("id")
             .withColumn("geojson", convert_to(as_hex($"hex"), "geojson"))
             .select(
@@ -739,7 +739,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "HEX"))
 
-        val right = getHexRowsDf
+        val right = getHexRowsDf(mc)
             .orderBy("id")
             .select("hex")
             .as[String]
@@ -756,7 +756,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        val hexDf: DataFrame = getHexRowsDf
+        val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .where(!st_geometrytype(as_hex($"hex")).isin("MultiLineString", "MultiPolygon"))
             .withColumn("geojson", convert_to(as_hex($"hex"), "geojson"))
@@ -778,7 +778,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .collect()
             .map(_.toSeq.head)
 
-        val right = getWKTRowsDf
+        val right = getWKTRowsDf(mc)
             .orderBy("id")
             .where(!st_geometrytype($"wkt").isin("MultiLineString", "MultiPolygon"))
             .withColumn("coords", convert_to($"wkt", "coords"))

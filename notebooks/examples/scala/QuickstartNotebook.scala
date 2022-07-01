@@ -179,7 +179,7 @@ display(tripsWithIndex)
 val neighbourhoodsWithIndex = neighbourhoods
    // We break down the original geometry in multiple smoller mosaic chips, each with its
    // own index
-   .withColumn("mosaic_index", mosaic_explode(col("geometry"), lit(optimal_resolution)))
+   .withColumn("mosaic_index", mosaic_explode(col("geometry"), lit(optimalResolution)))
    // We don't need the original geometry any more, since we have broken it down into
    // Smaller mosaic chips.
    .drop("json_geometry", "geometry")
@@ -198,7 +198,7 @@ display(neighbourhoodsWithIndex)
 
 // COMMAND ----------
 
-val pickupNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.borough").alias("pickup_zone"), col("mosaic_index"))
+val pickupNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.zone").alias("pickup_zone"), col("mosaic_index"))
 
 val withPickupZone = 
   tripsWithIndex.join(
@@ -222,7 +222,7 @@ display(withPickupZone)
 
 // COMMAND ----------
 
-val dropoffNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.borough").alias("dropoff_zone"), col("mosaic_index"))
+val dropoffNeighbourhoods = neighbourhoodsWithIndex.select(col("properties.zone").alias("dropoff_zone"), col("mosaic_index"))
 
 val withDropoffZone = 
   withPickupZone.join(

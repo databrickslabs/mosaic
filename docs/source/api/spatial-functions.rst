@@ -45,9 +45,17 @@ st_area
     |       550.0|
     +------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_area(column("wkt"))))
+    +------------+
+    |st_area(wkt)|
+    +------------+
+    |       550.0|
+    +------------+
+
 .. note:: Results of this function are always expressed in the original units of the input geometry.
-
-
 
 
 st_buffer
@@ -95,6 +103,16 @@ st_buffer
     |POLYGON ((29.1055...|
     +--------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_buffer(column("wkt"), lit(2))))
+    +--------------------+
+    | st_buffer(wkt, 2.0)|
+    +--------------------+
+    |POLYGON ((29.1055...|
+    +--------------------+
+
 st_perimeter
 ************
 
@@ -132,6 +150,15 @@ st_perimeter
    .. code-tab:: sql
 
     >>> SELECT st_perimeter("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +-----------------+
+    |   st_length(wkt)|
+    +-----------------+
+    |96.34413615167959|
+    +-----------------+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_perimeter(column("wkt"))))
     +-----------------+
     |   st_length(wkt)|
     +-----------------+
@@ -185,6 +212,15 @@ st_length
     +-----------------+
     |96.34413615167959|
     +-----------------+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_length(column("wkt"))))
+    +-----------------+
+    |   st_length(wkt)|
+    +-----------------+
+    |96.34413615167959|
+    +-----------------+
 
 
 .. note:: Results of this function are always expressed in the original units of the input geometry.
@@ -229,6 +265,16 @@ st_convexhull
    .. code-tab:: sql
 
     >>> SELECT st_convexhull("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")
+    +---------------------------------------------+
+    |st_convexhull(wkt)                           |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    >>> showDF(select(df, st_convexhull(column("wkt"))))
     +---------------------------------------------+
     |st_convexhull(wkt)                           |
     +---------------------------------------------+
@@ -287,6 +333,18 @@ st_dump
     |POINT (20 20)|
     |POINT (30 10)|
     +-------------+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    >>> showDF(select(df, st_dump(column("wkt"))))
+    +-------------+
+    |element      |
+    +-------------+
+    |POINT (10 40)|
+    |POINT (40 30)|
+    |POINT (20 20)|
+    |POINT (30 10)|
+    +-------------+
 
 
 st_srid
@@ -329,6 +387,17 @@ st_srid
    .. code-tab:: sql
 
     >>> select st_srid(as_json('{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'))
+    +------------+
+    |st_srid(...)|
+    +------------+
+    |4326        |
+    +------------+
+
+   .. code-tab:: r R
+
+    >>> json_geom <- '{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'
+    >>> df <- createDataFrame(data.frame(json=json_geom))
+    >>> showDF(select(df, st_srid(as_json(column('json')))))
     +------------+
     |st_srid(...)|
     +------------+
@@ -384,6 +453,15 @@ st_setsrid
     |             {2, 4326, [[[10.0...|
     +---------------------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    >>> showDF(select(df, st_setsrid(st_geomfromwkt(column("wkt")), lit(4326L))))
+    +---------------------------------+
+    |st_setsrid(convert_to(wkt), 4326)|
+    +---------------------------------+
+    |             {2, 4326, [[[10.0...|
+    +---------------------------------+
 
 .. note::
     ST_SetSRID does not transform the coordinates of `geom`,
@@ -440,6 +518,17 @@ st_transform
     |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    >>> df <- withColumn(df, 'geom', st_setsrid(st_geomfromwkt(column('wkt')), lit(4326L)))
+    >>>
+    >>> showDF(select(df, st_astext(st_transform(column('geom'), lit(3857L)))), truncate=F)
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. note::
     If `geom` does not have an associated SRID, use ST_SetSRID to set this before calling ST_Transform.
@@ -487,6 +576,16 @@ st_translate
    .. code-tab:: sql
 
     >>> SELECT st_translate("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))", 10d, -5d)
+    +----------------------------------------------+
+    |st_translate(wkt, 10, -5)                     |
+    +----------------------------------------------+
+    |MULTIPOINT ((20 35), (50 25), (30 15), (40 5))|
+    +----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    >>> showDF(select(df, st_translate(column('wkt'), lit(10), lit(-5))))
     +----------------------------------------------+
     |st_translate(wkt, 10, -5)                     |
     +----------------------------------------------+
@@ -541,6 +640,16 @@ st_scale
     |POLYGON ((15 20, 20 80, 10 80, 5 40, 15 20))|
     +--------------------------------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_scale(column('wkt'), lit(0.5), lit(2))), truncate=F)
+    +--------------------------------------------+
+    |st_scale(wkt, 0.5, 2)                       |
+    +--------------------------------------------+
+    |POLYGON ((15 20, 20 80, 10 80, 5 40, 15 20))|
+    +--------------------------------------------+
+
 
 st_rotate
 *********
@@ -589,6 +698,16 @@ st_rotate
     |POLYGON ((-30 -10, -40 -40, -20 -40, -10 -20, -30 -10))|
     +-------------------------------------------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_rotate(column("wkt"), lit(pi))), truncate=F)
+    +-------------------------------------------------------+
+    |st_rotate(wkt, 3.141592653589793)                      |
+    +-------------------------------------------------------+
+    |POLYGON ((-30 -10, -40 -40, -20 -40, -10 -20, -30 -10))|
+    +-------------------------------------------------------+
+
 
 st_centroid2D
 *************
@@ -616,7 +735,32 @@ st_centroid2D
 
    .. code-tab:: scala
 
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_centroid2D($"wkt")).show()
+    +---------------------------------------+
+    |st_centroid(wkt)                       |
+    +---------------------------------------+
+    |{25.454545454545453, 26.96969696969697}|
+    +---------------------------------------+
+
    .. code-tab:: sql
+
+    >>> SELECT st_centroid2D("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +---------------------------------------+
+    |st_centroid(wkt)                       |
+    +---------------------------------------+
+    |{25.454545454545453, 26.96969696969697}|
+    +---------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_centroid2D(column("wkt"))), truncate=F)
+    +---------------------------------------+
+    |st_centroid(wkt)                       |
+    +---------------------------------------+
+    |{25.454545454545453, 26.96969696969697}|
+    +---------------------------------------+
 
 st_centroid3D
 *************
@@ -628,6 +772,119 @@ st_centroid3D
     :param col: Geometry
     :type col: Column
     :rtype: Column: StructType[x: DoubleType, y: DoubleType, z: DoubleType]
+
+
+st_numpoints
+************
+
+.. function:: st_numpoints(col)
+
+    Returns the number of points in `geom`.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column: IntegerType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_numpoints('wkt')).show()
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_numpoints($"wkt")).show()
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_numpoints("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_numpoints(column("wkt"))))
+    +-----------------+
+    |st_numpoints(wkt)|
+    +-----------------+
+    |                5|
+    +-----------------+
+
+
+st_hasvalidcoordinates
+**********************
+
+.. function:: st_hasvalidcoordinates(geom, crs, which)
+
+    Checks if all points in `geom` are valid with respect to crs bounds.
+    CRS bounds can be provided either as bounds or as reprojected_bounds.
+
+    :param geom: Geometry
+    :type geom: Column
+    :param crs: CRS name (EPSG ID), e.g. "EPSG:2192"
+    :type crs: Column
+    :param which: Check against geographic `"bounds"` or geometric `"reprojected_bounds"` bounds.
+    :type which: Column
+    :rtype: Column: IntegerType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))'}])
+    >>> df.select(st_hasvalidcoordinates(col('wkt'), lit('EPSG:2192'), lit('bounds'))).show()
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))")).toDF("wkt")
+    >>> df.select(st_hasvalidcoordinates($"wkt", lit("EPSG:2192"), lit("bounds"))).show()
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_hasvalidcoordinates("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))", "EPSG:2192", "bounds")
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))"))
+    >>> showDF(select(df, st_hasvalidcoordinates(column("wkt"), lit("EPSG:2192"), lit("bounds"))), truncate=F)
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |true                                          |
+    +----------------------------------------------+
 
 
 st_isvalid
@@ -698,6 +955,24 @@ st_isvalid
     |          false|
     +---------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_isvalid(column("wkt"))), truncate=F)
+    +---------------+
+    |st_isvalid(wkt)|
+    +---------------+
+    |           true|
+    +---------------+
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))"))
+    >>> showDF(select(df, st_isvalid(column("wkt"))), truncate=F)
+    +---------------+
+    |st_isvalid(wkt)|
+    +---------------+
+    |          false|
+    +---------------+
+
 .. note:: Validity assertions will be dependent on the chosen geometry API.
     The assertions used in the ESRI geometry API (the default) follow the definitions in the
     "Simple feature access - Part 1" document (OGC 06-103r4) for each geometry type.
@@ -739,6 +1014,16 @@ st_geometrytype
    .. code-tab:: sql
 
     >>> SELECT st_geometrytype("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))")
+    +--------------------+
+    |st_geometrytype(wkt)|
+    +--------------------+
+    |             POLYGON|
+    +--------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_geometrytype(column("wkt"))), truncate=F)
     +--------------------+
     |st_geometrytype(wkt)|
     +--------------------+
@@ -789,6 +1074,16 @@ st_xmin
     |             10.0|
     +-----------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_xmin(column("wkt"))), truncate=F)
+    +-----------------+
+    |st_minmaxxyz(wkt)|
+    +-----------------+
+    |             10.0|
+    +-----------------+
+
 st_xmax
 *******
 
@@ -826,6 +1121,16 @@ st_xmax
    .. code-tab:: sql
 
     >>> SELECT st_xmax("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +-----------------+
+    |st_minmaxxyz(wkt)|
+    +-----------------+
+    |             40.0|
+    +-----------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_xmax(column("wkt"))), truncate=F)
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -875,6 +1180,16 @@ st_ymin
     |             10.0|
     +-----------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_ymin(column("wkt"))), truncate=F)
+    +-----------------+
+    |st_minmaxxyz(wkt)|
+    +-----------------+
+    |             10.0|
+    +-----------------+
+
 st_ymax
 *******
 
@@ -892,7 +1207,7 @@ st_ymax
    .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_xmax('wkt')).show()
+    >>> df.select(st_ymax('wkt')).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -902,7 +1217,7 @@ st_ymax
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_xmax($"wkt")).show()
+    >>> df.select(st_ymax($"wkt")).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -911,7 +1226,17 @@ st_ymax
 
    .. code-tab:: sql
 
-    >>> SELECT st_xmax("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    >>> SELECT st_ymax("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +-----------------+
+    |st_minmaxxyz(wkt)|
+    +-----------------+
+    |             40.0|
+    +-----------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_ymax(column("wkt"))), truncate=F)
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -940,6 +1265,120 @@ st_zmax
     :param col: Geometry
     :type col: Column
     :rtype: Column: DoubleType
+
+
+st_distance
+***********
+
+.. function:: st_distance(geom1, geom2)
+
+    Compute the distance between `geom1` and `geom2`.
+
+    :param geom1: Geometry
+    :type geom1: Column
+    :param geom2: Geometry
+    :type geom2: Column
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'point': 'POINT (5 5)', 'poly': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_distance('poly', 'point')).show()
+    +------------------------+
+    |st_distance(poly, point)|
+    +------------------------+
+    |      15.652475842498529|
+    +------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POINT (5 5)", "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("point", "poly")
+    >>> df.select(st_distance($"poly", $"point")).show()
+    +------------------------+
+    |st_distance(poly, point)|
+    +------------------------+
+    |      15.652475842498529|
+    +------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_distance("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", "POINT (5 5)")
+    +------------------------+
+    |st_distance(poly, point)|
+    +------------------------+
+    |      15.652475842498529|
+    +------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(point = c( "POINT (5 5)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_distance(column("poly"), column("point"))))
+    +------------------------+
+    |st_distance(poly, point)|
+    +------------------------+
+    |      15.652475842498529|
+    +------------------------+
+
+.. note:: Results of this function are always expressed in the original units of the input geometries.
+
+
+st_intersection
+***************
+
+.. function:: st_intersection(geom1, geom2)
+
+    Returns a geometry representing the intersection of `left_geom` and `right_geom`.
+
+    :param geom1: Geometry
+    :type geom1: Column
+    :param geom2: Geometry
+    :type geom2: Column
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'p1': 'POLYGON ((0 0, 0 3, 3 3, 3 0))', 'p2': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
+    >>> df.select(st_intersection(col('p1'), col('p2'))).show(1, False)
+    +-----------------------------------+
+    |st_intersection(p1, p2)            |
+    +-----------------------------------+
+    |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))|
+    +-----------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")).toDF("p1", "p2")
+    >>> df.select(st_intersection($"p1", $"p2")).show(false)
+    +-----------------------------------+
+    |st_intersection(p1, p2)            |
+    +-----------------------------------+
+    |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))|
+    +-----------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_intersection("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")
+    +-----------------------------------+
+    |st_intersection(p1, p2)            |
+    +-----------------------------------+
+    |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))|
+    +-----------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(p1 = "POLYGON ((0 0, 0 3, 3 3, 3 0))", p2 = "POLYGON ((2 2, 2 4, 4 4, 4 2))"))
+    >>> showDF(select(df, st_intersection(column("p1"), column("p2"))), truncate=F)
+    +-----------------------------------+
+    |st_intersection(p1, p2)            |
+    +-----------------------------------+
+    |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))|
+    +-----------------------------------+
 
 
 flatten_polygons
@@ -982,14 +1421,31 @@ flatten_polygons
 
    .. code-tab:: sql
 
-    >>>
+    >>> SELECT flatten_polygons("'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'")
+    +------------------------------------------+
+    |element                                   |
+    +------------------------------------------+
+    |POLYGON ((30 20, 45 40, 10 40, 30 20))    |
+    |POLYGON ((15 5, 40 10, 10 20, 5 10, 15 5))|
+    +------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
+    >>> showDF(select(df, flatten_polygons(column("wkt"))), truncate=F)
+    +------------------------------------------+
+    |element                                   |
+    +------------------------------------------+
+    |POLYGON ((30 20, 45 40, 10 40, 30 20))    |
+    |POLYGON ((15 5, 40 10, 10 20, 5 10, 15 5))|
+    +------------------------------------------+
 
 point_index_lonlat
 ******************
 
 .. function:: point_index_lonlat(lon, lat, resolution)
 
-    Returns the `resolution` grid index associated with 
+    Returns the `resolution` grid index associated with
     the input `lon` and `lat` coordinates.
 
     :param lon: Longitude
@@ -1007,30 +1463,97 @@ point_index_lonlat
 
     >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
     >>> df.select(point_index_lonlat('lon', 'lat', lit(10))).show(1, False)
-    +----------------------------+
-    |h3_point_index(lon, lat, 10)|
-    +----------------------------+
-    |623385352048508927          |
-    +----------------------------+
+    +--------------------------------+
+    |point_index_lonlat(lon, lat, 10)|
+    +--------------------------------+
+    |              623385352048508927|
+    +--------------------------------+
 
    .. code-tab:: scala
 
     >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
     >>> df.select(point_index_lonlat($"lon", $"lat", lit(10))).show()
-    +----------------------------+
-    |h3_point_index(lat, lon, 10)|
-    +----------------------------+
-    |623385352048508927          |
-    +----------------------------+
+    +--------------------------------+
+    |point_index_lonlat(lon, lat, 10)|
+    +--------------------------------+
+    |              623385352048508927|
+    +--------------------------------+
 
    .. code-tab:: sql
 
     >>> SELECT point_index_lonlat(30d, 10d, 10)
-    +----------------------------+
-    |h3_point_index(lat, lon, 10)|
-    +----------------------------+
-    |623385352048508927          |
-    +----------------------------+
+    +--------------------------------+
+    |point_index_lonlat(lon, lat, 10)|
+    +--------------------------------+
+    |              623385352048508927|
+    +--------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    >>> showDF(select(df, point_index_lonlat(column("lon"), column("lat"), lit(10L))), truncate=F)
+    +--------------------------------+
+    |point_index_lonlat(lon, lat, 10)|
+    +--------------------------------+
+    |              623385352048508927|
+    +--------------------------------+
+
+
+point_index_geom
+****************
+
+.. function:: point_index_geom(geometry, resolution)
+
+    Returns the `resolution` grid index associated
+    with the input geometry `geometry`.
+
+    :param geometry: Geometry
+    :type geometry: Column
+    :param resolution: Index resolution
+    :type resolution: Column: Integer
+    :rtype: Column: LongType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+    >>> df.select(point_index_geom(st_point('lon', 'lat'), lit(10))).show(1, False)
+    +----------------------------------------+
+    |point_index_geom(st_point(lon, lat), 10)|
+    +----------------------------------------+
+    |623385352048508927                      |
+    +----------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
+    >>> df.select(point_index_geom(st_point($"lon", $"lat"), lit(10))).show()
+    +----------------------------------------+
+    |point_index_geom(st_point(lon, lat), 10)|
+    +----------------------------------------+
+    |623385352048508927                      |
+    +----------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT point_index_geom(st_point(30d, 10d), 10)
+    +----------------------------------------+
+    |point_index_geom(st_point(lon, lat), 10)|
+    +----------------------------------------+
+    |623385352048508927                      |
+    +----------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    >>> showDF(select(df, point_index_geom(st_point(column("lon"), column("lat")), lit(10L))), truncate=F)
+    +----------------------------------------+
+    |point_index_geom(st_point(lon, lat), 10)|
+    +----------------------------------------+
+    |623385352048508927                      |
+    +----------------------------------------+
 
 
 polyfill
@@ -1074,6 +1597,16 @@ polyfill
    .. code-tab:: sql
 
     >>> SELECT polyfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
+    +------------------------------------------------------------+
+    |h3_polyfill(wkt, 0)                                         |
+    +------------------------------------------------------------+
+    |[577586652210266111, 578360708396220415, 577269992861466623]|
+    +------------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+    >>> showDF(select(df, polyfill(column("wkt"), lit(0L))), truncate=F)
     +------------------------------------------------------------+
     |h3_polyfill(wkt, 0)                                         |
     +------------------------------------------------------------+
@@ -1151,6 +1684,24 @@ mosaicfill
     | {[{false, 5774810...|
     +---------------------+
 
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+    >>> schema(select(df, mosaicfill(column("wkt"), lit(0L))))
+    root
+     |-- mosaicfill(wkt, 0): mosaic (nullable = true)
+     |    |-- chips: array (nullable = true)
+     |    |    |-- element: mosaic_chip (containsNull = true)
+     |    |    |    |-- is_core: boolean (nullable = true)
+     |    |    |    |-- h3: long (nullable = true)
+     |    |    |    |-- wkb: binary (nullable = true)
+    >>> showDF(select(df, mosaicfill(column("wkt"), lit(0L))))
+    +---------------------+
+    |mosaicfill(wkt, 0)   |
+    +---------------------+
+    | {[{false, 5774810...|
+    +---------------------+
+
 
 mosaic_explode
 **************
@@ -1159,7 +1710,7 @@ mosaic_explode
 
     Returns the set of Mosaic chips covering the input `geometry` at `resolution`.
 
-    In contrast to :ref:`mosaic_fill`, `mosaic_explode` generates one result row per chip.
+    In contrast to :ref:`mosaicfill`, `mosaic_explode` generates one result row per chip.
 
     :param geometry: Geometry
     :type geometry: Column
@@ -1221,4 +1772,21 @@ mosaic_explode
     |  false|577269992861466623|[01 03 00 00 00 0...|
     |  false|578360708396220415|[01 03 00 00 00 0...|
     +-------+------------------+--------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
+    >>> showDF(select(df, mosaic_explode(column("wkt"), lit(0L))))
+    +--------------------+
+    |               index|
+    +--------------------+
+    |{false, 577481099...|
+    |{false, 578044049...|
+    |{false, 578782920...|
+    |{false, 577023702...|
+    |{false, 577938495...|
+    |{false, 577586652...|
+    |{false, 577269992...|
+    |{false, 578360708...|
+    +--------------------+
 
