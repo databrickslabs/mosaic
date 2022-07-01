@@ -1,9 +1,11 @@
 package com.databricks.labs.mosaic.expressions.constructors
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{JTS, ESRI}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkSuite
+import org.gdal.gdal.gdal
+import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
 import org.scalatest.flatspec.AnyFlatSpec
 
 class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with SparkSuite {
@@ -36,6 +38,12 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
     "ST_MakePolygon" should "construct a polygon geometry with holes for any index system and any geometry API" in {
         it should behave like createST_MakePolygonWithHoles(MosaicContext.build(H3IndexSystem, ESRI), spark)
         it should behave like createST_MakePolygonWithHoles(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
+    "ReadFromGDAL" should "read a geotiff" in {
+        val inFile = getClass.getResource("/modis/MCMCD43A4.A2018185.h10v07.006.2018194033728_B02.TIF")
+        val dataset = gdal.Open(inFile.getPath, GA_ReadOnly)
+        val band = dataset.GetRasterBand(1)
     }
 
 }
