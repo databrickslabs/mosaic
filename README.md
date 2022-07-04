@@ -11,17 +11,30 @@ An extension to the [Apache Spark](https://spark.apache.org/) framework that all
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/databrickslabs/mosaic.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/databrickslabs/mosaic/context:python)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+## Why Mosaic?
 
-Mosaic provides:
-- easy conversion between common spatial data encodings (WKT, WKB and GeoJSON);
-- constructors to easily generate new geometries from Spark native data types;
-- many of the OGC SQL standard `ST_` functions implemented as Spark Expressions for transforming, aggregating and joining spatial datasets;
+Mosaic was created to simplify the implementation of scalable geospatial data pipelines by:
+* Bunding together common Open Source geospatial libraries and making them available via Apache Spark
+* Providing a set of examples and best practices for common geospatial use cases
+
+
+## What does it provide?
+Mosaic provides geospatial tools for
+* Data ingestion (WKT, WKB, GeoJSON)
+* Data Procesing
+    * Geometry and geography `ST_` operations (with [ESRI](https://github.com/Esri/geometry-api-java) or [JTS](https://github.com/locationtech/jts)) 
+    * Indexing (with [H3](https://github.com/uber/h3) or BNG)
+* Data visualisation ([Kepler](https://github.com/keplergl/kepler.gl))
+
+
+## How does it work?
+
 - high performance through implementation of Spark code generation within the core Mosaic functions;
 - optimisations for performing point-in-polygon joins using an approach we co-developed with Ordnance Survey ([blog post](https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html)); and
-- the choice of a Scala, SQL and Python API.
+- the choice of a Scala, SQL, R and Python API.
 
 
-![mosaic-logo](src/main/resources/MosaicLogicalDesign.png)
+![mosaic-logical-design](src/main/resources/MosaicLogicalDesign.png)
 Image1: Mosaic logical design.
 
 ## Getting started
