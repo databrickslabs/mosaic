@@ -236,7 +236,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <scala.version>2.12.10</scala.version>
+                <scala.version>2.13.8</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
                 <spark.version>3.2.1</spark.version>
             </properties>
