@@ -238,7 +238,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.2.1</spark.version>
+                <spark.version>3.3.0</spark.version>
             </properties>
         </profile>
     </profiles>
