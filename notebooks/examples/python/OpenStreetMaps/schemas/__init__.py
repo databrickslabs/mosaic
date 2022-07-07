@@ -1,1 +1,1 @@
-from .schemas import *
+from .schemas import nodes_schema, ways_schema, relations_schema
