@@ -16,9 +16,9 @@ The pipeline will
 ## Data flow
 
 The pipeline is divided in three notebooks
-* 0_Download - Will download the OSM dataset and ingest it into three delta tables
-* 1_Process - Will create the Delta Live Table transformations to process the OSM data and extract the building shapes and metadata, index and categorise
-* 2_Explore - Will display the density of residential and train station buildings
+* `0_Download` Will download the OSM dataset and ingest it into three delta tables
+* `1_Process` Will create the Delta Live Table transformations to process the OSM data and extract the building shapes and metadata, index and categorise
+* `2_Explore` Will display the density of residential and train station buildings
 
 ![Full pipeline](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/Readme_FullPipeline.png)
 
@@ -26,6 +26,8 @@ The pipeline is divided in three notebooks
 
 You should be able to visualise the final result in the 2_Explore notebook
 
+### Residential building density
 ![Building density](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/Readme_BuildingDensity.png)
 
+## Train station building density
 ![Train station density](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/Readme_TrainStationDensity.png)
