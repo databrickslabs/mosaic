@@ -15,7 +15,7 @@
 # MAGIC 
 # MAGIC This notebook will create one delta table for each of this element types.
 # MAGIC 
-# MAGIC ![Diagram](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/0_Diagram.png)
+# MAGIC ![Diagram](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/0_Download.png)
 # MAGIC 
 # MAGIC ## Note: INSTALL XML libraries before running this notebook!
 # MAGIC 
