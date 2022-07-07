@@ -133,22 +133,7 @@ display(dbutils.fs.ls(raw_path + "raw"))
 
 # COMMAND ----------
 
-from pyspark.sql.types import *
-
-nodes_schema = StructType([
-    StructField("_id", LongType(), True),
-    StructField("_lat", DoubleType(), True),
-    StructField("_lon", DoubleType(), True),
-    StructField("_timestamp", TimestampType(), True),
-    StructField("_visible", BooleanType(), True),
-    StructField("_version", IntegerType(), True),
-    StructField("tag", ArrayType(
-      StructType([
-         StructField("_VALUE", StringType(), True),
-         StructField("_k", StringType(), True),
-         StructField("_v", StringType(), True),
-      ])
-    ), True)])
+from schemas import nodes_schema, ways_schema, relations_schema
 
 nodes = (spark
       .read
@@ -159,33 +144,12 @@ nodes = (spark
 
 nodes.write.format("delta").mode("overwrite").save(f"{raw_path}/bronze/nodes")
 
-
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### Ways
 
 # COMMAND ----------
-
-ways_schema = StructType([
-    StructField("_id", LongType(), True),
-    StructField("_timestamp", TimestampType(), True),
-    StructField("_visible", BooleanType(), True),
-    StructField("_version", IntegerType(), True),
-    StructField("tag", ArrayType(
-      StructType([
-         StructField("_VALUE", StringType(), True),
-         StructField("_k", StringType(), True),
-         StructField("_v", StringType(), True),
-      ])
-    ), True),
-    StructField("nd", ArrayType(
-        StructType([
-           StructField("_VALUE", StringType(), True),
-           StructField("_ref", LongType(), True)
-        ])
-      ), True)
-])
 
 ways = (spark
       .read
@@ -203,34 +167,13 @@ ways.write.format("delta").mode("overwrite").save(f"{raw_path}/bronze/ways")
 
 # COMMAND ----------
 
-relations_schema = StructType([
-    StructField("_id", LongType(), True),
-    StructField("_timestamp", TimestampType(), True),
-    StructField("_visible", BooleanType(), True),
-    StructField("_version", IntegerType(), True),
-    StructField("tag", ArrayType(
-      StructType([
-         StructField("_VALUE", StringType(), True),
-         StructField("_k", StringType(), True),
-         StructField("_v", StringType(), True),
-      ])
-    ), True),
-    StructField("member", ArrayType(
-      StructType([
-         StructField("_VALUE", StringType(), True),
-         StructField("_ref", LongType(), True),
-         StructField("_role", StringType(), True),
-         StructField("_type", StringType(), True),
-      ])
-      ), True)
-])
-
 relations = (spark
       .read
       .format("xml")
       .options(rowTag="relation") # Only extract relations
       .load(f"{raw_path}/raw/", schema=relations_schema)
      )
+
 relations.write.format("delta").mode("overwrite").save(f"{raw_path}/bronze/relations")
 
 # COMMAND ----------
