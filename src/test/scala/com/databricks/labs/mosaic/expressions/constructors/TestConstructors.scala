@@ -42,8 +42,7 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
     }
 
     "ReadFromGDAL" should "read a geotiff" in {
-        val nu = NativeUtils()
-        nu.loadLibraryFromJar("/CRSBounds.csv")
+        NativeUtils.loadLibraryFromJar("/GDAL.libs/libcrypto-de69073a.so.0.9.8e")
 //        val inFile = getClass.getResource("/modis/MCMCD43A4.A2018185.h10v07.006.2018194033728_B02.TIF")
 //        val dataset = gdal.Open(inFile.getPath, GA_ReadOnly)
 //        val band = dataset.GetRasterBand(1)
