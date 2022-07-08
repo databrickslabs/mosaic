@@ -67,13 +67,13 @@ class NativeUtils {
           */
         def loadLibraryFromJar(path: String): Unit = {
           val filename = path match {
-            case p: String if p == null || !p.startsWith("/") => throw new IOException("The path has to be absolute (start with '/').")
+            case p: String if p == null || !p.startsWith("/") => throw new IllegalArgumentException("The path has to be absolute (start with '/').")
             case p: String =>
               val parts = p.split("/")
               if (parts.length > 1) parts(parts.length - 1) else null
           }
             // Check if the filename is okay
-            if (filename == null || filename.length < MIN_PREFIX_LENGTH) throw new IOException("The filename has to be at least 3 characters long.")
+            if (filename == null || filename.length < MIN_PREFIX_LENGTH) throw new IllegalArgumentException("The filename has to be at least 3 characters long.")
             // Prepare temporary file
             if (temporaryDir == null) {
               temporaryDir = createTempDirectory(NATIVE_FOLDER_PATH_PREFIX)
