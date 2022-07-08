@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkSuite
 import com.databricks.labs.mosaic.utils.NativeUtils
-//import org.gdal.gdal.gdal
+import org.gdal.gdal.gdal
 import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -42,10 +42,31 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
     }
 
     "ReadFromGDAL" should "read a geotiff" in {
-        NativeUtils.loadLibraryFromJar("/GDAL.libs/libcrypto-de69073a.so.0.9.8e")
-//        val inFile = getClass.getResource("/modis/MCMCD43A4.A2018185.h10v07.006.2018194033728_B02.TIF")
-//        val dataset = gdal.Open(inFile.getPath, GA_ReadOnly)
-//        val band = dataset.GetRasterBand(1)
+        val libs = Seq(
+            "/GDAL.libs/libcrypto-de69073a.so.0.9.8e",
+            "/GDAL.libs/libcurl-9bc4ffbf.so.4.7.0",
+            "/GDAL.libs/libexpat-c5a39682.so.1.6.11",
+            "/GDAL.libs/libgeos--no-undefined-82dbfb1f.so",
+            "/GDAL.libs/libgeos_c-d134951e.so.1.14.3",
+            "/GDAL.libs/libhdf5-13db72d8.so.200.0.0",
+            "/GDAL.libs/libhdf5_hl-76c8603c.so.200.0.0",
+            "/GDAL.libs/libjasper-21c09ccf.so.1.0.0",
+            "/GDAL.libs/libjson-c-ca0558d5.so.2.0.1",
+            "/GDAL.libs/libnetcdf-f68a7300.so.13.1.1",
+            "/GDAL.libs/libopenjp2-f1d08cc2.so.2.3.1",
+            "/GDAL.libs/libsqlite3-13a07f98.so.0.8.6",
+            "/GDAL.libs/libtiff-d64010d8.so.5.5.0",
+            "/GDAL.libs/libwebp-25902a0b.so.7.1.0",
+            "/GDAL.libs/libproj-268837f3.so.22.2.1",
+            "/GDAL.libs/libgdal-39073f84.so.30.0.1",
+            "/GDAL.libs/libgdalalljni.so",
+        )
+        libs.foreach(NativeUtils.loadLibraryFromJar)
+        gdal.AllRegister()
+        val inFile = getClass.getResource("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
+        val dataset = gdal.Open(inFile.getPath, GA_ReadOnly)
+        val band = dataset.GetRasterBand(1)
+        println(s"x-pixels: ${band.getXSize}, y-pixels: ${band.getYSize}")
     }
 
 }
