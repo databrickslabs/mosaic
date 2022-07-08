@@ -115,10 +115,8 @@ def lines():
     
       # Collect an ordered list of points by way ID
       .withColumn("point", mos.st_point("lon", "lat"))
-      .repartition("id")
-      .sortWithinPartitions("pos")
-      .groupBy("id")
-      .agg(f.collect_list("point").alias("points"))
+      .agg(f.collect_list(f.struct("pos", "point")).alias("points"))
+      .withColumn("points", f.expr("transform(sort_array(points), x -> x.point)"))
       
       # Make and validate line
       .withColumn("line", mos.st_makeline("points"))
