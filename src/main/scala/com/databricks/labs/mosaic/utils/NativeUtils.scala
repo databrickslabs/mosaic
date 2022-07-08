@@ -106,3 +106,9 @@ class NativeUtils {
             generatedDir
         }
 }
+
+object NativeUtils {
+  def apply(): NativeUtils = {
+    new NativeUtils
+  }
+}

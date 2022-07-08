@@ -4,7 +4,8 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkSuite
-import org.gdal.gdal.gdal
+import com.databricks.labs.mosaic.utils.NativeUtils
+//import org.gdal.gdal.gdal
 import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -41,9 +42,11 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
     }
 
     "ReadFromGDAL" should "read a geotiff" in {
-        val inFile = getClass.getResource("/modis/MCMCD43A4.A2018185.h10v07.006.2018194033728_B02.TIF")
-        val dataset = gdal.Open(inFile.getPath, GA_ReadOnly)
-        val band = dataset.GetRasterBand(1)
+        val nu = NativeUtils()
+        nu.loadLibraryFromJar("/CRSBounds.csv")
+//        val inFile = getClass.getResource("/modis/MCMCD43A4.A2018185.h10v07.006.2018194033728_B02.TIF")
+//        val dataset = gdal.Open(inFile.getPath, GA_ReadOnly)
+//        val band = dataset.GetRasterBand(1)
     }
 
 }
