@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.utils
 import java.io.{File, IOException, FileNotFoundException}
 import java.nio.file.{Files, StandardCopyOption}
 
-class Natives {
+class NativeUtils {
 
     /*
      * Class NativeUtils is published under the The MIT License:
