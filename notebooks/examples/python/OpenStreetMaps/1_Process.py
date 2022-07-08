@@ -174,51 +174,24 @@ def polygons():
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Tags
+# MAGIC ### Buildings
 
 # COMMAND ----------
 
-
-@dlt.table()
-def ways_tags():
-  return (
-    dlt.read("ways")
+def get_simple_buildings():
+  
+  building_tags = (dlt.read("ways")
       .select(
         f.col("_id").alias("id"),
         f.explode_outer("tag")
        )
        .select(f.col("id"), f.col("col._k").alias("key"), f.col("col._v").alias("value"))
-    )
-
-  
-@dlt.table(comment="relation tags")
-def relation_tags():
-  keys_of_interes = ["type", "restriction", "landuse", "name", "network", "route", "ref", "building", "source", "operator", "natural", "website"]
-  return (
-    dlt.read("relations")
-      .withColumnRenamed("_id", "id")
-      .select("id", f.explode_outer("tag"))
-      .withColumn("key", f.col("col._k"))
-      .withColumn("val", f.col("col._v"))
-      .groupBy("id")
-      .pivot("key", keys_of_interes)
-      .agg(f.first("val"))
-    )
-  
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Buildings
-
-# COMMAND ----------
-
-@dlt.table()
-@dlt.expect_or_drop("is_valid", "is_valid")
-def simple_buildings():
+       .filter(f.col("key") == "building")
+  )
+      
   return (
     dlt.read("lines")
-      .join(dlt.read("ways_tags").filter(f.col("key") == "building"), "id")
+      .join(building_tags, "id")
       .withColumnRenamed("value", "building")
 
       # A valid polygon needs at least 3 vertices + a closing point
@@ -231,11 +204,22 @@ def simple_buildings():
       .drop("line", "key")
      )
 
-@dlt.table()
-def complex_buildings():
+def get_complex_buildings():
+  keys_of_interes = ["type", "building"]
+  
+  relation_tags = (dlt.read("relations")
+      .withColumnRenamed("_id", "id")
+      .select("id", f.explode_outer("tag"))
+      .withColumn("key", f.col("col._k"))
+      .withColumn("val", f.col("col._v"))
+      .groupBy("id")
+      .pivot("key", keys_of_interes)
+      .agg(f.first("val"))
+  )
+  
   return (
     dlt.read("polygons")
-      .join(dlt.read("relation_tags"), "id")
+      .join(relation_tags, "id")
       
       # Only get polygons
       .filter(f.col("type") == "multipolygon")
@@ -243,21 +227,26 @@ def complex_buildings():
       # Only get buildings
       .filter(f.col("building").isNotNull())
   )
-  
+
 @dlt.table()
 def buildings():
   fields = ["id", "building", "polygon"]
+  complex_buildings = get_complex_buildings().select(fields)
+  simple_buildings = get_simple_buildings().select(fields)
+  
+  return complex_buildings.union(simple_buildings)
+  
+  
+@dlt.table()
+def buildings_indexed():
   return (
-    dlt.read("complex_buildings")
-      .select(fields)
-      .union(dlt.read("simple_buildings").select(fields))
+    dlt.read("buildings")
       .withColumn("centroid", mos.st_centroid2D("polygon"))
       .withColumn("centroid_index_res_5", mos.point_index_lonlat("centroid.x", "centroid.y", f.lit(5)))
       .withColumn("centroid_index_res_6", mos.point_index_lonlat("centroid.x", "centroid.y", f.lit(6)))
       .withColumn("centroid_index_res_7", mos.point_index_lonlat("centroid.x", "centroid.y", f.lit(7)))
       .withColumn("centroid_index_res_8", mos.point_index_lonlat("centroid.x", "centroid.y", f.lit(8)))
   )
-  
 
 # COMMAND ----------
 
@@ -269,27 +258,27 @@ def buildings():
 @dlt.table()
 def residential_buildings():
   return (
-    dlt.read("buildings")
+    dlt.read("buildings_indexed")
       .filter(f.col("building").isin(["yes", "residential", "house", "apartments"]))
   )
   
 @dlt.table()
 def hospital_buildings():
   return (
-    dlt.read("buildings")
+    dlt.read("buildings_indexed")
       .filter(f.col("building").isin(["hospital"]))
   )
   
 @dlt.table()
 def university_buildings():
   return (
-    dlt.read("buildings")
+    dlt.read("buildings_indexed")
       .filter(f.col("building").isin(["university"]))
   )
 
 @dlt.table()
 def train_station_buildings():
   return (
-    dlt.read("buildings")
+    dlt.read("buildings_indexed")
       .filter(f.col("building").isin(["train_station"]))
   )
