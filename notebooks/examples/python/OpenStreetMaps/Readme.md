@@ -2,7 +2,7 @@
 
 This is an example of how to ingest and process Open Street Maps using Databricks Delta Live Tablas and Mosaic.
 
-The objective of this example is processing the OSM dataset to identify the density of residential buildings, hospitals and train stations across Italy.
+The aim is to ingest and process OSM data and form the medallion layers of our delta lake following the best practices. Then used these tables to identify the density of residential buildings, hospitals and train stations across Italy as an example of the new insights this capability unlocks.
 
 ![Conceptual diagram](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/Readme_ConceptDiagram.png)
 

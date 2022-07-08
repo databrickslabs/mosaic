@@ -43,7 +43,6 @@ mirror_index_url = "https://download.geofabrik.de/index-v1-nogeom.json"
 
 # COMMAND ----------
 
-import os
 import pathlib
 
 # The DBFS file system is mounted under /dbfs/ directory on Databricks cluster nodes
@@ -71,8 +70,7 @@ available_regions
 
 # Define which regions to download
 regions = [
-  'italy'
-  
+  'italy',
 #   'africa', 
 #   'antarctica', 
 #   'asia', 

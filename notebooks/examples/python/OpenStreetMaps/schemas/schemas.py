@@ -1,4 +1,4 @@
-from pyspark.sql.types import *
+from pyspark.sql.types import LongType, TimestampType, BooleanType, IntegerType, StringType, StructField, ArrayType, StructType, DoubleType
 
 id_field = StructField("_id", LongType(), True)
 
