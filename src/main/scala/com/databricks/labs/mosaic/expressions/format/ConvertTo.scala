@@ -1,16 +1,14 @@
 package com.databricks.labs.mosaic.expressions.format
 
-import java.util.Locale
-
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.types._
-
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
+
+import java.util.Locale
 
 @ExpressionDescription(
   usage = "_FUNC_(expr1, dataType) - Converts expr1 to the specified data type.",
@@ -114,6 +112,17 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
         }
     }
 
+    def getOutType: DataType =
+        outDataType.toUpperCase(Locale.ROOT) match {
+            case "WKT"     => StringType
+            case "WKB"     => BinaryType
+            case "HEX"     => HexType
+            case "JSON"    => JSONType
+            case "GEOJSON" => JSONType
+            case "COORDS"  => InternalGeometryType
+            case _         => throw new IllegalArgumentException(s"OutDataType ${outDataType.toUpperCase(Locale.ROOT)} not supported.")
+        }
+
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val res = ConvertTo(
           newArgs(0).asInstanceOf[Expression],
@@ -126,7 +135,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
 
     override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
         val geometryAPI = GeometryAPI.apply(geometryAPIName)
-        ConvertToCodeGen.doCodeGenESRI(
+        ConvertToCodeGen.doCodeGen(
           ctx,
           ev,
           nullSafeCodeGen,
@@ -135,17 +144,6 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
           geometryAPI
         )
     }
-
-    def getOutType: DataType =
-        outDataType.toUpperCase(Locale.ROOT) match {
-            case "WKT"     => StringType
-            case "WKB"     => BinaryType
-            case "HEX"     => HexType
-            case "JSON"    => JSONType
-            case "GEOJSON" => JSONType
-            case "COORDS"  => InternalGeometryType
-            case _         => ???
-        }
 
     override def child: Expression = inGeometry
 

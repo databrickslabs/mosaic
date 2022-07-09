@@ -1,14 +1,15 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import java.util.Locale
-
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen._
 import org.apache.spark.sql.types.{DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
+
+import java.util.Locale
+import scala.util.{Success, Try}
 
 case class ST_GeometryType(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
@@ -44,24 +45,32 @@ case class ST_GeometryType(inputGeom: Expression, geometryAPIName: String) exten
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val javaStringClass = CodeGenerator.javaType(StringType)
               // TODO: code can be simplified if the function is registered and called 2 times
-              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
+              val tryIO = Try {
+                  ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
+              }
 
               // not merged into the same code block due to JTS IOException throwing
               // ESRI code will always remain simpler
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                   |$inCode
-                                   |${ev.value} = $javaStringClass.fromString($geomInRef.geometryType());
-                                   |""".stripMargin
-                  case "JTS" => s"""
-                                   |try {
-                                   |$inCode
-                                   |${ev.value} = $javaStringClass.fromString($geomInRef.getGeometryType());
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
-
+              (tryIO, geometryAPI) match {
+                  case (
+                        Success((inCode, geomInRef)),
+                        ESRI
+                      ) => s"""
+                              |$inCode
+                              |${ev.value} = $javaStringClass.fromString($geomInRef.geometryType());
+                              |""".stripMargin
+                  case (
+                        Success((inCode, geomInRef)),
+                        JTS
+                      ) => s"""
+                              |try {
+                              |$inCode
+                              |${ev.value} = $javaStringClass.fromString($geomInRef.getGeometryType());
+                              |} catch (Exception e) {
+                              | throw e;
+                              |}
+                              |""".stripMargin
+                  case _ => throw new IllegalArgumentException(s"Geometry API unsupported: $geometryAPIName.")
               }
           }
         )

@@ -3,14 +3,15 @@ package com.databricks.labs.mosaic.codegen.format
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.types._
-
 import org.apache.spark.sql.catalyst.expressions.codegen._
 import org.apache.spark.sql.types._
+
+import scala.util.{Success, Try}
 
 object ConvertToCodeGen {
 
     // noinspection DuplicatedCode
-    def doCodeGenESRI(
+    def doCodeGen(
         ctx: CodegenContext,
         ev: ExprCode,
         nullSafeCodeGen: (CodegenContext, ExprCode, String => String) => ExprCode,
@@ -27,24 +28,33 @@ object ConvertToCodeGen {
                      |${ev.value} = $eval;
                      |""".stripMargin
               } else {
-                  val (inCode, geomInRef) = readGeometryCode(ctx, eval, inputDataType, geometryAPI)
-                  val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataType, geometryAPI)
-
-                  geometryAPI.name match {
-                      case n if n == ESRI.name => s"""
-                                                     |$inCode
-                                                     |$outCode
-                                                     |${ev.value} = $geomOutRef;
-                                                     |""".stripMargin
-                      case n if n == JTS.name  => s"""
-                                                    |try {
-                                                    |$inCode
-                                                    |$outCode
-                                                    |${ev.value} = $geomOutRef;
-                                                    |} catch (Exception e) {
-                                                    | throw e;
-                                                    |}
-                                                    |""".stripMargin
+                  val tryIO = Try {
+                      val (inCode, geomInRef) = readGeometryCode(ctx, eval, inputDataType, geometryAPI)
+                      val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataType, geometryAPI)
+                      ((inCode, geomInRef), (outCode, geomOutRef))
+                  }
+                  (tryIO, geometryAPI) match {
+                      case (
+                            Success(((inCode, _), (outCode, geomOutRef))),
+                            ESRI
+                          ) => s"""
+                                  |$inCode
+                                  |$outCode
+                                  |${ev.value} = $geomOutRef;
+                                  |""".stripMargin
+                      case (
+                            Success(((inCode, _), (outCode, geomOutRef))),
+                            JTS
+                          ) => s"""
+                                  |try {
+                                  |$inCode
+                                  |$outCode
+                                  |${ev.value} = $geomOutRef;
+                                  |} catch (Exception e) {
+                                  | throw e;
+                                  |}
+                                  |""".stripMargin
+                      case _ => throw new IllegalArgumentException(s"Geometry API unsupported: ${geometryAPI.name}.")
                   }
               }
           }
@@ -53,9 +63,10 @@ object ConvertToCodeGen {
 
     // noinspection DuplicatedCode
     def readGeometryCode(ctx: CodegenContext, eval: String, inputDataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
-        val geometryCodeGen = geometryAPI.name match {
-            case n if n == ESRI.name => MosaicGeometryIOCodeGenESRI
-            case n if n == JTS.name  => MosaicGeometryIOCodeGenJTS
+        val geometryCodeGen = geometryAPI match {
+            case ESRI => MosaicGeometryIOCodeGenESRI
+            case JTS  => MosaicGeometryIOCodeGenJTS
+            case _    => throw new IllegalArgumentException(s"Geometry API unsupported: ${geometryAPI.name}.")
         }
         // noinspection ScalaStyle
         inputDataType match {
@@ -64,15 +75,16 @@ object ConvertToCodeGen {
             case HexType              => geometryCodeGen.fromHex(ctx, eval, geometryAPI)
             case JSONType             => geometryCodeGen.fromJSON(ctx, eval, geometryAPI)
             case InternalGeometryType => geometryCodeGen.fromInternal(ctx, eval, geometryAPI)
-            case KryoType             => throw new NotImplementedError("KryoType is not Supported yet.")
+            case _                    => throw new IllegalArgumentException(s"Geometry API unsupported: ${inputDataType.typeName}.")
         }
     }
 
     // noinspection DuplicatedCode
     def writeGeometryCode(ctx: CodegenContext, eval: String, outputDataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
-        val geometryCodeGen = geometryAPI.name match {
-            case n if n == ESRI.name => MosaicGeometryIOCodeGenESRI
-            case n if n == JTS.name  => MosaicGeometryIOCodeGenJTS
+        val geometryCodeGen = geometryAPI match {
+            case ESRI => MosaicGeometryIOCodeGenESRI
+            case JTS  => MosaicGeometryIOCodeGenJTS
+            case _    => throw new IllegalArgumentException(s"Geometry API unsupported: ${geometryAPI.name}.")
         }
         // noinspection ScalaStyle
         outputDataType match {
@@ -81,7 +93,7 @@ object ConvertToCodeGen {
             case HexType              => geometryCodeGen.toHEX(ctx, eval, geometryAPI)
             case JSONType             => geometryCodeGen.toJSON(ctx, eval, geometryAPI)
             case InternalGeometryType => geometryCodeGen.toInternal(ctx, eval, geometryAPI)
-            case KryoType             => throw new NotImplementedError("KryoType is not Supported yet.")
+            case _                    => throw new IllegalArgumentException(s"Data type unsupported: ${outputDataType.typeName}.")
         }
     }
 

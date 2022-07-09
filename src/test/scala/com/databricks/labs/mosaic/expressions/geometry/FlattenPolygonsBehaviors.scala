@@ -1,21 +1,23 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
-import org.apache.spark.sql.{AnalysisException, SparkSession}
+import org.apache.spark.sql.{AnalysisException, QueryTest}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.locationtech.jts.io.{WKBReader, WKTReader}
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
+trait FlattenPolygonsBehaviors extends QueryTest {
 
-    def flattenWKBPolygon(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
+    def flattenWKBPolygon(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val df = getWKTRowsDf(mc).withColumn("wkb", convert_to(col("wkt"), "wkb"))
 
@@ -61,10 +63,11 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
         sqlFlattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def flattenWKTPolygon(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
+    def flattenWKTPolygon(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val df = getWKTRowsDf(mc)
 
@@ -110,10 +113,11 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
         sqlFlattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def flattenCOORDSPolygon(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
+    def flattenCOORDSPolygon(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val df = getWKTRowsDf(mc)
             .withColumn("coords", convert_to(col("wkt"), "coords"))
@@ -170,10 +174,11 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
         sqlFlattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def flattenHEXPolygon(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
+    def flattenHEXPolygon(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val df = getWKTRowsDf(mc)
             .withColumn("hex", convert_to(col("wkt"), "hex"))
@@ -230,10 +235,11 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
         sqlFlattenedGeoms2.zip(geoms).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def failDataTypeCheck(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
+    def failDataTypeCheck(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val df = getWKTRowsDf(mc)
             .withColumn("hex", struct(lit(1), convert_to(col("wkt"), "hex")))
@@ -247,25 +253,28 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
 
     }
 
-    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
+    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val df = getWKTRowsDf(mc)
             .withColumn("hex", convert_to(col("wkt"), "hex"))
             .withColumn("wkb", convert_to(col("wkt"), "wkb"))
             .withColumn("coords", convert_to(col("wkt"), "coords"))
 
-        val wktFlatten = FlattenPolygons(df.col("wkt").expr, mosaicContext.getGeometryAPI.name)
-        val wkbFlatten = FlattenPolygons(df.col("wkb").expr, mosaicContext.getGeometryAPI.name)
-        val hexFlatten = FlattenPolygons(df.col("hex").expr, mosaicContext.getGeometryAPI.name)
-        val coordsFlatten = FlattenPolygons(df.col("coords").expr, mosaicContext.getGeometryAPI.name)
+        val wktFlatten = FlattenPolygons(df.col("wkt").expr, geometryAPI.name)
+        val wkbFlatten = FlattenPolygons(df.col("wkb").expr, geometryAPI.name)
+        val hexFlatten = FlattenPolygons(df.col("hex").expr, geometryAPI.name)
+        val coordsFlatten = FlattenPolygons(df.col("coords").expr, geometryAPI.name)
+        val structFlatten = FlattenPolygons(struct(lit(1), df.col("coords")).expr, geometryAPI.name)
 
         wktFlatten.elementSchema.head.dataType shouldEqual StringType
         wkbFlatten.elementSchema.head.dataType shouldEqual BinaryType
         hexFlatten.elementSchema.head.dataType shouldEqual HexType
         coordsFlatten.elementSchema.head.dataType shouldEqual InternalGeometryType
+        an [IllegalArgumentException] should be thrownBy structFlatten.elementSchema
 
         wktFlatten.collectionType shouldEqual StringType
         wkbFlatten.collectionType shouldEqual BinaryType
@@ -276,6 +285,11 @@ trait FlattenPolygonBehaviors { this: AnyFlatSpec =>
         wkbFlatten.position shouldEqual false
         hexFlatten.position shouldEqual false
         coordsFlatten.position shouldEqual false
+
+        wktFlatten.inline shouldEqual false
+        wkbFlatten.inline shouldEqual false
+        hexFlatten.inline shouldEqual false
+        coordsFlatten.inline shouldEqual false
 
         noException should be thrownBy wktFlatten.makeCopy(Array(wktFlatten.child))
         noException should be thrownBy wkbFlatten.makeCopy(Array(wktFlatten.child))

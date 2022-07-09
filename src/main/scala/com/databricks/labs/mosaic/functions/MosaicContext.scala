@@ -242,7 +242,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         registry.registerFunction(
           FunctionIdentifier("st_buffer", database),
           ST_Buffer.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_Buffer(exprs(0), exprs(1), geometryAPI.name)
+          (exprs: Seq[Expression]) => ST_Buffer(exprs(0), ColumnAdapter(exprs(1)).cast("double").expr, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("st_numpoints", database),
@@ -401,8 +401,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_Scale(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
         def st_rotate(geom1: Column, td: Column): Column = ColumnAdapter(ST_Rotate(geom1.expr, td.expr, geometryAPI.name))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))
-        def st_buffer(geom: Column, radius: Column): Column = ColumnAdapter(ST_Buffer(geom.expr, radius.expr, geometryAPI.name))
-        def st_buffer(geom: Column, radius: Double): Column = ColumnAdapter(ST_Buffer(geom.expr, lit(radius).expr, geometryAPI.name))
+        def st_buffer(geom: Column, radius: Column): Column = ColumnAdapter(ST_Buffer(geom.expr, radius.cast("double").expr, geometryAPI.name))
+        def st_buffer(geom: Column, radius: Double): Column = ColumnAdapter(ST_Buffer(geom.expr, lit(radius).cast("double").expr, geometryAPI.name))
         def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
         def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, geometryAPI.name))
         def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))

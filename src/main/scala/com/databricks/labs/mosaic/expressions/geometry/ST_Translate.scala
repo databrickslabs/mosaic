@@ -2,10 +2,12 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.geometry.GeometryTransformationsCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
+
+import scala.util.{Success, Try}
 
 case class ST_Translate(inputGeom: Expression, xd: Expression, yd: Expression, geometryAPIName: String)
     extends TernaryExpression
@@ -49,23 +51,29 @@ case class ST_Translate(inputGeom: Expression, xd: Expression, yd: Expression, g
           ev,
           (firstEval, secondEval, thirdEval) => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val (code, result) =
-                  GeometryTransformationsCodeGen.translate(ctx, firstEval, secondEval, thirdEval, inputGeom.dataType, geometryAPI)
+              val tryIO =
+                  Try(GeometryTransformationsCodeGen.translate(ctx, firstEval, secondEval, thirdEval, inputGeom.dataType, geometryAPI))
 
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                   |$code
-                                   |${ev.value} = $result;
-                                   |""".stripMargin
-                  case "JTS" => s"""
-                                   |try {
-                                   |$code
-                                   |${ev.value} = $result;
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
-
+              (tryIO, geometryAPI) match {
+                  case (
+                        Success((code, result)),
+                        ESRI
+                      ) => s"""
+                              |$code
+                              |${ev.value} = $result;
+                              |""".stripMargin
+                  case (
+                        Success((code, result)),
+                        JTS
+                      ) => s"""
+                              |try {
+                              |$code
+                              |${ev.value} = $result;
+                              |} catch (Exception e) {
+                              | throw e;
+                              |}
+                              |""".stripMargin
+                  case _ => throw new IllegalArgumentException(s"Geometry API unsupported: $geometryAPIName.")
               }
           }
         )

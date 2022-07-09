@@ -1,11 +1,13 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
+import com.databricks.labs.mosaic.core.geometry.api._
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{DataType, DoubleType}
+
+import scala.util.{Success, Try}
 
 case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
@@ -39,20 +41,27 @@ case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends Unary
           ev,
           eval => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, eval, inputGeom.dataType, geometryAPI)
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                   |$inCode
-                                   |${ev.value} = $geomInRef.getEsriGeometry().calculateArea2D();
-                                   |""".stripMargin
-                  case "JTS" => s"""
-                                   |try {
-                                   |$inCode
-                                   |${ev.value} = $geomInRef.getArea();
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
+              val tryIO = Try(ConvertToCodeGen.readGeometryCode(ctx, eval, inputGeom.dataType, geometryAPI))
+              (tryIO, geometryAPI) match {
+                  case (
+                        Success((inCode, geomInRef)),
+                        ESRI
+                      ) => s"""
+                              |$inCode
+                              |${ev.value} = $geomInRef.getEsriGeometry().calculateArea2D();
+                              |""".stripMargin
+                  case (
+                        Success((inCode, geomInRef)),
+                        JTS
+                      ) => s"""
+                              |try {
+                              |$inCode
+                              |${ev.value} = $geomInRef.getArea();
+                              |} catch (Exception e) {
+                              | throw e;
+                              |}
+                              |""".stripMargin
+                  case _ => throw new IllegalArgumentException(s"Geometry API unsupported: $geometryAPIName.")
               }
           }
         )

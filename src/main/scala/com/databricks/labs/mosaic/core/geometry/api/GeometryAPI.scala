@@ -1,16 +1,15 @@
 package com.databricks.labs.mosaic.core.geometry.api
 
-import java.util.Locale
-
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point._
 import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.uber.h3core.util.GeoCoord
-
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+
+import java.util.Locale
 
 abstract class GeometryAPI(
     reader: GeometryReader
@@ -106,12 +105,14 @@ object GeometryAPI extends Serializable {
         name match {
             case "JTS"  => JTS
             case "ESRI" => ESRI
+            case _      => Illegal
         }
 
     def getReader(name: String): GeometryReader =
         name match {
             case "JTS"  => MosaicGeometryJTS
             case "ESRI" => MosaicGeometryESRI
+            case _      => throw new IllegalArgumentException(s"Geometry API unsupported: $name.")
         }
 
     object ESRI extends GeometryAPI(MosaicGeometryESRI) {
@@ -121,6 +122,7 @@ object GeometryAPI extends Serializable {
         override def fromGeoCoord(point: GeoCoord): MosaicPoint = MosaicPointESRI(point)
 
         override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointESRI(coords)
+
     }
 
     object JTS extends GeometryAPI(MosaicGeometryJTS) {
@@ -130,6 +132,18 @@ object GeometryAPI extends Serializable {
         override def fromGeoCoord(geoCoord: GeoCoord): MosaicPoint = MosaicPointJTS(geoCoord)
 
         override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointJTS(coords)
+
+    }
+
+    // Added to better support case matching and to avoid deflating test coverage over _ case.
+    object Illegal extends GeometryAPI(null) {
+
+        override def name: String = "Illegal"
+
+        override def fromGeoCoord(point: GeoCoord): MosaicPoint = throw new IllegalArgumentException(s"Geometry API unsupported: $name.")
+
+        override def fromCoords(coords: Seq[Double]): MosaicPoint = throw new IllegalArgumentException(s"Geometry API unsupported: $name.")
+
     }
 
 }

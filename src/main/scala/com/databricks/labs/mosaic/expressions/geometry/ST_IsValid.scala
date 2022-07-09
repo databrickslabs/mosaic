@@ -17,15 +17,11 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
 
     override def nullSafeEval(input1: Any): Any = {
         val geometryAPI = GeometryAPI(geometryAPIName)
-        geometryAPIName match {
-            case "ESRI" =>
-                val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-                geom.isValid
-            case "JTS" => Try {
-                    val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-                    geom.isValid
-                }.getOrElse(false)
-        }
+        // Invalid format should not crash the execution
+        Try {
+            val geom = geometryAPI.geometry(input1, inputGeom.dataType)
+            geom.isValid
+        }.getOrElse(false)
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
@@ -43,12 +39,15 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
 
-              // not merged into the same code block due to JTS IOException throwing
-              // OGC code will always remain simpler
+              // Invalid format should not crash the execution
               geometryAPIName match {
                   case "ESRI" => s"""
+                                   |try {
                                    |$inCode
                                    |${ev.value} = $geomInRef.isSimple();
+                                   |} catch (Exception e) {
+                                   | ${ev.value} = false;
+                                   |}
                                    |""".stripMargin
                   case "JTS" => s"""
                                    |try {

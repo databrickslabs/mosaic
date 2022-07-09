@@ -126,12 +126,10 @@ object BNGIndexSystem extends IndexSystem with Serializable {
     }
 
     /**
-      * A radius of minimal enclosing circle is always smaller than the largest
-      * side of the skewed hexagon. Since H3 is generating hexagons that take
-      * into account curvature of the spherical envelope a radius may be
-      * different at different localities due to the skew. To address this
-      * problem a centroid hexagon is selected from the geometry and the optimal
-      * radius is computed based on this hexagon.
+      * Returns a half diagonal of the index geometry. Since this is a planar
+      * index system, there is no need to account for skew, both diagonals
+      * have the same length. It is sufficient to do square root of 2 times
+      * the length of the edge to determine the diagonal.
       *
       * @param geometry
       *   An instance of [[MosaicGeometry]] for which we are computing the
@@ -148,8 +146,10 @@ object BNGIndexSystem extends IndexSystem with Serializable {
     }
 
     /**
-      * H3 polyfill logic is based on the centroid point of the individual index
+      * Polyfill logic is based on the centroid point of the individual index
       * geometry. Blind spots do occur near the boundary of the geometry.
+      * The decision to use centroid based logic is made to align with what
+      * is done in H3 and unify the logic between index systems.
       *
       * @param geometry
       *   Input geometry to be represented.
@@ -162,12 +162,12 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         require(geometryAPI.isDefined, "GeometryAPI cannot be None for BNG Index System.")
         @tailrec
         def visit(queue: Set[Long], visited: Set[Long], result: Set[Long]): Set[Long] = {
-            val visits = queue.map(index => (index, geometry.intersects(indexToGeometry(index, geometryAPI.get))))
+            val visits = queue.map(index => (index, geometry.contains(indexToGeometry(index, geometryAPI.get).getCentroid)))
             val matches = visits.filter(_._2)
             val newVisited = visited ++ visits.map(_._1)
             val newQueue = matches.flatMap(c => kDisk(c._1, 1).filterNot(newVisited.contains))
             val newResult = result ++ matches.map(_._1)
-            if (queue.isEmpty) {
+            if (newQueue.isEmpty) {
                 newResult
             } else {
                 visit(newQueue, newVisited, newResult)
@@ -177,7 +177,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         if (geometry.isEmpty) Seq.empty[Long]
         else {
             val shells = geometry.getShells
-            val startPoints = shells.map(_.asSeq.head)
+            val startPoints = shells.flatMap(_.asSeq)
             val startIndices = startPoints.map(p => pointToIndex(p.getX, p.getY, resolution))
             visit(startIndices.toSet, Set.empty[Long], Set.empty[Long]).toSeq
         }
@@ -199,10 +199,8 @@ object BNGIndexSystem extends IndexSystem with Serializable {
     }
 
     /**
-      * Boundary that is returned by H3 isn't valid from JTS perspective since
-      * it does not form a LinearRing (ie first point == last point). The first
-      * point of the boundary is appended to the end of the boundary to form a
-      * LinearRing.
+      * Constructs a geometry representing the index tile corresponding to
+      * provided index id.
       *
       * @param index
       *   Id of the index whose geometry should be returned.

@@ -2,10 +2,12 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.geometry.GeometryTransformationsCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
+
+import scala.util.{Success, Try}
 
 case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
 
@@ -44,22 +46,28 @@ case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: Str
           ev,
           (leftEval, rightEval) => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val (code, result) = GeometryTransformationsCodeGen.rotate(ctx, leftEval, rightEval, inputGeom.dataType, geometryAPI)
+              val tryIO = Try(GeometryTransformationsCodeGen.rotate(ctx, leftEval, rightEval, inputGeom.dataType, geometryAPI))
 
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                    |$code
-                                    |${ev.value} = $result;
-                                    |""".stripMargin
-                  case "JTS"  => s"""
-                                   |try {
-                                   |$code
-                                   |${ev.value} = $result;
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
-
+              (tryIO, geometryAPI) match {
+                  case (
+                        Success((code, result)),
+                        ESRI
+                      ) => s"""
+                              |$code
+                              |${ev.value} = $result;
+                              |""".stripMargin
+                  case (
+                        Success((code, result)),
+                        JTS
+                      ) => s"""
+                              |try {
+                              |$code
+                              |${ev.value} = $result;
+                              |} catch (Exception e) {
+                              | throw e;
+                              |}
+                              |""".stripMargin
+                  case _ => throw new IllegalArgumentException(s"Geometry API unsupported: $geometryAPIName.")
               }
           }
         )

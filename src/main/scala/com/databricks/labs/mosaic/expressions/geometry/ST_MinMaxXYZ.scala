@@ -18,7 +18,6 @@ case class ST_MinMaxXYZ(inputGeom: Expression, geometryAPIName: String, dimensio
 
     override def nullSafeEval(input1: Any): Any = {
         val geometryAPI = GeometryAPI(geometryAPIName)
-
         val geom = geometryAPI.geometry(input1, inputGeom.dataType)
         geom.minMaxCoord(dimension, func)
     }

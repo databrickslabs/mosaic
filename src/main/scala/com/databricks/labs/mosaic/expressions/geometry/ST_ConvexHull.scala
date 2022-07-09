@@ -2,12 +2,14 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.esri.core.geometry.ogc.OGCGeometry
-import org.locationtech.jts.geom.{Geometry => JTSGeometry}
-
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
+import org.locationtech.jts.geom.{Geometry => JTSGeometry}
+
+import scala.util.{Success, Try}
 
 case class ST_ConvexHull(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
@@ -38,27 +40,37 @@ case class ST_ConvexHull(inputGeom: Expression, geometryAPIName: String) extends
               val convexHull = ctx.freshName("convexHull")
               val ogcPolygonClass = classOf[OGCGeometry].getName
               val jtsPolygonClass = classOf[JTSGeometry].getName
-              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-              val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, convexHull, inputGeom.dataType, geometryAPI)
+              val tryIO = Try {
+                  val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
+                  val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, convexHull, inputGeom.dataType, geometryAPI)
+                  ((inCode, geomInRef), (outCode, outGeomRef))
+              }
               // not merged into the same code block due to JTS IOException throwing
               // ESRI code will always remain simpler
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                   |$inCode
-                                   |$ogcPolygonClass $convexHull = $geomInRef.convexHull();
-                                   |$outCode
-                                   |${ev.value} = $outGeomRef;
-                                   |""".stripMargin
-                  case "JTS" => s"""
-                                   |try {
-                                   |$inCode
-                                   |$jtsPolygonClass $convexHull = $geomInRef.convexHull();
-                                   |$outCode
-                                   |${ev.value} = $outGeomRef;
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
+              (tryIO, geometryAPI) match {
+                  case (
+                        Success(((inCode, geomInRef), (outCode, outGeomRef))),
+                        ESRI
+                      ) => s"""
+                              |$inCode
+                              |$ogcPolygonClass $convexHull = $geomInRef.convexHull();
+                              |$outCode
+                              |${ev.value} = $outGeomRef;
+                              |""".stripMargin
+                  case (
+                        Success(((inCode, geomInRef), (outCode, outGeomRef))),
+                        JTS
+                      ) => s"""
+                              |try {
+                              |$inCode
+                              |$jtsPolygonClass $convexHull = $geomInRef.convexHull();
+                              |$outCode
+                              |${ev.value} = $outGeomRef;
+                              |} catch (Exception e) {
+                              | throw e;
+                              |}
+                              |""".stripMargin
+                  case _ => throw new IllegalArgumentException(s"Geometry API unsupported: $geometryAPIName.")
 
               }
           }
