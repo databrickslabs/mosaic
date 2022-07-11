@@ -8,13 +8,13 @@
 # MAGIC 
 # MAGIC This notebook creates a [Delta Live Table](https://databricks.com/product/delta-live-tables) data pipeline that processes the OSM data ingested by the [0_Download](./0_Download) notebook.
 # MAGIC 
-# MAGIC ![Process pipeline](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/1_Process.png)
+# MAGIC ![Process pipeline](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/1_Process.png)
 # MAGIC 
 # MAGIC ## Setup
 # MAGIC 
 # MAGIC Go to `Workflows` -> `Delta Live Tables` -> `Create pipeline`
 # MAGIC 
-# MAGIC ![create pipeline](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/1_CreatePipelineDLT.png)
+# MAGIC ![create pipeline](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/1_CreatePipelineDLT.png)
 # MAGIC 
 # MAGIC * Select this notebook in the Notebook libraries
 # MAGIC * Set the Target database name to `open_street_maps`
@@ -25,7 +25,7 @@
 # MAGIC 
 # MAGIC Delta live tables will run the data transformations defined in this notebook and populate the tables in the target database.
 # MAGIC 
-# MAGIC ![Pipeline](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/1_Pipeline.png)
+# MAGIC ![Pipeline](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/1_Pipeline.png)
 
 # COMMAND ----------
 

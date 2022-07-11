@@ -15,7 +15,7 @@
 # MAGIC 
 # MAGIC This notebook will create one delta table for each of this element types.
 # MAGIC 
-# MAGIC ![Diagram](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/0_Download.png)
+# MAGIC ![Diagram](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/0_Download.png)
 # MAGIC 
 # MAGIC ## Note: INSTALL XML libraries before running this notebook!
 # MAGIC 
@@ -212,8 +212,6 @@ relations_schema = StructType(
 # MAGIC ### Nodes
 
 # COMMAND ----------
-
-from schemas import nodes_schema, ways_schema, relations_schema
 
 nodes = (spark
       .read
