@@ -4,7 +4,7 @@ This is an example of how to ingest and process Open Street Maps using Databrick
 
 The aim is to ingest and process OSM data and form the medallion layers of our delta lake following the best practices. Then used these tables to identify the density of residential buildings, hospitals and train stations across Italy as an example of the new insights this capability unlocks.
 
-![Conceptual diagram](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/Readme_ConceptDiagram.png)
+![Conceptual diagram](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/Readme_ConceptDiagram.png)
 
 The pipeline will
 * Download the OSM dataset for Italy
@@ -20,14 +20,14 @@ The pipeline is divided in three notebooks
 * `1_Process` Will create the Delta Live Table transformations to process the OSM data and extract the building shapes and metadata, index and categorise
 * `2_Explore` Will display the density of residential and train station buildings
 
-![Full pipeline](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/Readme_FullPipeline.png)
+![Full pipeline](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/Readme_FullPipeline.png)
 
 ## Results
 
 You should be able to visualise the final result in the 2_Explore notebook
 
 ### Residential building density
-![Building density](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/Readme_BuildingDensity.png)
+![Building density](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/Readme_BuildingDensity.png)
 
 ## Train station building density
-![Train station density](https://github.com/databrickslabs/mosaic/raw/feature/open_street_maps/notebooks/examples/python/OpenStreetMaps/Images/Readme_TrainStationDensity.png)
+![Train station density](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/Readme_TrainStationDensity.png)
