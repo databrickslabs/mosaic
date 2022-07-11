@@ -13,7 +13,7 @@ An extension to the [Apache Spark](https://spark.apache.org/) framework that all
 
 ## Why Mosaic?
 
-Mosaic was created to simplify the implementation of scalable geospatial data pipelines by bunding together common Open Source geospatial libraries via Apache Spark, with a set of __examples and best practices__ for common geospatial use cases.
+Mosaic was created to simplify the implementation of scalable geospatial data pipelines by bunding together common Open Source geospatial libraries via Apache Spark, with a set of [examples and best practices](notebooks/examples) for common geospatial use cases.
 
 
 ## What does it provide?
@@ -104,9 +104,6 @@ Mosaic is intended to augment the existing system and unlock the potential by in
 
 ![mosaic-logo](src/main/resources/MosaicEcosystem.png)
 Image2: Mosaic ecosystem - Lakehouse integration.
-
-## Example notebooks
-This repository contains several example notebooks in `notebooks/examples`. You can import them into your Databricks workspace using the instructions [here](https://docs.databricks.com/notebooks/notebooks-manage.html#import-a-notebook).
 
 ### Project Support
 Please note that all projects in the `databrickslabs` github space are provided for your exploration only, and are not formally supported by Databricks with Service Level Agreements (SLAs). They are provided AS-IS and we do not make any guarantees of any kind. Please do not submit a support ticket relating to any issues arising from the use of these projects.
