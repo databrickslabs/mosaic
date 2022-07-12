@@ -25,6 +25,8 @@ Mosaic provides geospatial tools for
     * Chipping of polygons and lines over an indexing grid [co-developed with Ordnance Survey](https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html)
 * Data visualisation ([Kepler](https://github.com/keplergl/kepler.gl))
 
+![mosaic-general-pipeline](src/main/resources/MosaicGeneralPipeline.png)
+
 The supported languages are Scala, Python, R, and SQL.
 
 ## How does it work?
