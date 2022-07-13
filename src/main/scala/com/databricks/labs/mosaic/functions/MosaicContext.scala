@@ -147,7 +147,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         registry.registerFunction(
           FunctionIdentifier("st_geomfromgeojson", database),
           ConvertTo.registryExpressionInfo(database, "st_geomfromgeojson"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(AsJSON(exprs(0)), "coords", geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("convert_to_hex", database),

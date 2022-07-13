@@ -15,39 +15,35 @@ object ConvertToCodeGen {
         ev: ExprCode,
         nullSafeCodeGen: (CodegenContext, ExprCode, String => String) => ExprCode,
         inputDataType: DataType,
-        outputDataType: DataType,
+        outputDataTypeName: String,
         geometryAPI: GeometryAPI
     ): ExprCode = {
         nullSafeCodeGen(
           ctx,
           ev,
           eval => {
-              if (inputDataType.simpleString == outputDataType.simpleString) {
-                  s"""
-                     |${ev.value} = $eval;
-                     |""".stripMargin
-              } else {
-                  val (inCode, geomInRef) = readGeometryCode(ctx, eval, inputDataType, geometryAPI)
-                  val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataType, geometryAPI)
 
-                  geometryAPI.name match {
-                      case n if n == ESRI.name => s"""
-                                                     |$inCode
-                                                     |$outCode
-                                                     |${ev.value} = $geomOutRef;
-                                                     |""".stripMargin
-                      case n if n == JTS.name  => s"""
-                                                    |try {
-                                                    |$inCode
-                                                    |$outCode
-                                                    |${ev.value} = $geomOutRef;
-                                                    |} catch (Exception e) {
-                                                    | throw e;
-                                                    |}
-                                                    |""".stripMargin
-                  }
+              val (inCode, geomInRef) = readGeometryCode(ctx, eval, inputDataType, geometryAPI)
+              val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataTypeName, geometryAPI)
+
+              geometryAPI.name match {
+                  case n if n == ESRI.name => s"""
+                                                 |$inCode
+                                                 |$outCode
+                                                 |${ev.value} = $geomOutRef;
+                                                 |""".stripMargin
+                  case n if n == JTS.name  => s"""
+                                                |try {
+                                                |$inCode
+                                                |$outCode
+                                                |${ev.value} = $geomOutRef;
+                                                |} catch (Exception e) {
+                                                | throw e;
+                                                |}
+                                                |""".stripMargin
               }
           }
+
         )
     }
 
@@ -85,4 +81,23 @@ object ConvertToCodeGen {
         }
     }
 
+
+    // noinspection DuplicatedCode
+    def writeGeometryCode(ctx: CodegenContext, eval: String, outputDataTypeName: String, geometryAPI: GeometryAPI): (String, String) = {
+        val geometryCodeGen = geometryAPI.name match {
+            case n if n == ESRI.name => MosaicGeometryIOCodeGenESRI
+            case n if n == JTS.name  => MosaicGeometryIOCodeGenJTS
+        }
+        // noinspection ScalaStyle
+        outputDataTypeName match {
+            case "WKB"           => geometryCodeGen.toWKB(ctx, eval, geometryAPI)
+            case "WKT"           => geometryCodeGen.toWKT(ctx, eval, geometryAPI)
+            case "HEX"           => geometryCodeGen.toHEX(ctx, eval, geometryAPI)
+            case "JSON"          => geometryCodeGen.toJSON(ctx, eval, geometryAPI)
+            case "GEOJSON"       => geometryCodeGen.toGeoJSON(ctx, eval, geometryAPI)
+            case "COORDS"        => geometryCodeGen.toInternal(ctx, eval, geometryAPI)
+            case "KRYO"          => throw new NotImplementedError("KryoType is not Supported yet.")
+            case _               => throw new NotImplementedError("Unsupported type ")
+        }
+    }
 }

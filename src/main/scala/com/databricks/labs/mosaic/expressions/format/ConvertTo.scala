@@ -84,7 +84,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
             case "WKB"     => BinaryType
             case "HEX"     => HexType
             case "COORDS"  => InternalGeometryType
-            case "GEOJSON" => JSONType
+            case "GEOJSON" => StringType
             case "KRYO"    => KryoType
         }
 
@@ -105,13 +105,10 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
       *   A converted representation of the input geometry.
       */
     override def nullSafeEval(input: Any): Any = {
-        if (inGeometry.dataType.simpleString == getOutType.simpleString) {
-            input
-        } else {
-            val geometryAPI = GeometryAPI(geometryAPIName)
-            val geometry = geometryAPI.geometry(input, inGeometry.dataType)
-            geometryAPI.serialize(geometry, outDataType)
-        }
+
+        val geometryAPI = GeometryAPI(geometryAPIName)
+        val geometry = geometryAPI.geometry(input, inGeometry.dataType)
+        geometryAPI.serialize(geometry, outDataType)
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
@@ -131,21 +128,10 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
           ev,
           nullSafeCodeGen,
           child.dataType,
-          getOutType,
+          outDataType.toUpperCase(Locale.ROOT),
           geometryAPI
         )
     }
-
-    def getOutType: DataType =
-        outDataType.toUpperCase(Locale.ROOT) match {
-            case "WKT"     => StringType
-            case "WKB"     => BinaryType
-            case "HEX"     => HexType
-            case "JSON"    => JSONType
-            case "GEOJSON" => JSONType
-            case "COORDS"  => InternalGeometryType
-            case _         => ???
-        }
 
     override def child: Expression = inGeometry
 
