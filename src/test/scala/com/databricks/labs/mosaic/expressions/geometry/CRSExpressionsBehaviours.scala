@@ -72,7 +72,9 @@ trait CRSExpressionsBehaviours { this: AnyFlatSpec =>
 
         val refSrid = 27700
 
-        val sourceDf = mocks.getWKTRowsDf(mc)
+        // Internal format
+        val sourceDf = mocks
+            .getWKTRowsDf(mc)
             .withColumn("internal", convert_to($"wkt", "COORDS"))
 
         val result = sourceDf
@@ -83,11 +85,18 @@ trait CRSExpressionsBehaviours { this: AnyFlatSpec =>
 
         result should contain only refSrid
 
+        // GoeJSON
         val resultJson = sourceDf
-            .select(convert_to($"wkt", "GEOJSON").alias("json"))
-            .where(!st_geometrytype($"json").isin("MultiLineString", "MultiPolygon"))
-            .select(st_setsrid($"json", lit(refSrid)).alias("json"))
-            .select(st_srid($"json").alias("srid"))
+            .where(!st_geometrytype($"wkt").isin("MultiLineString", "MultiPolygon"))
+            .select(st_geomfromwkt($"wkt").alias("geom"))
+            .select(st_setsrid($"geom", lit(refSrid)).alias("geom"))
+
+            // Convert to and from geoJSON should maintain the SRID
+            .select(st_asgeojson($"geom").alias("json"))
+            .select(st_geomfromgeojson($"json").alias("geom"))
+
+            // Extract the SRID
+            .select(st_srid($"geom").alias("srid"))
             .as[Int]
             .collect()
 
@@ -95,6 +104,7 @@ trait CRSExpressionsBehaviours { this: AnyFlatSpec =>
 
         sourceDf.createOrReplaceTempView("source")
 
+        // SQL
         val sqlResult = spark
             .sql(s"select st_srid(st_setsrid(internal, $refSrid)) from source")
             .as[Int]
