@@ -87,7 +87,7 @@ abstract class GeometryAPI(
             case "WKB"     => geometry.toWKB
             case "WKT"     => UTF8String.fromString(geometry.toWKT)
             case "HEX"     => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
-            case "JSON"    => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
+            case "JSONOBJECT" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
             case "GEOJSON" => UTF8String.fromString(geometry.toJSON)
             case "COORDS"  => geometry.toInternal.serialize
             case "KRYO"    => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
