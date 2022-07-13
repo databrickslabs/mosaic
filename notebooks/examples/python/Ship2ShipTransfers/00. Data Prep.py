@@ -91,7 +91,6 @@ print(f"The raw data is stored in {raw_path}")
 # COMMAND ----------
 
 import requests
-import os
 import pathlib
 
 us_outline_url = (
