@@ -43,7 +43,6 @@ object ConvertToCodeGen {
                                                 |""".stripMargin
               }
           }
-
         )
     }
 
@@ -81,23 +80,24 @@ object ConvertToCodeGen {
         }
     }
 
-
     // noinspection DuplicatedCode
     def writeGeometryCode(ctx: CodegenContext, eval: String, outputDataTypeName: String, geometryAPI: GeometryAPI): (String, String) = {
         val geometryCodeGen = geometryAPI.name match {
             case n if n == ESRI.name => MosaicGeometryIOCodeGenESRI
             case n if n == JTS.name  => MosaicGeometryIOCodeGenJTS
         }
+
         // noinspection ScalaStyle
         outputDataTypeName match {
-            case "WKB"           => geometryCodeGen.toWKB(ctx, eval, geometryAPI)
-            case "WKT"           => geometryCodeGen.toWKT(ctx, eval, geometryAPI)
-            case "HEX"           => geometryCodeGen.toHEX(ctx, eval, geometryAPI)
-            case "JSONOBJECT"          => geometryCodeGen.toJSON(ctx, eval, geometryAPI)
-            case "GEOJSON"       => geometryCodeGen.toGeoJSON(ctx, eval, geometryAPI)
-            case "COORDS"        => geometryCodeGen.toInternal(ctx, eval, geometryAPI)
-            case "KRYO"          => throw new NotImplementedError("KryoType is not Supported yet.")
-            case _               => throw new NotImplementedError("Unsupported type ")
+            case "WKB"        => geometryCodeGen.toWKB(ctx, eval, geometryAPI)
+            case "WKT"        => geometryCodeGen.toWKT(ctx, eval, geometryAPI)
+            case "HEX"        => geometryCodeGen.toHEX(ctx, eval, geometryAPI)
+            case "JSONOBJECT" => geometryCodeGen.toJSON(ctx, eval, geometryAPI)
+            case "GEOJSON"    => geometryCodeGen.toGeoJSON(ctx, eval, geometryAPI)
+            case "COORDS"     => geometryCodeGen.toInternal(ctx, eval, geometryAPI)
+            case "KRYO"       => throw new NotImplementedError("KryoType is not Supported yet.")
+            case _            => throw new NotImplementedError("Unsupported type ")
         }
     }
+
 }

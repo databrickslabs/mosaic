@@ -84,14 +84,14 @@ abstract class GeometryAPI(
 
     def serialize(geometry: MosaicGeometry, dataTypeName: String): Any = {
         dataTypeName.toUpperCase(Locale.ROOT) match {
-            case "WKB"     => geometry.toWKB
-            case "WKT"     => UTF8String.fromString(geometry.toWKT)
-            case "HEX"     => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
+            case "WKB"        => geometry.toWKB
+            case "WKT"        => UTF8String.fromString(geometry.toWKT)
+            case "HEX"        => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
             case "JSONOBJECT" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
-            case "GEOJSON" => UTF8String.fromString(geometry.toJSON)
-            case "COORDS"  => geometry.toInternal.serialize
-            case "KRYO"    => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
-            case _         => throw new Error(s"$dataTypeName not supported.")
+            case "GEOJSON"    => UTF8String.fromString(geometry.toJSON)
+            case "COORDS"     => geometry.toInternal.serialize
+            case "KRYO"       => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
+            case _            => throw new Error(s"$dataTypeName not supported.")
         }
     }
 
@@ -122,6 +122,7 @@ object GeometryAPI extends Serializable {
         override def fromGeoCoord(point: GeoCoord): MosaicPoint = MosaicPointESRI(point)
 
         override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointESRI(coords)
+
     }
 
     object JTS extends GeometryAPI(MosaicGeometryJTS) {
@@ -131,6 +132,7 @@ object GeometryAPI extends Serializable {
         override def fromGeoCoord(geoCoord: GeoCoord): MosaicPoint = MosaicPointJTS(geoCoord)
 
         override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointJTS(coords)
+
     }
 
 }

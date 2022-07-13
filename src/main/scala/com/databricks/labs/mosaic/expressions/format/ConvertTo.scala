@@ -36,49 +36,49 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
       */
     override def checkInputDataTypes(): TypeCheckResult =
         (inGeometry.dataType, outDataType.toUpperCase(Locale.ROOT)) match {
-            case (BinaryType, "WKT")               => TypeCheckResult.TypeCheckSuccess
-            case (BinaryType, "WKB")               => TypeCheckResult.TypeCheckSuccess
-            case (BinaryType, "COORDS")            => TypeCheckResult.TypeCheckSuccess
-            case (BinaryType, "HEX")               => TypeCheckResult.TypeCheckSuccess
-            case (BinaryType, "GEOJSON")           => TypeCheckResult.TypeCheckSuccess
-            case (BinaryType, "JSONOBJECT")        => TypeCheckResult.TypeCheckSuccess
-            case (BinaryType, "KRYO")              => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "WKT")               => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "WKB")               => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "COORDS")            => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "HEX")               => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "GEOJSON")           => TypeCheckResult.TypeCheckSuccess
+            case (BinaryType, "WKT")                  => TypeCheckResult.TypeCheckSuccess
+            case (BinaryType, "WKB")                  => TypeCheckResult.TypeCheckSuccess
+            case (BinaryType, "COORDS")               => TypeCheckResult.TypeCheckSuccess
+            case (BinaryType, "HEX")                  => TypeCheckResult.TypeCheckSuccess
+            case (BinaryType, "GEOJSON")              => TypeCheckResult.TypeCheckSuccess
+            case (BinaryType, "JSONOBJECT")           => TypeCheckResult.TypeCheckSuccess
+            case (BinaryType, "KRYO")                 => TypeCheckResult.TypeCheckSuccess
+            case (StringType, "WKT")                  => TypeCheckResult.TypeCheckSuccess
+            case (StringType, "WKB")                  => TypeCheckResult.TypeCheckSuccess
+            case (StringType, "COORDS")               => TypeCheckResult.TypeCheckSuccess
+            case (StringType, "HEX")                  => TypeCheckResult.TypeCheckSuccess
+            case (StringType, "GEOJSON")              => TypeCheckResult.TypeCheckSuccess
             case (StringType, "JSONOBJECT")           => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "KRYO")              => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "WKT")                  => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "WKB")                  => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "COORDS")               => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "HEX")                  => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "GEOJSON")              => TypeCheckResult.TypeCheckSuccess
+            case (StringType, "KRYO")                 => TypeCheckResult.TypeCheckSuccess
+            case (HexType, "WKT")                     => TypeCheckResult.TypeCheckSuccess
+            case (HexType, "WKB")                     => TypeCheckResult.TypeCheckSuccess
+            case (HexType, "COORDS")                  => TypeCheckResult.TypeCheckSuccess
+            case (HexType, "HEX")                     => TypeCheckResult.TypeCheckSuccess
+            case (HexType, "GEOJSON")                 => TypeCheckResult.TypeCheckSuccess
             case (HexType, "JSONOBJECT")              => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "KRYO")                 => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "WKT")                 => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "WKB")                 => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "HEX")                 => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "COORDS")              => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "GEOJSON")             => TypeCheckResult.TypeCheckSuccess
+            case (HexType, "KRYO")                    => TypeCheckResult.TypeCheckSuccess
+            case (JSONType, "WKT")                    => TypeCheckResult.TypeCheckSuccess
+            case (JSONType, "WKB")                    => TypeCheckResult.TypeCheckSuccess
+            case (JSONType, "HEX")                    => TypeCheckResult.TypeCheckSuccess
+            case (JSONType, "COORDS")                 => TypeCheckResult.TypeCheckSuccess
+            case (JSONType, "GEOJSON")                => TypeCheckResult.TypeCheckSuccess
             case (JSONType, "JSONOBJECT")             => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "KRYO")                => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "WKB")     => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "WKT")     => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "COORDS")  => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "HEX")     => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "GEOJSON") => TypeCheckResult.TypeCheckSuccess
+            case (JSONType, "KRYO")                   => TypeCheckResult.TypeCheckSuccess
+            case (InternalGeometryType, "WKB")        => TypeCheckResult.TypeCheckSuccess
+            case (InternalGeometryType, "WKT")        => TypeCheckResult.TypeCheckSuccess
+            case (InternalGeometryType, "COORDS")     => TypeCheckResult.TypeCheckSuccess
+            case (InternalGeometryType, "HEX")        => TypeCheckResult.TypeCheckSuccess
+            case (InternalGeometryType, "GEOJSON")    => TypeCheckResult.TypeCheckSuccess
             case (InternalGeometryType, "JSONOBJECT") => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "KRYO")    => TypeCheckResult.TypeCheckSuccess
-            case (KryoType, "WKB")                 => TypeCheckResult.TypeCheckSuccess
-            case (KryoType, "WKT")                 => TypeCheckResult.TypeCheckSuccess
-            case (KryoType, "COORDS")              => TypeCheckResult.TypeCheckSuccess
-            case (KryoType, "HEX")                 => TypeCheckResult.TypeCheckSuccess
-            case (KryoType, "GEOJSON")             => TypeCheckResult.TypeCheckSuccess
+            case (InternalGeometryType, "KRYO")       => TypeCheckResult.TypeCheckSuccess
+            case (KryoType, "WKB")                    => TypeCheckResult.TypeCheckSuccess
+            case (KryoType, "WKT")                    => TypeCheckResult.TypeCheckSuccess
+            case (KryoType, "COORDS")                 => TypeCheckResult.TypeCheckSuccess
+            case (KryoType, "HEX")                    => TypeCheckResult.TypeCheckSuccess
+            case (KryoType, "GEOJSON")                => TypeCheckResult.TypeCheckSuccess
             case (KryoType, "JSONOBJECT")             => TypeCheckResult.TypeCheckSuccess
-            case (KryoType, "KRYO")                => TypeCheckResult.TypeCheckSuccess
-            case _                                 => TypeCheckResult.TypeCheckFailure(
+            case (KryoType, "KRYO")                   => TypeCheckResult.TypeCheckSuccess
+            case _                                    => TypeCheckResult.TypeCheckFailure(
                   s"Cannot convert from ${inGeometry.dataType.sql} to $dataType"
                 )
         }
@@ -86,13 +86,13 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
     /** Expression output DataType. */
     override def dataType: DataType =
         outDataType.toUpperCase(Locale.ROOT) match {
-            case "WKT"     => StringType
-            case "WKB"     => BinaryType
-            case "HEX"     => HexType
-            case "COORDS"  => InternalGeometryType
-            case "GEOJSON" => StringType
+            case "WKT"        => StringType
+            case "WKB"        => BinaryType
+            case "HEX"        => HexType
+            case "COORDS"     => InternalGeometryType
+            case "GEOJSON"    => StringType
             case "JSONOBJECT" => JSONType
-            case "KRYO"    => KryoType
+            case "KRYO"       => KryoType
         }
 
     override def toString: String = s"convert_to($inGeometry, $outDataType)"
