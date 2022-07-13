@@ -186,17 +186,18 @@ matches = (
 
 # COMMAND ----------
 
-matches.count()
-
-# COMMAND ----------
-
-# MAGIC %%mosaic_kepler
-# MAGIC matches "line_1" "geometry" 2_000
-
-# COMMAND ----------
-
 (
     matches.write.mode("overwrite")
     .option("overwriteSchema", "true")
     .saveAsTable("ship2ship.overlap_candidates_lines_filtered")
 )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT COUNT(*) FROM ship2ship.overlap_candidates_lines_filtered";
+
+# COMMAND ----------
+
+# MAGIC %%mosaic_kepler
+# MAGIC ship2ship.overlap_candidates_lines_filtered "line_1" "geometry" 2_000
