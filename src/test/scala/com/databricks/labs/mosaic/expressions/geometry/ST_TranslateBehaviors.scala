@@ -58,7 +58,7 @@ trait ST_TranslateBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stTranslate = ST_Translate(lit("POINT (1 1)").expr, lit(1.1).expr, lit(1.2).expr, "illegalAPI")
+        val stTranslate = ST_Translate(lit(1).expr, lit(1.1).expr, lit(1.2).expr, "JTS")
         val ctx = new CodegenContext
         an[IllegalArgumentException] should be thrownBy stTranslate.genCode(ctx)
     }

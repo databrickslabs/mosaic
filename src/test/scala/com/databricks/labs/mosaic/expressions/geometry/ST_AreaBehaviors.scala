@@ -68,7 +68,7 @@ trait ST_AreaBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stArea = ST_Area(lit("POINT (1 1)").expr, "illegalAPI")
+        val stArea = ST_Area(lit(1).expr, "JTS")
         val ctx = new CodegenContext
         an [IllegalArgumentException] should be thrownBy stArea.genCode(ctx)
     }

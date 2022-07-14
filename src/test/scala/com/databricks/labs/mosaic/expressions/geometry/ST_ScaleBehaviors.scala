@@ -57,7 +57,7 @@ trait ST_ScaleBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stScale = ST_Scale(lit("POINT (1 1)").expr, lit(1.1).expr, lit(1.2).expr, "illegalAPI")
+        val stScale = ST_Scale(lit(1).expr, lit(1.1).expr, lit(1.2).expr, "JTS")
         val ctx = new CodegenContext
         an[IllegalArgumentException] should be thrownBy stScale.genCode(ctx)
     }

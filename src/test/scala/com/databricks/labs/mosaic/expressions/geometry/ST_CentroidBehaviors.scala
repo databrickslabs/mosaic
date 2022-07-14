@@ -77,7 +77,7 @@ trait ST_CentroidBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stCentroid = ST_Centroid(lit("POLYGON (1 1, 2 2, 3 3, 1 1)").expr, "illegalAPI")
+        val stCentroid = ST_Centroid(lit(1).expr, "JTS")
         val ctx = new CodegenContext
         an[IllegalArgumentException] should be thrownBy stCentroid.genCode(ctx)
     }

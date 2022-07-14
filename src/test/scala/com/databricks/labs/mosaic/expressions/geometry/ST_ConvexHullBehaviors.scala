@@ -64,7 +64,7 @@ trait ST_ConvexHullBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stConvexHull = ST_ConvexHull(lit("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)").expr, "illegalAPI")
+        val stConvexHull = ST_ConvexHull(lit(1).expr, "JTS")
         val ctx = new CodegenContext
         an[IllegalArgumentException] should be thrownBy stConvexHull.genCode(ctx)
     }

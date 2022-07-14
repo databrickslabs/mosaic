@@ -58,7 +58,7 @@ trait ST_RotateBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stRotate = ST_Rotate(lit("POINT (1 1)").expr, lit(1.1).expr, "illegalAPI")
+        val stRotate = ST_Rotate(lit(1).expr, lit(1.1).expr, "JTS")
         val ctx = new CodegenContext
         an[IllegalArgumentException] should be thrownBy stRotate.genCode(ctx)
     }

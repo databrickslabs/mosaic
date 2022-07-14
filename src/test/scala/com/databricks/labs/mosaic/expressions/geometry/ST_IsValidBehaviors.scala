@@ -103,7 +103,7 @@ trait ST_IsValidBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stIsValid = ST_IsValid(lit("POINT (1 1)").expr, "illegalAPI")
+        val stIsValid = ST_IsValid(lit(1).expr, "JTS")
         val ctx = new CodegenContext
         an[IllegalArgumentException] should be thrownBy stIsValid.genCode(ctx)
     }

@@ -88,7 +88,7 @@ trait ST_LengthBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stLength = ST_Length(lit("POINT (1 1)").expr, "illegalAPI")
+        val stLength = ST_Length(lit(1).expr, "JTS")
         val ctx = new CodegenContext
         an[IllegalArgumentException] should be thrownBy stLength.genCode(ctx)
     }

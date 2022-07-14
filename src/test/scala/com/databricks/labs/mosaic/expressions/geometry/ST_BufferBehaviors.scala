@@ -76,7 +76,7 @@ trait ST_BufferBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stBuffer = ST_Buffer(lit("POINT (1 1)").expr, lit(1).expr, "illegalAPI")
+        val stBuffer = ST_Buffer(lit(1).expr, lit(1).expr, "JTS")
         val ctx = new CodegenContext
         an[IllegalArgumentException] should be thrownBy stBuffer.genCode(ctx)
     }

@@ -75,7 +75,7 @@ trait ST_ContainsBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stContains = ST_Contains(lit(poly).expr, lit(rows.head._1).expr, "illegalAPI")
+        val stContains = ST_Contains(lit(1).expr, lit(rows.head._1).expr, "JTS")
         val ctx = new CodegenContext
         an[IllegalArgumentException] should be thrownBy stContains.genCode(ctx)
     }
