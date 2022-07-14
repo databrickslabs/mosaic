@@ -32,6 +32,12 @@
             <version>3.2.12</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.scalamock</groupId>
+            <artifactId>scalamock_${scala.compat.version}</artifactId>
+            <version>5.2.0</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- spark -->
         <dependency>
