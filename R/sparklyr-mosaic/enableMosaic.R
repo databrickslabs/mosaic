@@ -26,8 +26,5 @@ enableMosaic <- function(
   indexing_system <- sparklyr::invoke_static(sc, class="com.databricks.labs.mosaic.core.index.IndexSystemID", method="getIndexSystem", index_system_id)
   mosaic_context <- sparklyr::invoke_new(sc, class="com.databricks.labs.mosaic.functions.MosaicContext", indexing_system, geometry_api)
   functions <<- sparklyr::invoke(mosaic_context, "functions")
-  # register SQL functions
-  optionClass <- 
-    sparklyr::invoke_static(sc, class = "scala", method="Option$")
   
 }
