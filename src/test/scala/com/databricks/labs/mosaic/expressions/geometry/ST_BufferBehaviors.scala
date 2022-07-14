@@ -8,7 +8,7 @@ import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions.{col, lit}
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
@@ -85,6 +85,8 @@ trait ST_BufferBehaviors extends QueryTest {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
+        import mc.functions._
+
 
         val df = getWKTRowsDf(mc)
 
@@ -94,6 +96,8 @@ trait ST_BufferBehaviors extends QueryTest {
         stBuffer.right shouldEqual lit(1).expr
         stBuffer.dataType shouldEqual df.col("wkt").expr.dataType
         noException should be thrownBy stBuffer.makeCopy(Array(stBuffer.left, stBuffer.right))
+
+        st_buffer(col("wkt"), 1).expr.children(1) shouldEqual lit(1.0).cast("double").expr
 
     }
 
