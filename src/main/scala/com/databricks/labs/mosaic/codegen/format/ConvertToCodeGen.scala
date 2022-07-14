@@ -63,12 +63,7 @@ object ConvertToCodeGen {
 
     // noinspection DuplicatedCode
     def readGeometryCode(ctx: CodegenContext, eval: String, inputDataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
-        val geometryCodeGen = geometryAPI match {
-            case ESRI => MosaicGeometryIOCodeGenESRI
-            case JTS  => MosaicGeometryIOCodeGenJTS
-            case _    => throw new IllegalArgumentException(s"Geometry API unsupported: ${geometryAPI.name}.")
-        }
-        // noinspection ScalaStyle
+        val geometryCodeGen = geometryAPI.ioCodeGen
         inputDataType match {
             case BinaryType           => geometryCodeGen.fromWKB(ctx, eval, geometryAPI)
             case StringType           => geometryCodeGen.fromWKT(ctx, eval, geometryAPI)
@@ -81,12 +76,7 @@ object ConvertToCodeGen {
 
     // noinspection DuplicatedCode
     def writeGeometryCode(ctx: CodegenContext, eval: String, outputDataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
-        val geometryCodeGen = geometryAPI match {
-            case ESRI => MosaicGeometryIOCodeGenESRI
-            case JTS  => MosaicGeometryIOCodeGenJTS
-            case _    => throw new IllegalArgumentException(s"Geometry API unsupported: ${geometryAPI.name}.")
-        }
-        // noinspection ScalaStyle
+        val geometryCodeGen = geometryAPI.ioCodeGen
         outputDataType match {
             case BinaryType           => geometryCodeGen.toWKB(ctx, eval, geometryAPI)
             case StringType           => geometryCodeGen.toWKT(ctx, eval, geometryAPI)

@@ -2,16 +2,42 @@ package com.databricks.labs.mosaic.codegen
 
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks._
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.must.Matchers.{be, noException}
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.col
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers.{be, noException}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
+
+    def codegenWKBtoWKB(mosaicContext: => MosaicContext): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+
+        val hexDf: DataFrame = getHexRowsDf(mc)
+            .orderBy("id")
+            .withColumn("wkb", convert_to(as_hex(col("hex")), "WKB"))
+            .select(
+              col("wkb"),
+              convert_to(col("wkb"), "WKB").alias("wkb_new")
+            )
+
+        val queryExecution = hexDf.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+
+        hexDf.where("wkb == wkb_new").count() should be > 0L
+    }
 
     def codegenWKBtoWKT(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext

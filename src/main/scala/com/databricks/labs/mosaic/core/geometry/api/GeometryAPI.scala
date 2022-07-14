@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.geometry.api
 
+import com.databricks.labs.mosaic.codegen.format.{GeometryIOCodeGen, MosaicGeometryIOCodeGenESRI, MosaicGeometryIOCodeGenJTS}
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point._
 import com.databricks.labs.mosaic.core.types._
@@ -66,7 +67,6 @@ abstract class GeometryAPI(
             case _: HexType              => reader.fromHEX(inputData.asInstanceOf[InternalRow].getString(0))
             case _: JSONType             => reader.fromJSON(inputData.asInstanceOf[InternalRow].getString(0))
             case _: InternalGeometryType => reader.fromInternal(inputData.asInstanceOf[InternalRow])
-            case _: KryoType             => reader.fromKryo(inputData.asInstanceOf[InternalRow])
         }
 
     def serialize(geometry: MosaicGeometry, dataType: DataType): Any = {
@@ -76,7 +76,6 @@ abstract class GeometryAPI(
             case _: HexType              => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
             case _: JSONType             => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
             case _: InternalGeometryType => geometry.toInternal.serialize
-            case _: KryoType => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
             case _           => throw new Error(s"$dataType not supported.")
         }
     }
@@ -88,7 +87,6 @@ abstract class GeometryAPI(
             case "HEX"     => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
             case "GEOJSON" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
             case "COORDS"  => geometry.toInternal.serialize
-            case "KRYO"    => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
             case _         => throw new Error(s"$dataTypeName not supported.")
         }
     }
@@ -96,6 +94,8 @@ abstract class GeometryAPI(
     def fromGeoCoord(point: GeoCoord): MosaicPoint
 
     def fromCoords(coords: Seq[Double]): MosaicPoint
+
+    def ioCodeGen: GeometryIOCodeGen
 
 }
 
@@ -105,13 +105,6 @@ object GeometryAPI extends Serializable {
         name match {
             case "JTS"  => JTS
             case "ESRI" => ESRI
-            case _      => Illegal
-        }
-
-    def getReader(name: String): GeometryReader =
-        name match {
-            case "JTS"  => MosaicGeometryJTS
-            case "ESRI" => MosaicGeometryESRI
             case _      => throw new IllegalArgumentException(s"Geometry API unsupported: $name.")
         }
 
@@ -123,6 +116,7 @@ object GeometryAPI extends Serializable {
 
         override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointESRI(coords)
 
+        override def ioCodeGen: GeometryIOCodeGen = MosaicGeometryIOCodeGenESRI
     }
 
     object JTS extends GeometryAPI(MosaicGeometryJTS) {
@@ -133,17 +127,7 @@ object GeometryAPI extends Serializable {
 
         override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointJTS(coords)
 
-    }
-
-    // Added to better support case matching and to avoid deflating test coverage over _ case.
-    object Illegal extends GeometryAPI(null) {
-
-        override def name: String = "Illegal"
-
-        override def fromGeoCoord(point: GeoCoord): MosaicPoint = throw new IllegalArgumentException(s"Geometry API unsupported: $name.")
-
-        override def fromCoords(coords: Seq[Double]): MosaicPoint = throw new IllegalArgumentException(s"Geometry API unsupported: $name.")
-
+        override def ioCodeGen: GeometryIOCodeGen = MosaicGeometryIOCodeGenJTS
     }
 
 }

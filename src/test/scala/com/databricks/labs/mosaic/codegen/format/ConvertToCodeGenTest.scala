@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.codegen.format
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{Illegal, JTS}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.JTS
 import org.apache.spark.sql.catalyst.expressions.codegen._
 import org.apache.spark.sql.types._
 import org.scalatest.flatspec.AnyFlatSpec
@@ -18,15 +18,8 @@ class ConvertToCodeGenTest extends AnyFlatSpec {
                 code
             }
         an[IllegalArgumentException] should be thrownBy {
-            ConvertToCodeGen.doCodeGen(ctx, ExprCode.forNullValue(StringType), nullSafeEval, StringType, BinaryType, Illegal)
+            ConvertToCodeGen.doCodeGen(ctx, ExprCode.forNullValue(StringType), nullSafeEval, StringType, DoubleType, JTS)
         }
-    }
-
-    "ConvertToCodeGen" should "fail for invalid geometry API" in {
-        val ctx = new CodegenContext
-        val eval = "geom"
-        an[IllegalArgumentException] should be thrownBy ConvertToCodeGen.readGeometryCode(ctx, eval, BinaryType, Illegal)
-        an[IllegalArgumentException] should be thrownBy ConvertToCodeGen.writeGeometryCode(ctx, eval, BinaryType, Illegal)
     }
 
     "ConvertToCodeGen" should "fail for not supported data type" in {

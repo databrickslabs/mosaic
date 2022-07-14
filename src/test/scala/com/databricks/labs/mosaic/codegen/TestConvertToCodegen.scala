@@ -8,6 +8,11 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class TestConvertToCodegen extends AnyFlatSpec with ConvertToCodegenBehaviors with SparkCodeGenSuite {
 
+    "ConvertTo Expression from WKB to WKB - passthrough test" should "do codegen for any index system and any geometry API" in {
+        it should behave like codegenWKBtoWKB(MosaicContext.build(H3IndexSystem, ESRI))
+        it should behave like codegenWKBtoWKB(MosaicContext.build(H3IndexSystem, JTS))
+    }
+
     "ConvertTo Expression from WKB to WKT" should "do codegen for any index system and any geometry API" in {
         it should behave like codegenWKBtoWKT(MosaicContext.build(H3IndexSystem, ESRI), spark)
         it should behave like codegenWKBtoWKT(MosaicContext.build(H3IndexSystem, JTS), spark)
