@@ -16,4 +16,6 @@ trait MosaicRaster extends Serializable {
   def extent: Seq[Double]
 
   def geoTransform(pixel: Int, line: Int): Seq[Double]
+
+  def getRaster: Any
 }

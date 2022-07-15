@@ -22,7 +22,6 @@ package object types {
     val KryoType: DataType = new KryoType()
     val RasterMetadataType = new RasterMetadataType()
     val RasterExtentType = new RasterExtentType()
-    val RasterProjectionType = new RasterProjectionType()
-    val RasterBandType = new RasterBandType()
+    val RasterBandType = new RasterBandMetadataType()
 
 }

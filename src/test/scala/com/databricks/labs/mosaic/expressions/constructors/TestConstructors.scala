@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.core.raster.MosaicRasterGDAL
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkSuite
+import org.gdal.gdal.Dataset
 import org.scalatest.flatspec.AnyFlatSpec
 
 import java.nio.file.{Files, Paths}
@@ -47,17 +48,21 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
         val byteArray = Files.readAllBytes(Paths.get(inFile.getPath))
         val testRaster = MosaicRasterGDAL.fromBytes(byteArray)
 
+        println(s"description: ${testRaster.name}")
         println(s"x-pixels: ${testRaster.xSize}, y-pixels: ${testRaster.ySize}")
         println(s"num bands: ${testRaster.numBands}")
         println("spatial ref metadata:")
         println(s"proj: ${testRaster.proj4String}, srid: ${testRaster.SRID}")
         println(s"geo transform coefficients: (0, 0) => (${testRaster.geoTransform(0, 0).mkString(",")})")
+        println(s"extent: (${testRaster.extent.mkString(",")})")
         val testBand = testRaster.getBand(1)
+        println(s"description: ${testBand.description}")
+        println(s"data type: ${testBand.dataType}")
         println(s"min pixel value: ${testBand.minPixelValue}, max pixel value: ${testBand.maxPixelValue}")
         println(s"pixel value scale: ${testBand.pixelValueScale}, pixel value offset: ${testBand.pixelValueOffset}")
-        val testValues = testBand.values(0, 0, 100, 50)
+        val testValues = testBand.values[Float](1000, 1000, 100, 50)
         val testValuesConverted = testValues.map(l => l.map(p => testBand.pixelValueToUnitValue(p)))
-        println(testValuesConverted.mkString("\n").mkString(","))
+        println(testValuesConverted.map(l => l.mkString(",")).mkString("\n"))
 
     }
 

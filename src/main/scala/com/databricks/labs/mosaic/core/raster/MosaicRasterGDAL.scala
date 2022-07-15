@@ -35,6 +35,8 @@ class MosaicRasterGDAL(raster: Dataset) extends MosaicRaster {
     Seq(minx, miny, maxx, maxy)
   }
 
+  override def getRaster: Dataset = this.raster
+
   def spatialRef: SpatialReference = raster.GetSpatialRef()
 
   def geoTransformArray: Seq[Double] = raster.GetGeoTransform()
