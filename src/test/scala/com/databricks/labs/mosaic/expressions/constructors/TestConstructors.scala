@@ -8,6 +8,7 @@ import com.databricks.labs.mosaic.utils.NativeUtils
 import org.gdal.gdal.gdal
 import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
 import org.scalatest.flatspec.AnyFlatSpec
+import java.nio.file.{Files, Paths}
 
 class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with SparkSuite {
 
@@ -63,10 +64,15 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
         )
         libs.foreach(NativeUtils.loadLibraryFromJar)
         gdal.AllRegister()
-        val inFile = getClass.getResource("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
-        val dataset = gdal.Open(inFile.getPath, GA_ReadOnly)
+        val resourcePath = "/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"
+        val id = java.util.UUID.randomUUID
+        val virtualPath = s"/vsimem/${id.toString}.TIF"
+        val inFile = getClass.getResource(resourcePath)
+        val byteArray = Files.readAllBytes(Paths.get(inFile.getPath))
+        gdal.FileFromMemBuffer(virtualPath, byteArray)
+        val dataset = gdal.Open(virtualPath, GA_ReadOnly)
         val band = dataset.GetRasterBand(1)
-        println(s"x-pixels: ${band.getXSize}, y-pixels: ${band.getYSize}")
+        println(s"x-pixels: ${band.getXSize}, y-pixels: ${band.getYSize}, spatial ref: ${dataset.GetSpatialRef.ExportToProj4}")
     }
 
 }
