@@ -6,10 +6,6 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../../data/DownloadNYCTaxiZones
-
-# COMMAND ----------
-
 user_name <- SparkR::collect(SparkR::sql("select current_user()"))
 raw_path <- paste0("dbfs:/tmp/mosaic/", user_name)
 raw_taxi_zones_path = paste0(raw_path,"/taxi_zones")
