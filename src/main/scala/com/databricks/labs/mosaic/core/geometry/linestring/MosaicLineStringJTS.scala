@@ -2,12 +2,10 @@ package com.databricks.labs.mosaic.core.geometry.linestring
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINEARRING, LINESTRING, POINT}
-import com.esotericsoftware.kryo.io.Input
-import org.locationtech.jts.geom._
-
+import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.catalyst.InternalRow
+import org.locationtech.jts.geom._
 
 class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(lineString) with MosaicLineString {
 
@@ -48,6 +46,18 @@ object MosaicLineStringJTS extends GeometryReader {
         MosaicLineStringJTS(lineString)
     }
 
+    def apply(geometry: Geometry): MosaicLineStringJTS = {
+        GeometryTypeEnum.fromString(geometry.getGeometryType) match {
+            case LINESTRING => new MosaicLineStringJTS(geometry.asInstanceOf[LineString])
+            case LINEARRING =>
+                val newGeom = new GeometryFactory().createLineString(
+                  geometry.asInstanceOf[LinearRing].getCoordinates
+                )
+                newGeom.setSRID(geometry.getSRID)
+                new MosaicLineStringJTS(newGeom)
+        }
+    }
+
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicLineStringJTS = {
         val gf = new GeometryFactory()
         val spatialReference = geomSeq.head.getSpatialReference
@@ -69,18 +79,6 @@ object MosaicLineStringJTS extends GeometryReader {
         MosaicLineStringJTS(newGeom)
     }
 
-    def apply(geometry: Geometry): MosaicLineStringJTS = {
-        GeometryTypeEnum.fromString(geometry.getGeometryType) match {
-            case LINESTRING => new MosaicLineStringJTS(geometry.asInstanceOf[LineString])
-            case LINEARRING =>
-                val newGeom = new GeometryFactory().createLineString(
-                  geometry.asInstanceOf[LinearRing].getCoordinates
-                )
-                newGeom.setSRID(geometry.getSRID)
-                new MosaicLineStringJTS(newGeom)
-        }
-    }
-
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 
     override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)
@@ -88,11 +86,5 @@ object MosaicLineStringJTS extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = {
-        val kryoBytes = row.getBinary(1)
-        val input = new Input(kryoBytes)
-        MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicLineStringJTS])
-    }
 
 }

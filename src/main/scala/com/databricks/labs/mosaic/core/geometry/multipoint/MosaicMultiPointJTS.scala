@@ -1,14 +1,11 @@
 package com.databricks.labs.mosaic.core.geometry.multipoint
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOINT, POINT}
-import com.esotericsoftware.kryo.io.Input
-import org.locationtech.jts.geom._
-
 import org.apache.spark.sql.catalyst.InternalRow
+import org.locationtech.jts.geom._
 
 class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(multiPoint) with MosaicMultiPoint {
 
@@ -16,6 +13,14 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
     override def toInternal: InternalGeometry = {
         val points = asSeq.map(_.coord).map(InternalCoord(_))
         new InternalGeometry(MULTIPOINT.id, getSpatialReference, Array(points.toArray), Array(Array(Array())))
+    }
+
+    override def asSeq: Seq[MosaicPoint] = {
+        for (i <- 0 until multiPoint.getNumPoints) yield {
+            val geom = multiPoint.getGeometryN(i)
+            geom.setSRID(multiPoint.getSRID)
+            MosaicPointJTS(geom)
+        }
     }
 
     override def getBoundary: MosaicGeometry = {
@@ -28,19 +33,9 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
         MosaicMultiPointJTS.fromSeq(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointJTS]))
     }
 
-    override def asSeq: Seq[MosaicPoint] = {
-        for (i <- 0 until multiPoint.getNumPoints) yield {
-            val geom = multiPoint.getGeometryN(i)
-            geom.setSRID(multiPoint.getSRID)
-            MosaicPointJTS(geom)
-        }
-    }
-
 }
 
 object MosaicMultiPointJTS extends GeometryReader {
-
-    def apply(geom: Geometry): MosaicMultiPointJTS = new MosaicMultiPointJTS(geom.asInstanceOf[MultiPoint])
 
     // noinspection ZeroIndexToHead
     override def fromInternal(row: InternalRow): MosaicGeometry = {
@@ -69,6 +64,8 @@ object MosaicMultiPointJTS extends GeometryReader {
         MosaicMultiPointJTS(newGeom)
     }
 
+    def apply(geom: Geometry): MosaicMultiPointJTS = new MosaicMultiPointJTS(geom.asInstanceOf[MultiPoint])
+
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 
     override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)
@@ -76,11 +73,5 @@ object MosaicMultiPointJTS extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = {
-        val kryoBytes = row.getBinary(1)
-        val input = new Input(kryoBytes)
-        MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicMultiPointJTS])
-    }
 
 }

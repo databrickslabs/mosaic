@@ -1,12 +1,9 @@
 package com.databricks.labs.mosaic.codegen.format
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.types._
 import org.apache.spark.sql.catalyst.expressions.codegen._
 import org.apache.spark.sql.types._
-
-import scala.util.{Success, Try}
 
 object ConvertToCodeGen {
 
@@ -28,34 +25,13 @@ object ConvertToCodeGen {
                      |${ev.value} = $eval;
                      |""".stripMargin
               } else {
-                  val tryIO = Try {
-                      val (inCode, geomInRef) = readGeometryCode(ctx, eval, inputDataType, geometryAPI)
-                      val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataType, geometryAPI)
-                      ((inCode, geomInRef), (outCode, geomOutRef))
-                  }
-                  (tryIO, geometryAPI) match {
-                      case (
-                            Success(((inCode, _), (outCode, geomOutRef))),
-                            ESRI
-                          ) => s"""
-                                  |$inCode
-                                  |$outCode
-                                  |${ev.value} = $geomOutRef;
-                                  |""".stripMargin
-                      case (
-                            Success(((inCode, _), (outCode, geomOutRef))),
-                            JTS
-                          ) => s"""
-                                  |try {
-                                  |$inCode
-                                  |$outCode
-                                  |${ev.value} = $geomOutRef;
-                                  |} catch (Exception e) {
-                                  | throw e;
-                                  |}
-                                  |""".stripMargin
-                      case _ => throw new IllegalArgumentException(s"Geometry API unsupported: ${geometryAPI.name}.")
-                  }
+                  val (inCode, geomInRef) = readGeometryCode(ctx, eval, inputDataType, geometryAPI)
+                  val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataType, geometryAPI)
+                  geometryAPI.codeGenTryWrap(s"""
+                                                |$inCode
+                                                |$outCode
+                                                |${ev.value} = $geomOutRef;
+                                                |""".stripMargin)
               }
           }
         )

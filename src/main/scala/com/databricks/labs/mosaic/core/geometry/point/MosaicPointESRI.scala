@@ -127,6 +127,4 @@ object MosaicPointESRI extends GeometryReader {
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryESRI.fromHEX(hex)
 
-    override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryESRI.fromKryo(row)
-
 }

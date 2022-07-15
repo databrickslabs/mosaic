@@ -2,14 +2,11 @@ package com.databricks.labs.mosaic.core.geometry.polygon
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringJTS}
-import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POINT, POLYGON}
-import com.esotericsoftware.kryo.io.Input
-import org.locationtech.jts.geom._
-
+import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.catalyst.InternalRow
+import org.locationtech.jts.geom._
 
 class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with MosaicPolygon {
 
@@ -26,6 +23,14 @@ class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with
         MosaicGeometryJTS(boundaryRing)
     }
 
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        val shellTransformed = getShells.head.asInstanceOf[MosaicLineStringJTS].mapXY(f).asInstanceOf[MosaicLineStringJTS]
+        val holesTransformed = getHoles.head.map(_.asInstanceOf[MosaicLineStringJTS].mapXY(f).asInstanceOf[MosaicLineStringJTS])
+        val newGeom = MosaicPolygonJTS.fromSeq(Seq(shellTransformed) ++ holesTransformed)
+        newGeom.setSpatialReference(getSpatialReference)
+        newGeom
+    }
+
     override def getShells: Seq[MosaicLineString] = {
         val ring = polygon.getExteriorRing
         ring.setSRID(polygon.getSRID)
@@ -39,23 +44,11 @@ class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with
             MosaicLineStringJTS(ring)
         })
 
-    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
-        val shellTransformed = getShells.head.asInstanceOf[MosaicLineStringJTS].mapXY(f).asInstanceOf[MosaicLineStringJTS]
-        val holesTransformed = getHoles.head.map(_.asInstanceOf[MosaicLineStringJTS].mapXY(f).asInstanceOf[MosaicLineStringJTS])
-        val newGeom = MosaicPolygonJTS.fromSeq(Seq(shellTransformed) ++ holesTransformed)
-        newGeom.setSpatialReference(getSpatialReference)
-        newGeom
-    }
-
     override def asSeq: Seq[MosaicLineString] = getShells ++ getHoles.flatten
 
 }
 
 object MosaicPolygonJTS extends GeometryReader {
-
-    def apply(geometry: Geometry): MosaicPolygonJTS = {
-        new MosaicPolygonJTS(geometry.asInstanceOf[Polygon])
-    }
 
     def getPoints(linearRing: LinearRing): Seq[MosaicPoint] = {
         linearRing.getCoordinates.map(MosaicPointJTS(_, linearRing.getSRID))
@@ -96,6 +89,10 @@ object MosaicPolygonJTS extends GeometryReader {
         MosaicPolygonJTS(newGeom)
     }
 
+    def apply(geometry: Geometry): MosaicPolygonJTS = {
+        new MosaicPolygonJTS(geometry.asInstanceOf[Polygon])
+    }
+
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 
     override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)
@@ -103,11 +100,5 @@ object MosaicPolygonJTS extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = {
-        val kryoBytes = row.getBinary(1)
-        val input = new Input(kryoBytes)
-        MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicPolygonJTS])
-    }
 
 }

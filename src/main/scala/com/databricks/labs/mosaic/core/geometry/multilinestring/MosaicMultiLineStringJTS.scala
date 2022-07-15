@@ -2,13 +2,10 @@ package com.databricks.labs.mosaic.core.geometry.multilinestring
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringJTS}
-import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
-import com.esotericsoftware.kryo.io.Input
-import org.locationtech.jts.geom._
-
 import org.apache.spark.sql.catalyst.InternalRow
+import org.locationtech.jts.geom._
 
 class MosaicMultiLineStringJTS(multiLineString: MultiLineString) extends MosaicGeometryJTS(multiLineString) with MosaicMultiLineString {
 
@@ -29,16 +26,16 @@ class MosaicMultiLineStringJTS(multiLineString: MultiLineString) extends MosaicG
     override def getShells: Seq[MosaicLineString] =
         for (i <- 0 until multiLineString.getNumGeometries) yield MosaicLineStringJTS(multiLineString.getGeometryN(i))
 
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        MosaicMultiLineStringJTS.fromSeq(asSeq.map(_.mapXY(f).asInstanceOf[MosaicLineStringJTS]))
+    }
+
     override def asSeq: Seq[MosaicLineString] =
         for (i <- 0 until multiLineString.getNumGeometries) yield {
             val geom = multiLineString.getGeometryN(i).asInstanceOf[LineString]
             geom.setSRID(multiLineString.getSRID)
             new MosaicLineStringJTS(geom)
         }
-
-    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
-        MosaicMultiLineStringJTS.fromSeq(asSeq.map(_.mapXY(f).asInstanceOf[MosaicLineStringJTS]))
-    }
 
 }
 
@@ -51,10 +48,6 @@ object MosaicMultiLineStringJTS extends GeometryReader {
         val geometry = gf.createMultiLineString(lineStrings)
         geometry.setSRID(internalGeom.srid)
         MosaicMultiLineStringJTS(geometry)
-    }
-
-    def apply(geometry: Geometry): MosaicMultiLineStringJTS = {
-        new MosaicMultiLineStringJTS(geometry.asInstanceOf[MultiLineString])
     }
 
     override def fromSeq[T <: MosaicGeometry](
@@ -76,6 +69,10 @@ object MosaicMultiLineStringJTS extends GeometryReader {
         MosaicMultiLineStringJTS(newGeom)
     }
 
+    def apply(geometry: Geometry): MosaicMultiLineStringJTS = {
+        new MosaicMultiLineStringJTS(geometry.asInstanceOf[MultiLineString])
+    }
+
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 
     override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)
@@ -83,11 +80,5 @@ object MosaicMultiLineStringJTS extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = {
-        val kryoBytes = row.getBinary(1)
-        val input = new Input(kryoBytes)
-        MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicMultiLineStringJTS])
-    }
 
 }

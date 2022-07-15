@@ -68,9 +68,9 @@ trait ST_AreaBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stArea = ST_Area(lit(1).expr, "JTS")
         val ctx = new CodegenContext
-        an [IllegalArgumentException] should be thrownBy stArea.genCode(ctx)
+        an [IllegalArgumentException] should be thrownBy ST_Area(lit(1).expr, "JTS").genCode(ctx)
+        an [IllegalArgumentException] should be thrownBy ST_Area(lit("POINT (1 1)").expr, "Illegal").genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
@@ -85,7 +85,8 @@ trait ST_AreaBehaviors extends QueryTest {
         stArea.child shouldEqual df.col("wkt").expr
         stArea.dataType shouldEqual DoubleType
         noException should be thrownBy stArea.makeCopy(Array(stArea.child))
-
+        noException should be thrownBy ST_Area.unapply(stArea)
+        noException should be thrownBy ST_Area.apply(stArea.child, geometryAPI.name)
     }
 
 }

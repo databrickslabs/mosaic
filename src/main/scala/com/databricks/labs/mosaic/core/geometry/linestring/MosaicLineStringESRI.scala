@@ -3,11 +3,10 @@ package com.databricks.labs.mosaic.core.geometry.linestring
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POINT}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString}
 import com.esri.core.geometry.SpatialReference
-
 import org.apache.spark.sql.catalyst.InternalRow
 
 class MosaicLineStringESRI(lineString: OGCLineString) extends MosaicGeometryESRI(lineString) with MosaicLineString {
@@ -91,7 +90,5 @@ object MosaicLineStringESRI extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryESRI.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryESRI.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryESRI.fromKryo(row)
 
 }
