@@ -48,7 +48,6 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
         val byteArray = Files.readAllBytes(Paths.get(inFile.getPath))
         val testRaster = MosaicRasterGDAL.fromBytes(byteArray)
 
-        println(s"description: ${testRaster.name}")
         println(s"x-pixels: ${testRaster.xSize}, y-pixels: ${testRaster.ySize}")
         println(s"num bands: ${testRaster.numBands}")
         println("spatial ref metadata:")
