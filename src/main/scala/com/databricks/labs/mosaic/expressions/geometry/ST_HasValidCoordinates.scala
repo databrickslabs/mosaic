@@ -1,14 +1,13 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import java.util.Locale
-
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.{BooleanType, DataType}
 import org.apache.spark.unsafe.types.UTF8String
+
+import java.util.Locale
 
 case class ST_HasValidCoordinates(
     inputGeom: Expression,
@@ -63,13 +62,13 @@ object ST_HasValidCoordinates {
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-            classOf[ST_HasValidCoordinates].getCanonicalName,
-            db.orNull,
-            "ST_HasValidCoordinates",
-            """
-              |    _FUNC_(expr1, expr2, expr3) - Checks if all points in geometry have
-              |    valid coordinates with respect to provided crs code and
-              |    the type of bounds.
+          classOf[ST_HasValidCoordinates].getCanonicalName,
+          db.orNull,
+          "ST_HasValidCoordinates",
+          """
+            |    _FUNC_(expr1, expr2, expr3) - Checks if all points in geometry have
+            |    valid coordinates with respect to provided crs code and
+            |    the type of bounds.
             """.stripMargin,
           "",
           """

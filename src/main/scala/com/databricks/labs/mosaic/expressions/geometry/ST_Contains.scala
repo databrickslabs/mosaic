@@ -2,12 +2,9 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{BooleanType, DataType}
-
-import scala.util.{Success, Try}
 
 case class ST_Contains(leftGeom: Expression, rightGeom: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
 
@@ -38,38 +35,13 @@ case class ST_Contains(leftGeom: Expression, rightGeom: Expression, geometryAPIN
           ev,
           (leftEval, rightEval) => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              // TODO: code can be simplified if the function is registered and called 2 times
-              // not merged into the same code block due to JTS IOException throwing
-              // ESRI code will always remain simpler
-              val tryIO = Try {
-                  val (leftInCode, leftGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, leftGeom.dataType, geometryAPI)
-                  val (rightInCode, rightGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, rightEval, rightGeom.dataType, geometryAPI)
-                  ((leftInCode, leftGeomInRef), (rightInCode, rightGeomInRef))
-              }
-              (tryIO, geometryAPI) match {
-                  case (
-                        Success(((leftInCode, leftGeomInRef), (rightInCode, rightGeomInRef))),
-                        ESRI
-                      ) => s"""
-                              |$leftInCode
-                              |$rightInCode
-                              |${ev.value} = $leftGeomInRef.contains($rightGeomInRef);
-                              |""".stripMargin
-                  case (
-                        Success(((leftInCode, leftGeomInRef), (rightInCode, rightGeomInRef))),
-                        JTS
-                      ) => s"""
-                              |try {
-                              |$leftInCode
-                              |$rightInCode
-                              |${ev.value} = $leftGeomInRef.contains($rightGeomInRef);
-                              |} catch (Exception e) {
-                              | throw e;
-                              |}
-                              |""".stripMargin
-                  case _ => throw new IllegalArgumentException(s"Geometry API unsupported: $geometryAPIName.")
-
-              }
+              val (leftInCode, leftGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, leftGeom.dataType, geometryAPI)
+              val (rightInCode, rightGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, rightEval, rightGeom.dataType, geometryAPI)
+              geometryAPI.codeGenTryWrap(s"""
+                                            |$leftInCode
+                                            |$rightInCode
+                                            |${ev.value} = $leftGeomInRef.contains($rightGeomInRef);
+                                            |""".stripMargin)
           }
         )
 

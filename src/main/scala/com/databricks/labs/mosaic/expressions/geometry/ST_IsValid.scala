@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import scala.util.Try
-
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{BooleanType, DataType}
+
+import scala.util.Try
 
 case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
@@ -38,27 +37,16 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
           leftEval => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-
+              val geometryIsValidStatement = geometryAPI.geometryIsValidCode
               // Invalid format should not crash the execution
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                   |try {
-                                   |$inCode
-                                   |${ev.value} = $geomInRef.isSimple();
-                                   |} catch (Exception e) {
-                                   | ${ev.value} = false;
-                                   |}
-                                   |""".stripMargin
-                  case "JTS" => s"""
-                                   |try {
-                                   |$inCode
-                                   |${ev.value} = $geomInRef.isValid();
-                                   |} catch (Exception e) {
-                                   | ${ev.value} = false;
-                                   |}
-                                   |""".stripMargin
-
-              }
+              s"""
+                 |try {
+                 |$inCode
+                 |${ev.value} = $geomInRef.$geometryIsValidStatement;
+                 |} catch (Exception e) {
+                 | ${ev.value} = false;
+                 |}
+                 |""".stripMargin
           }
         )
 

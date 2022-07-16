@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api._
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI._
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{DataType, DoubleType}
@@ -39,25 +38,12 @@ case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends Unary
           ev,
           eval => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              geometryAPI match {
-                  case ESRI       =>
-                      val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, eval, inputGeom.dataType, geometryAPI)
-                      geometryAPI.codeGenTryWrap(
-                        s"""
-                           |$inCode
-                           |${ev.value} = $geomInRef.getEsriGeometry().calculateArea2D();
-                           |""".stripMargin
-                      )
-                  case JTS        =>
-                      val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, eval, inputGeom.dataType, geometryAPI)
-                      geometryAPI.codeGenTryWrap(
-                        s"""
-                           |$inCode
-                           |${ev.value} = $geomInRef.getArea();
-                           |""".stripMargin
-                      )
-                  case IllegalAPI => throw new IllegalArgumentException(s"Geometry API unsupported: $geometryAPIName.")
-              }
+              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, eval, inputGeom.dataType, geometryAPI)
+              val areaStatement = geometryAPI.geometryAreaCode
+              geometryAPI.codeGenTryWrap(s"""
+                                            |$inCode
+                                            |${ev.value} = $geomInRef.$areaStatement;
+                                            |""".stripMargin)
           }
         )
 

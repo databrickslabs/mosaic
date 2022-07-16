@@ -3,13 +3,10 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.codegen.geometry.CentroidCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
-
-import scala.util.{Success, Try}
 
 case class ST_Centroid(inputGeom: Expression, geometryAPIName: String, nDim: Int = 2) extends UnaryExpression with NullIntolerant {
 
@@ -55,34 +52,13 @@ case class ST_Centroid(inputGeom: Expression, geometryAPIName: String, nDim: Int
           ev,
           eval => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val tryIO = Try {
-                  val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, eval, inputGeom.dataType, geometryAPI)
-                  val (centroidCode, centroidRow) = CentroidCodeGen(geometryAPI).centroid(ctx, geomInRef, geometryAPI, nDim)
-                  ((inCode, geomInRef), (centroidCode, centroidRow))
-              }
-              (tryIO, geometryAPI) match {
-                  case (
-                        Success(((inCode, _), (centroidCode, centroidRow))),
-                        ESRI
-                      ) => s"""
-                              |$inCode
-                              |$centroidCode
-                              |${ev.value} = $centroidRow;
-                              |""".stripMargin
-                  case (
-                        Success(((inCode, _), (centroidCode, centroidRow))),
-                        JTS
-                      ) => s"""
-                              |try {
-                              |$inCode
-                              |$centroidCode
-                              |${ev.value} = $centroidRow;
-                              |} catch (Exception e) {
-                              | throw e;
-                              |}
-                              |""".stripMargin
-                  case _ => throw new IllegalArgumentException(s"Geometry API unsupported: $geometryAPIName.")
-              }
+              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, eval, inputGeom.dataType, geometryAPI)
+              val (centroidCode, centroidRow) = CentroidCodeGen(geometryAPI).centroid(ctx, geomInRef, geometryAPI, nDim)
+              geometryAPI.codeGenTryWrap(s"""
+                                            |$inCode
+                                            |$centroidCode
+                                            |${ev.value} = $centroidRow;
+                                            |""".stripMargin)
           }
         )
 

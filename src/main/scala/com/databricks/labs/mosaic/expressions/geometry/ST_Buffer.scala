@@ -2,14 +2,9 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
-import com.esri.core.geometry.ogc.OGCGeometry
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
-import org.locationtech.jts.geom.{Geometry => JTSGeometry}
-
-import scala.util.{Success, Try}
 
 case class ST_Buffer(inputGeom: Expression, radius: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
 
@@ -43,41 +38,17 @@ case class ST_Buffer(inputGeom: Expression, radius: Expression, geometryAPIName:
           (leftEval, rightEval) => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val buffered = ctx.freshName("buffered")
-              val ogcPolygonClass = classOf[OGCGeometry].getName
-              val jtsPolygonClass = classOf[JTSGeometry].getName
-              val tryIO = Try(
-                (
-                  ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI),
-                  ConvertToCodeGen.writeGeometryCode(ctx, buffered, inputGeom.dataType, geometryAPI)
-                )
-              )
-              // not merged into the same code block due to JTS IOException throwing
-              // ESRI code will always remain simpler
-              (tryIO, geometryAPI) match {
-                  case (
-                        Success(((inCode, geomInRef), (outCode, outGeomRef))),
-                        ESRI
-                      ) => s"""
-                              |$inCode
-                              |$ogcPolygonClass $buffered = $geomInRef.buffer($rightEval);
-                              |$outCode
-                              |${ev.value} = $outGeomRef;
-                              |""".stripMargin
-                  case (
-                        Success(((inCode, geomInRef), (outCode, outGeomRef))),
-                        JTS
-                      ) => s"""
-                              |try {
-                              |$inCode
-                              |$jtsPolygonClass $buffered = $geomInRef.buffer($rightEval);
-                              |$outCode
-                              |${ev.value} = $outGeomRef;
-                              |} catch (Exception e) {
-                              | throw e;
-                              |}
-                              |""".stripMargin
-                  case _ => throw new IllegalArgumentException(s"Geometry API unsupported: $geometryAPIName.")
-              }
+              val polygonClass = geometryAPI.geometryClass
+
+              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
+              val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, buffered, inputGeom.dataType, geometryAPI)
+
+              geometryAPI.codeGenTryWrap(s"""
+                                            |$inCode
+                                            |$polygonClass $buffered = $geomInRef.buffer($rightEval);
+                                            |$outCode
+                                            |${ev.value} = $outGeomRef;
+                                            |""".stripMargin)
           }
         )
 

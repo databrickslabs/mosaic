@@ -5,10 +5,12 @@ import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point._
 import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
+import com.esri.core.geometry.ogc.OGCGeometry
 import com.uber.h3core.util.GeoCoord
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+import org.locationtech.jts.geom.{Geometry => JTSGeometry}
 
 import java.util.Locale
 
@@ -102,6 +104,19 @@ abstract class GeometryAPI(
 
     def codeGenTryWrap(code: String): String = throw new Error("Unimplemented")
 
+    def geometryClass: String = throw new Error("Unimplemented")
+
+    def mosaicGeometryClass: String = throw new Error("Unimplemented")
+
+    def geometryAreaCode: String = throw new Error("Unimplemented")
+
+    def geometryTypeCode: String = throw new Error("Unimplemented")
+
+    def geometryIsValidCode: String = throw new Error("Unimplemented")
+
+    def geometryLengthCode: String = throw new Error("Unimplemented")
+
+    def geometrySRIDCode(geomInRef: String): String = throw new Error("Unimplemented")
 }
 
 object GeometryAPI extends Serializable {
@@ -125,6 +140,20 @@ object GeometryAPI extends Serializable {
 
         override def codeGenTryWrap(code: String): String = code
 
+        override def geometryClass: String = classOf[OGCGeometry].getName
+
+        override def mosaicGeometryClass: String = classOf[MosaicGeometryESRI].getName
+
+        override def geometryAreaCode: String = "getEsriGeometry().calculateArea2D()"
+
+        override def geometryTypeCode: String = "geometryType()"
+
+        override def geometryIsValidCode: String = "isSimple()"
+
+        override def geometryLengthCode: String = "getEsriGeometry().calculateLength2D()"
+
+        override def geometrySRIDCode(geomInRef: String): String = s"($geomInRef.esriSR == null) ? 0 : $geomInRef.getEsriSpatialReference().getID()"
+
     }
 
     object JTS extends GeometryAPI(MosaicGeometryJTS) {
@@ -146,6 +175,19 @@ object GeometryAPI extends Serializable {
                |}
                |""".stripMargin
 
+        override def geometryClass: String = classOf[JTSGeometry].getName
+
+        override def mosaicGeometryClass: String = classOf[MosaicGeometryJTS].getName
+
+        override def geometryAreaCode: String = "getArea()"
+
+        override def geometryTypeCode: String = "getGeometryType()"
+
+        override def geometryIsValidCode: String = "isValid()"
+
+        override def geometryLengthCode: String = "getLength()"
+
+        override def geometrySRIDCode(geomInRef: String): String = s"$geomInRef.getSRID()"
     }
 
     object IllegalAPI extends GeometryAPI(null) {

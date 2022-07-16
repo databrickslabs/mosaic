@@ -144,7 +144,7 @@ trait ST_GeometryTypeBehaviors extends QueryTest {
 
         val stGeometryType = ST_GeometryType(lit("POINT (1 1)").expr, "illegalAPI")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stGeometryType.genCode(ctx)
+        an[Error] should be thrownBy stGeometryType.genCode(ctx)
 
     }
 

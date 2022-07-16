@@ -25,7 +25,7 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
     override def getLength: Double = MosaicGeometryESRI(multiPolygon.boundary()).getLength
 
     override def numPoints: Int = {
-        getHolePoints.map(_.length).sum + getShellPoints.map(_.length).sum
+        getHolePoints.map(_.map(_.length).sum).sum + getShellPoints.map(_.length).sum
     }
 
     override def getHoles: Seq[Seq[MosaicLineString]] = {

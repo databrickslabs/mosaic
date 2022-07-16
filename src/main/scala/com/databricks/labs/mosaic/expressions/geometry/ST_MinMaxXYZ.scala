@@ -1,9 +1,7 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.{MosaicGeometryJTS, MosaicGeometryESRI}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{DataType, DoubleType}
@@ -36,24 +34,11 @@ case class ST_MinMaxXYZ(inputGeom: Expression, geometryAPIName: String, dimensio
           leftEval => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-              val mosaicGeometryOGC = classOf[MosaicGeometryESRI].getName
-              val mosaicGeometryJTS = classOf[MosaicGeometryJTS].getName
-
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                   |$inCode
-                                   |${ev.value} = $mosaicGeometryOGC.apply($geomInRef).minMaxCoord("$dimension", "$func");
-                                   |""".stripMargin
-                  case "JTS" => s"""
-                                   |try {
-                                   |$inCode
-                                   |${ev.value} = $mosaicGeometryJTS.apply($geomInRef).minMaxCoord("$dimension", "$func");
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
-
-              }
+              val mosaicGeometryClass = geometryAPI.mosaicGeometryClass
+              geometryAPI.codeGenTryWrap(s"""
+                                            |$inCode
+                                            |${ev.value} = $mosaicGeometryClass.apply($geomInRef).minMaxCoord("$dimension", "$func");
+                                            |""".stripMargin)
           }
         )
 

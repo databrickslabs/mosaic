@@ -70,7 +70,7 @@ trait ST_AreaBehaviors extends QueryTest {
 
         val ctx = new CodegenContext
         an [IllegalArgumentException] should be thrownBy ST_Area(lit(1).expr, "JTS").genCode(ctx)
-        an [IllegalArgumentException] should be thrownBy ST_Area(lit("POINT (1 1)").expr, "Illegal").genCode(ctx)
+        an [Error] should be thrownBy ST_Area(lit("POINT (1 1)").expr, "Illegal").genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
