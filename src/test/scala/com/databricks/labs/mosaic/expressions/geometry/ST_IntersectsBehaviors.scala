@@ -78,6 +78,50 @@ trait ST_IntersectsBehaviors extends QueryTest {
         result2.collect().length should be > 0
     }
 
+    def selfIntersectsBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        import mc.functions._
+        mc.register(spark)
+
+        val boroughs: DataFrame = getBoroughs(mc).limit(1)
+
+        val left = boroughs
+            .select(
+                col("wkt"),
+                col("id").alias("left_id"),
+                mosaic_explode(col("wkt"), resolution).alias("left_index"),
+                col("wkt").alias("left_wkt")
+            )
+
+        val right = left
+            .select(
+                col("left_wkt").alias("right_wkt"),
+                col("left_id").alias("right_id"),
+                col("left_index").alias("right_index")
+            )
+
+        val result = left
+            .drop("wkt")
+            .join(
+                right,
+                col("left_index.index_id") === col("right_index.index_id")
+            )
+            .groupBy(
+                "left_id",
+                "right_id"
+            )
+            .agg(
+                st_intersects_aggregate(col("left_index"), col("right_index")).alias("agg_intersects"),
+                first("left_wkt").alias("left_wkt"),
+                first("right_wkt").alias("right_wkt")
+            )
+            .withColumn("flat_intersects", st_intersects(col("left_wkt"), col("right_wkt")))
+            .withColumn("comparison", col("flat_intersects") === col("agg_intersects"))
+
+        result.select("comparison").collect().map(_.getBoolean(0)).forall(identity) shouldBe true
+    }
+
     def intersectsCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
