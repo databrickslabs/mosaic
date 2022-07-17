@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.expressions.index.IndexGeometry
-
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
@@ -27,20 +26,14 @@ case class ST_IntersectsAggregate(
     override def prettyName: String = "st_intersects_aggregate"
 
     override def update(accumulator: Boolean, inputRow: InternalRow): Boolean = {
-        val state = accumulator
-        if (!state) {
+        accumulator || {
             val leftChipValue = left.eval(inputRow).asInstanceOf[InternalRow]
             val rightChipValue = right.eval(inputRow).asInstanceOf[InternalRow]
-            val eitherIsCore = leftChipValue.getBoolean(0) || rightChipValue.getBoolean(0)
-            if (eitherIsCore) {
-                true
-            } else {
+            leftChipValue.getBoolean(2) || rightChipValue.getBoolean(2) || {
                 val leftChipGeom = geometryAPI.geometry(leftChipValue.getBinary(2), "WKB")
                 val rightChipGeom = geometryAPI.geometry(rightChipValue.getBinary(2), "WKB")
                 leftChipGeom.intersects(rightChipGeom)
             }
-        } else {
-            true
         }
     }
 
