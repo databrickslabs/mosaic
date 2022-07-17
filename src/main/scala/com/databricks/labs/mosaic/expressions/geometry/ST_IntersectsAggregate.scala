@@ -29,7 +29,7 @@ case class ST_IntersectsAggregate(
         accumulator || {
             val leftChipValue = left.eval(inputRow).asInstanceOf[InternalRow]
             val rightChipValue = right.eval(inputRow).asInstanceOf[InternalRow]
-            leftChipValue.getBoolean(2) || rightChipValue.getBoolean(2) || {
+            leftChipValue.getBoolean(0) || rightChipValue.getBoolean(0) || {
                 val leftChipGeom = geometryAPI.geometry(leftChipValue.getBinary(2), "WKB")
                 val rightChipGeom = geometryAPI.geometry(rightChipValue.getBinary(2), "WKB")
                 leftChipGeom.intersects(rightChipGeom)
