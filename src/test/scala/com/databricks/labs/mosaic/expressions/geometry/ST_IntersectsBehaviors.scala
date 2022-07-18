@@ -11,6 +11,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{BinaryType, BooleanType, LongType, StructField, StructType}
+import org.scalatest.matchers.must.Matchers.contain
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper, noException}
 
 trait ST_IntersectsBehaviors extends QueryTest {
@@ -88,7 +89,7 @@ trait ST_IntersectsBehaviors extends QueryTest {
         mc.register(spark)
 
         val indexID1 = if (indexSystem == H3IndexSystem) 608726199203528703L else 10000731741640L
-        val indexID2 = if (indexSystem == H3IndexSystem) 608726199220305919L else 10000731541660L
+        val indexID2 = if (indexSystem == H3IndexSystem) 608826199220316919L else 10000931541660L
         val indexPolygon1 = indexSystem.indexToGeometry(indexID1, geometryAPI)
         val indexPolygon2 = indexSystem.indexToGeometry(indexID2, geometryAPI)
         val indexPolygonShell1 = indexPolygon1.getShellPoints
@@ -102,7 +103,8 @@ trait ST_IntersectsBehaviors extends QueryTest {
             List(1L, true, indexID1, indexPolygon1.toWKB, true, indexID1, indexPolygon1.toWKB),
             List(2L, false, indexID1, indexChip1.toWKB, true, indexID1, indexPolygon1.toWKB),
             List(3L, true, indexID2, indexPolygon2.toWKB, false, indexID2, indexChip2.toWKB),
-            List(4L, false, indexID2, indexChip2.toWKB, false, indexID2, indexChip2.toWKB)
+            List(4L, false, indexID2, indexChip2.toWKB, false, indexID2, indexChip2.toWKB),
+            List(5L, false, indexID2, indexChip1.toWKB, false, indexID2, indexChip2.toWKB)
         )
         val rows = matchRows.map { x => Row(x: _*) }
         val rdd = spark.sparkContext.makeRDD(rows)
@@ -130,7 +132,7 @@ trait ST_IntersectsBehaviors extends QueryTest {
             .groupBy("row_id")
             .agg(st_intersects_aggregate(col("left_index"), col("right_index")).alias("flag"))
 
-        results.select("flag").as[Boolean].collect().head shouldEqual true
+        results.select("flag").as[Boolean].collect() should contain theSameElementsAs Seq(true, true, true, true, false)
     }
 
     def selfIntersectsBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {

@@ -17,7 +17,7 @@ case class ST_IntersectsAggregate(
 ) extends TypedImperativeAggregate[Boolean]
       with BinaryLike[Expression] {
 
-    lazy val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
+    val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
     override val left: Expression = leftChip
     override val right: Expression = rightChip
     override val nullable: Boolean = false
