@@ -8,24 +8,40 @@ import org.locationtech.proj4j.CRSFactory
 import scala.util.{Try, Success, Failure}
 
 class MosaicRasterGDAL(raster: Dataset) extends MosaicRaster {
+
+  override def subdatasets: List[(String, String)] = {
+    raster
+      .GetMetadata_List("SUBDATASETS")
+      .toArray
+      .map(_.toString)
+      .grouped(2)
+      .map({case Array(p, d) => (p.split("=").last, d)})
+      .toList
+  }
+
   override def numBands: Int = raster.GetRasterCount()
 
   override def SRID: Int = {
-    val crsFactory = new CRSFactory
-    Try(crsFactory.readEpsgFromParameters(proj4String)) match {
-      case Success(null) => 0
-      case Success(s) if s contains ":" => ":".split(s).last.toInt
-      case Failure(_) => 0
-    }
+    Try(crsFactory.readEpsgFromParameters(proj4String))
+      .filter(_ != null)
+      .getOrElse("EPSG:0")
+      .split(":")
+      .last.toInt
   }
 
-  override def proj4String: String = raster.GetSpatialRef.ExportToProj4
+  override def proj4String: String = Try(raster.GetSpatialRef.ExportToProj4).filter(_ != null).getOrElse("")
 
   override def xSize: Int = raster.GetRasterXSize
 
   override def ySize: Int = raster.GetRasterYSize
 
-  override def getBand(bandId: Int): MosaicRasterBand = new MosaicRasterBandGDAL(raster.GetRasterBand(bandId), bandId)
+  override def getBand(bandId: Int): MosaicRasterBand = {
+    if (bandId > 0 && numBands >= bandId) {
+      new MosaicRasterBandGDAL(raster.GetRasterBand(bandId), bandId)
+    } else {
+      throw new ArrayIndexOutOfBoundsException()
+    }
+  }
 
   override def extent: Seq[Double] = {
     val minx = geoTransformArray(0)
@@ -37,15 +53,17 @@ class MosaicRasterGDAL(raster: Dataset) extends MosaicRaster {
 
   override def getRaster: Dataset = this.raster
 
-  def spatialRef: SpatialReference = raster.GetSpatialRef()
-
-  def geoTransformArray: Seq[Double] = raster.GetGeoTransform()
-
   override def geoTransform(pixel: Int, line: Int): Seq[Double] = {
     val Xp = geoTransformArray(0) + pixel * geoTransformArray(1) + line * geoTransformArray(2)
     val Yp = geoTransformArray(3) + pixel * geoTransformArray(4) + line * geoTransformArray(5)
     Array(Xp, Yp)
   }
+
+  val crsFactory: CRSFactory = new CRSFactory
+
+  def spatialRef: SpatialReference = raster.GetSpatialRef()
+
+  def geoTransformArray: Seq[Double] = raster.GetGeoTransform()
 
 }
 
@@ -55,9 +73,15 @@ object MosaicRasterGDAL extends RasterReader {
 
   override def fromBytes(bytes: Array[Byte]): MosaicRaster = {
     enableGDAL()
-    val virtualPath = s"/vsimem/${java.util.UUID.randomUUID.toString}.TIF"
+    val virtualPath = s"/vsimem/${java.util.UUID.randomUUID.toString}"
     gdal.FileFromMemBuffer(virtualPath, bytes)
     val dataset = gdal.Open(virtualPath, GA_ReadOnly)
+    MosaicRasterGDAL(dataset)
+  }
+
+  def fromBytes(bytes: Array[Byte], subdataset: Int): MosaicRaster = {
+    val (p, _) = fromBytes(bytes).subdatasets(subdataset)
+    val dataset = gdal.Open(p, GA_ReadOnly)
     MosaicRasterGDAL(dataset)
   }
 

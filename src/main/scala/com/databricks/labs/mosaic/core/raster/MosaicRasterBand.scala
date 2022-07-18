@@ -18,6 +18,6 @@ trait MosaicRasterBand extends Serializable {
   def pixelValueScale: Double
   def pixelValueOffset: Double
   def pixelValueToUnitValue(pixelValue: Double): Double
-  def values[T: TypeTag: ClassTag]: Array[Array[T]] = values(0, 0, xSize, ySize)
-  def values[T: TypeTag: ClassTag](xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Array[T]]
+  def values: Array[Array[Double]] = values(0, 0, xSize, ySize)
+  def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Array[Double]]
 }

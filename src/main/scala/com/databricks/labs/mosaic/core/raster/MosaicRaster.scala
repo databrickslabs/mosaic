@@ -1,6 +1,9 @@
 package com.databricks.labs.mosaic.core.raster
 
 trait MosaicRaster extends Serializable {
+
+  def subdatasets: List[(String, String)]
+
   def numBands: Int
 
   def SRID: Int
