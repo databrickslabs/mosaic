@@ -1,7 +1,5 @@
 package com.databricks.labs.mosaic.core.types
 
-import com.databricks.labs.mosaic.core.geometry.GeometryFormat
-import org.apache.spark.sql.types.{BinaryType, DoubleType, StringType}
 import org.scalatest.flatspec.AnyFlatSpec
 
 class TestTypeNames extends AnyFlatSpec {

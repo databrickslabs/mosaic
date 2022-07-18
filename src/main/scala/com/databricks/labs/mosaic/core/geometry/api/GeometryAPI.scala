@@ -71,15 +71,7 @@ abstract class GeometryAPI(
         }
 
     def serialize(geometry: MosaicGeometry, dataType: DataType): Any = {
-        dataType match {
-            case _: BinaryType           => geometry.toWKB
-            case _: StringType           => UTF8String.fromString(geometry.toWKT)
-            case _: HexType              => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
-            case _: JSONType             => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
-            case _: InternalGeometryType => geometry.toInternal.serialize
-            case _: KryoType => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
-            case _           => throw new Error(s"$dataType not supported.")
-        }
+        serialize(geometry, GeometryFormat.getDefaultFormat(dataType))
     }
 
     def serialize(geometry: MosaicGeometry, dataFormatName: String): Any = {
