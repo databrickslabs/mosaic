@@ -95,7 +95,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
 
     override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode = {
         val geometryAPI = GeometryAPI.apply(geometryAPIName)
-        ConvertToCodeGen.doCodeGenESRI(
+        ConvertToCodeGen.doCodeGen(
           ctx,
           ev,
           nullSafeCodeGen,

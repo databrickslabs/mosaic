@@ -1,16 +1,16 @@
 package com.databricks.labs.mosaic.codegen.format
 
+import com.databricks.labs.mosaic.core.geometry.GeometryFormat
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.types._
-
 import org.apache.spark.sql.catalyst.expressions.codegen._
 import org.apache.spark.sql.types._
 
 object ConvertToCodeGen {
 
     // noinspection DuplicatedCode
-    def doCodeGenESRI(
+    def doCodeGen(
         ctx: CodegenContext,
         ev: ExprCode,
         nullSafeCodeGen: (CodegenContext, ExprCode, String => String) => ExprCode,
@@ -65,19 +65,8 @@ object ConvertToCodeGen {
 
     // noinspection DuplicatedCode
     def writeGeometryCode(ctx: CodegenContext, eval: String, outputDataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
-        val geometryCodeGen = geometryAPI.name match {
-            case n if n == ESRI.name => MosaicGeometryIOCodeGenESRI
-            case n if n == JTS.name  => MosaicGeometryIOCodeGenJTS
-        }
-        // noinspection ScalaStyle
-        outputDataType match {
-            case BinaryType           => geometryCodeGen.toWKB(ctx, eval, geometryAPI)
-            case StringType           => geometryCodeGen.toWKT(ctx, eval, geometryAPI)
-            case HexType              => geometryCodeGen.toHEX(ctx, eval, geometryAPI)
-            case JSONType             => geometryCodeGen.toJSON(ctx, eval, geometryAPI)
-            case InternalGeometryType => geometryCodeGen.toInternal(ctx, eval, geometryAPI)
-            case KryoType             => throw new NotImplementedError("KryoType is not Supported yet.")
-        }
+        val outDataFormat = GeometryFormat.getDefaultFormat(outputDataType)
+        writeGeometryCode(ctx, eval, outDataFormat, geometryAPI)
     }
 
     // noinspection DuplicatedCode

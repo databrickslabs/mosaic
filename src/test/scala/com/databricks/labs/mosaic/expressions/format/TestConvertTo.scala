@@ -1,7 +1,5 @@
 package com.databricks.labs.mosaic.expressions.format
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.ESRI
-import com.databricks.labs.mosaic.core.geometry.point.MosaicPointESRI
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types.NullType
 import org.scalamock.scalatest.MockFactory
