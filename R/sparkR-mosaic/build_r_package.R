@@ -7,7 +7,7 @@ devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
 library(devtools)
 library(roxygen2)
 library(SparkR)
-SparkR::install.spark()
+SparkR::install.spark(mirrorUrl="https://archive.apache.org/dist/spark")
 
 
 build_sparkr_mosaic <- function(){
