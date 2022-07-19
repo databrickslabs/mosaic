@@ -55,3 +55,6 @@ class MosaicContext:
     @property
     def index_system(self):
         return self._index_system
+
+    def install_gdal(self, spark: SparkSession):
+        return self._context.installGDAL(spark._jsparkSession)
