@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.functions
 
 import scala.io.Source
+import scala.sys.process._
 
 import java.io.IOException
 
@@ -365,11 +366,18 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     def installGDAL(spark: SparkSession): Unit = {
         val sc = spark.sparkContext
         val numExecutors = sc.getExecutorMemoryStatus.size - 1
-        val scriptPath = getClass.getResourceAsStream("/scripts/install-gdal.sh")
-        val script = Source.fromInputStream(scriptPath)
+        val scriptPath = System.getProperty("os.name").toLowerCase() match {
+            case o: String if o.contains("nux") => "/scripts/install-gdal-debian-ubuntu.sh"
+            case o: String if o.contains("mac") => "/scripts/install-gdal-macos.sh"
+            case _ => throw new UnsupportedOperationException("This method only supports Ubuntu Linux with `apt` and MacOS with `brew`.")
+        }
+        val script = Source.fromInputStream(getClass.getResourceAsStream(scriptPath))
         for (cmd <- script.getLines.toList) {
             try {
-                sc.parallelize(1 to numExecutors).pipe(cmd).collect
+                cmd.!!
+                if (!spark.sparkContext.isLocal) {
+                    sc.parallelize(1 to numExecutors).pipe(cmd).collect
+                }
             } catch {
                 case e: IOException           => logError(e.getMessage)
                 case e: IllegalStateException => logError(e.getMessage)
@@ -506,14 +514,14 @@ object MosaicContext {
         context
     }
 
+    def geometryAPI: GeometryAPI = context.getGeometryAPI
+
+    def indexSystem: IndexSystem = context.getIndexSystem
+
     def context: MosaicContext =
         instance match {
             case Some(context) => context
             case None          => throw new IllegalStateException("MosaicContext was not built.")
         }
-
-    def geometryAPI: GeometryAPI = context.getGeometryAPI
-
-    def indexSystem: IndexSystem = context.getIndexSystem
 
 }

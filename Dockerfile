@@ -21,7 +21,7 @@ RUN pip install --upgrade pip \
 COPY pom.xml scalastyle-config.xml src /tmp/
 COPY src/. /tmp/src/
 WORKDIR /tmp
-RUN mvn -DskipTests clean install
+RUN mvn clean install
 COPY python/. /tmp/python/
 WORKDIR /tmp/python
 RUN cp ../target/mosaic*jar-with-dependencies.jar ./mosaic/lib
