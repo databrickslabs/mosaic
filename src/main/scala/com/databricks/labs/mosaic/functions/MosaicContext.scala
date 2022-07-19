@@ -1,5 +1,16 @@
 package com.databricks.labs.mosaic.functions
 
+import scala.io.Source
+
+import java.io.IOException
+
+import org.apache.spark.internal.Logging
+import org.apache.spark.sql.{Column, SparkSession}
+import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.functions._
+import org.apache.spark.SparkException
+
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
@@ -9,12 +20,7 @@ import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.helper.TrySql
 import com.databricks.labs.mosaic.expressions.index._
 
-import org.apache.spark.sql.{Column, SparkSession}
-import org.apache.spark.sql.catalyst.FunctionIdentifier
-import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.functions._
-
-class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends Serializable {
+class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends Serializable with Logging {
 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 
@@ -275,9 +281,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_Transform(exprs(0), exprs(1), geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("st_hasvalidcoordinates", database),
-            ST_HasValidCoordinates.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => ST_HasValidCoordinates(exprs(0), exprs(1), exprs(2), geometryAPI.name)
+          FunctionIdentifier("st_hasvalidcoordinates", database),
+          ST_HasValidCoordinates.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_HasValidCoordinates(exprs(0), exprs(1), exprs(2), geometryAPI.name)
         )
 
         /** Aggregators */
@@ -355,6 +361,24 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     def getGeometryAPI: GeometryAPI = this.geometryAPI
 
     def getIndexSystem: IndexSystem = this.indexSystem
+
+    def installGDAL(spark: SparkSession): Unit = {
+        val sc = spark.sparkContext
+        val numExecutors = sc.getExecutorMemoryStatus.size - 1
+        val scriptPath = getClass.getResourceAsStream("/scripts/install-gdal.sh")
+        val script = Source.fromInputStream(scriptPath)
+        for (cmd <- script.getLines.toList) {
+            try {
+                sc.parallelize(1 to numExecutors).pipe(cmd).collect
+            } catch {
+                case e: IOException           => logError(e.getMessage)
+                case e: IllegalStateException => logError(e.getMessage)
+                case e: SparkException        => logError(e.getMessage)
+            } finally {
+                script.close
+            }
+        }
+    }
 
     // scalastyle:off object.name
     object functions extends Serializable {
