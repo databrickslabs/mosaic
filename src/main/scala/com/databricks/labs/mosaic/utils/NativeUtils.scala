@@ -91,20 +91,20 @@ object NativeUtils {
             temporaryDir.deleteOnExit()
         }
         val temp = new File(temporaryDir, filename)
-        try {
-            val is = getClass.getResourceAsStream(path)
-            try Files.copy(is, temp.toPath, StandardCopyOption.REPLACE_EXISTING)
-            catch {
-                case e: IOException          =>
-                    temp.delete
-                    throw e
-                case e: NullPointerException =>
-                    temp.delete
-                    throw new FileNotFoundException("File " + path + " was not found inside JAR.")
-            } finally if (is != null) is.close()
-        }
+        val is = getClass.getResourceAsStream(path)
+        try Files.copy(is, temp.toPath, StandardCopyOption.REPLACE_EXISTING)
+        catch {
+            case e: IOException          =>
+                temp.delete
+                throw e
+            case e: NullPointerException =>
+                temp.delete
+                throw new FileNotFoundException("File " + path + " was not found inside JAR.")
+        } finally if (is != null) is.close()
         try {
             System.load(temp.getAbsolutePath)
+        } catch {
+            case e: UnsatisfiedLinkError => throw e
         } finally {
             temp.delete
         }
