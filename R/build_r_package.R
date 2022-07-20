@@ -23,12 +23,12 @@ for(repo in names(mirror_status)){
   }
 }
 
-install.packages("devtools", repos=repo)
+#install.packages("devtools", repos=repo)
 install.packages("roxygen2", repos=repo)
 #install.packages("sparklyr", repos=repo)
 #devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
 
-library(devtools)
+#library(devtools)
 library(roxygen2)
 #library(SparkR)
 #library(sparklyr)
@@ -43,13 +43,17 @@ build_mosaic_bindings <- function(){
   system(system_cmd)
 
   # build doc
-  devtools::document("sparkR-mosaic/sparkrMosaic")
-  devtools::document("sparklyr-mosaic/sparklyrMosaic")
-
-  ## build package
-  devtools::build("sparkR-mosaic/sparkrMosaic")
-  devtools::build("sparklyr-mosaic/sparklyrMosaic")
+  #devtools::document("sparkR-mosaic/sparkrMosaic")
+  #devtools::document("sparklyr-mosaic/sparklyrMosaic")
+  roxygen2::roxygenize("sparkR-mosaic/sparkrMosaic")
+  roxygen2::roxygenize("sparklyr-mosaic/sparklyrMosaic")
   
+  
+  ## build package
+  #devtools::build("sparkR-mosaic/sparkrMosaic")
+  #devtools::build("sparklyr-mosaic/sparklyrMosaic")
+  system("R CMD build sparkR-mosaic/sparkrMosaic")
+  system("R CMD build sparkR-mosaic/sparkrMosaic")
 }
 
 
