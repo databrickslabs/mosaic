@@ -115,6 +115,13 @@ object MosaicGeometryIOCodeGenESRI extends GeometryIOCodeGen {
     }
 
     // noinspection DuplicatedCode
+    override def toGeoJSON(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
+        val outputGeom = ctx.freshName("outputGeom")
+        val javaStringType = CodeGenerator.javaType(StringType)
+        (s"""$javaStringType $outputGeom = $javaStringType.fromString($eval.asGeoJson());""", outputGeom)
+    }
+
+    // noinspection DuplicatedCode
     override def toJSON(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val outputGeom = ctx.freshName("outputGeom")
         val stringJavaType = CodeGenerator.javaType(StringType)

@@ -18,7 +18,7 @@ class ConvertToCodeGenTest extends AnyFlatSpec {
                 code
             }
         an[IllegalArgumentException] should be thrownBy {
-            ConvertToCodeGen.doCodeGen(ctx, ExprCode.forNullValue(StringType), nullSafeEval, StringType, DoubleType, JTS)
+            ConvertToCodeGen.doCodeGen(ctx, ExprCode.forNullValue(StringType), nullSafeEval, StringType, "double", JTS)
         }
     }
 

@@ -1,8 +1,11 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index._
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.test.mocks
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.io.{WKTReader, WKTWriter}
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
@@ -13,8 +16,108 @@ import scala.collection.JavaConverters._
 
 trait ST_TransformBehaviors extends QueryTest {
 
-    def transformBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    val wktReader = new WKTReader()
+    val wktWriter = new WKTWriter()
+    val geomFactory = new GeometryFactory()
+
+    def extractSRID(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        val sc = spark
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        import mc.functions._
+        import sc.implicits._
+        mc.register(spark)
+
+        val refSrid = 27700
+
+        val referenceGeoms = mocks.geoJSON_rows
+            .map(_(1).asInstanceOf[String])
+            .map(mc.getGeometryAPI.geometry(_, "GEOJSON"))
+
+        referenceGeoms
+            .foreach(_.setSpatialReference(refSrid))
+
+        val referenceRows = referenceGeoms
+            .map(g => Row(g.toJSON))
+            .asJava
+        val schema = StructType(List(StructField("json", StringType)))
+
+        val sourceDf = spark
+            .createDataFrame(referenceRows, schema)
+            .select(as_json($"json").alias("json"))
+            .where(!st_geometrytype($"json").isin("MULTILINESTRING", "MULTIPOLYGON"))
+
+        val result = sourceDf // ESRI GeoJSON issue
+            .select(st_srid($"json"))
+            .as[Int]
+            .collect()
+
+        result should contain only refSrid
+
+        sourceDf.createOrReplaceTempView("source")
+
+        val sqlResult = spark
+            .sql("select st_srid(json) from source")
+            .as[Int]
+            .collect()
+
+        sqlResult should contain only refSrid
+
+    }
+
+    def assignSRID(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val sc = spark
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        import mc.functions._
+        import sc.implicits._
+        mc.register(spark)
+
+        val refSrid = 27700
+
+        // Internal format
+        val sourceDf = mocks
+            .getWKTRowsDf(mc)
+            .withColumn("internal", convert_to($"wkt", "COORDS"))
+
+        val result = sourceDf
+            .select(st_setsrid($"internal", lit(refSrid)).alias("internal"))
+            .select(st_srid($"internal").alias("srid"))
+            .as[Int]
+            .collect()
+
+        result should contain only refSrid
+
+        // GoeJSON
+        val resultJson = sourceDf
+            .where(!st_geometrytype($"wkt").isin("MULTILINESTRING", "MULTIPOLYGON"))
+            .select(st_geomfromwkt($"wkt").alias("geom"))
+            .select(st_setsrid($"geom", lit(refSrid)).alias("geom"))
+
+            // Convert to and from geoJSON should maintain the SRID
+            .select(st_asgeojson($"geom").alias("json"))
+            .select(st_geomfromgeojson($"json").alias("geom"))
+
+            // Extract the SRID
+            .select(st_srid($"geom").alias("srid"))
+            .as[Int]
+            .collect()
+
+        resultJson should contain only refSrid
+
+        sourceDf.createOrReplaceTempView("source")
+
+        // SQL
+        val sqlResult = spark
+            .sql(s"select st_srid(st_setsrid(internal, $refSrid)) from source")
+            .as[Int]
+            .collect()
+
+        sqlResult should contain only refSrid
+
+    }
+
+    def reprojectGeometries(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val sc = spark
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
@@ -49,7 +152,7 @@ trait ST_TransformBehaviors extends QueryTest {
         val sqlResult = spark
             .sql(s"""
                     |with transformed as (
-                    |    select
+                    |    select 
                     |        toInternalRef
                     |        , st_transform(fromInternal, $toSrid) as toInternalTest
                     |    from source)

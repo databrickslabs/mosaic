@@ -2,13 +2,11 @@ package com.databricks.labs.mosaic.expressions.format
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks._
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.catalyst.analysis.TypeCheckResult.{TypeCheckFailure, TypeCheckSuccess}
+import org.apache.spark.sql.catalyst.analysis.TypeCheckResult.TypeCheckSuccess
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
 import org.scalatest.matchers.should.Matchers._
 
 trait ConvertToBehaviors extends QueryTest {
@@ -64,9 +62,7 @@ trait ConvertToBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
-
         val wkts = getWKTRowsDf(mc).select("wkt").withColumn("new_wkt", st_astext(col("wkt"))).where("new_wkt == wkt")
-
         wkts.count() should be > 0L
     }
 
@@ -74,20 +70,9 @@ trait ConvertToBehaviors extends QueryTest {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
-
         val wkts = getWKTRowsDf(mc).select("wkt")
-
-        ConvertTo(wkts.col("wkt").expr, "WKT", geometryAPI.name).getOutType shouldEqual StringType
-        ConvertTo(wkts.col("wkt").expr, "WKB", geometryAPI.name).getOutType shouldEqual BinaryType
-        ConvertTo(wkts.col("wkt").expr, "HEX", geometryAPI.name).getOutType shouldEqual HexType
-        ConvertTo(wkts.col("wkt").expr, "JSON", geometryAPI.name).getOutType shouldEqual JSONType
-        ConvertTo(wkts.col("wkt").expr, "GEOJSON", geometryAPI.name).getOutType shouldEqual JSONType
-        ConvertTo(wkts.col("wkt").expr, "COORDS", geometryAPI.name).getOutType shouldEqual InternalGeometryType
-        an[IllegalArgumentException] should be thrownBy ConvertTo(wkts.col("wkt").expr, "ERROR", geometryAPI.name).getOutType
-
         val expr = ConvertTo(wkts.col("wkt").expr, "WKT", geometryAPI.name)
         expr.makeCopy(expr.children.toArray) shouldEqual expr
-
     }
 
 }

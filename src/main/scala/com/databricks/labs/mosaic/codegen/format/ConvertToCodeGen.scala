@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.codegen.format
 
+import com.databricks.labs.mosaic.core.geometry.GeometryFormat
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types._
 import org.apache.spark.sql.catalyst.expressions.codegen._
@@ -13,20 +14,20 @@ object ConvertToCodeGen {
         ev: ExprCode,
         nullSafeCodeGen: (CodegenContext, ExprCode, String => String) => ExprCode,
         inputDataType: DataType,
-        outputDataType: DataType,
+        outputDataTypeName: String,
         geometryAPI: GeometryAPI
     ): ExprCode = {
         nullSafeCodeGen(
           ctx,
           ev,
           eval => {
-              if (inputDataType.simpleString == outputDataType.simpleString) {
+              if (inputDataType.simpleString == outputDataTypeName) {
                   s"""
                      |${ev.value} = $eval;
                      |""".stripMargin
               } else {
                   val (inCode, geomInRef) = readGeometryCode(ctx, eval, inputDataType, geometryAPI)
-                  val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataType, geometryAPI)
+                  val (outCode, geomOutRef) = writeGeometryCode(ctx, geomInRef, outputDataTypeName, geometryAPI)
                   geometryAPI.codeGenTryWrap(s"""
                                                 |$inCode
                                                 |$outCode
@@ -52,14 +53,22 @@ object ConvertToCodeGen {
 
     // noinspection DuplicatedCode
     def writeGeometryCode(ctx: CodegenContext, eval: String, outputDataType: DataType, geometryAPI: GeometryAPI): (String, String) = {
+        val outDataFormat = GeometryFormat.getDefaultFormat(outputDataType)
+        writeGeometryCode(ctx, eval, outDataFormat, geometryAPI)
+    }
+
+    // noinspection DuplicatedCode
+    def writeGeometryCode(ctx: CodegenContext, eval: String, outputDataFormatName: String, geometryAPI: GeometryAPI): (String, String) = {
         val geometryCodeGen = geometryAPI.ioCodeGen
-        outputDataType match {
-            case BinaryType           => geometryCodeGen.toWKB(ctx, eval, geometryAPI)
-            case StringType           => geometryCodeGen.toWKT(ctx, eval, geometryAPI)
-            case HexType              => geometryCodeGen.toHEX(ctx, eval, geometryAPI)
-            case JSONType             => geometryCodeGen.toJSON(ctx, eval, geometryAPI)
-            case InternalGeometryType => geometryCodeGen.toInternal(ctx, eval, geometryAPI)
-            case _                    => throw new IllegalArgumentException(s"Data type unsupported: ${outputDataType.typeName}.")
+
+        outputDataFormatName match {
+            case "WKB"        => geometryCodeGen.toWKB(ctx, eval, geometryAPI)
+            case "WKT"        => geometryCodeGen.toWKT(ctx, eval, geometryAPI)
+            case "HEX"        => geometryCodeGen.toHEX(ctx, eval, geometryAPI)
+            case "JSONOBJECT" => geometryCodeGen.toJSON(ctx, eval, geometryAPI)
+            case "GEOJSON"    => geometryCodeGen.toGeoJSON(ctx, eval, geometryAPI)
+            case "COORDS"     => geometryCodeGen.toInternal(ctx, eval, geometryAPI)
+            case _            => throw new IllegalArgumentException(s"Data type unsupported: $outputDataFormatName.")
         }
     }
 

@@ -32,46 +32,29 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
       * @return
       *   An instance of [[TypeCheckResult]] indicating success or a failure.
       */
-    override def checkInputDataTypes(): TypeCheckResult =
-        (inGeometry.dataType, outDataType.toUpperCase(Locale.ROOT)) match {
-            case (BinaryType, "WKT")               => TypeCheckResult.TypeCheckSuccess
-            case (BinaryType, "WKB")               => TypeCheckResult.TypeCheckSuccess
-            case (BinaryType, "COORDS")            => TypeCheckResult.TypeCheckSuccess
-            case (BinaryType, "HEX")               => TypeCheckResult.TypeCheckSuccess
-            case (BinaryType, "GEOJSON")           => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "WKT")               => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "WKB")               => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "COORDS")            => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "HEX")               => TypeCheckResult.TypeCheckSuccess
-            case (StringType, "GEOJSON")           => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "WKT")                  => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "WKB")                  => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "COORDS")               => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "HEX")                  => TypeCheckResult.TypeCheckSuccess
-            case (HexType, "GEOJSON")              => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "WKT")                 => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "WKB")                 => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "HEX")                 => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "COORDS")              => TypeCheckResult.TypeCheckSuccess
-            case (JSONType, "GEOJSON")             => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "WKB")     => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "WKT")     => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "COORDS")  => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "HEX")     => TypeCheckResult.TypeCheckSuccess
-            case (InternalGeometryType, "GEOJSON") => TypeCheckResult.TypeCheckSuccess
-            case _                                 => TypeCheckResult.TypeCheckFailure(
-                  s"Cannot convert from ${inGeometry.dataType.sql} to $dataType"
-                )
+    override def checkInputDataTypes(): TypeCheckResult = {
+
+        val inputTypes = Seq(BinaryType, StringType, HexType, JSONType, InternalGeometryType)
+        val outputDataTypes = Seq("WKT", "WKB", "COORDS", "HEX", "GEOJSON", "JSONOBJECT")
+
+        if (inputTypes.contains(inGeometry.dataType) && outputDataTypes.contains(outDataType.toUpperCase(Locale.ROOT))) {
+            TypeCheckResult.TypeCheckSuccess
+        } else {
+            TypeCheckResult.TypeCheckFailure(
+              s"Cannot convert from ${inGeometry.dataType.sql} to $dataType"
+            )
         }
+    }
 
     /** Expression output DataType. */
     override def dataType: DataType =
         outDataType.toUpperCase(Locale.ROOT) match {
-            case "WKT"     => StringType
-            case "WKB"     => BinaryType
-            case "HEX"     => HexType
-            case "COORDS"  => InternalGeometryType
-            case "GEOJSON" => JSONType
+            case "WKT"        => StringType
+            case "WKB"        => BinaryType
+            case "HEX"        => HexType
+            case "COORDS"     => InternalGeometryType
+            case "GEOJSON"    => StringType
+            case "JSONOBJECT" => JSONType
             case _         => throw new IllegalArgumentException(s"Data type not supported: $outDataType")
         }
 
@@ -92,7 +75,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
       *   A converted representation of the input geometry.
       */
     override def nullSafeEval(input: Any): Any = {
-        if (inGeometry.dataType.simpleString == getOutType.simpleString) {
+        if (inGeometry.dataType.simpleString == outDataType) {
             input
         } else {
             val geometryAPI = GeometryAPI(geometryAPIName)
@@ -118,21 +101,10 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
           ev,
           nullSafeCodeGen,
           child.dataType,
-          getOutType,
+          outDataType.toUpperCase(Locale.ROOT),
           geometryAPI
         )
     }
-
-    def getOutType: DataType =
-        outDataType.toUpperCase(Locale.ROOT) match {
-            case "WKT"     => StringType
-            case "WKB"     => BinaryType
-            case "HEX"     => HexType
-            case "JSON"    => JSONType
-            case "GEOJSON" => JSONType
-            case "COORDS"  => InternalGeometryType
-            case _         => throw new IllegalArgumentException(s"OutDataType ${outDataType.toUpperCase(Locale.ROOT)} not supported.")
-        }
 
     override def child: Expression = inGeometry
 

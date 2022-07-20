@@ -163,7 +163,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .orderBy("id")
             .select(convert_to(as_hex($"hex"), "WKB").alias("wkb"))
             .select(
-              convert_to($"wkb", "geojson").getItem("json").alias("geojson")
+              convert_to($"wkb", "geojson").alias("geojson")
             )
 
         val queryExecution = wkbDf.queryExecution
@@ -183,7 +183,6 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
 
         val right = getGeoJSONDf(mc)
             .orderBy("id")
-            .select(as_json($"geojson").getItem("json").alias("geojson"))
             .select("geojson")
             .as[String]
             .collect()
@@ -315,7 +314,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         val wktDf: DataFrame = getWKTRowsDf(mc)
             .orderBy("id")
             .select(
-              convert_to($"wkt", "geojson").getItem("json").alias("geojson")
+              convert_to($"wkt", "geojson").alias("geojson")
             )
 
         val queryExecution = wktDf.queryExecution
@@ -335,7 +334,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
 
         val right = getGeoJSONDf(mc)
             .orderBy("id")
-            .select(as_json($"geojson").getItem("json").alias("geojson"))
+            .select("geojson")
             .as[String]
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "GEOJSON"))
@@ -471,7 +470,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .orderBy("id")
             .withColumn("hex", as_hex($"hex"))
             .select(
-              convert_to($"hex", "geojson").getItem("json").alias("geojson")
+              convert_to($"hex", "geojson").alias("geojson")
             )
 
         val queryExecution = hexDf.queryExecution
@@ -629,7 +628,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
             .orderBy("id")
             .withColumn("coords", convert_to(as_hex($"hex"), "coords"))
             .select(
-              convert_to($"coords", "geojson").getItem("json").alias("geojson")
+              convert_to($"coords", "geojson").alias("geojson")
             )
 
         val queryExecution = wkbDf.queryExecution
@@ -649,7 +648,6 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
 
         val right = getGeoJSONDf(mc)
             .orderBy("id")
-            .select(as_json($"geojson").getItem("json").alias("geojson"))
             .select("geojson")
             .as[String]
             .collect()
@@ -666,7 +664,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
 
         val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
-            .withColumn("geojson", convert_to(as_hex($"hex"), "geojson"))
+            .withColumn("geojson", convert_to(as_hex($"hex"), "JSONOBJECT"))
             .select(
               convert_to($"geojson", "WKB").alias("wkb")
             )
@@ -706,7 +704,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
 
         val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
-            .withColumn("geojson", convert_to(as_hex($"hex"), "geojson"))
+            .withColumn("geojson", convert_to(as_hex($"hex"), "JSONOBJECT"))
             .select(
               convert_to($"geojson", "wkt").alias("wkt").cast("string")
             )
@@ -745,7 +743,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
 
         val hexDf = getHexRowsDf(mc)
             .orderBy("id")
-            .withColumn("geojson", convert_to(as_hex($"hex"), "geojson"))
+            .withColumn("geojson", convert_to(as_hex($"hex"), "JSONOBJECT"))
             .select(
               convert_to($"geojson", "hex").getItem("hex").alias("hex")
             )
@@ -785,7 +783,7 @@ trait ConvertToCodegenBehaviors { this: AnyFlatSpec =>
         val hexDf: DataFrame = getHexRowsDf(mc)
             .orderBy("id")
             .where(!st_geometrytype(as_hex($"hex")).isin("MultiLineString", "MultiPolygon"))
-            .withColumn("geojson", convert_to(as_hex($"hex"), "geojson"))
+            .withColumn("geojson", convert_to(as_hex($"hex"), "JSONOBJECT"))
             .select(
               convert_to($"geojson", "coords").alias("coords")
             )
