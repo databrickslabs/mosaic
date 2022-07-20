@@ -71,26 +71,19 @@ abstract class GeometryAPI(
         }
 
     def serialize(geometry: MosaicGeometry, dataType: DataType): Any = {
-        dataType match {
-            case _: BinaryType           => geometry.toWKB
-            case _: StringType           => UTF8String.fromString(geometry.toWKT)
-            case _: HexType              => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
-            case _: JSONType             => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
-            case _: InternalGeometryType => geometry.toInternal.serialize
-            case _: KryoType => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
-            case _           => throw new Error(s"$dataType not supported.")
-        }
+        serialize(geometry, GeometryFormat.getDefaultFormat(dataType))
     }
 
-    def serialize(geometry: MosaicGeometry, dataTypeName: String): Any = {
-        dataTypeName.toUpperCase(Locale.ROOT) match {
-            case "WKB"     => geometry.toWKB
-            case "WKT"     => UTF8String.fromString(geometry.toWKT)
-            case "HEX"     => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
-            case "GEOJSON" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
-            case "COORDS"  => geometry.toInternal.serialize
-            case "KRYO"    => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
-            case _         => throw new Error(s"$dataTypeName not supported.")
+    def serialize(geometry: MosaicGeometry, dataFormatName: String): Any = {
+        dataFormatName.toUpperCase(Locale.ROOT) match {
+            case "WKB"        => geometry.toWKB
+            case "WKT"        => UTF8String.fromString(geometry.toWKT)
+            case "HEX"        => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
+            case "JSONOBJECT" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
+            case "GEOJSON"    => UTF8String.fromString(geometry.toJSON)
+            case "COORDS"     => geometry.toInternal.serialize
+            case "KRYO"       => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
+            case _            => throw new Error(s"$dataFormatName not supported.")
         }
     }
 
@@ -121,6 +114,7 @@ object GeometryAPI extends Serializable {
         override def fromGeoCoord(point: GeoCoord): MosaicPoint = MosaicPointESRI(point)
 
         override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointESRI(coords)
+
     }
 
     object JTS extends GeometryAPI(MosaicGeometryJTS) {
@@ -130,6 +124,7 @@ object GeometryAPI extends Serializable {
         override def fromGeoCoord(geoCoord: GeoCoord): MosaicPoint = MosaicPointJTS(geoCoord)
 
         override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointJTS(coords)
+
     }
 
 }

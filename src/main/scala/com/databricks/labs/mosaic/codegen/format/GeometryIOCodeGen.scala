@@ -22,6 +22,8 @@ trait GeometryIOCodeGen {
 
     def toJSON(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)
 
+    def toGeoJSON(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)
+
     def toHEX(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)
 
     def toInternal(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)

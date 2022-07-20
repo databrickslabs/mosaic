@@ -1,12 +1,16 @@
 package com.databricks.labs.mosaic.codegen
 
+import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkCodeGenSuite
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 
-class TestConvertToCodegen extends AnyFlatSpec with ConvertToCodegenBehaviors with SparkCodeGenSuite {
+class TestConvertToCodegen extends AnyFlatSpec with ConvertToCodegenBehaviors with SparkCodeGenSuite with MockFactory {
 
     "ConvertTo Expression from WKB to WKT" should "do codegen for any index system and any geometry API" in {
         it should behave like codegenWKBtoWKT(MosaicContext.build(H3IndexSystem, ESRI), spark)
@@ -106,6 +110,16 @@ class TestConvertToCodegen extends AnyFlatSpec with ConvertToCodegenBehaviors wi
     "ConvertTo Expression from GEOJSON to COORDS" should "do codegen for any index system and any geometry API" in {
         it should behave like codegenGEOJSONtoCOORDS(MosaicContext.build(H3IndexSystem, ESRI), spark)
         it should behave like codegenGEOJSONtoCOORDS(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
+    "ConvertTo Expression from GEOJSON to Unsupported format" should "throw an exception" in {
+        val ctx = stub[CodegenContext]
+        val api = stub[GeometryAPI]
+        (api.name _) when () returns ("ESRI")
+
+        assertThrows[NotImplementedError] {
+            ConvertToCodeGen writeGeometryCode (ctx, "", "unsupported", api)
+        }
     }
 
 }
