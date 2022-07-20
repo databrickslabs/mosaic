@@ -32,7 +32,7 @@ library(devtools)
 library(roxygen2)
 library(SparkR)
 library(sparklyr)
-SparkR::install.spark()
+SparkR::install.spark(mirrorUrl="https://archive.apache.org/dist/spark")
 
 
 
