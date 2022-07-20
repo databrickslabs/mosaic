@@ -1,4 +1,27 @@
-repo<-"https://cran.ma.imperial.ac.uk/"
+repos = c(
+   "https://cran.ma.imperial.ac.uk" = "https://cran.ma.imperial.ac.uk"
+  ,"https://www.stats.bris.ac.uk/R" = "https://www.stats.bris.ac.uk/R"
+  ,"https://cran.rstudio.com/"  = "https://cran.rstudio.com/" 
+)
+
+mirror_is_up <- function(x){
+  out <- tryCatch({
+    available.packages(contrib.url(x))
+  }
+  ,error = function(cond){return(0)}
+  ,warning = function(cond){return(0)}
+  ,finally = function(cond){}
+  )
+  return(length(out))
+}
+
+mirror_status = lapply(repos, mirror_is_up)
+for(repo in names(mirror_status)){
+  if (mirror_status[[repo]] > 1){
+    repo <<- repo
+    break
+  }
+}
 
 install.packages("devtools", repos=repo)
 install.packages("roxygen2", repos=repo)
