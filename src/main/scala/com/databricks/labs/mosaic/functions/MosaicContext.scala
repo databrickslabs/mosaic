@@ -369,7 +369,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         val scriptPath = System.getProperty("os.name").toLowerCase() match {
             case o: String if o.contains("nux") => "/scripts/install-gdal-debian-ubuntu.sh"
             case o: String if o.contains("mac") => "/scripts/install-gdal-macos.sh"
-            case _ => throw new UnsupportedOperationException("This method only supports Ubuntu Linux with `apt` and MacOS with `brew`.")
+            case _                              =>
+                throw new UnsupportedOperationException("This method is only enabled on Ubuntu Linux with `apt` and MacOS with `brew`.")
         }
         val script = Source.fromInputStream(getClass.getResourceAsStream(scriptPath))
         for (cmd <- script.getLines.toList) {

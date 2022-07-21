@@ -1,5 +1,7 @@
 package com.databricks.labs.mosaic.core.raster
 
-trait RasterReader {
-  def fromBytes(bytes: Array[Byte]): MosaicRaster
+import org.apache.spark.internal.Logging
+
+trait RasterReader extends Logging {
+    def fromBytes(bytes: Array[Byte]): MosaicRaster
 }

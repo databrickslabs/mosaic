@@ -2,23 +2,26 @@ package com.databricks.labs.mosaic.core.raster
 
 trait MosaicRaster extends Serializable {
 
-  def subdatasets: List[(String, String)]
+    def metadata: Map[String, String]
 
-  def numBands: Int
+    def subdatasets: Map[String, String]
 
-  def SRID: Int
+    def numBands: Int
 
-  def proj4String: String
+    def SRID: Int
 
-  def xSize: Int
+    def proj4String: String
 
-  def ySize: Int
+    def xSize: Int
 
-  def getBand(bandId: Int): MosaicRasterBand
+    def ySize: Int
 
-  def extent: Seq[Double]
+    def getBand(bandId: Int): MosaicRasterBand
 
-  def geoTransform(pixel: Int, line: Int): Seq[Double]
+    def extent: Seq[Double]
 
-  def getRaster: Any
+    def geoTransform(pixel: Int, line: Int): Seq[Double]
+
+    def getRaster: Any
+
 }

@@ -156,3 +156,4 @@ spark-warehouse
 # MacOS
 .DS_Store
 .Rproj.user
+docker/.m2/
