@@ -3,12 +3,11 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks
-import org.locationtech.jts.geom.GeometryFactory
-import org.locationtech.jts.io.{WKTReader, WKTWriter}
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.io.{WKTReader, WKTWriter}
 import org.scalatest.matchers.must.Matchers._
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper, noException}
 
