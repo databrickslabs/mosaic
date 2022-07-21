@@ -51,7 +51,7 @@ jobs:
     #   run: cp python/dist/*.whl staging
       - name: Setup R build environment
         run: |
-          sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config
+          sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev 
       - name: Build R package
         run: |
           cd R
