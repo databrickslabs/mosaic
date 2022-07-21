@@ -52,7 +52,7 @@ trait ConvertToBehaviors extends QueryTest {
         ConvertTo(coords.col("coords").expr, "HEX", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(coords.col("coords").expr, "GEOJSON", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(lit(1).expr, "GEOJSON", geometryAPI.name).checkInputDataTypes().isFailure shouldEqual true
-        an[IllegalArgumentException] should be thrownBy ConvertTo(coords.col("coords").expr, "ERROR", geometryAPI.name)
+        an[Error] should be thrownBy ConvertTo(coords.col("coords").expr, "ERROR", geometryAPI.name)
             .checkInputDataTypes()
 
     }

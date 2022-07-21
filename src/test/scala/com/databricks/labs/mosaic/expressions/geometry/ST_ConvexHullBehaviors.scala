@@ -66,7 +66,7 @@ trait ST_ConvexHullBehaviors extends QueryTest {
 
         val stConvexHull = ST_ConvexHull(lit(1).expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stConvexHull.genCode(ctx)
+        an[Error] should be thrownBy stConvexHull.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

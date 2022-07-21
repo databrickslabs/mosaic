@@ -53,4 +53,13 @@ class GeometryAPITest extends AnyFunSuite with GeometryAPIBehaviors {
         serializeDeserializeBehavior("JTS", MosaicPointJTS(Seq(0.1, 0.2)))
     }
 
+    test("Geometry API throw an exception when serializing non existing format.") {
+        val point = MosaicPointESRI.fromWKT("POINT(1 1)")
+        val geometryAPI = ESRI
+
+        assertThrows[Error] {
+            geometryAPI.serialize(point, "non-existent-format")
+        }
+    }
+
 }

@@ -17,7 +17,7 @@ class ConvertToCodeGenTest extends AnyFlatSpec {
                 f(eval)
                 code
             }
-        an[IllegalArgumentException] should be thrownBy {
+        an[Error] should be thrownBy {
             ConvertToCodeGen.doCodeGen(ctx, ExprCode.forNullValue(StringType), nullSafeEval, StringType, "double", JTS)
         }
     }
@@ -25,8 +25,8 @@ class ConvertToCodeGenTest extends AnyFlatSpec {
     "ConvertToCodeGen" should "fail for not supported data type" in {
         val ctx = new CodegenContext
         val eval = "geom"
-        an[IllegalArgumentException] should be thrownBy ConvertToCodeGen.readGeometryCode(ctx, eval, IntegerType, JTS)
-        an[IllegalArgumentException] should be thrownBy ConvertToCodeGen.writeGeometryCode(ctx, eval, IntegerType, JTS)
+        an[Error] should be thrownBy ConvertToCodeGen.readGeometryCode(ctx, eval, IntegerType, JTS)
+        an[Error] should be thrownBy ConvertToCodeGen.writeGeometryCode(ctx, eval, IntegerType, JTS)
     }
 
 

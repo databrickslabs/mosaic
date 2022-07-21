@@ -83,7 +83,7 @@ trait ST_DistanceBehaviors extends QueryTest {
 
         val stDistance = ST_Distance(lit(1).expr, lit("POINT (2 2)").expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stDistance.genCode(ctx)
+        an[Error] should be thrownBy stDistance.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

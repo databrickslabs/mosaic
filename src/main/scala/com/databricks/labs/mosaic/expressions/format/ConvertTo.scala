@@ -55,7 +55,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
             case "COORDS"     => InternalGeometryType
             case "GEOJSON"    => StringType
             case "JSONOBJECT" => JSONType
-            case _         => throw new IllegalArgumentException(s"Data type not supported: $outDataType")
+            case _         => throw new Error(s"Data type not supported: $outDataType")
         }
 
     override def toString: String = s"convert_to($inGeometry, $outDataType)"

@@ -77,7 +77,7 @@ trait ST_ContainsBehaviors extends QueryTest {
 
         val stContains = ST_Contains(lit(1).expr, lit(rows.head._1).expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stContains.genCode(ctx)
+        an[Error] should be thrownBy stContains.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

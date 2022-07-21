@@ -90,7 +90,7 @@ trait ST_LengthBehaviors extends QueryTest {
 
         val stLength = ST_Length(lit(1).expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stLength.genCode(ctx)
+        an[Error] should be thrownBy stLength.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

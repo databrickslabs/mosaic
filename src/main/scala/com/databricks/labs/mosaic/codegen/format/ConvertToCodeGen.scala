@@ -47,7 +47,7 @@ object ConvertToCodeGen {
             case HexType              => geometryCodeGen.fromHex(ctx, eval, geometryAPI)
             case JSONType             => geometryCodeGen.fromJSON(ctx, eval, geometryAPI)
             case InternalGeometryType => geometryCodeGen.fromInternal(ctx, eval, geometryAPI)
-            case _                    => throw new IllegalArgumentException(s"Geometry API unsupported: ${inputDataType.typeName}.")
+            case _                    => throw new Error(s"Geometry API unsupported: ${inputDataType.typeName}.")
         }
     }
 
@@ -68,7 +68,7 @@ object ConvertToCodeGen {
             case "JSONOBJECT" => geometryCodeGen.toJSON(ctx, eval, geometryAPI)
             case "GEOJSON"    => geometryCodeGen.toGeoJSON(ctx, eval, geometryAPI)
             case "COORDS"     => geometryCodeGen.toInternal(ctx, eval, geometryAPI)
-            case _            => throw new IllegalArgumentException(s"Data type unsupported: $outputDataFormatName.")
+            case _            => throw new Error(s"Data type unsupported: $outputDataFormatName.")
         }
     }
 

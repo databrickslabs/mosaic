@@ -105,7 +105,7 @@ trait ST_IsValidBehaviors extends QueryTest {
 
         val stIsValid = ST_IsValid(lit(1).expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stIsValid.genCode(ctx)
+        an[Error] should be thrownBy stIsValid.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

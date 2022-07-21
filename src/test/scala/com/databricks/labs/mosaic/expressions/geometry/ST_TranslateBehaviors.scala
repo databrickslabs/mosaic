@@ -60,7 +60,7 @@ trait ST_TranslateBehaviors extends QueryTest {
 
         val stTranslate = ST_Translate(lit(1).expr, lit(1.1).expr, lit(1.2).expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stTranslate.genCode(ctx)
+        an[Error] should be thrownBy stTranslate.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

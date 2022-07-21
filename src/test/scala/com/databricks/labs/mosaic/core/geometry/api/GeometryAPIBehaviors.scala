@@ -23,7 +23,7 @@ trait GeometryAPIBehaviors { this: AnyFunSuite =>
         val wktSer = geometryAPI.serialize(point, "WKT")
         val wkbSer = geometryAPI.serialize(point, "WKB")
         val hexSer = geometryAPI.serialize(point, "HEX")
-        val jsonSer = geometryAPI.serialize(point, "GEOJSON")
+        val jsonSer = geometryAPI.serialize(point, "JSONOBJECT")
         val coordsSer = geometryAPI.serialize(point, "COORDS")
 
         val wktSerDT = geometryAPI.serialize(point, StringType)

@@ -37,7 +37,7 @@ case class ST_HasValidCoordinates(
         val crsBounds = whichIn.toLowerCase(Locale.ROOT) match {
             case "bounds"             => crsBoundsProvider.bounds(crsCodeIn(0), crsCodeIn(1).toInt)
             case "reprojected_bounds" => crsBoundsProvider.reprojectedBounds(crsCodeIn(0), crsCodeIn(1).toInt)
-            case _ => throw new IllegalArgumentException("Only boundary and reprojected_boundary supported for which argument.")
+            case _ => throw new Error("Only boundary and reprojected_boundary supported for which argument.")
         }
         (Seq(geomIn.getShellPoints) ++ geomIn.getHolePoints).flatten.flatten.forall(point =>
             crsBounds.lowerLeft.getX <= point.getX && point.getX <= crsBounds.upperRight.getX &&

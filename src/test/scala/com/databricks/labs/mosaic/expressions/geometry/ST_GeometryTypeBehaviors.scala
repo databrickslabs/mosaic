@@ -77,7 +77,7 @@ trait ST_GeometryTypeBehaviors extends QueryTest {
 
         val stGeometryType = ST_GeometryType(lit(1).expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stGeometryType.genCode(ctx)
+        an[Error] should be thrownBy stGeometryType.genCode(ctx)
     }
 
     def hexTypesBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

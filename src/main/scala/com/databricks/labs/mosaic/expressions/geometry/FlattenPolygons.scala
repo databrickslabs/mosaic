@@ -65,7 +65,8 @@ object FlattenPolygons {
       * [[FlattenPolygons]] expression can only be called on supported data
       * types. The supported data types are [[BinaryType]] for WKB encoding,
       * [[StringType]] for WKT encoding, [[HexType]] ([[StringType]] wrapper)
-      * for HEX encoding and [[InternalGeometryType]] for primitive types
+      * for HEX encoding, [[JSONType]] ([[StringType]] wrapper) for GeoJSON
+      * encoding, and [[InternalGeometryType]] for primitive types
       * encoding via [[ArrayType]].
       *
       * @return
@@ -76,6 +77,7 @@ object FlattenPolygons {
             case _: BinaryType           => TypeCheckResult.TypeCheckSuccess
             case _: StringType           => TypeCheckResult.TypeCheckSuccess
             case _: HexType              => TypeCheckResult.TypeCheckSuccess
+            case _: JSONType             => TypeCheckResult.TypeCheckSuccess
             case _: InternalGeometryType => TypeCheckResult.TypeCheckSuccess
             case _                       => TypeCheckResult.TypeCheckFailure(
                   "input to function explode should be array or map type, " +
@@ -99,8 +101,9 @@ object FlattenPolygons {
             case _: BinaryType           => StructType(Seq(StructField("element", BinaryType)))
             case _: StringType           => StructType(Seq(StructField("element", StringType)))
             case _: HexType              => StructType(Seq(StructField("element", HexType)))
+            case _: JSONType             => StructType(Seq(StructField("element", JSONType)))
             case _: InternalGeometryType => StructType(Seq(StructField("element", InternalGeometryType)))
-            case _                       => throw new IllegalArgumentException(s"Data type not supported: ${child.dataType}.")
+            case _                       => throw new Error(s"Data type not supported: ${child.dataType}.")
         }
 
     def makeCopyImpl(newArgs: Array[AnyRef], instance: Expression, geometryAPIName: String): Expression = {

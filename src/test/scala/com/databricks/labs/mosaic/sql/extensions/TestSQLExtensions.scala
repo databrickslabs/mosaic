@@ -45,7 +45,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQL")
         spark = withConf(conf)
         it should behave like {
-            an[IllegalArgumentException] should be thrownBy spark.sql("""show functions""").collect()
+            an[Error] should be thrownBy spark.sql("""show functions""").collect()
         }
 
         conf = new SparkConf(false)

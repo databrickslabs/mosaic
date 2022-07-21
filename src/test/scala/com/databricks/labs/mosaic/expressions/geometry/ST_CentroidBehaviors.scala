@@ -79,7 +79,7 @@ trait ST_CentroidBehaviors extends QueryTest {
 
         val stCentroid = ST_Centroid(lit(1).expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stCentroid.genCode(ctx)
+        an[Error] should be thrownBy stCentroid.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

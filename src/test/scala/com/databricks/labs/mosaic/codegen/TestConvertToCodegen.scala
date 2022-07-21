@@ -122,7 +122,7 @@ class TestConvertToCodegen extends AnyFlatSpec with ConvertToCodegenBehaviors wi
         val api = stub[GeometryAPI]
         api.name _ when () returns "ESRI"
 
-        assertThrows[NotImplementedError] {
+        assertThrows[Error] {
             ConvertToCodeGen writeGeometryCode (ctx, "", "unsupported", api)
         }
     }

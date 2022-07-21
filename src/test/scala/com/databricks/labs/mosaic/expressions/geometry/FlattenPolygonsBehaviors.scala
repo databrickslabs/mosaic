@@ -276,7 +276,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
         wkbFlatten.elementSchema.head.dataType shouldEqual BinaryType
         hexFlatten.elementSchema.head.dataType shouldEqual HexType
         coordsFlatten.elementSchema.head.dataType shouldEqual InternalGeometryType
-        an [IllegalArgumentException] should be thrownBy structFlatten.elementSchema
+        an [Error] should be thrownBy structFlatten.elementSchema
 
         wktFlatten.collectionType shouldEqual StringType
         wkbFlatten.collectionType shouldEqual BinaryType

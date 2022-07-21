@@ -59,7 +59,7 @@ trait ST_ScaleBehaviors extends QueryTest {
 
         val stScale = ST_Scale(lit(1).expr, lit(1.1).expr, lit(1.2).expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stScale.genCode(ctx)
+        an[Error] should be thrownBy stScale.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

@@ -19,14 +19,12 @@ case class ST_Centroid(inputGeom: Expression, geometryAPIName: String, nDim: Int
     override def child: Expression = inputGeom
 
     /** Output Data Type */
-    // scalastyle:off throwerror
     override def dataType: DataType =
         nDim match {
             case 2 => StructType(Seq(StructField("x", DoubleType), StructField("y", DoubleType)))
             case 3 => StructType(Seq(StructField("x", DoubleType), StructField("y", DoubleType), StructField("z", DoubleType)))
-            case _ => throw new NotImplementedError("Only 2D and 3D centroid supported!")
+            case _ => throw new Error("Only 2D and 3D centroid supported!")
         }
-    // scalastyle:on throwerror
 
     override def nullSafeEval(input1: Any): Any = {
         val geometryAPI = GeometryAPI(geometryAPIName)

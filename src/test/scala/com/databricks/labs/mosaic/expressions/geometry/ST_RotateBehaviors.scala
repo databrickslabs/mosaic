@@ -60,7 +60,7 @@ trait ST_RotateBehaviors extends QueryTest {
 
         val stRotate = ST_Rotate(lit(1).expr, lit(1.1).expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stRotate.genCode(ctx)
+        an[Error] should be thrownBy stRotate.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

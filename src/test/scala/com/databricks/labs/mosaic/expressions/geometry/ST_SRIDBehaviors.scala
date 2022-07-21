@@ -59,6 +59,7 @@ trait ST_SRIDBehaviors extends QueryTest {
             .collect()
 
         sqlResult should contain only refSrid
+
     }
 
     def SRIDCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

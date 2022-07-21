@@ -78,7 +78,7 @@ trait ST_BufferBehaviors extends QueryTest {
 
         val stBuffer = ST_Buffer(lit(1).expr, lit(1).expr, "JTS")
         val ctx = new CodegenContext
-        an[IllegalArgumentException] should be thrownBy stBuffer.genCode(ctx)
+        an[Error] should be thrownBy stBuffer.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
