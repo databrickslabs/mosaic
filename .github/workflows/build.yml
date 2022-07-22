@@ -26,7 +26,7 @@ jobs:
           java-version: '8'
           distribution: 'zulu'
       - name: Test and build the scala JAR
-        run: mvn -q clean install -DskipTests
+        run: mvn -q clean install
       - name: Publish test coverage
         uses: codecov/codecov-action@v1
       - name: Copy Scala artifacts to GH Actions run
@@ -54,7 +54,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev 
       - name: Build R package
         run: |
-          cd R
+          cd R/sparkR-mosaic
           mkdir -p /usr/lib/R/site-library
           sudo chown -R $USER: /usr/lib/R/site-library
           Rscript --vanilla build_r_package.R
@@ -65,7 +65,6 @@ jobs:
       - name: Copy R artifacts to GH Actions run
         run: |
           cp R/sparkR-mosaic/*.tar.gz staging
-          cp R/sparklyr-mosaic/*.tar.gz staging
       - uses: actions/upload-artifact@v3
         with:
           name: artefacts
