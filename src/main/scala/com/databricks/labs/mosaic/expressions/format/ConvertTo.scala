@@ -1,16 +1,14 @@
 package com.databricks.labs.mosaic.expressions.format
 
-import java.util.Locale
-
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.types._
-
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
+
+import java.util.Locale
 
 @ExpressionDescription(
   usage = "_FUNC_(expr1, dataType) - Converts expr1 to the specified data type.",
@@ -36,8 +34,8 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
       */
     override def checkInputDataTypes(): TypeCheckResult = {
 
-        val inputTypes = Seq(BinaryType, StringType, HexType, JSONType, InternalGeometryType, KryoType)
-        val outputDataTypes = Seq("WKT", "WKB", "COORDS", "HEX", "GEOJSON", "JSONOBJECT", "KRYO")
+        val inputTypes = Seq(BinaryType, StringType, HexType, JSONType, InternalGeometryType)
+        val outputDataTypes = Seq("WKT", "WKB", "COORDS", "HEX", "GEOJSON", "JSONOBJECT")
 
         if (inputTypes.contains(inGeometry.dataType) && outputDataTypes.contains(outDataType.toUpperCase(Locale.ROOT))) {
             TypeCheckResult.TypeCheckSuccess
@@ -57,7 +55,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
             case "COORDS"     => InternalGeometryType
             case "GEOJSON"    => StringType
             case "JSONOBJECT" => JSONType
-            case "KRYO"       => KryoType
+            case _         => throw new Error(s"Data type not supported: $outDataType")
         }
 
     override def toString: String = s"convert_to($inGeometry, $outDataType)"
@@ -77,10 +75,13 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
       *   A converted representation of the input geometry.
       */
     override def nullSafeEval(input: Any): Any = {
-
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geometry = geometryAPI.geometry(input, inGeometry.dataType)
-        geometryAPI.serialize(geometry, outDataType)
+        if (inGeometry.dataType.simpleString == outDataType) {
+            input
+        } else {
+            val geometryAPI = GeometryAPI(geometryAPIName)
+            val geometry = geometryAPI.geometry(input, inGeometry.dataType)
+            geometryAPI.serialize(geometry, outDataType)
+        }
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {

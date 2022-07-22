@@ -1,22 +1,16 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks
-import com.databricks.labs.mosaic.test.mocks._
+import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-
-import org.apache.spark.sql.{Row, DataFrame, SparkSession}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
-import org.apache.spark.sql.execution.WholeStageCodegenExec
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
 trait ConversionBehaviors { this: AnyFlatSpec =>
 
     def conversion_expressions(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
-        import mc.functions._
         mosaicContext.register(spark)
 
         val wkt = """POINT (0 0)"""

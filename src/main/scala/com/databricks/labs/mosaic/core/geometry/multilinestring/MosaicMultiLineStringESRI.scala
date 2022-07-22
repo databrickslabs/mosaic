@@ -2,12 +2,10 @@ package com.databricks.labs.mosaic.core.geometry.multilinestring
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringESRI}
-import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
 import com.esri.core.geometry.{Polyline, SpatialReference}
 import com.esri.core.geometry.ogc._
-
 import org.apache.spark.sql.catalyst.InternalRow
 
 class MosaicMultiLineStringESRI(multiLineString: OGCMultiLineString)
@@ -29,16 +27,16 @@ class MosaicMultiLineStringESRI(multiLineString: OGCMultiLineString)
     override def getShells: Seq[MosaicLineString] =
         for (i <- 0 until multiLineString.numGeometries()) yield MosaicLineStringESRI(multiLineString.geometryN(i))
 
-    override def asSeq: Seq[MosaicLineString] =
-        for (i <- 0 until multiLineString.numGeometries())
-            yield new MosaicLineStringESRI(multiLineString.geometryN(i).asInstanceOf[OGCLineString])
-
     override def numPoints: Int =
         (for (i <- 0 until multiLineString.numGeometries()) yield multiLineString.geometryN(i).asInstanceOf[OGCLineString].numPoints()).sum
 
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
         MosaicMultiLineStringESRI.fromSeq(asSeq.map(_.mapXY(f).asInstanceOf[MosaicLineStringESRI]))
     }
+
+    override def asSeq: Seq[MosaicLineString] =
+        for (i <- 0 until multiLineString.numGeometries())
+            yield new MosaicLineStringESRI(multiLineString.geometryN(i).asInstanceOf[OGCLineString])
 
 }
 
@@ -82,10 +80,6 @@ object MosaicMultiLineStringESRI extends GeometryReader {
         polyline
     }
 
-    def apply(geometry: OGCGeometry): MosaicMultiLineStringESRI = {
-        new MosaicMultiLineStringESRI(geometry.asInstanceOf[OGCMultiLineString])
-    }
-
     override def fromSeq[T <: MosaicGeometry](
         geomSeq: Seq[T],
         geomType: GeometryTypeEnum.Value = MULTILINESTRING
@@ -105,6 +99,10 @@ object MosaicMultiLineStringESRI extends GeometryReader {
         MosaicMultiLineStringESRI(newGeom)
     }
 
+    def apply(geometry: OGCGeometry): MosaicMultiLineStringESRI = {
+        new MosaicMultiLineStringESRI(geometry.asInstanceOf[OGCMultiLineString])
+    }
+
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)
 
     override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryESRI.fromWKT(wkt)
@@ -112,7 +110,5 @@ object MosaicMultiLineStringESRI extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryESRI.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryESRI.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryESRI.fromKryo(row)
 
 }

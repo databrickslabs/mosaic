@@ -1,14 +1,11 @@
 package com.databricks.labs.mosaic.core.geometry.point
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
-import com.esotericsoftware.kryo.io.Input
 import com.uber.h3core.util.GeoCoord
-import org.locationtech.jts.geom._
-
 import org.apache.spark.sql.catalyst.InternalRow
+import org.locationtech.jts.geom._
 
 class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicPoint {
 
@@ -52,10 +49,15 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
 
 object MosaicPointJTS extends GeometryReader {
 
-    def apply(geom: Geometry): MosaicPointJTS = new MosaicPointJTS(geom.asInstanceOf[Point])
-
     def apply(geoCoord: GeoCoord): MosaicPointJTS = {
         this.apply(new Coordinate(geoCoord.lng, geoCoord.lat), defaultSpatialReferenceId)
+    }
+
+    def apply(coord: Coordinate, srid: Int): MosaicPointJTS = {
+        val gf = new GeometryFactory()
+        val point = gf.createPoint(coord)
+        point.setSRID(srid)
+        new MosaicPointJTS(point)
     }
 
     def apply(coords: Seq[Double]): MosaicPointJTS = {
@@ -67,13 +69,6 @@ object MosaicPointJTS extends GeometryReader {
             val point = gf.createPoint(new Coordinate(coords(0), coords(1)))
             new MosaicPointJTS(point)
         }
-    }
-
-    def apply(coord: Coordinate, srid: Int): MosaicPointJTS = {
-        val gf = new GeometryFactory()
-        val point = gf.createPoint(coord)
-        point.setSRID(srid)
-        new MosaicPointJTS(point)
     }
 
     override def fromInternal(row: InternalRow): MosaicGeometry = {
@@ -100,6 +95,8 @@ object MosaicPointJTS extends GeometryReader {
         MosaicPointJTS(newGeom)
     }
 
+    def apply(geom: Geometry): MosaicPointJTS = new MosaicPointJTS(geom.asInstanceOf[Point])
+
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 
     override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)
@@ -107,11 +104,5 @@ object MosaicPointJTS extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = {
-        val kryoBytes = row.getBinary(1)
-        val input = new Input(kryoBytes)
-        MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicPointJTS])
-    }
 
 }
