@@ -12,6 +12,11 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class TestConvertToCodegen extends AnyFlatSpec with ConvertToCodegenBehaviors with SparkCodeGenSuite with MockFactory {
 
+    "ConvertTo Expression from WKB to WKB - passthrough test" should "do codegen for any index system and any geometry API" in {
+        it should behave like codegenWKBtoWKB(MosaicContext.build(H3IndexSystem, ESRI))
+        it should behave like codegenWKBtoWKB(MosaicContext.build(H3IndexSystem, JTS))
+    }
+
     "ConvertTo Expression from WKB to WKT" should "do codegen for any index system and any geometry API" in {
         it should behave like codegenWKBtoWKT(MosaicContext.build(H3IndexSystem, ESRI), spark)
         it should behave like codegenWKBtoWKT(MosaicContext.build(H3IndexSystem, JTS), spark)
@@ -115,9 +120,9 @@ class TestConvertToCodegen extends AnyFlatSpec with ConvertToCodegenBehaviors wi
     "ConvertTo Expression from GEOJSON to Unsupported format" should "throw an exception" in {
         val ctx = stub[CodegenContext]
         val api = stub[GeometryAPI]
-        (api.name _) when () returns ("ESRI")
+        api.name _ when () returns "ESRI"
 
-        assertThrows[NotImplementedError] {
+        assertThrows[Error] {
             ConvertToCodeGen writeGeometryCode (ctx, "", "unsupported", api)
         }
     }

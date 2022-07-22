@@ -32,7 +32,7 @@ class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon)
     override def getLength: Double = MosaicGeometryESRI(polygon.boundary()).getLength
 
     override def numPoints: Int = {
-        getHolePoints.map(_.length).sum + getShellPoints.map(_.length).sum
+        getHolePoints.map(_.map(_.length).sum).sum + getShellPoints.map(_.length).sum
     }
 
     override def getShells: Seq[MosaicLineString] = Seq(MosaicLineStringESRI(polygon.exteriorRing()))
@@ -105,7 +105,5 @@ object MosaicPolygonESRI extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryESRI.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryESRI.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryESRI.fromKryo(row)
 
 }

@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.geometry.GeometryTransformationsCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
@@ -45,22 +44,10 @@ case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: Str
           (leftEval, rightEval) => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (code, result) = GeometryTransformationsCodeGen.rotate(ctx, leftEval, rightEval, inputGeom.dataType, geometryAPI)
-
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                    |$code
-                                    |${ev.value} = $result;
-                                    |""".stripMargin
-                  case "JTS"  => s"""
-                                   |try {
-                                   |$code
-                                   |${ev.value} = $result;
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
-
-              }
+              geometryAPI.codeGenTryWrap(s"""
+                                            |$code
+                                            |${ev.value} = $result;
+                                            |""".stripMargin)
           }
         )
 

@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
@@ -35,26 +34,11 @@ case class ST_SRID(inputGeom: Expression, geometryAPIName: String) extends Unary
               checkEncoding(inputGeom.dataType)
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                    |$inCode
-                                    |if ($geomInRef.esriSR == null) {
-                                    |${ev.value} = 0;
-                                    |} else {
-                                    |${ev.value} = $geomInRef.getEsriSpatialReference().getID();
-                                    |}
-                                    |""".stripMargin
-                  case "JTS"  => s"""
-                                   |try {
-                                   |$inCode
-                                   |${ev.value} = $geomInRef.getSRID();
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
-
-              }
+              val geometrySRIDStatement = geometryAPI.geometrySRIDCode(geomInRef)
+              geometryAPI.codeGenTryWrap(s"""
+                                            |$inCode
+                                            |${ev.value} = $geometrySRIDStatement;
+                                            |""".stripMargin)
           }
         )
 

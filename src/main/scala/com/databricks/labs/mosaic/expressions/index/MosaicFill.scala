@@ -44,7 +44,7 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
             case (HexType, IntegerType, BooleanType)              => Seq(HexType, IntegerType, BooleanType)
             case (InternalGeometryType, IntegerType, BooleanType) => Seq(InternalGeometryType, IntegerType, BooleanType)
             case _                                                =>
-                throw new IllegalArgumentException(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}).")
+                throw new Error(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}).")
         }
 
     override def second: Expression = resolution

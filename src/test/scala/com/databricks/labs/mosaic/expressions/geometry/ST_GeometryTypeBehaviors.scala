@@ -1,26 +1,28 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import java.util.Locale
-
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.{getHexRowsDf, getWKTRowsDf}
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.must.Matchers.noException
-import org.scalatest.matchers.should.Matchers._
-
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
+import org.apache.spark.sql.QueryTest
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
+import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.types.StringType
+import org.scalatest.matchers.must.Matchers.noException
+import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
-trait TypeCheckBehaviors {
-    this: AnyFlatSpec =>
+import java.util.Locale
 
-    def wktTypes(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
+trait ST_GeometryTypeBehaviors extends QueryTest {
+
+    def wktTypeBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
         import sc.implicits._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val df = getWKTRowsDf(mc)
 
@@ -47,12 +49,13 @@ trait TypeCheckBehaviors {
         sqlResults.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def wktTypesCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
+    def wktTypesCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
         import sc.implicits._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val df = getWKTRowsDf(mc)
 
@@ -72,14 +75,18 @@ trait TypeCheckBehaviors {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
+        val stGeometryType = ST_GeometryType(lit(1).expr, "JTS")
+        val ctx = new CodegenContext
+        an[Error] should be thrownBy stGeometryType.genCode(ctx)
     }
 
-    def hexTypes(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
+    def hexTypesBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
         import sc.implicits._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val df = getHexRowsDf(mc).select(as_hex($"hex").alias("hex"))
 
@@ -108,12 +115,13 @@ trait TypeCheckBehaviors {
         sqlResults.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def hexTypesCodegen(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
+    def hexTypesCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
         import sc.implicits._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val df = getHexRowsDf(mc)
 
@@ -133,6 +141,23 @@ trait TypeCheckBehaviors {
         val (_, code) = codeGenStage.doCodeGen()
 
         noException should be thrownBy CodeGenerator.compile(code)
+
+        val stGeometryType = ST_GeometryType(lit("POINT (1 1)").expr, "illegalAPI")
+        val ctx = new CodegenContext
+        an[Error] should be thrownBy stGeometryType.genCode(ctx)
+
+    }
+
+    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(spark)
+
+        val stGeometryType = ST_GeometryType(lit("POINT (1 1)").expr, geometryAPI.name)
+
+        stGeometryType.child shouldEqual lit("POINT (1 1)").expr
+        stGeometryType.dataType shouldEqual StringType
+        noException should be thrownBy stGeometryType.makeCopy(Array(stGeometryType.child))
 
     }
 

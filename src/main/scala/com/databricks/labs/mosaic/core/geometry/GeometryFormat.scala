@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry
 
-import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
-import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
+import com.databricks.labs.mosaic.core.types._
+import org.apache.spark.sql.types._
 
 object GeometryFormat {
 
@@ -12,7 +12,7 @@ object GeometryFormat {
             case HexType              => "HEX"
             case JSONType             => "JSONOBJECT"
             case InternalGeometryType => "COORDS"
-            case _                    => throw new NotImplementedError(s"Unsupported data type ${outputDataType.typeName}.")
+            case _                    => throw new Error(s"Unsupported data type ${outputDataType.typeName}.")
         }
     }
 }

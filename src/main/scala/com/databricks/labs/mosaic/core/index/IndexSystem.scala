@@ -145,7 +145,12 @@ trait IndexSystem extends Serializable {
       * @return
       *   A core area representation via [[MosaicChip]] set.
       */
-    def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip]
+    def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
+        coreIndices.map(index => {
+            val indexGeom = if (keepCoreGeom) indexToGeometry(index, geometryAPI) else null
+            MosaicChip(isCore = true, index, indexGeom)
+        })
+    }
 
     /**
       * Get the geometry corresponding to the index with the input id.
