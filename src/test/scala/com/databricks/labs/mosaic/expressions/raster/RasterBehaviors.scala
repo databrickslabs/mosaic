@@ -76,8 +76,8 @@ trait RasterBehaviors { this: AnyFlatSpec =>
         val result = rasterDfWithBandMetadata.as[Map[String, String]].collect()
 
         result.head.getOrElse("bleaching_alert_area_long_name", "") shouldBe "bleaching alert area 7-day maximum composite"
-        result.head.getOrElse("bleaching_alert_area_valid_max", "") shouldBe "4"
-        result.head.getOrElse("bleaching_alert_area_valid_min", "") shouldBe "0"
+        result.head.getOrElse("bleaching_alert_area_valid_max", "") shouldBe "4 "
+        result.head.getOrElse("bleaching_alert_area_valid_min", "") shouldBe "0 "
         result.head.getOrElse("bleaching_alert_area_units", "") shouldBe "stress_level"
     }
 
