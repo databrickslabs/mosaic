@@ -1,0 +1,12 @@
+target
+docker
+**/spark-warehouse
+.git
+.github
+**/.idea
+.vscode
+**/.env
+**/.mypy_cache
+**/build
+**/_build
+**/databricks_mosaic.egg-info
