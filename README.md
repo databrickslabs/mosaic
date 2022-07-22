@@ -22,7 +22,7 @@ Mosaic provides geospatial tools for
 * Data procesing
     * Geometry and geography `ST_` operations (with [ESRI](https://github.com/Esri/geometry-api-java) or [JTS](https://github.com/locationtech/jts)) 
     * Indexing (with [H3](https://github.com/uber/h3) or BNG)
-    * Chipping of polygons and lines over an indexing grid [co-developed with Ordnance Survey](https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html)
+    * Chipping of polygons and lines over an indexing grid [co-developed with Ordnance Survey and Microsoft](https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html)
 * Data visualisation ([Kepler](https://github.com/keplergl/kepler.gl))
 
 ![mosaic-general-pipeline](src/main/resources/MosaicGeneralPipeline.png)
