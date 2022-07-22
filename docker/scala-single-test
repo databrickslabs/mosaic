@@ -3,6 +3,7 @@ FROM databricksruntime/standard:10.4-LTS
 ARG SPARK_VERSION=3.2.1
 ARG TEST_TO_RUN
 ENV MVN_TEST_CMD="-Dsuites=$TEST_TO_RUN"
+ENV MAVEN_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
 
 RUN apt update && apt-get install -y maven locales
 

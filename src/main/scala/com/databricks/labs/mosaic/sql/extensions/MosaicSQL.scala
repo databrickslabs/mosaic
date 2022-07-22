@@ -1,10 +1,12 @@
 package com.databricks.labs.mosaic.sql.extensions
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
-import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSessionExtensions
+
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
+import com.databricks.labs.mosaic.functions.MosaicContext
 
 /**
   * Supports automatic registration of SQL expressions at the cluster start up
@@ -27,14 +29,16 @@ class MosaicSQL extends (SparkSessionExtensions => Unit) with Logging {
         ext.injectCheckRule(spark => {
             val indexSystem = spark.conf.get("spark.databricks.labs.mosaic.index.system")
             val geometryAPI = spark.conf.get("spark.databricks.labs.mosaic.geometry.api")
-            val mosaicContext = (indexSystem, geometryAPI) match {
-                case ("H3", "JTS")   => MosaicContext.build(H3IndexSystem, JTS)
-                case ("H3", "ESRI")  => MosaicContext.build(H3IndexSystem, ESRI)
-                case ("BNG", "JTS")  => MosaicContext.build(BNGIndexSystem, JTS)
-                case ("BNG", "ESRI") => MosaicContext.build(BNGIndexSystem, ESRI)
-                case (is, gapi)      => throw new IllegalArgumentException(s"Index system and geometry API: ($is, $gapi) not supported.")
+            val rasterAPI = spark.conf.get("spark.databricks.labs.mosaic.raster.api")
+            val mosaicContext = (indexSystem, geometryAPI, rasterAPI) match {
+                case ("H3", "JTS", "GDAL")   => MosaicContext.build(H3IndexSystem, JTS, GDAL)
+                case ("H3", "ESRI", "GDAL")  => MosaicContext.build(H3IndexSystem, ESRI, GDAL)
+                case ("BNG", "JTS", "GDAL")  => MosaicContext.build(BNGIndexSystem, JTS, GDAL)
+                case ("BNG", "ESRI", "GDAL") => MosaicContext.build(BNGIndexSystem, ESRI, GDAL)
+                case (is, gapi, rapi)        =>
+                    throw new IllegalArgumentException(s"Index system, geometry API and rasterAPI: ($is, $gapi, $rapi) not supported.")
             }
-            logInfo(s"Registering Mosaic SQL Extensions ($indexSystem, $geometryAPI).")
+            logInfo(s"Registering Mosaic SQL Extensions ($indexSystem, $geometryAPI, $rasterAPI).")
             mosaicContext.register(spark)
             // NOP rule. This rule is specified only to respect syntax.
             _ => ()

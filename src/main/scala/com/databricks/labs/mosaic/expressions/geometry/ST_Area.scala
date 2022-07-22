@@ -10,7 +10,7 @@ import org.apache.spark.sql.types.{DataType, DoubleType}
 case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
     /**
-      * ST_Area expression returns are covered by the
+      * ST_Area expression returns area covered by the
       * [[org.locationtech.jts.geom.Geometry]] instance extracted from inputGeom
       * expression.
       */
@@ -42,10 +42,10 @@ case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends Unary
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, eval, inputGeom.dataType, geometryAPI)
               geometryAPIName match {
                   case "ESRI" => s"""
-                                   |$inCode
-                                   |${ev.value} = $geomInRef.getEsriGeometry().calculateArea2D();
-                                   |""".stripMargin
-                  case "JTS" => s"""
+                                    |$inCode
+                                    |${ev.value} = $geomInRef.getEsriGeometry().calculateArea2D();
+                                    |""".stripMargin
+                  case "JTS"  => s"""
                                    |try {
                                    |$inCode
                                    |${ev.value} = $geomInRef.getArea();

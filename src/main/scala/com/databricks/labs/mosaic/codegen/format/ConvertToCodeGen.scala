@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.codegen.format
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
 import com.databricks.labs.mosaic.core.types._
 
 import org.apache.spark.sql.catalyst.expressions.codegen._

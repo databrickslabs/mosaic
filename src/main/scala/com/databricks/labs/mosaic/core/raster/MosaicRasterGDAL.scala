@@ -12,7 +12,7 @@ class MosaicRasterGDAL(raster: Dataset) extends MosaicRaster {
 
     val crsFactory: CRSFactory = new CRSFactory
 
-    override def metadata: Map[String, String] = raster.GetMetadata_Dict.asScala.map { case (k: String, v: String) => k -> v }.toMap
+    override def metadata: Map[String, String] = raster.GetMetadata_Dict.asScala.toMap.asInstanceOf[Map[String, String]]
 
     override def subdatasets: Map[String, String] =
         raster
@@ -72,16 +72,16 @@ class MosaicRasterGDAL(raster: Dataset) extends MosaicRaster {
 
 object MosaicRasterGDAL extends RasterReader {
 
+    override def fromBytes(bytes: Array[Byte]): MosaicRaster = {
+        val virtualPath = s"/vsimem/${java.util.UUID.randomUUID.toString}"
+        fromBytes(bytes, virtualPath)
+    }
+
     def fromBytes(bytes: Array[Byte], path: String): MosaicRaster = {
         enableGDAL()
         gdal.FileFromMemBuffer(path, bytes)
         val dataset = gdal.Open(path, GA_ReadOnly)
         MosaicRasterGDAL(dataset)
-    }
-
-    override def fromBytes(bytes: Array[Byte]): MosaicRaster = {
-        val virtualPath = s"/vsimem/${java.util.UUID.randomUUID.toString}"
-        fromBytes(bytes, virtualPath)
     }
 
     def apply(raster: Dataset): MosaicRaster = new MosaicRasterGDAL(raster)
