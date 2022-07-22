@@ -38,4 +38,26 @@ class TestConstructors extends AnyFlatSpec with ConstructorsBehaviors with Spark
         it should behave like createST_MakePolygonWithHoles(MosaicContext.build(H3IndexSystem, JTS), spark)
     }
 
+    "CDMStructure" should "extract the variables and attributes of a set of netCDF files" in {
+        it should behave like structureFromNetCDF(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like structureFromNetCDF(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
+    ignore should "extract the variables and attributes of a set of GRIB files" in {
+        // https://github.com/Unidata/netcdf-java/issues/638
+        it should behave like structureFromGRIB(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like structureFromGRIB(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
+    ignore should "extract the variables and attributes of a Zarr file" in {
+        // debugging to see how to get the Zarr reader to recognise zip binary content
+        it should behave like structureFromZarr(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like structureFromZarr(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
+    "CDMContent" should "extract the content of a set of netCDF files" in {
+        it should behave like contentFromNetCDF(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like contentFromNetCDF(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
 }

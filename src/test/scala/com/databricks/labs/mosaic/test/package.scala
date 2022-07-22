@@ -325,5 +325,26 @@ package object test {
             }
         }
 
+        def netCDFDf(sparkSession: SparkSession): DataFrame = {
+            sparkSession.read
+                .format("binaryFile")
+                .option("pathGlobFilter", "*.nc")
+                .load("src/test/resources/binary/netcdf-coral")
+        }
+
+        def gribDf(sparkSession: SparkSession): DataFrame = {
+            sparkSession.read
+                .format("binaryFile")
+                .option("pathGlobFilter", "*.grib")
+                .load("src/test/resources/binary/grib-cams")
+        }
+
+        def zarrDf(sparkSession: SparkSession): DataFrame = {
+            sparkSession.read
+                .format("binaryFile")
+                .option("pathGlobFilter", "*.zip")
+                .load("src/test/resources/binary/zarr-example")
+        }
+
     }
 }

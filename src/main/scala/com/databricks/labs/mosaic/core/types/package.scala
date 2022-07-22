@@ -1,5 +1,7 @@
 package com.databricks.labs.mosaic.core
 
+//import com.databricks.labs.mosaic.core.types.CDMAttributeType
+
 import org.apache.spark.sql.types._
 
 /**
