@@ -115,21 +115,6 @@ object H3IndexSystem extends IndexSystem with Serializable {
     }
 
     /**
-      * @see
-      *   [[IndexSystem.getCoreChips()]]
-      * @param coreIndices
-      *   Indices corresponding to the core area of the input geometry.
-      * @return
-      *   A core area representation via [[MosaicChip]] set.
-      */
-    override def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
-        coreIndices.map(index => {
-            val indexGeom = if (keepCoreGeom) indexToGeometry(index, geometryAPI) else null
-            MosaicChip(isCore = true, index, indexGeom)
-        })
-    }
-
-    /**
       * Returns the index system ID instance that uniquely identifies an index
       * system. This instance is used to select appropriate Mosaic expressions.
       *

@@ -25,7 +25,7 @@ object GeometryTypeEnum extends Enumeration {
         GeometryTypeEnum.values
             .find(_.toString == value.toUpperCase(Locale.ROOT))
             .getOrElse(
-              throw new IllegalArgumentException(
+              throw new Error(
                 s"Invalid mode for geometry type: $value." +
                     s" Must be one of ${GeometryTypeEnum.values.mkString(",")}"
               )
@@ -34,7 +34,7 @@ object GeometryTypeEnum extends Enumeration {
     def fromId(id: Int): GeometryTypeEnum.Value =
         GeometryTypeEnum.values
             .find(_.id == id)
-            .getOrElse(throw new IllegalArgumentException(s"Invalid value for geometry type id: $id."))
+            .getOrElse(throw new Error(s"Invalid value for geometry type id: $id."))
 
     def groupOf(enumerator: GeometryTypeEnum.Value): GeometryTypeEnum.Value =
         enumerator match {

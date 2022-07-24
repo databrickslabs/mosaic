@@ -41,14 +41,16 @@ case class ST_IntersectionAggregate(
         val leftCoreFlag = leftIndexValue.getBoolean(0)
         val rightCoreFlag = rightIndexValue.getBoolean(0)
 
-        val geomIncrement = (leftCoreFlag, rightCoreFlag) match {
-            case (true, true)   => indexSystem.indexToGeometry(leftIndexValue.getLong(1), geometryAPI)
-            case (true, false)  => geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
-            case (false, true)  => geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
-            case (false, false) =>
-                val leftChipGeom = geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
-                val rightChipGeom = geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
-                leftChipGeom.intersection(rightChipGeom)
+        val geomIncrement = if (leftCoreFlag && rightCoreFlag) {
+            indexSystem.indexToGeometry(leftIndexValue.getLong(1), geometryAPI)
+        } else if (leftCoreFlag) {
+            geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
+        } else if (rightCoreFlag) {
+            geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
+        } else {
+            val leftChipGeom = geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
+            val rightChipGeom = geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
+            leftChipGeom.intersection(rightChipGeom)
         }
 
         partialGeom.union(geomIncrement).toWKB

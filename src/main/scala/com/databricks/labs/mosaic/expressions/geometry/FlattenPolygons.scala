@@ -1,7 +1,5 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import scala.collection.TraversableOnce
-
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types._
 import org.apache.spark.sql.catalyst.InternalRow
@@ -9,7 +7,8 @@ import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo, Literal, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
+
+import scala.collection.TraversableOnce
 
 case class FlattenPolygons(geom: Expression, geometryAPIName: String)
     extends UnaryExpression
@@ -32,9 +31,9 @@ case class FlattenPolygons(geom: Expression, geometryAPIName: String)
 
     override def elementSchema: StructType = FlattenPolygons.elementSchemaImpl(child)
 
-    override def child: Expression = geom
-
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = FlattenPolygons.evalImpl(input, child, geometryAPIName)
+
+    override def child: Expression = geom
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = FlattenPolygons.makeCopyImpl(newArgs, this, geometryAPIName)
 
@@ -66,7 +65,8 @@ object FlattenPolygons {
       * [[FlattenPolygons]] expression can only be called on supported data
       * types. The supported data types are [[BinaryType]] for WKB encoding,
       * [[StringType]] for WKT encoding, [[HexType]] ([[StringType]] wrapper)
-      * for HEX encoding and [[InternalGeometryType]] for primitive types
+      * for HEX encoding, [[JSONType]] ([[StringType]] wrapper) for GeoJSON
+      * encoding, and [[InternalGeometryType]] for primitive types
       * encoding via [[ArrayType]].
       *
       * @return
@@ -77,6 +77,7 @@ object FlattenPolygons {
             case _: BinaryType           => TypeCheckResult.TypeCheckSuccess
             case _: StringType           => TypeCheckResult.TypeCheckSuccess
             case _: HexType              => TypeCheckResult.TypeCheckSuccess
+            case _: JSONType             => TypeCheckResult.TypeCheckSuccess
             case _: InternalGeometryType => TypeCheckResult.TypeCheckSuccess
             case _                       => TypeCheckResult.TypeCheckFailure(
                   "input to function explode should be array or map type, " +
@@ -100,7 +101,9 @@ object FlattenPolygons {
             case _: BinaryType           => StructType(Seq(StructField("element", BinaryType)))
             case _: StringType           => StructType(Seq(StructField("element", StringType)))
             case _: HexType              => StructType(Seq(StructField("element", HexType)))
+            case _: JSONType             => StructType(Seq(StructField("element", JSONType)))
             case _: InternalGeometryType => StructType(Seq(StructField("element", InternalGeometryType)))
+            case _                       => throw new Error(s"Data type not supported: ${child.dataType}.")
         }
 
     def makeCopyImpl(newArgs: Array[AnyRef], instance: Expression, geometryAPIName: String): Expression = {

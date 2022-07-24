@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{DataType, DoubleType}
@@ -36,29 +35,13 @@ case class ST_Distance(leftGeom: Expression, rightGeom: Expression, geometryAPIN
           ev,
           (leftEval, rightEval) => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              // TODO: code can be simplified if the function is registered and called 2 times
               val (leftInCode, leftGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, leftGeom.dataType, geometryAPI)
               val (rightInCode, rightGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, rightEval, rightGeom.dataType, geometryAPI)
-
-              // not merged into the same code block due to JTS IOException throwing
-              // ESRI code will always remain simpler
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                   |$leftInCode
-                                   |$rightInCode
-                                   |${ev.value} = $leftGeomInRef.distance($rightGeomInRef);
-                                   |""".stripMargin
-                  case "JTS" => s"""
-                                   |try {
-                                   |$leftInCode
-                                   |$rightInCode
-                                   |${ev.value} = $leftGeomInRef.distance($rightGeomInRef);
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
-
-              }
+              geometryAPI.codeGenTryWrap(s"""
+                                            |$leftInCode
+                                            |$rightInCode
+                                            |${ev.value} = $leftGeomInRef.distance($rightGeomInRef);
+                                            |""".stripMargin)
           }
         )
 
