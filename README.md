@@ -13,7 +13,7 @@ An extension to the [Apache Spark](https://spark.apache.org/) framework that all
 
 ## Why Mosaic?
 
-Mosaic was created to simplify the implementation of scalable geospatial data pipelines by bounding together common Open Source geospatial libraries via Apache Spark, with a set of [examples](#examples) and best practices for common geospatial use cases.
+Mosaic was created to simplify the implementation of scalable geospatial data pipelines by bounding together common Open Source geospatial libraries via Apache Spark, with a set of [examples and best practices](#examples) for common geospatial use cases.
 
 
 ## What does it provide?
