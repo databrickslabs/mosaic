@@ -34,7 +34,8 @@ cargos_indexed.count()
 # MAGIC
 # MAGIC
 # MAGIC
-# MAGIC Choosing a buffer of `(1*0.001 - 1*0.0001)` as being equal to 99.99 metres at the equator
+# MAGIC Since our projection is not in metres, we convert from decimal degrees, with `(0.00001 - 0.000001)` as being equal to one metre at the equator.
+# MAGIC Here we choose an buffer of roughly 100 metres.
 # MAGIC Ref: http://wiki.gis.com/wiki/index.php/Decimal_degrees
 
 # COMMAND ----------

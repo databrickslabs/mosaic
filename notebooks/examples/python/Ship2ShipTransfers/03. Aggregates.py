@@ -28,6 +28,8 @@ cargos_indexed.count()
 # MAGIC
 # MAGIC When we collect the various points within a timewindow, we want to construct the linestring by the order in which they were generated (timestamp).
 # MAGIC We choose a buffer of a max of 200 metres in this case.
+# MAGIC Since our projection is not in metres, we convert from decimal degrees. With `(0.00001 - 0.000001)` as being equal to one metre at the equator
+# MAGIC Ref: http://wiki.gis.com/wiki/index.php/Decimal_degrees
 
 # COMMAND ----------
 

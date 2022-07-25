@@ -71,10 +71,13 @@ display(AIS_df)
 
 # MAGIC %md ## Harbours
 # MAGIC
-# MAGIC This data can be obtained from [here](https://data-usdot.opendata.arcgis.com/datasets/usdot::ports-major/about), and loaded accordingly.
+# MAGIC This data can be obtained from [here](https://data-usdot.opendata.arcgis.com/datasets/usdot::ports-major/about), and loaded with the code below.
 # MAGIC
-# MAGIC We are choosing a buffer of `10 km` around harbours to arbitrarily define an area wherein we do not expect ship-to-ship transfers to take place.
-# MAGIC Since our projection is not in metres, we convert from decimal degrees. With `(0.00001 - 0.000001)` as being equal to one metres at the equator
+# MAGIC To avoid detecting overlap close to, or within harbours, in Notebook `03. Aggregates` we filter out events taking place close to a harbour.
+# MAGIC Various approaches are possible, including filtering out events too close to shore, and can be implemented in a similar fashion.
+# MAGIC
+# MAGIC In this instance we set a buffer of `10 km` around harbours to arbitrarily define an area wherein we do not expect ship-to-ship transfers to take place.
+# MAGIC Since our projection is not in metres, we convert from decimal degrees. With `(0.00001 - 0.000001)` as being equal to one metre at the equator
 # MAGIC Ref: http://wiki.gis.com/wiki/index.php/Decimal_degrees
 
 # COMMAND ----------
