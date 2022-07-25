@@ -112,6 +112,7 @@ mosaicContext.register(spark)
 | --- | --- | --- |
 | __Quick Start__ | Example of performing spatial point-in-polygon joins on the NYC Taxi dataset | [python](/notebooks/examples/python/QuickstartNotebook.py), [scala](notebooks/examples/scala/QuickstartNotebook.scala), [R](notebooks/examples/R/QuickstartNotebook.r), [SQL](notebooks/examples/sql/QuickstartNotebook.sql) | 
 | Open Street Maps | Ingesting and processing with Delta Live Tables the Open Street Maps dataset to extract buildings polygons and calculate aggregation statistics over H3 indexes | [python](notebooks/examples/python/OpenStreetMaps) |
+| STS Transfers | Detecting Ship-to-Ship transfers at scale by leveraging Mosaic to process AIS data. | [python](notebooks/examples/python/Ship2ShipTransfers) |
 
 You can import those examples in Databricks workspace using [these instructions](https://docs.databricks.com/notebooks/notebooks-manage.html#import-a-notebook).
 
