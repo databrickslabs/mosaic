@@ -44,7 +44,7 @@ display(cargos)
 
 cargos_indexed = (
     cargos_geopoint
-    withColumn(
+    .withColumn(
         "point_geom", mos.st_point("LON", "LAT")
     )
     .withColumn(
