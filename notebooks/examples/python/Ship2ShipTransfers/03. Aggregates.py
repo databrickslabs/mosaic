@@ -18,9 +18,6 @@ cargos_indexed = spark.read.table("ship2ship.cargos_indexed").repartition(
     sc.defaultParallelism * 20
 )
 display(cargos_indexed)
-
-# COMMAND ----------
-
 cargos_indexed.count()
 
 # COMMAND ----------
@@ -30,14 +27,15 @@ cargos_indexed.count()
 # MAGIC We can `groupBy` across a timewindow to give us aggregated geometries to work with.
 # MAGIC
 # MAGIC When we collect the various points within a timewindow, we want to construct the linestring by the order in which they were generated (timestamp).
+# MAGIC We choose a buffer of a max of 200 metres in this case.
 
 # COMMAND ----------
 
 lines = (
     cargos_indexed.repartition(sc.defaultParallelism * 20)
-    .groupBy("mmsi", window("timestamp", "15 minutes"))
+    .groupBy("mmsi", window("BaseDateTime", "15 minutes"))
     # We link the points to their respective timestamps in the aggregation
-    .agg(collect_list(struct(col("point_geom"), col("timestamp"))).alias("coords"))
+    .agg(collect_list(struct(col("point_geom"), col("BaseDateTime"))).alias("coords"))
     # And then sort our array of points by the timestamp
     .withColumn(
         "coords",
@@ -45,8 +43,8 @@ lines = (
             """
         array_sort(coords, (left, right) -> 
             case 
-            when left.timestamp < right.timestamp then -1 
-            when left.timestamp > right.timestamp then 1 
+            when left.BaseDateTime < right.BaseDateTime then -1 
+            when left.BaseDateTime > right.BaseDateTime then 1 
             else 0 
             end
         )"""
@@ -62,6 +60,7 @@ lines = (
 lines.count()
 
 # COMMAND ----------
+
 
 one_metre = 0.00001 - 0.000001
 buffer = 200 * one_metre
@@ -195,7 +194,7 @@ matches = (
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT COUNT(*) FROM ship2ship.overlap_candidates_lines_filtered";
+# MAGIC SELECT COUNT(*) FROM ship2ship.overlap_candidates_lines_filtered;
 
 # COMMAND ----------
 

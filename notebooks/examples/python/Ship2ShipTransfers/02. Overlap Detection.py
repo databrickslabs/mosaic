@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md # Overlap Detection
-# MAGIC 
+# MAGIC
 # MAGIC We now try to detect potentially overlapping pings using a buffer on a particular day.
 
 # COMMAND ----------
@@ -16,7 +16,7 @@ mos.enable_mosaic(spark, dbutils)
 # COMMAND ----------
 
 cargos_indexed = spark.read.table("ship2ship.cargos_indexed").filter(
-    col("timestamp").between(
+    col("BaseDateTime").between(
         "2018-01-31T00:00:00.000+0000", "2018-01-31T23:59:00.000+0000"
     )
 )
@@ -26,15 +26,15 @@ cargos_indexed.count()
 # COMMAND ----------
 
 # MAGIC %md ## Buffering
-# MAGIC 
+# MAGIC
 # MAGIC 1. Convert the point into a polygon by buffering it with a certain area to turn this into a circle.
 # MAGIC 2. Index the polygon to leverage more performant querying.
-# MAGIC 
+# MAGIC
 # MAGIC ![](http://1fykyq3mdn5r21tpna3wkdyi-wpengine.netdna-ssl.com/wp-content/uploads/2018/06/image14-1.png)
-# MAGIC 
-# MAGIC 
-# MAGIC 
-# MAGIC Choosing `(1*0.001 - 1*0.0001)` as being equal to 99.99 metres at the equator
+# MAGIC
+# MAGIC
+# MAGIC
+# MAGIC Choosing a buffer of `(1*0.001 - 1*0.0001)` as being equal to 99.99 metres at the equator
 # MAGIC Ref: http://wiki.gis.com/wiki/index.php/Decimal_degrees
 
 # COMMAND ----------
@@ -43,7 +43,8 @@ one_metre = 0.00001 - 0.000001
 buffer = 100 * one_metre
 
 (
-    cargos_indexed.withColumn("buffer_geom", mos.st_buffer("point_geom", lit(buffer)))
+    cargos_indexed.repartition(sc.defaultParallelism * 20)
+    .withColumn("buffer_geom", mos.st_buffer("point_geom", lit(buffer)))
     .withColumn("ix", mos.mosaic_explode("buffer_geom", lit(9)))
     .write.mode("overwrite")
     .saveAsTable("ship2ship.cargos_buffered")
@@ -53,7 +54,7 @@ buffer = 100 * one_metre
 
 # DBTITLE 1,We can optimise our table to colocate data and make querying faster
 # MAGIC %sql
-# MAGIC OPTIMIZE ship2ship.cargos_buffered ZORDER BY (ix.index_id, timestamp);
+# MAGIC OPTIMIZE ship2ship.cargos_buffered ZORDER BY (ix.index_id, BaseDateTime);
 # MAGIC SELECT * FROM ship2ship.cargos_buffered;
 
 # COMMAND ----------
@@ -113,7 +114,7 @@ candidates = (
             == col("b.ix.index_id"),  # to only compare across efficient indices
             col("a.mmsi")
             < col("b.mmsi"),  # to prevent comparing candidates bidirectionally
-            ts_diff("a.timestamp", "b.timestamp")
+            ts_diff("a.BaseDateTime", "b.BaseDateTime")
             < time_window("a.sog_kmph", "b.sog_kmph", "a.heading", "b.heading", buffer),
         ],
     )
@@ -128,8 +129,8 @@ candidates = (
     .select(
         col("a.vesselName").alias("vessel_1"),
         col("b.vesselName").alias("vessel_2"),
-        col("a.timestamp").alias("timestamp_1"),
-        col("b.timestamp").alias("timestamp_2"),
+        col("a.BaseDateTime").alias("timestamp_1"),
+        col("b.BaseDateTime").alias("timestamp_2"),
         col("a.ix.index_id").alias("ix"),
     )
 )
@@ -155,6 +156,6 @@ candidates = (
 
 # COMMAND ----------
 
-# DBTITLE 1,Plotting Common Overlaps 
+# DBTITLE 1,Plotting Common Overlaps
 # MAGIC %%mosaic_kepler
 # MAGIC "agg_overlap" "ix" "h3" 10_000

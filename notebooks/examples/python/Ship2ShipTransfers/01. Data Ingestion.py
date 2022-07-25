@@ -19,7 +19,7 @@ mos.enable_mosaic(spark, dbutils)
 # MAGIC - MMSI: unique 9-digit identification code of the ship - numeric
 # MAGIC - VesselName: name of the ship - string
 # MAGIC - CallSign: unique callsign of the ship - string
-# MAGIC - timestamp: timestamp of the AIS message - datetime
+# MAGIC - BaseDateTime: timestamp of the AIS message - datetime
 # MAGIC - LAT: latitude of the ship (in degree: [-90 ; 90], negative value represents South, 91 indicates ‘not available’) - numeric
 # MAGIC - LON: longitude of the ship (in degree: [-180 ; 180], negative value represents West, 181 indicates ‘not available’) - numeric
 # MAGIC - SOG: speed over ground, in knots - numeric
@@ -43,14 +43,8 @@ display(cargos)
 # COMMAND ----------
 
 cargos_indexed = (
-    cargos_geopoint
-    .withColumn(
-        "point_geom", mos.st_point("LON", "LAT")
-    )
-    .withColumn(
-        "ix", mos.point_index_geom(
-            "point_geom", resolution=lit(9))
-    )
+    cargos.withColumn("point_geom", mos.st_point("LON", "LAT"))
+    .withColumn("ix", mos.point_index_geom("point_geom", resolution=lit(9)))
     .withColumn("sog_kmph", round(col("sog") * 1.852, 2))
 )
 display(cargos_indexed)
@@ -71,7 +65,7 @@ display(cargos_indexed)
 # COMMAND ----------
 
 # DBTITLE 1,We can optimise our table to colocate data and make querying faster
-# MAGIC %sql OPTIMIZE ship2ship.cargos_indexed ZORDER by (ix, timestamp)
+# MAGIC %sql OPTIMIZE ship2ship.cargos_indexed ZORDER by (ix, BaseDateTime)
 
 # COMMAND ----------
 
@@ -82,5 +76,3 @@ display(cargos_indexed)
 
 # MAGIC %%mosaic_kepler
 # MAGIC ship2ship.cargos_indexed "ix" "h3" 10_000
-
-# COMMAND ----------
