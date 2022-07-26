@@ -10,14 +10,14 @@ object IndexSystemID {
         name match {
             case "H3"  => H3
             case "BNG" => BNG
-            case _  => throw new NotImplementedError("Index not supported yet!") // scalastyle:ignore
+            case _     => throw new Error("Index not supported yet!")
         }
 
     def getIndexSystem(indexSystemID: IndexSystemID): IndexSystem =
         indexSystemID match {
             case H3  => H3IndexSystem
             case BNG => BNGIndexSystem
-            case _  => throw new NotImplementedError("Index not supported yet!") // scalastyle:ignore
+            case _   => throw new Error("Index not supported yet!")
         }
 
 }

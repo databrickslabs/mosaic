@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import scala.util.Try
-
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{BooleanType, DataType}
+
+import scala.util.Try
 
 case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
@@ -17,15 +16,11 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
 
     override def nullSafeEval(input1: Any): Any = {
         val geometryAPI = GeometryAPI(geometryAPIName)
-        geometryAPIName match {
-            case "ESRI" =>
-                val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-                geom.isValid
-            case "JTS" => Try {
-                    val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-                    geom.isValid
-                }.getOrElse(false)
-        }
+        // Invalid format should not crash the execution
+        Try {
+            val geom = geometryAPI.geometry(input1, inputGeom.dataType)
+            geom.isValid
+        }.getOrElse(false)
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
@@ -42,24 +37,16 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
           leftEval => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-
-              // not merged into the same code block due to JTS IOException throwing
-              // OGC code will always remain simpler
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                   |$inCode
-                                   |${ev.value} = $geomInRef.isSimple();
-                                   |""".stripMargin
-                  case "JTS" => s"""
-                                   |try {
-                                   |$inCode
-                                   |${ev.value} = $geomInRef.isValid();
-                                   |} catch (Exception e) {
-                                   | ${ev.value} = false;
-                                   |}
-                                   |""".stripMargin
-
-              }
+              val geometryIsValidStatement = geometryAPI.geometryIsValidCode
+              // Invalid format should not crash the execution
+              s"""
+                 |try {
+                 |$inCode
+                 |${ev.value} = $geomInRef.$geometryIsValidStatement;
+                 |} catch (Exception e) {
+                 | ${ev.value} = false;
+                 |}
+                 |""".stripMargin
           }
         )
 

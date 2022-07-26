@@ -38,7 +38,7 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
             case (StringType, IntegerType)           => Seq(StringType, IntegerType)
             case (HexType, IntegerType)              => Seq(HexType, IntegerType)
             case (InternalGeometryType, IntegerType) => Seq(InternalGeometryType, IntegerType)
-            case _ => throw new IllegalArgumentException(s"Not supported data type: (${left.dataType}, ${right.dataType}).")
+            case _ => throw new Error(s"Not supported data type: (${left.dataType}, ${right.dataType}).")
         }
 
     override def right: Expression = resolution

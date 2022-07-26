@@ -3,13 +3,11 @@ package com.databricks.labs.mosaic.core.geometry.multipolygon
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
-import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
-import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonESRI}
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
+import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonESRI
+import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOLYGON, POLYGON}
 import com.esri.core.geometry.{Polygon, SpatialReference}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCMultiPolygon}
-
 import org.apache.spark.sql.catalyst.InternalRow
 
 class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeometryESRI(multiPolygon) with MosaicMultiPolygon {
@@ -26,11 +24,8 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
 
     override def getLength: Double = MosaicGeometryESRI(multiPolygon.boundary()).getLength
 
-    override def asSeq: Seq[MosaicGeometry] =
-        for (i <- 0 until multiPolygon.numGeometries()) yield MosaicGeometryESRI(multiPolygon.geometryN(i))
-
     override def numPoints: Int = {
-        getHolePoints.map(_.length).sum + getShellPoints.map(_.length).sum
+        getHolePoints.map(_.map(_.length).sum).sum + getShellPoints.map(_.length).sum
     }
 
     override def getHoles: Seq[Seq[MosaicLineString]] = {
@@ -50,6 +45,9 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
           asSeq.map(_.asInstanceOf[MosaicPolygonESRI].mapXY(f).asInstanceOf[MosaicPolygonESRI])
         )
     }
+
+    override def asSeq: Seq[MosaicGeometry] =
+        for (i <- 0 until multiPolygon.numGeometries()) yield MosaicGeometryESRI(multiPolygon.geometryN(i))
 
 }
 
@@ -122,7 +120,5 @@ object MosaicMultiPolygonESRI extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryESRI.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryESRI.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = MosaicGeometryESRI.fromKryo(row)
 
 }
