@@ -1,4 +1,5 @@
 target
+docker
 **/spark-warehouse
 .git
 .github

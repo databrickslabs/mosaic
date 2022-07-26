@@ -1,0 +1,38 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="docker/scala-single-test" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+    <deployment type="dockerfile">
+      <settings>
+        <option name="imageTag" value="mosaic-dev/scala-single-test" />
+        <option name="attachToContainerNeeded" value="true" />
+        <option name="buildArgs">
+          <list>
+            <DockerEnvVarImpl>
+              <option name="name" value="TEST_TO_RUN" />
+              <option name="value" value="com.databricks.labs.mosaic.expressions.raster.*" />
+            </DockerEnvVarImpl>
+          </list>
+        </option>
+        <option name="containerName" value="scala-single-test" />
+        <option name="contextFolderPath" value="." />
+        <option name="portBindings">
+          <list>
+            <DockerPortBindingImpl>
+              <option name="containerPort" value="5005" />
+              <option name="hostPort" value="5005" />
+            </DockerPortBindingImpl>
+          </list>
+        </option>
+        <option name="sourceFilePath" value="docker/scala-single-test" />
+        <option name="volumeBindings">
+          <list>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/root/.m2" />
+              <option name="hostPath" value="$PROJECT_DIR$/docker/.m2" />
+            </DockerVolumeBindingImpl>
+          </list>
+        </option>
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>

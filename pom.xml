@@ -104,6 +104,11 @@
             <artifactId>proj4j</artifactId>
             <version>1.1.5</version>
         </dependency>
+        <dependency>
+            <groupId>org.gdal</groupId>
+            <artifactId>gdal</artifactId>
+            <version>3.0.0</version>
+        </dependency>
 
     </dependencies>
 
@@ -168,6 +173,7 @@
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
                     <filereports>TestSuiteReport.txt</filereports>
+                    <stderr></stderr>
                     <!-- Comma separated list of JUnit test class names to execute -->
                     <!-- <jUnitClasses>com.databricks.labs.mosaic.expresions.format.TestHexToWKT</jUnitClasses> -->
                     <!-- <suites>com.databricks.labs.mosaic.expresions.format.TestHexToWKT</suites> -->

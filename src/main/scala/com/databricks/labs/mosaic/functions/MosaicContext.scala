@@ -15,13 +15,15 @@ import org.apache.spark.SparkException
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.expressions.constructors._
 import com.databricks.labs.mosaic.expressions.format._
 import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.helper.TrySql
 import com.databricks.labs.mosaic.expressions.index._
+import com.databricks.labs.mosaic.expressions.raster.{ST_BandMetaData, ST_MetaData, ST_Subdatasets}
 
-class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends Serializable with Logging {
+class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI) extends Serializable with Logging {
 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 
@@ -287,6 +289,31 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_HasValidCoordinates(exprs(0), exprs(1), exprs(2), geometryAPI.name)
         )
 
+        /** RasterAPI dependent functions */
+        registry.registerFunction(
+          FunctionIdentifier("st_metadata", database),
+          ST_MetaData.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) =>
+              exprs match {
+                  case e if e.length == 1 => ST_MetaData(exprs(0), lit("").expr, rasterAPI.name)
+                  case e if e.length == 2 => ST_MetaData(exprs(0), exprs(1), rasterAPI.name)
+              }
+        )
+        registry.registerFunction(
+          FunctionIdentifier("st_bandmetadata", database),
+          ST_BandMetaData.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) =>
+              exprs match {
+                  case e if e.length == 2 => ST_BandMetaData(exprs(0), exprs(1), lit("").expr, rasterAPI.name)
+                  case e if e.length == 3 => ST_BandMetaData(exprs(0), exprs(1), exprs(2), rasterAPI.name)
+              }
+        )
+        registry.registerFunction(
+          FunctionIdentifier("st_subdatasets", database),
+          ST_Subdatasets.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_Subdatasets(exprs(0), rasterAPI.name)
+        )
+
         /** Aggregators */
         registry.registerFunction(
           FunctionIdentifier("st_intersection_aggregate", database),
@@ -361,6 +388,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
     def getGeometryAPI: GeometryAPI = this.geometryAPI
 
+    def getRasterAPI: RasterAPI = this.rasterAPI
+
     def getIndexSystem: IndexSystem = this.indexSystem
 
     def installGDAL(spark: SparkSession): Unit = {
@@ -369,7 +398,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         val scriptPath = System.getProperty("os.name").toLowerCase() match {
             case o: String if o.contains("nux") => "/scripts/install-gdal-debian-ubuntu.sh"
             case o: String if o.contains("mac") => "/scripts/install-gdal-macos.sh"
-            case _ => throw new UnsupportedOperationException("This method only supports Ubuntu Linux with `apt` and MacOS with `brew`.")
+            case _                              =>
+                throw new UnsupportedOperationException("This method is only enabled on Ubuntu Linux with `apt` and MacOS with `brew`.")
         }
         val script = Source.fromInputStream(getClass.getResourceAsStream(scriptPath))
         for (cmd <- script.getLines.toList) {
@@ -444,6 +474,28 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_HasValidCoordinates(geom.expr, crsCode.expr, which.expr, geometryAPI.name))
         def st_transform(geom: Column, srid: Column): Column = ColumnAdapter(ST_Transform(geom.expr, srid.expr, geometryAPI.name))
 
+        /** RasterAPI dependent functions */
+        def st_metadata(raster: Column, path: Column): Column =
+            ColumnAdapter(
+              ST_MetaData(raster.expr, path.expr, rasterAPI.name)
+            )
+        def st_metadata(raster: Column): Column =
+            ColumnAdapter(
+              ST_MetaData(raster.expr, lit("").expr, rasterAPI.name)
+            )
+        def st_subdatasets(raster: Column): Column =
+            ColumnAdapter(
+              ST_Subdatasets(raster.expr, rasterAPI.name)
+            )
+        def st_bandmetadata(raster: Column, band: Column, path: Column): Column =
+            ColumnAdapter(
+              ST_BandMetaData(raster.expr, band.expr, path.expr, rasterAPI.name)
+            )
+        def st_bandmetadata(raster: Column, band: Column): Column =
+            ColumnAdapter(
+              ST_BandMetaData(raster.expr, band.expr, lit("").expr, rasterAPI.name)
+            )
+
         /** Aggregators */
         def st_intersects_aggregate(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(
@@ -509,12 +561,14 @@ object MosaicContext {
 
     private var instance: Option[MosaicContext] = None
 
-    def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {
-        instance = Some(new MosaicContext(indexSystem, geometryAPI))
+    def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI): MosaicContext = {
+        instance = Some(new MosaicContext(indexSystem, geometryAPI, rasterAPI))
         context
     }
 
     def geometryAPI: GeometryAPI = context.getGeometryAPI
+
+    def rasterAPI: RasterAPI = context.getRasterAPI
 
     def indexSystem: IndexSystem = context.getIndexSystem
 
