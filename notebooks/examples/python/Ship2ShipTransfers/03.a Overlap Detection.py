@@ -5,6 +5,10 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks_mosaic
+
+# COMMAND ----------
+
 from pyspark.sql.functions import *
 import mosaic as mos
 

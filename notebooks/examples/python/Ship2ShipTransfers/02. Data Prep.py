@@ -3,6 +3,10 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks_mosaic
+
+# COMMAND ----------
+
 import mosaic as mos
 from pyspark.sql.functions import *
 
@@ -73,7 +77,7 @@ display(AIS_df)
 # MAGIC
 # MAGIC This data can be obtained from [here](https://data-usdot.opendata.arcgis.com/datasets/usdot::ports-major/about), and loaded with the code below.
 # MAGIC
-# MAGIC To avoid detecting overlap close to, or within harbours, in Notebook `03. Aggregates` we filter out events taking place close to a harbour.
+# MAGIC To avoid detecting overlap close to, or within harbours, in Notebook `03.b Advanced Overlap Detection` we filter out events taking place close to a harbour.
 # MAGIC Various approaches are possible, including filtering out events too close to shore, and can be implemented in a similar fashion.
 # MAGIC
 # MAGIC In this instance we set a buffer of `10 km` around harbours to arbitrarily define an area wherein we do not expect ship-to-ship transfers to take place.
