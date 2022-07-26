@@ -48,7 +48,9 @@ one_metre = 0.00001 - 0.000001
 buffer = 100 * one_metre
 
 (
-    cargos_indexed.repartition(sc.defaultParallelism * 20)
+    cargos_indexed
+    # We increase parallelism as the default execution plan does not take full advantage of it.
+    .repartition(sc.defaultParallelism * 20)
     .withColumn("buffer_geom", mos.st_buffer("point_geom", lit(buffer)))
     .withColumn("ix", mos.mosaic_explode("buffer_geom", lit(9)))
     .write.mode("overwrite")
@@ -129,7 +131,7 @@ candidates = (
         )  # if either candidate fully covers an index, no further comparison is needed
         | mos.st_intersects(
             "a.ix.wkb", "b.ix.wkb"
-        )  # limit geospatial querying to cases where indices are not enough
+        )  # limit geospatial querying to cases where indices alone cannot give certainty
     )
     .select(
         col("a.vesselName").alias("vessel_1"),

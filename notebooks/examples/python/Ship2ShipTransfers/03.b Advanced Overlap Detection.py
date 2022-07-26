@@ -75,6 +75,9 @@ buffer = 200 * one_metre
 def get_buffer(line, buffer=buffer):
     """Create buffer as function of number of points in linestring
     The buffer size is inversely proportional to the number of points, providing a larger buffer for slower ships.
+    The intuition behind this choice is held in the way AIS positions are emitted. The faster the vessel moves the
+    more positions it will emit — yielding a smoother trajectory, where slower vessels will yield far fewer positions
+    and a harder to reconstruct trajectory which inherently holds more uncertainty.
 
     Args:
         line (geometry): linestring geometry as generated with st_makeline.
@@ -82,7 +85,7 @@ def get_buffer(line, buffer=buffer):
     Returns:
         double: buffer size in degrees
     """
-    np = expr(f"st_numpoints({line})")
+    np = mos.st_numpoints(line)
     max_np = lines.select(max(np)).collect()[0][0]
     return lit(max_np) * lit(buffer) / np
 
@@ -121,14 +124,21 @@ candidates_lines = (
     .join(
         cargo_movement.alias("b"),
         [
-            col("a.ix.index_id") == col("b.ix.index_id"),
-            col("a.mmsi") < col("b.mmsi"),
-            col("a.window") == col("b.window"),
+            col("a.ix.index_id")
+            == col("b.ix.index_id"),  # to only compare across efficient indices
+            col("a.mmsi")
+            < col("b.mmsi"),  # to prevent comparing candidates bidirectionally
+            col("a.window")
+            == col("b.window"),  # to compare across the same time window
         ],
     )
     .where(
-        (col("a.ix.is_core") | col("b.ix.is_core"))
-        | mos.st_intersects("a.ix.wkb", "b.ix.wkb")
+        (
+            col("a.ix.is_core") | col("b.ix.is_core")
+        )  # if either candidate fully covers an index, no further comparison is needed
+        | mos.st_intersects(
+            "a.ix.wkb", "b.ix.wkb"
+        )  # limit geospatial querying to cases where indices alone cannot give certainty
     )
     .select(
         col("a.mmsi").alias("vessel_1"),
@@ -181,10 +191,9 @@ candidates = spark.read.table("ship2ship.overlap_candidates_lines")
 # COMMAND ----------
 
 matches = (
-    candidates_lines.join(
-        harbours_h3, how="leftouter", on=candidates_lines["index"] == harbours_h3["h3"]
+    candidates.join(
+        harbours_h3, how="leftanti", on=candidates["index"] == harbours_h3["h3"]
     )
-    .where(harbours_h3["h3"].isNull())
     .groupBy("vessel_1", "vessel_2")
     .agg(first("line_1").alias("line_1"), first("line_2").alias("line_2"))
 )
