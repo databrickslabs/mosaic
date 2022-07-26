@@ -16,7 +16,6 @@ spark.conf.set("spark.databricks.labs.mosaic.geometry.api", "ESRI")
 spark.conf.set("spark.databricks.labs.mosaic.index.system", "H3")
 mos.enable_mosaic(spark, dbutils)
 
-
 # COMMAND ----------
 
 cargos_indexed = spark.read.table("ship2ship.cargos_indexed").filter(

@@ -103,7 +103,7 @@ display(spark.read.table("ship_path"))
 
 # COMMAND ----------
 
-to_plot = spark.read.table("ship_path").select("buffer").limit(3_000)
+to_plot = spark.read.table("ship_path").select("buffer").limit(3_000).distinct()
 
 # COMMAND ----------
 

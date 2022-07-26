@@ -7,8 +7,8 @@
 
 # COMMAND ----------
 
-import mosaic as mos
 from pyspark.sql.functions import *
+import mosaic as mos
 
 spark.conf.set("spark.databricks.labs.mosaic.geometry.api", "ESRI")
 spark.conf.set("spark.databricks.labs.mosaic.index.system", "H3")
