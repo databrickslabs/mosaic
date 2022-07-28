@@ -23,13 +23,13 @@ Documentation
 =============
 
 .. toctree::
-   :maxdepth: 1
    :caption: Contents:
 
    usage/installation
    usage/quickstart
    usage/grid-indexes
    usage/automatic-sql-registration
+   usage/kepler
    api/geometry-constructors
    api/geometry-accessors
    api/spatial-functions
