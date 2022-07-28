@@ -168,10 +168,9 @@
                     <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                     <junitxml>.</junitxml>
                     <filereports>TestSuiteReport.txt</filereports>
-                    <!-- Comma separated list of JUnit test class names to execute -->
-                    <!-- <jUnitClasses>com.databricks.labs.mosaic.expresions.format.TestHexToWKT</jUnitClasses> -->
-                    <!-- <suites>com.databricks.labs.mosaic.expresions.format.TestHexToWKT</suites> -->
-                    <!-- <wildcardSuites>com.databricks.labs.mosaic</wildcardSuites> -->
+                    <!-- Comma separated list of suites to execute -->
+                    <!-- <suites>com.databricks.labs.mosaic.expressions.format.ConvertToTest</suites> -->
+                    <!-- <wildcardSuites>com.databricks.labs.mosaic.expressions</wildcardSuites> -->
                 </configuration>
                 <executions>
                     <execution>
