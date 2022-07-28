@@ -9,9 +9,13 @@
 # MAGIC You can use the `%%mosaic_kepler` magic function to visualise data using [Kepler.gl](https://kepler.gl/).
 # MAGIC 
 # MAGIC The mosaic_kepler magic function accepts four parameters:
+# MAGIC 
 # MAGIC 1) `dataset`: Can be a Spark dataset or a string representing a table/view name
+# MAGIC 
 # MAGIC 2) `column_name`: The column that needs to be plotted, can be either a geometry column (`WKT`, `WKB` or Mosaic internal format) or a column containing a spatial grid index ID
+# MAGIC 
 # MAGIC 3) `feature_type`: The type of data to be plotted. Valid values are `geometry` and `h3`
+# MAGIC 
 # MAGIC 4) `limit`: The maximum number of objects to plot. The default limit is `1000`
 # MAGIC 
 # MAGIC Usage:
@@ -29,7 +33,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-mosaic
+# MAGIC %pip install databricks-mosaic --quiet
 
 # COMMAND ----------
 
@@ -75,9 +79,7 @@ neighbourhoods = (
    .limit(1)
 )
 
-display(
-  neighbourhoods
-)
+neighbourhoods.show()
 
 # COMMAND ----------
 
@@ -141,7 +143,7 @@ neighbourhood_chips = (neighbourhoods
                        .select("index.*")
                     )
 
-display(neighbourhood_chips)
+neighbourhood_chips.show()
 
 # COMMAND ----------
 
