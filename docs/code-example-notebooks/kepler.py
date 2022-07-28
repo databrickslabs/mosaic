@@ -99,12 +99,22 @@ neighbourhoods.show()
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ![mosaic kepler map example](../images/kepler-1.png)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC #### WKT geometry type
 
 # COMMAND ----------
 
 # MAGIC %%mosaic_kepler
 # MAGIC neighbourhoods "geom_wkt" "geometry"
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ![mosaic kepler map example](../images/kepler-1.png)
 
 # COMMAND ----------
 
@@ -119,6 +129,11 @@ neighbourhoods.show()
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ![mosaic kepler map example](../images/kepler-1.png)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### Plot geometries from table/view
 
 # COMMAND ----------
@@ -129,6 +144,11 @@ neighbourhoods.createOrReplaceTempView("temp_view_neighbourhoods")
 
 # MAGIC %%mosaic_kepler
 # MAGIC "temp_view_neighbourhoods" "geom_wkt" "geometry"
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ![mosaic kepler map example](../images/kepler-1.png)
 
 # COMMAND ----------
 
@@ -153,6 +173,11 @@ neighbourhood_chips.show()
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ![mosaic kepler map example](../images/kepler-2.png)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### Plot H3 chips
 
 # COMMAND ----------
@@ -162,4 +187,5 @@ neighbourhood_chips.show()
 
 # COMMAND ----------
 
-
+# MAGIC %md
+# MAGIC ![mosaic kepler map example](../images/kepler-3.png)
