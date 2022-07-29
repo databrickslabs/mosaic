@@ -33,7 +33,7 @@ flatten_polygons
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-    >>> df.select(flatten_polygons($"wkt")).show(false)
+    >>> df.select(flatten_polygons(col("wkt"))).show(false)
     +------------------------------------------+
     |element                                   |
     +------------------------------------------+
@@ -90,7 +90,7 @@ st_area
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_area($"wkt")).show()
+    >>> df.select(st_area(col("wkt"))).show()
     +------------+
     |st_area(wkt)|
     +------------+
@@ -148,7 +148,7 @@ st_buffer
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_buffer($"wkt", 2d)).show()
+    >>> df.select(st_buffer(col("wkt"), 2d)).show()
     +--------------------+
     | st_buffer(wkt, 2.0)|
     +--------------------+
@@ -201,7 +201,7 @@ st_centroid2D
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_centroid2D($"wkt")).show()
+    >>> df.select(st_centroid2D(col("wkt"))).show()
     +---------------------------------------+
     |st_centroid(wkt)                       |
     +---------------------------------------+
@@ -266,7 +266,7 @@ st_convexhull
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
-    >>> df.select(st_convexhull($"wkt")).show(false)
+    >>> df.select(st_convexhull(col("wkt"))).show(false)
     +---------------------------------------------+
     |st_convexhull(wkt)                           |
     +---------------------------------------------+
@@ -322,7 +322,7 @@ st_distance
    .. code-tab:: scala
 
     >>> val df = List(("POINT (5 5)", "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("point", "poly")
-    >>> df.select(st_distance($"poly", $"point")).show()
+    >>> df.select(st_distance(col("poly"), col("point"))).show()
     +------------------------+
     |st_distance(poly, point)|
     +------------------------+
@@ -381,7 +381,7 @@ st_dump
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
-    >>> df.select(st_dump($"wkt")).show(false)
+    >>> df.select(st_dump(col("wkt"))).show(false)
     +-------------+
     |element      |
     +-------------+
@@ -443,7 +443,7 @@ st_geometrytype
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_geometrytype($"wkt")).show()
+    >>> df.select(st_geometrytype(col("wkt"))).show()
     +--------------------+
     |st_geometrytype(wkt)|
     +--------------------+
@@ -502,7 +502,7 @@ st_hasvalidcoordinates
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))")).toDF("wkt")
-    >>> df.select(st_hasvalidcoordinates($"wkt", lit("EPSG:2192"), lit("bounds"))).show()
+    >>> df.select(st_hasvalidcoordinates(col("wkt"), lit("EPSG:2192"), lit("bounds"))).show()
     +----------------------------------------------+
     |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
     +----------------------------------------------+
@@ -558,7 +558,7 @@ st_intersection
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")).toDF("p1", "p2")
-    >>> df.select(st_intersection($"p1", $"p2")).show(false)
+    >>> df.select(st_intersection(col("p1"), col("p2"))).show(false)
     +-----------------------------------+
     |st_intersection(p1, p2)            |
     +-----------------------------------+
@@ -622,7 +622,7 @@ st_isvalid
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_isvalid($"wkt")).show()
+    >>> df.select(st_isvalid(col("wkt"))).show()
     +---------------+
     |st_isvalid(wkt)|
     +---------------+
@@ -630,7 +630,7 @@ st_isvalid
     +---------------+
 
     >>> val df = List(("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))")).toDF("wkt")
-    >>> df.select(st_isvalid($"wkt")).show()
+    >>> df.select(st_isvalid(col("wkt"))).show()
     +---------------+
     |st_isvalid(wkt)|
     +---------------+
@@ -703,7 +703,7 @@ st_length
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_length($"wkt")).show()
+    >>> df.select(st_length(col("wkt"))).show()
     +-----------------+
     |   st_length(wkt)|
     +-----------------+
@@ -762,7 +762,7 @@ st_numpoints
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_numpoints($"wkt")).show()
+    >>> df.select(st_numpoints(col("wkt"))).show()
     +-----------------+
     |st_numpoints(wkt)|
     +-----------------+
@@ -815,7 +815,7 @@ st_perimeter
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_perimeter($"wkt")).show()
+    >>> df.select(st_perimeter(col("wkt"))).show()
     +-----------------+
     |st_perimeter(wkt)|
     +-----------------+
@@ -877,7 +877,7 @@ st_rotate
 
     >>> import math.Pi
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_rotate($"wkt", lit(Pi))).show(false)
+    >>> df.select(st_rotate(col("wkt"), lit(Pi))).show(false)
     +-------------------------------------------------------+
     |st_rotate(wkt, 3.141592653589793)                      |
     +-------------------------------------------------------+
@@ -936,7 +936,7 @@ st_scale
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_scale($"wkt", lit(0.5), lit(2.0))).show(false)
+    >>> df.select(st_scale(col("wkt"), lit(0.5), lit(2.0))).show(false)
     +--------------------------------------------+
     |st_scale(wkt, 0.5, 2)                       |
     +--------------------------------------------+
@@ -992,7 +992,7 @@ st_setsrid
    .. code-tab:: scala
 
     >>> val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
-    >>> df.select(st_setsrid(st_geomfromwkt($"wkt"), lit(4326))).show
+    >>> df.select(st_setsrid(st_geomfromwkt(col("wkt")), lit(4326))).show
     +---------------------------------+
     |st_setsrid(convert_to(wkt), 4326)|
     +---------------------------------+
@@ -1055,7 +1055,7 @@ st_srid
     >>> val df =
     >>>    List("""{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}""")
     >>>    .toDF("json")
-    >>> df.select(st_srid(as_json($"json"))).show(1)
+    >>> df.select(st_srid(as_json(col("json")))).show(1)
     +----------------------+
     |st_srid(as_json(json))|
     +----------------------+
@@ -1118,8 +1118,8 @@ st_transform
    .. code-tab:: scala
 
     >>> val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
-    >>>   .withColumn("geom", st_setsrid(st_geomfromwkt($"wkt"), lit(4326)))
-    >>> df.select(st_astext(st_transform($"geom", lit(3857)))).show(1, false)
+    >>>   .withColumn("geom", st_setsrid(st_geomfromwkt(col("wkt")), lit(4326)))
+    >>> df.select(st_astext(st_transform(col("geom"), lit(3857)))).show(1, false)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1183,7 +1183,7 @@ st_translate
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
-    >>> df.select(st_translate($"wkt", lit(10d), lit(-5d))).show(false)
+    >>> df.select(st_translate(col("wkt"), lit(10d), lit(-5d))).show(false)
     +----------------------------------------------+
     |st_translate(wkt, 10, -5)                     |
     +----------------------------------------------+
@@ -1236,7 +1236,7 @@ st_xmax
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_xmax($"wkt")).show()
+    >>> df.select(st_xmax(col("wkt"))).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1290,7 +1290,7 @@ st_xmin
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_xmin($"wkt")).show()
+    >>> df.select(st_xmin(col("wkt"))).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1344,7 +1344,7 @@ st_ymax
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_ymax($"wkt")).show()
+    >>> df.select(st_ymax(col("wkt"))).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1398,7 +1398,7 @@ st_ymin
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_ymin($"wkt")).show()
+    >>> df.select(st_ymin(col("wkt"))).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+

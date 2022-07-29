@@ -56,7 +56,7 @@ mosaic_explode
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-    >>> df.select(mosaic_explode($"wkt", lit(0))).show()
+    >>> df.select(mosaic_explode(col("wkt"), lit(0))).show()
     +-----------------------------------------------+
     |is_core|          index_id|                 wkb|
     +-------+------------------+--------------------+
@@ -160,7 +160,7 @@ mosaicfill
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-    >>> df.select(mosaicfill($"wkt", lit(0))).printSchema
+    >>> df.select(mosaicfill(col("wkt"), lit(0))).printSchema
     root
      |-- mosaicfill(wkt, 0): mosaic (nullable = true)
      |    |-- chips: array (nullable = true)
@@ -169,7 +169,7 @@ mosaicfill
      |    |    |    |-- index_id: long (nullable = true)
      |    |    |    |-- wkb: binary (nullable = true)
 
-    >>> df.select(mosaicfill($"wkt", lit(0))).show()
+    >>> df.select(mosaicfill(col("wkt"), lit(0))).show()
     +---------------------+
     |mosaicfill(wkt, 0)   |
     +---------------------+
@@ -234,7 +234,7 @@ point_index_geom
    .. code-tab:: scala
 
     >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
-    >>> df.select(point_index_geom(st_point($"lon", $"lat"), lit(10))).show()
+    >>> df.select(point_index_geom(st_point(col("lon"), col("lat")), lit(10))).show()
     +----------------------------------------+
     |point_index_geom(st_point(lon, lat), 10)|
     +----------------------------------------+
@@ -293,7 +293,7 @@ point_index_lonlat
    .. code-tab:: scala
 
     >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
-    >>> df.select(point_index_lonlat($"lon", $"lat", lit(10))).show()
+    >>> df.select(point_index_lonlat(col("lon"), col("lat"), lit(10))).show()
     +--------------------------------+
     |point_index_lonlat(lon, lat, 10)|
     +--------------------------------+
@@ -355,7 +355,7 @@ polyfill
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-    >>> df.select(polyfill($"wkt", lit(0))).show(false)
+    >>> df.select(polyfill(col("wkt"), lit(0))).show(false)
     +------------------------------------------------------------+
     |polyfill(wkt, 0)                                            |
     +------------------------------------------------------------+
