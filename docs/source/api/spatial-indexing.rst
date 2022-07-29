@@ -13,8 +13,11 @@ mosaic_explode
     Returns the set of Mosaic chips **covering** the input `geometry` at `resolution`.
 
     A Mosaic chip is a struct type composed of:
+
     - `is_core`: Identifies if the chip is fully contained within the geometry: Boolean
+
     - `index_id`: Index ID of the configured spatial indexing (default H3): Integer
+
     - `wkb`: Geometry in WKB format equal to the intersection of the index shape and the original `geometry`: Binary
 
     In contrast to :ref:`mosaicfill`, `mosaic_explode` generates one result row per chip.
@@ -111,8 +114,11 @@ mosaicfill
     Returns an array of Mosaic chips **covering** the input `geometry` at `resolution`.
 
     A Mosaic chip is a struct type composed of:
+
     - `is_core`: Identifies if the chip is fully contained within the geometry: Boolean
+
     - `index_id`: Index ID of the configured spatial indexing (default H3): Integer
+
     - `wkb`: Geometry in WKB format equal to the intersection of the index shape and the original `geometry`: Binary
 
     In contrast to :ref:`mosaic_explode`, `mosaicfill` does not explode the list of shapes.

@@ -33,6 +33,7 @@ Documentation
    api/geometry-constructors
    api/geometry-accessors
    api/spatial-functions
+   api/spatial-indexing
    api/spatial-predicates
    api/spatial-aggregations
 
