@@ -21,7 +21,7 @@ jobs:
       - uses: mosaic/build_ymls/python_build@v1
       - uses: mosaic/build_ymls/r_build@v1
       - uses: mosaic/build_ymls/upload_artifacts_build@v1
-
+# build for python, skip scala tests and R build
 on:
   push:
     branches:
@@ -45,11 +45,12 @@ jobs:
           skip_tests: "true"
       - uses: mosaic/build_ymls/python_build@v1
       - uses: mosaic/build_ymls/upload_artifacts_build@v1
-
+# build for R, skip scala tests and python build
 on:
   push:
     branches:
       - "r/*"
+      - "R/*"
   pull_request:
     branches:
       - '**'
