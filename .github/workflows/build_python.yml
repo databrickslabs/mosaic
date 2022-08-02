@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - "python/*"
-    workflow_dispatch:
-      inputs:
-        skip_tests:
-          description: "Run Scala Tests? true or false"
-          default: "false"
 jobs:
   build:
     runs-on: ubuntu-20.04
