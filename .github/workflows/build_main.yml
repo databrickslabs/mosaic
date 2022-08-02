@@ -17,7 +17,7 @@ jobs:
         spark: [ 3.2.1 ]
         R: [ 4.1.2 ]
     steps:
-      - uses: mosaic/build_ymls/scala_build@v1
-      - uses: mosaic/build_ymls/python_build@v1
-      - uses: mosaic/build_ymls/r_build@v1
-      - uses: mosaic/build_ymls/upload_artifacts_build@v1
+      - uses: build_ymls/scala_build@v1
+      - uses: build_ymls/python_build@v1
+      - uses: build_ymls/r_build@v1
+      - uses: build_ymls/upload_artifacts_build@v1
