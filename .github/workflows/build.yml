@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - sparklyr
   pull_request:
     branches:
       - '**'
@@ -18,54 +17,55 @@ jobs:
         spark: [ 3.2.1 ]
         R: [ 4.1.2 ]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Configure JDK
-        uses: actions/setup-java@v2
-        with:
-          java-version: '8'
-          distribution: 'zulu'
-      - name: Test and build the scala JAR
-        run: mvn -q clean install
-      - name: Publish test coverage
-        uses: codecov/codecov-action@v1
-      - name: Copy Scala artifacts to GH Actions run
-        run: |
-          mkdir staging
-          cp target/mosaic*.jar staging
-      - name: Configure python interpreter
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python }}
-      - name: Install python dependencies
-        run: |
-          cd python
-          pip install build wheel pyspark==${{ matrix.spark }}
-          pip install .
-      - name: Test and build python package
-        run: |
-          cd python
-          python -m unittest
-          python -m build
-      - name: Copy python artifacts to GH Actions run
-        run: cp python/dist/*.whl staging
-      - name: Setup R build environment
-        run: |
-          sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev 
-      - name: Build R package
-        run: |
-          cd R/sparkR-mosaic
-          mkdir -p /usr/lib/R/site-library
-          sudo chown -R $USER: /usr/lib/R/site-library
-          Rscript --vanilla build_r_package.R
-      - name: Test R package
-        run: |
-          cd R/sparkR-mosaic
-          Rscript --vanilla tests.R
-      - name: Copy R artifacts to GH Actions run
-        run: |
-          cp R/sparkR-mosaic/*.tar.gz staging
-      - uses: actions/upload-artifact@v3
-        with:
-          name: artefacts
-          path: staging/*
+      - uses: mosaic/build_ymls/scala_build@v1
+      - uses: mosaic/build_ymls/python_build@v1
+      - uses: mosaic/build_ymls/r_build@v1
+      - uses: mosaic/build_ymls/upload_artifacts_build@v1
+
+on:
+  push:
+    branches:
+      - "python/*"
+  pull_request:
+    branches:
+      - '**'
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        python: [ 3.8.10 ]
+        spark: [ 3.2.1 ]
+        R: [ 4.1.2 ]
+    steps:
+      - uses: mosaic/build_ymls/scala_build@v1
+        with: 
+          skip_tests: "true"
+      - uses: mosaic/build_ymls/python_build@v1
+      - uses: mosaic/build_ymls/upload_artifacts_build@v1
+
+on:
+  push:
+    branches:
+      - "r/*"
+  pull_request:
+    branches:
+      - '**'
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        python: [ 3.8.10 ]
+        spark: [ 3.2.1 ]
+        R: [ 4.1.2 ]
+    steps:
+      - uses: mosaic/build_ymls/scala_build@v1
+        with: 
+          skip_tests: "true"
+      - uses: mosaic/build_ymls/r_build@v1
+      - uses: mosaic/build_ymls/upload_artifacts_build@v1
