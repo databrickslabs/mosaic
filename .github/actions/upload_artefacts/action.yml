@@ -1,3 +1,5 @@
+name: upload mosaic artefacts
+description: upload mosaic artefacts
 runs:
   using: "composite"
   steps:

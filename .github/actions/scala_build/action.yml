@@ -1,3 +1,5 @@
+name: build mosaic scala
+description: build mosaic scala
 inputs: 
   skip_tests:
     description: "Run Scala Tests? true or false"

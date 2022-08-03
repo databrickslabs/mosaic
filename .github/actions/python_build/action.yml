@@ -1,3 +1,5 @@
+name: build mosaic python
+description: build mosaic python
 runs:
   using: "composite"
   steps:
