@@ -99,7 +99,7 @@ neighbourhoods.show()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ![mosaic kepler map example](../images/kepler-1.png)
+# MAGIC ![mosaic kepler map example geometry](../images/kepler-1.png)
 
 # COMMAND ----------
 
@@ -114,7 +114,7 @@ neighbourhoods.show()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ![mosaic kepler map example](../images/kepler-1.png)
+# MAGIC ![mosaic kepler map example geometry](../images/kepler-1.png)
 
 # COMMAND ----------
 
@@ -129,7 +129,7 @@ neighbourhoods.show()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ![mosaic kepler map example](../images/kepler-1.png)
+# MAGIC ![mosaic kepler map example geometry](../images/kepler-1.png)
 
 # COMMAND ----------
 
@@ -148,7 +148,7 @@ neighbourhoods.createOrReplaceTempView("temp_view_neighbourhoods")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ![mosaic kepler map example](../images/kepler-1.png)
+# MAGIC ![mosaic kepler map example geometry](../images/kepler-1.png)
 
 # COMMAND ----------
 
@@ -173,7 +173,7 @@ neighbourhood_chips.show()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ![mosaic kepler map example](../images/kepler-2.png)
+# MAGIC ![mosaic kepler map example H3 indexes](../images/kepler-2.png)
 
 # COMMAND ----------
 
@@ -188,4 +188,4 @@ neighbourhood_chips.show()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ![mosaic kepler map example](../images/kepler-3.png)
+# MAGIC ![mosaic kepler map example H3 chips](../images/kepler-3.png)
