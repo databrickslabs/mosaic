@@ -1,11 +1,13 @@
 repo<-"https://cran.ma.imperial.ac.uk/"
 
-install.packages("devtools", repos=repo)
+#install.packages("devtools", repos=repo)
+install.packages("pkgbuild", repos=repo)
 install.packages("roxygen2", repos=repo)
 
 spark_location <- "/usr/spark-download/unzipped/spark-3.2.1-bin-hadoop2.7"
 Sys.setenv(SPARK_HOME = spark_location)
-library(devtools)
+#library(devtools)
+library(pkgbuild)
 library(roxygen2)
 library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
 
@@ -17,10 +19,10 @@ build_sparkr_mosaic <- function(){
   system(system_cmd)
 
   # build doc
-  devtools::document("sparkrMosaic")
+  roxygen2::roxygenize("sparkrMosaic")
 
   ## build package
-  devtools::build("sparkrMosaic")
+  pkgdown::build("sparkrMosaic")
   
 }
 
