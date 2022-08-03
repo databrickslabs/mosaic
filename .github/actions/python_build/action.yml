@@ -8,14 +8,17 @@ runs:
       with:
         python-version: ${{ matrix.python }}
     - name: Install python dependencies
+      shell: bash
       run: |
         cd python
         pip install build wheel pyspark==${{ matrix.spark }}
         pip install .
     - name: Test and build python package
+      shell: bash
       run: |
         cd python
         python -m unittest
         python -m build
     - name: Copy python artifacts to GH Actions run
+      shell: bash
       run: cp python/dist/*.whl staging
