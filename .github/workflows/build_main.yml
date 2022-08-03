@@ -20,7 +20,7 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v2
       - name: build scala
-        uses: .github/actions/scala_build@v2
+        uses: /.github/actions/scala_build@v2
       - name: build python
         uses: ./.github/actions/python_build@v2
       - name: build r
