@@ -15,7 +15,8 @@ jobs:
         spark: [ 3.2.1 ]
         R: [ 4.1.2 ]
     steps:
-      - uses: build_ymls/scala_build@v1
+      - use: actions/checkout@v2
+      - uses: ./.github/actions/scala_build@v1
         with: 
           skip_tests: "true"
       - uses: ./.github/actions/python_build@v1
