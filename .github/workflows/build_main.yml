@@ -26,4 +26,4 @@ jobs:
       - name: build r
         uses: ./.github/actions/r_build
       - name: upload artefacts
-        uses: ./.github/actions/upload_artifacts_build
+        uses: ./.github/actions/upload_artefacts

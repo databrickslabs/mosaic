@@ -22,4 +22,4 @@ jobs:
       - name: build scala with tests
         uses: ./.github/actions/scala_build
       - name: upload artefacts
-        uses: ./.github/actions/upload_artifacts_build
+        uses: ./.github/actions/upload_artefacts
