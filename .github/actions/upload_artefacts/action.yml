@@ -3,9 +3,8 @@ description: upload mosaic artefacts
 runs:
   using: "composite"
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - uses: actions/upload-artifact@v3
+    - name: upload artefacts
+      uses: actions/upload-artifact@v3
       with:
         name: artefacts
         path: staging/*

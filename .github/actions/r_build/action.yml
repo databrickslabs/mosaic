@@ -3,8 +3,6 @@ description: build mosaic R
 runs:
   using: "composite"
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
     - name: Setup R build environment
       run: |
         sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev 
@@ -30,7 +28,3 @@ runs:
     - name: Copy R artifacts to GH Actions run
       run: |
         cp R/sparkR-mosaic/*.tar.gz staging
-    - uses: actions/upload-artifact@v3
-      with:
-        name: artefacts
-        path: staging/*

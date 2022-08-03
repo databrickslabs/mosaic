@@ -3,8 +3,6 @@ description: build mosaic python
 runs:
   using: "composite"
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
     - name: Configure python interpreter
       uses: actions/setup-python@v2
       with:

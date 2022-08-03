@@ -18,5 +18,5 @@ jobs:
         R: [ 4.1.2 ]
     steps:
       - uses: actions/checkout@v2
-      - uses: ./.github/actions/scala_build@v1
-      - uses: ./.github/actions/upload_artifacts_build@v1
+      - uses: ./.github/actions/scala_build
+      - uses: ./.github/actions/upload_artifacts_build@
