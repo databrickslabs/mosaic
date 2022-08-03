@@ -8,8 +8,6 @@ runs:
   using: "composite"
   if: inputs.skip_tests == "false"
   steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
         - name: Configure JDK
           uses: actions/setup-java@v2
           with:
@@ -25,8 +23,6 @@ runs:
             cp target/mosaic*.jar staging
   if: inputs.skip_tests == "true"
   steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
         - name: Configure JDK
           uses: actions/setup-java@v2
           with:
