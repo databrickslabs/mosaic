@@ -2,8 +2,8 @@ name: build mosaic scala
 description: build mosaic scala
 inputs: 
   skip_tests:
-    description: "Run Scala Tests? true or false"
-    default: "false"
+    description: 'Run Scala Tests? true or false'
+    default: 'false'
 runs:
   using: "composite"
   steps:
@@ -13,11 +13,11 @@ runs:
             java-version: '8'
             distribution: 'zulu'
         - name: Test and build the scala JAR - skip tests is false
-          if: inputs.skip_tests == false
+          if: inputs.skip_tests == 'false'
           shell: bash
           run: mvn -q clean install
         - name: Build the scala JAR - skip tests is true
-          if: inputs.skip_tests == true
+          if: inputs.skip_tests == 'true'
           shell: bash
           run: mvn -q clean install -DskipTests
         - name: Publish test coverage
