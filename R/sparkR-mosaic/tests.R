@@ -9,6 +9,7 @@ library(roxygen2)
 spark_location <- "/usr/spark-download/unzipped/spark-3.2.1-bin-hadoop2.7"
 Sys.setenv(SPARK_HOME = spark_location)
 library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
+.libPaths(c(file.path(spark_location, "R", "lib"), .libPaths()))
 
 # find the sparkrMosaic tar
 file_list <- list.files()
