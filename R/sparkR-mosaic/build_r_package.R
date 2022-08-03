@@ -22,7 +22,7 @@ build_sparkr_mosaic <- function(){
   roxygen2::roxygenize("sparkrMosaic")
 
   ## build package
-  pkgdown::build("sparkrMosaic")
+  pkgbuild::build("sparkrMosaic")
   
 }
 
