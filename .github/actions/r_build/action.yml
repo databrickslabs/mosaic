@@ -15,7 +15,6 @@ runs:
         sudo chown -R $USER: /usr/spark-download/
         wget -P /usr/spark-download/raw https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop2.7.tgz 
         tar zxvf /usr/spark-download/raw/spark-3.2.1-bin-hadoop2.7.tgz -C /usr/spark-download/unzipped
-        SPARK_HOME = /usr/spark-download/unzipped/spark-3.2.1-bin-hadoop2.7
 
 
     - name: Build R package

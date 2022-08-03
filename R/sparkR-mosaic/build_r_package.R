@@ -5,7 +5,7 @@ install.packages("roxygen2", repos=repo)
 #devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
 
 spark_location <- "/usr/spark-download/unzipped/spark-3.2.1-bin-hadoop2.7"
-
+Sys.setenv(SPARK_HOME = spark_location)
 library(devtools)
 library(roxygen2)
 library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
