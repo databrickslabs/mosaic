@@ -20,10 +20,10 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v2
       - name: build scala
-        uses: ./.github/actions/scala_build@v2
+        uses: ./.github/actions/scala_build
       - name: build python
-        uses: ./.github/actions/python_build@v2
+        uses: ./.github/actions/python_build
       - name: build r
-        uses: ./.github/actions/r_build@v2
+        uses: ./.github/actions/r_build
       - name: upload artefacts
-        uses: ./.github/actions/upload_artifacts_build@v2
+        uses: ./.github/actions/upload_artifacts_build
