@@ -17,7 +17,7 @@ jobs:
         spark: [ 3.2.1 ]
         R: [ 4.1.2 ]
     steps:
-      - use: actions/checkout@v2
+      - uses: actions/checkout@v2
       - uses: ./.github/actions/scala_build@v1
       - uses: ./.github/actions/python_build@v1
       - uses: ./.github/actions/r_build@v1
