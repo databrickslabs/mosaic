@@ -1,13 +1,14 @@
 repo<-"https://cran.ma.imperial.ac.uk/"
 
-install.packages("devtools", repos=repo)
-install.packages("roxygen2", repos=repo)
-devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
+#install.packages("devtools", repos=repo)
+#install.packages("roxygen2", repos=repo)
 
 library(devtools)
 library(roxygen2)
-library(SparkR)
-SparkR::install.spark()
+
+spark_location <- "/usr/spark-download/unzipped/spark-3.2.1-bin-hadoop2.7"
+Sys.setenv(SPARK_HOME = spark_location)
+library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
 
 # find the sparkrMosaic tar
 file_list <- list.files()
