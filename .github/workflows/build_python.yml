@@ -15,9 +15,13 @@ jobs:
         spark: [ 3.2.1 ]
         R: [ 4.1.2 ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/scala_build
+      - name: checkout code
+        uses: actions/checkout@v2
+      - name: build scala with skipping tests
+        uses: ./.github/actions/scala_build
         with: 
           skip_tests: "true"
-      - uses: ./.github/actions/python_build
-      - uses: ./.github/actions/upload_artifacts_build
+      - name: build python
+        uses: ./.github/actions/python_build
+      - name: upload artefacts
+        uses: ./.github/actions/upload_artifacts_build

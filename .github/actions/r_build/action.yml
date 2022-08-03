@@ -10,11 +10,12 @@ runs:
     - name: Download and unpack Spark
       shell: bash
       run: |
-        mkdir -p /usr/spark-tar
+        mkdir -p /usr/spark-download/raw
+        mkdir -p /usr/spark-download/unzipped
+        sudo chown -R $USER: /usr/spark-download/
         wget -P /usr/spark-tar https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop2.7.tgz 
-        mkdir /usr/spark
-        tar zxvf /usr/spark-tar/spark-3.2.1-bin-hadoop2.7.tgz -C /usr/spark
-        SPARK_HOME = /usr/spark/spark-3.2.1-bin-hadoop2.7
+        tar zxvf /usr/spark-tar/spark-3.2.1-bin-hadoop2.7.tgz -C /usr/spark/unzipped
+        SPARK_HOME = /usr/spark/unzipped/spark-3.2.1-bin-hadoop2.7
 
 
     - name: Build R package
