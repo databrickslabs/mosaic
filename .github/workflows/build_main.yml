@@ -2,7 +2,11 @@ name: build everything
 on:
   push:
     branches:
-      - main
+      - "!R/**"
+      - "!r/**"
+      - "!python/**"
+      - "!r/**"
+
   pull_request:
     branches:
       - '**'
