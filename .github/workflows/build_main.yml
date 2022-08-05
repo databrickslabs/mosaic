@@ -2,7 +2,10 @@ name: build everything
 on:
   push:
     branches:
-      - main
+      - "!R/*"
+      - "!r/*"
+      - "!python/*"
+      - "!scala/*"
   pull_request:
     branches:
       - '**'
