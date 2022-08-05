@@ -1,0 +1,29 @@
+name: build mosaic scala
+description: build mosaic scala
+inputs: 
+  skip_tests:
+    description: 'Skip Scala Tests? true or false'
+    default: 'false'
+runs:
+  using: "composite"
+  steps:
+        - name: Configure JDK
+          uses: actions/setup-java@v2
+          with:
+            java-version: '8'
+            distribution: 'zulu'
+        - name: Test and build the scala JAR - skip tests is false
+          if: inputs.skip_tests == 'false'
+          shell: bash
+          run: mvn -q clean install
+        - name: Build the scala JAR - skip tests is true
+          if: inputs.skip_tests == 'true'
+          shell: bash
+          run: mvn -q clean install -DskipTests
+        - name: Publish test coverage
+          uses: codecov/codecov-action@v1
+        - name: Copy Scala artifacts to GH Actions run
+          shell: bash
+          run: |
+            mkdir staging
+            cp target/mosaic*.jar staging

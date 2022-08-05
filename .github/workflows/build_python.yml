@@ -1,0 +1,30 @@
+name: build_python
+# build for python, skip scala tests and R build
+on:
+  push:
+    branches:
+      - "python/*"
+  pull_request:
+    branches:
+      - "python/*"
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        python: [ 3.8.10 ]
+        spark: [ 3.2.1 ]
+        R: [ 4.1.2 ]
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+      - name: build scala with skipping tests
+        uses: ./.github/actions/scala_build
+        with: 
+          skip_tests: "true"
+      - name: build python
+        uses: ./.github/actions/python_build
+      - name: upload artefacts
+        uses: ./.github/actions/upload_artefacts
