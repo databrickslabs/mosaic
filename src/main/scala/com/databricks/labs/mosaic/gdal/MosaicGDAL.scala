@@ -12,7 +12,7 @@ object MosaicGDAL extends Logging {
 
     def enableGDAL(spark: SparkSession): Unit = {
         installGDAL(Some(spark))
-        spark.sparkContext.addSparkListener(new GDALListener())
+        //spark.sparkContext.addSparkListener(new GDALListener())
     }
 
     def installGDAL(spark: Option[SparkSession]): Unit = {

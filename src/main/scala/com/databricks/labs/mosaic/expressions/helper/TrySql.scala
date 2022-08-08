@@ -78,7 +78,7 @@ object TrySql {
           db.orNull,
           name,
           """
-            |    _FUNC_(expr1) - Wraps evaluation of an expression into a Try/Catch block and in case of 
+            |    _FUNC_(expr1) - Wraps evaluation of an expression into a Try/Catch block and in case of
             |    errors returns error message for each row in the dataset.
             """.stripMargin,
           "",
