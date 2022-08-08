@@ -10,17 +10,17 @@ import org.scalatest.flatspec.AnyFlatSpec
 class TestRaster extends AnyFlatSpec with RasterBehaviors with SparkSuite {
 
     "ST_MetaData" should "return dataset metadata for any raster API" in {
-        assume(System.getProperty("os.name") == "Linux")
+        //assume(System.getProperty("os.name") == "Linux")
         it should behave like readST_MetaData(MosaicContext.build(H3IndexSystem, ESRI, GDAL), spark)
     }
 
     "ST_Subdatasets" should "return paths and descriptions for subdatasets within a raster dataset for any raster API" in {
-        assume(System.getProperty("os.name") == "Linux")
+        //assume(System.getProperty("os.name") == "Linux")
         it should behave like readST_Subdatasets(MosaicContext.build(H3IndexSystem, ESRI, GDAL), spark)
     }
 
     "ST_BandMetaData" should "return raster band metadata for any raster API" in {
-        assume(System.getProperty("os.name") == "Linux")
+        //assume(System.getProperty("os.name") == "Linux")
         it should behave like readST_BandMetaData(MosaicContext.build(H3IndexSystem, ESRI, GDAL), spark)
     }
 

@@ -89,7 +89,7 @@ object MosaicRasterGDAL extends RasterReader {
     private def enableGDAL(): Unit = {
         System.getProperty("os.name").toLowerCase() match {
             case o: String if o.contains("nux") => System.load("/usr/lib/jni/libgdalalljni.so")
-            case _                              => throw new UnsupportedOperationException("This method is only enabled on Ubuntu Linux.")
+            case _                              => //throw new UnsupportedOperationException("This method is only enabled on Ubuntu Linux.")
         }
         gdal.AllRegister()
     }
