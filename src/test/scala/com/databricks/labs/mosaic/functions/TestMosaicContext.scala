@@ -13,7 +13,7 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite {
     "MosaicContext" should "install GDAL on the driver and executors" in {
         val sc = spark.sparkContext
         val mc = MosaicContext.build(indexSystem = H3, geometryAPI = ESRI, rasterAPI = GDAL)
-        mc.installGDAL(spark)
+        mc.enableGDAL(spark)
 
         val checkCmd = "gdalinfo --version"
         val resultDriver = Try(checkCmd.!!).getOrElse("")

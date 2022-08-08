@@ -1,17 +1,5 @@
 package com.databricks.labs.mosaic.functions
 
-import scala.io.Source
-import scala.sys.process._
-
-import java.io.IOException
-
-import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{Column, SparkSession}
-import org.apache.spark.sql.catalyst.FunctionIdentifier
-import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.functions._
-import org.apache.spark.SparkException
-
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
@@ -22,6 +10,13 @@ import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.helper.TrySql
 import com.databricks.labs.mosaic.expressions.index._
 import com.databricks.labs.mosaic.expressions.raster.{ST_BandMetaData, ST_MetaData, ST_Subdatasets}
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
+import com.databricks.labs.mosaic.GDAL
+import org.apache.spark.internal.Logging
+import org.apache.spark.sql.{Column, SparkSession}
+import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.functions._
 
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI) extends Serializable with Logging {
 
@@ -392,31 +387,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 
     def getIndexSystem: IndexSystem = this.indexSystem
 
-    def installGDAL(spark: SparkSession): Unit = {
-        val sc = spark.sparkContext
-        val numExecutors = sc.getExecutorMemoryStatus.size - 1
-        val scriptPath = System.getProperty("os.name").toLowerCase() match {
-            case o: String if o.contains("nux") => "/scripts/install-gdal-debian-ubuntu.sh"
-            case o: String if o.contains("mac") => "/scripts/install-gdal-macos.sh"
-            case _                              =>
-                throw new UnsupportedOperationException("This method is only enabled on Ubuntu Linux with `apt` and MacOS with `brew`.")
-        }
-        val script = Source.fromInputStream(getClass.getResourceAsStream(scriptPath))
-        for (cmd <- script.getLines.toList) {
-            try {
-                cmd.!!
-                if (!spark.sparkContext.isLocal) {
-                    sc.parallelize(1 to numExecutors).pipe(cmd).collect
-                }
-            } catch {
-                case e: IOException           => logError(e.getMessage)
-                case e: IllegalStateException => logError(e.getMessage)
-                case e: SparkException        => logError(e.getMessage)
-            } finally {
-                script.close
-            }
-        }
-    }
+    def enableGDAL(spark: SparkSession): Unit = MosaicGDAL.enableGDAL(spark)
 
     // scalastyle:off object.name
     object functions extends Serializable {
@@ -573,7 +544,7 @@ object MosaicContext {
 
     private var instance: Option[MosaicContext] = None
 
-    def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI): MosaicContext = {
+    def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI = GDAL): MosaicContext = {
         instance = Some(new MosaicContext(indexSystem, geometryAPI, rasterAPI))
         context
     }

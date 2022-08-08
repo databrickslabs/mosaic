@@ -335,6 +335,7 @@ package object test {
             fileBytes("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grib")
         val netcdfBytes: Array[Byte] = fileBytes("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
 
+        //noinspection ScalaCustomHdfsFormat
         def getBinaryDf(spark: SparkSession, resourcePath: String, pathGlobFilter: String): DataFrame =
             spark.read.format("binaryFile").option("pathGlobFilter", pathGlobFilter).load(resourcePath)
 

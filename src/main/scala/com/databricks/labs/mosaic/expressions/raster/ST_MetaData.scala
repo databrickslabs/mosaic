@@ -1,25 +1,24 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.{ArrayBasedMapBuilder, ArrayData}
-import org.apache.spark.sql.types.{DataType, MapType, StringType}
+import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 
 case class ST_MetaData(inputRaster: Expression, path: Expression, rasterAPIName: String)
     extends BinaryExpression
       with NullIntolerant
       with CodegenFallback {
 
+    private lazy val mapBuilder = new ArrayBasedMapBuilder(StringType, StringType)
+
     override def left: Expression = inputRaster
 
     override def right: Expression = path
 
     override def dataType: DataType = MapType(keyType = StringType, valueType = StringType)
-
-    private lazy val mapBuilder = new ArrayBasedMapBuilder(StringType, StringType)
 
     override protected def nullSafeEval(rasterRow: Any, pathRow: Any): Any = {
         val rasterAPI = RasterAPI(rasterAPIName)

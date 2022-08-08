@@ -16,7 +16,7 @@ trait RasterBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        mc.installGDAL(spark)
+        mc.enableGDAL(spark)
 
         val rasterDfWithMetadata = mocks
             .getGeotiffBinaryDf(spark)
@@ -36,7 +36,7 @@ trait RasterBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        mc.installGDAL(spark)
+        mc.enableGDAL(spark)
 
         val rasterDfWithSubdatasets = mocks
             .getNetCDFBinaryDf(spark)
@@ -60,7 +60,7 @@ trait RasterBehaviors { this: AnyFlatSpec =>
         import mc.functions._
         import sc.implicits._
 
-        mc.installGDAL(spark)
+        mc.enableGDAL(spark)
 
         val rasterDfWithBandMetadata = mocks
             .getNetCDFBinaryDf(spark)

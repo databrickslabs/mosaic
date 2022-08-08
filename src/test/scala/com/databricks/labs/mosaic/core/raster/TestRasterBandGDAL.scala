@@ -11,7 +11,7 @@ class TestRasterBandGDAL extends AnyFlatSpec with SparkSuite {
     "MosaicRasterBandGDAL" should "read band metadata and pixel data from a GeoTIFF file." in {
         assume(System.getProperty("os.name") == "Linux")
         val mc = MosaicContext.build(H3, ESRI, GDAL)
-        mc.installGDAL(spark)
+        mc.enableGDAL(spark)
 
         val testRaster = MosaicRasterGDAL.fromBytes(mocks.geotiffBytes)
 
@@ -29,7 +29,7 @@ class TestRasterBandGDAL extends AnyFlatSpec with SparkSuite {
     "MosaicRasterBandGDAL" should "read band metadata and pixel data from a GRIdded Binary file." in {
         assume(System.getProperty("os.name") == "Linux")
         val mc = MosaicContext.build(H3, ESRI, GDAL)
-        mc.installGDAL(spark)
+        mc.enableGDAL(spark)
 
         val testRaster = MosaicRasterGDAL.fromBytes(mocks.gribBytes)
 
@@ -47,7 +47,7 @@ class TestRasterBandGDAL extends AnyFlatSpec with SparkSuite {
     "MosaicRasterBandGDAL" should "read band metadata and pixel data from a NetCDF file." in {
         assume(System.getProperty("os.name") == "Linux")
         val mc = MosaicContext.build(H3, ESRI, GDAL)
-        mc.installGDAL(spark)
+        mc.enableGDAL(spark)
 
         val superRaster = MosaicRasterGDAL.fromBytes(mocks.netcdfBytes)
         val subdatasetPath = superRaster.subdatasets.filterKeys(_.contains("bleaching_alert_area")).head._1

@@ -10,9 +10,8 @@ class TestRasterGDAL extends AnyFlatSpec with SparkSuite {
 
     // expectations gathered using `gdalinfo` utility
     "MosaicRasterGDAL" should "read dataset metadata from a GeoTIFF file." in {
-        assume(System.getProperty("os.name") == "Linux")
         val mc = MosaicContext.build(H3, ESRI, GDAL)
-        mc.installGDAL(spark)
+        mc.enableGDAL(spark)
 
         val testRaster = MosaicRasterGDAL.fromBytes(mocks.geotiffBytes)
         testRaster.xSize shouldBe 2400
@@ -21,12 +20,12 @@ class TestRasterGDAL extends AnyFlatSpec with SparkSuite {
         testRaster.proj4String shouldBe "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +R=6371007.181 +units=m +no_defs"
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
+        testRaster.getRaster.GetProjection()
     }
 
     "MosaicRasterGDAL" should "read dataset metadata from a Gridded Binary file." in {
-        assume(System.getProperty("os.name") == "Linux")
         val mc = MosaicContext.build(H3, ESRI, GDAL)
-        mc.installGDAL(spark)
+        mc.enableGDAL(spark)
 
         val testRaster = MosaicRasterGDAL.fromBytes(mocks.gribBytes)
         testRaster.xSize shouldBe 14
@@ -38,9 +37,8 @@ class TestRasterGDAL extends AnyFlatSpec with SparkSuite {
     }
 
     "MosaicRasterGDAL" should "read dataset metadata from a NetCDF file." in {
-        assume(System.getProperty("os.name") == "Linux")
         val mc = MosaicContext.build(H3, ESRI, GDAL)
-        mc.installGDAL(spark)
+        mc.enableGDAL(spark)
 
         val superRaster = MosaicRasterGDAL.fromBytes(mocks.netcdfBytes)
         val subdatasetPath = superRaster.subdatasets.filterKeys(_.contains("bleaching_alert_area")).head._1
