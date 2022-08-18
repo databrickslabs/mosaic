@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 @ExpressionDescription(
-  usage = "_FUNC_(indexID, indexSystem) - Returns the geometry representing the index.",
+  usage = "_FUNC_(indexID, indexSystem) - Returns the geometry representing the grid cell.",
   examples = """
     Examples:
       > SELECT _FUNC_(a, 'H3');
@@ -31,13 +31,13 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
     override def prettyName: String = "index_geometry"
 
     /**
-      * Computes the index corresponding to the provided lat and long
-      * coordinates.
+      * Computes grid cell shape as a polygon from the cell ID
       *
       * @param input1
-      *   Any instance containing the ID of the index.
+      *   Any instance containing the ID of the grid cell.
       * @return
-      *   Index id in Long.
+      *   A polygon in WKB format representing the cell identified by the
+      *   provided ID
       */
     override def nullSafeEval(input1: Any): Any = {
         val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
