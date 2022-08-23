@@ -8,9 +8,9 @@ import com.databricks.labs.mosaic.expressions.format._
 import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.helper.TrySql
 import com.databricks.labs.mosaic.expressions.index._
-
 import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.functions._
 
@@ -19,6 +19,30 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 
     val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
+
+    def isProductH3Enabled(spark: SparkSession): Boolean = {
+        // TODO: Use feature flag instead
+        val registry = spark.sessionState.functionRegistry
+        registry.functionExists(FunctionIdentifier("h3_polyfillash3"))
+    }
+
+    def registerProductH3(registry: FunctionRegistry): Unit = {
+        registry.registerFunction(
+          FunctionIdentifier("point_index_lonlat", None),
+          registry.lookupFunction(FunctionIdentifier("h3_longlatash3")).get,
+          registry.lookupFunctionBuilder(FunctionIdentifier("h3_longlatash3")).get
+        )
+        registry.registerFunction(
+          FunctionIdentifier("polyfill", None),
+          registry.lookupFunction(FunctionIdentifier("h3_polyfillash3")).get,
+          registry.lookupFunctionBuilder(FunctionIdentifier("h3_polyfillash3")).get
+        )
+        registry.registerFunction(
+          FunctionIdentifier("index_geometry", None),
+          registry.lookupFunction(FunctionIdentifier("h3_boundaryaswkb")).get,
+          registry.lookupFunctionBuilder(FunctionIdentifier("h3_boundaryaswkb")).get
+        )
+    }
 
     /**
       * Registers required parsers for SQL for Mosaic functionality.
@@ -66,11 +90,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
                   case e if e.length == 1 => ST_MakePolygon(e.head, array().expr)
                   case e if e.length == 2 => ST_MakePolygon(e.head, e.last)
               }
-        )
-        registry.registerFunction(
-          FunctionIdentifier("index_geometry", database),
-          IndexGeometry.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => IndexGeometry(exprs(0), indexSystem.name, geometryAPI.name)
         )
 
         /** GeometryAPI Specific */
@@ -317,21 +336,34 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
                   case e if e.length == 3 => MosaicFill(e(0), e(1), e(2), indexSystem.name, geometryAPI.name)
               }
         )
-        registry.registerFunction(
-          FunctionIdentifier("point_index_lonlat", database),
-          PointIndexLonLat.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => PointIndexLonLat(exprs(0), exprs(1), exprs(2), indexSystem.name)
-        )
+
         registry.registerFunction(
           FunctionIdentifier("point_index_geom", database),
           PointIndexGeom.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => PointIndexGeom(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
-        registry.registerFunction(
-          FunctionIdentifier("polyfill", database),
-          Polyfill.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => Polyfill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
-        )
+
+        if (indexSystem.name == "H3" && isProductH3Enabled(spark)) {
+            // Forward the H3 calls to product directly
+            registerProductH3(registry)
+        } else {
+            // Apply the Mosaic implementation
+            registry.registerFunction(
+              FunctionIdentifier("point_index_lonlat", database),
+              PointIndexLonLat.registryExpressionInfo(database),
+              (exprs: Seq[Expression]) => PointIndexLonLat(exprs(0), exprs(1), exprs(2), indexSystem.name)
+            )
+            registry.registerFunction(
+              FunctionIdentifier("polyfill", database),
+              Polyfill.registryExpressionInfo(database),
+              (exprs: Seq[Expression]) => Polyfill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+            )
+            registry.registerFunction(
+              FunctionIdentifier("index_geometry", database),
+              IndexGeometry.registryExpressionInfo(database),
+              (exprs: Seq[Expression]) => IndexGeometry(exprs(0), indexSystem.name, geometryAPI.name)
+            )
+        }
 
         // DataType keywords are needed at checkInput execution time.
         // They cant be passed as Expressions to ConvertTo Expression.
@@ -474,6 +506,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
         def polyfill(geom: Column, resolution: Int): Column =
             ColumnAdapter(Polyfill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
+//        def polyfill(): Column = ColumnAdapter(registry.lookupFunctionBuilder(FunctionIdentifier("h3_polyfillash3")).get)
         def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
 
         // Not specific to Mosaic
