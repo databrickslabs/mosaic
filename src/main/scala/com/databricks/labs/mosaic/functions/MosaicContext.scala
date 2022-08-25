@@ -169,6 +169,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ConvertTo(AsJSON(exprs(0)), "coords", geometryAPI.name)
         )
         registry.registerFunction(
+            FunctionIdentifier("convert_to", database),
+            ConvertTo.registryExpressionInfo(database, "convert_to"),
+            (exprs: Seq[Expression]) => ConvertTo(exprs(0), exprs(1).toString(), geometryAPI.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("convert_to_hex", database),
           ConvertTo.registryExpressionInfo(database, "convert_to_hex"),
           (exprs: Seq[Expression]) => ConvertTo(exprs(0), "hex", geometryAPI.name)
@@ -504,9 +509,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, lit(resolution).expr, indexSystem.name))
         def polyfill(geom: Column, resolution: Column): Column =
             ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
-        def polyfill(geom: Column, resolution: Int): Column =
-            ColumnAdapter(Polyfill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
-//        def polyfill(): Column = ColumnAdapter(registry.lookupFunctionBuilder(FunctionIdentifier("h3_polyfillash3")).get)
+        def polyfill(geom: Column, resolution: Int): Column = expr(s"polyfill(${geom.expr.sql}, $resolution)")
         def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
 
         // Not specific to Mosaic
