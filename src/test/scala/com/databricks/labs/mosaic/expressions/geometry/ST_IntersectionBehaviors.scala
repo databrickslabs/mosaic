@@ -127,6 +127,59 @@ trait ST_IntersectionBehaviors extends QueryTest {
             indexPolygon1.union(indexChip1).union(indexPolygon2).union(indexChip2).getArea) should be < 10e-8
     }
 
+    def intersectionMosaicBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mc.register(spark)
+
+        val indexID1 = if (indexSystem == H3IndexSystem) 608726199203528703L else 10000731741640L
+        val indexID2 = if (indexSystem == H3IndexSystem) 608726199220305919L else 10000731541660L
+        val indexPolygon1 = indexSystem.indexToGeometry(indexID1, geometryAPI)
+        val indexPolygon2 = indexSystem.indexToGeometry(indexID2, geometryAPI)
+        val indexPolygonShell1 = indexPolygon1.getShellPoints
+        val indexPolygonShell2 = indexPolygon2.getShellPoints
+        val chipShell1 = indexPolygonShell1.head.zipWithIndex.filter(_._2 != 2).map(_._1)
+        val chipShell2 = indexPolygonShell2.head.zipWithIndex.filter(_._2 != 2).map(_._1)
+        val indexChip1 = geometryAPI.geometry(points = chipShell1, GeometryTypeEnum.POLYGON)
+        val indexChip2 = geometryAPI.geometry(points = chipShell2, GeometryTypeEnum.POLYGON)
+
+        val chipsRows = List(
+            List(1L, true, indexID1, indexPolygon1.toWKB),
+            List(1L, true, indexID2, indexPolygon2.toWKB),
+            List(1L, false, indexID1, indexChip1.toWKB),
+            List(1L, false, indexID2, indexChip2.toWKB)
+        )
+        val rows = chipsRows.map { x => Row(x: _*) }
+        val rdd = spark.sparkContext.makeRDD(rows)
+        val schema = StructType(
+            Seq(
+                StructField("row_id", LongType),
+                StructField("is_core", BooleanType),
+                StructField("index_id", LongType),
+                StructField("wkb", BinaryType)
+            )
+        )
+
+        val chips =
+            spark.createDataFrame(rdd, schema).select(col("row_id"), struct(col("is_core"), col("index_id"), col("wkb")).alias("index"))
+        val left = chips.groupBy("row_id").agg(collect_list("index").alias("index")).as("left")
+        val right = chips.groupBy("row_id").agg(collect_list("index").alias("index")).as("right")
+
+        val results = left
+            .join(
+                right,
+                col("left.row_id") === col("right.row_id")
+            )
+            .withColumn("intersection", st_intersection_mosaic(col("left.index"), col("right.index")))
+            .withColumn("area", st_area(col("intersection")))
+
+        (results.select("area").as[Double].collect().head -
+            indexPolygon1.union(indexChip1).union(indexPolygon2).union(indexChip2).getArea) should be < 10e-8
+    }
+
     def selfIntersectionBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)

@@ -34,6 +34,10 @@ class ST_IntersectionTest extends QueryTest with SharedSparkSession with ST_Inte
     test("Testing stIntersectionAgg (H3, ESRI) NO_CODEGEN") {noCodegen { intersectionAggBehaviour(H3IndexSystem, ESRI) }}
     test("Testing stIntersectionAgg (BNG, JTS) NO_CODEGEN") {noCodegen { intersectionAggBehaviour(BNGIndexSystem, JTS) }}
     test("Testing stIntersectionAgg (BNG, ESRI) NO_CODEGEN") {noCodegen { intersectionAggBehaviour(BNGIndexSystem, ESRI) }}
+    test("Testing stIntersectionMosaic (H3, JTS) NO_CODEGEN") {noCodegen { intersectionMosaicBehaviour(H3IndexSystem, JTS) }}
+    test("Testing stIntersectionMosaic (H3, ESRI) NO_CODEGEN") {noCodegen { intersectionMosaicBehaviour(H3IndexSystem, ESRI) }}
+    test("Testing stIntersectionMosaic (BNG, JTS) NO_CODEGEN") {noCodegen { intersectionMosaicBehaviour(BNGIndexSystem, JTS) }}
+    test("Testing stIntersectionMosaic (BNG, ESRI) NO_CODEGEN") {noCodegen { intersectionMosaicBehaviour(BNGIndexSystem, ESRI) }}
     test("Testing stIntersection (H3, JTS) CODEGEN compilation") { codegenOnly { intersectionCodegen(H3IndexSystem, JTS) } }
     test("Testing stIntersection (H3, ESRI) CODEGEN compilation") { codegenOnly { intersectionCodegen(H3IndexSystem, ESRI) } }
     test("Testing stIntersection (BNG, JTS) CODEGEN compilation") { codegenOnly { intersectionCodegen(BNGIndexSystem, JTS) } }

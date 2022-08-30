@@ -8,7 +8,6 @@ import com.databricks.labs.mosaic.expressions.format._
 import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.helper.TrySql
 import com.databricks.labs.mosaic.expressions.index._
-
 import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -260,6 +259,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_Intersection(exprs(0), exprs(1), geometryAPI.name)
         )
         registry.registerFunction(
+          FunctionIdentifier("st_intersection_mosaic", database),
+          ST_IntersectionMosaic.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_IntersectionMosaic(exprs(0), exprs(1), geometryAPI.name, indexSystem.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_srid", database),
           ST_SRID.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_SRID(exprs(0), geometryAPI.name)
@@ -381,6 +385,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_hasvalidcoordinates(geom: Column, crsCode: Column, which: Column): Column =
             ColumnAdapter(ST_HasValidCoordinates(geom.expr, crsCode.expr, which.expr, geometryAPI.name))
         def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))
+        def st_intersection_mosaic(left: Column, right: Column): Column =
+            ColumnAdapter(ST_IntersectionMosaic(left.expr, right.expr, geometryAPI.name, indexSystem.name))
         def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr, geometryAPI.name))
         def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
         def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
