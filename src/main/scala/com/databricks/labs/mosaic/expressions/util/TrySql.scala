@@ -1,4 +1,4 @@
-package com.databricks.labs.mosaic.expressions.helper
+package com.databricks.labs.mosaic.expressions.util
 
 import java.io.{PrintWriter, StringWriter}
 

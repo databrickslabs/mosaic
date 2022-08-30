@@ -6,9 +6,8 @@ import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.expressions.constructors._
 import com.databricks.labs.mosaic.expressions.format._
 import com.databricks.labs.mosaic.expressions.geometry._
-import com.databricks.labs.mosaic.expressions.helper.TrySql
+import com.databricks.labs.mosaic.expressions.util.{TopNAggregate, TrySql}
 import com.databricks.labs.mosaic.expressions.index._
-
 import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -332,6 +331,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           Polyfill.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => Polyfill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
+        registry.registerFunction(
+          FunctionIdentifier("kring", database),
+          KRing.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => KRing(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+        )
 
         // DataType keywords are needed at checkInput execution time.
         // They cant be passed as Expressions to ConvertTo Expression.
@@ -474,10 +478,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
         def polyfill(geom: Column, resolution: Int): Column =
             ColumnAdapter(Polyfill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
+        def kring(cellId: Column, k: Column): Column = ColumnAdapter(KRing(cellId.expr, k.expr, indexSystem.name, geometryAPI.name))
+        def kring(cellId: Column, k: Int): Column = ColumnAdapter(KRing(cellId.expr, lit(k).expr, indexSystem.name, geometryAPI.name))
         def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
 
         // Not specific to Mosaic
         def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
+        def top_n_agg(inCol: Column, n: Int): Column = ColumnAdapter(TopNAggregate(inCol.expr, n).toAggregateExpression(isDistinct = false))
 
     }
 
