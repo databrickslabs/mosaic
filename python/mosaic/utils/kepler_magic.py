@@ -10,7 +10,6 @@ from pyspark.sql.functions import col, conv, lower
 from mosaic.api.accessors import st_astext
 from mosaic.api.functions import st_centroid2D
 from mosaic.config import config
-from mosaic.resources import mosaic_logo_b64str
 from mosaic.utils.kepler_config import mosaic_kepler_config
 
 
@@ -120,9 +119,4 @@ class MosaicKepler(Magics):
         m1 = KeplerGl(config=mosaic_kepler_config)
         m1.add_data(data=pandas_data, name=table_name)
 
-        logo_html = (
-            f"<img src='data:image/png;base64, {mosaic_logo_b64str}' height='20px'>"
-        )
-
-        config.notebook_utils.displayHTML(logo_html)
         self.displayKepler(m1, 800, 1200)
