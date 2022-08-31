@@ -169,9 +169,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ConvertTo(AsJSON(exprs(0)), "coords", geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("convert_to", database),
-            ConvertTo.registryExpressionInfo(database, "convert_to"),
-            (exprs: Seq[Expression]) => ConvertTo(exprs(0), exprs(1).toString(), geometryAPI.name)
+          FunctionIdentifier("convert_to", database),
+          ConvertTo.registryExpressionInfo(database, "convert_to"),
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), exprs(1).toString(), geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("convert_to_hex", database),
@@ -504,13 +504,12 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def point_index_geom(point: Column, resolution: Int): Column =
             ColumnAdapter(PointIndexGeom(point.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
         def point_index_lonlat(lon: Column, lat: Column, resolution: Column): Column =
-            ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, resolution.expr, indexSystem.name))
+            expr(s"point_index_lonlat(${lon.expr.sql}, ${lat.expr.sql}, ${resolution.expr.sql})")
         def point_index_lonlat(lon: Column, lat: Column, resolution: Int): Column =
-            ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, lit(resolution).expr, indexSystem.name))
-        def polyfill(geom: Column, resolution: Column): Column =
-            ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
+            expr(s"point_index_lonlat(${lon.expr.sql}, ${lat.expr.sql}, $resolution)")
+        def polyfill(geom: Column, resolution: Column): Column = expr(s"polyfill(${geom.expr.sql}, ${resolution.expr.sql})")
         def polyfill(geom: Column, resolution: Int): Column = expr(s"polyfill(${geom.expr.sql}, $resolution)")
-        def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
+        def index_geometry(indexID: Column): Column = expr(s"index_geometry(${indexID.expr.sql})")
 
         // Not specific to Mosaic
         def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
