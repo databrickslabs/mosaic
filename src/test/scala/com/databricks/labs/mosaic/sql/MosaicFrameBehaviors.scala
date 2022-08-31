@@ -53,6 +53,8 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         resolution: Int,
         expectedResolution: Int
     ): Unit = {
+        mosaicContext.register(spark)
+
         val mdf = MosaicFrame(polyDf(spark, mosaicContext), "geometry")
             .setIndexResolution(resolution)
             .applyIndex()
