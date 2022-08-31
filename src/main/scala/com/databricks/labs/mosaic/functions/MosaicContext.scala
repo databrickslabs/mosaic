@@ -21,9 +21,17 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
 
     def isProductH3Enabled(spark: SparkSession): Boolean = {
-        // TODO: Use feature flag instead
         val registry = spark.sessionState.functionRegistry
-        registry.functionExists(FunctionIdentifier("h3_polyfillash3"))
+        if (registry.functionExists(FunctionIdentifier("h3_longlatash3"))) {
+            try {
+                spark.sql("SELECT h3_longlatash3(0, 0, 1)").collect()
+                true
+            } catch {
+                case _: Throwable => false
+            }
+        } else {
+            false
+        }
     }
 
     def registerProductH3(registry: FunctionRegistry): Unit = {
