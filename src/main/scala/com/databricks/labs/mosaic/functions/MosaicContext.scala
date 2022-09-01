@@ -8,11 +8,11 @@ import com.databricks.labs.mosaic.expressions.format._
 import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.helper.TrySql
 import com.databricks.labs.mosaic.expressions.index._
-import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{Column, SparkSession}
 
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends Serializable {
 
