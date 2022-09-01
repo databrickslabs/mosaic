@@ -10,7 +10,7 @@ The pipeline will
 * Download the OSM dataset for Italy
 * Extract from it the buildings (with relative metadata)
 * Index the buildings on an H3 grid
-* Separate the buindings by type
+* Separate the buildings by type
 * Display a building density by counting the records per grid index
 
 ## Data flow

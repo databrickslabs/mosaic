@@ -169,7 +169,7 @@ display(tripsWithIndex)
 
 neighbourhoodsWithIndex <- 
  neighbourhoods %>%
- # We break down the original geometry in multiple smoller mosaic chips, each with its
+ # We break down the original geometry in multiple smaller mosaic chips, each with its
  # own index
  withColumn("mosaic_index", mosaic_explode(column("geometry"), lit(optimal_resolution))) %>%
  # We don't need the original geometry any more, since we have broken it down into
