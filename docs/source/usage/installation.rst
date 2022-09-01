@@ -5,7 +5,7 @@ Installation guide
 Supported platforms
 ###################
 In order to use Mosaic, you must have access to a Databricks cluster running
-Databricks Runtime 10.0 or later. If you have cluster creation permissions in your Databricks
+Databricks Runtime 11.2 or later. If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
 `here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
 
