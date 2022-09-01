@@ -25,7 +25,7 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
         registry.registerFunction(
           FunctionIdentifier("h3_longlatash3", None),
           new ExpressionInfo("mock", "mock"),
-          (exprs: Seq[Expression]) => Column(exprs(0)).expr
+          (exprs: Seq[Expression]) => Column(exprs.head).expr
         )
 
         assert(mc.isProductH3Enabled(spark))
@@ -45,7 +45,7 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
         registry.registerFunction(
           FunctionIdentifier("h3_longlatash3", None),
           new ExpressionInfo("product", "h3_longlatash3"),
-          functionBuilder
+          (exprs: Seq[Expression]) => Column(exprs.head).expr
         )
         registry.registerFunction(
           FunctionIdentifier("h3_polyfillash3", None),
