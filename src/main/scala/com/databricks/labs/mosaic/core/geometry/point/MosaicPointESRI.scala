@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
 import com.esri.core.geometry.{Point, SpatialReference}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCPoint}
-import com.uber.h3core.util.GeoCoord
+import com.databricks.labs.mosaic.core.types.model.GeoCoord
 import org.locationtech.jts.geom.Coordinate
 
 import org.apache.spark.sql.catalyst.InternalRow
@@ -14,7 +14,7 @@ class MosaicPointESRI(point: OGCPoint) extends MosaicGeometryESRI(point) with Mo
 
     def this() = this(null)
 
-    override def geoCoord: GeoCoord = new GeoCoord(point.Y(), point.X())
+    override def geoCoord: GeoCoord = GeoCoord(point.Y(), point.X())
 
     override def asSeq: Seq[Double] =
         if (point.is3D()) {

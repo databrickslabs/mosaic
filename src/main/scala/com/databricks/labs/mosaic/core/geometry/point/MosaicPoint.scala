@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.core.geometry.point
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.MosaicCoreException
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
-import com.uber.h3core.util.GeoCoord
+import com.databricks.labs.mosaic.core.types.model.GeoCoord
 import org.locationtech.jts.geom.Coordinate
 
 trait MosaicPoint extends MosaicGeometry {

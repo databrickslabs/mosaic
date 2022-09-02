@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.core.geometry.point._
 import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.esri.core.geometry.ogc.OGCGeometry
-import com.uber.h3core.util.GeoCoord
+import com.databricks.labs.mosaic.core.types.model.GeoCoord
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -86,7 +86,7 @@ abstract class GeometryAPI(
             case "JSONOBJECT" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
             case "GEOJSON"    => UTF8String.fromString(geometry.toJSON)
             case "COORDS"     => geometry.toInternal.serialize
-            case _         => throw new Error(s"$dataFormatName not supported.")
+            case _            => throw new Error(s"$dataFormatName not supported.")
         }
     }
 
@@ -111,6 +111,7 @@ abstract class GeometryAPI(
     def geometryLengthCode: String = throw new Error("Unimplemented")
 
     def geometrySRIDCode(geomInRef: String): String = throw new Error("Unimplemented")
+
 }
 
 object GeometryAPI extends Serializable {
@@ -146,7 +147,8 @@ object GeometryAPI extends Serializable {
 
         override def geometryLengthCode: String = "getEsriGeometry().calculateLength2D()"
 
-        override def geometrySRIDCode(geomInRef: String): String = s"($geomInRef.esriSR == null) ? 0 : $geomInRef.getEsriSpatialReference().getID()"
+        override def geometrySRIDCode(geomInRef: String): String =
+            s"($geomInRef.esriSR == null) ? 0 : $geomInRef.getEsriSpatialReference().getID()"
 
     }
 
@@ -182,6 +184,7 @@ object GeometryAPI extends Serializable {
         override def geometryLengthCode: String = "getLength()"
 
         override def geometrySRIDCode(geomInRef: String): String = s"$geomInRef.getSRID()"
+
     }
 
     object IllegalAPI extends GeometryAPI(null) {

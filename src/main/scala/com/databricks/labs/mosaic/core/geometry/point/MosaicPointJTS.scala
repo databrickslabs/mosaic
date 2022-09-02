@@ -3,13 +3,13 @@ package com.databricks.labs.mosaic.core.geometry.point
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
-import com.uber.h3core.util.GeoCoord
+import com.databricks.labs.mosaic.core.types.model.GeoCoord
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
 
 class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicPoint {
 
-    override def geoCoord: GeoCoord = new GeoCoord(point.getY, point.getX)
+    override def geoCoord: GeoCoord = GeoCoord(point.getY, point.getX)
 
     override def coord: Coordinate = new Coordinate(point.getX, point.getY)
 
