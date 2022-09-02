@@ -77,7 +77,6 @@
             <groupId>com.uber</groupId>
             <artifactId>h3</artifactId>
             <version>3.7.0</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.locationtech.jts</groupId>
