@@ -43,9 +43,7 @@ Image1: Mosaic logical design.
 
 Create a Databricks cluster running __Databricks Runtime 11.2__ (or later).
 
-If you are using an older version of the Databricks Runtime (>=10.0), you need to install on your cluster [Uber h3](https://h3geo.org/) library on version `3.7.0`.
-
-Databricks Runtime versions less than 10.0 are not supported.
+If you are using an older version of the Databricks Runtime (>=10.0), you need to install on your cluster [Uber h3](https://h3geo.org/) library on version `3.7.0` before installing Mosaic (order matters).
 
 ```
 <!-- https://mvnrepository.com/artifact/com.uber/h3 -->
@@ -55,6 +53,8 @@ Databricks Runtime versions less than 10.0 are not supported.
     <version>3.7.0</version>
 </dependency>
 ```
+
+Databricks Runtime versions less than 10.0 are not supported.
 
 
 ### Documentation
