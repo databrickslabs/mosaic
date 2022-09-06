@@ -6,20 +6,12 @@ import com.databricks.labs.mosaic.core.index.IndexSystemID
 import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
-import org.locationtech.jts.geom.Geometry
-
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{
-    ExpectsInputTypes,
-    Expression,
-    ExpressionDescription,
-    ExpressionInfo,
-    NullIntolerant,
-    TernaryExpression
-}
+import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
+import org.locationtech.jts.geom.Geometry
 
 @ExpressionDescription(
   usage = "_FUNC_(geometry, resolution) - Returns the 2 set representation of geometry at resolution.",
@@ -30,34 +22,50 @@ import org.apache.spark.sql.types._
   """,
   since = "1.0"
 )
-case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Expression, indexSystemName: String, geometryAPIName: String)
-    extends TernaryExpression
+case class MosaicFill(
+    geom: Expression,
+    resolution: Expression,
+    keepCoreGeom: Expression,
+    idAsLong: Expression,
+    indexSystemName: String,
+    geometryAPIName: String
+) extends QuaternaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
 
     // noinspection DuplicatedCode
     override def inputTypes: Seq[DataType] =
-        (first.dataType, second.dataType, third.dataType) match {
-            case (BinaryType, IntegerType, BooleanType)           => Seq(BinaryType, IntegerType, BooleanType)
-            case (StringType, IntegerType, BooleanType)           => Seq(StringType, IntegerType, BooleanType)
-            case (HexType, IntegerType, BooleanType)              => Seq(HexType, IntegerType, BooleanType)
-            case (InternalGeometryType, IntegerType, BooleanType) => Seq(InternalGeometryType, IntegerType, BooleanType)
-            case _                                                =>
-                throw new Error(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}).")
+        (first.dataType, second.dataType, third.dataType, fourth.dataType) match {
+            case (BinaryType, IntegerType, BooleanType, BooleanType)           => Seq(BinaryType, IntegerType, BooleanType, BooleanType)
+            case (StringType, IntegerType, BooleanType, BooleanType)           => Seq(StringType, IntegerType, BooleanType, BooleanType)
+            case (HexType, IntegerType, BooleanType, BooleanType)              => Seq(HexType, IntegerType, BooleanType, BooleanType)
+            case (InternalGeometryType, IntegerType, BooleanType, BooleanType) =>
+                Seq(InternalGeometryType, IntegerType, BooleanType, BooleanType)
+            case _                                                             =>
+                throw new Error(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}, ${fourth.dataType}).")
         }
 
     override def second: Expression = resolution
 
     override def third: Expression = keepCoreGeom
 
-    /** Expression output DataType. */
-    override def dataType: DataType = MosaicType
+    override def first: Expression = geom
 
-    override def toString: String = s"mosaicfill($geom, $resolution, $keepCoreGeom)"
+    override def fourth: Expression = idAsLong
+
+    /** Expression output DataType. */
+    override def dataType: DataType = {
+        idAsLong match {
+            case Literal(f: Boolean, BooleanType) => if (f) MosaicType(LongType) else MosaicType(StringType)
+            case _                                => throw new Error("Only boolean literal supported for idAsLong expression.")
+        }
+    }
+
+    override def toString: String = s"grid_tessellate($geom, $resolution, $keepCoreGeom, $idAsLong)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "mosaicfill"
+    override def prettyName: String = "grid_tessellate"
 
     /**
       * Type-wise differences in evaluation are only present on the input data
@@ -77,10 +85,11 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
       *   [[com.databricks.labs.mosaic.core.types.model.MosaicChip]].
       */
     // noinspection DuplicatedCode
-    override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
+    override def nullSafeEval(input1: Any, input2: Any, input3: Any, input4: Any): Any = {
         val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         val resolution: Int = indexSystem.getResolution(input2)
         val keepCoreGeom: Boolean = input3.asInstanceOf[Boolean]
+        val idAsLongVal: Boolean = input4.asInstanceOf[Boolean]
 
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geometry = geometryAPI.geometry(input1, first.dataType)
@@ -91,26 +100,28 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
             case _               => Mosaic.mosaicFill(geometry, resolution, keepCoreGeom, indexSystem, geometryAPI)
         }
 
-        val serialized = InternalRow.fromSeq(
+        val formatted = if (!idAsLongVal) chips.map(_.toStringID(indexSystem)) else chips
+
+        InternalRow.fromSeq(
           Seq(
-            ArrayData.toArrayData(chips.map(_.serialize))
+            ArrayData.toArrayData(formatted.map(_.serialize))
           )
         )
-
-        serialized
     }
 
-    override def first: Expression = geom
-
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = MosaicFill(asArray(0), asArray(1), asArray(2), indexSystemName, geometryAPIName)
+        val asArray = newArgs.take(4).map(_.asInstanceOf[Expression])
+        val res = MosaicFill(asArray(0), asArray(1), asArray(2), asArray(3), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
 
-    override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
-        copy(geom = newFirst, resolution = newSecond, keepCoreGeom = newThird)
+    override protected def withNewChildrenInternal(
+        newFirst: Expression,
+        newSecond: Expression,
+        newThird: Expression,
+        newFourth: Expression
+    ): Expression = copy(newFirst, newSecond, newThird, newFourth)
 
 }
 
@@ -119,9 +130,9 @@ object MosaicFill {
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[IndexGeometry].getCanonicalName,
+          classOf[MosaicFill].getCanonicalName,
           db.orNull,
-          "mosaicfill",
+          "grid_tessellate",
           """
             |    _FUNC_(geometry, resolution, keepCoreGeom) - Returns the 2 set representation of geometry at resolution.
             """.stripMargin,
