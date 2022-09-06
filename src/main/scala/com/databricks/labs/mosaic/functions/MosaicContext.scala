@@ -28,6 +28,16 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             case _          => throw new Error("Id can either be long or string.")
         }
 
+    def register(): Unit = {
+        val spark = SparkSession.builder().getOrCreate()
+        register(spark)
+    }
+
+    def register(database: String): Unit = {
+        val spark = SparkSession.builder().getOrCreate()
+        register(spark, Some(database))
+    }
+
     /**
       * Registers required parsers for SQL for Mosaic functionality.
       *
