@@ -24,18 +24,17 @@ case class Polyfill(geom: Expression, resolution: Expression, idAsLong: Expressi
       with CodegenFallback {
 
     // noinspection DuplicatedCode
-    override def inputTypes: Seq[DataType] =
-        (geom.dataType, resolution.dataType, idAsLong.dataType) match {
-            case (BinaryType, IntegerType, BooleanType)           => Seq(BinaryType, IntegerType, BooleanType)
-            case (StringType, IntegerType, BooleanType)           => Seq(StringType, IntegerType, BooleanType)
-            case (HexType, IntegerType, BooleanType)              => Seq(HexType, IntegerType, BooleanType)
-            case (InternalGeometryType, IntegerType, BooleanType) => Seq(InternalGeometryType, IntegerType, BooleanType)
-            case (BinaryType, StringType, BooleanType)            => Seq(BinaryType, StringType, BooleanType)
-            case (StringType, StringType, BooleanType)            => Seq(StringType, StringType, BooleanType)
-            case (HexType, StringType, BooleanType)               => Seq(HexType, StringType, BooleanType)
-            case (InternalGeometryType, StringType, BooleanType)  => Seq(InternalGeometryType, StringType, BooleanType)
-            case _ => throw new Error(s"Not supported data type: (${geom.dataType}, ${resolution.dataType}, ${idAsLong.dataType}).")
+    override def inputTypes: Seq[DataType] = {
+        if (
+          !Seq(BinaryType, StringType, HexType, InternalGeometryType).contains(geom.dataType) ||
+          !Seq(IntegerType, StringType).contains(resolution.dataType) ||
+          !Seq(BooleanType).contains(idAsLong.dataType)
+        ) {
+            throw new Error(s"Not supported data type: (${geom.dataType}, ${resolution.dataType}, ${idAsLong.dataType}).")
+        } else {
+            Seq(geom.dataType, resolution.dataType, idAsLong.dataType)
         }
+    }
 
     /** Expression output DataType. */
     override def dataType: DataType =

@@ -57,4 +57,11 @@ class TestMosaicExplode extends AnyFlatSpec with MosaicExplodeBehaviors with Spa
         it should behave like lineDecompose(MosaicContext.build(BNGIndexSystem, JTS), spark, 5)
     }
 
+    "Mosaic_Explode" should "correctly evaluate auxiliary methods." in {
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, JTS), spark)
+    }
+
 }

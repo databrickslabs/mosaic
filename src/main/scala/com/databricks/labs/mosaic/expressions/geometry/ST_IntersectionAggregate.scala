@@ -14,13 +14,13 @@ case class ST_IntersectionAggregate(
     rightChip: Expression,
     geometryAPIName: String,
     indexSystemName: String,
-    mutableAggBufferOffset: Int = 0,
-    inputAggBufferOffset: Int = 0
+    mutableAggBufferOffset: Int,
+    inputAggBufferOffset: Int
 ) extends TypedImperativeAggregate[Array[Byte]]
       with BinaryLike[Expression] {
 
-    lazy val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
-    lazy val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID.apply(indexSystemName))
+    val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
+    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID.apply(indexSystemName))
     override lazy val deterministic: Boolean = true
     override val left: Expression = leftChip
     override val right: Expression = rightChip
@@ -30,7 +30,7 @@ case class ST_IntersectionAggregate(
 
     override def prettyName: String = "st_intersection_aggregate"
 
-    private def getCellGeom(row: InternalRow, dt: DataType) = {
+    private [geometry] def getCellGeom(row: InternalRow, dt: DataType) = {
         dt.asInstanceOf[StructType].fields.find(_.name=="index_id").map(_.dataType) match {
             case Some(LongType) => indexSystem.indexToGeometry(row.getLong(1), geometryAPI)
             case Some(StringType) => indexSystem.indexToGeometry(row.getString(1), geometryAPI)

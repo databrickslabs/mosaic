@@ -47,25 +47,14 @@ case class MosaicExplode(
       *   An instance of [[TypeCheckResult]] indicating success or a failure.
       */
     override def checkInputDataTypes(): TypeCheckResult = {
-        idAsLong match {
-            case Literal(_, BooleanType) => (geom.dataType, resolution.dataType, keepCoreGeom.dataType) match {
-                    case (BinaryType, IntegerType, BooleanType)           => TypeCheckResult.TypeCheckSuccess
-                    case (StringType, IntegerType, BooleanType)           => TypeCheckResult.TypeCheckSuccess
-                    case (HexType, IntegerType, BooleanType)              => TypeCheckResult.TypeCheckSuccess
-                    case (InternalGeometryType, IntegerType, BooleanType) => TypeCheckResult.TypeCheckSuccess
-                    case (BinaryType, StringType, BooleanType)            => TypeCheckResult.TypeCheckSuccess
-                    case (StringType, StringType, BooleanType)            => TypeCheckResult.TypeCheckSuccess
-                    case (HexType, StringType, BooleanType)               => TypeCheckResult.TypeCheckSuccess
-                    case (InternalGeometryType, StringType, BooleanType)  => TypeCheckResult.TypeCheckSuccess
-                    case _                                                => TypeCheckResult.TypeCheckFailure(
-                          s"Input to mosaic explode should be (geometry, resolution, keepCoreGeom) pair. " +
-                              s"Geometry type can be WKB, WKT, Hex or Coords. Provided type was: ${(geom.dataType, resolution.dataType, keepCoreGeom.dataType)}"
-                        )
-                }
-            case _                       => TypeCheckResult.TypeCheckFailure(
-                  s"Input to mosaic explode should be (geometry, resolution, keepCoreGeom) pair. " +
-                      s"Geometry type can be WKB, WKT, Hex or Coords. Provided type was: ${(geom.dataType, resolution.dataType, keepCoreGeom.dataType)}"
-                )
+        if (!Seq(BinaryType, StringType, HexType, InternalGeometryType).contains(geom.dataType)) {
+            TypeCheckResult.TypeCheckFailure("Unsupported geom type.")
+        } else if (!Seq(IntegerType, StringType).contains(resolution.dataType)) {
+            TypeCheckResult.TypeCheckFailure("Unsupported resolution type.")
+        } else if (!Seq(BooleanType).contains(keepCoreGeom.dataType)) {
+            TypeCheckResult.TypeCheckFailure("Unsupported boolean flag.")
+        } else {
+            TypeCheckResult.TypeCheckSuccess
         }
     }
 
@@ -100,21 +89,9 @@ case class MosaicExplode(
         formatted.map(row => InternalRow.fromSeq(Seq(row.serialize)))
     }
 
-    override def collectionType: DataType = super.collectionType
-
     override def elementSchema: StructType = {
         val chipType = if (idAsLong.asInstanceOf[Literal].value.asInstanceOf[Boolean]) ChipType(LongType) else ChipType(StringType)
-
-        (geom.dataType, resolution.dataType, keepCoreGeom.dataType) match {
-            case (BinaryType, IntegerType, BooleanType)           => StructType(Array(StructField("index", chipType)))
-            case (StringType, IntegerType, BooleanType)           => StructType(Array(StructField("index", chipType)))
-            case (HexType, IntegerType, BooleanType)              => StructType(Array(StructField("index", chipType)))
-            case (InternalGeometryType, IntegerType, BooleanType) => StructType(Array(StructField("index", chipType)))
-            case _                                                => throw new Error(
-                  s"Input to mosaic explode should be (geometry, resolution, keepCoreGeom, idAsLong) expressions. " +
-                      s"Geometry type can be WKB, WKT, Hex or Coords. Provided type was: ${(geom.dataType, resolution.dataType, keepCoreGeom.dataType)}"
-                )
-        }
+        StructType(Array(StructField("index", chipType)))
     }
 
     override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression =

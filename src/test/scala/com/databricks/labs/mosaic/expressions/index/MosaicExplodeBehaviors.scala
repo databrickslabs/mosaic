@@ -1,8 +1,11 @@
 package com.databricks.labs.mosaic.expressions.index
 
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.{getBoroughs, getWKTRowsDf}
+import com.databricks.labs.mosaic.test.mocks
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.scalatest.flatspec.AnyFlatSpec
@@ -202,6 +205,47 @@ trait MosaicExplodeBehaviors {
             .collect()
 
         boroughs.collect().length should be <= mosaics2.length
+    }
+
+    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        mosaicContext.register(spark)
+        val sc = spark
+        import sc.implicits._
+
+        val wkt = mocks.getWKTRowsDf(mosaicContext).limit(1).select("wkt").as[String].collect().head
+        val idAsLongExpr = mc.getIndexSystem.defaultDataTypeID match {
+            case LongType   => lit(true).expr
+            case StringType => lit(false).expr
+        }
+        val resExpr = mc.getIndexSystem match {
+            case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
+            case BNGIndexSystem => lit("100m").expr
+        }
+
+        val mosaicExplodeExpr = MosaicExplode(
+            lit(wkt).expr,
+            resExpr,
+            lit(false).expr,
+            idAsLongExpr,
+            mc.getIndexSystem.name,
+            mc.getGeometryAPI.name
+        )
+
+        mosaicExplodeExpr.position shouldEqual false
+        mosaicExplodeExpr.inline shouldEqual false
+        mosaicExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
+
+        val badExpr = MosaicExplode(
+            lit(10).expr,
+            resExpr,
+            lit(false).expr,
+            idAsLongExpr,
+            mc.getIndexSystem.name,
+            mc.getGeometryAPI.name
+        )
+
+        badExpr.checkInputDataTypes().isFailure shouldEqual true
     }
 
 }
