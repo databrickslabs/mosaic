@@ -221,7 +221,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             case H3IndexSystem  => InternalRow.fromSeq(Seq(true, UTF8String.fromString("8a2a1072b59ffff"), Array.empty[Byte]))
         }
         val longIDRow = indexSystem match {
-            case BNGIndexSystem => InternalRow.fromSeq(Seq(true, 1050138790, Array.empty[Byte]))
+            case BNGIndexSystem => InternalRow.fromSeq(Seq(true, 1050138790L, Array.empty[Byte]))
             case H3IndexSystem  => InternalRow.fromSeq(Seq(true, 622236750694711295L, Array.empty[Byte]))
         }
 
