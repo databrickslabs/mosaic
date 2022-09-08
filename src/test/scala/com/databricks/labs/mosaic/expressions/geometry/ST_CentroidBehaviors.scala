@@ -88,15 +88,15 @@ trait ST_CentroidBehaviors extends QueryTest {
         mc.register(spark)
 
         val stCentroid = ST_Centroid(lit("POLYGON (1 1, 2 2, 3 3, 1 1)").expr, "illegalAPI")
-        val ST_Centroid3D = ST_Centroid(lit("POLYGON (1 1 1, 2 2 1, 3 3 1, 1 1 1)").expr, "illegalAPI", nDim = 3)
+        val stCentroid3D = ST_Centroid(lit("POLYGON (1 1 1, 2 2 1, 3 3 1, 1 1 1)").expr, "illegalAPI", nDim = 3)
 
         stCentroid.child shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 1 1)").expr
         stCentroid.dataType shouldEqual StructType(Seq(StructField("x", DoubleType), StructField("y", DoubleType)))
         noException should be thrownBy stCentroid.makeCopy(Array(stCentroid.child))
 
-        ST_Centroid3D.child shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 1 1)").expr
-        ST_Centroid3D.dataType shouldEqual StructType(Seq(StructField("x", DoubleType), StructField("y", DoubleType)))
-        noException should be thrownBy ST_Centroid3D.makeCopy(Array(stCentroid.child))
+        stCentroid3D.child shouldEqual lit("POLYGON (1 1 1, 2 2 1, 3 3 1, 1 1 1)").expr
+        stCentroid3D.dataType shouldEqual StructType(Seq(StructField("x", DoubleType), StructField("y", DoubleType), StructField("z", DoubleType)))
+        noException should be thrownBy stCentroid3D.makeCopy(Array(stCentroid3D.child))
         noException should be thrownBy mc.functions.st_centroid3D(lit("POLYGON (1 1 1, 2 2 1, 3 3 1, 1 1 1)"))
 
     }

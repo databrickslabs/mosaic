@@ -5,10 +5,13 @@ import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.auxiliary.BadIndexSystem
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.catalog.CatalogDatabase
 import org.apache.spark.sql.catalyst.expressions.Literal
 import org.apache.spark.sql.functions.{array, lit}
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
+
+import java.net.URI
 
 trait MosaicContextBehaviors extends QueryTest {
 
@@ -142,6 +145,9 @@ trait MosaicContextBehaviors extends QueryTest {
         noException should be thrownBy getFunc("point_index_lonlat").apply(Seq(xLit, yLit, lit(5).expr, lit(false).expr))
         noException should be thrownBy getFunc("polyfill").apply(Seq(multiPolygon.expr, lit(5).expr, lit(false).expr))
 
+        spark.sessionState.catalog.createDatabase(
+            CatalogDatabase("test", "", new URI("loc"), Map.empty),
+            ignoreIfExists = true)
         noException should be thrownBy mc.register("test")
     }
 

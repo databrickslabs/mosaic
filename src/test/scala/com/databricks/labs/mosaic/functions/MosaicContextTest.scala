@@ -7,7 +7,12 @@ import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.test.SharedSparkSession
 
+import scala.util.Try
+
 class MosaicContextTest extends QueryTest with SharedSparkSession with MosaicContextBehaviors {
+
+    //Hotfix for SharedSparkSession afterAll cleanup.
+    override def afterAll(): Unit = Try(super.afterAll())
 
     private val noCodegen =
         withSQLConf(
@@ -15,10 +20,6 @@ class MosaicContextTest extends QueryTest with SharedSparkSession with MosaicCon
           SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
         ) _
 
-    test("Testing creation of the context (H3, JTS).") { noCodegen { creationOfContext(H3IndexSystem, JTS) } }
-    test("Testing creation of the context (H3, ESRI).") { noCodegen { creationOfContext(H3IndexSystem, ESRI) } }
-    test("Testing creation of the context (BNG, JTS).") { noCodegen { creationOfContext(BNGIndexSystem, JTS) } }
-    test("Testing creation of the context (BNG, ESRI).") { noCodegen { creationOfContext(BNGIndexSystem, ESRI) } }
     test("Testing sql registration (H3, JTS).") { noCodegen { sqlRegistration(H3IndexSystem, JTS) } }
     test("Testing sql registration (H3, ESRI).") { noCodegen { sqlRegistration(H3IndexSystem, ESRI) } }
     test("Testing sql registration (BNG, JTS).") { noCodegen { sqlRegistration(BNGIndexSystem, JTS) } }
