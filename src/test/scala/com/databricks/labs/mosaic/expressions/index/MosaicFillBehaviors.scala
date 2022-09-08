@@ -183,6 +183,13 @@ trait MosaicFillBehaviors {
         )
 
         badExpr.checkInputDataTypes().isFailure shouldEqual true
+
+        //legacy API def tests
+        noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5))
+        noException should be thrownBy mc.functions.mosaicfill(lit(""), 5)
+        noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), lit(true))
+        noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), true)
+        noException should be thrownBy mc.functions.mosaicfill(lit(""), 5, true)
     }
 
 }

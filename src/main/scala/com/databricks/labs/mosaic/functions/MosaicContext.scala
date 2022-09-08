@@ -83,6 +83,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
               exprs match {
                   case e if e.length == 1 => ST_MakePolygon(e.head, array().expr)
                   case e if e.length == 2 => ST_MakePolygon(e.head, e.last)
+                  case _                  => throw new Error("Wrong number of arguments.")
               }
         )
         registry.registerFunction(
@@ -353,6 +354,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
               exprs match {
                   case e if e.length == 2 => MosaicFill(e(0), e(1), lit(true).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
                   case e if e.length == 3 => MosaicFill(e(0), e(1), e(2), idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
+                  case e                  => MosaicFill(e(0), e(1), e(2), e(3), indexSystem.name, geometryAPI.name)
               }
         )
         registry.registerFunction(
@@ -418,6 +420,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
                         indexSystem.name,
                         geometryAPI.name
                       )
+                  case _                  => throw new Error("Wrong number of arguments.")
               }
         )
         registry.registerFunction(
@@ -427,6 +430,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
               exprs match {
                   case e if e.length == 2 => MosaicFill(e(0), e(1), lit(true).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
                   case e if e.length == 3 => MosaicFill(e(0), e(1), e(2), idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
+                  case _                  => throw new Error("Wrong number of arguments.")
               }
         )
         registry.registerFunction(
@@ -534,26 +538,17 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
         /** IndexSystem and GeometryAPI Specific methods */
         def grid_tessellateexplode(geom: Column, resolution: Column): Column =
-            ColumnAdapter(
-              MosaicExplode(geom.expr, resolution.expr, lit(true).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
-            )
+            grid_tessellateexplode(geom, resolution, lit(true), ColumnAdapter(idAsLongDefaultExpr))
         def grid_tessellateexplode(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
-            ColumnAdapter(
-              MosaicExplode(geom.expr, resolution.expr, keepCoreGeometries.expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
-            )
+            grid_tessellateexplode(geom, resolution, keepCoreGeometries, lit(true))
         def grid_tessellateexplode(geom: Column, resolution: Column, keepCoreGeometries: Column, idAsLong: Column): Column =
             ColumnAdapter(
               MosaicExplode(geom.expr, resolution.expr, keepCoreGeometries.expr, idAsLong.expr, indexSystem.name, geometryAPI.name)
             )
         def grid_tessellateexplode(geom: Column, resolution: Int): Column =
-            ColumnAdapter(
-              MosaicExplode(geom.expr, lit(resolution).expr, lit(true).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
-            )
-        def grid_tessellateexplode(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column = {
-            val resExpr = lit(resolution).expr
-            val keepCoreExpr = lit(keepCoreGeometries).expr
-            ColumnAdapter(MosaicExplode(geom.expr, resExpr, keepCoreExpr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name))
-        }
+            grid_tessellateexplode(geom, lit(resolution), lit(true), ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellateexplode(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
+            grid_tessellateexplode(geom, lit(resolution), lit(keepCoreGeometries), lit(true))
         def grid_tessellateexplode(geom: Column, resolution: Int, keepCoreGeometries: Boolean, idAsLong: Boolean): Column = {
             val resExpr = lit(resolution).expr
             val keepCoreExpr = lit(keepCoreGeometries).expr
@@ -561,24 +556,17 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(MosaicExplode(geom.expr, resExpr, keepCoreExpr, idAsLongExpr, indexSystem.name, geometryAPI.name))
         }
         def grid_tessellate(geom: Column, resolution: Column): Column =
-            ColumnAdapter(MosaicFill(geom.expr, resolution.expr, lit(true).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name))
+            grid_tessellateexplode(geom, resolution, lit(true), ColumnAdapter(idAsLongDefaultExpr))
         def grid_tessellate(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
-            ColumnAdapter(
-              MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
-            )
+            grid_tessellateexplode(geom, resolution, keepCoreGeometries, ColumnAdapter(idAsLongDefaultExpr))
         def grid_tessellate(geom: Column, resolution: Column, keepCoreGeometries: Column, idAsLong: Column): Column =
             ColumnAdapter(
               MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, idAsLong.expr, indexSystem.name, geometryAPI.name)
             )
         def grid_tessellate(geom: Column, resolution: Int): Column =
-            ColumnAdapter(
-              MosaicFill(geom.expr, lit(resolution).expr, lit(true).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
-            )
-        def grid_tessellate(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column = {
-            val resExpr = lit(resolution).expr
-            val keepCoreExpr = lit(keepCoreGeometries).expr
-            ColumnAdapter(MosaicFill(geom.expr, resExpr, keepCoreExpr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name))
-        }
+            grid_tessellateexplode(geom, lit(resolution), lit(true), ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellate(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
+            grid_tessellateexplode(geom, lit(resolution), lit(keepCoreGeometries), ColumnAdapter(idAsLongDefaultExpr))
         def grid_tessellate(geom: Column, resolution: Int, keepCoreGeometries: Boolean, idAsLong: Boolean): Column = {
             val resExpr = lit(resolution).expr
             val keepCoreExpr = lit(keepCoreGeometries).expr
@@ -677,8 +665,10 @@ object MosaicContext {
     def context: MosaicContext =
         instance match {
             case Some(context) => context
-            case None          => throw new IllegalStateException("MosaicContext was not built.")
+            case None          => throw new Error("MosaicContext was not built.")
         }
+
+    def reset(): Unit = instance = None
 
     def geometryAPI: GeometryAPI = context.getGeometryAPI
 

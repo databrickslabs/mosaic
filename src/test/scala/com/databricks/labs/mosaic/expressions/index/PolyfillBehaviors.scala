@@ -156,6 +156,10 @@ trait PolyfillBehaviors {
 
         an[Error] should be thrownBy badExpr.dataType
         an[Error] should be thrownBy badExpr.inputTypes
+
+        //legacy API def tests
+        noException should be thrownBy mc.functions.polyfill(lit(""), lit(5))
+        noException should be thrownBy mc.functions.polyfill(lit(""), 5)
     }
 
 }
