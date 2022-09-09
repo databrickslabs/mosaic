@@ -5,9 +5,8 @@ import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{LongType, StringType}
+import org.apache.spark.sql.types._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -144,7 +143,7 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
         val mc = mosaicContext
         mosaicContext.register(spark)
         val sc = spark
@@ -160,7 +159,7 @@ trait MosaicFillBehaviors {
             case BNGIndexSystem => lit("100m").expr
         }
 
-        val mosaicExplodeExpr = MosaicExplode(
+        val mosaicfillExpr = MosaicFill(
           lit(wkt).expr,
           resExpr,
           lit(false).expr,
@@ -169,9 +168,17 @@ trait MosaicFillBehaviors {
           mc.getGeometryAPI.name
         )
 
-        mosaicExplodeExpr.position shouldEqual false
-        mosaicExplodeExpr.inline shouldEqual false
-        mosaicExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
+        mosaicfillExpr.first shouldEqual lit(wkt).expr
+        mosaicfillExpr.second shouldEqual resExpr
+        mosaicfillExpr.third shouldEqual lit(false).expr
+        mosaicfillExpr.fourth shouldEqual idAsLongExpr
+
+        mc.getIndexSystem match {
+            case H3IndexSystem  => mosaicfillExpr.inputTypes should contain theSameElementsAs
+                    Seq(StringType, IntegerType, BooleanType, BooleanType)
+            case BNGIndexSystem => mosaicfillExpr.inputTypes should contain theSameElementsAs
+                    Seq(StringType, StringType, BooleanType, BooleanType)
+        }
 
         val badExpr = MosaicFill(
           lit(10).expr,
@@ -182,18 +189,9 @@ trait MosaicFillBehaviors {
           mc.getGeometryAPI.name
         )
 
-        badExpr.checkInputDataTypes().isFailure shouldEqual true
         an[Error] should be thrownBy badExpr.inputTypes
-        badExpr
-            .withNewChildren(Array(lit(wkt).expr, lit(true).expr, lit(false).expr, idAsLongExpr))
-            .checkInputDataTypes()
-            .isFailure shouldEqual true
-        badExpr
-            .withNewChildren(Array(lit(wkt).expr, resExpr, lit(5).expr, idAsLongExpr))
-            .checkInputDataTypes()
-            .isFailure shouldEqual true
         an[Error] should be thrownBy badExpr
-            .withNewChildren(Array(lit(wkt).expr, resExpr, lit(5).expr, lit(5).expr))
+            .makeCopy(Array(lit(wkt).expr, resExpr, lit(5).expr, lit(5).expr))
             .dataType
 
         // legacy API def tests
