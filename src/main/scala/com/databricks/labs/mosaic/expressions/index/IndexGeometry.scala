@@ -39,7 +39,6 @@ case class IndexGeometry(indexID: Expression, format: Expression, indexSystemNam
     override def checkInputDataTypes(): TypeCheckResult = {
         (indexID.dataType, format.dataType) match {
             case (LongType, StringType)    => TypeCheckResult.TypeCheckSuccess
-            case (IntegerType, StringType) => TypeCheckResult.TypeCheckSuccess
             case (StringType, StringType)  => TypeCheckResult.TypeCheckSuccess
             case _                         => TypeCheckResult.TypeCheckFailure(
                   s"CellGeometry expression only supports numerical and string cell IDs and StringType for format." +

@@ -51,6 +51,7 @@ object Mosaic {
             case MULTILINESTRING =>
                 val multiLine = geometry.asInstanceOf[MosaicMultiLineString]
                 multiLine.flatten.flatMap(line => lineDecompose(line.asInstanceOf[MosaicLineString], resolution, indexSystem, geometryAPI))
+            case gt               => throw new Error(s"$gt not supported for line fill/decompose operation.")
         }
     }
 

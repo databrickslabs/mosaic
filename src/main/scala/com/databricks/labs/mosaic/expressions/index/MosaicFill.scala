@@ -35,16 +35,17 @@ case class MosaicFill(
       with CodegenFallback {
 
     // noinspection DuplicatedCode
-    override def inputTypes: Seq[DataType] =
-        (first.dataType, second.dataType, third.dataType, fourth.dataType) match {
-            case (BinaryType, IntegerType, BooleanType, BooleanType)           => Seq(BinaryType, IntegerType, BooleanType, BooleanType)
-            case (StringType, IntegerType, BooleanType, BooleanType)           => Seq(StringType, IntegerType, BooleanType, BooleanType)
-            case (HexType, IntegerType, BooleanType, BooleanType)              => Seq(HexType, IntegerType, BooleanType, BooleanType)
-            case (InternalGeometryType, IntegerType, BooleanType, BooleanType) =>
-                Seq(InternalGeometryType, IntegerType, BooleanType, BooleanType)
-            case _                                                             =>
-                throw new Error(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}, ${fourth.dataType}).")
+    override def inputTypes: Seq[DataType] = {
+        if (
+          !Seq(BinaryType, StringType, HexType, InternalGeometryType).contains(first.dataType) ||
+          !Seq(IntegerType, StringType).contains(second.dataType) ||
+          third.dataType != BooleanType || fourth.dataType != BooleanType
+        ) {
+            throw new Error(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}, ${fourth.dataType}).")
+        } else {
+            Seq(first.dataType, second.dataType, third.dataType, fourth.dataType)
         }
+    }
 
     override def second: Expression = resolution
 

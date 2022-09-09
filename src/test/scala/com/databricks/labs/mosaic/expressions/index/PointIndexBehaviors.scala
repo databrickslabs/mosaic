@@ -88,6 +88,9 @@ trait PointIndexBehaviors extends QueryTest {
             PointIndexGeom(lit("POLYGON EMPTY").expr, lit(5).expr, lit(true).expr, indexSystem.name, geometryAPI.name)
         an[Error] should be thrownBy badExprLonLat.inputTypes
         an[Error] should be thrownBy badExprLonLat.dataType
+        an[Error] should be thrownBy badExprPoint.makeCopy(
+          Array(lit("POLYGON EMPTY").expr, lit(5).expr, lit(5).expr)
+        ).dataType
         an[Exception] should be thrownBy badExprPoint.nullSafeEval(UTF8String.fromString("POLYGON EMPTY"), 5, true)
 
         //legacy API def tests

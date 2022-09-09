@@ -173,7 +173,7 @@ trait MosaicFillBehaviors {
         mosaicExplodeExpr.inline shouldEqual false
         mosaicExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
 
-        val badExpr = MosaicExplode(
+        val badExpr = MosaicFill(
           lit(10).expr,
           resExpr,
           lit(false).expr,
@@ -183,8 +183,20 @@ trait MosaicFillBehaviors {
         )
 
         badExpr.checkInputDataTypes().isFailure shouldEqual true
+        an[Error] should be thrownBy badExpr.inputTypes
+        badExpr
+            .withNewChildren(Array(lit(wkt).expr, lit(true).expr, lit(false).expr, idAsLongExpr))
+            .checkInputDataTypes()
+            .isFailure shouldEqual true
+        badExpr
+            .withNewChildren(Array(lit(wkt).expr, resExpr, lit(5).expr, idAsLongExpr))
+            .checkInputDataTypes()
+            .isFailure shouldEqual true
+        an[Error] should be thrownBy badExpr
+            .withNewChildren(Array(lit(wkt).expr, resExpr, lit(5).expr, lit(5).expr))
+            .dataType
 
-        //legacy API def tests
+        // legacy API def tests
         noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5))
         noException should be thrownBy mc.functions.mosaicfill(lit(""), 5)
         noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), lit(true))
