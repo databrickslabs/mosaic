@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types._
@@ -42,10 +43,12 @@ trait IndexGeometryBehaviors {
         an[Error] should be thrownBy IndexGeometry(gridCellLong, lit("BAD FORMAT").expr, indexSystemName, geometryAPIName).dataType
 
         val longIDGeom = IndexGeometry(gridCellLong, lit("WKT").expr, indexSystemName, geometryAPIName)
+        val intIDGeom = IndexGeometry(Column(gridCellLong).cast(IntegerType).expr, lit("WKT").expr, indexSystemName, geometryAPIName)
         val strIDGeom = IndexGeometry(gridCellStr, lit("WKT").expr, indexSystemName, geometryAPIName)
         val badIDGeom = IndexGeometry(lit(true).expr, lit("WKT").expr, indexSystemName, geometryAPIName)
 
         longIDGeom.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
+        intIDGeom.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
         strIDGeom.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
         badIDGeom.checkInputDataTypes().isFailure shouldEqual true
 
