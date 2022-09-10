@@ -2,24 +2,17 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.index.IndexSystemID
 import com.databricks.labs.mosaic.core.types._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
-import org.locationtech.jts.geom.Geometry
-
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, MosaicChip}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{
-    ExpectsInputTypes,
-    Expression,
-    ExpressionDescription,
-    ExpressionInfo,
-    NullIntolerant,
-    TernaryExpression
-}
+import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
+import org.locationtech.jts.geom.Geometry
 
 @ExpressionDescription(
   usage = "_FUNC_(geometry, resolution) - Returns the 2 set representation of geometry at resolution.",
@@ -43,13 +36,14 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
             case (StringType, IntegerType, BooleanType)           => Seq(StringType, IntegerType, BooleanType)
             case (HexType, IntegerType, BooleanType)              => Seq(HexType, IntegerType, BooleanType)
             case (InternalGeometryType, IntegerType, BooleanType) => Seq(InternalGeometryType, IntegerType, BooleanType)
-            case _                                                =>
-                throw new Error(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}).")
+            case _ => throw new Error(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}).")
         }
 
     override def second: Expression = resolution
 
     override def third: Expression = keepCoreGeom
+
+    override def first: Expression = geom
 
     /** Expression output DataType. */
     override def dataType: DataType = MosaicType
@@ -86,6 +80,8 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
         val geometry = geometryAPI.geometry(input1, first.dataType)
 
         val chips = GeometryTypeEnum.fromString(geometry.getGeometryType) match {
+            case POINT           => Mosaic.pointFill(geometry, resolution, indexSystem)
+            case MULTIPOINT      => Mosaic.pointFill(geometry, resolution, indexSystem)
             case LINESTRING      => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
             case MULTILINESTRING => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
             case _               => Mosaic.mosaicFill(geometry, resolution, keepCoreGeom, indexSystem, geometryAPI)
@@ -99,8 +95,6 @@ case class MosaicFill(geom: Expression, resolution: Expression, keepCoreGeom: Ex
 
         serialized
     }
-
-    override def first: Expression = geom
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])

@@ -39,8 +39,8 @@ case class ST_IntersectionMosaic(leftGeom: Expression, rightGeom: Expression, ge
                 } else if (flags._2) {
                     geometryAPI.geometry(geoms._1, "WKB")
                 } else {
-                    val leftChipGeom = geometryAPI.geometry(geoms._2, "WKB")
-                    val rightChipGeom = geometryAPI.geometry(geoms._1, "WKB")
+                    val leftChipGeom = geometryAPI.geometry(geoms._1, "WKB")
+                    val rightChipGeom = geometryAPI.geometry(geoms._2, "WKB")
                     leftChipGeom.intersection(rightChipGeom)
                 }
             result match {

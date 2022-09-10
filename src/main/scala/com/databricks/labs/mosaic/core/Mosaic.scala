@@ -1,20 +1,34 @@
 package com.databricks.labs.mosaic.core
 
-import scala.annotation.tailrec
-
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineString
+import com.databricks.labs.mosaic.core.geometry.multipoint.MosaicMultiPoint
+import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, MosaicChip}
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
+
+import scala.annotation.tailrec
 
 /**
   * Single abstracted logic for mosaic fill via [[IndexSystem]]. [[IndexSystem]]
   * is in charge of implementing the individual steps of the logic.
   */
 object Mosaic {
+
+    def pointFill(geometry: MosaicGeometry, resolution: Int, indexSystem: IndexSystem): Seq[MosaicChip] = {
+        case POINT      => Seq(pointToChip(geometry, resolution, indexSystem))
+        case MULTIPOINT => geometry.asInstanceOf[MosaicMultiPoint].asSeq.map(point => pointToChip(point, resolution, indexSystem))
+    }
+
+    private def pointToChip(geometry: MosaicGeometry, resolution: Int, indexSystem: IndexSystem): MosaicChip = {
+        val point = geometry.asInstanceOf[MosaicPoint]
+        val index = indexSystem.pointToIndex(point.getX, point.getY, resolution)
+        val chip = MosaicChip(isCore = false, index, point)
+        chip
+    }
 
     def mosaicFill(
         geometry: MosaicGeometry,
