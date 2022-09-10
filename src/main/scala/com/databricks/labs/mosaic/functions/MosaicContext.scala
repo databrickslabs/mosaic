@@ -264,6 +264,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_IntersectionMosaic(exprs(0), exprs(1), geometryAPI.name, indexSystem.name)
         )
         registry.registerFunction(
+            FunctionIdentifier("st_intersects_mosaic", database),
+            ST_IntersectsMosaic.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_IntersectsMosaic(exprs(0), exprs(1), geometryAPI.name, indexSystem.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_srid", database),
           ST_SRID.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_SRID(exprs(0), geometryAPI.name)
@@ -387,6 +392,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))
         def st_intersection_mosaic(left: Column, right: Column): Column =
             ColumnAdapter(ST_IntersectionMosaic(left.expr, right.expr, geometryAPI.name, indexSystem.name))
+        def st_intersects_mosaic(left: Column, right: Column): Column =
+            ColumnAdapter(ST_IntersectsMosaic(left.expr, right.expr, geometryAPI.name, indexSystem.name))
         def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr, geometryAPI.name))
         def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
         def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))

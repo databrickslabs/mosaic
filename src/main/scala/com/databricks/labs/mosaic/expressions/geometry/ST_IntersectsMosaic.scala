@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.types.ChipType
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -57,3 +57,30 @@ case class ST_IntersectsMosaic(leftGeom: Expression, rightGeom: Expression, geom
         copy(leftGeom = newLeft, rightGeom = newRight)
 
 }
+
+object ST_IntersectsMosaic {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+    new ExpressionInfo(
+    classOf[ST_IntersectsMosaic].getCanonicalName,
+    db.orNull,
+    "st_intersects_mosaic",
+    """
+      |    _FUNC_(expr1, expr2) - Returns the intersects of the two geometries.
+      """.stripMargin,
+    "",
+    """
+      |    Examples:
+      |      > SELECT _FUNC_(a, b);
+      |        POLYGON(...)
+      |  """.stripMargin,
+    "",
+    "misc_funcs",
+    "1.0",
+    "",
+    "built-in"
+    )
+
+}
+
