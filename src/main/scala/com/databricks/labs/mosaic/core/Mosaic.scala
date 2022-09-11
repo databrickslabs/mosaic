@@ -18,10 +18,13 @@ import scala.annotation.tailrec
   */
 object Mosaic {
 
-    def pointFill(geometry: MosaicGeometry, resolution: Int, indexSystem: IndexSystem): Seq[MosaicChip] = {
-        case POINT      => Seq(pointToChip(geometry, resolution, indexSystem))
-        case MULTIPOINT => geometry.asInstanceOf[MosaicMultiPoint].asSeq.map(point => pointToChip(point, resolution, indexSystem))
-    }
+    def pointFill(geometry: MosaicGeometry, resolution: Int, indexSystem: IndexSystem): Seq[MosaicChip] =
+        GeometryTypeEnum.fromString(geometry.getGeometryType) match {
+            case POINT      => Seq(pointToChip(geometry, resolution, indexSystem))
+            case MULTIPOINT => geometry.asInstanceOf[MosaicMultiPoint].asSeq.map(point => pointToChip(point, resolution, indexSystem))
+            case _          =>
+                throw new Error(s"Pointfill should only be call on POINT/MULTIPOINT geometries. ${geometry.getGeometryType} was provided.")
+        }
 
     private def pointToChip(geometry: MosaicGeometry, resolution: Int, indexSystem: IndexSystem): MosaicChip = {
         val point = geometry.asInstanceOf[MosaicPoint]
@@ -65,6 +68,9 @@ object Mosaic {
             case MULTILINESTRING =>
                 val multiLine = geometry.asInstanceOf[MosaicMultiLineString]
                 multiLine.flatten.flatMap(line => lineDecompose(line.asInstanceOf[MosaicLineString], resolution, indexSystem, geometryAPI))
+            case _               => throw new Error(
+                  s"Linefill should only be call on LINESTRING/MULTILINESTRING geometries. ${geometry.getGeometryType} was provided."
+                )
         }
     }
 

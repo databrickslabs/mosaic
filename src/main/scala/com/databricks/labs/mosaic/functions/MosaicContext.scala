@@ -264,9 +264,14 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_IntersectionMosaic(exprs(0), exprs(1), geometryAPI.name, indexSystem.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("st_intersects_mosaic", database),
-            ST_IntersectsMosaic.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => ST_IntersectsMosaic(exprs(0), exprs(1), geometryAPI.name, indexSystem.name)
+          FunctionIdentifier("st_intersects_mosaic", database),
+          ST_IntersectsMosaic.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_IntersectsMosaic(exprs(0), exprs(1), geometryAPI.name, indexSystem.name)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("st_contains_mosaic", database),
+          ST_ContainsMosaic.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_ContainsMosaic(exprs(0), exprs(1), geometryAPI.name, indexSystem.name)
         )
         registry.registerFunction(
           FunctionIdentifier("st_srid", database),
@@ -299,6 +304,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           FunctionIdentifier("st_intersects_aggregate", database),
           ST_IntersectsAggregate.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_IntersectsAggregate(exprs(0), exprs(1), geometryAPI.name)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("st_contains_aggregate", database),
+          ST_ContainsAggregate.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_ContainsAggregate(exprs(0), exprs(1), geometryAPI.name, indexSystem.name, 0, 0)
         )
 
         /** IndexSystem and GeometryAPI Specific methods */
@@ -394,6 +404,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_IntersectionMosaic(left.expr, right.expr, geometryAPI.name, indexSystem.name))
         def st_intersects_mosaic(left: Column, right: Column): Column =
             ColumnAdapter(ST_IntersectsMosaic(left.expr, right.expr, geometryAPI.name, indexSystem.name))
+        def st_contains_mosaic(left: Column, right: Column): Column =
+            ColumnAdapter(ST_ContainsMosaic(left.expr, right.expr, geometryAPI.name, indexSystem.name))
         def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr, geometryAPI.name))
         def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
         def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
@@ -445,6 +457,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_intersection_aggregate(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(
               ST_IntersectionAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem.name)
+                  .toAggregateExpression(isDistinct = false)
+            )
+        def st_contains_aggregate(leftIndex: Column, rightIndex: Column): Column =
+            ColumnAdapter(
+              ST_ContainsAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem.name, 0, 0)
                   .toAggregateExpression(isDistinct = false)
             )
 
