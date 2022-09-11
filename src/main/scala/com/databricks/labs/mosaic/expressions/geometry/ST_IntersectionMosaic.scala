@@ -15,8 +15,10 @@ case class ST_IntersectionMosaic(leftGeom: Expression, rightGeom: Expression, ge
       with NullIntolerant
       with CodegenFallback {
 
-    lazy val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
-    lazy val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID.apply(indexSystemName))
+    val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
+    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID.apply(indexSystemName))
+
+    val emptyGeom: Any = geometryAPI.serialize(geometryAPI.geometry("POLYGON EMPTY", "WKT"), BinaryType)
 
     override def dataType: DataType = BinaryType
 
@@ -50,7 +52,7 @@ case class ST_IntersectionMosaic(leftGeom: Expression, rightGeom: Expression, ge
         }
 
         intersectionGeom match {
-            case None             => geometryAPI.serialize(geometryAPI.geometry("POLYGON EMPTY", "WKT"), BinaryType)
+            case None             => emptyGeom
             case Some(resultGeom) => geometryAPI.serialize(resultGeom, BinaryType)
         }
     }

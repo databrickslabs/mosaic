@@ -5,7 +5,6 @@ import scala.collection.JavaConverters._
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
-import com.databricks.labs.mosaic.core.types.model.MosaicChip
 import com.uber.h3core.H3Core
 import org.locationtech.jts.geom.Geometry
 
@@ -56,19 +55,22 @@ object H3IndexSystem extends IndexSystem with Serializable {
       *   when performing polyfill.
       */
     override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = {
-        val centroid = geometry.getCentroid
-        val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
-        val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
-        val boundary = indexGeom.getShellPoints.head // first shell is always in head
+        if (geometry.isEmpty) 0.0
+        else {
+            val centroid = geometry.getCentroid
+            val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
+            val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
+            val boundary = indexGeom.getShellPoints.head // first shell is always in head
 
-        // Hexagons have only 3 diameters.
-        // Computing them manually and selecting the maximum.
-        // noinspection ZeroIndexToHead
-        Seq(
-          boundary(0).distance(boundary(3)),
-          boundary(1).distance(boundary(4)),
-          boundary(2).distance(boundary(5))
-        ).max / 2
+            // Hexagons have only 3 diameters.
+            // Computing them manually and selecting the maximum.
+            // noinspection ZeroIndexToHead
+            Seq(
+                boundary(0).distance(boundary(3)),
+                boundary(1).distance(boundary(4)),
+                boundary(2).distance(boundary(5))
+            ).max / 2
+        }
     }
 
     /**

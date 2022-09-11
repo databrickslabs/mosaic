@@ -3,14 +3,17 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.labs.mosaic.expressions.index.MosaicFill
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
 
@@ -147,20 +150,20 @@ trait ST_IntersectionBehaviors extends QueryTest {
         val indexChip2 = geometryAPI.geometry(points = chipShell2, GeometryTypeEnum.POLYGON)
 
         val chipsRows = List(
-            List(1L, true, indexID1, indexPolygon1.toWKB),
-            List(1L, true, indexID2, indexPolygon2.toWKB),
-            List(1L, false, indexID1, indexChip1.toWKB),
-            List(1L, false, indexID2, indexChip2.toWKB)
+          List(1L, true, indexID1, indexPolygon1.toWKB),
+          List(1L, true, indexID2, indexPolygon2.toWKB),
+          List(1L, false, indexID1, indexChip1.toWKB),
+          List(1L, false, indexID2, indexChip2.toWKB)
         )
         val rows = chipsRows.map { x => Row(x: _*) }
         val rdd = spark.sparkContext.makeRDD(rows)
         val schema = StructType(
-            Seq(
-                StructField("row_id", LongType),
-                StructField("is_core", BooleanType),
-                StructField("index_id", LongType),
-                StructField("wkb", BinaryType)
-            )
+          Seq(
+            StructField("row_id", LongType),
+            StructField("is_core", BooleanType),
+            StructField("index_id", LongType),
+            StructField("wkb", BinaryType)
+          )
         )
 
         val chips =
@@ -170,8 +173,8 @@ trait ST_IntersectionBehaviors extends QueryTest {
 
         val results = left
             .join(
-                right,
-                col("left.row_id") === col("right.row_id")
+              right,
+              col("left.row_id") === col("right.row_id")
             )
             .withColumn("intersection", st_intersection_mosaic(col("left.index"), col("right.index")))
             .withColumn("area", st_area(col("intersection")))
@@ -256,15 +259,37 @@ trait ST_IntersectionBehaviors extends QueryTest {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
+        import mc.functions._
 
         val stIntersection =
-            ST_Intersection(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, lit("POLYGON (1 2, 2 2, 3 3, 4 2, 1 2)").expr, geometryAPI.name)
+            ST_Intersection(lit("POLYGON ((3 1, 4 4, 2 4, 1 2, 3 1))").expr, lit("POLYGON ((3 1, 7 7, 2 4, 1 2, 3 1))").expr, geometryAPI.name)
 
-        stIntersection.left shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
-        stIntersection.right shouldEqual lit("POLYGON (1 2, 2 2, 3 3, 4 2, 1 2)").expr
+        stIntersection.left shouldEqual lit("POLYGON ((3 1, 4 4, 2 4, 1 2, 3 1))").expr
+        stIntersection.right shouldEqual lit("POLYGON ((3 1, 7 7, 2 4, 1 2, 3 1))").expr
 
-        stIntersection.dataType shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr.dataType
+        stIntersection.dataType shouldEqual lit("POLYGON ((3 1, 4 4, 2 4, 1 2, 3 1))").expr.dataType
         noException should be thrownBy stIntersection.makeCopy(stIntersection.children.toArray)
+
+        val stIntersectionMosaic = ST_IntersectionMosaic(lit("").expr, lit("").expr, geometryAPI.name, indexSystem.name)
+        val leftMosaic = mosaicfill(lit(""), lit(3)).expr.asInstanceOf[MosaicFill].nullSafeEval(
+            UTF8String.fromString("POLYGON ((3 1, 4 4, 2 4, 1 2, 3 1))"),
+            3,
+            true,
+        ).asInstanceOf[InternalRow].getArray(0)
+        val rightMosaic = mosaicfill(lit(""), lit(3)).expr.asInstanceOf[MosaicFill].nullSafeEval(
+            UTF8String.fromString("POLYGON ((3 1, 7 7, 2 4, 1 2, 3 1))"),
+            3,
+            true,
+        ).asInstanceOf[InternalRow].getArray(0)
+        val emptyMosaic = mosaicfill(lit(""), lit(3)).expr.asInstanceOf[MosaicFill].nullSafeEval(
+            UTF8String.fromString("POLYGON EMPTY"),
+            3,
+            true,
+        ).asInstanceOf[InternalRow].getArray(0)
+
+        noException should be thrownBy stIntersectionMosaic.nullSafeEval(leftMosaic, rightMosaic)
+        noException should be thrownBy stIntersectionMosaic.nullSafeEval(leftMosaic, emptyMosaic)
+        noException should be thrownBy stIntersectionMosaic.nullSafeEval(emptyMosaic, rightMosaic)
 
     }
 
