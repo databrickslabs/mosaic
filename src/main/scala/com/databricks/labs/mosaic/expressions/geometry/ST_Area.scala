@@ -2,11 +2,32 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api._
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
+import com.databricks.labs.mosaic.expressions.core.MosaicUnaryExpression
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
-import org.apache.spark.sql.types.{DataType, DoubleType}
+import org.apache.spark.sql.types.DoubleType
 
-case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
+@ExpressionDescription(
+  usage = "_FUNC_(geometry) - Returns the area of the geometry.",
+  arguments = """
+    Arguments:
+        * geometry - a geometry
+    """,
+  examples = """
+    Examples:
+        > SELECT _FUNC_(ST_Point(1.0, 1.0));
+         0.0
+        > SELECT _FUNC_(ST_PolygonFromEnvelope(0.0, 0.0, 1.0, 1.0));
+         1.0
+    """,
+  group = "geometry_funcs",
+  since = "0.1.0"
+)
+case class ST_Area(
+    inputGeom: Expression,
+    indexSystemName: String,
+    geometryAPIName: String
+) extends MosaicUnaryExpression[ST_Area](inputGeom, DoubleType, Some(indexSystemName), Some(geometryAPIName)) {
 
     /**
       * ST_Area expression returns are covered by the
@@ -14,23 +35,13 @@ case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends Unary
       * expression.
       */
 
-    override def child: Expression = inputGeom
-
-    /** Output Data Type */
-    override def dataType: DataType = DoubleType
-
     override def nullSafeEval(input1: Any): Any = {
         val geometryAPI = GeometryAPI(geometryAPIName)
         val geom = geometryAPI.geometry(input1, inputGeom.dataType)
         geom.getArea
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = ST_Area(asArray(0), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
-    }
+    override def copyImpl(child: Expression): MosaicUnaryExpression[ST_Area] = copy(inputGeom = child)
 
     override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
         nullSafeCodeGen(
@@ -45,34 +56,6 @@ case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends Unary
                                             |${ev.value} = $geomInRef.$areaStatement;
                                             |""".stripMargin)
           }
-        )
-
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputGeom = newChild)
-
-}
-
-object ST_Area {
-
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_Area].getCanonicalName,
-          db.orNull,
-          "st_area",
-          """
-            |    _FUNC_(expr1) - Returns the area of the geometry.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        15.2512
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
         )
 
 }

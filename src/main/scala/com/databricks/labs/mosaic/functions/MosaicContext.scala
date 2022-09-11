@@ -8,7 +8,6 @@ import com.databricks.labs.mosaic.expressions.format._
 import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.helper.TrySql
 import com.databricks.labs.mosaic.expressions.index._
-
 import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -36,6 +35,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         database: Option[String] = None
     ): Unit = {
         val registry = spark.sessionState.functionRegistry
+        val mosaicRegistry = MosaicFunctionRegistry(registry, database, indexSystem, geometryAPI)
+
+        mosaicRegistry.registerFunction[ST_Area](name = "st_area")
 
         /** IndexSystem and GeometryAPI Agnostic methods */
         registry.registerFunction(
@@ -119,11 +121,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           ST_GeometryType.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_GeometryType(exprs(0), geometryAPI.name)
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_area", database),
-          ST_Area.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_Area(exprs(0), geometryAPI.name)
-        )
+
         registry.registerFunction(
           FunctionIdentifier("st_centroid2D", database),
           ST_Centroid.registryExpressionInfo(database, "st_centroid2D"),
@@ -367,7 +365,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
         /** Spatial functions */
         def flatten_polygons(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
-        def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr, geometryAPI.name))
+        def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr, indexSystem.name, geometryAPI.name))
         def st_buffer(geom: Column, radius: Column): Column =
             ColumnAdapter(ST_Buffer(geom.expr, radius.cast("double").expr, geometryAPI.name))
         def st_buffer(geom: Column, radius: Double): Column =
