@@ -43,4 +43,18 @@ class TestMosaicFill extends AnyFlatSpec with MosaicFillBehaviors with SparkSuit
         it should behave like wktMosaicFillKeepCoreGeom(MosaicContext.build(BNGIndexSystem, JTS), spark, 4)
     }
 
+    "MosaicFill" should "fill point geometries with keepCoreGeom parameter" in {
+        it should behave like mosaicFillPoints(MosaicContext.build(H3IndexSystem, ESRI), spark, 11)
+        it should behave like mosaicFillPoints(MosaicContext.build(H3IndexSystem, JTS), spark, 11)
+        it should behave like mosaicFillPoints(MosaicContext.build(BNGIndexSystem, ESRI), spark, 4)
+        it should behave like mosaicFillPoints(MosaicContext.build(BNGIndexSystem, JTS), spark, 4)
+    }
+
+    "MosaicFill" should "execute auxiliary methods correctly" in {
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, ESRI), spark, 11)
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, JTS), spark, 11)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, ESRI), spark, 4)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, JTS), spark, 4)
+    }
+
 }
