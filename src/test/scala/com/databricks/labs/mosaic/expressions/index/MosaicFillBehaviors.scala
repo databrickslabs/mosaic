@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{col, lit}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -174,6 +174,7 @@ trait MosaicFillBehaviors {
 
     def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
+        import mc.functions._
         mosaicContext.register(spark)
 
         val geometryAPI = mc.getGeometryAPI
@@ -191,6 +192,20 @@ trait MosaicFillBehaviors {
 
         an[Error] should be thrownBy Mosaic.pointFill(lineStringGeom, resolution, indexSystem)
         an[Error] should be thrownBy Mosaic.lineFill(pointGeom, resolution, indexSystem, geometryAPI)
+
+        val mosaicfillExpr = MosaicFill(
+          lit(pointGeom.toWKT).expr,
+          lit(resolution).expr,
+          lit(true).expr,
+          indexSystem.name,
+          geometryAPI.name
+        )
+
+        noException should be thrownBy mosaicfillExpr.inputTypes
+        noException should be thrownBy mosaicfillExpr.copy(geom = lit(lineStringGeom.toWKB).expr).inputTypes
+        noException should be thrownBy mosaicfillExpr.copy(geom = as_hex(lit(lineStringGeom.toHEX)).expr).inputTypes
+        noException should be thrownBy mosaicfillExpr.copy(geom = st_geomfromwkt(lit(lineStringGeom.toWKT)).expr).inputTypes
+        an[Error] should be thrownBy mosaicfillExpr.copy(geom = lit(lineStringGeom.toWKB).expr, resolution = lit("hex").expr).inputTypes
     }
 
 }
