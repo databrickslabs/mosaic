@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
@@ -36,6 +36,85 @@ trait ST_ContainsBehaviors extends QueryTest {
             .where($"expected" === $"result")
 
         results.count shouldBe 2
+    }
+
+    def containsAggBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        import mc.functions._
+        val sc = spark
+        import sc.implicits._
+        mc.register(spark)
+
+        val poly = """POLYGON ((10 10, 110 10, 110 110, 10 110, 10 10),
+                     | (20 20, 20 30, 30 30, 30 20, 20 20),
+                     | (40 20, 40 30, 50 30, 50 20, 40 20))""".stripMargin.filter(_ >= ' ')
+
+        val rows = List(
+          (1, poly, "POINT (35 25)"),
+          (2, poly, "MULTIPOINT ((34 24), (35 25))"),
+          (3, poly, "LINESTRING (35 25, 35 26)"),
+          (4, poly, "MULTILINESTRING ((35 25, 35 26), (35 25, 35 24))"),
+          (5, poly, "POLYGON ((35 25, 35 35, 45 35, 45 25, 35 25))"),
+          (6, poly, "MULTIPOLYGON (((35 25, 35 35, 45 35, 45 25, 35 25)))"),
+          (7, poly, "POINT (41 21)")
+        )
+
+        val left = rows
+            .toDF("id", "leftGeom", "rightGeom")
+            .withColumn("left", mosaic_explode($"leftGeom", lit(resolution)))
+            .drop("rightGeom")
+
+        val right = rows
+            .toDF("id", "leftGeom", "rightGeom")
+            .withColumn("right", mosaic_explode($"rightGeom", lit(resolution)))
+            .drop("leftGeom")
+
+        val results = left
+            .join(right.drop("id"), $"left.index_id" === $"right.index_id")
+            .groupBy($"id")
+            .agg(
+              st_contains_aggregate($"left", $"right") as "result",
+              first($"leftGeom") as "leftGeom",
+              first($"rightGeom") as "rightGeom"
+            )
+            .withColumn("expected", st_contains($"leftGeom", $"rightGeom"))
+            .where($"expected" === $"result")
+
+        results.count shouldBe rows.size
+    }
+
+    def containsMosaicBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        import mc.functions._
+        val sc = spark
+        import sc.implicits._
+        mc.register(spark)
+
+        val poly = """POLYGON ((10 10, 110 10, 110 110, 10 110, 10 10),
+                     | (20 20, 20 30, 30 30, 30 20, 20 20),
+                     | (40 20, 40 30, 50 30, 50 20, 40 20))""".stripMargin.filter(_ >= ' ')
+
+        val rows = List(
+          (1, poly, "POINT (35 25)"),
+          (2, poly, "MULTIPOINT ((34 24), (35 25))"),
+          (3, poly, "LINESTRING (35 25, 35 26)"),
+          (4, poly, "MULTILINESTRING ((35 25, 35 26), (35 25, 35 24))"),
+          (5, poly, "POLYGON ((35 25, 35 35, 45 35, 45 25, 35 25))"),
+          (6, poly, "MULTIPOLYGON (((35 25, 35 35, 45 35, 45 25, 35 25)))"),
+          (7, poly, "POINT (41 21)")
+        )
+
+        val results = rows
+            .toDF("id", "leftGeom", "rightGeom")
+            .withColumn("expected", st_contains($"leftGeom", $"rightGeom"))
+            .withColumn("left", mosaicfill($"leftGeom", lit(resolution)))
+            .withColumn("right", mosaicfill($"rightGeom", lit(resolution)))
+            .withColumn("result", st_contains_mosaic($"left", $"right"))
+            .where($"expected" === $"result")
+
+        results.count shouldBe rows.size
     }
 
     def containsCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

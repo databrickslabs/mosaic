@@ -26,6 +26,14 @@ class ST_ContainsTest extends QueryTest with SharedSparkSession with ST_Contains
     test("Testing stContains (H3, ESRI) NO_CODEGEN") { noCodegen { containsBehavior(H3IndexSystem, ESRI) } }
     test("Testing stContains (BNG, JTS) NO_CODEGEN") { noCodegen { containsBehavior(BNGIndexSystem, JTS) } }
     test("Testing stContains (BNG, ESRI) NO_CODEGEN") { noCodegen { containsBehavior(BNGIndexSystem, ESRI) } }
+    test("Testing stContainsAgg (H3, JTS) NO_CODEGEN") { noCodegen { containsAggBehaviour(H3IndexSystem, JTS, 2) } }
+    test("Testing stContainsAgg (H3, ESRI) NO_CODEGEN") { noCodegen { containsAggBehaviour(H3IndexSystem, ESRI, 2) } }
+    test("Testing stContainsAgg (BNG, JTS) NO_CODEGEN") { noCodegen { containsAggBehaviour(BNGIndexSystem, JTS, 5) } }
+    test("Testing stContainsAgg (BNG, ESRI) NO_CODEGEN") { noCodegen { containsAggBehaviour(BNGIndexSystem, ESRI, 5) } }
+    test("Testing stContainsMosaic (H3, JTS) NO_CODEGEN") { noCodegen { containsMosaicBehaviour(H3IndexSystem, JTS, 2) } }
+    test("Testing stContainsMosaic (H3, ESRI) NO_CODEGEN") { noCodegen { containsMosaicBehaviour(H3IndexSystem, ESRI, 2) } }
+    test("Testing stContainsMosaic (BNG, JTS) NO_CODEGEN") { noCodegen { containsMosaicBehaviour(BNGIndexSystem, JTS, 5) } }
+    test("Testing stContainsMosaic (BNG, ESRI) NO_CODEGEN") { noCodegen { containsMosaicBehaviour(BNGIndexSystem, ESRI, 5) } }
     test("Testing stContains (H3, JTS) CODEGEN compilation") { codegenOnly { containsCodegen(H3IndexSystem, JTS) } }
     test("Testing stContains (H3, ESRI) CODEGEN compilation") { codegenOnly { containsCodegen(H3IndexSystem, ESRI) } }
     test("Testing stContains (BNG, JTS) CODEGEN compilation") { codegenOnly { containsCodegen(BNGIndexSystem, JTS) } }

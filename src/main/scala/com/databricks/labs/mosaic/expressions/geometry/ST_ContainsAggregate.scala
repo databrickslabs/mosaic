@@ -44,6 +44,8 @@ case class ST_ContainsAggregate(
                 // If the right chip is core, then left contains right
                 // if and only if when left chip is core and accumulator is true
                 accumulator && leftCoreFlag
+            } else if (leftCoreFlag) {
+                accumulator
             } else {
                 // If any of the chips isnt core then contains relation has
                 // to be evaluated. If accumulator is already false then no

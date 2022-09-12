@@ -58,7 +58,8 @@ case class ST_IntersectionMosaic(leftGeom: Expression, rightGeom: Expression, ge
     }
 
     private def getChips(input: Any): Seq[(Boolean, Long, Array[Byte])] = {
-        input.asInstanceOf[ArrayData].toArray[InternalRow](ChipType).map(row => (row.getBoolean(0), row.getLong(1), row.getBinary(2)))
+        val inputArray = input.asInstanceOf[InternalRow].getArray(0)
+        inputArray.toArray[InternalRow](ChipType).map(row => (row.getBoolean(0), row.getLong(1), row.getBinary(2)))
     }
 
     override def left: Expression = leftGeom

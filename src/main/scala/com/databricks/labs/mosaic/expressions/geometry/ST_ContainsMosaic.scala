@@ -6,7 +6,6 @@ import com.databricks.labs.mosaic.core.types.ChipType
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{BooleanType, DataType}
 
 case class ST_ContainsMosaic(leftGeom: Expression, rightGeom: Expression, geometryAPIName: String, indexSystemName: String)
@@ -29,21 +28,25 @@ case class ST_ContainsMosaic(leftGeom: Expression, rightGeom: Expression, geomet
             (f2, `k`, v2) <- rightChips
         } yield ((f1, f2), (v1, v2))
 
-        matches.foldLeft(true) { case (accumulator, (flags, geoms)) =>
-            accumulator && {
-                if (flags._2) {
-                    flags._1
-                } else {
-                    val leftChipGeom = geometryAPI.geometry(geoms._1, "WKB")
-                    val rightChipGeom = geometryAPI.geometry(geoms._2, "WKB")
-                    leftChipGeom.contains(rightChipGeom)
+        if (matches.isEmpty) false
+        else {
+            matches.foldLeft(true) { case (accumulator, (flags, geoms)) =>
+                accumulator && {
+                    if (flags._2) {
+                        flags._1
+                    } else {
+                        val leftChipGeom = geometryAPI.geometry(geoms._1, "WKB")
+                        val rightChipGeom = geometryAPI.geometry(geoms._2, "WKB")
+                        leftChipGeom.contains(rightChipGeom)
+                    }
                 }
             }
         }
     }
 
     private def getChips(input: Any): Seq[(Boolean, Long, Array[Byte])] = {
-        input.asInstanceOf[ArrayData].toArray[InternalRow](ChipType).map(row => (row.getBoolean(0), row.getLong(1), row.getBinary(2)))
+        val arrayData = input.asInstanceOf[InternalRow].getArray(0)
+        arrayData.toArray[InternalRow](ChipType).map(row => (row.getBoolean(0), row.getLong(1), row.getBinary(2)))
     }
 
     override def left: Expression = leftGeom
@@ -66,26 +69,26 @@ object ST_ContainsMosaic {
 
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-            classOf[ST_ContainsMosaic].getCanonicalName,
-            db.orNull,
-            "st_contains_mosaic",
-            """
-              |    _FUNC_(left_index, right_index)) - Resolves a contains based on matched indices.
+          classOf[ST_ContainsMosaic].getCanonicalName,
+          db.orNull,
+          "st_contains_mosaic",
+          """
+            |    _FUNC_(left_index, right_index)) - Resolves a contains based on matched indices.
             """.stripMargin,
-            "",
-            """
-              |    Examples:
-              |      > SELECT _FUNC_(a, b);
-              |        geom
-              |        geom
-              |        ...
-              |        geom
-              |  """.stripMargin,
-            "",
-            "agg_funcs",
-            "1.0",
-            "",
-            "built-in"
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a, b);
+            |        geom
+            |        geom
+            |        ...
+            |        geom
+            |  """.stripMargin,
+          "",
+          "agg_funcs",
+          "1.0",
+          "",
+          "built-in"
         )
 
 }

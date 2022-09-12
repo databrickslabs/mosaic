@@ -34,6 +34,10 @@ class ST_IntersectsTest extends QueryTest with SharedSparkSession with ST_Inters
     test("Testing stIntersectsAgg (H3, ESRI) NO_CODEGEN") { noCodegen { intersectsAggBehaviour(H3IndexSystem, ESRI) } }
     test("Testing stIntersectsAgg (BNG, JTS) NO_CODEGEN") { noCodegen { intersectsAggBehaviour(BNGIndexSystem, JTS) } }
     test("Testing stIntersectsAgg (BNG, ESRI) NO_CODEGEN") { noCodegen { intersectsAggBehaviour(BNGIndexSystem, ESRI) } }
+    test("Testing stIntersectsMosaic (H3, JTS) NO_CODEGEN") {noCodegen { intersectsMosaicBehaviour(H3IndexSystem, JTS) }}
+    test("Testing stIntersectsMosaic (H3, ESRI) NO_CODEGEN") {noCodegen { intersectsMosaicBehaviour(H3IndexSystem, ESRI) }}
+    test("Testing stIntersectsMosaic (BNG, JTS) NO_CODEGEN") {noCodegen { intersectsMosaicBehaviour(BNGIndexSystem, JTS) }}
+    test("Testing stIntersectsMosaic (BNG, ESRI) NO_CODEGEN") {noCodegen { intersectsMosaicBehaviour(BNGIndexSystem, ESRI) }}
     test("Testing stIntersects (H3, JTS) CODEGEN compilation") { codegenOnly { intersectsCodegen(H3IndexSystem, JTS) } }
     test("Testing stIntersects (H3, ESRI) CODEGEN compilation") { codegenOnly { intersectsCodegen(H3IndexSystem, ESRI) } }
     test("Testing stIntersects (BNG, JTS) CODEGEN compilation") { codegenOnly { intersectsCodegen(BNGIndexSystem, JTS) } }

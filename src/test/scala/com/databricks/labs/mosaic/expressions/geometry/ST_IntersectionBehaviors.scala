@@ -176,7 +176,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
               right,
               col("left.row_id") === col("right.row_id")
             )
-            .withColumn("intersection", st_intersection_mosaic(col("left.index"), col("right.index")))
+            .withColumn("intersection", st_intersection_mosaic(struct(col("left.index").alias("chips")), struct(col("right.index").alias("chips"))))
             .withColumn("area", st_area(col("intersection")))
 
         (results.select("area").as[Double].collect().head -
@@ -275,17 +275,17 @@ trait ST_IntersectionBehaviors extends QueryTest {
             UTF8String.fromString("POLYGON ((3 1, 4 4, 2 4, 1 2, 3 1))"),
             3,
             true,
-        ).asInstanceOf[InternalRow].getArray(0)
+        ).asInstanceOf[InternalRow]
         val rightMosaic = mosaicfill(lit(""), lit(3)).expr.asInstanceOf[MosaicFill].nullSafeEval(
             UTF8String.fromString("POLYGON ((3 1, 7 7, 2 4, 1 2, 3 1))"),
             3,
             true,
-        ).asInstanceOf[InternalRow].getArray(0)
+        ).asInstanceOf[InternalRow]
         val emptyMosaic = mosaicfill(lit(""), lit(3)).expr.asInstanceOf[MosaicFill].nullSafeEval(
             UTF8String.fromString("POLYGON EMPTY"),
             3,
             true,
-        ).asInstanceOf[InternalRow].getArray(0)
+        ).asInstanceOf[InternalRow]
 
         noException should be thrownBy stIntersectionMosaic.nullSafeEval(leftMosaic, rightMosaic)
         noException should be thrownBy stIntersectionMosaic.nullSafeEval(leftMosaic, emptyMosaic)
