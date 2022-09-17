@@ -51,6 +51,7 @@ object Mosaic {
             case MULTILINESTRING =>
                 val multiLine = geometry.asInstanceOf[MosaicMultiLineString]
                 multiLine.flatten.flatMap(line => lineDecompose(line.asInstanceOf[MosaicLineString], resolution, indexSystem, geometryAPI))
+            case gt               => throw new Error(s"$gt not supported for line fill/decompose operation.")
         }
     }
 
@@ -77,7 +78,7 @@ object Mosaic {
                 val indexGeom = indexSystem.indexToGeometry(current, geometryAPI)
                 val lineSegment = line.intersection(indexGeom)
                 if (!lineSegment.isEmpty) {
-                    val chip = MosaicChip(isCore = false, current, lineSegment)
+                    val chip = MosaicChip(isCore = false, Left(current), lineSegment)
                     val kRing = indexSystem.kRing(current, 1)
                     val toQueue = kRing.filterNot(newTraversed.contains)
                     (toQueue, accumulator._2 ++ Seq(chip))

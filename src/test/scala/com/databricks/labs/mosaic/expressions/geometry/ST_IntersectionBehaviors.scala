@@ -3,16 +3,19 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.labs.mosaic.core.types.ChipType
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.matchers.must.Matchers.noException
-import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
+import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
 trait ST_IntersectionBehaviors extends QueryTest {
 
@@ -212,6 +215,23 @@ trait ST_IntersectionBehaviors extends QueryTest {
 
         stIntersection.dataType shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr.dataType
         noException should be thrownBy stIntersection.makeCopy(stIntersection.children.toArray)
+
+        val stringIDRow = indexSystem match {
+            case BNGIndexSystem => InternalRow.fromSeq(Seq(true, UTF8String.fromString("TQ3879"), Array.empty[Byte]))
+            case H3IndexSystem  => InternalRow.fromSeq(Seq(true, UTF8String.fromString("8a2a1072b59ffff"), Array.empty[Byte]))
+        }
+        val longIDRow = indexSystem match {
+            case BNGIndexSystem => InternalRow.fromSeq(Seq(true, 1050138790L, Array.empty[Byte]))
+            case H3IndexSystem  => InternalRow.fromSeq(Seq(true, 622236750694711295L, Array.empty[Byte]))
+        }
+
+        val stIntersectionAgg = ST_IntersectionAggregate(null, null, geometryAPI.name, indexSystem.name, 0, 0)
+        noException should be thrownBy stIntersectionAgg.getCellGeom(stringIDRow, ChipType(StringType))
+        noException should be thrownBy stIntersectionAgg.getCellGeom(longIDRow, ChipType(LongType))
+        an[Error] should be thrownBy stIntersectionAgg.getCellGeom(
+          longIDRow,
+          new StructType().add("f1", BooleanType).add("index_id", BooleanType)
+        )
 
     }
 
