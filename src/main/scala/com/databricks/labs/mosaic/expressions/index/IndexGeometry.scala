@@ -2,10 +2,12 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystemID
-
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo, NullIntolerant, UnaryExpression}
+import com.databricks.labs.mosaic.core.types.InternalGeometryType
+import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
+import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 
 @ExpressionDescription(
   usage = "_FUNC_(indexID, indexSystem) - Returns the geometry representing the grid cell.",
@@ -16,19 +18,40 @@ import org.apache.spark.sql.types._
   """,
   since = "1.0"
 )
-case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryAPIName: String)
-    extends UnaryExpression
+case class IndexGeometry(indexID: Expression, format: Expression, indexSystemName: String, geometryAPIName: String)
+    extends BinaryExpression
       with NullIntolerant
       with CodegenFallback {
 
     /** Expression output DataType. */
-    // Return WKB, if other type is required call ConvertTO
-    override def dataType: DataType = BinaryType
+    override def dataType: DataType = {
+        val formatExpr = format.asInstanceOf[Literal]
+        val formatName = formatExpr.value.asInstanceOf[UTF8String].toString
+        formatName match {
+            case "WKT"     => StringType
+            case "WKB"     => BinaryType
+            case "GEOJSON" => StringType
+            case "COORDS"  => InternalGeometryType
+            case _         => throw new Error(s"Format name can only be 'WKT', 'WKB', 'GEOJSON' or 'COORDS', but $formatName was provided.")
+        }
+    }
 
-    override def toString: String = s"index_geometry($indexID)"
+    override def checkInputDataTypes(): TypeCheckResult = {
+        (indexID.dataType, format.dataType) match {
+            case (LongType, StringType)    => TypeCheckResult.TypeCheckSuccess
+            case (IntegerType, StringType)    => TypeCheckResult.TypeCheckSuccess
+            case (StringType, StringType)  => TypeCheckResult.TypeCheckSuccess
+            case _                         => TypeCheckResult.TypeCheckFailure(
+                  s"CellGeometry expression only supports numerical and string cell IDs and StringType for format." +
+                      s"But ${indexID.dataType} was provided for ID and ${format.dataType} was provided for format."
+                )
+        }
+    }
+
+    override def toString: String = s"grid_boundaryaswkb($indexID)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "index_geometry"
+    override def prettyName: String = "grid_boundaryaswkb"
 
     /**
       * Computes grid cell shape as a polygon from the cell ID
@@ -39,23 +62,32 @@ case class IndexGeometry(indexID: Expression, indexSystemName: String, geometryA
       *   A polygon in WKB format representing the cell identified by the
       *   provided ID
       */
-    override def nullSafeEval(input1: Any): Any = {
+    override def nullSafeEval(input1: Any, input2: Any): Any = {
         val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         val geometryAPI = GeometryAPI(geometryAPIName)
-        val indexGeometry = indexSystem.indexToGeometry(input1.asInstanceOf[Long], geometryAPI)
-        indexGeometry.toWKB
+        val formatName = input2.asInstanceOf[UTF8String].toString
+        val indexGeometry = indexID.dataType match {
+            case LongType    => indexSystem.indexToGeometry(input1.asInstanceOf[Long], geometryAPI)
+            case IntegerType => indexSystem.indexToGeometry(input1.asInstanceOf[Int], geometryAPI)
+            case StringType  => indexSystem.indexToGeometry(input1.asInstanceOf[UTF8String].toString, geometryAPI)
+            case _           => throw new Error(s"${indexID.dataType} not supported.")
+        }
+        geometryAPI.serialize(indexGeometry, formatName)
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val arg1 = newArgs.head.asInstanceOf[Expression]
-        val res = IndexGeometry(arg1, indexSystemName, geometryAPIName)
+        val arg2 = newArgs(1).asInstanceOf[Expression]
+        val res = IndexGeometry(arg1, arg2, indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
 
-    override def child: Expression = indexID
+    override def left: Expression = indexID
 
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(indexID = newChild)
+    override def right: Expression = format
+
+    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = copy(newLeft, newRight)
 
 }
 
@@ -66,7 +98,7 @@ object IndexGeometry {
         new ExpressionInfo(
           classOf[IndexGeometry].getCanonicalName,
           db.orNull,
-          "index_geometry",
+          "grid_boundaryaswkb",
           """
             |    _FUNC_(indexID, indexSystem) - Returns the geometry representing the index.
             """.stripMargin,

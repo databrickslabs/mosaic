@@ -102,10 +102,18 @@ get_function_names <- function(scala_file_path){
   start_string = "    object functions extends Serializable {"
   start_index = grep(start_string, scala_file, fixed=T) + 1
   # find the methods end - will be the next curly bracket
+  # need to find where the matching end brace for the start string is located.
+  brace_counter = 1
+
   for(i in start_index : length(scala_file)){
-    if(grepl("}", scala_file[i], fixed=T)){
-      break
+    if(grepl("{", scala_file[i], fixed=T)){
+      brace_counter = brace_counter + 1
     }
+    else if(grepl("}", scala_file[i], fixed=T)){
+      brace_counter = brace_counter -1
+      if (brace_counter == 0) break
+    }
+
   }
   methods_to_bind = scala_file[start_index:i]
   # remove any line that doesn't start with def
