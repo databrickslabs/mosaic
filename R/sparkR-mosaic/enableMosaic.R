@@ -12,7 +12,7 @@
 #' \dontrun{
 #' enableMosaic()
 #' enableMosaic("ESRI", "H3")
-#' enableMosaic("ESRI", "BNG") # Not yet supported}
+#' enableMosaic("ESRI", "BNG") }
 enableMosaic <- function(
   geometryAPI="ESRI"
   ,indexSystem="H3"
@@ -21,6 +21,7 @@ enableMosaic <- function(
   index_system_id <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemID", methodName="apply", indexSystem)
   indexing_system <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemID", methodName="getIndexSystem", index_system_id)
   mosaic_context <- sparkR.newJObject(x="com.databricks.labs.mosaic.functions.MosaicContext", indexing_system, geometry_api)
+  sparkR.callJMethod(mosaic_context, "register")
   functions <<- sparkR.callJMethod(mosaic_context, "functions")
   
 }
