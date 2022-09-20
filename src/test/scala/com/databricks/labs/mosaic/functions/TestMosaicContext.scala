@@ -2,12 +2,12 @@ package com.databricks.labs.mosaic.functions
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.expressions.index.PointIndexLonLat
 import com.databricks.labs.mosaic.test.SparkSuite
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
+import org.apache.spark.sql.types.LongType
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -15,7 +15,9 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
 
     "MosaicContext" should "detect if product H3 is enabled" in {
 
-        val mc = MosaicContext.build(stub[IndexSystem], stub[GeometryAPI])
+        val ix = stub[IndexSystem]
+        ix.defaultDataTypeID _ when () returns LongType
+        val mc = MosaicContext.build(ix, stub[GeometryAPI])
 
         val registry = spark.sessionState.functionRegistry
 
@@ -36,6 +38,7 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
         val functionBuilder = stub[FunctionBuilder]
         val indexSystem = stub[IndexSystem]
         indexSystem.name _ when () returns "H3"
+        indexSystem.defaultDataTypeID _ when () returns LongType
 
         val mc = MosaicContext.build(indexSystem, stub[GeometryAPI])
 
