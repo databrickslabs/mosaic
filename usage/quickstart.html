@@ -1153,12 +1153,12 @@ only showing top 20 rows
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import point_index
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import point_index_lonlat
 
 trips_with_geom = (
   trips
-  .withColumn("pickup_h3", point_index(lng="pickup_longitude", lat="pickup_latitude", resolution=lit(10)))
-  .withColumn("dropoff_h3", point_index(lng="dropoff_longitude", lat="dropoff_latitude", resolution=lit(10)))
+  .withColumn("pickup_h3", point_index_lonlat(lon="pickup_longitude", lat="pickup_latitude", resolution=lit(10)))
+  .withColumn("dropoff_h3", point_index_lonlat(lon="dropoff_longitude", lat="dropoff_latitude", resolution=lit(10)))
 )
 
 trips_with_geom.show()
@@ -1409,7 +1409,7 @@ displayMosaic(mosaic_neighbourhoods)
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import st_aswkt
 (
   mosaic_neighbourhoods
-  .select(st_aswkt(col("wkb")).alias("wkt"), col("h3"))
+  .select(st_aswkt(col("index.wkb")).alias("wkt"), col("index.index_id").alias("h3"))
 ).createOrReplaceTempView("kepler_df")
 </pre></div>
 </div>
@@ -1516,10 +1516,10 @@ displayMosaic(mosaic_neighbourhoods)
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>mosaic_joined_df = (
   trips_with_geom.alias("t")
-  .join(mosaic_neighbourhoods.alias("n"), on=expr("t.pickup_h3 = n.h3"), how="inner")
+  .join(mosaic_neighbourhoods.alias("n"), on=expr("t.pickup_h3 = n.index.index_id"), how="inner")
   .where(
-    ~col("is_core") |
-    st_contains("wkb", "pickup_geom")
+    ~col("index.is_core") |
+    st_contains("index.wkb", "pickup_geom")
   )
 )
 

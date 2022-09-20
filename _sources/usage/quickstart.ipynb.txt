@@ -617,7 +617,7 @@
   {
    "cell_type": "code",
    "source": [
-    "from mosaic import point_index\n\ntrips_with_geom = (\n  trips\n  .withColumn(\"pickup_h3\", point_index(lng=\"pickup_longitude\", lat=\"pickup_latitude\", resolution=lit(10)))\n  .withColumn(\"dropoff_h3\", point_index(lng=\"dropoff_longitude\", lat=\"dropoff_latitude\", resolution=lit(10)))\n)\n\ntrips_with_geom.show()"
+    "from mosaic import point_index_lonlat\n\ntrips_with_geom = (\n  trips\n  .withColumn(\"pickup_h3\", point_index_lonlat(lon=\"pickup_longitude\", lat=\"pickup_latitude\", resolution=lit(10)))\n  .withColumn(\"dropoff_h3\", point_index_lonlat(lon=\"dropoff_longitude\", lat=\"dropoff_latitude\", resolution=lit(10)))\n)\n\ntrips_with_geom.show()"
    ],
    "metadata": {
     "application/vnd.databricks.v1+cell": {
@@ -9909,7 +9909,7 @@
   {
    "cell_type": "code",
    "source": [
-    "from mosaic import st_aswkt\n(\n  mosaic_neighbourhoods\n  .select(st_aswkt(col(\"wkb\")).alias(\"wkt\"), col(\"h3\"))\n).createOrReplaceTempView(\"kepler_df\")"
+    "from mosaic import st_aswkt\n(\n  mosaic_neighbourhoods\n  .select(st_aswkt(col(\"index.wkb\")).alias(\"wkt\"), col(\"index.index_id\").alias(\"h3\"))\n).createOrReplaceTempView(\"kepler_df\")"
    ],
    "metadata": {
     "application/vnd.databricks.v1+cell": {
@@ -10049,7 +10049,7 @@
   {
    "cell_type": "code",
    "source": [
-    "mosaic_joined_df = (\n  trips_with_geom.alias(\"t\")\n  .join(mosaic_neighbourhoods.alias(\"n\"), on=expr(\"t.pickup_h3 = n.h3\"), how=\"inner\")\n  .where(\n    ~col(\"is_core\") | \n    st_contains(\"wkb\", \"pickup_geom\")\n  )\n)\n\nmosaic_joined_df.show()"
+    "mosaic_joined_df = (\n  trips_with_geom.alias(\"t\")\n  .join(mosaic_neighbourhoods.alias(\"n\"), on=expr(\"t.pickup_h3 = n.index.index_id\"), how=\"inner\")\n  .where(\n    ~col(\"index.is_core\") | \n    st_contains(\"index.wkb\", \"pickup_geom\")\n  )\n)\n\nmosaic_joined_df.show()"
    ],
    "metadata": {
     "application/vnd.databricks.v1+cell": {
