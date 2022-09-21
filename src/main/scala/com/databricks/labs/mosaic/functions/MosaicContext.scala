@@ -645,7 +645,7 @@ object MosaicContext {
         context
     }
 
-    def context: MosaicContext =
+    def context(): MosaicContext =
         instance match {
             case Some(context) => context
             case None          => throw new Error("MosaicContext was not built.")
@@ -653,8 +653,8 @@ object MosaicContext {
 
     def reset(): Unit = instance = None
 
-    def geometryAPI: GeometryAPI = context.getGeometryAPI
+    def geometryAPI(): GeometryAPI = context.getGeometryAPI
 
-    def indexSystem: IndexSystem = context.getIndexSystem
+    def indexSystem(): IndexSystem = context.getIndexSystem
 
 }
