@@ -164,6 +164,8 @@ build_sparklyr_mosaic_function <- function(input){
   sparklyr::invoke(functions, "%s", spark_session(sc))
 }', function_name, function_name
     )
+    ,"#' @examples\n"
+    ," mutate(sparklyr_df, ", function_name, "(inputs)"
   )
 }
 
