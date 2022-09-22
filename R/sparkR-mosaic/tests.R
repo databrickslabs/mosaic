@@ -15,7 +15,7 @@ library(sparkrMosaic)
 # find the mosaic jar in staging
 staging_dir = "/home/runner/work/mosaic/mosaic/staging/"
 mosaic_jar <- list.files(staging_dir)
-mosaic_jar <- mosaic_jar[grep("jar-with-dependencies.jar", mosaic_jar, fixed=T)]
+mosaic_jar <- mosaic_jar[grep("SNAPSHOT-jar-with-dependencies.jar", mosaic_jar, fixed=T)]
 print("Looking for mosaic jar in")
 mosaic_jar_path = paste0(staging_dir, mosaic_jar)
 print(mosaic_jar_path)

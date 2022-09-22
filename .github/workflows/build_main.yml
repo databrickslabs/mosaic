@@ -6,6 +6,8 @@ on:
       - "!r/*"
       - "!python/*"
       - "!scala/*"
+      - "feature/*"
+      - "Feature/*"
   pull_request:
     branches:
       - '**'
