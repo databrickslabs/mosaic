@@ -36,4 +36,11 @@ class TestPolyfill extends AnyFlatSpec with PolyfillBehaviors with SparkSuite {
         it should behave like coordsPolyfill(MosaicContext.build(BNGIndexSystem, JTS), spark, 4)
     }
 
+    "Polyfill" should "correctly evaluate auxiliary methods." in {
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, JTS), spark)
+    }
+
 }

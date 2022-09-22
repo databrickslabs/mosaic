@@ -36,6 +36,46 @@ class MosaicFrame(DataFrame):
             The name of the primary geometry in this spatial dataframe.
         """
 
+    def get_optimal_resolution_str(
+            self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None
+        ) -> str:
+        """
+        Analyzes the geometries in the currently selected geometry column and proposes an optimal
+        grid-index resolution.
+
+        Provide either `sample_rows` or `sample_fraction` parameters to control how much data is passed to the analyzer.
+        (Providing too little data to the analyzer may result in a `NotEnoughGeometriesException`)
+
+        Parameters
+        ----------
+        sample_rows: int, optional
+            The number of rows to sample.
+        sample_fraction: float, optional
+            The proportion of rows to sample.
+
+        Returns
+        -------
+        str
+            The recommended grid-index resolution to apply to this MosaicFrame.
+        """
+        optionClass = getattr(self.sc._jvm.scala, "Option$")
+        optionModule = getattr(optionClass, "MODULE$")
+        sampleStrategyClass = getattr(
+            self.sc._jvm.com.databricks.labs.mosaic.sql, "SampleStrategy"
+        )
+        if sample_rows:
+            sampleStrategy = sampleStrategyClass(
+                optionModule.apply(None), optionModule.apply(sample_rows)
+            )
+            return self._mosaicFrame.analyzer().getOptimalResolutionStr(sampleStrategy)
+        if sample_fraction:
+            sampleStrategy = sampleStrategyClass(
+                optionModule.apply(sample_fraction), optionModule.apply(None)
+            )
+            return self._mosaicFrame.analyzer().getOptimalResolutionStr(sampleStrategy)
+        return self._mosaicFrame.analyzer().getOptimalResolutionStr()
+
+
     def get_optimal_resolution(
         self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None
     ) -> int:

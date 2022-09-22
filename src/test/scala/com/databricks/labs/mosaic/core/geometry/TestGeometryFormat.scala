@@ -15,7 +15,7 @@ class TestGeometryFormat extends AnyFlatSpec {
     }
 
     it should "throw an exception for unknown types" in {
-        assertThrows[NotImplementedError](GeometryFormat.getDefaultFormat(DoubleType))
+        assertThrows[Error](GeometryFormat.getDefaultFormat(DoubleType))
     }
 
 }

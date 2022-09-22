@@ -3,12 +3,19 @@ package com.databricks.labs.mosaic.core.index
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.MosaicChip
+import org.apache.spark.sql.types.DataType
 
 /**
   * Defines the API that all index systems need to respect for Mosaic to support
   * them.
   */
 trait IndexSystem extends Serializable {
+
+    def getResolutionStr(resolution: Int): String
+
+    def format(id: Long): String
+
+    def defaultDataTypeID: DataType
 
     /**
       * Get the k ring of indices around the provided index id.
@@ -129,7 +136,7 @@ trait IndexSystem extends Serializable {
 
             val chipGeom = if (!isCore || keepCoreGeom) intersect else null
 
-            MosaicChip(isCore = isCore, index, chipGeom)
+            MosaicChip(isCore = isCore, Left(index), chipGeom)
         }
         intersections.filterNot(_.isEmpty)
     }
@@ -145,7 +152,12 @@ trait IndexSystem extends Serializable {
       * @return
       *   A core area representation via [[MosaicChip]] set.
       */
-    def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip]
+    def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
+        coreIndices.map(index => {
+            val indexGeom = if (keepCoreGeom) indexToGeometry(index, geometryAPI) else null
+            MosaicChip(isCore = true, Left(index), indexGeom)
+        })
+    }
 
     /**
       * Get the geometry corresponding to the index with the input id.
@@ -156,6 +168,16 @@ trait IndexSystem extends Serializable {
       *   An instance of [[MosaicGeometry]] corresponding to index.
       */
     def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry
+
+    /**
+     * Get the geometry corresponding to the index with the input id.
+     *
+     * @param index
+     *   Id of the index whose geometry should be returned.
+     * @return
+     *   An instance of [[MosaicGeometry]] corresponding to index.
+     */
+    def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry
 
     /**
       * Get the index ID corresponding to the provided coordinates.

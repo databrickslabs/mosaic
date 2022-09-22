@@ -1,13 +1,13 @@
 package com.databricks.labs.mosaic.core.index
 
-import scala.collection.JavaConverters._
-
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
-import com.databricks.labs.mosaic.core.types.model.MosaicChip
 import com.uber.h3core.H3Core
+import org.apache.spark.sql.types.{DataType, LongType}
 import org.locationtech.jts.geom.Geometry
+
+import scala.collection.JavaConverters._
 
 /**
   * Implements the [[IndexSystem]] via [[H3Core]] java bindings.
@@ -115,21 +115,6 @@ object H3IndexSystem extends IndexSystem with Serializable {
     }
 
     /**
-      * @see
-      *   [[IndexSystem.getCoreChips()]]
-      * @param coreIndices
-      *   Indices corresponding to the core area of the input geometry.
-      * @return
-      *   A core area representation via [[MosaicChip]] set.
-      */
-    override def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
-        coreIndices.map(index => {
-            val indexGeom = if (keepCoreGeom) indexToGeometry(index, geometryAPI) else null
-            MosaicChip(isCore = true, index, indexGeom)
-        })
-    }
-
-    /**
       * Returns the index system ID instance that uniquely identifies an index
       * system. This instance is used to select appropriate Mosaic expressions.
       *
@@ -192,5 +177,28 @@ object H3IndexSystem extends IndexSystem with Serializable {
       *   A set of supported resolutions.
       */
     override def resolutions: Set[Int] = (0 to 15).toSet
+
+    /**
+      * Get the geometry corresponding to the index with the input id.
+      *
+      * @param index
+      *   Id of the index whose geometry should be returned.
+      * @return
+      *   An instance of [[MosaicGeometry]] corresponding to index.
+      */
+    override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = {
+        val boundary = h3.h3ToGeoBoundary(index).asScala
+        val extended = boundary ++ List(boundary.head)
+        geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord), POLYGON)
+    }
+
+    override def defaultDataTypeID: DataType = LongType
+
+    override def format(id: Long): String = {
+        val geo = h3.h3ToGeo(id)
+        h3.geoToH3Address(geo.lat, geo.lng, h3.h3GetResolution(id))
+    }
+
+    override def getResolutionStr(resolution: Int): String = resolution.toString
 
 }

@@ -2,9 +2,6 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.esri.core.geometry.ogc.OGCGeometry
-import org.locationtech.jts.geom.{Geometry => JTSGeometry}
-
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
@@ -41,31 +38,17 @@ case class ST_Buffer(inputGeom: Expression, radius: Expression, geometryAPIName:
           (leftEval, rightEval) => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val buffered = ctx.freshName("buffered")
-              val ogcPolygonClass = classOf[OGCGeometry].getName
-              val jtsPolygonClass = classOf[JTSGeometry].getName
+              val polygonClass = geometryAPI.geometryClass
+
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
               val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, buffered, inputGeom.dataType, geometryAPI)
-              // not merged into the same code block due to JTS IOException throwing
-              // ESRI code will always remain simpler
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                    |$inCode
-                                    |$ogcPolygonClass $buffered = $geomInRef.buffer($rightEval);
-                                    |$outCode
-                                    |${ev.value} = $outGeomRef;
-                                    |""".stripMargin
-                  case "JTS"  => s"""
-                                   |try {
-                                   |$inCode
-                                   |$jtsPolygonClass $buffered = $geomInRef.buffer($rightEval);
-                                   |$outCode
-                                   |${ev.value} = $outGeomRef;
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
 
-              }
+              geometryAPI.codeGenTryWrap(s"""
+                                            |$inCode
+                                            |$polygonClass $buffered = $geomInRef.buffer($rightEval);
+                                            |$outCode
+                                            |${ev.value} = $outGeomRef;
+                                            |""".stripMargin)
           }
         )
 

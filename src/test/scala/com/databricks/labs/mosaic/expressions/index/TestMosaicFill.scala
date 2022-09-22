@@ -43,4 +43,11 @@ class TestMosaicFill extends AnyFlatSpec with MosaicFillBehaviors with SparkSuit
         it should behave like wktMosaicFillKeepCoreGeom(MosaicContext.build(BNGIndexSystem, JTS), spark, 4)
     }
 
+    "MosaicFill" should "correctly evaluate auxiliary methods." in {
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, JTS), spark)
+    }
+
 }

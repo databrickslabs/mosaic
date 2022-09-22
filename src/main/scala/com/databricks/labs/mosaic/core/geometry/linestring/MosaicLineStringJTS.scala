@@ -2,12 +2,10 @@ package com.databricks.labs.mosaic.core.geometry.linestring
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINEARRING, LINESTRING, POINT}
-import com.esotericsoftware.kryo.io.Input
-import org.locationtech.jts.geom._
-
+import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.catalyst.InternalRow
+import org.locationtech.jts.geom._
 
 class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(lineString) with MosaicLineString {
 
@@ -56,11 +54,9 @@ object MosaicLineStringJTS extends GeometryReader {
                 val extractedPoints = geomSeq.map(_.asInstanceOf[MosaicPointJTS])
                 gf.createLineString(extractedPoints.map(_.coord).toArray)
             case other: GeometryTypeEnum.Value if other == LINESTRING =>
-                // scalastyle:off throwerror
-                throw new NotImplementedError(
+                throw new Error(
                   s"Joining a sequence of ${other.toString} to create a ${geomType.toString} geometry is not yet supported"
                 )
-            // scalastyle:on throwerror
             case other: GeometryTypeEnum.Value                        => throw new UnsupportedOperationException(
                   s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
                 )
@@ -88,11 +84,5 @@ object MosaicLineStringJTS extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = {
-        val kryoBytes = row.getBinary(1)
-        val input = new Input(kryoBytes)
-        MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicLineStringJTS])
-    }
 
 }

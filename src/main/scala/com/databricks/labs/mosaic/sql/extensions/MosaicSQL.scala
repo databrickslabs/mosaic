@@ -32,7 +32,7 @@ class MosaicSQL extends (SparkSessionExtensions => Unit) with Logging {
                 case ("H3", "ESRI")  => MosaicContext.build(H3IndexSystem, ESRI)
                 case ("BNG", "JTS")  => MosaicContext.build(BNGIndexSystem, JTS)
                 case ("BNG", "ESRI") => MosaicContext.build(BNGIndexSystem, ESRI)
-                case (is, gapi)      => throw new IllegalArgumentException(s"Index system and geometry API: ($is, $gapi) not supported.")
+                case (is, gapi)      => throw new Error(s"Index system and geometry API: ($is, $gapi) not supported.")
             }
             logInfo(s"Registering Mosaic SQL Extensions ($indexSystem, $geometryAPI).")
             mosaicContext.register(spark)

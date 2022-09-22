@@ -1,3 +1,14 @@
+## v0.2.1
+- Added CodeQL scanner
+- Added Ship-to-Ship transfer detection example
+- Added Open Street Maps ingestion and processing example
+- Fixed geoJSON conversion DataType
+- Fixed SparkR mirror URL
+- Fixed R dependencies
+- Fixed comments in pom.xml
+- Updated and polished Readme and example files
+- Switched to `published` release type
+
 ## v0.2.0
 - Support for British National Grid index system
 - Improved documentation (installation instructions and coverage of functions)

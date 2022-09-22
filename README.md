@@ -13,17 +13,17 @@ An extension to the [Apache Spark](https://spark.apache.org/) framework that all
 
 ## Why Mosaic?
 
-Mosaic was created to simplify the implementation of scalable geospatial data pipelines by bunding together common Open Source geospatial libraries via Apache Spark, with a set of [examples and best practices](notebooks/examples) for common geospatial use cases.
+Mosaic was created to simplify the implementation of scalable geospatial data pipelines by bounding together common Open Source geospatial libraries via Apache Spark, with a set of [examples and best practices](#examples) for common geospatial use cases.
 
 
 ## What does it provide?
 Mosaic provides geospatial tools for
 * Data ingestion (WKT, WKB, GeoJSON)
-* Data procesing
+* Data processing
     * Geometry and geography `ST_` operations (with [ESRI](https://github.com/Esri/geometry-api-java) or [JTS](https://github.com/locationtech/jts)) 
     * Indexing (with [H3](https://github.com/uber/h3) or BNG)
-    * Chipping of polygons and lines over an indexing grid [co-developed with Ordnance Survey](https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html)
-* Data visualisation ([Kepler](https://github.com/keplergl/kepler.gl))
+    * Chipping of polygons and lines over an indexing grid [co-developed with Ordnance Survey and Microsoft](https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html)
+* Data visualization ([Kepler](https://github.com/keplergl/kepler.gl))
 
 ![mosaic-general-pipeline](src/main/resources/MosaicGeneralPipeline.png)
 
@@ -31,7 +31,7 @@ The supported languages are Scala, Python, R, and SQL.
 
 ## How does it work?
 
-The Mosaic library is written in Scala to guarantee the maximum performance with Spark, and when possible it uses code generation to give an extra performance boost.
+The Mosaic library is written in Scala to guarantee maximum performance with Spark and when possible, it uses code generation to give an extra performance boost.
 
 The other supported languages (Python, R and SQL) are thin wrappers around the Scala code.
 
@@ -42,6 +42,10 @@ Image1: Mosaic logical design.
 ## Getting started
 
 Create a Databricks cluster running __Databricks Runtime 10.0__ (or later).
+
+### Documentation
+
+Check out the [documentation pages](https://databrickslabs.github.io/mosaic/).
 
 ### Python
 
@@ -100,6 +104,17 @@ import com.databricks.labs.mosaic.ESRI
 val mosaicContext = MosaicContext.build(H3, ESRI)
 mosaicContext.register(spark)
 ```
+
+
+## Examples
+
+| Example | Description | Links |
+| --- | --- | --- |
+| __Quick Start__ | Example of performing spatial point-in-polygon joins on the NYC Taxi dataset | [python](/notebooks/examples/python/QuickstartNotebook.py), [scala](notebooks/examples/scala/QuickstartNotebook.scala), [R](notebooks/examples/R/QuickstartNotebook.r), [SQL](notebooks/examples/sql/QuickstartNotebook.sql) | 
+| Open Street Maps | Ingesting and processing with Delta Live Tables the Open Street Maps dataset to extract buildings polygons and calculate aggregation statistics over H3 indexes | [python](notebooks/examples/python/OpenStreetMaps) |
+| STS Transfers | Detecting Ship-to-Ship transfers at scale by leveraging Mosaic to process AIS data. | [python](notebooks/examples/python/Ship2ShipTransfers), [blog](https://medium.com/@timo.roest/ship-to-ship-transfer-detection-b370dd9d43e8) |
+
+You can import those examples in Databricks workspace using [these instructions](https://docs.databricks.com/notebooks/notebooks-manage.html#import-a-notebook).
 
 ## Ecosystem
 Mosaic is intended to augment the existing system and unlock the potential by integrating spark, delta and 3rd party frameworks into the Lakehouse architecture.

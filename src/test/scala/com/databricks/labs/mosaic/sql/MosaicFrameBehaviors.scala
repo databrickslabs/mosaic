@@ -1,11 +1,11 @@
 package com.databricks.labs.mosaic.sql
 
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 
@@ -67,6 +67,15 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
             MosaicSQLExceptions.NotEnoughGeometriesException.getMessage
 
         mdf.getOptimalResolution(10) shouldBe expectedResolution
+        mdf.analyzer.getOptimalResolution shouldBe expectedResolution
+        mosaicContext.getIndexSystem match {
+            case BNGIndexSystem =>
+                mdf.analyzer.getOptimalResolutionStr(SampleStrategy(sampleRows = Some(10))) shouldBe "500m"
+                mdf.analyzer.getOptimalResolutionStr shouldBe "500m"
+            case H3IndexSystem =>
+                mdf.analyzer.getOptimalResolutionStr(SampleStrategy(sampleRows = Some(10))) shouldBe expectedResolution.toString
+                mdf.analyzer.getOptimalResolutionStr shouldBe expectedResolution.toString
+        }
 
         the[Exception] thrownBy mdf.getOptimalResolution should have message
             MosaicSQLExceptions.NotEnoughGeometriesException.getMessage

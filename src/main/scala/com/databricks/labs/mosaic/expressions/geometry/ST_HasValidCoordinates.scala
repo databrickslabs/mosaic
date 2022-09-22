@@ -1,14 +1,13 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import java.util.Locale
-
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.{BooleanType, DataType}
 import org.apache.spark.unsafe.types.UTF8String
+
+import java.util.Locale
 
 case class ST_HasValidCoordinates(
     inputGeom: Expression,
@@ -38,7 +37,7 @@ case class ST_HasValidCoordinates(
         val crsBounds = whichIn.toLowerCase(Locale.ROOT) match {
             case "bounds"             => crsBoundsProvider.bounds(crsCodeIn(0), crsCodeIn(1).toInt)
             case "reprojected_bounds" => crsBoundsProvider.reprojectedBounds(crsCodeIn(0), crsCodeIn(1).toInt)
-            case _ => throw new IllegalArgumentException("Only boundary and reprojected_boundary supported for which argument.")
+            case _ => throw new Error("Only boundary and reprojected_boundary supported for which argument.")
         }
         (Seq(geomIn.getShellPoints) ++ geomIn.getHolePoints).flatten.flatten.forall(point =>
             crsBounds.lowerLeft.getX <= point.getX && point.getX <= crsBounds.upperRight.getX &&
@@ -47,7 +46,7 @@ case class ST_HasValidCoordinates(
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
+        val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
         val res = ST_HasValidCoordinates(asArray(0), asArray(1), asArray(2), geometryAPIName)
         res.copyTagsFrom(this)
         res
@@ -63,13 +62,13 @@ object ST_HasValidCoordinates {
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-            classOf[ST_HasValidCoordinates].getCanonicalName,
-            db.orNull,
-            "ST_HasValidCoordinates",
-            """
-              |    _FUNC_(expr1, expr2, expr3) - Checks if all points in geometry have
-              |    valid coordinates with respect to provided crs code and
-              |    the type of bounds.
+          classOf[ST_HasValidCoordinates].getCanonicalName,
+          db.orNull,
+          "ST_HasValidCoordinates",
+          """
+            |    _FUNC_(expr1, expr2, expr3) - Checks if all points in geometry have
+            |    valid coordinates with respect to provided crs code and
+            |    the type of bounds.
             """.stripMargin,
           "",
           """
