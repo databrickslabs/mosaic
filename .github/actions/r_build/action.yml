@@ -33,4 +33,4 @@ runs:
       shell: bash
       run: |
         cp R/sparkR-mosaic/*.tar.gz staging
-        cp R/sparklyrMosaic/*.tar.gz staging
+        cp R/sparklyr-mosaic/*.tar.gz staging
