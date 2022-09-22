@@ -23,16 +23,18 @@ for(repo in names(mirror_status)){
   }
 }
 
-install.packages("devtools", repos=repo)
+install.packages("pkgbuild", repos=repo)
 install.packages("roxygen2", repos=repo)
 install.packages("sparklyr", repos=repo)
-devtools::install_github("apache/spark@v3.2.1", subdir='R/pkg')
+spark_location <- "/usr/spark-download/unzipped/spark-3.2.1-bin-hadoop2.7"
+Sys.setenv(SPARK_HOME = spark_location)
 
-library(devtools)
+library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
+
+
+library(pkgbuild)
 library(roxygen2)
-library(SparkR)
 library(sparklyr)
-SparkR::install.spark(mirrorUrl="https://archive.apache.org/dist/spark")
 
 
 
@@ -43,13 +45,13 @@ build_mosaic_bindings <- function(){
   system(system_cmd)
 
   # build doc
-  devtools::document("sparkR-mosaic/sparkrMosaic")
-  devtools::document("sparklyr-mosaic/sparklyrMosaic")
+  roxygen2::roxygenize("sparkR-mosaic/sparkrMosaic")
+  roxygen2::roxygenize("sparklyr-mosaic/sparklyrMosaic")
   
   
   ## build package
-  devtools::build("sparkR-mosaic/sparkrMosaic")
-  devtools::build("sparklyr-mosaic/sparklyrMosaic")
+  pkgbuild::build("sparkR-mosaic/sparkrMosaic")
+  pkgbuild::build("sparklyr-mosaic/sparklyrMosaic")
   
 }
 
