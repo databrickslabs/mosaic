@@ -22,5 +22,6 @@ enableMosaic <- function(
   indexing_system <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemID", methodName="getIndexSystem", index_system_id)
   mosaic_context <- sparkR.newJObject(x="com.databricks.labs.mosaic.functions.MosaicContext", indexing_system, geometry_api)
   functions <<- sparkR.callJMethod(mosaic_context, "functions")
+  # register the sql functions for use in sql() commands
   sparkR.callJMethod(mosaic_context, "register")
 }
