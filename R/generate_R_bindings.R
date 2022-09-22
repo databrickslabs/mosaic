@@ -156,16 +156,18 @@ build_sparklyr_mosaic_function <- function(input){
   function_name = input$function_name
   paste0(
     
-    "#' ", function_name, '\n', 
+    "#' ", function_name, "\n\n",
     "#' See \\url{https://databrickslabs.github.io/mosaic/} for full documentation\n",
-    '#\' @rdname ', function_name,'\n',
+    '#\' @rdname ', function_name,'\n'
+    
+    ,"\n#' @examples\n#' \\dontrun{\n"
+    ,"#' mutate(sparklyr_df, ", function_name, "(inputs))\n#' }\n"
+    ,
     sprintf(
       '%s <- function(sc){
   sparklyr::invoke(functions, "%s", spark_session(sc))
 }', function_name, function_name
     )
-    ,"#' @examples\n"
-    ," mutate(sparklyr_df, ", function_name, "(inputs)"
   )
 }
 
