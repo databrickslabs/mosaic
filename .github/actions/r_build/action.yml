@@ -20,7 +20,7 @@ runs:
     - name: Build R package
       shell: bash
       run: |
-        cd R/sparkR-mosaic
+        cd R
         sudo mkdir -p /usr/lib/R/site-library
         sudo chown -R $USER: /usr/lib/R/site-library
         Rscript --vanilla build_r_package.R
@@ -33,3 +33,4 @@ runs:
       shell: bash
       run: |
         cp R/sparkR-mosaic/*.tar.gz staging
+        cp R/sparklyr-mosaic/*.tar.gz staging

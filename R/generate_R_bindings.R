@@ -125,13 +125,15 @@ get_function_names <- function(scala_file_path){
   brace_counter = 1
 
   for(i in start_index : length(scala_file)){
-    if(grepl("{", scala_file[i], fixed=T)){
-      brace_counter = brace_counter + 1
-    }
-    else if(grepl("}", scala_file[i], fixed=T)){
-      brace_counter = brace_counter -1
-      if (brace_counter == 0) break
-    }
+    # split the string into characters - returns a list so unlist it
+    line_characters <- unlist(strsplit(scala_file[i], ''))
+    # count the number of brace opens
+    n_opens = sum(grepl("{", line_characters, fixed=T))
+    # count the number of brace closes
+    n_closes = sum(grepl("}", line_characters, fixed=T))
+    # update the counter
+    brace_counter <- brace_counter + n_opens - n_closes
+    if (brace_counter == 0) break
 
   }
   methods_to_bind = scala_file[start_index:i]
@@ -154,9 +156,13 @@ build_sparklyr_mosaic_function <- function(input){
   function_name = input$function_name
   paste0(
     
-    "#' ", function_name, '\n', 
+    "#' ", function_name, "\n\n",
     "#' See \\url{https://databrickslabs.github.io/mosaic/} for full documentation\n",
-    '#\' @rdname ', function_name,'\n',
+    '#\' @rdname ', function_name,'\n'
+    
+    ,"\n#' @examples\n#' \\dontrun{\n"
+    ,"#' mutate(sparklyr_df, ", function_name, "(inputs))\n#' }\n"
+    ,
     sprintf(
       '%s <- function(sc){
   sparklyr::invoke(functions, "%s", spark_session(sc))
