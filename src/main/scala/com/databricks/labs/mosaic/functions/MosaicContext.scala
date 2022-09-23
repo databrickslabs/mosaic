@@ -25,20 +25,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
     val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
 
-    def isProductH3Enabled(spark: SparkSession): Boolean = {
-        val registry = spark.sessionState.functionRegistry
-        if (registry.functionExists(FunctionIdentifier("h3_longlatash3"))) {
-            try {
-                spark.sql("SELECT h3_longlatash3(0, 0, 1)").collect()
-                true
-            } catch {
-                case _: Throwable => false
-            }
-        } else {
-            false
-        }
-    }
-
     def registerProductH3(registry: FunctionRegistry, dbName: Option[String]): Unit = {
         aliasFunction(registry, "grid_longlatascellid", dbName, "h3_longlatash3", None)
         aliasFunction(registry, "grid_polyfill", dbName, "h3_polyfillash3", None)
@@ -387,7 +373,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
               }
         )
 
-        if (indexSystem.name == "H3" && isProductH3Enabled(spark)) {
+        if (usingProductH3) {
             // Forward the H3 calls to product directly
             registerProductH3(registry, database)
         } else {
@@ -454,14 +440,27 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
     def getIndexSystem: IndexSystem = this.indexSystem
 
-    val usingProductH3 = false
-
     private def getProductMethod(methodName: String) = {
         val functionsModuleSymbol = mirror.staticModule("com.databricks.sql.functions")
         val functionsModuleMirror = mirror.reflectModule(functionsModuleSymbol)
         val instanceMirror = mirror.reflect(functionsModuleMirror.instance)
         val methodSymbol = functionsModuleSymbol.info.decl(universe.TermName(methodName)).asMethod
         instanceMirror.reflectMethod(methodSymbol)
+    }
+
+    def usingProductH3(): Boolean = {
+        val spark = SparkSession.builder().getOrCreate()
+        val registry = spark.sessionState.functionRegistry
+        if (indexSystem.name == "H3" && registry.functionExists(FunctionIdentifier("h3_longlatash3"))) {
+            try {
+                spark.sql("SELECT h3_longlatash3(0, 0, 1)").collect()
+                true
+            } catch {
+                case _: Throwable => false
+            }
+        } else {
+            false
+        }
     }
 
     // scalastyle:off object.name
@@ -607,7 +606,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
                     .apply(indexID)
                     .asInstanceOf[Column]
             } else {
-                ColumnAdapter(IndexGeometry(indexID.expr, idAsLongDefaultExpr, indexSystem.name, getGeometryAPI.name))
+                ColumnAdapter(IndexGeometry(indexID.expr, lit("WKB").expr, indexSystem.name, getGeometryAPI.name))
             }
         }
         def grid_boundary(indexID: Column, format: Column): Column =

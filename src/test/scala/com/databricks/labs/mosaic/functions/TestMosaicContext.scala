@@ -17,11 +17,12 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
 
         val ix = stub[IndexSystem]
         ix.defaultDataTypeID _ when () returns LongType
+        ix.name _ when () returns "H3"
         val mc = MosaicContext.build(ix, stub[GeometryAPI])
 
         val registry = spark.sessionState.functionRegistry
 
-        assert(!mc.isProductH3Enabled(spark))
+        assert(!mc.usingProductH3())
 
         // Mocking h3_longlatash3 function
         registry.registerFunction(
@@ -30,7 +31,7 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
           (exprs: Seq[Expression]) => Column(exprs.head).expr
         )
 
-        assert(mc.isProductH3Enabled(spark))
+        assert(mc.usingProductH3())
     }
 
     it should "forward functions to product" in {
