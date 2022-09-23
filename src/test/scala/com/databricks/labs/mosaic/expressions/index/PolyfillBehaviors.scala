@@ -13,6 +13,22 @@ import org.scalatest.matchers.should.Matchers._
 trait PolyfillBehaviors {
     this: AnyFlatSpec =>
 
+    def polyfillOnComputedColumns(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+        mosaicContext.register(spark)
+
+        val boroughs: DataFrame = getBoroughs(mc)
+
+        val mosaics = boroughs
+            .select(
+              grid_polyfill(convert_to(col("wkt"), "wkb"), resolution)
+            )
+            .collect()
+
+        boroughs.collect().length shouldEqual mosaics.length
+    }
+
     def wktPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._

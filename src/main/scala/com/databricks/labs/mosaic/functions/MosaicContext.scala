@@ -14,6 +14,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.types.{LongType, StringType}
+import scala.reflect.runtime.universe
 
 //noinspection DuplicatedCode
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends Serializable {
@@ -21,6 +22,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 
     val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
+
+    val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
 
     def isProductH3Enabled(spark: SparkSession): Boolean = {
         val registry = spark.sessionState.functionRegistry
@@ -451,6 +454,16 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
     def getIndexSystem: IndexSystem = this.indexSystem
 
+    val usingProductH3 = false
+
+    private def getProductMethod(methodName: String) = {
+        val functionsModuleSymbol = mirror.staticModule("com.databricks.sql.functions")
+        val functionsModuleMirror = mirror.reflectModule(functionsModuleSymbol)
+        val instanceMirror = mirror.reflect(functionsModuleMirror.instance)
+        val methodSymbol = functionsModuleSymbol.info.decl(universe.TermName(methodName)).asMethod
+        instanceMirror.reflectMethod(methodSymbol)
+    }
+
     // scalastyle:off object.name
     object functions extends Serializable {
 
@@ -567,13 +580,36 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(PointIndexGeom(point.expr, resolution.expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name))
         def grid_pointascellid(point: Column, resolution: Int): Column =
             ColumnAdapter(PointIndexGeom(point.expr, lit(resolution).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name))
-        def grid_longlatascellid(lon: Column, lat: Column, resolution: Column): Column =
-            expr(s"grid_longlatascellid(${lon.expr.sql}, ${lat.expr.sql}, ${resolution.expr.sql})")
-        def grid_longlatascellid(lon: Column, lat: Column, resolution: Int): Column =
-            expr(s"grid_longlatascellid(${lon.expr.sql}, ${lat.expr.sql}, $resolution)")
-        def grid_polyfill(geom: Column, resolution: Column): Column = expr(s"grid_polyfill(${geom.expr.sql}, ${resolution.expr.sql})")
-        def grid_polyfill(geom: Column, resolution: Int): Column = expr(s"grid_polyfill(${geom.expr.sql}, ${resolution})")
-        def grid_boundaryaswkb(indexID: Column): Column = expr(s"grid_boundaryaswkb(${indexID.expr.sql})")
+        def grid_longlatascellid(lon: Column, lat: Column, resolution: Column): Column = {
+            if (usingProductH3) {
+                getProductMethod("h3_longlatascellid")
+                    .apply(lon, lat, resolution)
+                    .asInstanceOf[Column]
+            } else {
+                ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, resolution.expr, idAsLongDefaultExpr, indexSystem.name))
+            }
+        }
+
+        def grid_longlatascellid(lon: Column, lat: Column, resolution: Int): Column = grid_longlatascellid(lon, lat, lit(resolution))
+        def grid_polyfill(geom: Column, resolution: Column): Column = {
+            if (usingProductH3) {
+                getProductMethod("h3_polyfill")
+                    .apply(geom, resolution)
+                    .asInstanceOf[Column]
+            } else {
+                ColumnAdapter(Polyfill(geom.expr, resolution.expr, idAsLongDefaultExpr, indexSystem.name, getGeometryAPI.name))
+            }
+        }
+        def grid_polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, lit(resolution))
+        def grid_boundaryaswkb(indexID: Column): Column = {
+            if (usingProductH3) {
+                getProductMethod("h3_boundaryaswkb")
+                    .apply(indexID)
+                    .asInstanceOf[Column]
+            } else {
+                ColumnAdapter(IndexGeometry(indexID.expr, idAsLongDefaultExpr, indexSystem.name, getGeometryAPI.name))
+            }
+        }
         def grid_boundary(indexID: Column, format: Column): Column =
             ColumnAdapter(IndexGeometry(indexID.expr, format.expr, indexSystem.name, geometryAPI.name))
         def grid_boundary(indexID: Column, format: String): Column =
