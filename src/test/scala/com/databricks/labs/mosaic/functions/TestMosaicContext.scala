@@ -69,4 +69,17 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
         assert(registry.lookupFunction(FunctionIdentifier("index_geometry", None)).get.getName == "h3_boundaryaswkb")
     }
 
+    "getProductMethod" should "get method via reflection" in {
+        val indexSystem = stub[IndexSystem]
+        indexSystem.name _ when () returns "H3"
+        indexSystem.defaultDataTypeID _ when () returns LongType
+
+        val mc = MosaicContext.build(indexSystem, stub[GeometryAPI])
+
+        val method = mc.getProductMethod("sample_increment")
+
+        assert(method.apply(1).asInstanceOf[Int] == 2)
+
+    }
+
 }
