@@ -10,4 +10,6 @@ package object mosaic {
     val H3: IndexSystem = mosaic.core.index.H3IndexSystem
     val BNG: IndexSystem = mosaic.core.index.BNGIndexSystem
 
+    val SPARK_DATABRICKS_GEO_H3_ENABLED = "spark.databricks.geo.h3.enabled"
+
 }

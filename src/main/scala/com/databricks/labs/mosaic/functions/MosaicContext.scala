@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.functions
 
+import com.databricks.labs.mosaic.SPARK_DATABRICKS_GEO_H3_ENABLED
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
@@ -373,7 +374,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
               }
         )
 
-        if (usingProductH3) {
+        if (shouldUseDatabricksH3) {
             // Forward the H3 calls to product directly
             registerProductH3(registry, database)
         } else {
@@ -440,27 +441,20 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
     def getIndexSystem: IndexSystem = this.indexSystem
 
-    private def getProductMethod(methodName: String) = {
+    def getProductMethod(methodName: String) = {
         val functionsModuleSymbol = mirror.staticModule("com.databricks.sql.functions")
+
         val functionsModuleMirror = mirror.reflectModule(functionsModuleSymbol)
         val instanceMirror = mirror.reflect(functionsModuleMirror.instance)
+
         val methodSymbol = functionsModuleSymbol.info.decl(universe.TermName(methodName)).asMethod
         instanceMirror.reflectMethod(methodSymbol)
     }
 
-    def usingProductH3(): Boolean = {
+    def shouldUseDatabricksH3(): Boolean = {
         val spark = SparkSession.builder().getOrCreate()
-        val registry = spark.sessionState.functionRegistry
-        if (indexSystem.name == "H3" && registry.functionExists(FunctionIdentifier("h3_longlatash3"))) {
-            try {
-                spark.sql("SELECT h3_longlatash3(0, 0, 1)").collect()
-                true
-            } catch {
-                case _: Throwable => false
-            }
-        } else {
-            false
-        }
+        val isDatabricksH3Enabled = spark.conf.get(SPARK_DATABRICKS_GEO_H3_ENABLED, "false") == "true"
+        indexSystem.name == "H3" && isDatabricksH3Enabled
     }
 
     // scalastyle:off object.name
@@ -580,7 +574,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def grid_pointascellid(point: Column, resolution: Int): Column =
             ColumnAdapter(PointIndexGeom(point.expr, lit(resolution).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name))
         def grid_longlatascellid(lon: Column, lat: Column, resolution: Column): Column = {
-            if (usingProductH3) {
+            if (shouldUseDatabricksH3) {
                 getProductMethod("h3_longlatascellid")
                     .apply(lon, lat, resolution)
                     .asInstanceOf[Column]
@@ -591,7 +585,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
         def grid_longlatascellid(lon: Column, lat: Column, resolution: Int): Column = grid_longlatascellid(lon, lat, lit(resolution))
         def grid_polyfill(geom: Column, resolution: Column): Column = {
-            if (usingProductH3) {
+            if (shouldUseDatabricksH3) {
                 getProductMethod("h3_polyfill")
                     .apply(geom, resolution)
                     .asInstanceOf[Column]
@@ -601,7 +595,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         }
         def grid_polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, lit(resolution))
         def grid_boundaryaswkb(indexID: Column): Column = {
-            if (usingProductH3) {
+            if (shouldUseDatabricksH3) {
                 getProductMethod("h3_boundaryaswkb")
                     .apply(indexID)
                     .asInstanceOf[Column]
