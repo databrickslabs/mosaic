@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.core.geometry.api
 import com.databricks.labs.mosaic.codegen.format.{MosaicGeometryIOCodeGenESRI, MosaicGeometryIOCodeGenJTS}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI._
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPointESRI, MosaicPointJTS}
-import com.databricks.labs.mosaic.core.types.model.GeoCoord
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
@@ -24,7 +24,7 @@ class GeometryAPITest extends AnyFunSuite with GeometryAPIBehaviors {
         val jts = GeometryAPI.apply("JTS")
         jts.name shouldEqual "JTS"
         jts.fromCoords(Seq(0.1, 0.2)).equals(MosaicPointJTS(Seq(0.1, 0.2))) shouldEqual true
-        jts.fromGeoCoord(GeoCoord(0.2, 0.1)).equals(MosaicPointJTS(Seq(0.1, 0.2))) shouldEqual true
+        jts.fromGeoCoord(Coordinates(0.2, 0.1)).equals(MosaicPointJTS(Seq(0.1, 0.2))) shouldEqual true
         jts.ioCodeGen shouldEqual MosaicGeometryIOCodeGenJTS
         jts.codeGenTryWrap("1==1;").contains("try") shouldEqual true
     }
@@ -33,7 +33,7 @@ class GeometryAPITest extends AnyFunSuite with GeometryAPIBehaviors {
         val esri = GeometryAPI.apply("ESRI")
         esri.name shouldEqual "ESRI"
         esri.fromCoords(Seq(0.1, 0.2)).equals(MosaicPointESRI(Seq(0.1, 0.2))) shouldEqual true
-        esri.fromGeoCoord(GeoCoord(0.2, 0.1)).equals(MosaicPointESRI(Seq(0.1, 0.2))) shouldEqual true
+        esri.fromGeoCoord(Coordinates(0.2, 0.1)).equals(MosaicPointESRI(Seq(0.1, 0.2))) shouldEqual true
         esri.ioCodeGen shouldEqual MosaicGeometryIOCodeGenESRI
         esri.codeGenTryWrap("1==1;").contains("try") shouldEqual false
     }
@@ -42,7 +42,7 @@ class GeometryAPITest extends AnyFunSuite with GeometryAPIBehaviors {
         val illegalAPI = GeometryAPI.apply("anyother")
         illegalAPI.name.toUpperCase(Locale.ROOT) shouldEqual "ILLEGAL"
         an[Error] should be thrownBy illegalAPI.fromCoords(Seq(0.1, 0.2))
-        an[Error] should be thrownBy illegalAPI.fromGeoCoord(GeoCoord(0.2, 0.1))
+        an[Error] should be thrownBy illegalAPI.fromGeoCoord(Coordinates(0.2, 0.1))
         an[Error] should be thrownBy illegalAPI.ioCodeGen
         an[Error] should be thrownBy illegalAPI.codeGenTryWrap("1==1;")
         GeometryAPI

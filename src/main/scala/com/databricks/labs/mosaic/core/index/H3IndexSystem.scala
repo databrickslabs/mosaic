@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic.core.index
 import scala.collection.JavaConverters._
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.uber.h3core.H3Core
 import org.apache.spark.sql.types.{DataType, LongType}
@@ -86,7 +87,7 @@ object H3IndexSystem extends IndexSystem with Serializable {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
         geometryAPI.geometry(
-          extended.map(p => geometryAPI.fromGeoCoord(com.databricks.labs.mosaic.core.types.model.GeoCoord(p.lat, p.lng))),
+          extended.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
           POLYGON
         )
     }
@@ -193,7 +194,7 @@ object H3IndexSystem extends IndexSystem with Serializable {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
         geometryAPI.geometry(
-          extended.map(p => geometryAPI.fromGeoCoord(com.databricks.labs.mosaic.core.types.model.GeoCoord(p.lat, p.lng))),
+          extended.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
           POLYGON
         )
     }

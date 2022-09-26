@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.core.geometry.point._
 import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.esri.core.geometry.ogc.OGCGeometry
-import com.databricks.labs.mosaic.core.types.model.GeoCoord
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -90,7 +90,7 @@ abstract class GeometryAPI(
         }
     }
 
-    def fromGeoCoord(point: GeoCoord): MosaicPoint = throw new Error("Unimplemented")
+    def fromGeoCoord(point: Coordinates): MosaicPoint = throw new Error("Unimplemented")
 
     def fromCoords(coords: Seq[Double]): MosaicPoint = throw new Error("Unimplemented")
 
@@ -127,7 +127,7 @@ object GeometryAPI extends Serializable {
 
         override def name: String = "ESRI"
 
-        override def fromGeoCoord(point: GeoCoord): MosaicPoint = MosaicPointESRI(point)
+        override def fromGeoCoord(point: Coordinates): MosaicPoint = MosaicPointESRI(point)
 
         override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointESRI(coords)
 
@@ -156,7 +156,7 @@ object GeometryAPI extends Serializable {
 
         override def name: String = "JTS"
 
-        override def fromGeoCoord(geoCoord: GeoCoord): MosaicPoint = MosaicPointJTS(geoCoord)
+        override def fromGeoCoord(geoCoord: Coordinates): MosaicPoint = MosaicPointJTS(geoCoord)
 
         override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointJTS(coords)
 

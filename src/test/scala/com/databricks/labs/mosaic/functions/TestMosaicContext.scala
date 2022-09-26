@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.functions
 
-import com.databricks.labs.mosaic.SPARK_DATABRICKS_GEO_H3_ENABLED
+import com.databricks.labs.mosaic.{H3, SPARK_DATABRICKS_GEO_H3_ENABLED}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.test.SparkSuite
@@ -15,16 +15,16 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
 
-    def getMosaicContext() = {
+    def getMosaicContext: MosaicContext = {
         val ix = stub[IndexSystem]
         ix.defaultDataTypeID _ when () returns LongType
-        ix.name _ when () returns "H3"
+        ix.name _ when () returns H3.name
         MosaicContext.build(ix, stub[GeometryAPI])
     }
 
     "MosaicContext" should "detect if product H3 is enabled" in {
 
-        val mc = getMosaicContext()
+        val mc = getMosaicContext
 
         assert(!mc.shouldUseDatabricksH3())
 
@@ -40,7 +40,7 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
     it should "lookup correct sql functions" in {
 
         val functionBuilder = stub[FunctionBuilder]
-        val mc = getMosaicContext()
+        val mc = getMosaicContext
 
         val registry = spark.sessionState.functionRegistry
 
@@ -71,7 +71,7 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
     }
 
     it should "forward the calls to databricks h3 functions" in {
-        val mc = getMosaicContext()
+        val mc = getMosaicContext
         spark.conf.set(SPARK_DATABRICKS_GEO_H3_ENABLED, "true")
         import mc.functions._
 
@@ -90,7 +90,7 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
 
     "getProductMethod" should "get method via reflection" in {
 
-        val mc = getMosaicContext()
+        val mc = getMosaicContext
 
         val method = mc.getProductMethod("sample_increment")
 

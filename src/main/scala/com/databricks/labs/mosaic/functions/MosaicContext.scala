@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.functions
 
-import com.databricks.labs.mosaic.SPARK_DATABRICKS_GEO_H3_ENABLED
+import com.databricks.labs.mosaic.{DATABRICKS_SQL_FUNCTIONS_MODULE, H3, SPARK_DATABRICKS_GEO_H3_ENABLED}
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
@@ -15,6 +15,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.types.{LongType, StringType}
+
 import scala.reflect.runtime.universe
 
 //noinspection DuplicatedCode
@@ -374,7 +375,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
               }
         )
 
-        if (shouldUseDatabricksH3) {
+        if (shouldUseDatabricksH3()) {
             // Forward the H3 calls to product directly
             registerProductH3(registry, database)
         } else {
@@ -441,8 +442,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
     def getIndexSystem: IndexSystem = this.indexSystem
 
-    def getProductMethod(methodName: String) = {
-        val functionsModuleSymbol = mirror.staticModule("com.databricks.sql.functions")
+    def getProductMethod(methodName: String): universe.MethodMirror = {
+        val functionsModuleSymbol: universe.ModuleSymbol = mirror.staticModule(DATABRICKS_SQL_FUNCTIONS_MODULE)
 
         val functionsModuleMirror = mirror.reflectModule(functionsModuleSymbol)
         val instanceMirror = mirror.reflect(functionsModuleMirror.instance)
@@ -454,7 +455,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     def shouldUseDatabricksH3(): Boolean = {
         val spark = SparkSession.builder().getOrCreate()
         val isDatabricksH3Enabled = spark.conf.get(SPARK_DATABRICKS_GEO_H3_ENABLED, "false") == "true"
-        indexSystem.name == "H3" && isDatabricksH3Enabled
+        indexSystem.name == H3.name && isDatabricksH3Enabled
     }
 
     // scalastyle:off object.name
@@ -574,7 +575,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def grid_pointascellid(point: Column, resolution: Int): Column =
             ColumnAdapter(PointIndexGeom(point.expr, lit(resolution).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name))
         def grid_longlatascellid(lon: Column, lat: Column, resolution: Column): Column = {
-            if (shouldUseDatabricksH3) {
+            if (shouldUseDatabricksH3()) {
                 getProductMethod("h3_longlatascellid")
                     .apply(lon, lat, resolution)
                     .asInstanceOf[Column]
@@ -585,7 +586,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
         def grid_longlatascellid(lon: Column, lat: Column, resolution: Int): Column = grid_longlatascellid(lon, lat, lit(resolution))
         def grid_polyfill(geom: Column, resolution: Column): Column = {
-            if (shouldUseDatabricksH3) {
+            if (shouldUseDatabricksH3()) {
                 getProductMethod("h3_polyfill")
                     .apply(geom, resolution)
                     .asInstanceOf[Column]
@@ -595,7 +596,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         }
         def grid_polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, lit(resolution))
         def grid_boundaryaswkb(indexID: Column): Column = {
-            if (shouldUseDatabricksH3) {
+            if (shouldUseDatabricksH3()) {
                 getProductMethod("h3_boundaryaswkb")
                     .apply(indexID)
                     .asInstanceOf[Column]
@@ -671,7 +672,7 @@ object MosaicContext {
 
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {
         instance = Some(new MosaicContext(indexSystem, geometryAPI))
-        context
+        context()
     }
 
     def context(): MosaicContext =
@@ -682,8 +683,8 @@ object MosaicContext {
 
     def reset(): Unit = instance = None
 
-    def geometryAPI(): GeometryAPI = context.getGeometryAPI
+    def geometryAPI(): GeometryAPI = context().getGeometryAPI
 
-    def indexSystem(): IndexSystem = context.getIndexSystem
+    def indexSystem(): IndexSystem = context().getIndexSystem
 
 }

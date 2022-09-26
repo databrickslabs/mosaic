@@ -1,3 +1,3 @@
 package com.databricks.labs.mosaic.core.types.model
 
-case class GeoCoord(lat: Double, lng: Double)
+case class Coordinates(lat: Double, lng: Double)

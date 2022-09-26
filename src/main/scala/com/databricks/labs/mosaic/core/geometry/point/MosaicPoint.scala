@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.core.geometry.point
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.MosaicCoreException
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
-import com.databricks.labs.mosaic.core.types.model.GeoCoord
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import org.locationtech.jts.geom.Coordinate
 
 trait MosaicPoint extends MosaicGeometry {
@@ -14,7 +14,7 @@ trait MosaicPoint extends MosaicGeometry {
 
     def getZ: Double
 
-    def geoCoord: GeoCoord
+    def geoCoord: Coordinates
 
     def coord: Coordinate
 
