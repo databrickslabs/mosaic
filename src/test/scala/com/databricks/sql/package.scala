@@ -3,6 +3,11 @@ package com.databricks.sql
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.lit
 
+/**
+  * Stub functions used for testing the reflection pattern for accessing
+  * Databricks native H3 functions.
+  */
+//noinspection ScalaStyle
 object functions {
 
     def sample_increment(i: Int): Int = {
