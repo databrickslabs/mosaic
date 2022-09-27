@@ -17,7 +17,7 @@ print(s"The raw data is stored in $raw_path")
 
 // MAGIC %md
 // MAGIC ## Enable Mosaic in the notebook
-// MAGIC Mosaic requires Databricks Runtime (DBR) version 11.2 or higher. </br>
+// MAGIC Mosaic requires Databricks Runtime (DBR) version 10.0 or higher (11.2 with photon or higher is recommended). </br>
 // MAGIC To get started, you'll need to attach the JAR to your cluster and import instances as in the cell below.
 
 // COMMAND ----------
