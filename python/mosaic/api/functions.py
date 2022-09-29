@@ -39,12 +39,21 @@ __all__ = [
     "st_zmin",
     "st_zmax",
     "flatten_polygons",
+
+    "grid_boundaryaswkb",
+    "grid_longlatascellid",
+    "grid_pointascellid",
+    "grid_polyfill",
+    "grid_tessellate",
+    "grid_tassellateexplode",
+
     "point_index_geom",
     "point_index_lonlat",
     "index_geometry",
     "polyfill",
     "mosaic_explode",
     "mosaicfill",
+
 ]
 
 
@@ -625,8 +634,165 @@ def flatten_polygons(geom: ColumnOrName) -> Column:
     )
 
 
+def grid_boundaryaswkb(index_id: ColumnOrName) -> Column:
+    """
+    Returns a WKB representing the grid cell boundary
+
+    Parameters
+    ----------
+    index_id : Column
+        The grid cell ID
+
+    Returns
+    -------
+    Column
+        A geometry in WKB format
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_boundaryaswkb", pyspark_to_java_column(index_id)
+    )
+
+
+def grid_longlatascellid(
+    lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
+) -> Column:
+    """
+    Returns the grid's cell ID associated with the input `lng` and `lat` coordinates at a given grid `resolution`.
+
+    Parameters
+    ----------
+    lon : Column (DoubleType) Longitude
+    lat : Column (DoubleType) Latitude
+    resolution : Column (IntegerType)
+
+    Returns
+    -------
+    Column (LongType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_longlatascellid",
+        pyspark_to_java_column(as_typed_col(lon, "double")),
+        pyspark_to_java_column(as_typed_col(lat, "double")),
+        pyspark_to_java_column(resolution),
+    )
+
+
+def grid_pointascellid(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+    """
+    Returns the grid's cell ID associated with the input point geometry `geom` at a given grid `resolution`.
+
+    Parameters
+    ----------
+    geom: Column (Geometry)
+    resolution : Column (IntegerType)
+
+    Returns
+    -------
+    Column (LongType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_pointascellid",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(resolution),
+    )
+
+
+def grid_polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
+    """
+    Returns the set of grid cell IDs whose centroid is contained in the input geometry `geom` at
+    resolution `resolution`.
+
+    Parameters
+    ----------
+    geom : Column
+    resolution : Column (IntegerType)
+
+    Returns
+    -------
+    Column (ArrayType[LongType])
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_polyfill",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(resolution),
+    )
+
+
+def grid_tessellate(
+    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+) -> Column:
+    """
+    Generates:
+    - a set of core indices that are fully contained by `geom`; and
+    - a set of border indices and sub-polygons that are partially contained by the input.
+
+    Outputs an array of chip structs for each input row.
+
+    Parameters
+    ----------
+    geom : Column
+    resolution : Column (IntegerType)
+    keep_core_geometries : Column (BooleanType) | bool
+
+    Returns
+    -------
+    Column (ArrayType[StructType[is_core: BooleanType, h3: LongType, wkb: BinaryType]])
+        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips
+        if keep_core_geometries is set to False.
+
+    """
+
+    if type(keep_core_geometries) == bool:
+        keep_core_geometries = lit(keep_core_geometries)
+
+    return config.mosaic_context.invoke_function(
+        "grid_tessellate",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(resolution),
+        pyspark_to_java_column(keep_core_geometries),
+    )
+
+
+def grid_tassellateexplode(
+    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+) -> Column:
+    """
+    Generates:
+    - a set of core grid cells that are fully contained by `geom`; and
+    - a set of border grid cells and sub-polygons that are partially contained by the input.
+
+    Outputs a row per grid cell.
+
+    Parameters
+    ----------
+    geom : Column
+    resolution : Column (IntegerType)
+    keep_core_geometries : Column (BooleanType) | bool
+
+    Returns
+    -------
+    Column (StructType[is_core: BooleanType, h3: LongType, wkb: BinaryType])
+        `wkb` in this struct represents a border chip geometry and is null for all 'core' chips
+        if keep_core_geometries is set to False.
+
+    """
+    if type(keep_core_geometries) == bool:
+        keep_core_geometries = lit(keep_core_geometries)
+
+    return config.mosaic_context.invoke_function(
+        "grid_tassellateexplode",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(resolution),
+        pyspark_to_java_column(keep_core_geometries),
+    )
+
+
 def point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
+    [Deprecated] alias for `grid_pointascellid`
     Returns the `resolution` grid index associated with the input geometry `geom`.
 
     Parameters
@@ -650,6 +816,7 @@ def point_index_lonlat(
     lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
 ) -> Column:
     """
+    [Deprecated] alias for `grid_longlatascellid`
     Returns the `resolution` grid index associated with the input `lng` and `lat` coordinates.
 
     Parameters
@@ -672,6 +839,9 @@ def point_index_lonlat(
 
 
 def index_geometry(index_id: ColumnOrName) -> Column:
+    """
+    [Deprecated] alias for `grid_boundaryaswkb`
+    """
     return config.mosaic_context.invoke_function(
         "index_geometry", pyspark_to_java_column(index_id)
     )
@@ -679,6 +849,7 @@ def index_geometry(index_id: ColumnOrName) -> Column:
 
 def polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
+    [Deprecated] alias for `grid_polyfill`
     Returns the set of grid indices covering the input geometry `geom` at resolution `resolution`.
 
     Parameters
@@ -702,6 +873,7 @@ def mosaic_explode(
     geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
+    [Deprecated] alias for `grid_tassellateexplode`
     Generates:
     - a set of core indices that are fully contained by `geom`; and
     - a set of border indices and sub-polygons that are partially contained by the input.
@@ -736,6 +908,7 @@ def mosaicfill(
     geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
+    [Deprecated] alias for `grid_tessellate`
     Generates:
     - a set of core indices that are fully contained by `geom`; and
     - a set of border indices and sub-polygons that are partially contained by the input.
