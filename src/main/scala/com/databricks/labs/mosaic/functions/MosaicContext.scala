@@ -544,7 +544,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             grid_tessellateexplode(geom, resolution, keepCoreGeometries, ColumnAdapter(idAsLongDefaultExpr))
         def grid_tessellateexplode(geom: Column, resolution: Column, keepCoreGeometries: Column, idAsLong: Column): Column =
             ColumnAdapter(
-                MosaicExplode(geom.expr, resolution.expr, keepCoreGeometries.expr, idAsLong.expr, indexSystem.name, geometryAPI.name)
+              MosaicExplode(geom.expr, resolution.expr, keepCoreGeometries.expr, idAsLong.expr, indexSystem.name, geometryAPI.name)
             )
         def grid_tessellateexplode(geom: Column, resolution: Int): Column =
             grid_tessellateexplode(geom, lit(resolution), lit(true), ColumnAdapter(idAsLongDefaultExpr))
@@ -558,11 +558,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         }
         def grid_tessellate(geom: Column, resolution: Column): Column =
             grid_tessellate(geom, resolution, lit(true), ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellate(geom: Column, resolution: Int): Column =
+            grid_tessellate(geom, lit(resolution), lit(true), ColumnAdapter(idAsLongDefaultExpr))
         def grid_tessellate(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
             grid_tessellate(geom, resolution, keepCoreGeometries, ColumnAdapter(idAsLongDefaultExpr))
         def grid_tessellate(geom: Column, resolution: Column, keepCoreGeometries: Column, idAsLong: Column): Column =
             ColumnAdapter(
-                MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, idAsLong.expr, indexSystem.name, geometryAPI.name)
+              MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, idAsLong.expr, indexSystem.name, geometryAPI.name)
             )
         def grid_tessellate(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
             grid_tessellate(geom, lit(resolution), lit(keepCoreGeometries), ColumnAdapter(idAsLongDefaultExpr))
@@ -630,17 +632,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         @deprecated("Please use 'grid_pointascellid' expressions instead.")
         def point_index_geom(point: Column, resolution: Int): Column = grid_pointascellid(point, resolution)
         @deprecated("Please use 'grid_longlatascellid' expressions instead.")
-        def point_index_lonlat(lon: Column, lat: Column, resolution: Column): Column =
-            grid_longlatascellid(lon, lat, resolution)
+        def point_index_lonlat(lon: Column, lat: Column, resolution: Column): Column = grid_longlatascellid(lon, lat, resolution)
         @deprecated("Please use 'grid_longlatascellid' expressions instead.")
-        def point_index_lonlat(lon: Column, lat: Column, resolution: Int): Column =
-            grid_longlatascellid(lon, lat, resolution)
+        def point_index_lonlat(lon: Column, lat: Column, resolution: Int): Column = grid_longlatascellid(lon, lat, resolution)
         @deprecated("Please use 'grid_polyfill' expressions instead.")
-        def polyfill(geom: Column, resolution: Column): Column =
-            grid_polyfill(geom, resolution)
+        def polyfill(geom: Column, resolution: Column): Column = grid_polyfill(geom, resolution)
         @deprecated("Please use 'grid_polyfill' expressions instead.")
-        def polyfill(geom: Column, resolution: Int): Column =
-            grid_polyfill(geom, resolution)
+        def polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, resolution)
 
     }
 
