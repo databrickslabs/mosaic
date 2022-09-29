@@ -57,15 +57,27 @@ sdf <- withColumn(sdf, "st_ymax", st_ymax(column("wkt")))
 sdf <- withColumn(sdf, "st_zmin", st_zmin(column("wkt")))
 sdf <- withColumn(sdf, "st_zmax", st_zmax(column("wkt")))
 sdf <- withColumn(sdf, "flatten_polygons", flatten_polygons(column("wkt")))
+
+# SRID
+sdf <- withColumn(sdf, "geom_with_srid", st_setsrid(st_geomfromwkt(column("wkt")), lit(4326L)))
+sdf <- withColumn(sdf, "srid_check", st_srid(column("geom_with_srid")))
+sdf <- withColumn(sdf, "transformed_geom", st_transform(column("geom_with_srid"), lit(3857L)))
+
+# Grid functions
+sdf <- withColumn(sdf, "grid_longlatascellid", point_index_lonlat(lit(1), lit(1), lit(1L)))
+sdf <- withColumn(sdf, "grid_pointascellid", point_index_geom(column("point_wkt"), lit(1L)))
+sdf <- withColumn(sdf, "grid_boundaryaswkb", grid_boundaryaswkb( SparkR::cast(lit(1), "long")))
+sdf <- withColumn(sdf, "grid_polyfill", polyfill(column("wkt"), lit(1L)))
+sdf <- withColumn(sdf, "grid_tassellateexplode", mosaic_explode(column("wkt"), lit(1L)))
+sdf <- withColumn(sdf, "grid_tessellate", mosaicfill(column("wkt"), lit(1L)))
+
+# Deprecated
 sdf <- withColumn(sdf, "point_index_lonlat", point_index_lonlat(lit(1), lit(1), lit(1L)))
 sdf <- withColumn(sdf, "point_index_geom", point_index_geom(column("point_wkt"), lit(1L)))
 sdf <- withColumn(sdf, "index_geometry", index_geometry( SparkR::cast(lit(1), "long")))
 sdf <- withColumn(sdf, "polyfill", polyfill(column("wkt"), lit(1L)))
 sdf <- withColumn(sdf, "mosaic_explode", mosaic_explode(column("wkt"), lit(1L)))
 sdf <- withColumn(sdf, "mosaicfill", mosaicfill(column("wkt"), lit(1L)))
-sdf <- withColumn(sdf, "geom_with_srid", st_setsrid(st_geomfromwkt(column("wkt")), lit(4326L)))
-sdf <- withColumn(sdf, "srid_check", st_srid(column("geom_with_srid")))
-sdf <- withColumn(sdf, "transformed_geom", st_transform(column("geom_with_srid"), lit(3857L)))
 
 if (nrow(SparkR::collect(sdf)) == 1.0){
   q(save="no", status=0)
