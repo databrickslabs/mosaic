@@ -80,14 +80,14 @@ class TestFunctions(MosaicTestCase):
             .withColumn("grid_pointascellid", api.grid_pointascellid("point_wkt", lit(1)))
             .withColumn("grid_boundaryaswkb", api.grid_boundaryaswkb(lit(1)))
             .withColumn("grid_polyfill", api.grid_polyfill("wkt", lit(1)))
-            .withColumn("grid_tassellateexplode", api.grid_tassellateexplode("wkt", lit(1)))
+            .withColumn("grid_tessellateexplode", api.grid_tessellateexplode("wkt", lit(1)))
             .withColumn(
-                "grid_tassellateexplode_no_core_chips",
-                api.grid_tassellateexplode("wkt", lit(1), lit(False)),
+                "grid_tessellateexplode_no_core_chips",
+                api.grid_tessellateexplode("wkt", lit(1), lit(False)),
             )
             .withColumn(
-                "grid_tassellateexplode_no_core_chips_bool",
-                api.grid_tassellateexplode("wkt", lit(1), False),
+                "grid_tessellateexplode_no_core_chips_bool",
+                api.grid_tessellateexplode("wkt", lit(1), False),
             )
             .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
 

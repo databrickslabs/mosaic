@@ -45,7 +45,7 @@ __all__ = [
     "grid_pointascellid",
     "grid_polyfill",
     "grid_tessellate",
-    "grid_tassellateexplode",
+    "grid_tessellateexplode",
 
     "point_index_geom",
     "point_index_lonlat",
@@ -756,7 +756,7 @@ def grid_tessellate(
     )
 
 
-def grid_tassellateexplode(
+def grid_tessellateexplode(
     geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
@@ -783,7 +783,7 @@ def grid_tassellateexplode(
         keep_core_geometries = lit(keep_core_geometries)
 
     return config.mosaic_context.invoke_function(
-        "grid_tassellateexplode",
+        "grid_tessellateexplode",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
         pyspark_to_java_column(keep_core_geometries),
@@ -873,7 +873,7 @@ def mosaic_explode(
     geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
-    [Deprecated] alias for `grid_tassellateexplode`
+    [Deprecated] alias for `grid_tessellateexplode`
     Generates:
     - a set of core indices that are fully contained by `geom`; and
     - a set of border indices and sub-polygons that are partially contained by the input.

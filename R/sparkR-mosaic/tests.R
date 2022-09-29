@@ -68,7 +68,7 @@ sdf <- withColumn(sdf, "grid_longlatascellid", grid_longlatascellid(lit(1), lit(
 sdf <- withColumn(sdf, "grid_pointascellid", grid_pointascellid(column("point_wkt"), lit(1L)))
 sdf <- withColumn(sdf, "grid_boundaryaswkb", grid_boundaryaswkb( SparkR::cast(lit(1), "long")))
 sdf <- withColumn(sdf, "grid_polyfill", grid_polyfill(column("wkt"), lit(1L)))
-sdf <- withColumn(sdf, "grid_tassellateexplode", grid_tassellateexplode(column("wkt"), lit(1L)))
+sdf <- withColumn(sdf, "grid_tessellateexplode", grid_tessellateexplode(column("wkt"), lit(1L)))
 sdf <- withColumn(sdf, "grid_tessellate", grid_tessellate(column("wkt"), lit(1L)))
 
 # Deprecated

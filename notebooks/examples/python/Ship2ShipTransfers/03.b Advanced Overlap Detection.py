@@ -94,7 +94,7 @@ cargo_movement = (
     lines.withColumn("buffer_r", get_buffer("line"))
     .withColumn("buffer_geom", mos.st_buffer("line", col("buffer_r")))
     .withColumn("buffer", mos.st_astext("buffer_geom"))
-    .withColumn("ix", mos.grid_tassellateexplode("buffer_geom", lit(9)))
+    .withColumn("ix", mos.grid_tessellateexplode("buffer_geom", lit(9)))
 )
 
 (cargo_movement.createOrReplaceTempView("ship_path"))

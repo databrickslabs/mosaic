@@ -196,7 +196,7 @@ create or replace temp view tripsWithIndex as (
 create or replace temp view neighbourhoodsWithIndex as (
   select 
     *,
-    grid_tassellateexplode(geometry, 9) as mosaic_index
+    grid_tessellateexplode(geometry, 9) as mosaic_index
   from neighbourhoods
 )
 

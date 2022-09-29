@@ -550,6 +550,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             grid_tessellateexplode(geom, lit(resolution), lit(true), ColumnAdapter(idAsLongDefaultExpr))
         def grid_tessellateexplode(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
             grid_tessellateexplode(geom, lit(resolution), lit(keepCoreGeometries), ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellateexplode(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
+            grid_tessellateexplode(geom, lit(resolution), keepCoreGeometries, ColumnAdapter(idAsLongDefaultExpr))
         def grid_tessellateexplode(geom: Column, resolution: Int, keepCoreGeometries: Boolean, idAsLong: Boolean): Column = {
             val resExpr = lit(resolution).expr
             val keepCoreExpr = lit(keepCoreGeometries).expr
@@ -595,22 +597,22 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         // Legacy API
         @deprecated("Please use 'grid_boundaryaswkb' or 'grid_boundary(..., format_name)' expressions instead.")
         def index_geometry(indexID: Column): Column = grid_boundaryaswkb(indexID)
-        @deprecated("Please use 'grid_tassellateexplode' expression instead.")
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
         def mosaic_explode(geom: Column, resolution: Column): Column = grid_tessellateexplode(geom, resolution)
-        @deprecated("Please use 'grid_tassellateexplode' expression instead.")
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
         def mosaic_explode(geom: Column, resolution: Column, keepCoreGeometries: Boolean): Column =
             grid_tessellateexplode(geom, resolution, lit(keepCoreGeometries))
-        @deprecated("Please use 'grid_tassellateexplode' expression instead.")
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
         def mosaic_explode(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
             grid_tessellateexplode(geom, resolution, keepCoreGeometries)
-        @deprecated("Please use 'grid_tassellateexplode' expression instead.")
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
         def mosaic_explode(geom: Column, resolution: Int): Column = grid_tessellateexplode(geom, resolution)
-        @deprecated("Please use 'grid_tassellateexplode' expression instead.")
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
         def mosaic_explode(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
             grid_tessellateexplode(geom, resolution, keepCoreGeometries)
-        @deprecated("Please use 'grid_tassellateexplode' expression instead.")
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
         def mosaic_explode(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
-            grid_tessellateexplode(geom, lit(resolution), keepCoreGeometries)
+            grid_tessellateexplode(geom, resolution, keepCoreGeometries)
         @deprecated("Please use 'grid_tessellate' expression instead.")
         def mosaicfill(geom: Column, resolution: Column): Column = grid_tessellate(geom, resolution)
         @deprecated("Please use 'grid_tessellate' expression instead.")
