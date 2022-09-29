@@ -64,12 +64,12 @@ sdf <- withColumn(sdf, "srid_check", st_srid(column("geom_with_srid")))
 sdf <- withColumn(sdf, "transformed_geom", st_transform(column("geom_with_srid"), lit(3857L)))
 
 # Grid functions
-sdf <- withColumn(sdf, "grid_longlatascellid", point_index_lonlat(lit(1), lit(1), lit(1L)))
-sdf <- withColumn(sdf, "grid_pointascellid", point_index_geom(column("point_wkt"), lit(1L)))
+sdf <- withColumn(sdf, "grid_longlatascellid", grid_longlatascellid(lit(1), lit(1), lit(1L)))
+sdf <- withColumn(sdf, "grid_pointascellid", grid_pointascellid(column("point_wkt"), lit(1L)))
 sdf <- withColumn(sdf, "grid_boundaryaswkb", grid_boundaryaswkb( SparkR::cast(lit(1), "long")))
-sdf <- withColumn(sdf, "grid_polyfill", polyfill(column("wkt"), lit(1L)))
-sdf <- withColumn(sdf, "grid_tassellateexplode", mosaic_explode(column("wkt"), lit(1L)))
-sdf <- withColumn(sdf, "grid_tessellate", mosaicfill(column("wkt"), lit(1L)))
+sdf <- withColumn(sdf, "grid_polyfill", grid_polyfill(column("wkt"), lit(1L)))
+sdf <- withColumn(sdf, "grid_tassellateexplode", grid_tassellateexplode(column("wkt"), lit(1L)))
+sdf <- withColumn(sdf, "grid_tessellate", grid_tessellate(column("wkt"), lit(1L)))
 
 # Deprecated
 sdf <- withColumn(sdf, "point_index_lonlat", point_index_lonlat(lit(1), lit(1), lit(1L)))

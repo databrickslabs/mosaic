@@ -165,8 +165,8 @@ display(
 // COMMAND ----------
 
 val tripsWithIndex = trips
-  .withColumn("pickup_h3", point_index_geom(col("pickup_geom"), lit(optimalResolution)))
-  .withColumn("dropoff_h3", point_index_geom(col("dropoff_geom"), lit(optimalResolution)))
+  .withColumn("pickup_h3", grid_pointascellid(col("pickup_geom"), lit(optimalResolution)))
+  .withColumn("dropoff_h3", grid_pointascellid(col("dropoff_geom"), lit(optimalResolution)))
 
 display(tripsWithIndex)
 
@@ -180,7 +180,7 @@ display(tripsWithIndex)
 val neighbourhoodsWithIndex = neighbourhoods
    // We break down the original geometry in multiple smaller mosaic chips, each with its
    // own index
-   .withColumn("mosaic_index", mosaic_explode(col("geometry"), lit(optimalResolution)))
+   .withColumn("mosaic_index", grid_tassellateexplode(col("geometry"), lit(optimalResolution)))
    // We don't need the original geometry any more, since we have broken it down into
    // Smaller mosaic chips.
    .drop("json_geometry", "geometry")

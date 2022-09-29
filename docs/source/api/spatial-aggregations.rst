@@ -23,11 +23,11 @@ st_intersects_aggregate
 
     >>> left_df = (
           spark.createDataFrame([{'geom': 'POLYGON ((0 0, 0 3, 3 3, 3 0))'}])
-          .select(mosaic_explode(col("geom"), lit(1)).alias("left_index"))
+          .select(grid_tassellateexplode(col("geom"), lit(1)).alias("left_index"))
         )
     >>> right_df = (
           spark.createDataFrame([{'geom': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
-          .select(mosaic_explode(col("geom"), lit(1)).alias("right_index"))
+          .select(grid_tassellateexplode(col("geom"), lit(1)).alias("right_index"))
         )
     >>> (
           left_df
@@ -44,9 +44,9 @@ st_intersects_aggregate
    .. code-tab:: scala
 
     >>> val leftDf = List("POLYGON ((0 0, 0 3, 3 3, 3 0))").toDF("geom")
-            .select(mosaic_explode($"geom", lit(1)).alias("left_index"))
+            .select(grid_tassellateexplode($"geom", lit(1)).alias("left_index"))
     >>> val rightDf = List("POLYGON ((2 2, 2 4, 4 4, 4 2))").toDF("geom")
-            .select(mosaic_explode($"geom", lit(1)).alias("right_index"))
+            .select(grid_tassellateexplode($"geom", lit(1)).alias("right_index"))
     >>> leftDf
             .join(rightDf, $"left_index.index_id" === $"right_index.index_id")
             .groupBy()
@@ -60,8 +60,8 @@ st_intersects_aggregate
 
    .. code-tab:: sql
 
-    >>> WITH l AS (SELECT mosaic_explode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
-        r AS (SELECT mosaic_explode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
+    >>> WITH l AS (SELECT grid_tassellateexplode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
+        r AS (SELECT grid_tassellateexplode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
         SELECT st_intersects_aggregate(l.left_index, r.right_index)
         FROM l INNER JOIN r on l.left_index.index_id = r.right_index.index_id
     +------------------------------------------------+
@@ -74,11 +74,11 @@ st_intersects_aggregate
 
     >>> df.l <- select(
           createDataFrame(data.frame(geom = "POLYGON ((0 0, 0 3, 3 3, 3 0))")),
-          alias(mosaic_explode(column("geom"), lit(1L)), "left_index")
+          alias(grid_tassellateexplode(column("geom"), lit(1L)), "left_index")
         )
     >>> df.r <- select(
           createDataFrame(data.frame(geom = "POLYGON ((2 2, 2 4, 4 4, 4 2))")),
-          alias(mosaic_explode(column("geom"), lit(1L)), "right_index")
+          alias(grid_tassellateexplode(column("geom"), lit(1L)), "right_index")
         )
     >>> showDF(
           select(
@@ -113,11 +113,11 @@ st_intersection_aggregate
 
     >>> left_df = (
           spark.createDataFrame([{'geom': 'POLYGON ((0 0, 0 3, 3 3, 3 0))'}])
-          .select(mosaic_explode(col("geom"), lit(1)).alias("left_index"))
+          .select(grid_tassellateexplode(col("geom"), lit(1)).alias("left_index"))
         )
     >>> right_df = (
           spark.createDataFrame([{'geom': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
-          .select(mosaic_explode(col("geom"), lit(1)).alias("right_index"))
+          .select(grid_tassellateexplode(col("geom"), lit(1)).alias("right_index"))
         )
     >>> (
           left_df
@@ -134,9 +134,9 @@ st_intersection_aggregate
    .. code-tab:: scala
 
     >>> val leftDf = List("POLYGON ((0 0, 0 3, 3 3, 3 0))").toDF("geom")
-            .select(mosaic_explode($"geom", lit(1)).alias("left_index"))
+            .select(grid_tassellateexplode($"geom", lit(1)).alias("left_index"))
     >>> val rightDf = List("POLYGON ((2 2, 2 4, 4 4, 4 2))").toDF("geom")
-            .select(mosaic_explode($"geom", lit(1)).alias("right_index"))
+            .select(grid_tassellateexplode($"geom", lit(1)).alias("right_index"))
     >>> leftDf
             .join(rightDf, $"left_index.index_id" === $"right_index.index_id")
             .groupBy()
@@ -150,8 +150,8 @@ st_intersection_aggregate
 
    .. code-tab:: sql
 
-    >>> WITH l AS (SELECT mosaic_explode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
-        r AS (SELECT mosaic_explode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
+    >>> WITH l AS (SELECT grid_tassellateexplode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
+        r AS (SELECT grid_tassellateexplode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
         SELECT st_astext(st_intersection_aggregate(l.left_index, r.right_index))
         FROM l INNER JOIN r on l.left_index.index_id = r.right_index.index_id
     +--------------------------------------------------------------+
@@ -164,11 +164,11 @@ st_intersection_aggregate
 
     >>> df.l <- select(
           createDataFrame(data.frame(geom = "POLYGON ((0 0, 0 3, 3 3, 3 0))")),
-          alias(mosaic_explode(column("geom"), lit(1L)), "left_index")
+          alias(grid_tassellateexplode(column("geom"), lit(1L)), "left_index")
         )
     >>> df.r <- select(
           createDataFrame(data.frame(geom = "POLYGON ((2 2, 2 4, 4 4, 4 2))")),
-          alias(mosaic_explode(column("geom"), lit(1L)), "right_index")
+          alias(grid_tassellateexplode(column("geom"), lit(1L)), "right_index")
         )
     >>> showDF(
           select(

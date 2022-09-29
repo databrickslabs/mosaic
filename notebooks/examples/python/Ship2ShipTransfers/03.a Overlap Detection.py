@@ -51,7 +51,7 @@ buffer = 100 * one_metre
     # We increase parallelism as the default execution plan does not take full advantage of it.
     .repartition(sc.defaultParallelism * 20)
     .withColumn("buffer_geom", mos.st_buffer("point_geom", lit(buffer)))
-    .withColumn("ix", mos.mosaic_explode("buffer_geom", lit(9)))
+    .withColumn("ix", mos.grid_tassellateexplode("buffer_geom", lit(9)))
     .write.mode("overwrite")
     .saveAsTable("ship2ship.cargos_buffered")
 )

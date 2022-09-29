@@ -159,7 +159,7 @@ neighbourhoods.createOrReplaceTempView("temp_view_neighbourhoods")
 
 neighbourhood_chips = (neighbourhoods
                        .limit(1)
-                       .select(mos.mosaic_explode("geom_internal", lit(9)))
+                       .select(mos.grid_tassellateexplode("geom_internal", lit(9)))
                        .select("index.*")
                     )
 
