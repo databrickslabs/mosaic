@@ -66,6 +66,14 @@ trait MosaicExplodeBehaviors {
 
         noEmptyChips.collect().length should be >= 0
 
+        val noEmptyChips2 = df
+          .select(
+            mosaic_explode(col("wkt"), resolution, keepCoreGeometries = lit(true))
+          )
+          .filter(col("index.wkb").isNull)
+
+        noEmptyChips2.collect().length should be >= 0
+
         val emptyChips = df
             .select(
               mosaic_explode(col("wkt"), resolution, keepCoreGeometries = false)
@@ -73,6 +81,14 @@ trait MosaicExplodeBehaviors {
             .filter(col("index.wkb").isNull)
 
         emptyChips.collect().length should be >= 0
+
+        val emptyChips2 = df
+          .select(
+            mosaic_explode(col("wkt"), resolution, keepCoreGeometries = lit(false))
+          )
+          .filter(col("index.wkb").isNull)
+
+        emptyChips2.collect().length should be >= 0
     }
 
     def wktDecomposeKeepCoreParamExpression(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
