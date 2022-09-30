@@ -1,6 +1,12 @@
 ## v0.3.0
 - Integration with H3 functions from Databricks runtime 11.2
-- Refactored grid functions to reflect the naming convention of H3 functions from Databricks runtime 
+- Refactored grid functions to reflect the naming convention of H3 functions from Databricks runtime
+  - `index_geometry` -> `grid_boundaryaswkb`
+  - `point_index_lonlat` -> `grid_longlatascellid`
+  - `polyfill` -> `grid_polyfill`
+  - `point_index_geom` -> `grid_pointascellid`
+  - `mosaicfill` -> `grid_tessellate`
+  - `mosaic_explode` -> `grid_tessellateexplode`
 - Added links to the solution accelerators
 - Refactored build actions
 - Updated BNG grid output cell ID as string
