@@ -194,8 +194,7 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
                     .build()
                 val geometryColumnWithMetadata = getGeometryColumn.as(getFocalGeometryColumnName, geometryColumnMetadata)
                 this.withColumn(getFocalGeometryColumnName, geometryColumnWithMetadata)
-            case _ =>
-                throw MosaicSQLExceptions.BadIndexResolution(indexSystem.resolutions)
+            case _                                            => throw MosaicSQLExceptions.BadIndexResolution(indexSystem.resolutions)
         }
     }
 
@@ -286,15 +285,16 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
                 if (explodePolyFillIndexes) trimmedDf
                     .select(
                       trimmedDf.col("*"),
-                      mosaic_explode(geometryColumn, resolution).as(indexColumnName)
+                      grid_tessellateexplode(geometryColumn, resolution).as(indexColumnName)
                     )
                 else trimmedDf
                     .select(
                       trimmedDf.col("*"),
-                      mosaicfill(geometryColumn, resolution).as(indexColumnName)
+                      grid_tessellate(geometryColumn, resolution).as(indexColumnName)
                     )
 
-            case GeometryTypeEnum.POINT => trimmedDf.select(trimmedDf.col("*"), point_index_geom(geometryColumn, resolution).as(indexColumnName))
+            case GeometryTypeEnum.POINT =>
+                trimmedDf.select(trimmedDf.col("*"), grid_pointascellid(geometryColumn, resolution).as(indexColumnName))
             case _                      => trimmedDf
         }
         indexedDf.addMosaicColumnMetadata(indexId, indexColumnName, explodePolyFillIndexes)
