@@ -298,7 +298,7 @@
     <li class="md-nav__item">
     
     
-      <a href="../api/spatial-indexing.html" class="md-nav__link">Spatial indexing</a>
+      <a href="../api/spatial-indexing.html" class="md-nav__link">Spatial grid indexing</a>
       
     
     </li>
@@ -874,8 +874,8 @@ get_optimal_resolution(sample_rows: Union[int, NoneType] = None, sample_fraction
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import point_index_lonlat
-indexed_trips = trips.withColumn("ix", point_index_lonlat(lon="pickup_longitude", lat="pickup_latitude", resolution=lit(resolution)))
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import grid_longlatascellid
+indexed_trips = trips.withColumn("ix", grid_longlatascellid(lon="pickup_longitude", lat="pickup_latitude", resolution=lit(resolution)))
 indexed_trips.show()
 </pre></div>
 </div>

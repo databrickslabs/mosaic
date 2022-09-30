@@ -306,7 +306,7 @@
     <li class="md-nav__item">
     
     
-      <a href="../api/spatial-indexing.html" class="md-nav__link">Spatial indexing</a>
+      <a href="../api/spatial-indexing.html" class="md-nav__link">Spatial grid indexing</a>
       
     
     </li>
@@ -1079,7 +1079,7 @@ neighbourhoods "geom_wkb" "geometry"
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>neighbourhood_chips = (neighbourhoods
                        .limit(1)
-                       .select(mos.mosaic_explode("geom_internal", lit(9)))
+                       .select(mos.grid_tessellateexplode("geom_internal", lit(9)))
                        .select("index.*")
                     )
 

@@ -46,7 +46,7 @@
   
   
   
-    <title>Spatial indexing &#8212; Mosaic</title>
+    <title>Spatial grid indexing &#8212; Mosaic</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/material.css" />
     <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
@@ -97,7 +97,7 @@
       <div class="md-flex__cell md-flex__cell--stretch">
         <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
           <span class="md-header-nav__topic">Mosaic v0.2.1</span>
-          <span class="md-header-nav__topic"> Spatial indexing </span>
+          <span class="md-header-nav__topic"> Spatial grid indexing </span>
         </div>
       </div>
       <div class="md-flex__cell md-flex__cell--shrink">
@@ -267,25 +267,35 @@
     
     
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    <label class="md-nav__link md-nav__link--active" for="__toc"> Spatial indexing </label>
+    <label class="md-nav__link md-nav__link--active" for="__toc"> Spatial grid indexing </label>
     
-      <a href="#" class="md-nav__link md-nav__link--active">Spatial indexing</a>
+      <a href="#" class="md-nav__link md-nav__link--active">Spatial grid indexing</a>
       
         
 <nav class="md-nav md-nav--secondary">
     <label class="md-nav__title" for="__toc">Contents</label>
   <ul class="md-nav__list" data-md-scrollfix="">
-        <li class="md-nav__item"><a href="#api-spatial-indexing--page-root" class="md-nav__link">Spatial indexing</a><nav class="md-nav">
+        <li class="md-nav__item"><a href="#api-spatial-indexing--page-root" class="md-nav__link">Spatial grid indexing</a><nav class="md-nav">
               <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#mosaic-explode" class="md-nav__link">mosaic_explode</a>
+        <li class="md-nav__item"><a href="#grid-longlatascellid" class="md-nav__link">grid_longlatascellid</a>
         </li>
-        <li class="md-nav__item"><a href="#mosaicfill" class="md-nav__link">mosaicfill</a>
+        <li class="md-nav__item"><a href="#grid-pointascellid" class="md-nav__link">grid_pointascellid</a>
         </li>
-        <li class="md-nav__item"><a href="#point-index-geom" class="md-nav__link">point_index_geom</a>
+        <li class="md-nav__item"><a href="#grid-polyfill" class="md-nav__link">grid_polyfill</a>
         </li>
-        <li class="md-nav__item"><a href="#point-index-lonlat" class="md-nav__link">point_index_lonlat</a>
+        <li class="md-nav__item"><a href="#grid-tessellate" class="md-nav__link">grid_tessellate</a>
         </li>
-        <li class="md-nav__item"><a href="#polyfill" class="md-nav__link">polyfill</a>
+        <li class="md-nav__item"><a href="#grid-tessellateexplode" class="md-nav__link">grid_tessellateexplode</a>
+        </li>
+        <li class="md-nav__item"><a href="#mosaic-explode-deprecated" class="md-nav__link">mosaic_explode [Deprecated]</a>
+        </li>
+        <li class="md-nav__item"><a href="#mosaicfill-deprecated" class="md-nav__link">mosaicfill [Deprecated]</a>
+        </li>
+        <li class="md-nav__item"><a href="#point-index-geom-deprecated" class="md-nav__link">point_index_geom [Deprecated]</a>
+        </li>
+        <li class="md-nav__item"><a href="#point-index-lonlat-deprecated" class="md-nav__link">point_index_lonlat [Deprecated]</a>
+        </li>
+        <li class="md-nav__item"><a href="#polyfill-deprecated" class="md-nav__link">polyfill [Deprecated]</a>
         </li></ul>
             </nav>
         </li>
@@ -325,17 +335,27 @@
 <nav class="md-nav md-nav--secondary">
     <label class="md-nav__title" for="__toc">Contents</label>
   <ul class="md-nav__list" data-md-scrollfix="">
-        <li class="md-nav__item"><a href="#api-spatial-indexing--page-root" class="md-nav__link">Spatial indexing</a><nav class="md-nav">
+        <li class="md-nav__item"><a href="#api-spatial-indexing--page-root" class="md-nav__link">Spatial grid indexing</a><nav class="md-nav">
               <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#mosaic-explode" class="md-nav__link">mosaic_explode</a>
+        <li class="md-nav__item"><a href="#grid-longlatascellid" class="md-nav__link">grid_longlatascellid</a>
         </li>
-        <li class="md-nav__item"><a href="#mosaicfill" class="md-nav__link">mosaicfill</a>
+        <li class="md-nav__item"><a href="#grid-pointascellid" class="md-nav__link">grid_pointascellid</a>
         </li>
-        <li class="md-nav__item"><a href="#point-index-geom" class="md-nav__link">point_index_geom</a>
+        <li class="md-nav__item"><a href="#grid-polyfill" class="md-nav__link">grid_polyfill</a>
         </li>
-        <li class="md-nav__item"><a href="#point-index-lonlat" class="md-nav__link">point_index_lonlat</a>
+        <li class="md-nav__item"><a href="#grid-tessellate" class="md-nav__link">grid_tessellate</a>
         </li>
-        <li class="md-nav__item"><a href="#polyfill" class="md-nav__link">polyfill</a>
+        <li class="md-nav__item"><a href="#grid-tessellateexplode" class="md-nav__link">grid_tessellateexplode</a>
+        </li>
+        <li class="md-nav__item"><a href="#mosaic-explode-deprecated" class="md-nav__link">mosaic_explode [Deprecated]</a>
+        </li>
+        <li class="md-nav__item"><a href="#mosaicfill-deprecated" class="md-nav__link">mosaicfill [Deprecated]</a>
+        </li>
+        <li class="md-nav__item"><a href="#point-index-geom-deprecated" class="md-nav__link">point_index_geom [Deprecated]</a>
+        </li>
+        <li class="md-nav__item"><a href="#point-index-lonlat-deprecated" class="md-nav__link">point_index_lonlat [Deprecated]</a>
+        </li>
+        <li class="md-nav__item"><a href="#polyfill-deprecated" class="md-nav__link">polyfill [Deprecated]</a>
         </li></ul>
             </nav>
         </li>
@@ -354,264 +374,14 @@
           <article class="md-content__inner md-typeset" role="main">
             
   
-<h1 id="api-spatial-indexing--page-root">Spatial indexing<a class="headerlink" href="#api-spatial-indexing--page-root" title="Permalink to this headline">¶</a></h1>
+<h1 id="api-spatial-indexing--page-root">Spatial grid indexing<a class="headerlink" href="#api-spatial-indexing--page-root" title="Permalink to this headline">¶</a></h1>
+<p>Spatial grid indexing is the process of mapping a geometry (or a point) to one or more cells (or cell ID)
+from the selected spatial grid.</p>
 
-<h2 id="mosaic-explode">mosaic_explode<a class="headerlink" href="#mosaic-explode" title="Permalink to this headline">¶</a></h2>
+<h2 id="grid-longlatascellid">grid_longlatascellid<a class="headerlink" href="#grid-longlatascellid" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="mosaic_explode">
-<span class="sig-name descname"><span class="pre">mosaic_explode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mosaic_explode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Cuts the original <cite>geometry</cite> into several pieces along the grid index borders at the specified <cite>resolution</cite>.</p>
-<p>Returns the set of Mosaic chips <strong>covering</strong> the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
-<p>A Mosaic chip is a struct type composed of:</p>
-<ul class="simple">
-<li><p><cite>is_core</cite>: Identifies if the chip is fully contained within the geometry: Boolean</p></li>
-<li><p><cite>index_id</cite>: Index ID of the configured spatial indexing (default H3): Integer</p></li>
-<li><p><cite>wkb</cite>: Geometry in WKB format equal to the intersection of the index shape and the original <cite>geometry</cite>: Binary</p></li>
-</ul>
-<p>In contrast to <a class="reference internal" href="#mosaicfill"><span class="std std-ref">mosaicfill</span></a>, <cite>mosaic_explode</cite> generates one result row per chip.</p>
-<p>In contrast to <a class="reference internal" href="#polyfill"><span class="std std-ref">polyfill</span></a>, <cite>mosaic_explode</cite> fully covers the original <cite>geometry</cite> even if the index centroid
-falls outside of the original geometry. This makes it suitable to index lines as well.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
-<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
-<li><p><strong>keep_core_geometries</strong> (<em>Column: Boolean</em>) – Whether to keep the core geometries or set them to null</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column: MosaicType</p>
-</dd>
-<dt class="field-odd">Example</dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-</dd></dl>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-0-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-0-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span><span class="p">}])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaic_explode</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="go">+-----------------------------------------------+</span>
-<span class="go">|is_core|          index_id|                 wkb|</span>
-<span class="go">+-------+------------------+--------------------+</span>
-<span class="go">|  false|577481099093999615|[01 03 00 00 00 0...|</span>
-<span class="go">|  false|578044049047420927|[01 03 00 00 00 0...|</span>
-<span class="go">|  false|578782920861286399|[01 03 00 00 00 0...|</span>
-<span class="go">|  false|577023702256844799|[01 03 00 00 00 0...|</span>
-<span class="go">|  false|577938495931154431|[01 03 00 00 00 0...|</span>
-<span class="go">|  false|577586652210266111|[01 06 00 00 00 0...|</span>
-<span class="go">|  false|577269992861466623|[01 03 00 00 00 0...|</span>
-<span class="go">|  false|578360708396220415|[01 03 00 00 00 0...|</span>
-<span class="go">+-------+------------------+--------------------+</span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-0-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span><span class="w"></span>
-<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaic_explode</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
-<span class="o">+-----------------------------------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="n">is_core</span><span class="o">|</span><span class="w">          </span><span class="n">index_id</span><span class="o">|</span><span class="w">                 </span><span class="n">wkb</span><span class="o">|</span><span class="w"></span>
-<span class="o">+-------+------------------+--------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">577481099093999615</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">578044049047420927</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">578782920861286399</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">577023702256844799</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">577938495931154431</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">577586652210266111</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">06</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">577269992861466623</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">578360708396220415</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">+-------+------------------+--------------------+</span><span class="w"></span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-0-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">mosaic_explode</span><span class="p">(</span><span class="ss">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
-<span class="o">+</span><span class="c1">-----------------------------------------------+</span>
-<span class="o">|</span><span class="n">is_core</span><span class="o">|</span><span class="w">          </span><span class="n">index_id</span><span class="o">|</span><span class="w">                 </span><span class="n">wkb</span><span class="o">|</span><span class="w"></span>
-<span class="o">+</span><span class="c1">-------+------------------+--------------------+</span>
-<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577481099093999615</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">578044049047420927</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">578782920861286399</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577023702256844799</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577938495931154431</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577586652210266111</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">06</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577269992861466623</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">578360708396220415</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">+</span><span class="c1">-------+------------------+--------------------+</span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-0-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span> <span class="o">=</span> <span class="s">'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span><span class="p">))</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">mosaic_explode</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">0L</span><span class="p">))))</span>
-<span class="o">+-----------------------------------------------+</span>
-<span class="o">|</span><span class="n">is_core</span><span class="o">|</span>          <span class="n">index_id</span><span class="o">|</span>                 <span class="n">wkb</span><span class="o">|</span>
-<span class="o">+-------+------------------+--------------------+</span>
-<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">577481099093999615</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
-<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">578044049047420927</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
-<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">578782920861286399</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
-<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">577023702256844799</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
-<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">577938495931154431</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
-<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">577586652210266111</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">06</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
-<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">577269992861466623</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
-<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">578360708396220415</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
-<span class="o">+-------+------------------+--------------------+</span>
-</pre></div>
-</div>
-</div></div>
-
-
-<h2 id="mosaicfill">mosaicfill<a class="headerlink" href="#mosaicfill" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">mosaicfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
-<dd><p>Cuts the original <cite>geometry</cite> into several pieces along the grid index borders at the specified <cite>resolution</cite>.</p>
-<p>Returns an array of Mosaic chips <strong>covering</strong> the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
-<p>A Mosaic chip is a struct type composed of:</p>
-<ul class="simple">
-<li><p><cite>is_core</cite>: Identifies if the chip is fully contained within the geometry: Boolean</p></li>
-<li><p><cite>index_id</cite>: Index ID of the configured spatial indexing (default H3): Integer</p></li>
-<li><p><cite>wkb</cite>: Geometry in WKB format equal to the intersection of the index shape and the original <cite>geometry</cite>: Binary</p></li>
-</ul>
-<p>In contrast to <a class="reference internal" href="#mosaic-explode"><span class="std std-ref">mosaic_explode</span></a>, <cite>mosaicfill</cite> does not explode the list of shapes.</p>
-<p>In contrast to <a class="reference internal" href="#polyfill"><span class="std std-ref">polyfill</span></a>, <cite>mosaicfill</cite> fully covers the original <cite>geometry</cite> even if the index centroid
-falls outside of the original geometry. This makes it suitable to index lines as well.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
-<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
-<li><p><strong>keep_core_geometries</strong> (<em>Column: Boolean</em>) – Whether to keep the core geometries or set them to null</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column: ArrayType[MosaicType]</p>
-</dd>
-<dt class="field-odd">Example</dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-</dd></dl>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-1-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-1-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-1-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span><span class="p">}])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">printSchema</span><span class="p">()</span>
-<span class="go">root</span>
-<span class="go"> |-- mosaicfill(wkt, 0): mosaic (nullable = true)</span>
-<span class="go"> |    |-- chips: array (nullable = true)</span>
-<span class="go"> |    |    |-- element: mosaic_chip (containsNull = true)</span>
-<span class="go"> |    |    |    |-- is_core: boolean (nullable = true)</span>
-<span class="go"> |    |    |    |-- index_id: long (nullable = true)</span>
-<span class="go"> |    |    |    |-- wkb: binary (nullable = true)</span>
-
-
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="go">+---------------------+</span>
-<span class="go">|mosaicfill(wkt, 0)   |</span>
-<span class="go">+---------------------+</span>
-<span class="go">| {[{false, 5774810...|</span>
-<span class="go">+---------------------+</span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-1-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span><span class="w"></span>
-<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">printSchema</span><span class="w"></span>
-<span class="n">root</span><span class="w"></span>
-<span class="w"> </span><span class="o">|--</span><span class="w"> </span><span class="n">mosaicfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">):</span><span class="w"> </span><span class="n">mosaic</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
-<span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">chips</span><span class="p">:</span><span class="w"> </span><span class="n">array</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
-<span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">element</span><span class="p">:</span><span class="w"> </span><span class="n">mosaic_chip</span><span class="w"> </span><span class="p">(</span><span class="n">containsNull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
-<span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">is_core</span><span class="p">:</span><span class="w"> </span><span class="n">boolean</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
-<span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">index_id</span><span class="p">:</span><span class="w"> </span><span class="n">long</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
-<span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">wkb</span><span class="p">:</span><span class="w"> </span><span class="n">binary</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
-
-<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">mosaicfill</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
-<span class="o">+---------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="n">mosaicfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">   </span><span class="o">|</span><span class="w"></span>
-<span class="o">+---------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="w"> </span><span class="p">{[{</span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="mi">5774810</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
-<span class="o">+---------------------+</span><span class="w"></span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-1-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; SELECT mosaicfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
-+---------------------+
-|mosaicfill(wkt, 0)   |
-+---------------------+
-| {[{false, 5774810...|
-+---------------------+
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-1-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span> <span class="o">=</span> <span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">))</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nf">schema</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">mosaicfill</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">0L</span><span class="p">))))</span>
-<span class="n">root</span>
- <span class="o">|--</span> <span class="nf">mosaicfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span><span class="o">:</span> <span class="nf">mosaic </span><span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
- <span class="o">|</span>    <span class="o">|--</span> <span class="n">chips</span><span class="o">:</span> <span class="nf">array </span><span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
- <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">element</span><span class="o">:</span> <span class="nf">mosaic_chip </span><span class="p">(</span><span class="n">containsNull</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
- <span class="o">|</span>    <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">is_core</span><span class="o">:</span> <span class="nf">boolean </span><span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
- <span class="o">|</span>    <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">index_id</span><span class="o">:</span> <span class="nf">long </span><span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
- <span class="o">|</span>    <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">wkb</span><span class="o">:</span> <span class="nf">binary </span><span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">mosaicfill</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">0L</span><span class="p">))))</span>
-<span class="o">+---------------------+</span>
-<span class="o">|</span><span class="nf">mosaicfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>   <span class="o">|</span>
-<span class="o">+---------------------+</span>
-<span class="o">|</span> <span class="p">{[{</span><span class="n">false</span><span class="p">,</span> <span class="m">5774810</span><span class="kc">...</span><span class="o">|</span>
-<span class="o">+---------------------+</span>
-</pre></div>
-</div>
-</div></div>
-
-
-<h2 id="point-index-geom">point_index_geom<a class="headerlink" href="#point-index-geom" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="point_index_geom">
-<span class="sig-name descname"><span class="pre">point_index_geom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#point_index_geom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the <cite>resolution</cite> grid index associated
-with the input point geometry <cite>geometry</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
-<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Column: LongType</p>
-</dd>
-<dt class="field-odd">Example</dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-</dd></dl>
-<div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-2-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-2-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-2-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-2-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-2-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-2-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'lon'</span><span class="p">:</span> <span class="mf">30.</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">:</span> <span class="mf">10.</span><span class="p">}])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index_geom</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="s1">'lon'</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-<span class="go">+----------------------------------------+</span>
-<span class="go">|point_index_geom(st_point(lon, lat), 10)|</span>
-<span class="go">+----------------------------------------+</span>
-<span class="go">|623385352048508927                      |</span>
-<span class="go">+----------------------------------------+</span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-2-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"lon"</span><span class="p">,</span><span class="w"> </span><span class="s">"lat"</span><span class="p">)</span><span class="w"></span>
-<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index_geom</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"lon"</span><span class="p">),</span><span class="w"> </span><span class="n">col</span><span class="p">(</span><span class="s">"lat"</span><span class="p">)),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
-<span class="o">+----------------------------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="n">point_index_geom</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="n">lat</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
-<span class="o">+----------------------------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="mi">623385352048508927</span><span class="w">                      </span><span class="o">|</span><span class="w"></span>
-<span class="o">+----------------------------------------+</span><span class="w"></span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-2-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">point_index_geom</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="mi">30</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="n">d</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
-<span class="o">+</span><span class="c1">----------------------------------------+</span>
-<span class="o">|</span><span class="n">point_index_geom</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="n">lat</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
-<span class="o">+</span><span class="c1">----------------------------------------+</span>
-<span class="o">|</span><span class="mi">623385352048508927</span><span class="w">                      </span><span class="o">|</span><span class="w"></span>
-<span class="o">+</span><span class="c1">----------------------------------------+</span>
-</pre></div>
-</div>
-</div><div aria-labelledby="tab-2-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">lon</span> <span class="o">=</span> <span class="m">30.0</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="m">10.0</span><span class="p">))</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">point_index_geom</span><span class="p">(</span><span class="nf">st_point</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"lon"</span><span class="p">),</span> <span class="nf">column</span><span class="p">(</span><span class="s">"lat"</span><span class="p">)),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">10L</span><span class="p">))),</span> <span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
-<span class="o">+----------------------------------------+</span>
-<span class="o">|</span><span class="nf">point_index_geom</span><span class="p">(</span><span class="nf">st_point</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">),</span> <span class="m">10</span><span class="p">)</span><span class="o">|</span>
-<span class="o">+----------------------------------------+</span>
-<span class="o">|</span><span class="m">623385352048508927</span>                      <span class="o">|</span>
-<span class="o">+----------------------------------------+</span>
-</pre></div>
-</div>
-</div></div>
-
-
-<h2 id="point-index-lonlat">point_index_lonlat<a class="headerlink" href="#point-index-lonlat" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="point_index_lonlat">
-<span class="sig-name descname"><span class="pre">point_index_lonlat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#point_index_lonlat" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="grid_longlatascellid">
+<span class="sig-name descname"><span class="pre">grid_longlatascellid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_longlatascellid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the <cite>resolution</cite> grid index associated with
 the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 <dl class="field-list simple">
@@ -630,48 +400,107 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 </dl>
 </dd></dl>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-3-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-3-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-3-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-3-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-3-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-3-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'lon'</span><span class="p">:</span> <span class="mf">30.</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">:</span> <span class="mf">10.</span><span class="p">}])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index_lonlat</span><span class="p">(</span><span class="s1">'lon'</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-<span class="go">+--------------------------------+</span>
-<span class="go">|point_index_lonlat(lon, lat, 10)|</span>
-<span class="go">+--------------------------------+</span>
-<span class="go">|              623385352048508927|</span>
-<span class="go">+--------------------------------+</span>
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-0-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-0-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'lon'</span><span class="p">:</span> <span class="mf">30.</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">:</span> <span class="mf">10.</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_longlatascellid</span><span class="p">(</span><span class="s1">'lon'</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+----------------------------------+</span>
+<span class="go">|grid_longlatascellid(lon, lat, 10)|</span>
+<span class="go">+----------------------------------+</span>
+<span class="go">|                623385352048508927|</span>
+<span class="go">+----------------------------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-3-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"lon"</span><span class="p">,</span><span class="w"> </span><span class="s">"lat"</span><span class="p">)</span><span class="w"></span>
-<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">point_index_lonlat</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"lon"</span><span class="p">),</span><span class="w"> </span><span class="n">col</span><span class="p">(</span><span class="s">"lat"</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
-<span class="o">+--------------------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="n">point_index_lonlat</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
-<span class="o">+--------------------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="w">              </span><span class="mi">623385352048508927</span><span class="o">|</span><span class="w"></span>
-<span class="o">+--------------------------------+</span><span class="w"></span>
+</div><div aria-labelledby="tab-0-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"lon"</span><span class="p">,</span><span class="w"> </span><span class="s">"lat"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_longlatascellid</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"lon"</span><span class="p">),</span><span class="w"> </span><span class="n">col</span><span class="p">(</span><span class="s">"lat"</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
+<span class="o">+----------------------------------+</span><span class="w"></span>
+<span class="o">|</span><span class="n">grid_longlatascellid</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+----------------------------------+</span><span class="w"></span>
+<span class="o">|</span><span class="w">                </span><span class="mi">623385352048508927</span><span class="o">|</span><span class="w"></span>
+<span class="o">+----------------------------------+</span><span class="w"></span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-3-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">point_index_lonlat</span><span class="p">(</span><span class="mi">30</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
-<span class="o">+</span><span class="c1">--------------------------------+</span>
-<span class="o">|</span><span class="n">point_index_lonlat</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
-<span class="o">+</span><span class="c1">--------------------------------+</span>
-<span class="o">|</span><span class="w">              </span><span class="mi">623385352048508927</span><span class="o">|</span><span class="w"></span>
-<span class="o">+</span><span class="c1">--------------------------------+</span>
+</div><div aria-labelledby="tab-0-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">grid_longlatascellid</span><span class="p">(</span><span class="mi">30</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">----------------------------------+</span>
+<span class="o">|</span><span class="n">grid_longlatascellid</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="n">lat</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">----------------------------------+</span>
+<span class="o">|</span><span class="w">                </span><span class="mi">623385352048508927</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">----------------------------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-3-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">lon</span> <span class="o">=</span> <span class="m">30.0</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="m">10.0</span><span class="p">))</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">point_index_lonlat</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"lon"</span><span class="p">),</span> <span class="nf">column</span><span class="p">(</span><span class="s">"lat"</span><span class="p">),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">10L</span><span class="p">))),</span> <span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
-<span class="o">+--------------------------------+</span>
-<span class="o">|</span><span class="nf">point_index_lonlat</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="m">10</span><span class="p">)</span><span class="o">|</span>
-<span class="o">+--------------------------------+</span>
-<span class="o">|</span>              <span class="m">623385352048508927</span><span class="o">|</span>
-<span class="o">+--------------------------------+</span>
+</div><div aria-labelledby="tab-0-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">lon</span> <span class="o">=</span> <span class="m">30.0</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="m">10.0</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">grid_longlatascellid</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"lon"</span><span class="p">),</span> <span class="nf">column</span><span class="p">(</span><span class="s">"lat"</span><span class="p">),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">10L</span><span class="p">))),</span> <span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
+<span class="o">+----------------------------------+</span>
+<span class="o">|</span><span class="nf">grid_longlatascellid</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="m">10</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+----------------------------------+</span>
+<span class="o">|</span>                <span class="m">623385352048508927</span><span class="o">|</span>
+<span class="o">+----------------------------------+</span>
 </pre></div>
 </div>
 </div></div>
 
 
-<h2 id="polyfill">polyfill<a class="headerlink" href="#polyfill" title="Permalink to this headline">¶</a></h2>
+<h2 id="grid-pointascellid">grid_pointascellid<a class="headerlink" href="#grid-pointascellid" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">polyfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="grid_pointascellid">
+<span class="sig-name descname"><span class="pre">grid_pointascellid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_pointascellid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <cite>resolution</cite> grid index associated
+with the input point geometry <cite>geometry</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: LongType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-1-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-1-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-1-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'lon'</span><span class="p">:</span> <span class="mf">30.</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">:</span> <span class="mf">10.</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_pointascellid</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="s1">'lon'</span><span class="p">,</span> <span class="s1">'lat'</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">+------------------------------------------+</span>
+<span class="go">|grid_pointascellid(st_point(lon, lat), 10)|</span>
+<span class="go">+------------------------------------------+</span>
+<span class="go">|623385352048508927                        |</span>
+<span class="go">+------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="mf">30.0</span><span class="p">,</span><span class="w"> </span><span class="mf">10.0</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"lon"</span><span class="p">,</span><span class="w"> </span><span class="s">"lat"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_pointascellid</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"lon"</span><span class="p">),</span><span class="w"> </span><span class="n">col</span><span class="p">(</span><span class="s">"lat"</span><span class="p">)),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
+<span class="o">+------------------------------------------+</span><span class="w"></span>
+<span class="o">|</span><span class="n">grid_pointascellid</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="n">lat</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+------------------------------------------+</span><span class="w"></span>
+<span class="o">|</span><span class="mi">623385352048508927</span><span class="w">                        </span><span class="o">|</span><span class="w"></span>
+<span class="o">+------------------------------------------+</span><span class="w"></span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">grid_pointascellid</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="mi">30</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="n">d</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">------------------------------------------+</span>
+<span class="o">|</span><span class="n">grid_pointascellid</span><span class="p">(</span><span class="n">st_point</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="w"> </span><span class="n">lat</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">------------------------------------------+</span>
+<span class="o">|</span><span class="mi">623385352048508927</span><span class="w">                        </span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">lon</span> <span class="o">=</span> <span class="m">30.0</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="m">10.0</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">grid_pointascellid</span><span class="p">(</span><span class="nf">st_point</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"lon"</span><span class="p">),</span> <span class="nf">column</span><span class="p">(</span><span class="s">"lat"</span><span class="p">)),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">10L</span><span class="p">))),</span> <span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
+<span class="o">+------------------------------------------+</span>
+<span class="o">|</span><span class="nf">grid_pointascellid</span><span class="p">(</span><span class="nf">st_point</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">),</span> <span class="m">10</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+------------------------------------------+</span>
+<span class="o">|</span><span class="m">623385352048508927</span>                        <span class="o">|</span>
+<span class="o">+------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
+<h2 id="grid-polyfill">grid_polyfill<a class="headerlink" href="#grid-polyfill" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="grid_polyfill">
+<span class="sig-name descname"><span class="pre">grid_polyfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_polyfill" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the set of grid indices of which centroid is contained in the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
 <p>When using <cite>H3 &lt;https://h3geo.org/&gt;</cite> index system, this is equivalent to the
 <cite>H3 polyfill &lt;https://h3geo.org/docs/api/regions/#polyfill&gt;</cite> method</p>
@@ -690,44 +519,277 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 </dl>
 </dd></dl>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-4-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-4-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-4-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-4-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-4-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-4-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span>
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-2-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-2-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-2-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-2-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-2-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-2-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span>
 <span class="go">    'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span>
 <span class="go">    }])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">polyfill</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_polyfill</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 <span class="go">+------------------------------------------------------------+</span>
-<span class="go">|polyfill(wkt, 0)                                            |</span>
+<span class="go">|grid_polyfill(wkt, 0)                                       |</span>
 <span class="go">+------------------------------------------------------------+</span>
 <span class="go">|[577586652210266111, 578360708396220415, 577269992861466623]|</span>
 <span class="go">+------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-4-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span><span class="w"></span>
-<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">polyfill</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span><span class="w"></span>
+</div><div aria-labelledby="tab-2-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_polyfill</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span><span class="w"></span>
 <span class="o">+------------------------------------------------------------+</span><span class="w"></span>
-<span class="o">|</span><span class="n">polyfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">                                            </span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="n">grid_polyfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">                                       </span><span class="o">|</span><span class="w"></span>
 <span class="o">+------------------------------------------------------------+</span><span class="w"></span>
 <span class="o">|</span><span class="p">[</span><span class="mi">577586652210266111</span><span class="p">,</span><span class="w"> </span><span class="mi">578360708396220415</span><span class="p">,</span><span class="w"> </span><span class="mi">577269992861466623</span><span class="p">]</span><span class="o">|</span><span class="w"></span>
 <span class="o">+------------------------------------------------------------+</span><span class="w"></span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-4-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">polyfill</span><span class="p">(</span><span class="ss">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+</div><div aria-labelledby="tab-2-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">grid_polyfill</span><span class="p">(</span><span class="ss">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
 <span class="o">+</span><span class="c1">------------------------------------------------------------+</span>
-<span class="o">|</span><span class="n">polyfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">                                            </span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="n">grid_polyfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">                                       </span><span class="o">|</span><span class="w"></span>
 <span class="o">+</span><span class="c1">------------------------------------------------------------+</span>
 <span class="o">|</span><span class="p">[</span><span class="mi">577586652210266111</span><span class="p">,</span><span class="w"> </span><span class="mi">578360708396220415</span><span class="p">,</span><span class="w"> </span><span class="mi">577269992861466623</span><span class="p">]</span><span class="o">|</span><span class="w"></span>
 <span class="o">+</span><span class="c1">------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-4-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span> <span class="o">=</span> <span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">))</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">polyfill</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">0L</span><span class="p">))),</span> <span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
+</div><div aria-labelledby="tab-2-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span> <span class="o">=</span> <span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">grid_polyfill</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">0L</span><span class="p">))),</span> <span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
 <span class="o">+------------------------------------------------------------+</span>
-<span class="o">|</span><span class="nf">polyfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>                                            <span class="o">|</span>
+<span class="o">|</span><span class="nf">grid_polyfill</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>                                       <span class="o">|</span>
 <span class="o">+------------------------------------------------------------+</span>
 <span class="o">|</span><span class="p">[</span><span class="m">577586652210266111</span><span class="p">,</span> <span class="m">578360708396220415</span><span class="p">,</span> <span class="m">577269992861466623</span><span class="p">]</span><span class="o">|</span>
 <span class="o">+------------------------------------------------------------+</span>
 </pre></div>
 </div>
 </div></div>
+
+
+<h2 id="grid-tessellate">grid_tessellate<a class="headerlink" href="#grid-tessellate" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="grid_tessellate">
+<span class="sig-name descname"><span class="pre">grid_tessellate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_tessellate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cuts the original <cite>geometry</cite> into several pieces along the grid index borders at the specified <cite>resolution</cite>.</p>
+<p>Returns an array of Mosaic chips <strong>covering</strong> the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
+<p>A Mosaic chip is a struct type composed of:</p>
+<ul class="simple">
+<li><p><cite>is_core</cite>: Identifies if the chip is fully contained within the geometry: Boolean</p></li>
+<li><p><cite>index_id</cite>: Index ID of the configured spatial indexing (default H3): Integer</p></li>
+<li><p><cite>wkb</cite>: Geometry in WKB format equal to the intersection of the index shape and the original <cite>geometry</cite>: Binary</p></li>
+</ul>
+<p>In contrast to <a class="reference internal" href="#grid-tessellateexplode"><span class="std std-ref">grid_tessellateexplode</span></a>, <cite>grid_tessellate</cite> does not explode the list of shapes.</p>
+<p>In contrast to <a class="reference internal" href="#grid-polyfill"><span class="std std-ref">grid_polyfill</span></a>, <cite>grid_tessellate</cite> fully covers the original <cite>geometry</cite> even if the index centroid
+falls outside of the original geometry. This makes it suitable to index lines as well.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
+<li><p><strong>keep_core_geometries</strong> (<em>Column: Boolean</em>) – Whether to keep the core geometries or set them to null</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: ArrayType[MosaicType]</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-3-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-3-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-3-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-3-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-3-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-3-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellate</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">printSchema</span><span class="p">()</span>
+<span class="go">root</span>
+<span class="go"> |-- grid_tessellate(wkt, 0): mosaic (nullable = true)</span>
+<span class="go"> |    |-- chips: array (nullable = true)</span>
+<span class="go"> |    |    |-- element: mosaic_chip (containsNull = true)</span>
+<span class="go"> |    |    |    |-- is_core: boolean (nullable = true)</span>
+<span class="go"> |    |    |    |-- index_id: long (nullable = true)</span>
+<span class="go"> |    |    |    |-- wkb: binary (nullable = true)</span>
+
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellate</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+-----------------------+</span>
+<span class="go">|grid_tessellate(wkt, 0)|</span>
+<span class="go">+-----------------------+</span>
+<span class="go">|   {[{false, 5774810...|</span>
+<span class="go">+-----------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-3-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellate</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">printSchema</span><span class="w"></span>
+<span class="n">root</span><span class="w"></span>
+<span class="w"> </span><span class="o">|--</span><span class="w"> </span><span class="n">grid_tessellate</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">):</span><span class="w"> </span><span class="n">mosaic</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
+<span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">chips</span><span class="p">:</span><span class="w"> </span><span class="n">array</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
+<span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">element</span><span class="p">:</span><span class="w"> </span><span class="n">mosaic_chip</span><span class="w"> </span><span class="p">(</span><span class="n">containsNull</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
+<span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">is_core</span><span class="p">:</span><span class="w"> </span><span class="n">boolean</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
+<span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">index_id</span><span class="p">:</span><span class="w"> </span><span class="n">long</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
+<span class="w"> </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|</span><span class="w">    </span><span class="o">|--</span><span class="w"> </span><span class="n">wkb</span><span class="p">:</span><span class="w"> </span><span class="n">binary</span><span class="w"> </span><span class="p">(</span><span class="n">nullable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w"></span>
+
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellate</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
+<span class="o">+-----------------------+</span><span class="w"></span>
+<span class="o">|</span><span class="n">grid_tessellate</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="o">|</span><span class="w"></span>
+<span class="o">+-----------------------+</span><span class="w"></span>
+<span class="o">|</span><span class="w">   </span><span class="p">{[{</span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="mi">5774810</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">+-----------------------+</span><span class="w"></span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-3-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; SELECT grid_tessellate("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
++-----------------------+
+|grid_tessellate(wkt, 0)|
++-----------------------+
+|   {[{false, 5774810...|
++-----------------------+
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-3-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span> <span class="o">=</span> <span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nf">schema</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">grid_tessellate</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">0L</span><span class="p">))))</span>
+<span class="n">root</span>
+ <span class="o">|--</span> <span class="nf">grid_tessellate</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span><span class="o">:</span> <span class="nf">mosaic </span><span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
+ <span class="o">|</span>    <span class="o">|--</span> <span class="n">chips</span><span class="o">:</span> <span class="nf">array </span><span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
+ <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">element</span><span class="o">:</span> <span class="nf">mosaic_chip </span><span class="p">(</span><span class="n">containsNull</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
+ <span class="o">|</span>    <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">is_core</span><span class="o">:</span> <span class="nf">boolean </span><span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
+ <span class="o">|</span>    <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">index_id</span><span class="o">:</span> <span class="nf">long </span><span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
+ <span class="o">|</span>    <span class="o">|</span>    <span class="o">|</span>    <span class="o">|--</span> <span class="n">wkb</span><span class="o">:</span> <span class="nf">binary </span><span class="p">(</span><span class="n">nullable</span> <span class="o">=</span> <span class="n">true</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">grid_tessellate</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">0L</span><span class="p">))))</span>
+<span class="o">+-----------------------+</span>
+<span class="o">|</span><span class="nf">grid_tessellate</span><span class="p">(</span><span class="n">wkt</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+-----------------------+</span>
+<span class="o">|</span>   <span class="p">{[{</span><span class="n">false</span><span class="p">,</span> <span class="m">5774810</span><span class="kc">...</span><span class="o">|</span>
+<span class="o">+-----------------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
+<h2 id="grid-tessellateexplode">grid_tessellateexplode<a class="headerlink" href="#grid-tessellateexplode" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="grid_tessellateexplode">
+<span class="sig-name descname"><span class="pre">grid_tessellateexplode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_tessellateexplode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cuts the original <cite>geometry</cite> into several pieces along the grid index borders at the specified <cite>resolution</cite>.</p>
+<p>Returns the set of Mosaic chips <strong>covering</strong> the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
+<p>A Mosaic chip is a struct type composed of:</p>
+<ul class="simple">
+<li><p><cite>is_core</cite>: Identifies if the chip is fully contained within the geometry: Boolean</p></li>
+<li><p><cite>index_id</cite>: Index ID of the configured spatial indexing (default H3): Integer</p></li>
+<li><p><cite>wkb</cite>: Geometry in WKB format equal to the intersection of the index shape and the original <cite>geometry</cite>: Binary</p></li>
+</ul>
+<p>In contrast to <a class="reference internal" href="#grid-tessellate"><span class="std std-ref">grid_tessellate</span></a>, <cite>grid_tessellateexplode</cite> generates one result row per chip.</p>
+<p>In contrast to <a class="reference internal" href="#grid-polyfill"><span class="std std-ref">grid_polyfill</span></a>, <cite>grid_tessellateexplode</cite> fully covers the original <cite>geometry</cite> even if the index centroid
+falls outside of the original geometry. This makes it suitable to index lines as well.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
+<li><p><strong>keep_core_geometries</strong> (<em>Column: Boolean</em>) – Whether to keep the core geometries or set them to null</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column: MosaicType</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-4-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-4-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-4-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-4-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-4-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-4-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'wkt'</span><span class="p">:</span> <span class="s1">'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="s1">'wkt'</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+-----------------------------------------------+</span>
+<span class="go">|is_core|          index_id|                 wkb|</span>
+<span class="go">+-------+------------------+--------------------+</span>
+<span class="go">|  false|577481099093999615|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|578044049047420927|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|578782920861286399|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|577023702256844799|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|577938495931154431|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|577586652210266111|[01 06 00 00 00 0...|</span>
+<span class="go">|  false|577269992861466623|[01 03 00 00 00 0...|</span>
+<span class="go">|  false|578360708396220415|[01 03 00 00 00 0...|</span>
+<span class="go">+-------+------------------+--------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
+<span class="o">+-----------------------------------------------+</span><span class="w"></span>
+<span class="o">|</span><span class="n">is_core</span><span class="o">|</span><span class="w">          </span><span class="n">index_id</span><span class="o">|</span><span class="w">                 </span><span class="n">wkb</span><span class="o">|</span><span class="w"></span>
+<span class="o">+-------+------------------+--------------------+</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">577481099093999615</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">578044049047420927</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">578782920861286399</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">577023702256844799</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">577938495931154431</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">577586652210266111</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">06</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">577269992861466623</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="kc">false</span><span class="o">|</span><span class="mi">578360708396220415</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">+-------+------------------+--------------------+</span><span class="w"></span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="ss">"MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-----------------------------------------------+</span>
+<span class="o">|</span><span class="n">is_core</span><span class="o">|</span><span class="w">          </span><span class="n">index_id</span><span class="o">|</span><span class="w">                 </span><span class="n">wkb</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------+------------------+--------------------+</span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577481099093999615</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">578044049047420927</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">578782920861286399</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577023702256844799</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577938495931154431</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577586652210266111</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">06</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">577269992861466623</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">  </span><span class="k">false</span><span class="o">|</span><span class="mi">578360708396220415</span><span class="o">|</span><span class="p">[</span><span class="mi">01</span><span class="w"> </span><span class="mi">03</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">00</span><span class="w"> </span><span class="mi">0</span><span class="p">...</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------+------------------+--------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df</span> <span class="o">&lt;-</span> <span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span> <span class="o">=</span> <span class="s">'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nf">grid_tessellateexplode</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"wkt"</span><span class="p">),</span> <span class="nf">lit</span><span class="p">(</span><span class="m">0L</span><span class="p">))))</span>
+<span class="o">+-----------------------------------------------+</span>
+<span class="o">|</span><span class="n">is_core</span><span class="o">|</span>          <span class="n">index_id</span><span class="o">|</span>                 <span class="n">wkb</span><span class="o">|</span>
+<span class="o">+-------+------------------+--------------------+</span>
+<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">577481099093999615</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">578044049047420927</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">578782920861286399</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">577023702256844799</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">577938495931154431</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">577586652210266111</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">06</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">577269992861466623</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
+<span class="o">|</span>  <span class="n">false</span><span class="o">|</span><span class="m">578360708396220415</span><span class="o">|</span><span class="p">[</span><span class="m">01</span> <span class="m">03</span> <span class="m">00</span> <span class="m">00</span> <span class="m">00</span> <span class="m">0</span><span class="kc">...</span><span class="o">|</span>
+<span class="o">+-------+------------------+--------------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
+<h2 id="mosaic-explode-deprecated">mosaic_explode [Deprecated]<a class="headerlink" href="#mosaic-explode-deprecated" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mosaic_explode">
+<span class="sig-name descname"><span class="pre">mosaic_explode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mosaic_explode" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an alias for <a class="reference internal" href="#grid-tessellateexplode"><span class="std std-ref">grid_tessellateexplode</span></a></p>
+</dd></dl>
+
+
+<h2 id="mosaicfill-deprecated">mosaicfill [Deprecated]<a class="headerlink" href="#mosaicfill-deprecated" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mosaicfill">
+<span class="sig-name descname"><span class="pre">mosaicfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mosaicfill" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an alias for <a class="reference internal" href="#grid-tessellate"><span class="std std-ref">grid_tessellate</span></a></p>
+</dd></dl>
+
+
+<h2 id="point-index-geom-deprecated">point_index_geom [Deprecated]<a class="headerlink" href="#point-index-geom-deprecated" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="point_index_geom">
+<span class="sig-name descname"><span class="pre">point_index_geom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#point_index_geom" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an alias for <a class="reference internal" href="#grid-pointascellid"><span class="std std-ref">grid_pointascellid</span></a></p>
+</dd></dl>
+
+
+<h2 id="point-index-lonlat-deprecated">point_index_lonlat [Deprecated]<a class="headerlink" href="#point-index-lonlat-deprecated" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="point_index_lonlat">
+<span class="sig-name descname"><span class="pre">point_index_lonlat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#point_index_lonlat" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an alias for <a class="reference internal" href="#grid-longlatascellid"><span class="std std-ref">grid_longlatascellid</span></a></p>
+</dd></dl>
+
+
+<h2 id="polyfill-deprecated">polyfill [Deprecated]<a class="headerlink" href="#polyfill-deprecated" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="polyfill">
+<span class="sig-name descname"><span class="pre">polyfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polyfill" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is an alias for <a class="reference internal" href="#grid-polyfill"><span class="std std-ref">grid_polyfill</span></a></p>
+</dd></dl>
 
 
 
