@@ -106,6 +106,11 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
         )
     }
 
+    override def sql: String ={
+        val childrenSQL = children.map(_.sql).mkString(", ")
+        s"$prettyName($childrenSQL, '$outDataType')"
+    }
+
     override def child: Expression = inGeometry
 
     override protected def withNewChildInternal(newChild: Expression): Expression = copy(inGeometry = newChild)

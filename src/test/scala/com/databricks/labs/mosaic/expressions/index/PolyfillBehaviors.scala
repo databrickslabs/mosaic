@@ -13,6 +13,22 @@ import org.scalatest.matchers.should.Matchers._
 trait PolyfillBehaviors {
     this: AnyFlatSpec =>
 
+    def polyfillOnComputedColumns(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+        mosaicContext.register(spark)
+
+        val boroughs: DataFrame = getBoroughs(mc)
+
+        val mosaics = boroughs
+            .select(
+              grid_polyfill(convert_to(col("wkt"), "wkb"), resolution)
+            )
+            .collect()
+
+        boroughs.collect().length shouldEqual mosaics.length
+    }
+
     def wktPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
@@ -47,9 +63,8 @@ trait PolyfillBehaviors {
         val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
-            .select(
-              polyfill(convert_to(col("wkt"), "wkb"), resolution)
-            )
+            .select(convert_to(col("wkt"), "wkb").as("wkb"))
+            .select(polyfill(col("wkb"), resolution))
             .collect()
 
         boroughs.collect().length shouldEqual mosaics.length
@@ -73,9 +88,8 @@ trait PolyfillBehaviors {
         val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
-            .select(
-              polyfill(convert_to(col("wkt"), "hex"), resolution)
-            )
+            .select(convert_to(col("wkt"), "hex").as("hex"))
+            .select(polyfill(col("hex"), resolution))
             .collect()
 
         boroughs.collect().length shouldEqual mosaics.length
@@ -99,9 +113,8 @@ trait PolyfillBehaviors {
         val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
-            .select(
-              polyfill(convert_to(col("wkt"), "coords"), resolution)
-            )
+            .select(convert_to(col("wkt"), "coords").as("coords"))
+            .select(polyfill(col("coords"), resolution))
             .collect()
 
         boroughs.collect().length shouldEqual mosaics.length
@@ -157,7 +170,7 @@ trait PolyfillBehaviors {
         an[Error] should be thrownBy badExpr.dataType
         an[Error] should be thrownBy badExpr.inputTypes
 
-        //legacy API def tests
+        // legacy API def tests
         noException should be thrownBy mc.functions.polyfill(lit(""), lit(5))
         noException should be thrownBy mc.functions.polyfill(lit(""), 5)
     }
