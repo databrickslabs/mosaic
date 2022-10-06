@@ -671,151 +671,151 @@ df.select(flatten_polygons($"wkt")).show(false)
 // COMMAND ----------
 
 // MAGIC %md
-// MAGIC ### point_index_lonlat
+// MAGIC ### grid_longlatascellid
 
 // COMMAND ----------
 
 // MAGIC %python
 // MAGIC df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-// MAGIC df.select(point_index_lonlat('lon', 'lat', lit(10))).show(1, False)
+// MAGIC df.select(grid_longlatascellid('lon', 'lat', lit(10))).show(1, False)
 
 // COMMAND ----------
 
 val df = List((30.0, 10.0)).toDF("lon", "lat")
-df.select(point_index_lonlat($"lon", $"lat", lit(10))).show()
+df.select(grid_longlatascellid($"lon", $"lat", lit(10))).show()
 
 // COMMAND ----------
 
 // MAGIC %sql
-// MAGIC SELECT point_index_lonlat(30d, 10d, 10)
+// MAGIC SELECT grid_longlatascellid(30d, 10d, 10)
 
 // COMMAND ----------
 
 // MAGIC %r
 // MAGIC df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
-// MAGIC showDF(select(df, point_index_lonlat(column("lon"), column("lat"), lit(10L))), truncate=F)
+// MAGIC showDF(select(df, grid_longlatascellid(column("lon"), column("lat"), lit(10L))), truncate=F)
 
 // COMMAND ----------
 
 // MAGIC %md
-// MAGIC ### point_index_geom
+// MAGIC ### grid_pointascellid
 
 // COMMAND ----------
 
 // MAGIC %python
 // MAGIC df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-// MAGIC df.select(point_index_geom(st_point('lon', 'lat'), lit(10))).show(1, False)
+// MAGIC df.select(grid_pointascellid(st_point('lon', 'lat'), lit(10))).show(1, False)
 
 // COMMAND ----------
 
 val df = List((30.0, 10.0)).toDF("lon", "lat")
-df.select(point_index_geom(st_point($"lon", $"lat"), lit(10))).show()
+df.select(grid_pointascellid(st_point($"lon", $"lat"), lit(10))).show()
 
 // COMMAND ----------
 
 // MAGIC %sql
-// MAGIC SELECT point_index_geom(st_point(30d, 10d), 10)
+// MAGIC SELECT grid_pointascellid(st_point(30d, 10d), 10)
 
 // COMMAND ----------
 
 // MAGIC %r
 // MAGIC df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
-// MAGIC showDF(select(df, point_index_geom(st_point(column("lon"), column("lat")), lit(10L))), truncate=F)
+// MAGIC showDF(select(df, grid_pointascellid(st_point(column("lon"), column("lat")), lit(10L))), truncate=F)
 
 // COMMAND ----------
 
 // MAGIC %md
-// MAGIC ### polyfill
+// MAGIC ### grid_polyfill
 
 // COMMAND ----------
 
 // MAGIC %python
 // MAGIC df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
-// MAGIC df.select(polyfill('wkt', lit(0))).show(2, False)
+// MAGIC df.select(grid_polyfill('wkt', lit(0))).show(2, False)
 
 // COMMAND ----------
 
 val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-df.select(polyfill($"wkt", lit(0))).show(false)
+df.select(grid_polyfill($"wkt", lit(0))).show(false)
 
 // COMMAND ----------
 
 // MAGIC %sql
-// MAGIC SELECT polyfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
+// MAGIC SELECT grid_polyfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
 
 // COMMAND ----------
 
 // MAGIC %r
 // MAGIC df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
-// MAGIC showDF(select(df, polyfill(column("wkt"), lit(0L))), truncate=F)
+// MAGIC showDF(select(df, grid_polyfill(column("wkt"), lit(0L))), truncate=F)
 
 // COMMAND ----------
 
 // MAGIC %md 
-// MAGIC ### mosaic_explode
+// MAGIC ### grid_tessellateexplode
 
 // COMMAND ----------
 
 // MAGIC %python
 // MAGIC df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
-// MAGIC df.select(mosaic_explode('wkt', lit(0))).show()
+// MAGIC df.select(grid_tessellateexplode('wkt', lit(0))).show()
 
 // COMMAND ----------
 
 val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-df.select(mosaic_explode($"wkt", lit(0))).show()
+df.select(grid_tessellateexplode($"wkt", lit(0))).show()
 
 // COMMAND ----------
 
 // MAGIC %sql
-// MAGIC SELECT mosaic_explode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
+// MAGIC SELECT grid_tessellateexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
 
 // COMMAND ----------
 
 // MAGIC %r
 // MAGIC df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
-// MAGIC showDF(select(df, mosaic_explode(column("wkt"), lit(0L))))
+// MAGIC showDF(select(df, grid_tessellateexplode(column("wkt"), lit(0L))))
 
 // COMMAND ----------
 
 // MAGIC %md
-// MAGIC ### mosaicfill
+// MAGIC ### grid_tessellate
 
 // COMMAND ----------
 
 // MAGIC %python
-// MAGIC help(mosaicfill)
+// MAGIC help(grid_tessellate)
 
 // COMMAND ----------
 
 // MAGIC %python
 // MAGIC df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
-// MAGIC df.select(mosaicfill('wkt', lit(0))).show()
+// MAGIC df.select(grid_tessellate('wkt', lit(0))).show()
 
 // COMMAND ----------
 
 // MAGIC %python
-// MAGIC df.select(mosaicfill('wkt', lit(0))).printSchema()
+// MAGIC df.select(grid_tessellate('wkt', lit(0))).printSchema()
 
 // COMMAND ----------
 
 val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-df.select(mosaic_explode($"wkt", lit(0))).show()
+df.select(grid_tessellateexplode($"wkt", lit(0))).show()
 
 // COMMAND ----------
 
 // MAGIC %sql
-// MAGIC SELECT mosaic_explode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
+// MAGIC SELECT grid_tessellateexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
 
 // COMMAND ----------
 
 // MAGIC %python
 // MAGIC df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
-// MAGIC df2 = df.select(mosaicfill('wkt', lit(0)))
+// MAGIC df2 = df.select(grid_tessellate('wkt', lit(0)))
 
 // COMMAND ----------
 
 // MAGIC %r
 // MAGIC df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
-// MAGIC schema(select(df, mosaicfill(column("wkt"), lit(0L))))
-// MAGIC showDF(select(df, mosaicfill(column("wkt"), lit(0L))))
+// MAGIC schema(select(df, grid_tessellate(column("wkt"), lit(0L))))
+// MAGIC showDF(select(df, grid_tessellate(column("wkt"), lit(0L))))

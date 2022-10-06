@@ -152,8 +152,8 @@ display(trips  %>% SparkR::select("pickup_geom", "dropoff_geom"))
 
 optimal_resolution <- 9L
 tripsWithIndex <- trips %>%
-  withColumn("pickup_h3", point_index_geom(column("pickup_geom"), lit(optimal_resolution))) %>%
-  withColumn("dropoff_h3", point_index_geom(column("dropoff_geom"), lit(optimal_resolution)))
+  withColumn("pickup_h3", grid_pointascellid(column("pickup_geom"), lit(optimal_resolution))) %>%
+  withColumn("dropoff_h3", grid_pointascellid(column("dropoff_geom"), lit(optimal_resolution)))
 
 
 # COMMAND ----------
@@ -169,9 +169,9 @@ display(tripsWithIndex)
 
 neighbourhoodsWithIndex <- 
  neighbourhoods %>%
- # We break down the original geometry in multiple smoller mosaic chips, each with its
+ # We break down the original geometry in multiple smaller mosaic chips, each with its
  # own index
- withColumn("mosaic_index", mosaic_explode(column("geometry"), lit(optimal_resolution))) %>%
+ withColumn("mosaic_index", grid_tessellateexplode(column("geometry"), lit(optimal_resolution))) %>%
  # We don't need the original geometry any more, since we have broken it down into
  # Smaller mosaic chips.
  drop(c("json_geometry", "geometry"))
