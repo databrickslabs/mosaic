@@ -5,10 +5,11 @@ import pandas as pd
 from IPython.core.magic import Magics, cell_magic, magics_class
 from keplergl import KeplerGl
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, conv, lower
+from pyspark.sql.functions import col, conv, lower, lit
 
-from mosaic.api.accessors import st_astext
-from mosaic.api.functions import st_centroid2D
+from mosaic.api.accessors import st_astext, st_aswkt
+from mosaic.api.constructors import st_geomfromwkt, st_geomfromwkb
+from mosaic.api.functions import st_centroid2D, grid_pointascellid, grid_boundaryaswkb, st_setsrid, st_transform
 from mosaic.config import config
 from mosaic.utils.kepler_config import mosaic_kepler_config
 
@@ -56,21 +57,20 @@ class MosaicKepler(Magics):
 
     @staticmethod
     def set_centroid(pandas_data, feature_type, feature_name):
+        tmp_sdf = config.mosaic_spark.createDataFrame(pandas_data.iloc[:1])
+
         if feature_type == "h3":
-            centroid = h3.h3_to_geo(pandas_data[feature_name][0])
-            # set to centroid of a geom
-            mosaic_kepler_config["config"]["mapState"]["latitude"] = centroid[0]
-            mosaic_kepler_config["config"]["mapState"]["longitude"] = centroid[1]
-        elif feature_type == "geometry":
-            tmp_sdf = config.mosaic_spark.createDataFrame(pandas_data.iloc[:1])
-            centroid = (
-                tmp_sdf.select(st_centroid2D(col(feature_name)))
-                .limit(1)
-                .collect()[0][0]
-            )
-            # set to centroid of a geom
-            mosaic_kepler_config["config"]["mapState"]["latitude"] = centroid[1]
-            mosaic_kepler_config["config"]["mapState"]["longitude"] = centroid[0]
+            tmp_sdf = tmp_sdf.withColumn(feature_name, grid_boundaryaswkb(feature_name))
+
+        centroid = (
+            tmp_sdf.select(st_centroid2D(feature_name))
+            .limit(1)
+            .collect()[0][0]
+        )
+
+        # set to centroid of a geom
+        mosaic_kepler_config["config"]["mapState"]["latitude"] = centroid[1]
+        mosaic_kepler_config["config"]["mapState"]["longitude"] = centroid[0]
 
     @cell_magic
     def mosaic_kepler(self, *args):
@@ -101,8 +101,25 @@ class MosaicKepler(Magics):
                 data = data.withColumn(
                     feature_name, lower(conv(col(feature_name), 10, 16))
                 )
+        if feature_type == "bng":
+            data = (data
+                .withColumn(feature_name, grid_boundaryaswkb(feature_name))
+                .withColumn(feature_name, st_geomfromwkb(feature_name))
+                .withColumn(
+                    feature_name,
+                    st_transform(st_setsrid(feature_name, lit(27700)), lit(4326))
+                )
+                .withColumn(feature_name, st_aswkt(feature_name)))
         elif feature_type == "geometry":
             data = data.withColumn(feature_name, st_astext(col(feature_name)))
+        elif feature_type == "bng_geometry":
+            data = (data
+                .withColumn(feature_name, st_geomfromwkt(st_aswkt(feature_name)))
+                .withColumn(
+                    feature_name,
+                    st_transform(st_setsrid(feature_name, lit(27700)), lit(4326))
+                )
+                .withColumn(feature_name, st_aswkt(feature_name)))
         else:
             raise Exception(f"Unsupported geometry type: {feature_type}.")
 
