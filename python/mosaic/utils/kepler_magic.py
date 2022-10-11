@@ -16,8 +16,39 @@ from mosaic.utils.kepler_config import mosaic_kepler_config
 
 @magics_class
 class MosaicKepler(Magics):
+
+    """
+    A magic command for visualizing data in KeplerGl.
+    """
+
+    def __init__(self, shell):
+      Magics.__init__(self, shell)
+      self.bng_crsid = 27700
+      self.osgb36_crsid = 27700
+      self.wgs84_crsid = 4326
+
     @staticmethod
     def displayKepler(map_instance, height, width):
+
+        """
+        Display Kepler map instance in Jupyter notebook.
+
+        Parameters:
+        ------------
+        map_instance: KeplerGl
+            Kepler map instance
+        height: int
+            Height of the map
+        width: int
+            Width of the map
+
+        Returns:
+        -----------
+        None
+
+        Example:
+            displayKepler(map_instance, 600, 800)
+        """
         decoded = (
             map_instance._repr_html_()
             .decode("utf-8")
@@ -40,6 +71,22 @@ class MosaicKepler(Magics):
 
     @staticmethod
     def get_spark_df(table_name):
+        """
+        Constructs a Spark DataFrame from table name, Pandas DataFrame or Spark DataFrame.
+
+        Parameters:
+        ------------
+        table_name: str
+            Name of the table
+
+        Returns:
+        -----------
+        Spark DataFrame
+
+        Example:
+            get_spark_df(table_name)
+        """
+
         try:
             table = config.ipython_hook.ev(table_name)
             if isinstance(table, pd.DataFrame):  # pandas dataframe
@@ -57,6 +104,37 @@ class MosaicKepler(Magics):
 
     @staticmethod
     def set_centroid(pandas_data, feature_type, feature_name):
+
+        """
+        Sets the centroid of the geometry column.
+
+        Parameters:
+        ------------
+        pandas_data: Pandas DataFrame
+            Pandas DataFrame containing the geometry column to be visualized in KeplerGl.
+        feature_type: str
+            Type of the feature column to be visualized in KeplerGl.
+            This can be "h3", "bng" or "geometry".
+            "geometry" represents geometry column with CRSID 4326.
+            "geometry(bng)" or "geometry(osgb36)" represents geometry column with CRSID 27700.
+            "geometry(23456)" represents geometry column with 23456 where 23456 is the EPSG code.
+        feature_name: str
+            Name of the column containing the geometry to be visualized in KeplerGl.
+
+        Returns:
+        -----------
+        None
+
+        Example:
+            set_centroid(pdf, "h3", "hex_id")
+            set_centroid(pdf, "bng", "bng_id")
+            set_centroid(pdf, "geometry", "geom")
+            set_centroid(pdf, "geometry(bng)", "geom")
+            set_centroid(pdf, "geometry(osgb36)", "geom")
+            set_centroid(pdf, "geometry(27700)", "geom")
+            set_centroid(pdf, "geometry(23456)", "geom")
+        """
+
         tmp_sdf = config.mosaic_spark.createDataFrame(pandas_data.iloc[:1])
 
         if feature_type == "h3":
@@ -74,7 +152,35 @@ class MosaicKepler(Magics):
 
     @cell_magic
     def mosaic_kepler(self, *args):
-        """Replace current line with new output"""
+
+        """
+        A magic command for visualizing data in KeplerGl.
+
+        Parameters:
+        ------------
+        args: str
+            Arguments passed to the magic command.
+            The first argument is the name of the table to be visualized in KeplerGl.
+            The second argument is the type of the feature column to be visualized in KeplerGl.
+            This can be "h3", "bng" or "geometry".
+            "geometry" represents geometry column with CRSID 4326.
+            "geometry(bng)" or "geometry(osgb36)" represents geometry column with CRSID 27700.
+            "geometry(23456)" represents geometry column with 23456 where 23456 is the EPSG code.
+
+        Returns:
+        -----------
+        None
+
+        Example:
+            %mosaic_kepler table_name geometry_column h3 [limit]
+            %mosaic_kepler table_name geometry_column bng [limit]
+            %mosaic_kepler table_name geometry_column geometry [limit]
+            %mosaic_kepler table_name geometry_column geometry(bng) [limit]
+            %mosaic_kepler table_name geometry_column geometry(osgb36) [limit]
+            %mosaic_kepler table_name geometry_column geometry(27700) [limit]
+            %mosaic_kepler table_name geometry_column geometry(23456) [limit]
+        """
+
         inputs = [
             i
             for i in " ".join(list(args)).replace("\n", " ").replace('"', "").split(" ")
@@ -107,17 +213,22 @@ class MosaicKepler(Magics):
                 .withColumn(feature_name, st_geomfromwkb(feature_name))
                 .withColumn(
                     feature_name,
-                    st_transform(st_setsrid(feature_name, lit(27700)), lit(4326))
+                    st_transform(st_setsrid(feature_name, lit(self.bng_crsid)), lit(self.wgs84_crsid))
                 )
                 .withColumn(feature_name, st_aswkt(feature_name)))
         elif feature_type == "geometry":
             data = data.withColumn(feature_name, st_astext(col(feature_name)))
-        elif feature_type == "bng_geometry":
+        elif re.search("^geometry\(.*\)$", feature_type).start() != None:
+            crsid = feature_type.replace("geometry(", "").replace(")", "").lower()
+            if crsid == "bng" or crsid == "osgb36":
+                crsid = self.bng_crsid
+            else:
+                crsid = int(crsid)
             data = (data
                 .withColumn(feature_name, st_geomfromwkt(st_aswkt(feature_name)))
                 .withColumn(
                     feature_name,
-                    st_transform(st_setsrid(feature_name, lit(27700)), lit(4326))
+                    st_transform(st_setsrid(feature_name, lit(crsid)), lit(self.wgs84_crsid))
                 )
                 .withColumn(feature_name, st_aswkt(feature_name)))
         else:

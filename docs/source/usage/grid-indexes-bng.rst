@@ -42,6 +42,11 @@ configurations. Spark provides an easy way to supply configuration parameters us
     >>> library(sparkrMosaic)
     >>> enableMosaic("ESRI", "BNG")
 
+   .. code-tab:: sql
+
+    >>> -- For SQL please use Automatic SQL Configuration. See: https://databrickslabs.github.io/mosaic/usage/automatic-sql-registration.html
+    >>> -- Otherwise, use python configuration in the first cell of your notebook, then use SQL in the rest of the notebook.
+
 Coordinate Reference System
 ###########################
 
@@ -82,15 +87,19 @@ possible to index with BNG.
 .. tabs::
    .. code-tab:: py
 
-    >>> df = df.withColumn("geometry", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
+    >>> df = df.withColumn("is_within_bng_bounds", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
 
    .. code-tab:: scala
 
-    >>> val withValidCoords = df.withColumn("geometry", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
+    >>> val withValidCoords = df.withColumn("is_within_bng_bounds", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
 
    .. code-tab:: r R
 
-    >>> df <- withColumn(df, "geometry", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
+    >>> df <- withColumn(df, "is_within_bng_bounds", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
+
+   .. code-tab:: sql
+
+    >>> SELECT *, st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds') as is_within_bng_bounds
 
 Mosaic supports all indexing operations for both H3 and BNG.
 Please see :doc:`Spatial Indexing </api/spatial-indexing>` for supported indexing operations.
