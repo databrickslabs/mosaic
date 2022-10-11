@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.functions
 
+import com.databricks.labs.mosaic.{DATABRICKS_SQL_FUNCTIONS_MODULE, H3, SPARK_DATABRICKS_GEO_H3_ENABLED}
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
@@ -15,14 +16,59 @@ import com.databricks.labs.mosaic.GDAL
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
-import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
+import org.apache.spark.sql.types.{LongType, StringType}
 
+import scala.reflect.runtime.universe
+
+//noinspection DuplicatedCode
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI) extends Serializable with Logging {
 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 
     val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
+
+    val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
+
+    def registerProductH3(registry: FunctionRegistry, dbName: Option[String]): Unit = {
+        aliasFunction(registry, "grid_longlatascellid", dbName, "h3_longlatash3", None)
+        aliasFunction(registry, "grid_polyfill", dbName, "h3_polyfillash3", None)
+        aliasFunction(registry, "grid_boundaryaswkb", dbName, "h3_boundaryaswkb", None)
+    }
+
+    def aliasFunction(
+        registry: FunctionRegistry,
+        alias: String,
+        aliasDbName: Option[String],
+        functionName: String,
+        functionDbName: Option[String]
+    ): Unit = {
+        registry.registerFunction(
+          FunctionIdentifier(alias, aliasDbName),
+          registry.lookupFunction(FunctionIdentifier(functionName, functionDbName)).get,
+          registry.lookupFunctionBuilder(FunctionIdentifier(functionName, functionDbName)).get
+        )
+    }
+
+    val idAsLongDefaultExpr: Expression =
+        indexSystem.defaultDataTypeID match {
+            case LongType   => lit(true).expr
+            case StringType => lit(false).expr
+            case _          => throw new Error("Id can either be long or string.")
+        }
+
+    def register(): Unit = {
+        val spark = SparkSession.builder().getOrCreate()
+        register(spark)
+    }
+
+    def register(database: String): Unit = {
+        val spark = SparkSession.builder().getOrCreate()
+        spark.sql(s"create database if not exists $database")
+        register(spark, Some(database))
+    }
 
     /**
       * Registers required parsers for SQL for Mosaic functionality.
@@ -69,12 +115,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
               exprs match {
                   case e if e.length == 1 => ST_MakePolygon(e.head, array().expr)
                   case e if e.length == 2 => ST_MakePolygon(e.head, e.last)
+                  case _                  => throw new Error("Wrong number of arguments.")
               }
-        )
-        registry.registerFunction(
-          FunctionIdentifier("index_geometry", database),
-          IndexGeometry.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => IndexGeometry(exprs(0), indexSystem.name, geometryAPI.name)
         )
 
         /** GeometryAPI Specific */
@@ -313,7 +355,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         registry.registerFunction(
           FunctionIdentifier("st_intersection_aggregate", database),
           ST_IntersectionAggregate.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_IntersectionAggregate(exprs(0), exprs(1), geometryAPI.name, indexSystem.name)
+          (exprs: Seq[Expression]) => ST_IntersectionAggregate(exprs(0), exprs(1), geometryAPI.name, indexSystem.name, 0, 0)
         )
         registry.registerFunction(
           FunctionIdentifier("st_intersects_aggregate", database),
@@ -323,43 +365,79 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 
         /** IndexSystem and GeometryAPI Specific methods */
         registry.registerFunction(
-          FunctionIdentifier("mosaic_explode", database),
+          FunctionIdentifier("grid_tessellateexplode", database),
           MosaicExplode.registryExpressionInfo(database),
           (exprs: Seq[Expression]) =>
               exprs match {
-                  case e if e.length == 2 =>
-                      MosaicExplode(struct(ColumnAdapter(e(0)), ColumnAdapter(e(1)), lit(true)).expr, indexSystem.name, geometryAPI.name)
+                  case e if e.length == 2 => MosaicExplode(e(0), e(1), lit(true).expr, lit(true).expr, indexSystem.name, geometryAPI.name)
                   case e if e.length == 3 =>
                       MosaicExplode(
-                        struct(ColumnAdapter(e(0)), ColumnAdapter(e(1)), ColumnAdapter(e(2))).expr,
+                        e(0),
+                        e(1),
+                        e(2),
+                        idAsLongDefaultExpr,
+                        indexSystem.name,
+                        geometryAPI.name
+                      )
+                  case _                  => MosaicExplode(
+                        exprs(0),
+                        exprs(1),
+                        exprs(2),
+                        exprs(3),
                         indexSystem.name,
                         geometryAPI.name
                       )
               }
         )
         registry.registerFunction(
-          FunctionIdentifier("mosaicfill", database),
+          FunctionIdentifier("grid_tessellateaslong", database),
+          MosaicFill.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => MosaicFill(exprs(0), exprs(1), lit(true).expr, lit(true).expr, indexSystem.name, geometryAPI.name)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("grid_tessellate", database),
           MosaicFill.registryExpressionInfo(database),
           (exprs: Seq[Expression]) =>
               exprs match {
-                  case e if e.length == 2 => MosaicFill(e(0), e(1), lit(true).expr, indexSystem.name, geometryAPI.name)
-                  case e if e.length == 3 => MosaicFill(e(0), e(1), e(2), indexSystem.name, geometryAPI.name)
+                  case e if e.length == 2 => MosaicFill(e(0), e(1), lit(true).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
+                  case e if e.length == 3 => MosaicFill(e(0), e(1), e(2), idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
+                  case e                  => MosaicFill(e(0), e(1), e(2), e(3), indexSystem.name, geometryAPI.name)
               }
         )
+
+        if (shouldUseDatabricksH3()) {
+            // Forward the H3 calls to product directly
+            registerProductH3(registry, database)
+        } else {
+            registry.registerFunction(
+              FunctionIdentifier("grid_longlatascellid", database),
+              PointIndexLonLat.registryExpressionInfo(database),
+              (exprs: Seq[Expression]) => PointIndexLonLat(exprs(0), exprs(1), exprs(2), idAsLongDefaultExpr, indexSystem.name)
+            )
+
+            registry.registerFunction(
+              FunctionIdentifier("grid_polyfill", database),
+              Polyfill.registryExpressionInfo(database),
+              (exprs: Seq[Expression]) => Polyfill(exprs(0), exprs(1), idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
+            )
+
+            registry.registerFunction(
+              FunctionIdentifier("grid_boundaryaswkb", database),
+              IndexGeometry.registryExpressionInfo(database),
+              (exprs: Seq[Expression]) => IndexGeometry(exprs(0), Literal("WKB"), indexSystem.name, geometryAPI.name)
+            )
+        }
+
         registry.registerFunction(
-          FunctionIdentifier("point_index_lonlat", database),
-          PointIndexLonLat.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => PointIndexLonLat(exprs(0), exprs(1), exprs(2), indexSystem.name)
-        )
-        registry.registerFunction(
-          FunctionIdentifier("point_index_geom", database),
+          FunctionIdentifier("grid_pointascellid", database),
           PointIndexGeom.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => PointIndexGeom(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => PointIndexGeom(exprs(0), exprs(1), idAsLongDefaultExpr, indexSystem.name, geometryAPI.name)
         )
+
         registry.registerFunction(
-          FunctionIdentifier("polyfill", database),
-          Polyfill.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => Polyfill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          FunctionIdentifier("grid_boundary", database),
+          IndexGeometry.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => IndexGeometry(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
 
         // DataType keywords are needed at checkInput execution time.
@@ -379,6 +457,15 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
           TrySql.registryExpressionInfo(database, "try_sql"),
           (exprs: Seq[Expression]) => TrySql(exprs(0))
         )
+
+        /** Legacy API Specific aliases */
+        aliasFunction(registry, "index_geometry", database, "grid_boundaryaswkb", database)
+        aliasFunction(registry, "mosaic_explode", database, "grid_tessellateexplode", database)
+        aliasFunction(registry, "mosaicfill", database, "grid_tessellate", database)
+        aliasFunction(registry, "point_index_geom", database, "grid_pointascellid", database)
+        aliasFunction(registry, "point_index_lonlat", database, "grid_longlatascellid", database)
+        aliasFunction(registry, "polyfill", database, "grid_polyfill", database)
+
     }
 
     def getGeometryAPI: GeometryAPI = this.geometryAPI
@@ -388,6 +475,22 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
     def getIndexSystem: IndexSystem = this.indexSystem
 
     def enableGDAL(spark: SparkSession): Unit = MosaicGDAL.enableGDAL(spark)
+
+    def getProductMethod(methodName: String): universe.MethodMirror = {
+        val functionsModuleSymbol: universe.ModuleSymbol = mirror.staticModule(DATABRICKS_SQL_FUNCTIONS_MODULE)
+
+        val functionsModuleMirror = mirror.reflectModule(functionsModuleSymbol)
+        val instanceMirror = mirror.reflect(functionsModuleMirror.instance)
+
+        val methodSymbol = functionsModuleSymbol.info.decl(universe.TermName(methodName)).asMethod
+        instanceMirror.reflectMethod(methodSymbol)
+    }
+
+    def shouldUseDatabricksH3(): Boolean = {
+        val spark = SparkSession.builder().getOrCreate()
+        val isDatabricksH3Enabled = spark.conf.get(SPARK_DATABRICKS_GEO_H3_ENABLED, "false") == "true"
+        indexSystem.name == H3.name && isDatabricksH3Enabled
+    }
 
     // scalastyle:off object.name
     object functions extends Serializable {
@@ -486,53 +589,136 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             )
         def st_intersection_aggregate(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(
-              ST_IntersectionAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem.name)
+              ST_IntersectionAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem.name, 0, 0)
                   .toAggregateExpression(isDistinct = false)
             )
 
         /** IndexSystem Specific */
 
         /** IndexSystem and GeometryAPI Specific methods */
-        def mosaic_explode(geom: Column, resolution: Column): Column =
-            ColumnAdapter(MosaicExplode(struct(geom, resolution, lit(true)).expr, indexSystem.name, geometryAPI.name))
-        def mosaic_explode(geom: Column, resolution: Column, keepCoreGeometries: Boolean): Column =
-            ColumnAdapter(MosaicExplode(struct(geom, resolution, lit(keepCoreGeometries)).expr, indexSystem.name, geometryAPI.name))
-        def mosaic_explode(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
-            ColumnAdapter(MosaicExplode(struct(geom, resolution, keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
-        def mosaic_explode(geom: Column, resolution: Int): Column =
-            ColumnAdapter(MosaicExplode(struct(geom, lit(resolution), lit(true)).expr, indexSystem.name, geometryAPI.name))
-        def mosaic_explode(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
-            ColumnAdapter(MosaicExplode(struct(geom, lit(resolution), lit(keepCoreGeometries)).expr, indexSystem.name, geometryAPI.name))
-        def mosaic_explode(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
-            ColumnAdapter(MosaicExplode(struct(geom, lit(resolution), keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
-        def mosaicfill(geom: Column, resolution: Column): Column =
-            ColumnAdapter(MosaicFill(geom.expr, resolution.expr, lit(true).expr, indexSystem.name, geometryAPI.name))
-        def mosaicfill(geom: Column, resolution: Int): Column =
-            ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, lit(true).expr, indexSystem.name, geometryAPI.name))
-        def mosaicfill(geom: Column, resolution: Column, keepCoreGeometries: Boolean): Column =
-            ColumnAdapter(MosaicFill(geom.expr, resolution.expr, lit(keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
-        def mosaicfill(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
-            ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, lit(keepCoreGeometries).expr, indexSystem.name, geometryAPI.name))
-        def mosaicfill(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
-            ColumnAdapter(MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name))
-        def mosaicfill(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
-            ColumnAdapter(MosaicFill(geom.expr, lit(resolution).expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name))
-        def point_index_geom(point: Column, resolution: Column): Column =
-            ColumnAdapter(PointIndexGeom(point.expr, resolution.expr, indexSystem.name, geometryAPI.name))
-        def point_index_geom(point: Column, resolution: Int): Column =
-            ColumnAdapter(PointIndexGeom(point.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
-        def point_index_lonlat(lon: Column, lat: Column, resolution: Column): Column =
-            ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, resolution.expr, indexSystem.name))
-        def point_index_lonlat(lon: Column, lat: Column, resolution: Int): Column =
-            ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, lit(resolution).expr, indexSystem.name))
-        def polyfill(geom: Column, resolution: Column): Column =
-            ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem.name, geometryAPI.name))
-        def polyfill(geom: Column, resolution: Int): Column =
-            ColumnAdapter(Polyfill(geom.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
-        def index_geometry(indexID: Column): Column = ColumnAdapter(IndexGeometry(indexID.expr, indexSystem.name, geometryAPI.name))
+        def grid_tessellateexplode(geom: Column, resolution: Column): Column =
+            grid_tessellateexplode(geom, resolution, lit(true), ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellateexplode(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
+            grid_tessellateexplode(geom, resolution, keepCoreGeometries, ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellateexplode(geom: Column, resolution: Column, keepCoreGeometries: Column, idAsLong: Column): Column =
+            ColumnAdapter(
+              MosaicExplode(geom.expr, resolution.expr, keepCoreGeometries.expr, idAsLong.expr, indexSystem.name, geometryAPI.name)
+            )
+        def grid_tessellateexplode(geom: Column, resolution: Int): Column =
+            grid_tessellateexplode(geom, lit(resolution), lit(true), ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellateexplode(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
+            grid_tessellateexplode(geom, lit(resolution), lit(keepCoreGeometries), ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellateexplode(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
+            grid_tessellateexplode(geom, lit(resolution), keepCoreGeometries, ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellateexplode(geom: Column, resolution: Int, keepCoreGeometries: Boolean, idAsLong: Boolean): Column = {
+            val resExpr = lit(resolution).expr
+            val keepCoreExpr = lit(keepCoreGeometries).expr
+            val idAsLongExpr = lit(idAsLong).expr
+            ColumnAdapter(MosaicExplode(geom.expr, resExpr, keepCoreExpr, idAsLongExpr, indexSystem.name, geometryAPI.name))
+        }
+        def grid_tessellate(geom: Column, resolution: Column): Column =
+            grid_tessellate(geom, resolution, lit(true), ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellate(geom: Column, resolution: Int): Column =
+            grid_tessellate(geom, lit(resolution), lit(true), ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellate(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
+            grid_tessellate(geom, resolution, keepCoreGeometries, ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellate(geom: Column, resolution: Column, keepCoreGeometries: Column, idAsLong: Column): Column =
+            ColumnAdapter(
+              MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, idAsLong.expr, indexSystem.name, geometryAPI.name)
+            )
+        def grid_tessellate(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
+            grid_tessellate(geom, lit(resolution), lit(keepCoreGeometries), ColumnAdapter(idAsLongDefaultExpr))
+        def grid_tessellate(geom: Column, resolution: Int, keepCoreGeometries: Boolean, idAsLong: Boolean): Column =
+            grid_tessellate(geom, lit(resolution), lit(keepCoreGeometries), lit(idAsLong))
+        def grid_pointascellid(point: Column, resolution: Column): Column =
+            ColumnAdapter(PointIndexGeom(point.expr, resolution.expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name))
+        def grid_pointascellid(point: Column, resolution: Int): Column =
+            ColumnAdapter(PointIndexGeom(point.expr, lit(resolution).expr, idAsLongDefaultExpr, indexSystem.name, geometryAPI.name))
+        def grid_longlatascellid(lon: Column, lat: Column, resolution: Column): Column = {
+            if (shouldUseDatabricksH3()) {
+                getProductMethod("h3_longlatascellid")
+                    .apply(lon, lat, resolution)
+                    .asInstanceOf[Column]
+            } else {
+                ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, resolution.expr, idAsLongDefaultExpr, indexSystem.name))
+            }
+        }
+
+        def grid_longlatascellid(lon: Column, lat: Column, resolution: Int): Column = grid_longlatascellid(lon, lat, lit(resolution))
+        def grid_polyfill(geom: Column, resolution: Column): Column = {
+            if (shouldUseDatabricksH3()) {
+                getProductMethod("h3_polyfill")
+                    .apply(geom, resolution)
+                    .asInstanceOf[Column]
+            } else {
+                ColumnAdapter(Polyfill(geom.expr, resolution.expr, idAsLongDefaultExpr, indexSystem.name, getGeometryAPI.name))
+            }
+        }
+        def grid_polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, lit(resolution))
+        def grid_boundaryaswkb(indexID: Column): Column = {
+            if (shouldUseDatabricksH3()) {
+                getProductMethod("h3_boundaryaswkb")
+                    .apply(indexID)
+                    .asInstanceOf[Column]
+            } else {
+                ColumnAdapter(IndexGeometry(indexID.expr, lit("WKB").expr, indexSystem.name, getGeometryAPI.name))
+            }
+        }
+        def grid_boundary(indexID: Column, format: Column): Column =
+            ColumnAdapter(IndexGeometry(indexID.expr, format.expr, indexSystem.name, geometryAPI.name))
+        def grid_boundary(indexID: Column, format: String): Column =
+            ColumnAdapter(IndexGeometry(indexID.expr, lit(format).expr, indexSystem.name, geometryAPI.name))
 
         // Not specific to Mosaic
         def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
+
+        // Legacy API
+        @deprecated("Please use 'grid_boundaryaswkb' or 'grid_boundary(..., format_name)' expressions instead.")
+        def index_geometry(indexID: Column): Column = grid_boundaryaswkb(indexID)
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
+        def mosaic_explode(geom: Column, resolution: Column): Column = grid_tessellateexplode(geom, resolution)
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
+        def mosaic_explode(geom: Column, resolution: Column, keepCoreGeometries: Boolean): Column =
+            grid_tessellateexplode(geom, resolution, lit(keepCoreGeometries))
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
+        def mosaic_explode(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
+            grid_tessellateexplode(geom, resolution, keepCoreGeometries)
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
+        def mosaic_explode(geom: Column, resolution: Int): Column = grid_tessellateexplode(geom, resolution)
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
+        def mosaic_explode(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
+            grid_tessellateexplode(geom, resolution, keepCoreGeometries)
+        @deprecated("Please use 'grid_tessellateexplode' expression instead.")
+        def mosaic_explode(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
+            grid_tessellateexplode(geom, resolution, keepCoreGeometries)
+        @deprecated("Please use 'grid_tessellate' expression instead.")
+        def mosaicfill(geom: Column, resolution: Column): Column = grid_tessellate(geom, resolution)
+        @deprecated("Please use 'grid_tessellate' expression instead.")
+        def mosaicfill(geom: Column, resolution: Int): Column = grid_tessellate(geom, lit(resolution))
+        @deprecated("Please use 'grid_tessellate' expression instead.")
+        def mosaicfill(geom: Column, resolution: Column, keepCoreGeometries: Boolean): Column =
+            grid_tessellate(geom, resolution, lit(keepCoreGeometries))
+        @deprecated("Please use 'grid_tessellate' expression instead.")
+        def mosaicfill(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =
+            grid_tessellate(geom, resolution, keepCoreGeometries)
+        @deprecated("Please use 'grid_tessellate' expression instead.")
+        def mosaicfill(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
+            grid_tessellate(geom, resolution, keepCoreGeometries)
+        @deprecated("Please use 'grid_tessellate' expression instead.")
+        def mosaicfill(geom: Column, resolution: Int, keepCoreGeometries: Column): Column =
+            grid_tessellate(geom, lit(resolution), keepCoreGeometries)
+        @deprecated("Please use 'grid_pointascellid' expressions instead.")
+        def point_index_geom(point: Column, resolution: Column): Column = grid_pointascellid(point, resolution)
+        @deprecated("Please use 'grid_pointascellid' expressions instead.")
+        def point_index_geom(point: Column, resolution: Int): Column = grid_pointascellid(point, resolution)
+        @deprecated("Please use 'grid_longlatascellid' expressions instead.")
+        def point_index_lonlat(lon: Column, lat: Column, resolution: Column): Column = grid_longlatascellid(lon, lat, resolution)
+        @deprecated("Please use 'grid_longlatascellid' expressions instead.")
+        def point_index_lonlat(lon: Column, lat: Column, resolution: Int): Column = grid_longlatascellid(lon, lat, resolution)
+        @deprecated("Please use 'grid_polyfill' expressions instead.")
+        def polyfill(geom: Column, resolution: Column): Column = grid_polyfill(geom, resolution)
+        @deprecated("Please use 'grid_polyfill' expressions instead.")
+        def polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, resolution)
 
     }
 
@@ -546,7 +732,7 @@ object MosaicContext {
 
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI = GDAL): MosaicContext = {
         instance = Some(new MosaicContext(indexSystem, geometryAPI, rasterAPI))
-        context
+        context()
     }
 
     def geometryAPI: GeometryAPI = context.getGeometryAPI
@@ -555,10 +741,16 @@ object MosaicContext {
 
     def indexSystem: IndexSystem = context.getIndexSystem
 
-    def context: MosaicContext =
+    def context(): MosaicContext =
         instance match {
             case Some(context) => context
-            case None          => throw new IllegalStateException("MosaicContext was not built.")
+            case None          => throw new Error("MosaicContext was not built.")
         }
+
+    def reset(): Unit = instance = None
+
+    def geometryAPI(): GeometryAPI = context().getGeometryAPI
+
+    def indexSystem(): IndexSystem = context().getIndexSystem
 
 }

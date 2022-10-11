@@ -64,6 +64,35 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_zmin", api.st_zmin("wkt"))
             .withColumn("st_zmax", api.st_zmax("wkt"))
             .withColumn("flatten_polygons", api.flatten_polygons("wkt"))
+
+            # SRID functions
+            .withColumn(
+                "geom_with_srid", api.st_setsrid(api.st_geomfromwkt("wkt"), lit(4326))
+            )
+            .withColumn("srid_check", api.st_srid("geom_with_srid"))
+            .withColumn(
+                "transformed_geom", api.st_transform("geom_with_srid", lit(3857))
+            )
+
+            # Grid functions
+            .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1))
+            )
+            .withColumn("grid_pointascellid", api.grid_pointascellid("point_wkt", lit(1)))
+            .withColumn("grid_boundaryaswkb", api.grid_boundaryaswkb(lit(1)))
+            .withColumn("grid_polyfill", api.grid_polyfill("wkt", lit(1)))
+            .withColumn("grid_tessellateexplode", api.grid_tessellateexplode("wkt", lit(1)))
+            .withColumn(
+                "grid_tessellateexplode_no_core_chips",
+                api.grid_tessellateexplode("wkt", lit(1), lit(False)),
+            )
+            .withColumn(
+                "grid_tessellateexplode_no_core_chips_bool",
+                api.grid_tessellateexplode("wkt", lit(1), False),
+            )
+            .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
+
+
+            # Deprecated
             .withColumn(
                 "point_index_lonlat", api.point_index_lonlat(lit(1), lit(1), lit(1))
             )
@@ -87,13 +116,7 @@ class TestFunctions(MosaicTestCase):
                 "mosaicfill_no_core_chips_bool",
                 api.mosaicfill("wkt", lit(1), lit(False)),
             )
-            .withColumn(
-                "geom_with_srid", api.st_setsrid(api.st_geomfromwkt("wkt"), lit(4326))
-            )
-            .withColumn("srid_check", api.st_srid("geom_with_srid"))
-            .withColumn(
-                "transformed_geom", api.st_transform("geom_with_srid", lit(3857))
-            )
+
         )
 
         self.assertEqual(result.count(), 1)

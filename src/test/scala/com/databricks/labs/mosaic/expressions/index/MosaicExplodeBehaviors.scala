@@ -1,8 +1,12 @@
 package com.databricks.labs.mosaic.expressions.index
 
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.{getBoroughs, getWKTRowsDf}
+import com.databricks.labs.mosaic.test.mocks
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.scalatest.flatspec.AnyFlatSpec
@@ -62,6 +66,14 @@ trait MosaicExplodeBehaviors {
 
         noEmptyChips.collect().length should be >= 0
 
+        val noEmptyChips2 = df
+          .select(
+            mosaic_explode(col("wkt"), resolution, keepCoreGeometries = lit(true))
+          )
+          .filter(col("index.wkb").isNull)
+
+        noEmptyChips2.collect().length should be >= 0
+
         val emptyChips = df
             .select(
               mosaic_explode(col("wkt"), resolution, keepCoreGeometries = false)
@@ -69,6 +81,14 @@ trait MosaicExplodeBehaviors {
             .filter(col("index.wkb").isNull)
 
         emptyChips.collect().length should be >= 0
+
+        val emptyChips2 = df
+          .select(
+            mosaic_explode(col("wkt"), resolution, keepCoreGeometries = lit(false))
+          )
+          .filter(col("index.wkb").isNull)
+
+        emptyChips2.collect().length should be >= 0
     }
 
     def wktDecomposeKeepCoreParamExpression(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
@@ -202,6 +222,72 @@ trait MosaicExplodeBehaviors {
             .collect()
 
         boroughs.collect().length should be <= mosaics2.length
+    }
+
+    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        val mc = mosaicContext
+        mosaicContext.register(spark)
+        val sc = spark
+        import sc.implicits._
+
+        val wkt = mocks.getWKTRowsDf(mosaicContext).limit(1).select("wkt").as[String].collect().head
+        val idAsLongExpr = mc.getIndexSystem.defaultDataTypeID match {
+            case LongType   => lit(true).expr
+            case StringType => lit(false).expr
+        }
+        val resExpr = mc.getIndexSystem match {
+            case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
+            case BNGIndexSystem => lit("100m").expr
+        }
+
+        val mosaicExplodeExpr = MosaicExplode(
+          lit(wkt).expr,
+          resExpr,
+          lit(false).expr,
+          idAsLongExpr,
+          mc.getIndexSystem.name,
+          mc.getGeometryAPI.name
+        )
+
+        mosaicExplodeExpr.position shouldEqual false
+        mosaicExplodeExpr.inline shouldEqual false
+        mosaicExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
+
+        val badExpr = MosaicExplode(
+          lit(10).expr,
+          resExpr,
+          lit(false).expr,
+          idAsLongExpr,
+          mc.getIndexSystem.name,
+          mc.getGeometryAPI.name
+        )
+
+        badExpr.checkInputDataTypes().isFailure shouldEqual true
+        badExpr
+            .withNewChildren(Array(lit(wkt).expr, lit(true).expr, lit(false).expr, idAsLongExpr))
+            .checkInputDataTypes()
+            .isFailure shouldEqual true
+        badExpr
+            .withNewChildren(Array(lit(wkt).expr, resExpr, lit(5).expr, idAsLongExpr))
+            .checkInputDataTypes()
+            .isFailure shouldEqual true
+
+        // Line decompose error should be thrown
+        val geom = MosaicContext.geometryAPI.geometry("POINT (1 1)", "WKT")
+        an[Error] should be thrownBy Mosaic.lineFill(geom, 5, MosaicContext.indexSystem, MosaicContext.geometryAPI)
+
+        // Default getters
+        noException should be thrownBy mosaicExplodeExpr.geom
+        noException should be thrownBy mosaicExplodeExpr.resolution
+        noException should be thrownBy mosaicExplodeExpr.keepCoreGeom
+        noException should be thrownBy mosaicExplodeExpr.idAsLong
+
+        // legacy API def tests
+        noException should be thrownBy mc.functions.mosaic_explode(lit(""), lit(5))
+        noException should be thrownBy mc.functions.mosaic_explode(lit(""), 5)
+        noException should be thrownBy mc.functions.mosaic_explode(lit(""), lit(5), lit(true))
+        noException should be thrownBy mc.functions.mosaic_explode(lit(""), lit(5), true)
+        noException should be thrownBy mc.functions.mosaic_explode(lit(""), 5, true)
     }
 
 }
