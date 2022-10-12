@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Kepler visializations
+# MAGIC # Kepler visualizations
 
 # COMMAND ----------
 
