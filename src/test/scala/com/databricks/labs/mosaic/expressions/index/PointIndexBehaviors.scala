@@ -44,6 +44,38 @@ trait PointIndexBehaviors extends QueryTest {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
+    def wktPointIndex(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: String): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        import mc.functions._
+        mc.register(spark)
+
+        val boroughs: DataFrame = getBoroughs(mc)
+
+        val mosaics = boroughs
+            .withColumn("centroid", st_centroid2D(col("wkt")))
+            .select(
+                grid_pointascellid(st_point(col("centroid.x"), col("centroid.y")), lit(resolution)),
+                grid_longlatascellid(col("centroid.x"), col("centroid.y"), lit(resolution))
+            )
+            .collect()
+
+        boroughs.collect().length shouldEqual mosaics.length
+
+        boroughs.withColumn("centroid", st_centroid2D(col("wkt"))).createOrReplaceTempView("boroughs")
+
+        val mosaics2 = spark
+            .sql(s"""
+                    |select grid_pointascellid(st_point(centroid.x, centroid.y), '$resolution'),
+                    |grid_longlatascellid(centroid.x, centroid.y, '$resolution')
+                    |from boroughs
+                    |""".stripMargin)
+            .collect()
+
+        boroughs.collect().length shouldEqual mosaics2.length
+    }
+
+
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)

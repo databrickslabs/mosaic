@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.index
 
+import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -146,6 +147,14 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         kRing1 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1)
         kRing2 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2)
         kRing3 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2).union(kDisk3)
+    }
+
+    "Auxiliary methods" should "not throw exceptions" in {
+        noException should be thrownBy BNGIndexSystem.getResolution(5)
+        noException should be thrownBy BNGIndexSystem.getResolution("100m")
+        noException should be thrownBy BNGIndexSystem.getResolution(UTF8String.fromString("100m"))
+        BNGIndexSystem.getResolutionStr(4) shouldEqual "100m"
+        BNGIndexSystem.getResolutionStr(-4) shouldEqual "500m"
     }
 
 }

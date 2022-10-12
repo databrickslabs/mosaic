@@ -28,6 +28,7 @@ Documentation
    usage/installation
    usage/quickstart
    usage/grid-indexes
+   usage/grid-indexes-bng
    usage/automatic-sql-registration
    usage/kepler
    api/geometry-constructors

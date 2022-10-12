@@ -19,6 +19,8 @@ class TestPointIndex extends QueryTest with SharedSparkSession with PointIndexBe
     test("Testing PointIndexGeom (H3, ESRI) NO_CODEGEN") { noCodegen { wktPointIndex(H3IndexSystem, ESRI, 5) } }
     test("Testing PointIndexGeom (BNG, JTS) NO_CODEGEN") { noCodegen { wktPointIndex(BNGIndexSystem, JTS, 5) } }
     test("Testing PointIndexGeom (BNG, ESRI) NO_CODEGEN") { noCodegen { wktPointIndex(BNGIndexSystem, ESRI, 5) } }
+    test("Testing PointIndexGeom (BNG, JTS) Resolution as String NO_CODEGEN") { noCodegen { wktPointIndex(BNGIndexSystem, JTS, "100m") } }
+    test("Testing PointIndexGeom (BNG, ESRI) Resolution as String NO_CODEGEN") { noCodegen { wktPointIndex(BNGIndexSystem, ESRI, "100m") } }
     test("Testing PointIndexGeom auxiliaryMethods (H3, JTS)") { noCodegen { auxiliaryMethods(H3IndexSystem, JTS) } }
     test("Testing PointIndexGeom auxiliaryMethods (H3, ESRI)") { noCodegen { auxiliaryMethods(H3IndexSystem, ESRI) } }
     test("Testing PointIndexGeom auxiliaryMethods (BNG, JTS)") { noCodegen { auxiliaryMethods(BNGIndexSystem, JTS) } }
