@@ -479,7 +479,7 @@ def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column
     -----
     The resulting geometry could give different results depending on the chosen
     geometry API (ESRI or JTS), especially for polygons that are invalid based on
-    the choosen geometry API.
+    the chosen geometry API.
 
     """
     return config.mosaic_context.invoke_function(
