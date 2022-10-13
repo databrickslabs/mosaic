@@ -1222,8 +1222,8 @@ st_unaryunion
 
     :example:
 
-..  tabs::
-    .. code-tab:: py
+.. tabs::
+   .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))'}])
     >>> df.select(st_unaryunion('wkt')).show()
@@ -1233,7 +1233,7 @@ st_unaryunion
     |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
     +-------------------------------------------------------------------------+
 
-    .. code-tab:: scala
+   .. code-tab:: scala
 
     >>> val df = List(("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")).toDF("wkt")
     >>> df.select(st_unaryunion(col("wkt"))).show()
@@ -1243,7 +1243,7 @@ st_unaryunion
     |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
     +-------------------------------------------------------------------------+
 
-    .. code-tab:: sql
+   .. code-tab:: sql
 
     >>> SELECT st_unaryunion("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
     +-------------------------------------------------------------------------+
@@ -1252,7 +1252,7 @@ st_unaryunion
     |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
     +-------------------------------------------------------------------------+
 
-    .. code-tab:: r R
+   .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
     >>> showDF(select(df, st_unaryunion(column("wkt"))), truncate=F)

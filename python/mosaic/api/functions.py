@@ -502,7 +502,7 @@ def st_unaryunion(geom: ColumnOrName) -> Column:
         The union geometry.
     """
     return config.mosaic_context.invoke_function(
-        "st_buffer", pyspark_to_java_column(geom)
+        "st_unaryunion", pyspark_to_java_column(geom)
     )
 
 
