@@ -24,5 +24,9 @@ class MosaicContextTest extends QueryTest with SharedSparkSession with MosaicCon
     test("Testing sql registration (H3, ESRI).") { noCodegen { sqlRegistration(H3IndexSystem, ESRI) } }
     test("Testing sql registration (BNG, JTS).") { noCodegen { sqlRegistration(BNGIndexSystem, JTS) } }
     test("Testing sql registration (BNG, ESRI).") { noCodegen { sqlRegistration(BNGIndexSystem, ESRI) } }
+    test("Testing detection of Databricks functions.") { detectDatabricksFunctions() }
+    test("Testing proxy for Databricks functions.") { proxyDatabricksFunctions() }
+    test("Testing call of Databricks H3 functions.") { callDatabricksH3Functions() }
+    test("Testing call of Databricks functions via reflection.") { detectDatabricksFunctionsWithReflection() }
 
 }

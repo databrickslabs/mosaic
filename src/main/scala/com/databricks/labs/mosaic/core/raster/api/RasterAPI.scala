@@ -10,8 +10,13 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
     def raster(input: Array[Byte]): MosaicRaster = reader.fromBytes(input)
     def raster(inputData: InternalRow): MosaicRaster = reader.fromBytes(inputData.getBinary(0))
     def raster(inputData: Any): MosaicRaster = reader.fromBytes(inputData.asInstanceOf[Array[Byte]])
-    def raster(inputData: Any, inputPath: Any): MosaicRaster =
-        reader.fromBytes(inputData.asInstanceOf[Array[Byte]], inputPath.asInstanceOf[String])
+    def raster(inputData: Any, inputPath: Any): MosaicRaster = {
+        if (inputPath == "") {
+            raster(inputData)
+        } else {
+            reader.fromBytes(inputData.asInstanceOf[Array[Byte]], inputPath.asInstanceOf[String])
+        }
+    }
 
 }
 

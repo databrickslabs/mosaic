@@ -12,7 +12,7 @@ case class ST_MetaData(inputRaster: Expression, path: Expression, rasterAPIName:
       with NullIntolerant
       with CodegenFallback {
 
-    private lazy val mapBuilder = new ArrayBasedMapBuilder(StringType, StringType)
+    val rasterAPI: RasterAPI = RasterAPI(rasterAPIName)
 
     override def left: Expression = inputRaster
 
@@ -21,16 +21,16 @@ case class ST_MetaData(inputRaster: Expression, path: Expression, rasterAPIName:
     override def dataType: DataType = MapType(keyType = StringType, valueType = StringType)
 
     override protected def nullSafeEval(rasterRow: Any, pathRow: Any): Any = {
-        val rasterAPI = RasterAPI(rasterAPIName)
-        val raster = pathRow.asInstanceOf[UTF8String].toString match {
-            case p: String if p == "" => rasterAPI.raster(rasterRow)
-            case p: String            => rasterAPI.raster(rasterRow, p)
-        }
+        val path = pathRow.asInstanceOf[UTF8String].toString
+
+        val baseRaster = rasterAPI.raster(rasterRow)
+        val raster = rasterAPI.raster(rasterRow, path)
         val metaData = raster.metadata
-        val keys = ArrayData.toArrayData(metaData.keys.toArray[String].map(UTF8String.fromString))
-        val values = ArrayData.toArrayData(metaData.values.toArray[String].map(UTF8String.fromString))
-        mapBuilder.putAll(keys, values)
-        mapBuilder.build()
+        val result = buildMap(metaData)
+
+        baseRaster.cleanUp()
+        raster.cleanUp()
+        result
     }
 
     override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =

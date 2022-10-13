@@ -2,13 +2,15 @@ package com.databricks.labs.mosaic.core.raster
 
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util.Try
-
-import org.gdal.gdal.{gdal, Dataset}
+import org.gdal.gdal.{Dataset, gdal}
 import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
 import org.gdal.osr.SpatialReference
 import org.locationtech.proj4j.CRSFactory
 
-class MosaicRasterGDAL(raster: Dataset) extends MosaicRaster {
+import java.util
+import scala.util.hashing.MurmurHash3
+
+class MosaicRasterGDAL(raster: Dataset, path: String) extends MosaicRaster(path) {
 
     val crsFactory: CRSFactory = new CRSFactory
 
@@ -44,6 +46,7 @@ class MosaicRasterGDAL(raster: Dataset) extends MosaicRaster {
 
     override def numBands: Int = raster.GetRasterCount()
 
+    // noinspection ZeroIndexToHead
     override def extent: Seq[Double] = {
         val minx = geoTransformArray(0)
         val maxy = geoTransformArray(3)
@@ -60,6 +63,7 @@ class MosaicRasterGDAL(raster: Dataset) extends MosaicRaster {
 
     override def getRaster: Dataset = this.raster
 
+    // noinspection ZeroIndexToHead
     override def geoTransform(pixel: Int, line: Int): Seq[Double] = {
         val Xp = geoTransformArray(0) + pixel * geoTransformArray(1) + line * geoTransformArray(2)
         val Yp = geoTransformArray(3) + pixel * geoTransformArray(4) + line * geoTransformArray(5)
@@ -68,30 +72,29 @@ class MosaicRasterGDAL(raster: Dataset) extends MosaicRaster {
 
     def spatialRef: SpatialReference = raster.GetSpatialRef()
 
+    override def cleanUp(): Unit = {
+        raster.delete()
+        gdal.Unlink(path)
+    }
 }
 
 object MosaicRasterGDAL extends RasterReader {
 
     override def fromBytes(bytes: Array[Byte]): MosaicRaster = {
-        val virtualPath = s"/vsimem/${java.util.UUID.randomUUID.toString}"
+        // We use both the hash code and murmur hash
+        // to ensure that the hash is unique.
+        val hashCode = util.Arrays.hashCode(bytes)
+        val murmur = MurmurHash3.arrayHash(bytes)
+        val virtualPath = s"/vsimem/$hashCode/$murmur"
         fromBytes(bytes, virtualPath)
     }
 
     def fromBytes(bytes: Array[Byte], path: String): MosaicRaster = {
-        enableGDAL()
         gdal.FileFromMemBuffer(path, bytes)
         val dataset = gdal.Open(path, GA_ReadOnly)
-        MosaicRasterGDAL(dataset)
+        MosaicRasterGDAL(dataset, path)
     }
 
-    def apply(raster: Dataset): MosaicRaster = new MosaicRasterGDAL(raster)
-
-    private def enableGDAL(): Unit = {
-        System.getProperty("os.name").toLowerCase() match {
-            case o: String if o.contains("nux") => System.load("/usr/lib/jni/libgdalalljni.so")
-            case _                              => //throw new UnsupportedOperationException("This method is only enabled on Ubuntu Linux.")
-        }
-        gdal.AllRegister()
-    }
+    def apply(dataset: Dataset, path: String) = new MosaicRasterGDAL(dataset, path)
 
 }

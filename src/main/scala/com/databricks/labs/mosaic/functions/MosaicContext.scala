@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.functions
 
-import com.databricks.labs.mosaic.{DATABRICKS_SQL_FUNCTIONS_MODULE, H3, SPARK_DATABRICKS_GEO_H3_ENABLED}
+import com.databricks.labs.mosaic.{DATABRICKS_SQL_FUNCTIONS_MODULE, GDAL, H3, SPARK_DATABRICKS_GEO_H3_ENABLED}
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
@@ -10,9 +10,7 @@ import com.databricks.labs.mosaic.expressions.format._
 import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.helper.TrySql
 import com.databricks.labs.mosaic.expressions.index._
-import com.databricks.labs.mosaic.expressions.raster.{ST_BandMetaData, ST_MetaData, ST_Subdatasets}
-import com.databricks.labs.mosaic.gdal.MosaicGDAL
-import com.databricks.labs.mosaic.GDAL
+import com.databricks.labs.mosaic.expressions.raster._
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
@@ -474,7 +472,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 
     def getIndexSystem: IndexSystem = this.indexSystem
 
-    def enableGDAL(spark: SparkSession): Unit = MosaicGDAL.enableGDAL(spark)
 
     def getProductMethod(methodName: String): universe.MethodMirror = {
         val functionsModuleSymbol: universe.ModuleSymbol = mirror.staticModule(DATABRICKS_SQL_FUNCTIONS_MODULE)
@@ -735,11 +732,11 @@ object MosaicContext {
         context()
     }
 
-    def geometryAPI: GeometryAPI = context.getGeometryAPI
+    def geometryAPI: GeometryAPI = context().getGeometryAPI
 
-    def rasterAPI: RasterAPI = context.getRasterAPI
+    def rasterAPI: RasterAPI = context().getRasterAPI
 
-    def indexSystem: IndexSystem = context.getIndexSystem
+    def indexSystem: IndexSystem = context().getIndexSystem
 
     def context(): MosaicContext =
         instance match {
@@ -748,9 +745,5 @@ object MosaicContext {
         }
 
     def reset(): Unit = instance = None
-
-    def geometryAPI(): GeometryAPI = context().getGeometryAPI
-
-    def indexSystem(): IndexSystem = context().getIndexSystem
 
 }

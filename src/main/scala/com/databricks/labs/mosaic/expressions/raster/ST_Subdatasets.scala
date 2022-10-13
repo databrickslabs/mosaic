@@ -6,23 +6,24 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.{ArrayBasedMapBuilder, ArrayData}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+import org.gdal.gdal.gdal
 
 case class ST_Subdatasets(inputRaster: Expression, rasterAPIName: String) extends UnaryExpression with NullIntolerant with CodegenFallback {
 
-    private lazy val mapBuilder = new ArrayBasedMapBuilder(StringType, StringType)
+    val rasterAPI: RasterAPI = RasterAPI(rasterAPIName)
 
     override def child: Expression = inputRaster
 
     override def dataType: DataType = MapType(keyType = StringType, valueType = StringType)
 
     override protected def nullSafeEval(rasterRow: Any): Any = {
-        val rasterAPI = RasterAPI(rasterAPIName)
         val raster = rasterAPI.raster(rasterRow)
+
         val metaData = raster.subdatasets
-        val keys = ArrayData.toArrayData(metaData.keys.toArray[String].map(UTF8String.fromString))
-        val values = ArrayData.toArrayData(metaData.values.toArray[String].map(UTF8String.fromString))
-        mapBuilder.putAll(keys, values)
-        mapBuilder.build()
+        val result = buildMap(metaData)
+
+        raster.cleanUp()
+        result
     }
 
     override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputRaster = newChild)

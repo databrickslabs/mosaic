@@ -1,19 +1,41 @@
 package com.databricks.labs.mosaic.functions
 
+import com.databricks.labs.mosaic.{H3, SPARK_DATABRICKS_GEO_H3_ENABLED}
+
+import scala.sys.process._
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.auxiliary.BadIndexSystem
 import org.apache.spark.sql.QueryTest
+import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.catalog.CatalogDatabase
-import org.apache.spark.sql.catalyst.expressions.Literal
-import org.apache.spark.sql.functions.{array, lit}
-import org.scalatest.matchers.must.Matchers.{be, noException}
-import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, Literal}
+import org.apache.spark.sql.functions.{array, col, lit}
+import org.apache.spark.sql.types.LongType
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.matchers.must.Matchers.{be, noException, not}
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, include}
 
 import java.net.URI
+import scala.util.Try
+
 
 trait MosaicContextBehaviors extends QueryTest {
+
+    object Mocks extends MockFactory {
+
+        val functionBuilder: FunctionBuilder = stub[FunctionBuilder]
+
+        def getMosaicContext: MosaicContext = {
+            val ix = stub[IndexSystem]
+            ix.defaultDataTypeID _ when() returns LongType
+            ix.name _ when() returns H3.name
+            MosaicContext.build(ix, stub[GeometryAPI])
+        }
+
+    }
 
     def creationOfContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
@@ -149,6 +171,74 @@ trait MosaicContextBehaviors extends QueryTest {
             CatalogDatabase("test", "", new URI("loc"), Map.empty),
             ignoreIfExists = true)
         noException should be thrownBy mc.register("test")
+    }
+
+    def detectDatabricksFunctions(): Unit = {
+        val mc = Mocks.getMosaicContext
+
+        mc.shouldUseDatabricksH3() should be(false)
+
+        spark.conf.set(SPARK_DATABRICKS_GEO_H3_ENABLED, "false")
+        mc.shouldUseDatabricksH3() should be(false)
+
+        spark.conf.set(SPARK_DATABRICKS_GEO_H3_ENABLED, "true")
+        mc.shouldUseDatabricksH3() should be(true)
+    }
+
+    def proxyDatabricksFunctions(): Unit = {
+        val functionBuilder = Mocks.functionBuilder
+        val mc = Mocks.getMosaicContext
+
+        val registry = spark.sessionState.functionRegistry
+
+        spark.conf.set(SPARK_DATABRICKS_GEO_H3_ENABLED, "true")
+
+        // Register mock product functions
+        registry.registerFunction(
+            FunctionIdentifier("h3_longlatash3", None),
+            new ExpressionInfo("product", "h3_longlatash3"),
+            (exprs: Seq[Expression]) => Column(exprs.head).expr
+        )
+        registry.registerFunction(
+            FunctionIdentifier("h3_polyfillash3", None),
+            new ExpressionInfo("product", "h3_polyfillash3"),
+            functionBuilder
+        )
+        registry.registerFunction(
+            FunctionIdentifier("h3_boundaryaswkb", None),
+            new ExpressionInfo("product", "h3_boundaryaswkb"),
+            functionBuilder
+        )
+
+        mc.register(spark)
+
+        assert(registry.lookupFunction(FunctionIdentifier("grid_longlatascellid", None)).get.getName == "h3_longlatash3")
+        assert(registry.lookupFunction(FunctionIdentifier("grid_polyfill", None)).get.getName == "h3_polyfillash3")
+        assert(registry.lookupFunction(FunctionIdentifier("grid_boundaryaswkb", None)).get.getName == "h3_boundaryaswkb")
+    }
+
+    def callDatabricksH3Functions(): Unit = {
+        val mc = Mocks.getMosaicContext
+        spark.conf.set(SPARK_DATABRICKS_GEO_H3_ENABLED, "true")
+        import mc.functions._
+
+        val result = spark
+            .range(10)
+            .withColumn("grid_longlatascellid", grid_longlatascellid(col("id"), col("id"), col("id")))
+            .withColumn("grid_polyfill", grid_polyfill(col("id"), col("id")))
+            .withColumn("grid_boundaryaswkb", grid_boundaryaswkb(col("id")))
+            .collect()
+
+        result.length shouldEqual 10
+        result.forall(_.getAs[String]("grid_longlatascellid") == "dummy_h3_longlatascellid") should be(true)
+        result.forall(_.getAs[String]("grid_polyfill") == "dummy_h3_polyfill") should be(true)
+        result.forall(_.getAs[String]("grid_boundaryaswkb") == "dummy_h3_boundaryaswkb") should be(true)
+    }
+
+    def detectDatabricksFunctionsWithReflection(): Unit = {
+        val mc = Mocks.getMosaicContext
+        val method = mc.getProductMethod("sample_increment")
+        method.apply(1).asInstanceOf[Int] shouldEqual 2
     }
 
 }

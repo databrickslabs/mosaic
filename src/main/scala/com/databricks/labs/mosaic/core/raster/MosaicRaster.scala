@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.core.raster
 
 import org.gdal.gdal.Dataset
 
-trait MosaicRaster extends Serializable {
+abstract class MosaicRaster(path: String) extends Serializable {
 
     def metadata: Map[String, String]
 
@@ -25,5 +25,7 @@ trait MosaicRaster extends Serializable {
     def geoTransform(pixel: Int, line: Int): Seq[Double]
 
     def getRaster: Dataset
+
+    def cleanUp(): Unit
 
 }
