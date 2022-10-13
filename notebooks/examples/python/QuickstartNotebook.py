@@ -160,8 +160,8 @@ display(
 # COMMAND ----------
 
 tripsWithIndex = (trips
-  .withColumn("pickup_h3", mos.point_index_geom(col("pickup_geom"), lit(optimal_resolution)))
-  .withColumn("dropoff_h3", mos.point_index_geom(col("dropoff_geom"), lit(optimal_resolution)))
+  .withColumn("pickup_h3", mos.grid_pointascellid(col("pickup_geom"), lit(optimal_resolution)))
+  .withColumn("dropoff_h3", mos.grid_pointascellid(col("dropoff_geom"), lit(optimal_resolution)))
 )
 
 # COMMAND ----------
@@ -179,7 +179,7 @@ neighbourhoodsWithIndex = (neighbourhoods
 
                            # We break down the original geometry in multiple smaller mosaic chips, each with its
                            # own index
-                           .withColumn("mosaic_index", mos.mosaic_explode(col("geometry"), lit(optimal_resolution)))
+                           .withColumn("mosaic_index", mos.grid_tessellateexplode(col("geometry"), lit(optimal_resolution)))
 
                            # We don't need the original geometry any more, since we have broken it down into
                            # Smaller mosaic chips.

@@ -180,8 +180,8 @@ select * from trips
 create or replace temp view tripsWithIndex as (
   select 
     *,
-    point_index_geom(pickup_geom, 9) as pickup_h3,
-    point_index_geom(dropoff_geom, 9) as dropoff_h3,
+    grid_pointascellid(pickup_geom, 9) as pickup_h3,
+    grid_pointascellid(dropoff_geom, 9) as dropoff_h3,
     st_makeline(array(pickup_geom, dropoff_geom)) as trip_line
   from trips
 )
@@ -196,7 +196,7 @@ create or replace temp view tripsWithIndex as (
 create or replace temp view neighbourhoodsWithIndex as (
   select 
     *,
-    mosaic_explode(geometry, 9) as mosaic_index
+    grid_tessellateexplode(geometry, 9) as mosaic_index
   from neighbourhoods
 )
 

@@ -43,6 +43,10 @@ Image1: Mosaic logical design.
 
 Create a Databricks cluster running __Databricks Runtime 10.0__ (or later).
 
+We recommend using Databricks Runtime versions 11.2 or higher with Photon enabled, this will leverage the 
+Databricks h3 expressions when using H3 grid system.
+
+
 ### Documentation
 
 Check out the [documentation pages](https://databrickslabs.github.io/mosaic/).

@@ -1,13 +1,14 @@
 package com.databricks.labs.mosaic.core.index
 
+import scala.collection.JavaConverters._
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.uber.h3core.H3Core
 import org.apache.spark.sql.types.{DataType, LongType}
 import org.locationtech.jts.geom.Geometry
-
-import scala.collection.JavaConverters._
+import com.uber.h3core.util.GeoCoord
 
 /**
   * Implements the [[IndexSystem]] via [[H3Core]] java bindings.
@@ -85,7 +86,10 @@ object H3IndexSystem extends IndexSystem with Serializable {
     override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
-        geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord), POLYGON)
+        geometryAPI.geometry(
+          extended.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
+          POLYGON
+        )
     }
 
     /**
@@ -105,8 +109,8 @@ object H3IndexSystem extends IndexSystem with Serializable {
             val shellPoints = geometry.getShellPoints
             val holePoints = geometry.getHolePoints
             (for (i <- 0 until geometry.getNumGeometries) yield {
-                val boundary = shellPoints(i).map(_.geoCoord).asJava
-                val holes = holePoints(i).map(_.map(_.geoCoord).asJava).asJava
+                val boundary = shellPoints(i).map(_.geoCoord).map(p => new GeoCoord(p.lat, p.lng)).asJava
+                val holes = holePoints(i).map(_.map(_.geoCoord).map(p => new GeoCoord(p.lat, p.lng)).asJava).asJava
 
                 val indices = h3.polyfill(boundary, holes, resolution)
                 indices.asScala.map(_.toLong)
@@ -189,7 +193,10 @@ object H3IndexSystem extends IndexSystem with Serializable {
     override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
-        geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord), POLYGON)
+        geometryAPI.geometry(
+          extended.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
+          POLYGON
+        )
     }
 
     override def defaultDataTypeID: DataType = LongType

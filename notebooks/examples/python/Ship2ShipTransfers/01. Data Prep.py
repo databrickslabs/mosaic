@@ -120,7 +120,7 @@ display(major_ports)
 # COMMAND ----------
 
 (
-    major_ports.select("name", mos.mosaic_explode("geom", lit(9)).alias("mos"))
+    major_ports.select("name", mos.grid_tessellateexplode("geom", lit(9)).alias("mos"))
     .select("name", col("mos.index_id").alias("h3"))
     .write.mode("overwrite")
     .format("delta")
