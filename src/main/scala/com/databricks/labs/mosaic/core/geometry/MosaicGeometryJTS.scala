@@ -118,7 +118,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         MosaicGeometryJTS(convexHull)
     }
 
-    override def unaryUnion: MosaicGeometry = {
+    override def unaryUnion: MosaicGeometryJTS = {
         val unaryUnion = geom.union()
         unaryUnion.setSRID(geom.getSRID)
         MosaicGeometryJTS(unaryUnion)
