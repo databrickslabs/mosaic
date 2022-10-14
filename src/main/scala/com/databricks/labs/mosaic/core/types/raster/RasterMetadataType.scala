@@ -11,7 +11,7 @@ class RasterMetadataType
             StructField("extent", RasterExtentType),
             StructField("numBands", IntegerType),
             StructField("crs", StringType),
-            StructField("bands", ArrayType.apply(RasterBandType))
+            StructField("bands", ArrayType(RasterBandType))
         )
     ) {
 
