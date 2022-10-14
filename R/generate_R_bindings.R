@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+#This file contains all the logic required to parse the scala implementation
+#and build the sparklyr and SparkR bindings for mosaic. It is called from the 
+#command line
+
+
 library(methods)
 
 parser <- function(x){
@@ -19,6 +24,19 @@ parser <- function(x){
 
 ############################################################
 build_generic <- function(input){
+  function_name = input$function_name
+  args = lapply(input$args, function(x){x[1]})
+  paste0(
+    '#\' @rdname ', function_name, ' 
+    setGeneric(
+        name="',function_name,'"
+            ,def=function(',paste0(args, collapse=','), ')  {standardGeneric("',function_name, '")}
+              )
+                  ')
+}
+
+
+build_generic2 <- function(input){
   function_name = input$function_name
   args = lapply(input$args, function(x){x[1]})
   paste0(
@@ -91,6 +109,7 @@ build_method<-function(input){
 }
 
 
+
 ############################################################
 get_function_names <- function(scala_file_path){
   #scala_file_path = "~/Documents/mosaic/src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
@@ -133,11 +152,38 @@ get_function_names <- function(scala_file_path){
   methods_to_bind
 }
 
+############################################################
+build_sparklyr_mosaic_function <- function(input){
+  function_name = input$function_name
+  paste0(
+    
+    "#' ", function_name, '\n', 
+    "#' See \\url{https://databrickslabs.github.io/mosaic/} for full documentation\n",
+    '#\' @rdname ', function_name,'\n',
+    sprintf(
+      '%s <- function(sc){
+  sparklyr::invoke(functions, "%s", spark_session(sc))
+}', function_name, function_name
+    )
+  )
+}
+
+
+############################################################
+copy_supplementary_file <- function(file_name_vector, destination){
+  lapply(file_name_vector, function(x) file.copy(x, destination, overwrite=T))
+}
 ########################################################################
 main <- function(scala_file_path){
   
-  # this assumes working directoy is the SparkR folder
-  #scala_file_path="../../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
+  # this assumes working directory is the R folder
+  #scala_file_path <- "../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
+  sparkr_path <- "sparkR-mosaic/sparkrMosaic"
+  sparklyr_path <- "sparklyr-mosaic/sparklyrMosaic"
+  
+  ##########################
+  ##########################
+  # build sparkr functions
   function_data = get_function_names(scala_file_path)
   parsed <- lapply(function_data, parser)
   
@@ -148,17 +194,29 @@ main <- function(scala_file_path){
   functions <- lapply(parsed, build_method)
   functions <- append(functions_header, functions)
   
-  genericFileConn <- file("sparkrMosaic/R/generics.R")
-  functionsFileConn <- file("sparkrMosaic/R/functions.R")
+  generic_file_conn <- file(file.path(sparkr_path, "R/generics.R"))
+  functions_file_conn <- file(file.path(sparkr_path, "R/functions.R"))
   
-  writeLines(paste0(generics, collapse="\n"), genericFileConn)
-  writeLines(paste0(functions, collapse="\n"), functionsFileConn)
+  writeLines(paste0(generics, collapse="\n"), generic_file_conn)
+  writeLines(paste0(functions, collapse="\n"), functions_file_conn)
   closeAllConnections()
   
-  # copy enableMosaic and column to directory
-  file.copy("enableMosaic.R", "sparkrMosaic/R/enableMosaic.R", overwrite=T)
+  # supplementary files
+  sparkr_supplementary_files <- c("sparkR-mosaic/enableMosaic.R")
+  copy_supplementary_file(sparkr_supplementary_files, "sparkR-mosaic/sparkrMosaic/R")
   
+  ##########################
+  ##########################
+  # build sparklyr functions
+  sparklyr_functions <- lapply(parsed, build_sparklyr_mosaic_function)
+  sparklyr_file_conn <- file(file.path(sparklyr_path, "R/functions.R"))
+  writeLines(paste0(sparklyr_functions, collapse="\n"), sparklyr_file_conn)
+  closeAllConnections()
 
+  # supplementary files
+  sparkr_supplementary_files <- c("sparklyr-mosaic/enableMosaic.R", "sparklyr-mosaic/sparkFunctions.R")
+  copy_supplementary_file(sparkr_supplementary_files, "sparklyr-mosaic/sparklyrMosaic/R/")
+  
 }
 
 args <- commandArgs(trailingOnly = T)
