@@ -32,11 +32,11 @@ sdf <- mutate(sdf, "point_index_lonlat" =  point_index_lonlat(as.double(1L), as.
 sdf <- mutate(sdf, "point_index_geom" =  point_index_geom(point_wkt, as.integer(1L)))
 sdf <- mutate(sdf, "index_geometry" =  index_geometry(point_index_geom))
 sdf <- mutate(sdf, "polyfill" =  polyfill(wkt, as.integer(1L))) # requires a long and passing a double or an integer causes a cast exception - can't convert to Long.  
-#sdf <- mutate(sdf, "mosaic_explode" =  mosaic_explode(wkt, as.integer(1L)))
-#sdf <- mutate(sdf, "mosaicfill" =  mosaicfill(wkt, 1L))
-#sdf <- mutate(sdf, "geom_with_srid" =  st_setsrid(st_geomfromwkt(wkt), 4326L))
-#sdf <- mutate(sdf, "srid_check" =  st_srid(geom_with_srid))
-#sdf <- mutate(sdf, "transformed_geom" =  st_transform(geom_with_srid, 3857L))
+sdf <- mutate(sdf, "mosaic_explode" =  mosaic_explode(wkt, as.integer(1L)))
+sdf <- mutate(sdf, "mosaicfill" =  mosaicfill(wkt, 1L))
+sdf <- mutate(sdf, "geom_with_srid" =  st_setsrid(st_geomfromwkt(wkt), 4326L))
+sdf <- mutate(sdf, "srid_check" =  st_srid(geom_with_srid))
+sdf <- mutate(sdf, "transformed_geom" =  st_transform(geom_with_srid, 3857L))
 
 
 
