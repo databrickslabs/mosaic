@@ -127,6 +127,13 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def convexHull: MosaicGeometryESRI = MosaicGeometryESRI(geom.convexHull())
 
+
+    override def unaryUnion: MosaicGeometry = {
+        // ESRI geometry does not directly implement unary union.
+        // Here the (binary) union is used, because the union of the geometry with itself is equivalent to the unary union.
+        MosaicGeometryESRI(geom.union(geom))
+    }
+
     override def toWKT: String = geom.asText()
 
     override def toJSON: String = geom.asGeoJson()

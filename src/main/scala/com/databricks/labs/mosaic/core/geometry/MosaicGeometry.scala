@@ -59,6 +59,8 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def union(other: MosaicGeometry): MosaicGeometry
 
+    def unaryUnion: MosaicGeometry
+
     def contains(other: MosaicGeometry): Boolean
 
     def flatten: Seq[MosaicGeometry]
