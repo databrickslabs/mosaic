@@ -146,6 +146,32 @@ trait MosaicExplodeBehaviors {
 
     }
 
+    def lineDecomposeFirstPointOnBoundary(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+      mosaicContext.register(spark)
+
+      val rdd = spark.sparkContext.makeRDD(
+        Seq(
+          // The first point of this line is located exactly
+          // over the boundary of the relative h3 cell, while the second point
+          // is located outside of the first point's h3 cell.
+          Row("LINESTRING (-120.65246800000001 40.420067, -120.65228800000001 40.420528000000004)")
+        )
+      )
+      val schema = StructType(
+        List(
+          StructField("wkt", StringType)
+        )
+      )
+      val df = spark.createDataFrame(rdd, schema)
+
+      val noEmptyChips = df
+        .select(
+          expr(s"grid_tessellateexplode(wkt, 8, true)")
+        )
+      val res = noEmptyChips.collect()
+      res.length should be > 0
+    }
+
     def wkbDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
