@@ -153,7 +153,7 @@ select * from trips
 -- MAGIC %md
 -- MAGIC It is worth noting that not each resolution will yield performance improvements. </br>
 -- MAGIC By a rule of thumb it is always better to under index than over index - if not sure select a lower resolution. </br>
--- MAGIC Higher resolutions are needed when we have very imballanced geometries with respect to their size or with respect to the number of vertices. </br>
+-- MAGIC Higher resolutions are needed when we have very imbalanced geometries with respect to their size or with respect to the number of vertices. </br>
 -- MAGIC In such case indexing with more indices will considerably increase the parallel nature of the operations. </br>
 -- MAGIC You can think of Mosaic as a way to partition an overly complex row into multiple rows that have a balanced amount of computation each.
 
@@ -180,8 +180,8 @@ select * from trips
 create or replace temp view tripsWithIndex as (
   select 
     *,
-    point_index_geom(pickup_geom, 9) as pickup_h3,
-    point_index_geom(dropoff_geom, 9) as dropoff_h3,
+    grid_pointascellid(pickup_geom, 9) as pickup_h3,
+    grid_pointascellid(dropoff_geom, 9) as dropoff_h3,
     st_makeline(array(pickup_geom, dropoff_geom)) as trip_line
   from trips
 )
@@ -196,7 +196,7 @@ create or replace temp view tripsWithIndex as (
 create or replace temp view neighbourhoodsWithIndex as (
   select 
     *,
-    mosaic_explode(geometry, 9) as mosaic_index
+    grid_tessellateexplode(geometry, 9) as mosaic_index
   from neighbourhoods
 )
 
@@ -257,7 +257,7 @@ select * from withDropoffZone;
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC For visualisation there simply arent good options in scala. </br>
+-- MAGIC For visualisation there simply aren't good options in scala. </br>
 -- MAGIC Luckily in our notebooks you can easily switch to python just for UI. </br>
 -- MAGIC Mosaic abstracts interaction with Kepler in python.
 

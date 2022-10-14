@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.index
 
+import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -44,7 +45,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         val indexResN5 = BNGIndexSystem.pointToIndex(538825, 179111, -5)
         val indexResN6 = BNGIndexSystem.pointToIndex(538825, 179111, -6)
 
-        indexResN1 shouldBe 1054
+        indexResN1 shouldBe 1050
         indexResN2 shouldBe 105012
         indexResN3 shouldBe 10501373
         indexResN4 shouldBe 1050138794L
@@ -58,13 +59,30 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         BNGIndexSystem.format(indexResN5) shouldBe "TQ388791SW"
         BNGIndexSystem.format(indexResN6) shouldBe "TQ38827911SE"
 
-        BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(1054)) shouldBe -1
+        BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(1050)) shouldBe -1
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(105012)) shouldBe -2
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(10501373)) shouldBe -3
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(1050138794L)) shouldBe -4
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(105013887911L)) shouldBe -5
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(10501388279114L)) shouldBe -6
 
+    }
+
+    "Parse and Format" should "generate consistent results." in {
+        BNGIndexSystem.parse("T") shouldBe 1050
+        BNGIndexSystem.format(1050) shouldBe "T"
+
+        BNGIndexSystem.parse("TQ") shouldBe 105010
+        BNGIndexSystem.format(105010) shouldBe "TQ"
+
+        BNGIndexSystem.parse("TQNW") shouldBe 105012
+        BNGIndexSystem.format(105012) shouldBe "TQNW"
+
+        BNGIndexSystem.parse("TQ38827911") shouldBe 10501388279110L
+        BNGIndexSystem.format(10501388279110L) shouldBe "TQ38827911"
+
+        BNGIndexSystem.parse("TQ38827911SE") shouldBe 10501388279114L
+        BNGIndexSystem.format(10501388279114L) shouldBe "TQ38827911SE"
     }
 
     "KDisk" should "generate index IDs for negative resolutions." in {
@@ -129,6 +147,14 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         kRing1 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1)
         kRing2 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2)
         kRing3 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2).union(kDisk3)
+    }
+
+    "Auxiliary methods" should "not throw exceptions" in {
+        noException should be thrownBy BNGIndexSystem.getResolution(5)
+        noException should be thrownBy BNGIndexSystem.getResolution("100m")
+        noException should be thrownBy BNGIndexSystem.getResolution(UTF8String.fromString("100m"))
+        BNGIndexSystem.getResolutionStr(4) shouldEqual "100m"
+        BNGIndexSystem.getResolutionStr(-4) shouldEqual "500m"
     }
 
 }

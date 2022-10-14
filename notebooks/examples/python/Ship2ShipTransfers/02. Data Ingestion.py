@@ -49,7 +49,7 @@ display(cargos)
 
 cargos_indexed = (
     cargos.withColumn("point_geom", mos.st_point("LON", "LAT"))
-    .withColumn("ix", mos.point_index_geom("point_geom", resolution=lit(9)))
+    .withColumn("ix", mos.grid_pointascellid("point_geom", resolution=lit(9)))
     .withColumn("sog_kmph", round(col("sog") * 1.852, 2))
 )
 display(cargos_indexed)

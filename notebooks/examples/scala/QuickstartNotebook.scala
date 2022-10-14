@@ -17,7 +17,7 @@ print(s"The raw data is stored in $raw_path")
 
 // MAGIC %md
 // MAGIC ## Enable Mosaic in the notebook
-// MAGIC Mosaic requires Databricks Runtime (DBR) version 10.0 or higher. </br>
+// MAGIC Mosaic requires Databricks Runtime (DBR) version 10.0 or higher (11.2 with photon or higher is recommended). </br>
 // MAGIC To get started, you'll need to attach the JAR to your cluster and import instances as in the cell below.
 
 // COMMAND ----------
@@ -141,7 +141,7 @@ println(s"Optimal resolution is $optimalResolution")
 // MAGIC %md
 // MAGIC Not every resolution will yield performance improvements. </br>
 // MAGIC By a rule of thumb it is always better to under-index than over-index - if not sure select a lower resolution. </br>
-// MAGIC Higher resolutions are needed when we have very imballanced geometries with respect to their size or with respect to the number of vertices. </br>
+// MAGIC Higher resolutions are needed when we have very imbalanced geometries with respect to their size or with respect to the number of vertices. </br>
 // MAGIC In such case indexing with more indices will considerably increase the parallel nature of the operations. </br>
 // MAGIC You can think of Mosaic as a way to partition an overly complex row into multiple rows that have a balanced amount of computation each.
 
@@ -165,8 +165,8 @@ display(
 // COMMAND ----------
 
 val tripsWithIndex = trips
-  .withColumn("pickup_h3", point_index_geom(col("pickup_geom"), lit(optimalResolution)))
-  .withColumn("dropoff_h3", point_index_geom(col("dropoff_geom"), lit(optimalResolution)))
+  .withColumn("pickup_h3", grid_pointascellid(col("pickup_geom"), lit(optimalResolution)))
+  .withColumn("dropoff_h3", grid_pointascellid(col("dropoff_geom"), lit(optimalResolution)))
 
 display(tripsWithIndex)
 
@@ -178,9 +178,9 @@ display(tripsWithIndex)
 // COMMAND ----------
 
 val neighbourhoodsWithIndex = neighbourhoods
-   // We break down the original geometry in multiple smoller mosaic chips, each with its
+   // We break down the original geometry in multiple smaller mosaic chips, each with its
    // own index
-   .withColumn("mosaic_index", mosaic_explode(col("geometry"), lit(optimalResolution)))
+   .withColumn("mosaic_index", grid_tessellateexplode(col("geometry"), lit(optimalResolution)))
    // We don't need the original geometry any more, since we have broken it down into
    // Smaller mosaic chips.
    .drop("json_geometry", "geometry")
@@ -250,7 +250,7 @@ withDropoffZone.createOrReplaceTempView("withDropoffZone")
 // COMMAND ----------
 
 // MAGIC %md
-// MAGIC For visualisation there simply arent good options in scala. </br>
+// MAGIC For visualisation there simply aren't good options in scala. </br>
 // MAGIC Luckily in our notebooks you can easily switch to python just for UI. </br>
 // MAGIC Mosaic abstracts interaction with Kepler in python.
 

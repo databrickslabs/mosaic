@@ -70,7 +70,7 @@ object InternalCoord {
         if (input.numElements() == 2) {
             new InternalCoord(Seq(input.getDouble(0), input.getDouble(1)))
         } else {
-            new InternalCoord(Seq(input.getDouble(0), input.getDouble(1), input.getDouble(3)))
+            new InternalCoord(Seq(input.getDouble(0), input.getDouble(1), input.getDouble(2)))
         }
     }
 

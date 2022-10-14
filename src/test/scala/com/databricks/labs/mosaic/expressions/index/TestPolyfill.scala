@@ -8,6 +8,13 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class TestPolyfill extends AnyFlatSpec with PolyfillBehaviors with SparkSuite {
 
+    "Polyfill" should "work on computed columns for any index system and any geometry API" in {
+        it should behave like polyfillOnComputedColumns(MosaicContext.build(H3IndexSystem, ESRI), spark, 11)
+        it should behave like polyfillOnComputedColumns(MosaicContext.build(H3IndexSystem, JTS), spark, 11)
+        it should behave like polyfillOnComputedColumns(MosaicContext.build(BNGIndexSystem, ESRI), spark, 4)
+        it should behave like polyfillOnComputedColumns(MosaicContext.build(BNGIndexSystem, JTS), spark, 4)
+    }
+
     "Polyfill" should "fill wkt geometries for any index system and any geometry API" in {
         it should behave like wktPolyfill(MosaicContext.build(H3IndexSystem, ESRI), spark, 11)
         it should behave like wktPolyfill(MosaicContext.build(H3IndexSystem, JTS), spark, 11)
@@ -34,6 +41,13 @@ class TestPolyfill extends AnyFlatSpec with PolyfillBehaviors with SparkSuite {
         it should behave like coordsPolyfill(MosaicContext.build(H3IndexSystem, JTS), spark, 11)
         it should behave like coordsPolyfill(MosaicContext.build(BNGIndexSystem, ESRI), spark, 4)
         it should behave like coordsPolyfill(MosaicContext.build(BNGIndexSystem, JTS), spark, 4)
+    }
+
+    "Polyfill" should "correctly evaluate auxiliary methods." in {
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, JTS), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, ESRI), spark)
+        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, JTS), spark)
     }
 
 }
