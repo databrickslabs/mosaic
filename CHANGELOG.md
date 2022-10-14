@@ -1,3 +1,6 @@
+## v0.3.2
+- Fixed bug in `mosaic_kepler` plot for H3
+
 ## v0.3.1
 - Implemented `st_unaryunion` function
 - Added BNG grid plotting to mosaic_kepler
