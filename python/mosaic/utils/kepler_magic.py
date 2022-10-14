@@ -207,7 +207,7 @@ class MosaicKepler(Magics):
                 data = data.withColumn(
                     feature_name, lower(conv(col(feature_name), 10, 16))
                 )
-        if feature_type == "bng":
+        elif feature_type == "bng":
             data = (data
                 .withColumn(feature_name, grid_boundaryaswkb(feature_name))
                 .withColumn(feature_name, st_geomfromwkb(feature_name))
