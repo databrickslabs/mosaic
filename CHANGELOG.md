@@ -1,3 +1,11 @@
+## v0.3.1
+- Implemented `st_unaryunion` function
+- Added BNG grid plotting to mosaic_kepler
+- Added arbitrary CRS transformations to mosaic_kepler plotting
+- Added documentation for BNG grid
+- Bug fixes and improvements on the BNG grid implementation
+- Typo fixes
+
 ## v0.3.0
 - Integration with H3 functions from Databricks runtime 11.2
 - Refactored grid functions to reflect the naming convention of H3 functions from Databricks runtime
