@@ -11,8 +11,8 @@ runs:
       shell: bash
       run: |
         cd python
-        pip install build wheel pyspark==${{ matrix.spark }}
-        pip install .
+        sudo pip install build wheel pyspark==${{ matrix.spark }}
+        sudo pip install .
     - name: Test and build python package
       shell: bash
       run: |
