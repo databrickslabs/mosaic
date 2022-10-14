@@ -248,25 +248,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>createThriftDir</id>
-                        <phase>process-resources</phase>
-                        <configuration>
-                            <tasks>
-                                <delete dir="${basedir}/python/mosaic/lib"/>
-                                <mkdir dir="${basedir}/python/mosaic/lib"/>
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
     <profiles>
