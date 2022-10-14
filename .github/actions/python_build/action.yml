@@ -17,8 +17,8 @@ runs:
       shell: bash
       run: |
         cd python
-        python -m unittest
-        python -m build
+        sudo python -m unittest
+        sudo python -m build
     - name: Copy python artifacts to GH Actions run
       shell: bash
       run: cp python/dist/*.whl staging
