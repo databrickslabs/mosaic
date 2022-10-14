@@ -44,6 +44,7 @@ The project wheel file can be built with [build](https://pypa-build.readthedocs.
 The documentation has been produced using [Sphinx](https://www.sphinx-doc.org/en/master/).
 
 To build the docs:
+- Install the pandoc library (follow the instructions for your platform [here](https://pandoc.org/installing.html)).
 - Install the python requirements from `docs/docs-requirements.txt`.
 - Build the HTML documentation by running `make html` from `docs/`.
 - You can locally host the docs by running the `reload.py` script in the `docs/source/` directory.

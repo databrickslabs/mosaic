@@ -22,6 +22,7 @@ import org.apache.spark.sql.types._
   */
 case class InternalGeometry(
     typeId: Int,
+    srid: Int,
     boundaries: Array[Array[InternalCoord]],
     holes: Array[Array[Array[InternalCoord]]]
 ) {
@@ -39,6 +40,7 @@ case class InternalGeometry(
     def merge(other: InternalGeometry): InternalGeometry = {
         InternalGeometry(
           MULTIPOLYGON.id,
+          this.srid,
           this.boundaries ++ other.boundaries,
           this.holes ++ other.holes
         )
@@ -54,6 +56,7 @@ case class InternalGeometry(
         InternalRow.fromSeq(
           Seq(
             typeId,
+            srid,
             ArrayData.toArrayData(
               boundaries.map(boundary => ArrayData.toArrayData(boundary.map(_.serialize)))
             ),
@@ -83,9 +86,10 @@ object InternalGeometry {
       */
     def apply(input: InternalRow): InternalGeometry = {
         val typeId = input.getInt(0)
+        val srid = input.getInt(1)
 
         val boundaries = input
-            .getArray(1)
+            .getArray(2)
             .toObjectArray(ArrayType(ArrayType(InternalCoordType)))
             .map(
               _.asInstanceOf[ArrayData]
@@ -94,7 +98,7 @@ object InternalGeometry {
             )
 
         val holeGroups = input
-            .getArray(2)
+            .getArray(3)
             .toObjectArray(ArrayType(ArrayType(ArrayType(InternalCoordType))))
             .map(
               _.asInstanceOf[ArrayData]
@@ -106,7 +110,7 @@ object InternalGeometry {
                   )
             )
 
-        new InternalGeometry(typeId, boundaries, holeGroups)
+        new InternalGeometry(typeId, srid, boundaries, holeGroups)
     }
 
 }

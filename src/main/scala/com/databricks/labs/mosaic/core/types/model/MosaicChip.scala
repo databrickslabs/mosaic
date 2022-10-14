@@ -1,8 +1,9 @@
 package com.databricks.labs.mosaic.core.types.model
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
-
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.unsafe.types.UTF8String
 
 /**
   * A case class modeling an instance of a mosaic chip. A chip can belong to
@@ -15,27 +16,7 @@ import org.apache.spark.sql.catalyst.InternalRow
   * @param geom
   *   Geometry instance if the chip is a border chip.
   */
-case class MosaicChip(isCore: Boolean, index: Long, geom: MosaicGeometry) {
-
-    /**
-      * Perform an intersection with a geometry, and if intersection is non
-      * empty and the chip is not a core set chip then extract the chip
-      * geometry.
-      *
-      * @param other
-      *   Geometry instance.
-      * @return
-      *   A Mosaic Chip instance.
-      */
-    def intersection(other: MosaicGeometry): MosaicChip = {
-        val intersect = other.intersection(geom)
-        val isCore = intersect.equals(geom)
-        if (isCore) {
-            MosaicChip(isCore, index, null)
-        } else {
-            MosaicChip(isCore, index, intersect)
-        }
-    }
+case class MosaicChip(isCore: Boolean, index: Either[Long, String], geom: MosaicGeometry) {
 
     /**
       * Indicates whether the chip is outside of the representation of the
@@ -49,7 +30,10 @@ case class MosaicChip(isCore: Boolean, index: Long, geom: MosaicGeometry) {
       * @return
       *   An instance of [[InternalRow]].
       */
-    def serialize: InternalRow = InternalRow.fromSeq(Seq(isCore, index, encodeGeom))
+    def serialize: InternalRow = {
+        if (index.isLeft) InternalRow.fromSeq(Seq(isCore, index.left.get, encodeGeom))
+        else InternalRow.fromSeq(Seq(isCore, UTF8String.fromString(index.right.get), encodeGeom))
+    }
 
     /**
       * Encodes the chip geometry as WKB.
@@ -58,5 +42,7 @@ case class MosaicChip(isCore: Boolean, index: Long, geom: MosaicGeometry) {
       *   An instance of [[Array]] of [[Byte]] representing WKB.
       */
     private def encodeGeom: Array[Byte] = Option(geom).map(_.toWKB).orNull
+
+    def toStringID(indexSystem: IndexSystem): MosaicChip = MosaicChip(isCore, Right(indexSystem.format(index.left.get)), geom)
 
 }

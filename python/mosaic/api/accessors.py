@@ -8,6 +8,17 @@ from mosaic.utils.types import ColumnOrName
 # Geometry accessors  #
 #######################
 
+__all__ = [
+    "st_aswkt",
+    "st_astext",
+    "st_aswkb",
+    "st_asbinary",
+    "st_asgeojson",
+    "as_hex",
+    "as_json",
+    "convert_to",
+]
+
 
 def st_aswkt(geom: ColumnOrName) -> Column:
     """

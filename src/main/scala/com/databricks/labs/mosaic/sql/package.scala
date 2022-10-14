@@ -15,8 +15,7 @@ package object sql {
               BinaryType -> "WKB",
               HexType -> "HEX",
               InternalGeometryType -> "COORDS",
-              JSONType -> "GEOJSON",
-              KryoType -> "KRYO"
+              JSONType -> "GEOJSON"
             )
 
         object ColMetaTags {

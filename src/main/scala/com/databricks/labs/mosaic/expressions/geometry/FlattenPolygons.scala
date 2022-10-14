@@ -1,20 +1,19 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import scala.collection.TraversableOnce
-
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types._
-
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo, Literal, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
 
-case class FlattenPolygons(pair: Expression, geometryAPIName: String)
+import scala.collection.TraversableOnce
+
+case class FlattenPolygons(geom: Expression, geometryAPIName: String)
     extends UnaryExpression
       with CollectionGenerator
+      with Serializable
       with CodegenFallback {
 
     /** Fixed definitions. */
@@ -32,13 +31,13 @@ case class FlattenPolygons(pair: Expression, geometryAPIName: String)
 
     override def elementSchema: StructType = FlattenPolygons.elementSchemaImpl(child)
 
-    override def child: Expression = pair
-
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = FlattenPolygons.evalImpl(input, child, geometryAPIName)
+
+    override def child: Expression = geom
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = FlattenPolygons.makeCopyImpl(newArgs, this, geometryAPIName)
 
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(pair = newChild)
+    override protected def withNewChildInternal(newChild: Expression): Expression = copy(geom = newChild)
 
 }
 
@@ -58,40 +57,16 @@ object FlattenPolygons {
       */
     def evalImpl(input: InternalRow, child: Expression, geometryAPIName: String): TraversableOnce[InternalRow] = {
         val geometryAPI = GeometryAPI(geometryAPIName)
-        val geometry = geometryAPI.geometry(input, child.dataType)
-        val output = geometry.flatten
-
-        child.dataType match {
-            case _: BinaryType           => // WKB case
-                output.map(g => InternalRow.fromSeq(Seq(g.toWKB)))
-            case _: StringType           => // WTK case
-                output.map(g => InternalRow.fromSeq(Seq(UTF8String.fromString(g.toWKT))))
-            case _: HexType              => // HEX case
-                output.map(g =>
-                    InternalRow.fromSeq(
-                      Seq(
-                        InternalRow.fromSeq(Seq(UTF8String.fromString(g.toHEX)))
-                      )
-                    )
-                )
-            case _: JSONType             => // GEOJSON case
-                output.map(g =>
-                    InternalRow.fromSeq(
-                      Seq(
-                        InternalRow.fromSeq(Seq(UTF8String.fromString(g.toJSON)))
-                      )
-                    )
-                )
-            case _: InternalGeometryType => // COORDS case
-                output.map(g => InternalRow.fromSeq(Seq(g.toInternal.serialize)))
-        }
+        val geometry = geometryAPI.geometry(child.eval(input), child.dataType)
+        geometry.flatten.map(g => InternalRow.fromSeq(Seq(geometryAPI.serialize(g, child.dataType))))
     }
 
     /**
       * [[FlattenPolygons]] expression can only be called on supported data
       * types. The supported data types are [[BinaryType]] for WKB encoding,
       * [[StringType]] for WKT encoding, [[HexType]] ([[StringType]] wrapper)
-      * for HEX encoding and [[InternalGeometryType]] for primitive types
+      * for HEX encoding, [[JSONType]] ([[StringType]] wrapper) for GeoJSON
+      * encoding, and [[InternalGeometryType]] for primitive types
       * encoding via [[ArrayType]].
       *
       * @return
@@ -102,6 +77,7 @@ object FlattenPolygons {
             case _: BinaryType           => TypeCheckResult.TypeCheckSuccess
             case _: StringType           => TypeCheckResult.TypeCheckSuccess
             case _: HexType              => TypeCheckResult.TypeCheckSuccess
+            case _: JSONType             => TypeCheckResult.TypeCheckSuccess
             case _: InternalGeometryType => TypeCheckResult.TypeCheckSuccess
             case _                       => TypeCheckResult.TypeCheckFailure(
                   "input to function explode should be array or map type, " +
@@ -125,7 +101,9 @@ object FlattenPolygons {
             case _: BinaryType           => StructType(Seq(StructField("element", BinaryType)))
             case _: StringType           => StructType(Seq(StructField("element", StringType)))
             case _: HexType              => StructType(Seq(StructField("element", HexType)))
+            case _: JSONType             => StructType(Seq(StructField("element", JSONType)))
             case _: InternalGeometryType => StructType(Seq(StructField("element", InternalGeometryType)))
+            case _                       => throw new Error(s"Data type not supported: ${child.dataType}.")
         }
 
     def makeCopyImpl(newArgs: Array[AnyRef], instance: Expression, geometryAPIName: String): Expression = {

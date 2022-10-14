@@ -148,6 +148,18 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
         )
     }
 
+    override def toGeoJSON(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
+        val outputGeom = ctx.freshName("outputGeom")
+        val javaStringType = CodeGenerator.javaType(StringType)
+        val geoJsonWriterClass = classOf[GeoJsonWriter].getName
+        (
+          s"""
+             |$javaStringType $outputGeom = $javaStringType.fromString(new $geoJsonWriterClass().write($eval));
+             |""".stripMargin,
+          outputGeom
+        )
+    }
+
     override def toInternal(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val outputGeom = ctx.freshName("outputGeom")
         val mosaicGeometryClass = classOf[MosaicGeometryJTS].getName

@@ -1,12 +1,11 @@
 package com.databricks.labs.mosaic.sql
 
-import scala.util._
-
 import com.databricks.labs.mosaic.functions.MosaicContext
-
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+
+import scala.util._
 
 class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
 
@@ -14,6 +13,16 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
 
     def getOptimalResolution(sampleFraction: Double): Int = {
         getOptimalResolution(SampleStrategy(sampleFraction = Some(sampleFraction)))
+    }
+
+    def getOptimalResolution: Int = getOptimalResolution(SampleStrategy())
+
+    def getOptimalResolutionStr: String = getOptimalResolutionStr(SampleStrategy())
+
+    def getOptimalResolutionStr(sampleStrategy: SampleStrategy): String = {
+        val resolution = getOptimalResolution(sampleStrategy)
+        val mc = MosaicContext.context
+        mc.getIndexSystem.getResolutionStr(resolution)
     }
 
     def getOptimalResolution(sampleStrategy: SampleStrategy): Int = {
@@ -29,7 +38,7 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
         metrics(midInd)._1
     }
 
-    def getResolutionMetrics(sampleStrategy: SampleStrategy, lowerLimit: Int = 5, upperLimit: Int = 500): DataFrame = {
+    def getResolutionMetrics(sampleStrategy: SampleStrategy = SampleStrategy(), lowerLimit: Int = 5, upperLimit: Int = 500): DataFrame = {
         val mosaicContext = MosaicContext.context
         import mosaicContext.functions._
         val spark = SparkSession.builder().getOrCreate()
@@ -48,9 +57,7 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
             .collect()
             .head
 
-        val minResolution = mosaicContext.getIndexSystem.minResolution
-        val maxResolution = mosaicContext.getIndexSystem.maxResolution
-        val meanIndexAreas = for (i <- minResolution until maxResolution) yield (i, getMeanIndexArea(sampleStrategy, i))
+        val meanIndexAreas = for (i <- mosaicContext.getIndexSystem.resolutions) yield (i, getMeanIndexArea(sampleStrategy, i))
 
         if (percentiles.anyNull) {
             throw MosaicSQLExceptions.NotEnoughGeometriesException
@@ -104,8 +111,8 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
             .select(
               mean(
                 st_area(
-                  index_geometry(
-                    point_index_lonlat(
+                  grid_boundaryaswkb(
+                    grid_longlatascellid(
                       col("centroid").getItem("x"),
                       col("centroid").getItem("y"),
                       lit(resolution)
@@ -121,15 +128,8 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
         }
     }
 
-}
-
-case class SampleStrategy(sampleFraction: Option[Double] = None, sampleRows: Option[Int] = None) {
-    def transformer(df: DataFrame): DataFrame = {
-        (sampleFraction, sampleRows) match {
-            case (Some(d), None)    => df.sample(d)
-            case (None, Some(l))    => df.limit(l)
-            case (Some(_), Some(l)) => df.limit(l)
-            case _                  => df
-        }
+    def getOptimalResolution(sampleRows: Int): Int = {
+        getOptimalResolution(SampleStrategy(sampleRows = Some(sampleRows)))
     }
+
 }

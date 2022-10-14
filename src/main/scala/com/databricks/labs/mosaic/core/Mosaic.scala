@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.core
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters.asScalaBufferConverter
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
@@ -17,7 +16,13 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING,
   */
 object Mosaic {
 
-    def mosaicFill(geometry: MosaicGeometry, resolution: Int, indexSystem: IndexSystem, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
+    def mosaicFill(
+        geometry: MosaicGeometry,
+        resolution: Int,
+        keepCoreGeom: Boolean,
+        indexSystem: IndexSystem,
+        geometryAPI: GeometryAPI
+    ): Seq[MosaicChip] = {
 
         val radius = indexSystem.getBufferRadius(geometry, resolution, geometryAPI)
 
@@ -31,11 +36,11 @@ object Mosaic {
                 geometry.boundary.buffer(radius * 1.01).simplify(0.01 * radius)
             }
 
-        val coreIndices = indexSystem.polyfill(carvedGeometry, resolution)
-        val borderIndices = indexSystem.polyfill(borderGeometry, resolution)
+        val coreIndices = indexSystem.polyfill(carvedGeometry, resolution, Some(geometryAPI))
+        val borderIndices = indexSystem.polyfill(borderGeometry, resolution, Some(geometryAPI))
 
-        val coreChips = indexSystem.getCoreChips(coreIndices)
-        val borderChips = indexSystem.getBorderChips(geometry, borderIndices, geometryAPI)
+        val coreChips = indexSystem.getCoreChips(coreIndices, keepCoreGeom, geometryAPI)
+        val borderChips = indexSystem.getBorderChips(geometry, borderIndices, keepCoreGeom, geometryAPI)
 
         coreChips ++ borderChips
     }
@@ -46,6 +51,7 @@ object Mosaic {
             case MULTILINESTRING =>
                 val multiLine = geometry.asInstanceOf[MosaicMultiLineString]
                 multiLine.flatten.flatMap(line => lineDecompose(line.asInstanceOf[MosaicLineString], resolution, indexSystem, geometryAPI))
+            case gt               => throw new Error(s"$gt not supported for line fill/decompose operation.")
         }
     }
 
@@ -61,20 +67,20 @@ object Mosaic {
         @tailrec
         def traverseLine(
             line: MosaicLineString,
-            queue: Seq[java.lang.Long],
-            traversed: Set[java.lang.Long],
+            queue: Seq[Long],
+            traversed: Set[Long],
             chips: Seq[MosaicChip]
         ): Seq[MosaicChip] = {
             val newTraversed = traversed ++ queue
             val (newQueue, newChips) = queue.foldLeft(
-              (Seq.empty[java.lang.Long], chips)
-            )((accumulator: (Seq[java.lang.Long], Seq[MosaicChip]), current: java.lang.Long) => {
+              (Seq.empty[Long], chips)
+            )((accumulator: (Seq[Long], Seq[MosaicChip]), current: Long) => {
                 val indexGeom = indexSystem.indexToGeometry(current, geometryAPI)
                 val lineSegment = line.intersection(indexGeom)
                 if (!lineSegment.isEmpty) {
-                    val chip = MosaicChip(isCore = false, current, lineSegment)
+                    val chip = MosaicChip(isCore = false, Left(current), lineSegment)
                     val kRing = indexSystem.kRing(current, 1)
-                    val toQueue = kRing.asScala.filterNot(newTraversed.contains)
+                    val toQueue = kRing.filterNot(newTraversed.contains)
                     (toQueue, accumulator._2 ++ Seq(chip))
                 } else {
                     accumulator
@@ -87,7 +93,7 @@ object Mosaic {
             }
         }
 
-        val result = traverseLine(line, Seq(startIndex), Set.empty[java.lang.Long], Seq.empty[MosaicChip])
+        val result = traverseLine(line, Seq(startIndex), Set.empty[Long], Seq.empty[MosaicChip])
         result
     }
 

@@ -51,34 +51,32 @@ case class ST_Intersection(leftGeom: Expression, rightGeom: Expression, geometry
               // ESRI code will always remain simpler
               geometryAPIName match {
                   case "ESRI" =>
-                      val operatorIntersectionClass = classOf[OperatorIntersection]
-                      val operatorFactoryLocalClass = classOf[OperatorFactoryLocal]
-                      val esriOperatorClass = classOf[Operator]
-                      val geometryCursorClass = classOf[GeometryCursor]
-                      val ogcGeometryClass = classOf[OGCGeometry]
+                      val operatorIntersectionClass = classOf[OperatorIntersection].getName
+                      val operatorFactoryLocalClass = classOf[OperatorFactoryLocal].getName
+                      val esriOperatorClass = classOf[Operator].getName
+                      val geometryCursorClass = classOf[GeometryCursor].getName
+                      val ogcGeometryClass = classOf[OGCGeometry].getName
                       val operatorName = ctx.freshName("operator")
                       val cursorName = ctx.freshName("cursor")
 
                       s"""
                          |$leftInCode
                          |$rightInCode
-                         |$operatorIntersectionClass $operatorName = ($operatorIntersectionClass
-                         |    $operatorFactoryLocalClass.getInstance().getOperator(
-                         |        $esriOperatorClass.Type.Intersection
-                         |    )
+                         |$operatorIntersectionClass $operatorName = ($operatorIntersectionClass) $operatorFactoryLocalClass.getInstance().getOperator(
+                         |    $esriOperatorClass.Type.Intersection
                          |);
                          |$geometryCursorClass $cursorName = $operatorName.execute(
-                         |    $leftGeomInRef.getEsriGeometryCursor, $rightGeomInRef.getEsriGeometryCursor,
-                         |    $leftGeomInRef.getEsriSpatialReference, null, -1
+                         |    $leftGeomInRef.getEsriGeometryCursor(), $rightGeomInRef.getEsriGeometryCursor(),
+                         |    $leftGeomInRef.getEsriSpatialReference(), null, -1
                          |);
                          |$ogcGeometryClass $resultGeom = $ogcGeometryClass.createFromEsriCursor(
-                         |    $cursorName, $leftGeomInRef.getEsriSpatialReference, true
+                         |    $cursorName, $leftGeomInRef.getEsriSpatialReference(), true
                          |);
                          |$outCode
                          |${ev.value} = $outGeomRef;
                          |""".stripMargin
                   case "JTS" =>
-                      val jtsGeometryClass = classOf[JTSGeometry]
+                      val jtsGeometryClass = classOf[JTSGeometry].getName
                       s"""
                          |try {
                          |$leftInCode

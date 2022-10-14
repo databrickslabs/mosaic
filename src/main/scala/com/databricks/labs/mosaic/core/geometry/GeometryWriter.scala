@@ -14,6 +14,4 @@ trait GeometryWriter {
 
     def toHEX: String
 
-    def toKryo: Array[Byte]
-
 }

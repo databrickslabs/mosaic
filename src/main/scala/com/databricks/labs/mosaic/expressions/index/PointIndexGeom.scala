@@ -2,64 +2,72 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-import com.databricks.labs.mosaic.core.index.{H3IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.IndexSystemID
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.sql.MosaicSQLExceptions
-
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, Literal, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 
-case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
-    extends BinaryExpression
+case class PointIndexGeom(geom: Expression, resolution: Expression, idAsLong: Expression, indexSystemName: String, geometryAPIName: String)
+    extends TernaryExpression
       with NullIntolerant
       with CodegenFallback {
 
     /** Expression output DataType. */
-    override def dataType: DataType = LongType
+    override def dataType: DataType =
+        idAsLong match {
+            case Literal(f: Boolean, BooleanType) => if (f) LongType else StringType
+            case _                                => throw new Error("idAsLong has to be Boolean type.")
+        }
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "point_index_geom"
+    override def prettyName: String = "grid_pointascellid"
 
     /**
-      * Computes the H3 index corresponding to the provided POINT geometry.
+      * Computes the index corresponding to the provided POINT geometry.
       *
       * @param input1
       *   Any instance containing a point geometry.
       * @param input2
       *   Any instance containing resolution.
       * @return
-      *   H3 index id in Long.
+      *   Index id in Long.
       */
-    override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val resolution: Int = H3IndexSystem.getResolution(input2)
+    override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
+        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+        val resolution: Int = indexSystem.getResolution(input2)
+        val idAsLongVal = input3.asInstanceOf[Boolean]
         val geometryAPI = GeometryAPI(geometryAPIName)
         val rowGeom = geometryAPI.geometry(input1, geom.dataType)
         val geomType = GeometryTypeEnum.fromString(rowGeom.getGeometryType)
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-        geomType match {
+        val cellID = geomType match {
             case GeometryTypeEnum.POINT =>
                 val point = rowGeom.asInstanceOf[MosaicPoint]
                 indexSystem.pointToIndex(point.getX, point.getY, resolution)
             case _ => throw MosaicSQLExceptions.IncorrectGeometryTypeSupplied(toString, geomType, GeometryTypeEnum.POINT)
         }
+        if (idAsLongVal) cellID else UTF8String.fromString(indexSystem.format(cellID))
     }
 
-    override def toString: String = s"point_index_geom($geom, $resolution)"
+    override def toString: String = s"grid_pointascellid($geom, $resolution)"
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = PointIndexGeom(asArray(0), asArray(1), indexSystemName, geometryAPIName)
+        val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
+        val res = PointIndexGeom(asArray(0), asArray(1), asArray(2), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
 
-    override def left: Expression = geom
+    override def first: Expression = geom
 
-    override def right: Expression = resolution
+    override def second: Expression = resolution
 
-    override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression): Expression =
-        copy(geom = newFirst, resolution = newSecond)
+    override def third: Expression = idAsLong
+
+    override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
+        copy(newFirst, newSecond, newThird)
 
 }
 
@@ -70,9 +78,9 @@ object PointIndexGeom {
         new ExpressionInfo(
           classOf[PointIndexGeom].getCanonicalName,
           db.orNull,
-          "point_index_geom",
+          "grid_pointascellid",
           """
-            |    _FUNC_(geom, resolution) - Returns the h3 index of a point geometry at resolution.
+            |    _FUNC_(geom, resolution) - Returns the index of a point geometry at resolution.
             """.stripMargin,
           "",
           """

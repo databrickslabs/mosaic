@@ -2,14 +2,11 @@ package com.databricks.labs.mosaic.core.geometry.multipolygon
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
-import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
 import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOLYGON
-import com.esotericsoftware.kryo.io.Input
-import org.locationtech.jts.geom._
-
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOLYGON, POLYGON}
 import org.apache.spark.sql.catalyst.InternalRow
+import org.locationtech.jts.geom._
 
 class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicGeometryJTS(multiPolygon) with MosaicMultiPolygon {
 
@@ -18,10 +15,14 @@ class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicGeometryJT
         val polygons = for (i <- 0 until n) yield MosaicPolygonJTS(multiPolygon.getGeometryN(i)).toInternal
         val boundaries = polygons.map(_.boundaries.head).toArray
         val holes = polygons.flatMap(_.holes).toArray
-        new InternalGeometry(MULTIPOLYGON.id, boundaries, holes)
+        new InternalGeometry(MULTIPOLYGON.id, getSpatialReference, boundaries, holes)
     }
 
-    override def getBoundary: MosaicGeometry = MosaicGeometryJTS(multiPolygon.getBoundary)
+    override def getBoundary: MosaicGeometry = {
+        val geom = multiPolygon.getBoundary
+        geom.setSRID(multiPolygon.getSRID)
+        MosaicGeometryJTS(geom)
+    }
 
     override def getShells: Seq[MosaicLineString] = {
         val n = multiPolygon.getNumGeometries
@@ -32,9 +33,6 @@ class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicGeometryJT
         shells.flatten
     }
 
-    override def asSeq: Seq[MosaicGeometry] =
-        for (i <- 0 until multiPolygon.getNumGeometries) yield MosaicGeometryJTS(multiPolygon.getGeometryN(i))
-
     override def getHoles: Seq[Seq[MosaicLineString]] = {
         val n = multiPolygon.getNumGeometries
         val holes = for (i <- 0 until n) yield {
@@ -43,6 +41,19 @@ class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicGeometryJT
         }
         holes.flatten
     }
+
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+        MosaicMultiPolygonJTS.fromSeq(
+          asSeq.map(_.asInstanceOf[MosaicPolygonJTS].mapXY(f).asInstanceOf[MosaicPolygonJTS])
+        )
+    }
+
+    override def asSeq: Seq[MosaicGeometry] =
+        for (i <- 0 until multiPolygon.getNumGeometries) yield {
+            val geom = multiPolygon.getGeometryN(i)
+            geom.setSRID(multiPolygon.getSRID)
+            MosaicGeometryJTS(geom)
+        }
 
 }
 
@@ -59,14 +70,26 @@ object MosaicMultiPolygonJTS extends GeometryReader {
             gf.createPolygon(shell, holes)
         }
         val multiPolygon = gf.createMultiPolygon(polygons)
+        multiPolygon.setSRID(internalGeom.srid)
         MosaicMultiPolygonJTS(multiPolygon)
     }
 
-    def apply(multiPolygon: Geometry): MosaicMultiPolygonJTS = new MosaicMultiPolygonJTS(multiPolygon.asInstanceOf[MultiPolygon])
-
-    override def fromPoints(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
-        throw new UnsupportedOperationException("fromPoints is not intended for creating MultiPolygons")
+    override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = MULTIPOLYGON): MosaicMultiPolygonJTS = {
+        val gf = new GeometryFactory()
+        val spatialReference = geomSeq.head.getSpatialReference
+        val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
+            case POLYGON                       =>
+                val extractedPolys = geomSeq.map(_.asInstanceOf[MosaicPolygonJTS])
+                gf.createMultiPolygon(extractedPolys.map(_.getGeom.asInstanceOf[Polygon]).toArray)
+            case other: GeometryTypeEnum.Value => throw new UnsupportedOperationException(
+                  s"MosaicGeometry.fromSeq() cannot create ${geomType.toString} from ${other.toString} geometries."
+                )
+        }
+        newGeom.setSRID(spatialReference)
+        MosaicMultiPolygonJTS(newGeom)
     }
+
+    def apply(multiPolygon: Geometry): MosaicMultiPolygonJTS = new MosaicMultiPolygonJTS(multiPolygon.asInstanceOf[MultiPolygon])
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
 
@@ -75,11 +98,5 @@ object MosaicMultiPolygonJTS extends GeometryReader {
     override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
 
     override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
-
-    override def fromKryo(row: InternalRow): MosaicGeometry = {
-        val kryoBytes = row.getBinary(1)
-        val input = new Input(kryoBytes)
-        MosaicGeometryJTS.kryo.readObject(input, classOf[MosaicMultiPolygonJTS])
-    }
 
 }

@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{DataType, DoubleType}
@@ -33,22 +32,11 @@ case class ST_Length(inputGeom: Expression, geometryAPIName: String) extends Una
           leftEval => {
               val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-
-              geometryAPIName match {
-                  case "ESRI" => s"""
-                                   |$inCode
-                                   |${ev.value} = $geomInRef.getEsriGeometry().calculateLength2D();
-                                   |""".stripMargin
-                  case "JTS" => s"""
-                                   |try {
-                                   |$inCode
-                                   |${ev.value} = $geomInRef.getLength();
-                                   |} catch (Exception e) {
-                                   | throw e;
-                                   |}
-                                   |""".stripMargin
-
-              }
+              val geometryLengthStatement = geometryAPI.geometryLengthCode
+              geometryAPI.codeGenTryWrap(s"""
+                                            |$inCode
+                                            |${ev.value} = $geomInRef.$geometryLengthStatement;
+                                            |""".stripMargin)
           }
         )
 
@@ -65,13 +53,13 @@ object ST_Length {
           db.orNull,
           name,
           """
-            |    _FUNC_(expr1) - Returns the validity for a given geometry.
+            |    _FUNC_(expr1) - Returns the length of the given geometry.
             """.stripMargin,
           "",
           """
             |    Examples:
             |      > SELECT _FUNC_(a);
-            |        true
+            |        0.245
             |  """.stripMargin,
           "",
           "misc_funcs",

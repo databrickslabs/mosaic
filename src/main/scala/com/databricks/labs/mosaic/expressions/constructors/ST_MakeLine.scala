@@ -44,11 +44,6 @@ case class ST_MakeLine(geoms: Expression, geometryAPIName: String) extends Unary
                     .map(geom => InternalGeometry(geom.asInstanceOf[InternalRow]))
                 val outputGeom = internalGeoms.reduce(reduceGeoms)
                 val result = geometryAPI.geometry(outputGeom.serialize, InternalGeometryType)
-
-                val points = geomPieces.flatMap(_.getShellPoints).flatten
-                val outputGeom2 = geometryAPI.geometry(points, LINESTRING)
-                val x = geomPieces.last.getBoundary
-
                 geometryAPI.serialize(result, dataType)
             }
         }
@@ -59,6 +54,7 @@ case class ST_MakeLine(geoms: Expression, geometryAPIName: String) extends Unary
     def reduceGeoms(leftGeom: InternalGeometry, rightGeom: InternalGeometry): InternalGeometry =
         new InternalGeometry(
           GeometryTypeEnum.LINESTRING.id,
+          leftGeom.srid,
           Array(leftGeom.boundaries.flatMap(_.toList) ++ rightGeom.boundaries.flatMap(_.toList)),
           Array(Array())
         )

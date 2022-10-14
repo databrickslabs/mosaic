@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.ESRI
-import com.databricks.labs.mosaic.core.index.H3IndexSystem
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 
 import org.apache.spark.sql.functions._
@@ -15,7 +14,7 @@ package object test {
         import org.apache.spark.sql._
         import org.apache.spark.sql.types.{StructField, StructType}
 
-        val hex_rows =
+        val hex_rows_epsg4326 =
             List(
               List(
                 1,
@@ -44,7 +43,12 @@ package object test {
                 "00000000050000000200000000020000000340240000000000004024000000000000403400000000000040340000000000004024000000000000404400000000000000000000020000000440440000000000004044000000000000403E000000000000403E00000000000040440000000000004034000000000000403E0000000000004024000000000000"
               )
             )
-        val wkt_rows =
+        val hex_rows_epsg27700: List[List[Any]] =
+            hex_rows_epsg4326.map {
+                case id :: hex :: _ => List(id, JTS.geometry(hex, "HEX").mapXY((x, y) => (math.abs(x) * 1000, math.abs(y) * 1000)).toHEX)
+                case _              => throw new Error("Unexpected test data format!")
+            }
+        val wkt_rows_epsg4326 =
             List(
               List(1, "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"),
               List(2, "MULTIPOLYGON (((0 0, 0 1, 2 2, 0 0)))"),
@@ -64,6 +68,27 @@ package object test {
               List(6, "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"),
               List(7, "LINESTRING (30 10, 10 30, 40 40)"),
               List(8, "MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))")
+            )
+        val wkt_rows_epsg27700 =
+            List(
+              List(1, "POLYGON ((30000 10000, 40000 40000, 20000 40000, 10000 20000, 30000 10000))"),
+              List(2, "MULTIPOLYGON (((0 0, 0 1000, 2000 2000, 0 0)))"),
+              List(
+                3,
+                """POLYGON ((10000 10000, 110000 10000, 110000 110000, 10000 110000, 10000 10000),
+                  | (20000 20000, 20000 30000, 30000 30000, 30000 20000, 20000 20000),
+                  | (40000 20000, 40000 30000, 50000 30000, 50000 20000, 40000 20000))""".stripMargin.filter(_ >= ' ')
+              ),
+              List(
+                4,
+                """MULTIPOLYGON (((40000 60000, 20000 45000, 45000 30000, 40000 60000)),
+                  | ((20000 35000, 10000 30000, 10000 10000, 30000 5000, 45000 20000, 20000 35000),
+                  | (30000 20000, 20000 15000, 20000 25000, 30000 20000)))""".stripMargin.filter(_ >= ' ')
+              ),
+              List(5, "POINT (75780 35189)"),
+              List(6, "MULTIPOINT ((10000 40000), (40000 30000), (20000 20000), (30000 10000))"),
+              List(7, "LINESTRING (30000 10000, 10000 30000, 40000 40000)"),
+              List(8, "MULTILINESTRING ((10000 10000, 20000 20000, 10000 40000), (40000 40000, 30000 30000, 40000 20000, 30000 10000))")
             )
         val geoJSON_rows =
             List(
@@ -97,7 +122,7 @@ package object test {
                 """{"type":"MultiLineString","coordinates":[[[10,10],[20,20],[10,40]],[[40,40],[30,30],[40,20],[30,10]]],"crs":{"type":"name","properties":{"name":"EPSG:0"}}}"""
               )
             )
-        val wkt_rows_boroughs =
+        val wkt_rows_boroughs_epsg4326 =
             List(
               List(
                 1,
@@ -124,19 +149,54 @@ package object test {
                 "POLYGON ((-74.1597481587429570 40.6414165257901772, -74.1599787569963098 40.6414464808363576, -74.1603665567036785 40.6415795387926551, -74.1611124252219156 40.6418354537373574, -74.1611789710470646 40.6420066123307677, -74.1613480397163300 40.6435009886979728, -74.1614598592411625 40.6442914295759721, -74.1614603600531836 40.6442949697649141, -74.1579875954066665 40.6438617889660350, -74.1574334920100711 40.6433028577790125, -74.1575530521179331 40.6432482917784057, -74.1579158940678411 40.6430826944529571, -74.1581345160336980 40.6426325306630645, -74.1582754371735149 40.6425633838383860, -74.1584034767242173 40.6425416038819449, -74.1584849583912842 40.6425384668857674, -74.1585504377056566 40.6424975013064795, -74.1585761059831157 40.6424293511026207, -74.1586612596052674 40.6423051054572042, -74.1587437814761898 40.6420038398483285, -74.1588109374531115 40.6417586347403272, -74.1592002453457866 40.6416504039773514, -74.1594560243820524 40.6414483333241208, -74.1597481587429570 40.6414165257901772))"
               )
             )
+        // We are generating acceptable data for EPSG:27700
+        // by making sure all coordinates are positive
+        // and since EPSG:27700 represents meters from CRS
+        // origin we multiply long/lat values by 1000 (arbitrary choice)
+        val wkt_rows_boroughs_epsg27700: List[List[Any]] =
+            wkt_rows_boroughs_epsg4326.map {
+                case id :: wkt :: _ => List(id, JTS.geometry(wkt, "WKT").mapXY((x, y) => (math.abs(x) * 1000, math.abs(y) * 1000)).toWKT)
+                case _              => throw new Error("Unexpected test data format!")
+            }
 
-        def polyDf(sparkSession: SparkSession): DataFrame = {
-            val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, ESRI)
-            import mosaicContext.functions.st_geomfromgeojson
-            sparkSession.read
+        def polyDf(sparkSession: SparkSession, mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+            import mc.functions._
+
+            val indexSystem = mc.getIndexSystem
+            val df = sparkSession.read
                 .json("src/test/resources/NYC_Taxi_Zones.geojson")
                 .withColumn("geometry", st_geomfromgeojson(to_json(col("geometry"))))
+            indexSystem match {
+                case H3IndexSystem  => df
+                case BNGIndexSystem => df
+                        .withColumn("greenwich", st_point(lit(0.0098), lit(51.4934)))
+                        .withColumn(
+                          "geometry",
+                          st_translate(
+                            col("geometry"),
+                            st_xmax(col("greenwich")) - st_xmax(col("geometry")),
+                            st_ymax(col("greenwich")) - st_ymax(col("geometry"))
+                          )
+                        )
+                        .withColumn(
+                          "geometry",
+                          st_setsrid(col("geometry"), lit(4326))
+                        )
+                        .withColumn(
+                          "geometry",
+                          st_transform(col("geometry"), lit(27700))
+                        )
+                        .drop("greenwich")
+            }
         }
 
-        def pointDf(sparkSession: SparkSession): DataFrame = {
-            val mosaicContext: MosaicContext = MosaicContext.build(H3IndexSystem, ESRI)
-            import mosaicContext.functions.st_point
-            sparkSession.read
+        def pointDf(sparkSession: SparkSession, mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+            import mc.functions._
+
+            val indexSystem = mc.getIndexSystem
+            val df = sparkSession.read
                 .options(
                   Map(
                     "header" -> "true",
@@ -145,11 +205,39 @@ package object test {
                 )
                 .csv("src/test/resources/nyctaxi_yellow_trips.csv")
                 .withColumn("geometry", st_point(col("pickup_longitude"), col("pickup_latitude")))
+            indexSystem match {
+                case H3IndexSystem  => df
+                case BNGIndexSystem => df
+                        .withColumn("greenwich", st_point(lit(0.0098), lit(51.4934)))
+                        .withColumn(
+                          "geometry",
+                          st_translate(
+                            col("geometry"),
+                            st_xmax(col("greenwich")) - st_xmax(col("geometry")),
+                            st_ymax(col("greenwich")) - st_ymax(col("geometry"))
+                          )
+                        )
+                        .withColumn(
+                          "geometry",
+                          st_setsrid(col("geometry"), lit(4326))
+                        )
+                        .withColumn(
+                          "geometry",
+                          st_transform(col("geometry"), lit(27700))
+                        )
+                        .drop("greenwich")
+            }
         }
 
-        def getHexRowsDf: DataFrame = {
+        def getHexRowsDf(mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+
+            val indexSystem = mc.getIndexSystem
             val spark = SparkSession.builder().getOrCreate()
-            val rows = hex_rows.map { x => Row(x: _*) }
+            val rows = indexSystem match {
+                case H3IndexSystem  => hex_rows_epsg4326.map { x => Row(x: _*) }
+                case BNGIndexSystem => hex_rows_epsg27700.map { x => Row(x: _*) }
+            }
             val rdd = spark.sparkContext.makeRDD(rows)
             val schema = StructType(
               List(
@@ -157,13 +245,18 @@ package object test {
                 StructField("hex", StringType)
               )
             )
-            val df = spark.createDataFrame(rdd, schema)
-            df
+            spark.createDataFrame(rdd, schema)
         }
 
-        def getWKTRowsDf: DataFrame = {
+        def getWKTRowsDf(mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+
+            val indexSystem = mc.getIndexSystem
             val spark = SparkSession.builder().getOrCreate()
-            val rows = wkt_rows.map { x => Row(x: _*) }
+            val rows = indexSystem match {
+                case H3IndexSystem  => wkt_rows_epsg4326.map { x => Row(x: _*) }
+                case BNGIndexSystem => wkt_rows_epsg27700.map { x => Row(x: _*) }
+            }
             val rdd = spark.sparkContext.makeRDD(rows)
             val schema = StructType(
               List(
@@ -171,13 +264,18 @@ package object test {
                 StructField("wkt", StringType)
               )
             )
-            val df = spark.createDataFrame(rdd, schema)
-            df
+            spark.createDataFrame(rdd, schema)
         }
 
-        def getBoroughs: DataFrame = {
+        def getBoroughs(mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+
+            val indexSystem = mc.getIndexSystem
             val spark = SparkSession.builder().getOrCreate()
-            val rows = wkt_rows_boroughs.map { x => Row(x: _*) }
+            val rows = indexSystem match {
+                case H3IndexSystem  => wkt_rows_boroughs_epsg4326.map { x => Row(x: _*) }
+                case BNGIndexSystem => wkt_rows_boroughs_epsg27700.map { x => Row(x: _*) }
+            }
             val rdd = spark.sparkContext.makeRDD(rows)
             val schema = StructType(
               List(
@@ -185,11 +283,14 @@ package object test {
                 StructField("wkt", StringType)
               )
             )
-            val df = spark.createDataFrame(rdd, schema)
-            df
+            spark.createDataFrame(rdd, schema)
         }
 
-        def getGeoJSONDf: DataFrame = {
+        def getGeoJSONDf(mosaicContext: MosaicContext): DataFrame = {
+            val mc = mosaicContext
+            import mc.functions._
+
+            val indexSystem = mc.getIndexSystem
             val spark = SparkSession.builder().getOrCreate()
             val rows = geoJSON_rows.map { x => Row(x: _*) }
             val rdd = spark.sparkContext.makeRDD(rows)
@@ -200,7 +301,28 @@ package object test {
               )
             )
             val df = spark.createDataFrame(rdd, schema)
-            df
+            indexSystem match {
+                case H3IndexSystem  => df
+                case BNGIndexSystem => df
+                        .withColumn("greenwich", st_point(lit(0.0098), lit(51.4934)))
+                        .withColumn(
+                          "geojson",
+                          st_translate(
+                            col("geojson"),
+                            st_xmax(col("greenwich")) - st_xmax(col("geojson")),
+                            st_ymax(col("greenwich")) - st_ymax(col("geojson"))
+                          )
+                        )
+                        .withColumn(
+                          "geojson",
+                          st_setsrid(st_geomfromwkt(col("geojson")), lit(4326))
+                        )
+                        .withColumn(
+                          "geojson",
+                          st_asgeojson(st_transform(col("geojson"), lit(27700)))
+                        )
+                        .drop("greenwich")
+            }
         }
 
     }

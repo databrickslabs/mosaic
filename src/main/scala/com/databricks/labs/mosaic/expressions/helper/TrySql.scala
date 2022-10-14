@@ -16,7 +16,7 @@ case class TrySql(inExpr: Expression) extends UnaryExpression with CodegenFallba
     override def dataType: DataType = {
         val children = inExpr.children
         val childrenSchema = children
-            .map(c => StructField(c.sql, c.dataType))
+            .map(c => StructField(c.prettyName, c.dataType))
         StructType(
           Seq(
             StructField("inputs", StructType(childrenSchema)),

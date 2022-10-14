@@ -37,7 +37,8 @@ case class ST_MakePolygon(boundaryRing: Expression, holeRingArray: Expression)
             .toObjectArray(InternalGeometryType)
             .map(g => InternalGeometry(g.asInstanceOf[InternalRow]))
 
-        val polygon = new InternalGeometry(GeometryTypeEnum.POLYGON.id, ringGeom.boundaries, Array(holeGeoms.map(_.boundaries.head)))
+        val polygon =
+            new InternalGeometry(GeometryTypeEnum.POLYGON.id, ringGeom.srid, ringGeom.boundaries, Array(holeGeoms.map(_.boundaries.head)))
         polygon.serialize
     }
 

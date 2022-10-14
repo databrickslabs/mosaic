@@ -12,9 +12,14 @@ class InternalGeometryType
       Array(
         // StructField("typeName", StringType),
         StructField("type_id", IntegerType),
+        StructField("srid", IntegerType),
         StructField("boundary", BoundaryType),
         StructField("holes", HolesType)
       )
     ) {
+
+    override def simpleString: String = "COORDS"
+
     override def typeName: String = "struct"
+
 }

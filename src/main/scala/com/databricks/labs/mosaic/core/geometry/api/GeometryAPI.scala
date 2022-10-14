@@ -1,16 +1,18 @@
 package com.databricks.labs.mosaic.core.geometry.api
 
-import java.util.Locale
-
+import com.databricks.labs.mosaic.codegen.format._
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point._
 import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
-import com.uber.h3core.util.GeoCoord
-
+import com.esri.core.geometry.ogc.OGCGeometry
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+import org.locationtech.jts.geom.{Geometry => JTSGeometry}
+
+import java.util.Locale
 
 abstract class GeometryAPI(
     reader: GeometryReader
@@ -24,11 +26,12 @@ abstract class GeometryAPI(
             case "HEX"     => reader.fromHEX(input.asInstanceOf[String])
             case "WKB"     => reader.fromWKB(input.asInstanceOf[Array[Byte]])
             case "GEOJSON" => reader.fromJSON(input.asInstanceOf[String])
-            case _         => throw new UnsupportedOperationException
+            case "COORDS"  => throw new Error(s"$typeName not supported.")
+            case _         => throw new Error(s"$typeName not supported.")
         }
     }
 
-    def geometry(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = reader.fromPoints(points, geomType)
+    def geometry(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = reader.fromSeq(points, geomType)
 
     /**
       * Constructs an instance of [[MosaicGeometry]] based on an instance of
@@ -47,6 +50,7 @@ abstract class GeometryAPI(
             case _: HexType              => reader.fromHEX(inputData.get(0, HexType).asInstanceOf[InternalRow].getString(0))
             case _: JSONType             => reader.fromJSON(inputData.get(0, JSONType).asInstanceOf[InternalRow].getString(0))
             case _: InternalGeometryType => reader.fromInternal(inputData.get(0, InternalGeometryType).asInstanceOf[InternalRow])
+            case _                       => throw new Error(s"$dataType not supported.")
         }
     }
 
@@ -67,34 +71,46 @@ abstract class GeometryAPI(
             case _: HexType              => reader.fromHEX(inputData.asInstanceOf[InternalRow].getString(0))
             case _: JSONType             => reader.fromJSON(inputData.asInstanceOf[InternalRow].getString(0))
             case _: InternalGeometryType => reader.fromInternal(inputData.asInstanceOf[InternalRow])
-            case _: KryoType             => reader.fromKryo(inputData.asInstanceOf[InternalRow])
+            case _                       => throw new Error(s"$dataType not supported.")
         }
 
     def serialize(geometry: MosaicGeometry, dataType: DataType): Any = {
-        dataType match {
-            case _: BinaryType           => geometry.toWKB
-            case _: StringType           => UTF8String.fromString(geometry.toWKT)
-            case _: HexType              => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
-            case _: JSONType             => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
-            case _: InternalGeometryType => geometry.toInternal.serialize
-            case _: KryoType => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
-            case _           => throw new Error(s"$dataType not supported.")
+        serialize(geometry, GeometryFormat.getDefaultFormat(dataType))
+    }
+
+    def serialize(geometry: MosaicGeometry, dataFormatName: String): Any = {
+        dataFormatName.toUpperCase(Locale.ROOT) match {
+            case "WKB"        => geometry.toWKB
+            case "WKT"        => UTF8String.fromString(geometry.toWKT)
+            case "HEX"        => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
+            case "JSONOBJECT" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
+            case "GEOJSON"    => UTF8String.fromString(geometry.toJSON)
+            case "COORDS"     => geometry.toInternal.serialize
+            case _            => throw new Error(s"$dataFormatName not supported.")
         }
     }
 
-    def serialize(geometry: MosaicGeometry, dataTypeName: String): Any = {
-        dataTypeName.toUpperCase(Locale.ROOT) match {
-            case "WKB"     => geometry.toWKB
-            case "WKT"     => UTF8String.fromString(geometry.toWKT)
-            case "HEX"     => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
-            case "GEOJSON" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
-            case "COORDS"  => geometry.toInternal.serialize
-            case "KRYO"    => InternalRow.fromSeq(Seq(GeometryTypeEnum.fromString(geometry.getGeometryType).id, geometry.toKryo))
-            case _         => throw new Error(s"$dataTypeName not supported.")
-        }
-    }
+    def fromGeoCoord(point: Coordinates): MosaicPoint = throw new Error("Unimplemented")
 
-    def fromGeoCoord(point: GeoCoord): MosaicPoint
+    def fromCoords(coords: Seq[Double]): MosaicPoint = throw new Error("Unimplemented")
+
+    def ioCodeGen: GeometryIOCodeGen = throw new Error("Unimplemented")
+
+    def codeGenTryWrap(code: String): String = throw new Error("Unimplemented")
+
+    def geometryClass: String = throw new Error("Unimplemented")
+
+    def mosaicGeometryClass: String = throw new Error("Unimplemented")
+
+    def geometryAreaCode: String = throw new Error("Unimplemented")
+
+    def geometryTypeCode: String = throw new Error("Unimplemented")
+
+    def geometryIsValidCode: String = throw new Error("Unimplemented")
+
+    def geometryLengthCode: String = throw new Error("Unimplemented")
+
+    def geometrySRIDCode(geomInRef: String): String = throw new Error("Unimplemented")
 
 }
 
@@ -102,21 +118,37 @@ object GeometryAPI extends Serializable {
 
     def apply(name: String): GeometryAPI =
         name match {
-            case "JTS" => JTS
+            case "JTS"  => JTS
             case "ESRI" => ESRI
-        }
-
-    def getReader(name: String): GeometryReader =
-        name match {
-            case "JTS" => MosaicGeometryJTS
-            case "ESRI" => MosaicGeometryESRI
+            case _      => IllegalAPI
         }
 
     object ESRI extends GeometryAPI(MosaicGeometryESRI) {
 
         override def name: String = "ESRI"
 
-        override def fromGeoCoord(point: GeoCoord): MosaicPoint = MosaicPointESRI(point)
+        override def fromGeoCoord(point: Coordinates): MosaicPoint = MosaicPointESRI(point)
+
+        override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointESRI(coords)
+
+        override def ioCodeGen: GeometryIOCodeGen = MosaicGeometryIOCodeGenESRI
+
+        override def codeGenTryWrap(code: String): String = code
+
+        override def geometryClass: String = classOf[OGCGeometry].getName
+
+        override def mosaicGeometryClass: String = classOf[MosaicGeometryESRI].getName
+
+        override def geometryAreaCode: String = "getEsriGeometry().calculateArea2D()"
+
+        override def geometryTypeCode: String = "geometryType()"
+
+        override def geometryIsValidCode: String = "isSimple()"
+
+        override def geometryLengthCode: String = "getEsriGeometry().calculateLength2D()"
+
+        override def geometrySRIDCode(geomInRef: String): String =
+            s"($geomInRef.esriSR == null) ? 0 : $geomInRef.getEsriSpatialReference().getID()"
 
     }
 
@@ -124,8 +156,39 @@ object GeometryAPI extends Serializable {
 
         override def name: String = "JTS"
 
-        override def fromGeoCoord(geoCoord: GeoCoord): MosaicPoint = MosaicPointJTS(geoCoord)
+        override def fromGeoCoord(geoCoord: Coordinates): MosaicPoint = MosaicPointJTS(geoCoord)
 
+        override def fromCoords(coords: Seq[Double]): MosaicPoint = MosaicPointJTS(coords)
+
+        override def ioCodeGen: GeometryIOCodeGen = MosaicGeometryIOCodeGenJTS
+
+        override def codeGenTryWrap(code: String): String =
+            s"""
+               |try {
+               |$code
+               |} catch (Exception e) {
+               | throw e;
+               |}
+               |""".stripMargin
+
+        override def geometryClass: String = classOf[JTSGeometry].getName
+
+        override def mosaicGeometryClass: String = classOf[MosaicGeometryJTS].getName
+
+        override def geometryAreaCode: String = "getArea()"
+
+        override def geometryTypeCode: String = "getGeometryType()"
+
+        override def geometryIsValidCode: String = "isValid()"
+
+        override def geometryLengthCode: String = "getLength()"
+
+        override def geometrySRIDCode(geomInRef: String): String = s"$geomInRef.getSRID()"
+
+    }
+
+    object IllegalAPI extends GeometryAPI(null) {
+        override def name: String = "ILLEGAL"
     }
 
 }

@@ -1,9 +1,10 @@
-from typing import Union, Any
-from mosaic.config import config
+from typing import Any, Union
 
 from pyspark.sql import Column
 from pyspark.sql.column import _to_java_column
 from pyspark.sql.functions import col
+
+from mosaic.config import config
 
 ColumnOrName = Union[Column, str]
 

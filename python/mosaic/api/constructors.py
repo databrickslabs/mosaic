@@ -8,6 +8,15 @@ from mosaic.utils.types import ColumnOrName
 # Geometry constructors #
 #########################
 
+__all__ = [
+    "st_point",
+    "st_makeline",
+    "st_makepolygon",
+    "st_geomfromwkt",
+    "st_geomfromwkb",
+    "st_geomfromgeojson",
+]
+
 
 def st_point(x: ColumnOrName, y: ColumnOrName) -> Column:
     """
