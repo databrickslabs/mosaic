@@ -118,6 +118,12 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         MosaicGeometryJTS(convexHull)
     }
 
+    override def unaryUnion: MosaicGeometryJTS = {
+        val unaryUnion = geom.union()
+        unaryUnion.setSRID(geom.getSRID)
+        MosaicGeometryJTS(unaryUnion)
+    }
+
     override def toWKT: String = new WKTWriter().write(geom)
 
     override def toJSON: String = new GeoJsonWriter().write(geom)

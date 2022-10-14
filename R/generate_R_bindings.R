@@ -122,6 +122,7 @@ get_function_names <- function(scala_file_path){
   start_index = grep(start_string, scala_file, fixed=T) + 1
   # find the methods end - will be the next curly bracket
   # need to find where the matching end brace for the start string is located.
+  # counter starts at 1 as the start string includes the opening brace
   brace_counter = 1
 
   for(i in start_index : length(scala_file)){

@@ -51,7 +51,7 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, idAsLong: Ex
         if (idAsLongVal) cellID else UTF8String.fromString(indexSystem.format(cellID))
     }
 
-    override def toString: String = s"point_index_geom($geom, $resolution)"
+    override def toString: String = s"grid_pointascellid($geom, $resolution)"
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])

@@ -8,6 +8,13 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class TestPolyfill extends AnyFlatSpec with PolyfillBehaviors with SparkSuite {
 
+    "Polyfill" should "work on computed columns for any index system and any geometry API" in {
+        it should behave like polyfillOnComputedColumns(MosaicContext.build(H3IndexSystem, ESRI), spark, 11)
+        it should behave like polyfillOnComputedColumns(MosaicContext.build(H3IndexSystem, JTS), spark, 11)
+        it should behave like polyfillOnComputedColumns(MosaicContext.build(BNGIndexSystem, ESRI), spark, 4)
+        it should behave like polyfillOnComputedColumns(MosaicContext.build(BNGIndexSystem, JTS), spark, 4)
+    }
+
     "Polyfill" should "fill wkt geometries for any index system and any geometry API" in {
         it should behave like wktPolyfill(MosaicContext.build(H3IndexSystem, ESRI), spark, 11)
         it should behave like wktPolyfill(MosaicContext.build(H3IndexSystem, JTS), spark, 11)

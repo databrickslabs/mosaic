@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.databricks.labs</groupId>
     <artifactId>mosaic</artifactId>
-    <version>0.2.2-SNAPSHOT</version>
+    <version>0.3.1</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -76,7 +76,7 @@
         <dependency>
             <groupId>com.uber</groupId>
             <artifactId>h3</artifactId>
-            <version>3.7.2</version>
+            <version>3.7.0</version>
         </dependency>
         <dependency>
             <groupId>org.locationtech.jts</groupId>

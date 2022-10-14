@@ -106,7 +106,7 @@ object MosaicExplode {
         new ExpressionInfo(
           classOf[IndexGeometry].getCanonicalName,
           db.orNull,
-          "grid_tassellateexplode",
+          "grid_tessellateexplode",
           """
             |    _FUNC_(struct(geometry, resolution, keepCoreGeom)) - Generates the mosaic chips for the input
             |    geometry at a given resolution. Geometry and resolution are provided via struct wrapper to ensure
