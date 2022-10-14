@@ -57,7 +57,7 @@ def enable_mosaic(spark: SparkSession, dbutils=None, install_gdal=False) -> None
     )
 
     if install_gdal:
-        config.mosaic_context.install_gdal(spark)
+        config.mosaic_context.enable_gdal(spark)
 
     # Not yet added to the pyspark API
     with warnings.catch_warnings():
