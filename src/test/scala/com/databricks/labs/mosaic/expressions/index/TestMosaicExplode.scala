@@ -57,6 +57,11 @@ class TestMosaicExplode extends AnyFlatSpec with MosaicExplodeBehaviors with Spa
         it should behave like lineDecompose(MosaicContext.build(BNGIndexSystem, JTS), spark, 5)
     }
 
+    "Mosaic_Explode" should "decompose lines that have the first point on the cell boundary" in {
+        it should behave like lineDecomposeFirstPointOnBoundary(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        it should behave like lineDecomposeFirstPointOnBoundary(MosaicContext.build(H3IndexSystem, JTS), spark)
+    }
+
     "Mosaic_Explode" should "correctly evaluate auxiliary methods." in {
         it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, ESRI), spark)
         it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, JTS), spark)
