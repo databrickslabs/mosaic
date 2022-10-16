@@ -11,14 +11,14 @@ runs:
       shell: bash
       run: |
         cd python
-        sudo pip install build wheel pyspark==${{ matrix.spark }}
-        sudo pip install .
+        pip install build wheel pyspark==${{ matrix.spark }}
+        pip install .
     - name: Test and build python package
       shell: bash
       run: |
         cd python
-        sudo python -m unittest
-        sudo python -m build
+        python -m unittest
+        python -m build
     - name: Copy python artifacts to GH Actions run
       shell: bash
       run: cp python/dist/*.whl staging

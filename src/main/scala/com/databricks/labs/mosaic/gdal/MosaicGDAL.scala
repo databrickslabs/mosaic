@@ -10,6 +10,7 @@ import java.nio.file.{Files, Paths}
 import scala.io.{BufferedSource, Source}
 import scala.language.postfixOps
 import scala.sys.process._
+import scala.util.Try
 
 object MosaicGDAL extends Logging {
 
@@ -32,21 +33,23 @@ object MosaicGDAL extends Logging {
     }
 
     def disableGDAL(): Unit = {
-        val spark = SparkSession.builder().getOrCreate()
-        if (wasEnabled(spark) && isEnabled) {
-            gdal.GDALDestroyDriverManager()
-            // Clear the drivers.
-            val n = gdal.GetDriverCount()
-            for (i <- 0 until n) {
-                val driver = gdal.GetDriver(i)
-                if (driver != null) {
-                    driver.Deregister()
-                    driver.delete()
+        gdal.Rmdir("/vsimem/")
+        Try {
+            val spark = SparkSession.builder().getOrCreate()
+            if (wasEnabled(spark) && isEnabled) {
+                gdal.GDALDestroyDriverManager()
+                // Clear the drivers.
+                val n = gdal.GetDriverCount()
+                for (i <- 0 until n) {
+                    val driver = gdal.GetDriver(i)
+                    if (driver != null) {
+                        driver.Deregister()
+                        driver.delete()
+                    }
                 }
+                // Clear the virtual filesystem
+                isEnabled = false
             }
-            // Clear the virtual filesystem
-            gdal.Rmdir("/vsimem/")
-            isEnabled = false
         }
     }
 
@@ -60,7 +63,8 @@ object MosaicGDAL extends Logging {
         val so = readSOBytes("/gdal/ubuntu/libgdalalljni.so")
         val so30 = readSOBytes("/gdal/ubuntu/libgdalalljni.so.30")
 
-        val mosaicGDALPath = Paths.get("/tmp/mosaic/gdal/")
+        val mosaicGDALPath = Files.createTempDirectory("mosaic-gdal")
+        val mosaicGDALAbsolutePath = mosaicGDALPath.toAbsolutePath.toString
         val usrGDALPath = Paths.get("/usr/lib/jni/")
         val libgdalSOPath = Paths.get("/usr/lib/libgdal.so")
         if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
@@ -68,11 +72,11 @@ object MosaicGDAL extends Logging {
         if (!Files.exists(libgdalSOPath)) {
             "sudo cp /usr/lib/libgdal.so.30 /usr/lib/libgdal.so".!!
         }
-        Files.write(Paths.get("/tmp/mosaic/gdal/libgdalalljni.so"), so)
-        Files.write(Paths.get("/tmp/mosaic/gdal/libgdalalljni.so.30"), so30)
+        Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so"), so)
+        Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so.30"), so30)
 
-        "sudo cp /tmp/mosaic/gdal/libgdalalljni.so /usr/lib/jni/libgdalalljni.so".!!
-        "sudo cp /tmp/mosaic/gdal/libgdalalljni.so.30 /usr/lib/jni/libgdalalljni.so.30".!!
+        s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so /usr/lib/jni/libgdalalljni.so".!!
+        s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so.30 /usr/lib/jni/libgdalalljni.so.30".!!
     }
 
     def loadSharedObjects(): Unit = {
@@ -91,7 +95,7 @@ object MosaicGDAL extends Logging {
         val script = getScript
         for (cmd <- script.getLines.toList) {
             try {
-                if (!cmd.startsWith("#")) cmd.!!
+                if (!cmd.startsWith("#") || cmd.nonEmpty) cmd.!!
                 sc.map { sparkContext =>
                     if (!sparkContext.isLocal) {
                         sparkContext.parallelize(1 to numExecutors.get).pipe(cmd).collect
