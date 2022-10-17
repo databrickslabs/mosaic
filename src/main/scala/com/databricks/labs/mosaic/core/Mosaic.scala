@@ -1,20 +1,61 @@
 package com.databricks.labs.mosaic.core
 
-import scala.annotation.tailrec
-
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineString
+import com.databricks.labs.mosaic.core.geometry.multipoint.MosaicMultiPoint
+import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, MosaicChip}
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
+
+import scala.annotation.tailrec
 
 /**
   * Single abstracted logic for mosaic fill via [[IndexSystem]]. [[IndexSystem]]
   * is in charge of implementing the individual steps of the logic.
   */
 object Mosaic {
+
+    def getChips(
+        geometry: MosaicGeometry,
+        resolution: Int,
+        keepCoreGeom: Boolean,
+        indexSystem: IndexSystem,
+        geometryAPI: GeometryAPI
+    ): Seq[MosaicChip] = {
+        GeometryTypeEnum.fromString(geometry.getGeometryType) match {
+            case POINT           => pointChip(geometry, resolution, keepCoreGeom, indexSystem)
+            case MULTIPOINT      => multiPointChips(geometry, resolution, keepCoreGeom, indexSystem)
+            case LINESTRING      => lineFill(geometry, resolution, indexSystem, geometryAPI)
+            case MULTILINESTRING => lineFill(geometry, resolution, indexSystem, geometryAPI)
+            case _               => mosaicFill(geometry, resolution, keepCoreGeom, indexSystem, geometryAPI)
+        }
+    }
+
+    def multiPointChips(
+        geometry: MosaicGeometry,
+        resolution: Int,
+        keepCoreGeom: Boolean,
+        indexSystem: IndexSystem
+    ): Seq[MosaicChip] = {
+        val points = geometry.asInstanceOf[MosaicMultiPoint].asSeq
+        points.flatMap(point => pointChip(point, resolution, keepCoreGeom, indexSystem))
+    }
+
+    def pointChip(
+        geometry: MosaicGeometry,
+        resolution: Int,
+        keepCoreGeom: Boolean,
+        indexSystem: IndexSystem
+    ): Seq[MosaicChip] = {
+        val point = geometry.asInstanceOf[MosaicPoint]
+        val chipGeom = if (keepCoreGeom) point else null
+        val cellId = indexSystem.pointToIndex(point.getX, point.getY, resolution)
+        val chip = MosaicChip(isCore = false, Left(cellId), chipGeom)
+        Seq(chip.formatCellId(indexSystem))
+    }
 
     def mosaicFill(
         geometry: MosaicGeometry,
@@ -51,7 +92,7 @@ object Mosaic {
             case MULTILINESTRING =>
                 val multiLine = geometry.asInstanceOf[MosaicMultiLineString]
                 multiLine.flatten.flatMap(line => lineDecompose(line.asInstanceOf[MosaicLineString], resolution, indexSystem, geometryAPI))
-            case gt               => throw new Error(s"$gt not supported for line fill/decompose operation.")
+            case gt              => throw new Error(s"$gt not supported for line fill/decompose operation.")
         }
     }
 

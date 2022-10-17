@@ -10,6 +10,7 @@ import org.apache.spark.sql.types._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
+//noinspection ScalaDeprecation
 trait MosaicFillBehaviors {
     this: AnyFlatSpec =>
 
@@ -150,10 +151,6 @@ trait MosaicFillBehaviors {
         import sc.implicits._
 
         val wkt = mocks.getWKTRowsDf(mosaicContext).limit(1).select("wkt").as[String].collect().head
-        val idAsLongExpr = mc.getIndexSystem.defaultDataTypeID match {
-            case LongType   => lit(true).expr
-            case StringType => lit(false).expr
-        }
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr
@@ -163,7 +160,6 @@ trait MosaicFillBehaviors {
           lit(wkt).expr,
           resExpr,
           lit(false).expr,
-          idAsLongExpr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
@@ -171,35 +167,30 @@ trait MosaicFillBehaviors {
         mosaicfillExpr.first shouldEqual lit(wkt).expr
         mosaicfillExpr.second shouldEqual resExpr
         mosaicfillExpr.third shouldEqual lit(false).expr
-        mosaicfillExpr.fourth shouldEqual idAsLongExpr
 
         mc.getIndexSystem match {
             case H3IndexSystem  => mosaicfillExpr.inputTypes should contain theSameElementsAs
-                    Seq(StringType, IntegerType, BooleanType, BooleanType)
+                    Seq(StringType, IntegerType, BooleanType)
             case BNGIndexSystem => mosaicfillExpr.inputTypes should contain theSameElementsAs
-                    Seq(StringType, StringType, BooleanType, BooleanType)
+                    Seq(StringType, StringType, BooleanType)
         }
 
         val badExpr = MosaicFill(
           lit(10).expr,
           resExpr,
           lit(false).expr,
-          idAsLongExpr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
 
         an[Error] should be thrownBy badExpr.inputTypes
-        an[Error] should be thrownBy badExpr
-            .makeCopy(Array(lit(wkt).expr, resExpr, lit(5).expr, lit(5).expr))
-            .dataType
 
         // legacy API def tests
         noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5))
         noException should be thrownBy mc.functions.mosaicfill(lit(""), 5)
         noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), lit(true))
-        noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), true)
-        noException should be thrownBy mc.functions.mosaicfill(lit(""), 5, true)
+        noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), keepCoreGeometries = true)
+        noException should be thrownBy mc.functions.mosaicfill(lit(""), 5, keepCoreGeometries = true)
     }
 
 }

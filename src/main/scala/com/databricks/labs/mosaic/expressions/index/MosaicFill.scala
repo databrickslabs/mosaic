@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.IndexSystemID
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
@@ -26,44 +26,39 @@ case class MosaicFill(
     geom: Expression,
     resolution: Expression,
     keepCoreGeom: Expression,
-    idAsLong: Expression,
     indexSystemName: String,
     geometryAPIName: String
-) extends QuaternaryExpression
+) extends TernaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
+
+    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+    val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     // noinspection DuplicatedCode
     override def inputTypes: Seq[DataType] = {
         if (
           !Seq(BinaryType, StringType, HexType, InternalGeometryType).contains(first.dataType) ||
           !Seq(IntegerType, StringType).contains(second.dataType) ||
-          third.dataType != BooleanType || fourth.dataType != BooleanType
+          third.dataType != BooleanType
         ) {
-            throw new Error(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}, ${fourth.dataType}).")
+            throw new Error(s"Not supported data type: (${first.dataType}, ${second.dataType}, ${third.dataType}).")
         } else {
-            Seq(first.dataType, second.dataType, third.dataType, fourth.dataType)
+            Seq(first.dataType, second.dataType, third.dataType)
         }
     }
+
+    override def first: Expression = geom
 
     override def second: Expression = resolution
 
     override def third: Expression = keepCoreGeom
 
-    override def first: Expression = geom
-
-    override def fourth: Expression = idAsLong
-
     /** Expression output DataType. */
-    override def dataType: DataType = {
-        idAsLong match {
-            case Literal(f: Boolean, BooleanType) => if (f) MosaicType(LongType) else MosaicType(StringType)
-            case _                                => throw new Error("Only boolean literal supported for idAsLong expression.")
-        }
-    }
+    override def dataType: DataType = MosaicType(indexSystem.getCellIdDataType)
 
-    override def toString: String = s"grid_tessellate($geom, $resolution, $keepCoreGeom, $idAsLong)"
+    override def toString: String = s"grid_tessellate($geom, $resolution, $keepCoreGeom)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
     override def prettyName: String = "grid_tessellate"
@@ -86,14 +81,10 @@ case class MosaicFill(
       *   [[com.databricks.labs.mosaic.core.types.model.MosaicChip]].
       */
     // noinspection DuplicatedCode
-    override def nullSafeEval(input1: Any, input2: Any, input3: Any, input4: Any): Any = {
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+    override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
+        val geometry = geometryAPI.geometry(input1, first.dataType)
         val resolution: Int = indexSystem.getResolution(input2)
         val keepCoreGeom: Boolean = input3.asInstanceOf[Boolean]
-        val idAsLongVal: Boolean = input4.asInstanceOf[Boolean]
-
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geometry = geometryAPI.geometry(input1, first.dataType)
 
         val chips = GeometryTypeEnum.fromString(geometry.getGeometryType) match {
             case LINESTRING      => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
@@ -101,7 +92,7 @@ case class MosaicFill(
             case _               => Mosaic.mosaicFill(geometry, resolution, keepCoreGeom, indexSystem, geometryAPI)
         }
 
-        val formatted = if (!idAsLongVal) chips.map(_.toStringID(indexSystem)) else chips
+        val formatted = chips.map(_.formatCellId(indexSystem))
 
         InternalRow.fromSeq(
           Seq(
@@ -111,8 +102,8 @@ case class MosaicFill(
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(4).map(_.asInstanceOf[Expression])
-        val res = MosaicFill(asArray(0), asArray(1), asArray(2), asArray(3), indexSystemName, geometryAPIName)
+        val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
+        val res = MosaicFill(asArray(0), asArray(1), asArray(2), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -121,8 +112,7 @@ case class MosaicFill(
         newFirst: Expression,
         newSecond: Expression,
         newThird: Expression,
-        newFourth: Expression
-    ): Expression = copy(newFirst, newSecond, newThird, newFourth)
+    ): Expression = copy(newFirst, newSecond, newThird)
 
 }
 

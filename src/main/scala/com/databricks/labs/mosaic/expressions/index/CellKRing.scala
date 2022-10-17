@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.index.IndexSystemID
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -15,11 +16,14 @@ import org.apache.spark.sql.types._
   """,
   since = "1.0"
 )
-case class KRing(cellId: Expression, k: Expression, indexSystemName: String, geometryAPIName: String)
+case class CellKRing(cellId: Expression, k: Expression, indexSystemName: String, geometryAPIName: String)
     extends BinaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
+
+    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+    val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     // noinspection DuplicatedCode
     override def inputTypes: Seq[DataType] =
@@ -34,12 +38,12 @@ case class KRing(cellId: Expression, k: Expression, indexSystemName: String, geo
     override def left: Expression = cellId
 
     /** Expression output DataType. */
-    override def dataType: DataType = ArrayType(LongType)
+    override def dataType: DataType = ArrayType(indexSystem.getCellIdDataType)
 
-    override def toString: String = s"polyfill($cellId, $k)"
+    override def toString: String = s"grid_cellkring($cellId, $k)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "kring"
+    override def prettyName: String = "grid_cellkring"
 
     /**
       * Generates a set of indices corresponding to kring call over the input
@@ -54,15 +58,15 @@ case class KRing(cellId: Expression, k: Expression, indexSystemName: String, geo
       */
     // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-        val indices = indexSystem.kRing(input1.asInstanceOf[Long], input2.asInstanceOf[Int])
-        val serialized = ArrayData.toArrayData(indices.toArray)
+        val cellId = indexSystem.formatCellId(input1, LongType).asInstanceOf[Long]
+        val indices = indexSystem.kRing(cellId, input2.asInstanceOf[Int])
+        val serialized = ArrayData.toArrayData(indices.map(indexSystem.serializeCellId))
         serialized
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = Polyfill(asArray(0), asArray(1), indexSystemName, geometryAPIName)
+        val res = CellKRing(asArray(0), asArray(1), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -72,14 +76,14 @@ case class KRing(cellId: Expression, k: Expression, indexSystemName: String, geo
 
 }
 
-object KRing {
+object CellKRing {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-            classOf[KRing].getCanonicalName,
+            classOf[CellKRing].getCanonicalName,
             db.orNull,
-            "kring",
+            "grid_cellkring",
             "_FUNC_(cellId, k) - Returns k ring for a given cell.",
             "",
             """

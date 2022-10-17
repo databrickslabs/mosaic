@@ -12,6 +12,7 @@ import org.apache.spark.sql.types._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
+//noinspection ScalaDeprecation
 trait MosaicExplodeBehaviors {
     this: AnyFlatSpec =>
 
@@ -231,10 +232,6 @@ trait MosaicExplodeBehaviors {
         import sc.implicits._
 
         val wkt = mocks.getWKTRowsDf(mosaicContext).limit(1).select("wkt").as[String].collect().head
-        val idAsLongExpr = mc.getIndexSystem.defaultDataTypeID match {
-            case LongType   => lit(true).expr
-            case StringType => lit(false).expr
-        }
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr
@@ -244,7 +241,6 @@ trait MosaicExplodeBehaviors {
           lit(wkt).expr,
           resExpr,
           lit(false).expr,
-          idAsLongExpr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
@@ -257,37 +253,35 @@ trait MosaicExplodeBehaviors {
           lit(10).expr,
           resExpr,
           lit(false).expr,
-          idAsLongExpr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
 
         badExpr.checkInputDataTypes().isFailure shouldEqual true
         badExpr
-            .withNewChildren(Array(lit(wkt).expr, lit(true).expr, lit(false).expr, idAsLongExpr))
+            .withNewChildren(Array(lit(wkt).expr, lit(true).expr, lit(false).expr))
             .checkInputDataTypes()
             .isFailure shouldEqual true
         badExpr
-            .withNewChildren(Array(lit(wkt).expr, resExpr, lit(5).expr, idAsLongExpr))
+            .withNewChildren(Array(lit(wkt).expr, resExpr, lit(5).expr))
             .checkInputDataTypes()
             .isFailure shouldEqual true
 
         // Line decompose error should be thrown
-        val geom = MosaicContext.geometryAPI.geometry("POINT (1 1)", "WKT")
-        an[Error] should be thrownBy Mosaic.lineFill(geom, 5, MosaicContext.indexSystem, MosaicContext.geometryAPI)
+        val geom = MosaicContext.geometryAPI().geometry("POINT (1 1)", "WKT")
+        an[Error] should be thrownBy Mosaic.lineFill(geom, 5, MosaicContext.indexSystem(), MosaicContext.geometryAPI())
 
         // Default getters
         noException should be thrownBy mosaicExplodeExpr.geom
         noException should be thrownBy mosaicExplodeExpr.resolution
         noException should be thrownBy mosaicExplodeExpr.keepCoreGeom
-        noException should be thrownBy mosaicExplodeExpr.idAsLong
 
         // legacy API def tests
         noException should be thrownBy mc.functions.mosaic_explode(lit(""), lit(5))
         noException should be thrownBy mc.functions.mosaic_explode(lit(""), 5)
         noException should be thrownBy mc.functions.mosaic_explode(lit(""), lit(5), lit(true))
-        noException should be thrownBy mc.functions.mosaic_explode(lit(""), lit(5), true)
-        noException should be thrownBy mc.functions.mosaic_explode(lit(""), 5, true)
+        noException should be thrownBy mc.functions.mosaic_explode(lit(""), lit(5), keepCoreGeometries = true)
+        noException should be thrownBy mc.functions.mosaic_explode(lit(""), 5, keepCoreGeometries = true)
     }
 
 }

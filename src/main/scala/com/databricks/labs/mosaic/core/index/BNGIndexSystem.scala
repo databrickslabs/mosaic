@@ -25,7 +25,7 @@ import scala.util.{Success, Try}
   * @see
   *   [[https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid]]
   */
-object BNGIndexSystem extends IndexSystem with Serializable {
+object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
 
     /**
       * Quadrant encodings. The order is determined in a way that preserves
@@ -182,7 +182,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
             val visits = queue.map(index => (index, geometry.contains(indexToGeometry(index, geometryAPI.get).getCentroid)))
             val matches = visits.filter(_._2)
             val newVisited = visited ++ visits.map(_._1)
-            val newQueue = matches.flatMap(c => kDisk(c._1, 1).filterNot(newVisited.contains))
+            val newQueue = matches.flatMap(c => kDisc(c._1, 1).filterNot(newVisited.contains))
             val newResult = result ++ matches.map(_._1)
             if (newQueue.isEmpty) {
                 newResult
@@ -222,9 +222,9 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       */
     override def kRing(index: Long, n: Int): Seq[Long] = {
         if (n == 1) {
-            Seq(index) ++ kDisk(index, 1)
+            Seq(index) ++ kDisc(index, 1)
         } else {
-            Seq(index) ++ (1 to n).flatMap(kDisk(index, _))
+            Seq(index) ++ (1 to n).flatMap(kDisc(index, _))
         }
     }
 
@@ -238,7 +238,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       * @return
       *   A collection of index IDs forming a k disk.
       */
-    override def kDisk(index: Long, k: Int): Seq[Long] = {
+    override def kDisc(index: Long, k: Int): Seq[Long] = {
         val digits = indexDigits(index)
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution)
@@ -282,6 +282,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       *   Index ID in this index system.
       */
     override def pointToIndex(eastings: Double, northings: Double, resolution: Int): Long = {
+        require(!eastings.isNaN && !northings.isNaN, throw new IllegalStateException("NaN coordinates are not supported."))
         val eastingsInt = eastings.toInt
         val northingsInt = northings.toInt
         val eLetter: Int = math.floor(eastingsInt / 100000).toInt
@@ -529,8 +530,6 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         val yOffset = if (quadrant == 2 || quadrant == 3) edgeSize else 0
         yDigits.mkString.toInt * edgeSizeAdj + yOffset
     }
-
-    override def defaultDataTypeID: DataType = StringType
 
     override def getResolutionStr(resolution: Int): String = resolutionMap.find(_._2 == resolution).map(_._1).getOrElse("")
 

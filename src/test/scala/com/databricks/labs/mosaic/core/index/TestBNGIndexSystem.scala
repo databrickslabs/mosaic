@@ -88,9 +88,9 @@ class TestBNGIndexSystem extends AnyFlatSpec {
     "KDisk" should "generate index IDs for negative resolutions." in {
         val index = 1050138794L // "TQ3879SE" res -4
 
-        val kDisk1 = BNGIndexSystem.kDisk(index, 1).map(BNGIndexSystem.format)
-        val kDisk2 = BNGIndexSystem.kDisk(index, 2).map(BNGIndexSystem.format)
-        val kDisk3 = BNGIndexSystem.kDisk(index, 3).map(BNGIndexSystem.format)
+        val kDisk1 = BNGIndexSystem.kDisc(index, 1).map(BNGIndexSystem.format)
+        val kDisk2 = BNGIndexSystem.kDisc(index, 2).map(BNGIndexSystem.format)
+        val kDisk3 = BNGIndexSystem.kDisc(index, 3).map(BNGIndexSystem.format)
         kDisk1 should contain theSameElementsAs Seq(
           Seq("TQ3878NW", "TQ3878NE"), // bottom
           Seq("TQ3978NW", "TQ3979SW"), // right
@@ -113,9 +113,9 @@ class TestBNGIndexSystem extends AnyFlatSpec {
 
     "KDisk" should "generate index IDs for positive resolutions." in {
         val index = 1050138790
-        val kDisk1 = BNGIndexSystem.kDisk(index, 1).map(BNGIndexSystem.format)
-        val kDisk2 = BNGIndexSystem.kDisk(index, 2).map(BNGIndexSystem.format)
-        val kDisk3 = BNGIndexSystem.kDisk(index, 3).map(BNGIndexSystem.format)
+        val kDisk1 = BNGIndexSystem.kDisc(index, 1).map(BNGIndexSystem.format)
+        val kDisk2 = BNGIndexSystem.kDisc(index, 2).map(BNGIndexSystem.format)
+        val kDisk3 = BNGIndexSystem.kDisc(index, 3).map(BNGIndexSystem.format)
         kDisk1 should contain theSameElementsAs Seq(
             Seq("TQ3778", "TQ3779"), // bottom
             Seq("TQ3780", "TQ3878"), // right
@@ -141,9 +141,9 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         val kRing1 = BNGIndexSystem.kRing(index, 1).map(BNGIndexSystem.format)
         val kRing2 = BNGIndexSystem.kRing(index, 2).map(BNGIndexSystem.format)
         val kRing3 = BNGIndexSystem.kRing(index, 3).map(BNGIndexSystem.format)
-        val kDisk1 = BNGIndexSystem.kDisk(index, 1).map(BNGIndexSystem.format)
-        val kDisk2 = BNGIndexSystem.kDisk(index, 2).map(BNGIndexSystem.format)
-        val kDisk3 = BNGIndexSystem.kDisk(index, 3).map(BNGIndexSystem.format)
+        val kDisk1 = BNGIndexSystem.kDisc(index, 1).map(BNGIndexSystem.format)
+        val kDisk2 = BNGIndexSystem.kDisc(index, 2).map(BNGIndexSystem.format)
+        val kDisk3 = BNGIndexSystem.kDisc(index, 3).map(BNGIndexSystem.format)
         kRing1 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1)
         kRing2 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2)
         kRing3 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2).union(kDisk3)

@@ -10,6 +10,7 @@ import org.apache.spark.sql.types._
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
+//noinspection ScalaDeprecation
 trait PolyfillBehaviors {
     this: AnyFlatSpec =>
 
@@ -137,10 +138,6 @@ trait PolyfillBehaviors {
         import sc.implicits._
 
         val wkt = mocks.getWKTRowsDf(mosaicContext).limit(1).select("wkt").as[String].collect().head
-        val idAsLongExpr = mc.getIndexSystem.defaultDataTypeID match {
-            case LongType   => lit(true).expr
-            case StringType => lit(false).expr
-        }
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr
@@ -149,7 +146,6 @@ trait PolyfillBehaviors {
         val polyfillExpr = Polyfill(
           lit(wkt).expr,
           resExpr,
-          idAsLongExpr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
@@ -162,12 +158,10 @@ trait PolyfillBehaviors {
         val badExpr = Polyfill(
           lit(10).expr,
           lit(true).expr,
-          lit(5).expr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
 
-        an[Error] should be thrownBy badExpr.dataType
         an[Error] should be thrownBy badExpr.inputTypes
 
         // legacy API def tests

@@ -8,6 +8,7 @@ import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.catalog.CatalogDatabase
 import org.apache.spark.sql.catalyst.expressions.Literal
 import org.apache.spark.sql.functions.{array, lit}
+import org.apache.spark.sql.types.{LongType, StringType}
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
@@ -15,6 +16,7 @@ import java.net.URI
 
 trait MosaicContextBehaviors extends QueryTest {
 
+    //noinspection EmptyParenMethodAccessedAsParameterless
     def creationOfContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         MosaicContext.reset()
@@ -23,8 +25,8 @@ trait MosaicContextBehaviors extends QueryTest {
         MosaicContext.indexSystem shouldEqual indexSystem
         MosaicContext.geometryAPI shouldEqual geometryAPI
         MosaicContext.indexSystem match {
-            case BNGIndexSystem => mc.idAsLongDefaultExpr.asInstanceOf[Literal].value shouldEqual false
-            case H3IndexSystem  => mc.idAsLongDefaultExpr.asInstanceOf[Literal].value shouldEqual true
+            case BNGIndexSystem => mc.getIndexSystem.getCellIdDataType shouldEqual StringType
+            case H3IndexSystem  => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
         }
         an[Error] should be thrownBy MosaicContext.build(BadIndexSystem, geometryAPI)
     }

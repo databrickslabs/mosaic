@@ -1,14 +1,16 @@
 package com.databricks.labs.mosaic.core.index
 
-import scala.collection.JavaConverters._
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.Coordinates
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.uber.h3core.H3Core
-import org.apache.spark.sql.types.{DataType, LongType}
-import org.locationtech.jts.geom.Geometry
 import com.uber.h3core.util.GeoCoord
+import org.apache.spark.sql.types.LongType
+import org.locationtech.jts.geom.Geometry
+
+import scala.collection.JavaConverters._
+import scala.util.Try
 
 /**
   * Implements the [[IndexSystem]] via [[H3Core]] java bindings.
@@ -16,7 +18,7 @@ import com.uber.h3core.util.GeoCoord
   * @see
   *   [[https://github.com/uber/h3-java]]
   */
-object H3IndexSystem extends IndexSystem with Serializable {
+object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
     // An instance of H3Core to be used for IndexSystem implementation.
     @transient val h3: H3Core = H3Core.newInstance()
@@ -167,8 +169,14 @@ object H3IndexSystem extends IndexSystem with Serializable {
       * @return
       *   A collection of index IDs forming a k disk.
       */
-    override def kDisk(index: Long, n: Int): Seq[Long] = {
-        h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).toSeq.map(_.toLong)
+    override def kDisc(index: Long, n: Int): Seq[Long] = {
+        // HexRing crashes in case of pentagons.
+        // Ensure a KRing fallback in said case.
+        Try(
+          h3.hexRing(index, n).asScala.map(_.toLong)
+        ).getOrElse(
+          h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).toSeq.map(_.toLong)
+        )
     }
 
     /**
@@ -199,13 +207,16 @@ object H3IndexSystem extends IndexSystem with Serializable {
         )
     }
 
-    override def defaultDataTypeID: DataType = LongType
-
     override def format(id: Long): String = {
         val geo = h3.h3ToGeo(id)
         h3.geoToH3Address(geo.lat, geo.lng, h3.h3GetResolution(id))
     }
 
     override def getResolutionStr(resolution: Int): String = resolution.toString
+
+    override def parse(id: String): Long = {
+        val geo = h3.h3ToGeo(id)
+        h3.geoToH3(geo.lat, geo.lng, h3.h3GetResolution(id))
+    }
 
 }

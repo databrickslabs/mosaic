@@ -3,19 +3,49 @@ package com.databricks.labs.mosaic.core.index
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.MosaicChip
-import org.apache.spark.sql.types.DataType
+import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 
 /**
   * Defines the API that all index systems need to respect for Mosaic to support
   * them.
   */
-trait IndexSystem extends Serializable {
+abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
+
+    def getCellIdDataType: DataType = cellIdType
+
+    def setCellIdDataType(dataType: DataType): Unit = {
+        cellIdType = dataType
+    }
 
     def getResolutionStr(resolution: Int): String
 
+    def formatCellId(cellId: Any, dt: DataType): Any = (dt, cellId) match {
+        case (LongType, _: Long)           => cellId
+        case (LongType, cid: String)       => parse(cid)
+        case (LongType, cid: UTF8String)   => parse(cid.toString)
+        case (StringType, cid: Long)       => format(cid)
+        case (StringType, cid: UTF8String) => cid.toString
+        case (StringType, _: String)       => cellId
+        case _                             => throw new Error("Cell ID data type not supported.")
+    }
+
+    def formatCellId(cellId: Any): Any = formatCellId(cellId, getCellIdDataType)
+
+    def serializeCellId(cellId: Any): Any =
+        (getCellIdDataType, cellId) match {
+            case (LongType, _: Long)         => cellId
+            case (LongType, cid: String)     => parse(cid)
+            case (LongType, cid: UTF8String) => parse(cid.toString)
+            case (StringType, cid: Long)     => UTF8String.fromString(format(cid))
+            case (StringType, _: UTF8String) => cellId
+            case (StringType, cid: String)   => UTF8String.fromString(cid)
+            case _                           => throw new Error("Cell ID data type not supported.")
+        }
+
     def format(id: Long): String
 
-    def defaultDataTypeID: DataType
+    def parse(id: String): Long
 
     /**
       * Get the k ring of indices around the provided index id.
@@ -29,6 +59,8 @@ trait IndexSystem extends Serializable {
       */
     def kRing(index: Long, n: Int): Seq[Long]
 
+    def kRing(index: String, n: Int): Seq[String] = kRing(parse(index), n).map(format)
+
     /**
       * Get the k disk of indices around the provided index id.
       *
@@ -39,17 +71,18 @@ trait IndexSystem extends Serializable {
       * @return
       *   A collection of index IDs forming a k disk.
       */
-    def kDisk(index: Long, n: Int): Seq[Long]
+    def kDisc(index: Long, n: Int): Seq[Long]
+
+    def kDisc(index: String, n: Int): Seq[String] = kDisc(parse(index), n).map(format)
 
     /**
-     * Returns the set of supported resolutions for the
-     * given index system. This doesnt have to be a
-     * continuous set of values. Only values provided
-     * in this set are considered valid.
-     *
-     * @return
-     *   A set of supported resolutions.
-     */
+      * Returns the set of supported resolutions for the given index system.
+      * This doesnt have to be a continuous set of values. Only values provided
+      * in this set are considered valid.
+      *
+      * @return
+      *   A set of supported resolutions.
+      */
     def resolutions: Set[Int]
 
     /**
@@ -170,13 +203,13 @@ trait IndexSystem extends Serializable {
     def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry
 
     /**
-     * Get the geometry corresponding to the index with the input id.
-     *
-     * @param index
-     *   Id of the index whose geometry should be returned.
-     * @return
-     *   An instance of [[MosaicGeometry]] corresponding to index.
-     */
+      * Get the geometry corresponding to the index with the input id.
+      *
+      * @param index
+      *   Id of the index whose geometry should be returned.
+      * @return
+      *   An instance of [[MosaicGeometry]] corresponding to index.
+      */
     def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry
 
     /**

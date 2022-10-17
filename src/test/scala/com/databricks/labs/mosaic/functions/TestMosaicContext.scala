@@ -17,7 +17,7 @@ class TestMosaicContext extends AnyFlatSpec with SparkSuite with MockFactory {
 
     def getMosaicContext: MosaicContext = {
         val ix = stub[IndexSystem]
-        ix.defaultDataTypeID _ when () returns LongType
+        ix.getCellIdDataType _ when () returns LongType
         ix.name _ when () returns H3.name
         MosaicContext.build(ix, stub[GeometryAPI])
     }

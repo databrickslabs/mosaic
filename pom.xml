@@ -78,6 +78,12 @@
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>io.delta</groupId>
+            <artifactId>delta-core_${scala.compat.version}</artifactId>
+            <version>2.1.0</version>
+            <scope>provided</scope>
+        </dependency>
         <!--geo dependencies-->
         <dependency>
             <groupId>com.uber</groupId>
