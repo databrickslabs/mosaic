@@ -342,6 +342,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           ST_IntersectsAggregate.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_IntersectsAggregate(exprs(0), exprs(1), geometryAPI.name)
         )
+        registry.registerFunction(
+          FunctionIdentifier("st_union_agg", database),
+          ST_UnionAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_UnionAgg(exprs(0), geometryAPI.name)
+        )
 
         /** IndexSystem and GeometryAPI Specific methods */
         registry.registerFunction(
@@ -548,6 +553,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
               ST_IntersectionAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem.name, 0, 0)
                   .toAggregateExpression(isDistinct = false)
             )
+        def st_union_agg(geom: Column): Column =
+            ColumnAdapter(ST_UnionAgg(geom.expr, geometryAPI.name).toAggregateExpression(isDistinct = false))
 
         /** IndexSystem Specific */
 

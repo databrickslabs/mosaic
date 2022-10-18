@@ -119,6 +119,11 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def equals(other: java.lang.Object): Boolean = false
 
+    override def equalsTopo(other: MosaicGeometry): Boolean = {
+        val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
+        this.getGeom.Equals(otherGeom)
+    }
+
     override def hashCode: Int = geom.hashCode()
 
     override def boundary: MosaicGeometry = MosaicGeometryESRI(geom.boundary())
@@ -126,7 +131,6 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def distance(geom2: MosaicGeometry): Double = this.getGeom.distance(geom2.asInstanceOf[MosaicGeometryESRI].getGeom)
 
     override def convexHull: MosaicGeometryESRI = MosaicGeometryESRI(geom.convexHull())
-
 
     override def unaryUnion: MosaicGeometry = {
         // ESRI geometry does not directly implement unary union.

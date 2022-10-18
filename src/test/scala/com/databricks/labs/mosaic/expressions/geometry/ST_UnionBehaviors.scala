@@ -4,10 +4,11 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
-import org.apache.spark.sql.QueryTest
+import org.apache.spark.sql.{QueryTest, Row}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType}
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
@@ -34,7 +35,44 @@ trait ST_UnionBehaviors extends QueryTest {
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "WKT"))
 
-        results.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
+        results.zip(expected).foreach { case (l, r) => l.equalsTopo(r) shouldEqual true }
+    }
+
+    def unionAggBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        import mc.functions._
+        val sc = spark
+        import sc.implicits._
+        mc.register(spark)
+
+        val polygonRows = List(
+          List(1L, "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))"),
+          List(1L, "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")
+        )
+        val rows = polygonRows.map { x => Row(x: _*) }
+        val rdd = spark.sparkContext.makeRDD(rows)
+        val schema = StructType(
+          Seq(
+            StructField("row_id", LongType),
+            StructField("polygons", StringType)
+          )
+        )
+
+        val polygons = spark.createDataFrame(rdd, schema)
+        val expected = List("POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))")
+            .map(mc.getGeometryAPI.geometry(_, "WKT"))
+
+        val results = polygons
+            .groupBy($"row_id")
+            .agg(
+              st_union_agg($"polygons").alias("result")
+            )
+            .select($"result")
+            .as[Array[Byte]]
+            .collect()
+            .map(mc.getGeometryAPI.geometry(_, "WKB"))
+
+        results.zip(expected).foreach { case (l, r) => l.equalsTopo(r) shouldEqual true }
     }
 
     def unionCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
