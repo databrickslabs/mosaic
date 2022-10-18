@@ -281,6 +281,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_ConvexHull(exprs(0), geometryAPI.name)
         )
         registry.registerFunction(
+          FunctionIdentifier("st_union", database),
+          ST_Union.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_Union(exprs(0), exprs(1), geometryAPI.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_unaryunion", database),
           ST_UnaryUnion.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_UnaryUnion(exprs(0), geometryAPI.name)
@@ -506,6 +511,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_ymin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Y", "MIN"))
         def st_zmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Z", "MAX"))
         def st_zmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Z", "MIN"))
+        def st_union(leftGeom: Column, rightGeom: Column): Column = ColumnAdapter(ST_Union(leftGeom.expr, rightGeom.expr, geometryAPI.name))
         def st_unaryunion(geom: Column): Column = ColumnAdapter(ST_UnaryUnion(geom.expr, geometryAPI.name))
 
         /** Undocumented helper */
