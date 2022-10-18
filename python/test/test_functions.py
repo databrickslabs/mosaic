@@ -195,3 +195,8 @@ class TestFunctions(MosaicTestCase):
                 "comparison_intersection"
             ]
         )
+
+    def test_union_agg(self):
+        df = self.generate_input_polygon_collection()
+        result = df.groupBy().agg(api.st_union_agg(col("geometry")))
+        self.assertEqual(result.count(), 1)
