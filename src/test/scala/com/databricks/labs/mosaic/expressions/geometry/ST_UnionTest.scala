@@ -26,26 +26,10 @@ class ST_UnionTest extends QueryTest with SharedSparkSession with ST_UnionBehavi
     test("Testing stUnion (H3, ESRI) NO_CODEGEN") { noCodegen { unionBehavior(H3IndexSystem, ESRI) } }
     test("Testing stUnion (BNG, JTS) NO_CODEGEN") { noCodegen { unionBehavior(BNGIndexSystem, JTS) } }
     test("Testing stUnion (BNG, ESRI) NO_CODEGEN") { noCodegen { unionBehavior(BNGIndexSystem, ESRI) } }
-    test("Testing stUnionAgg (H3, JTS) NO_CODEGEN") {
-        noCodegen {
-            unionAggBehavior(H3IndexSystem, JTS)
-        }
-    }
-    test("Testing stUnionAgg (H3, ESRI) NO_CODEGEN") {
-        noCodegen {
-            unionAggBehavior(H3IndexSystem, ESRI)
-        }
-    }
-    test("Testing stUnionAgg (BNG, JTS) NO_CODEGEN") {
-        noCodegen {
-            unionAggBehavior(BNGIndexSystem, JTS)
-        }
-    }
-    test("Testing stUnionAgg (BNG, ESRI) NO_CODEGEN") {
-        noCodegen {
-            unionAggBehavior(BNGIndexSystem, ESRI)
-        }
-    }
+    test("Testing stUnionAgg (H3, JTS) NO_CODEGEN") { noCodegen { unionAggBehavior(H3IndexSystem, JTS) } }
+    test("Testing stUnionAgg (H3, ESRI) NO_CODEGEN") { noCodegen { unionAggBehavior(H3IndexSystem, ESRI) } }
+    test("Testing stUnionAgg (BNG, JTS) NO_CODEGEN") { noCodegen { unionAggBehavior(BNGIndexSystem, JTS) } }
+    test("Testing stUnionAgg (BNG, ESRI) NO_CODEGEN") { noCodegen { unionAggBehavior(BNGIndexSystem, ESRI) } }
     test("Testing stUnion (H3, JTS) CODEGEN compilation") { codegenOnly { unionCodegen(H3IndexSystem, JTS) } }
     test("Testing stUnion (H3, ESRI) CODEGEN compilation") { codegenOnly { unionCodegen(H3IndexSystem, ESRI) } }
     test("Testing stUnion (BNG, JTS) CODEGEN compilation") { codegenOnly { unionCodegen(BNGIndexSystem, JTS) } }
