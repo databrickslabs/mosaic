@@ -300,6 +300,8 @@
         <li class="md-nav__item"><a href="#st-intersects-aggregate" class="md-nav__link">st_intersects_aggregate</a>
         </li>
         <li class="md-nav__item"><a href="#st-intersection-aggregate" class="md-nav__link">st_intersection_aggregate</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-union-agg" class="md-nav__link">st_union_agg</a>
         </li></ul>
             </nav>
         </li>
@@ -330,6 +332,8 @@
         <li class="md-nav__item"><a href="#st-intersects-aggregate" class="md-nav__link">st_intersects_aggregate</a>
         </li>
         <li class="md-nav__item"><a href="#st-intersection-aggregate" class="md-nav__link">st_intersection_aggregate</a>
+        </li>
+        <li class="md-nav__item"><a href="#st-union-agg" class="md-nav__link">st_union_agg</a>
         </li></ul>
             </nav>
         </li>
@@ -529,6 +533,62 @@
 <span class="o">+--------------------------------------------------------------+</span>
 <span class="o">|</span><span class="nf">POLYGON </span><span class="p">((</span><span class="m">2</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span> <span class="m">3</span><span class="p">,</span> <span class="m">2</span> <span class="m">3</span><span class="p">,</span> <span class="m">2</span> <span class="m">2</span><span class="p">))</span>                           <span class="o">|</span>
 <span class="o">+--------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
+<h2 id="st-union-agg">st_union_agg<a class="headerlink" href="#st-union-agg" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_union_agg">
+<span class="sig-name descname"><span class="pre">st_union_agg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_union_agg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the union of the input geometries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>geom</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-2-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-2-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-2-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-2-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-2-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-2-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">'geom'</span><span class="p">:</span> <span class="s1">'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'</span><span class="p">},</span> <span class="p">{</span><span class="s1">'geom'</span><span class="p">:</span> <span class="s1">'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'</span><span class="p">}])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_astext</span><span class="p">(</span><span class="n">st_union_agg</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s1">'geom'</span><span class="p">))))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+-------------------------------------------------------------------------+</span>
+<span class="go">| st_union_agg(geom)                                                      |</span>
+<span class="go">+-------------------------------------------------------------------------+</span>
+<span class="go">|POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|</span>
+<span class="go">+-------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-2-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; val df = List("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").toDF("geom")
+&gt;&gt;&gt; df.select(st_astext(st_union_agg(col('geom')))).show()
++-------------------------------------------------------------------------+
+| st_union_agg(geom)                                                      |
++-------------------------------------------------------------------------+
+|POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
++-------------------------------------------------------------------------+
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-2-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">geoms</span><span class="w"> </span><span class="p">(</span><span class="s1">'geom'</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="s1">'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'</span><span class="p">))</span><span class="w"></span>
+<span class="w">    </span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_astext</span><span class="p">(</span><span class="n">st_union_agg</span><span class="p">(</span><span class="n">geoms</span><span class="p">));</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="n">st_union_agg</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span><span class="w">                                                      </span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">POLYGON</span><span class="w"> </span><span class="p">((</span><span class="mi">20</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="mi">15</span><span class="p">))</span><span class="o">|</span><span class="w"></span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-2-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">df.geom</span> <span class="o">&lt;-</span> <span class="nf">select</span><span class="p">(</span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">geom</span> <span class="o">=</span> <span class="nf">c</span><span class="p">(</span><span class="s">'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'</span><span class="p">),</span> <span class="p">(</span><span class="s">'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'</span><span class="p">))))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="nf">st_astext</span><span class="p">(</span><span class="nf">st_union_agg</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">"geom"</span><span class="p">)))),</span> <span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
+<span class="o">+-------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="nf">st_union_agg</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span>                                                      <span class="o">|</span>
+<span class="o">+-------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="nf">POLYGON </span><span class="p">((</span><span class="m">20</span> <span class="m">15</span><span class="p">,</span> <span class="m">20</span> <span class="m">10</span><span class="p">,</span> <span class="m">10</span> <span class="m">10</span><span class="p">,</span> <span class="m">10</span> <span class="m">20</span><span class="p">,</span> <span class="m">15</span> <span class="m">20</span><span class="p">,</span> <span class="m">15</span> <span class="m">25</span><span class="p">,</span> <span class="m">25</span> <span class="m">25</span><span class="p">,</span> <span class="m">25</span> <span class="m">15</span><span class="p">,</span> <span class="m">20</span> <span class="m">15</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+-------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
 </div></div>
