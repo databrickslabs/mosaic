@@ -13,7 +13,7 @@
 #' \dontrun{
 #' enableMosaic()
 #' enableMosaic("ESRI", "H3")
-#' enableMosaic("ESRI", "BNG") # Not yet supported}
+#' enableMosaic("ESRI", "BNG")}
 
 enableMosaic <- function(
     sc
