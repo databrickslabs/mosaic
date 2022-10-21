@@ -65,13 +65,15 @@ display(
 # MAGIC ## Reproject the geometries to correct SRID
 # MAGIC British National Grid expects coordinate of geometries to be provided in EPSG:27700. <br>
 # MAGIC Our geometries are provided in EPSG:4326. So we will need to reproject the geometries. <br>
-# MAGIC Luckily, Mosaic has the necessary functionality to help us achieve this.
+# MAGIC Mosaic has the necessary functionality to help us achieve this.
 
 # COMMAND ----------
 
 postcodes = (
   postcodes.select(
     "type", "properties", "geometry"
+  ).withColumn(
+    "geometry", mos.st_setsrid("geometry", lit(4326))
   ).withColumn(
     "geometry", mos.st_transform("geometry", lit(27700))
   )
@@ -141,7 +143,7 @@ display(uprns_table)
 
 # MAGIC %md
 # MAGIC Next step is optional. Howerver, since we are constructing POINT geometries and ensuring they are valid it is prudent to write out the validated dataset. <br>
-# MAGIC That way we are making sure validation is performed only once ate ingestion and not each time spark runs the queries (due to spark lazy evaluation). 
+# MAGIC That way we are making sure validation is performed only once at ingestion time and not each time spark runs the queries (due to spark lazy evaluation). 
 
 # COMMAND ----------
 
@@ -165,6 +167,9 @@ uprns_table.count()
 # MAGIC %md
 # MAGIC We can use Mosaic to perform spatial joins both with and without Mosaic indexing strategies. </br>
 # MAGIC Indexing is very important when handling very different geometries both in size and in shape (ie. number of vertices). </br>
+# MAGIC In the context of Mosaic we are using grid index systems rather than traditional tree based index system. </br>
+# MAGIC The reason for this is the fact grid index systems like BNG and/or H3 are far better suited for distributed massive scale systems. </br>
+# MAGIC Mosaic comes with grid_tessallate expressions that allow the caller to index an arbitrary shape within grid index system of choice.
 
 # COMMAND ----------
 
@@ -261,9 +266,9 @@ count_per_index = uprns_table.groupBy("uprn_bng_500m").count().cache()
 
 postcodes_with_index = (postcodes
 
-                           # We break down the original geometry in multiple smoller mosaic chips, each with its
-                           # own index
-                           .withColumn("mosaic_index", mos.mosaic_explode(col("geometry"), lit(optimal_resolution)))
+                           # We break down the original geometry in multiple smaller mosaic chips
+                           # each fully contained in a grid cell
+                           .withColumn("chips", mos.grid_tessellateexplode(col("geometry"), lit(optimal_resolution)))
 
                            # We don't need the original geometry any more, since we have broken it down into
                            # Smaller mosaic chips.
@@ -322,7 +327,8 @@ display(with_postcodes)
 # MAGIC %md
 # MAGIC Mosaic abstracts interaction with Kepler in python through mosaic_kepler magic. <br>
 # MAGIC Mosaic_kepler magic takes care of conversion between EPSG:27700 and EPSG:4326 so that Kepler can properly render. <br>
-# MAGIC It can handle columns with bng index ids (int and str formats are both supported) and geometries that are provided in EPSG:27700. Mosaic will convert all the geometries for proper rendering. For CRSIDs that are neither EPSG:27700 nor EPSG:4326 the end user needs to convert the geometries using mos.st_transform(geom, destination_crsid).
+# MAGIC It can handle columns with bng index ids (int and str formats are both supported) and geometries that are provided in EPSG:27700. <br>
+# MAGIC Mosaic will convert all the geometries for proper rendering.
 
 # COMMAND ----------
 
@@ -357,8 +363,8 @@ properties_per_chip = with_postcodes.groupBy("index_geometry").count()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC Note that if you dont use "right_outer" join some chips will be empty. <br>
-# MAGIC This is due to no UPRNs being located in that exact border part between 2 postal areas. <br>
+# MAGIC Note that if you dont use "right_outer" join some chips may be empty. <br>
+# MAGIC This is due to no UPRNs being located in those exact chips. <br>
 
 # COMMAND ----------
 
