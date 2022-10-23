@@ -281,7 +281,7 @@ postcodes_with_index.display()
 
 # COMMAND ----------
 
-to_display = postcodes_with_index.select("properties.Name", "mosaic_index.index_id", mos.st_aswkt("mosaic_index.wkb").alias("geometry"))
+to_display = postcodes_with_index.select("properties.Name", "chips.index_id", mos.st_aswkt("chips.wkb").alias("geometry"))
 
 # COMMAND ----------
 
@@ -303,15 +303,15 @@ to_display = postcodes_with_index.select("properties.Name", "mosaic_index.index_
 with_postcodes = (
   uprns_table.join(
     postcodes_with_index,
-    uprns_table["uprn_bng_500m"] == postcodes_with_index["mosaic_index.index_id"],
+    uprns_table["uprn_bng_500m"] == postcodes_with_index["chips.index_id"],
     how = "right_outer" # to perserve even emtpy chips
   ).where(
     # If the borough is a core chip (the chip is fully contained within the geometry), then we do not need
     # to perform any intersection, because any point matching the same index will certainly be contained in
     # the borough. Otherwise we need to perform an st_contains operation on the chip geometry.
-    col("mosaic_index.is_core") | mos.st_contains(col("mosaic_index.wkb"), col("uprn_point"))
+    col("chips.is_core") | mos.st_contains(col("chips.wkb"), col("uprn_point"))
   ).select(
-    "properties.*", "uprn_point", "UPRN", "mosaic_index.index_id", mos.st_aswkt("mosaic_index.wkb").alias("index_geometry")
+    "properties.*", "uprn_point", "UPRN", "chips.index_id", mos.st_aswkt("chips.wkb").alias("index_geometry")
   )
 )
 
