@@ -1,10 +1,11 @@
 package com.databricks.labs.mosaic
 
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem, IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.functions.MosaicContext
-
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{IntegerType, StringType}
+import org.apache.spark.sql.types.{DataType, IntegerType, StringType}
 
 package object test {
 
@@ -326,4 +327,35 @@ package object test {
         }
 
     }
+
+    object MockIndexSystem extends IndexSystem {
+
+        override def getIndexSystemID: IndexSystemID = IndexSystemID.apply("H3")
+
+        override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = ???
+
+        override def format(id: Long): String = ???
+
+        override def getResolutionStr(resolution: Int): String = ???
+
+        override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = ???
+
+        override def defaultDataTypeID: DataType = StringType
+
+        override def kDisk(index: Long, n: Int): Seq[Long] = ???
+
+        override def kRing(index: Long, n: Int): Seq[Long] = ???
+
+        override def getResolution(res: Any): Int = ???
+
+        override def resolutions: Set[Int] = ???
+
+        override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = ???
+
+        override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = ???
+
+        override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = ???
+
+    }
+
 }

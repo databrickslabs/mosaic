@@ -12,6 +12,7 @@ import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
 trait ST_UnaryUnionBehaviours extends QueryTest {
+
     def unaryUnionBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
@@ -66,10 +67,17 @@ trait ST_UnaryUnionBehaviours extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stUnaryUnion = ST_UnaryUnion(lit("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))").expr, "illegalAPI")
+        val stUnaryUnion = ST_UnaryUnion(
+          lit("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))").expr,
+          "illegalAPI"
+        )
 
-        stUnaryUnion.child shouldEqual lit("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))").expr
-        stUnaryUnion.dataType shouldEqual lit("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))").expr.dataType
+        stUnaryUnion.child shouldEqual lit(
+          "MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))"
+        ).expr
+        stUnaryUnion.dataType shouldEqual lit(
+          "MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))"
+        ).expr.dataType
         noException should be thrownBy stUnaryUnion.makeCopy(Array(stUnaryUnion.child))
     }
 

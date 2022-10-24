@@ -1,13 +1,16 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem, IndexSystem}
+import com.databricks.labs.mosaic.test.SparkSuite
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.test.SharedSparkSession
+import com.databricks.labs.mosaic.test.MockIndexSystem
 
 class ST_UnaryUnionTest extends QueryTest with SharedSparkSession with ST_UnaryUnionBehaviours {
+
     private val noCodegen =
         withSQLConf(
           SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
@@ -21,21 +24,13 @@ class ST_UnaryUnionTest extends QueryTest with SharedSparkSession with ST_UnaryU
           SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
         ) _
 
-    test("Testing stUnaryUnion (H3, JTS) NO_CODEGEN") { noCodegen { unaryUnionBehavior(H3IndexSystem, JTS) } }
-    test("Testing stUnaryUnion (H3, ESRI) NO_CODEGEN") { noCodegen { unaryUnionBehavior(H3IndexSystem, ESRI) } }
-    test("Testing stUnaryUnion (BNG, JTS) NO_CODEGEN") { noCodegen { unaryUnionBehavior(BNGIndexSystem, JTS) } }
-    test("Testing stUnaryUnion (BNG, ESRI) NO_CODEGEN") { noCodegen { unaryUnionBehavior(BNGIndexSystem, ESRI) } }
-    test("Testing stUnaryUnion (H3, JTS) CODEGEN compilation") { codegenOnly { unaryUnionCodegen(H3IndexSystem, JTS) } }
-    test("Testing stUnaryUnion (H3, ESRI) CODEGEN compilation") { codegenOnly { unaryUnionCodegen(H3IndexSystem, ESRI) } }
-    test("Testing stUnaryUnion (BNG, JTS) CODEGEN compilation") { codegenOnly { unaryUnionCodegen(BNGIndexSystem, JTS) } }
-    test("Testing stUnaryUnion (BNG, ESRI) CODEGEN compilation") { codegenOnly { unaryUnionCodegen(BNGIndexSystem, ESRI) } }
-    test("Testing stUnaryUnion (H3, JTS) CODEGEN_ONLY") { codegenOnly { unaryUnionBehavior(H3IndexSystem, JTS) } }
-    test("Testing stUnaryUnion (H3, ESRI) CODEGEN_ONLY") { codegenOnly { unaryUnionBehavior(H3IndexSystem, ESRI) } }
-    test("Testing stUnaryUnion (BNG, JTS) CODEGEN_ONLY") { codegenOnly { unaryUnionBehavior(BNGIndexSystem, JTS) } }
-    test("Testing stUnaryUnion (BNG, ESRI) CODEGEN_ONLY") { codegenOnly { unaryUnionBehavior(BNGIndexSystem, ESRI) } }
-    test("Testing stUnaryUnion auxiliaryMethods (H3, JTS)") { noCodegen { auxiliaryMethods(H3IndexSystem, JTS) } }
-    test("Testing stUnaryUnion auxiliaryMethods (H3, ESRI)") { noCodegen { auxiliaryMethods(H3IndexSystem, ESRI) } }
-    test("Testing stUnaryUnion auxiliaryMethods (BNG, JTS)") { noCodegen { auxiliaryMethods(BNGIndexSystem, JTS) } }
-    test("Testing stUnaryUnion auxiliaryMethods (BNG, ESRI)") { noCodegen { auxiliaryMethods(BNGIndexSystem, ESRI) } }
+    test("Testing stUnaryUnion (JTS) NO_CODEGEN") { noCodegen { unaryUnionBehavior(MockIndexSystem, JTS) } }
+    test("Testing stUnaryUnion (ESRI) NO_CODEGEN") { noCodegen { unaryUnionBehavior(MockIndexSystem, ESRI) } }
+    test("Testing stUnaryUnion (JTS) CODEGEN compilation") { codegenOnly { unaryUnionCodegen(MockIndexSystem, JTS) } }
+    test("Testing stUnaryUnion (ESRI) CODEGEN compilation") { codegenOnly { unaryUnionCodegen(MockIndexSystem, ESRI) } }
+    test("Testing stUnaryUnion (JTS) CODEGEN_ONLY") { codegenOnly { unaryUnionBehavior(MockIndexSystem, JTS) } }
+    test("Testing stUnaryUnion (ESRI) CODEGEN_ONLY") { codegenOnly { unaryUnionBehavior(MockIndexSystem, ESRI) } }
+    test("Testing stUnaryUnion auxiliaryMethods (JTS)") { noCodegen { auxiliaryMethods(MockIndexSystem, JTS) } }
+    test("Testing stUnaryUnion auxiliaryMethods (ESRI)") { noCodegen { auxiliaryMethods(MockIndexSystem, ESRI) } }
 
 }
