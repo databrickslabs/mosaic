@@ -169,7 +169,9 @@ uprns_table.count()
 # MAGIC Indexing is very important when handling very different geometries both in size and in shape (ie. number of vertices). </br>
 # MAGIC In the context of Mosaic we are using grid index systems rather than traditional tree based index system. </br>
 # MAGIC The reason for this is the fact grid index systems like BNG and/or H3 are far better suited for distributed massive scale systems. </br>
-# MAGIC Mosaic comes with grid_tessallate expressions that allow the caller to index an arbitrary shape within grid index system of choice.
+# MAGIC Mosaic comes with grid_tessallate expressions that allow the caller to index an arbitrary shape within grid index system of choice. </br>
+# MAGIC One thing to note here is that tessellation is a specialised way of converting a geometry to set of grid index system cells with their local geometries. </br>
+# MAGIC Tesselation is applicable to any shape, Polygon, LineString, Points and their Multi* variants. </br>
 
 # COMMAND ----------
 
@@ -179,8 +181,8 @@ uprns_table.count()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC We can use Mosaic functionality to identify how to best index our data based on the data inside the specific dataframe. </br>
-# MAGIC Selecting an apropriate indexing resolution can have a considerable impact on the performance. </br>
+# MAGIC We can use Mosaic functionality to identify how to best index/tessellate our data based on the data inside the specific dataframe. </br>
+# MAGIC Selecting an apropriate tesselation resolution can have a considerable impact on the performance. </br>
 
 # COMMAND ----------
 
@@ -199,10 +201,11 @@ print(f"""
 
 # MAGIC %md
 # MAGIC Not every resolution will yield performance improvements. </br>
-# MAGIC By a rule of thumb it is always better to under-index than over-index - if not sure select a lower resolution. </br>
-# MAGIC Higher resolutions are needed when we have very imballanced geometries with respect to their size or with respect to the number of vertices. </br>
-# MAGIC In such case indexing with more indices will considerably increase the parallel nature of the operations. </br>
-# MAGIC You can think of Mosaic as a way to partition an overly complex row into multiple rows that have a balanced amount of computation each.
+# MAGIC By a rule of thumb it is always better to select more coarse resolution than to select a more fine grained resolution - if not sure select a lower resolution. </br>
+# MAGIC Tessellation is a trade off between decomposition and explosion factor. </br>
+# MAGIC The more fine grained the resolution is the more explosion of rows will impact the preprocessing time. However, it will make data more parallel. </br>
+# MAGIC On the other hand, if the resolution is too coarse we are not addressing localisation related data skews. </br>
+# MAGIC You can think of Mosaic's tesselation as a way to partition an overly complex row into multiple rows that have a balanced amount of computation each.
 
 # COMMAND ----------
 
@@ -213,7 +216,7 @@ display(
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Indexing using the optimal resolution
+# MAGIC ### Indexing/Tessellating using the optimal resolution
 
 # COMMAND ----------
 
@@ -221,10 +224,10 @@ display(
 # MAGIC We will use mosaic sql functions to index our points data. </br>
 # MAGIC Here we will use resolution -4 (500m), index resolution depends on the dataset in use. <br>
 # MAGIC There is a second best choice which is 4 (100m). <br> 
-# MAGIC The user can pass either numerical resolution or the string label to the index expressions. <br>
-# MAGIC BNG provides 2 types of hieracies. <br> 
-# MAGIC The standard hierarchy which operates with index resolutions in base 10 (i.e. (6, 1m), (5, 10m), (4, 100m), (3, 1km), (2, 10km), (1, 100km)) and index ids follow the format of letter pair followed by coordinate bins at the selected resolution (e.g. TQ100100 for (4, 100m)). <br>
-# MAGIC The quad hierachy (or quadrant hierarchy) which operates with index resolutions in base 5 (i.e. (-6, 5m), (-5, 50m), (-4, 500m), (-3, 5km), (-2, 50km), (-1, 500km)) and index ids follow the format of letter pair followed by coordinate bins at the selected resolution and folowed by quadrant letters (e.g. TQ100100SW for (-4, 500m)). Quadrants correspond to compas directions SW (south west), NW (north west), NE (north east) and SE (south east). <br>
+# MAGIC The user can pass either numerical resolution or the string label to the grid expressions. <br>
+# MAGIC BNG provides 2 types of hierarchies. <br> 
+# MAGIC The standard hierarchy which operates with index resolutions in base 10 (i.e. (6, 1m), (5, 10m), (4, 100m), (3, 1km), (2, 10km), (1, 100km)) and cell ids follow the format of letter pair followed by coordinate bins at the selected resolution (e.g. TQ100100 for (4, 100m)). <br>
+# MAGIC The quad hierachy (or quadrant hierarchy) which operates with index resolutions in base 5 (i.e. (-6, 5m), (-5, 50m), (-4, 500m), (-3, 5km), (-2, 50km), (-1, 500km)) and cell ids follow the format of letter pair followed by coordinate bins at the selected resolution and folowed by quadrant letters (e.g. TQ100100SW for (-4, 500m)). Quadrants correspond to compas directions SW (south west), NW (north west), NE (north east) and SE (south east). <br>
 
 # COMMAND ----------
 
@@ -244,7 +247,7 @@ uprns_table.display()
 
 # MAGIC %md
 # MAGIC Mosaic has a builtin wrappers for KeplerGL map plots using mosaic_kepler IPython magics. <br>
-# MAGIC Mosaic magics automatically handle bng idex system and CRS conversion for you. <br>
+# MAGIC Mosaic magics automatically handle bng grid idex system and CRS conversion for you. <br>
 # MAGIC Given that Kepler Plots are rendered on the browser side we are automatically limiting the row count to 1000. <br>
 # MAGIC The end user can override the number of ploted rows by specifying the desired number.
 
@@ -260,7 +263,7 @@ count_per_index = uprns_table.groupBy("uprn_bng_500m").count().cache()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC We will also index our postcodes using a built in generator function.
+# MAGIC We will use Mosaic to tessellate our postcode geometries using a built in tesselation generator (explode) function .
 
 # COMMAND ----------
 
