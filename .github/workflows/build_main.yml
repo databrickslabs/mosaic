@@ -2,10 +2,10 @@ name: build main
 on:
   push:
     branches-ignore:
-      - "!R/*"
-      - "!r/*"
-      - "!python/*"
-      - "!scala/*"
+      - "R/*"
+      - "r/*"
+      - "python/*"
+      - "scala/*"
   pull_request:
     branches:
       - '**'
