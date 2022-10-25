@@ -17,6 +17,7 @@ runs:
       shell: bash
       run: |
         cd python
+        python generate_python_bindings.py
         python -m unittest
         python -m build
     - name: Copy python artifacts to GH Actions run
