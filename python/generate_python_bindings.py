@@ -160,6 +160,8 @@ from mosaic.config import config
 from mosaic.utils.types import ColumnOrName
 """
 
-with open("mosaic/api/generated_mosaic_bindings.py", "w") as f:
+with open("mosaic/api/functions.py", "w") as f:
     f.writelines(headers)
     f.writelines(bindings)
+
+print("bindings generated")
