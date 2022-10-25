@@ -1,4 +1,4 @@
-name: build everything
+name: build main
 on:
   push:
     branches-ignore:
@@ -6,8 +6,6 @@ on:
       - "!r/*"
       - "!python/*"
       - "!scala/*"
-    branches:
-      - "**"
   pull_request:
     branches:
       - '**'
