@@ -32,6 +32,7 @@ __all__ = [
     "st_distance",
     "st_intersection",
     "st_simplify",
+    "st_union",
     "st_unaryunion",
     "st_geometrytype",
     "st_xmin",
@@ -509,6 +510,24 @@ def st_simplify(geom: ColumnOrName, tolerance: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "st_simplify", pyspark_to_java_column(geom), pyspark_to_java_column(tolerance)
+    )
+
+def st_union(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
+    """
+    Returns the union of the input geometries.
+
+    Parameters
+    ----------
+    left_geom: Column
+    right_geom: Column
+
+    Returns
+    -------
+    Column
+        The union geometry.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_union", pyspark_to_java_column(left_geom), pyspark_to_java_column(right_geom)
     )
 
 def st_unaryunion(geom: ColumnOrName) -> Column:
