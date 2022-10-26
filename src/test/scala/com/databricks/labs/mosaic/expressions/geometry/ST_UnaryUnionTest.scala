@@ -1,7 +1,9 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
+import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem, IndexSystem}
+import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkSuite
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
@@ -24,7 +26,11 @@ class ST_UnaryUnionTest extends QueryTest with SharedSparkSession with ST_UnaryU
           SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
         ) _
 
-    test("Testing stUnaryUnion (JTS) NO_CODEGEN") { noCodegen { unaryUnionBehavior(MockIndexSystem, JTS) } }
+    test("Testing stUnaryUnion (JTS) NO_CODEGEN") {
+        noCodegen {
+            uub(MosaicContext.build(H3IndexSystem, ESRI), spark)
+        }
+    }
     test("Testing stUnaryUnion (ESRI) NO_CODEGEN") { noCodegen { unaryUnionBehavior(MockIndexSystem, ESRI) } }
     test("Testing stUnaryUnion (JTS) CODEGEN compilation") { codegenOnly { unaryUnionCodegen(MockIndexSystem, JTS) } }
     test("Testing stUnaryUnion (ESRI) CODEGEN compilation") { codegenOnly { unaryUnionCodegen(MockIndexSystem, ESRI) } }
