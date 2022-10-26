@@ -133,7 +133,7 @@ get_function_names <- function(scala_file_path){
     )
   }
   ))
-  sorted(methods_to_bind, T)
+  sort(methods_to_bind, T)
 }
 
 ########################################################################
