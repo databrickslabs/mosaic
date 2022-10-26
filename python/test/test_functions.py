@@ -56,6 +56,7 @@ class TestFunctions(MosaicTestCase):
             )
             .withColumn("st_intersects", api.st_intersects("wkt", "wkt"))
             .withColumn("st_intersection", api.st_intersection("wkt", "wkt"))
+            .withColumn("st_simplify", api.st_simplify("wkt", lit(0.001)))
             .withColumn("st_unaryunion", api.st_unaryunion("wkt"))
             .withColumn("st_geometrytype", api.st_geometrytype("wkt"))
             .withColumn("st_xmin", api.st_xmin("wkt"))
