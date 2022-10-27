@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks
+import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
 import org.apache.spark.sql.{AnalysisException, DataFrame, QueryTest, Row, SparkSession}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext}
 import org.apache.spark.sql.catalyst.plans.CodegenInterpretedPlanTest
@@ -16,56 +16,6 @@ import org.scalatest.Tag
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
-trait MosaicHelper {
-    protected def withMosaicConf(geometry: GeometryAPI, indexSystem: IndexSystem)(f: MosaicContext => Unit): Unit = {
-        val mc: MosaicContext = MosaicContext.build(indexSystem, geometry)
-        f(mc)
-    }
-}
-
-//abstract class MosaicSpatialQueryTest extends CodegenInterpretedPlanTest with MosaicHelper {
-//
-//    private val geometryApis = Seq(JTS, ESRI)
-//    private val indexSystems = Seq(H3IndexSystem, BNGIndexSystem)
-//
-//    protected def spark: SparkSession
-//
-//    protected def testAllGeometriesAllIndexSystems(testName: String, testTags: Tag*)(testFun: MosaicContext => Unit): Unit = {
-//        for (geom <- geometryApis) {
-//            for (is <- indexSystems) {
-//                super.test(testName + s" (${geom.name}, ${is.name})", testTags: _*)(
-//                  withMosaicConf(geom, is) { testFun }
-//                )
-//            }
-//        }
-//    }
-//
-//    protected def checkGeometryTopo(
-//        mc: MosaicContext,
-//        actualAnswer: DataFrame,
-//        expectedAnswer: DataFrame,
-//        geometryFieldName: String
-//    ): Unit = {
-//        import mc.functions.st_aswkt
-//
-//        val actualGeoms = actualAnswer
-//            .withColumn("answer_wkt", st_aswkt(col(geometryFieldName)))
-//            .select("answer_wkt")
-//            .collect()
-//            .map(mc.getGeometryAPI.geometry(_, "WKT"))
-//        val expectedGeoms = expectedAnswer
-//            .withColumn("answer_wkt", st_aswkt(col(geometryFieldName)))
-//            .select("answer_wkt")
-//            .collect()
-//            .map(mc.getGeometryAPI.geometry(_, "WKT"))
-//
-//        actualGeoms.zip(expectedGeoms).foreach { case (actualGeom, expectedGeom) =>
-//            assert(actualGeom.equals(expectedGeom), s"$actualGeom did not topologically equal $expectedGeom")
-//        }
-//    }
-//
-//}
-
 trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
 
     def uub(mc: MosaicContext): Unit = {
@@ -74,20 +24,11 @@ trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
         import mc.functions._
         mc.register(sc)
 
-        val multiPolygon = List("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
-        val expected = List("POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))")
-            .map(mc.getGeometryAPI.geometry(_, "WKT"))
+        val input = List("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))").toDF("input_geom")
+        val expected = List("POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))").toDF("result_geom")
+        val result = input.withColumn("result_geom", st_unaryunion(col("input_geom")))
 
-        val results = multiPolygon
-            .toDF("multiPolygon")
-            .withColumn("result", st_unaryunion($"multiPolygon"))
-            .select($"result")
-            .as[String]
-            .collect()
-            .map(mc.getGeometryAPI.geometry(_, "WKT"))
-
-        results.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
-
+        checkGeometryTopo(mc, result, expected, "result_geom")
     }
 
     def unaryUnionBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

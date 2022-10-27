@@ -7,7 +7,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.catalyst.plans.CodegenInterpretedPlanTest
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem, IndexSystem}
 import org.apache.spark.sql.functions.col
-import org.scalatest.Tag
+import org.scalatest.{Assertions, Tag}
 
 abstract class MosaicSpatialQueryTest extends CodegenInterpretedPlanTest with MosaicHelper {
 
@@ -16,7 +16,7 @@ abstract class MosaicSpatialQueryTest extends CodegenInterpretedPlanTest with Mo
 
     protected def spark: SparkSession
 
-    protected def testAllGeometriesAllIndexSystems(testName: String, testTags: Tag*)(testFun: MosaicContext => Unit): Unit = {
+    def testAllGeometriesAllIndexSystems(testName: String, testTags: Tag*)(testFun: MosaicContext => Unit): Unit = {
         for (geom <- geometryApis) {
             for (is <- indexSystems) {
                 super.test(testName + s" (${geom.name}, ${is.name})", testTags: _*)(
@@ -26,7 +26,35 @@ abstract class MosaicSpatialQueryTest extends CodegenInterpretedPlanTest with Mo
         }
     }
 
-    protected def checkGeometryTopo(
+    def checkGeometryTopo(
+        mc: MosaicContext,
+        actualAnswer: DataFrame,
+        expectedAnswer: DataFrame,
+        geometryFieldName: String
+    ): Unit = {
+//        import mc.functions.st_aswkt
+//
+//        val actualGeoms = actualAnswer
+//            .withColumn("answer_wkt", st_aswkt(col(geometryFieldName)))
+//            .select("answer_wkt")
+//            .collect()
+//            .map(mc.getGeometryAPI.geometry(_, "WKT"))
+//        val expectedGeoms = expectedAnswer
+//            .withColumn("answer_wkt", st_aswkt(col(geometryFieldName)))
+//            .select("answer_wkt")
+//            .collect()
+//            .map(mc.getGeometryAPI.geometry(_, "WKT"))
+//
+//        actualGeoms.zip(expectedGeoms).foreach { case (actualGeom, expectedGeom) =>
+//            assert(actualGeom.equals(expectedGeom), s"$actualGeom did not topologically equal $expectedGeom")
+//        }
+        MosaicSpatialQueryTest.checkGeometryTopo(mc, actualAnswer, expectedAnswer, geometryFieldName)
+    }
+
+}
+
+object MosaicSpatialQueryTest {
+    def checkGeometryTopo(
         mc: MosaicContext,
         actualAnswer: DataFrame,
         expectedAnswer: DataFrame,
@@ -36,20 +64,21 @@ abstract class MosaicSpatialQueryTest extends CodegenInterpretedPlanTest with Mo
 
         val actualGeoms = actualAnswer
             .withColumn("answer_wkt", st_aswkt(col(geometryFieldName)))
-            .select("answer_wkt")
+            .select(col("answer_wkt"))
             .collect()
+            .map(_.getString(0))
             .map(mc.getGeometryAPI.geometry(_, "WKT"))
         val expectedGeoms = expectedAnswer
             .withColumn("answer_wkt", st_aswkt(col(geometryFieldName)))
-            .select("answer_wkt")
+            .select(col("answer_wkt"))
             .collect()
+            .map(_.getString(0))
             .map(mc.getGeometryAPI.geometry(_, "WKT"))
 
         actualGeoms.zip(expectedGeoms).foreach { case (actualGeom, expectedGeom) =>
             assert(actualGeom.equals(expectedGeom), s"$actualGeom did not topologically equal $expectedGeom")
         }
     }
-
 }
 
 trait MosaicHelper {
