@@ -26,11 +26,28 @@ class ST_UnaryUnionTest extends QueryTest with SharedSparkSession with ST_UnaryU
           SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
         ) _
 
-    test("Testing stUnaryUnion (JTS) NO_CODEGEN") {
-        noCodegen {
-            uub(MosaicContext.build(H3IndexSystem, ESRI), spark)
-        }
-    }
+//    private val geometry_apis = List(ESRI, JTS)
+//    private val index_systems = List(H3IndexSystem, BNGIndexSystem)
+
+//    val configs =
+//        Table(
+//          ("idx", "geom", "sc"),
+//          (H3IndexSystem, JTS, spark),
+//          (H3IndexSystem, ESRI, spark),
+//          (BNGIndexSystem, JTS, spark),
+//          (BNGIndexSystem, ESRI, spark)
+//        )
+//
+//    forAll(configs) { (idx, geom, sp) =>
+//        {
+//            val mc = MosaicContext.build(idx, geom)
+//            val spa = sc
+//            uub(mc, sc)
+//            noCodegen(uub(mc, spark))
+//        }
+//    }
+
+    test("Testing stUnaryUnion (JTS) NO_CODEGEN") { noCodegen(uub(MosaicContext.build(H3IndexSystem, ESRI), spark)) }
     test("Testing stUnaryUnion (ESRI) NO_CODEGEN") { noCodegen { unaryUnionBehavior(MockIndexSystem, ESRI) } }
     test("Testing stUnaryUnion (JTS) CODEGEN compilation") { codegenOnly { unaryUnionCodegen(MockIndexSystem, JTS) } }
     test("Testing stUnaryUnion (ESRI) CODEGEN compilation") { codegenOnly { unaryUnionCodegen(MockIndexSystem, ESRI) } }

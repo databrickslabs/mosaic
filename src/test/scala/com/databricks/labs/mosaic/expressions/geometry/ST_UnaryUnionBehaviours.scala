@@ -1,21 +1,77 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
-import org.apache.spark.sql.{QueryTest, SparkSession}
+import org.apache.spark.sql.{AnalysisException, DataFrame, QueryTest, Row, SparkSession}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext}
+import org.apache.spark.sql.catalyst.plans.CodegenInterpretedPlanTest
 import org.apache.spark.sql.execution.WholeStageCodegenExec
-import org.apache.spark.sql.functions.lit
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem, IndexSystem}
+import org.apache.spark.sql.functions.{col, lit}
+import org.scalatest.Tag
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
-trait ST_UnaryUnionBehaviours extends QueryTest {
+trait MosaicHelper {
+    protected def withMosaicConf(geometry: GeometryAPI, indexSystem: IndexSystem)(f: MosaicContext => Unit): Unit = {
+        val mc: MosaicContext = MosaicContext.build(indexSystem, geometry)
+        f(mc)
+    }
+}
 
-    def uub(mc: MosaicContext, sc: SparkSession): Unit = {
-        import mc.functions._
+//abstract class MosaicSpatialQueryTest extends CodegenInterpretedPlanTest with MosaicHelper {
+//
+//    private val geometryApis = Seq(JTS, ESRI)
+//    private val indexSystems = Seq(H3IndexSystem, BNGIndexSystem)
+//
+//    protected def spark: SparkSession
+//
+//    protected def testAllGeometriesAllIndexSystems(testName: String, testTags: Tag*)(testFun: MosaicContext => Unit): Unit = {
+//        for (geom <- geometryApis) {
+//            for (is <- indexSystems) {
+//                super.test(testName + s" (${geom.name}, ${is.name})", testTags: _*)(
+//                  withMosaicConf(geom, is) { testFun }
+//                )
+//            }
+//        }
+//    }
+//
+//    protected def checkGeometryTopo(
+//        mc: MosaicContext,
+//        actualAnswer: DataFrame,
+//        expectedAnswer: DataFrame,
+//        geometryFieldName: String
+//    ): Unit = {
+//        import mc.functions.st_aswkt
+//
+//        val actualGeoms = actualAnswer
+//            .withColumn("answer_wkt", st_aswkt(col(geometryFieldName)))
+//            .select("answer_wkt")
+//            .collect()
+//            .map(mc.getGeometryAPI.geometry(_, "WKT"))
+//        val expectedGeoms = expectedAnswer
+//            .withColumn("answer_wkt", st_aswkt(col(geometryFieldName)))
+//            .select("answer_wkt")
+//            .collect()
+//            .map(mc.getGeometryAPI.geometry(_, "WKT"))
+//
+//        actualGeoms.zip(expectedGeoms).foreach { case (actualGeom, expectedGeom) =>
+//            assert(actualGeom.equals(expectedGeom), s"$actualGeom did not topologically equal $expectedGeom")
+//        }
+//    }
+//
+//}
+
+trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
+
+    def uub(mc: MosaicContext): Unit = {
+        val sc = spark
         import sc.implicits._
+        import mc.functions._
         mc.register(sc)
 
         val multiPolygon = List("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
@@ -31,6 +87,7 @@ trait ST_UnaryUnionBehaviours extends QueryTest {
             .map(mc.getGeometryAPI.geometry(_, "WKT"))
 
         results.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
+
     }
 
     def unaryUnionBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
