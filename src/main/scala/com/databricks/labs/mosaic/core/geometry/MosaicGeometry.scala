@@ -69,6 +69,8 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def equals(other: java.lang.Object): Boolean
 
+    def equalsTopo(other: MosaicGeometry): Boolean
+
     def hashCode: Int
 
     def convexHull: MosaicGeometry

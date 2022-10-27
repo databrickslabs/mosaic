@@ -8,7 +8,7 @@ from mosaic.utils.types import ColumnOrName
 # Spatial aggregators #
 #######################
 
-__all__ = ["st_intersection_aggregate", "st_intersects_aggregate"]
+__all__ = ["st_intersection_aggregate", "st_intersects_aggregate", "st_union_agg"]
 
 
 def st_intersection_aggregate(
@@ -60,4 +60,21 @@ def st_intersects_aggregate(
         "st_intersects_aggregate",
         pyspark_to_java_column(leftIndex),
         pyspark_to_java_column(rightIndex),
+    )
+
+def st_union_agg(geom: ColumnOrName) -> Column:
+    """
+    Returns the point set union of the aggregated geometries.
+
+    Parameters
+    ----------
+    geom: Column
+
+    Returns
+    -------
+    Column
+        The union geometry.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_union_agg", pyspark_to_java_column(geom)
     )
