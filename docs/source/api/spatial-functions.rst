@@ -1219,7 +1219,7 @@ st_simplify
     :param geom: Geometry
     :type geom: Column
     :param tol: Tolerance
-    :type tol: Double
+    :type tol: Column
     :rtype: Column: Geometry
 
     :example:
@@ -1263,6 +1263,9 @@ st_simplify
     +----------------------------+
     | LINESTRING (0 1, 1 2, 3 0) |
     +----------------------------+
+
+.. note::
+    The specified tolerance will be ignored by the ESRI geometry API.
 
 st_union
 ********

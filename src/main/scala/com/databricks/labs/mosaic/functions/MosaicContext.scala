@@ -511,6 +511,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_scale(geom1: Column, xd: Column, yd: Column): Column =
             ColumnAdapter(ST_Scale(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
         def st_setsrid(geom: Column, srid: Column): Column = ColumnAdapter(ST_SetSRID(geom.expr, srid.expr, geometryAPI.name))
+        def st_simplify(geom: Column, tolerance: Column): Column =
+            ColumnAdapter(ST_Simplify(geom.expr, tolerance.cast("double").expr, geometryAPI.name))
         def st_simplify(geom: Column, tolerance: Double): Column =
             ColumnAdapter(ST_Simplify(geom.expr, lit(tolerance).cast("double").expr, geometryAPI.name))
         def st_srid(geom: Column): Column = ColumnAdapter(ST_SRID(geom.expr, geometryAPI.name))
