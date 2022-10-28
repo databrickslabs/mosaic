@@ -29,16 +29,25 @@ trait ST_SimplifyBehaviors extends QueryTest {
             .as[String]
             .collect()
             .map(mc.getGeometryAPI.geometry(_, "WKT"))
-
         val expected = referenceGeoms.map(_.simplify(1).getLength)
-        val result = mocks
+
+        // test st_simplify(Column, Double)
+        val result1 = mocks
             .getWKTRowsDf(mc)
             .orderBy("id")
             .select(st_length(st_simplify($"wkt", 1.0)))
             .as[Double]
             .collect()
+        result1.zip(expected).foreach { case (l, r) => math.abs(l - r) should be < 1e-8 }
 
-        result.zip(expected).foreach { case (l, r) => math.abs(l - r) should be < 1e-8 }
+        // test st_simplify(Column, Column)
+        val result2 = mocks
+            .getWKTRowsDf(mc)
+            .orderBy("id")
+            .select(st_length(st_simplify($"wkt", lit(1.0))))
+            .as[Double]
+            .collect()
+        result2.zip(expected).foreach { case (l, r) => math.abs(l - r) should be < 1e-8 }
     }
 
     def simplifyCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
