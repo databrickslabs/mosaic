@@ -1,3 +1,9 @@
+## v0.3.3
+- Implemented `st_union` and `st_union_agg`
+- Fixed line tessellation traversal when the first point falls between two indexes 
+- Added sparklyR bindings
+- Added BNG grid notebook example
+
 ## v0.3.2
 - Fixed bug in `mosaic_kepler` plot for H3
 

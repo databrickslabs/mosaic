@@ -1,11 +1,11 @@
-name: build everything
+name: build main
 on:
   push:
-    branches:
-      - "!R/*"
-      - "!r/*"
-      - "!python/*"
-      - "!scala/*"
+    branches-ignore:
+      - "R/*"
+      - "r/*"
+      - "python/*"
+      - "scala/*"
   pull_request:
     branches:
       - '**'
