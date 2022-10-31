@@ -291,6 +291,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_UnaryUnion(exprs(0), geometryAPI.name)
         )
         registry.registerFunction(
+          FunctionIdentifier("st_simplify", database),
+          ST_Simplify.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_Simplify(exprs(0), ColumnAdapter(exprs(1)).cast("double").expr, geometryAPI.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_buffer", database),
           ST_Buffer.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_Buffer(exprs(0), ColumnAdapter(exprs(1)).cast("double").expr, geometryAPI.name)
@@ -506,6 +511,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_scale(geom1: Column, xd: Column, yd: Column): Column =
             ColumnAdapter(ST_Scale(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
         def st_setsrid(geom: Column, srid: Column): Column = ColumnAdapter(ST_SetSRID(geom.expr, srid.expr, geometryAPI.name))
+        def st_simplify(geom: Column, tolerance: Column): Column =
+            ColumnAdapter(ST_Simplify(geom.expr, tolerance.cast("double").expr, geometryAPI.name))
+        def st_simplify(geom: Column, tolerance: Double): Column =
+            ColumnAdapter(ST_Simplify(geom.expr, lit(tolerance).cast("double").expr, geometryAPI.name))
         def st_srid(geom: Column): Column = ColumnAdapter(ST_SRID(geom.expr, geometryAPI.name))
         def st_transform(geom: Column, srid: Column): Column = ColumnAdapter(ST_Transform(geom.expr, srid.expr, geometryAPI.name))
         def st_translate(geom1: Column, xd: Column, yd: Column): Column =

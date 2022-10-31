@@ -1209,6 +1209,64 @@ st_translate
     |MULTIPOINT ((20 35), (50 25), (30 15), (40 5))|
     +----------------------------------------------+
 
+st_simplify
+***********
+
+.. function:: st_simplify(geom, tol)
+
+    Returns the simplified geometry.
+
+    :param geom: Geometry
+    :type geom: Column
+    :param tol: Tolerance
+    :type tol: Column
+    :rtype: Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'LINESTRING (0 1, 1 2, 2 1, 3 0)'}])
+    >>> df.select(st_simplify('wkt', 1.0)).show()
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+   .. code-tab:: scala
+
+    >>> df = List(("LINESTRING (0 1, 1 2, 2 1, 3 0)")).toDF("wkt")
+    >>> df.select(st_simplify('wkt', 1.0)).show()
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_simplify("LINESTRING (0 1, 1 2, 2 1, 3 0)", 1.0)
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "LINESTRING (0 1, 1 2, 2 1, 3 0)")
+    >>> showDF(select(df, st_simplify(column("wkt"), 1.0)), truncate=F)
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+.. note::
+    The specified tolerance will be ignored by the ESRI geometry API.
+
 st_union
 ********
 
