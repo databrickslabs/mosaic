@@ -1,14 +1,13 @@
 package com.databricks.labs.mosaic.expressions.util
 
-import java.io.{PrintWriter, StringWriter}
-
-import scala.util._
-
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+
+import java.io.{PrintWriter, StringWriter}
+import scala.util._
 
 case class TrySql(inExpr: Expression) extends UnaryExpression with CodegenFallback {
 
@@ -78,7 +77,7 @@ object TrySql {
           db.orNull,
           name,
           """
-            |    _FUNC_(expr1) - Wraps evaluation of an expression into a Try/Catch block and in case of 
+            |    _FUNC_(expr1) - Wraps evaluation of an expression into a Try/Catch block and in case of
             |    errors returns error message for each row in the dataset.
             """.stripMargin,
           "",

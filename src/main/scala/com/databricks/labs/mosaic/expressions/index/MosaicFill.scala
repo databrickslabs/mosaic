@@ -111,7 +111,7 @@ case class MosaicFill(
     override protected def withNewChildrenInternal(
         newFirst: Expression,
         newSecond: Expression,
-        newThird: Expression,
+        newThird: Expression
     ): Expression = copy(newFirst, newSecond, newThird)
 
 }

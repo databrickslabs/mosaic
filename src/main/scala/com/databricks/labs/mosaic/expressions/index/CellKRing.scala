@@ -2,7 +2,14 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, ExpressionInfo, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{
+    BinaryExpression,
+    ExpectsInputTypes,
+    Expression,
+    ExpressionDescription,
+    ExpressionInfo,
+    NullIntolerant
+}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
@@ -81,21 +88,21 @@ object CellKRing {
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-            classOf[CellKRing].getCanonicalName,
-            db.orNull,
-            "grid_cellkring",
-            "_FUNC_(cellId, k) - Returns k ring for a given cell.",
-            "",
-            """
-              |    Examples:
-              |      > SELECT _FUNC_(a, b);
-              |        [622236721348804607, 622236721274716159, ...]
-              |  """.stripMargin,
-            "",
-            "collection_funcs",
-            "1.0",
-            "",
-            "built-in"
+          classOf[CellKRing].getCanonicalName,
+          db.orNull,
+          "grid_cellkring",
+          "_FUNC_(cellId, k) - Returns k ring for a given cell.",
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a, b);
+            |        [622236721348804607, 622236721274716159, ...]
+            |  """.stripMargin,
+          "",
+          "collection_funcs",
+          "1.0",
+          "",
+          "built-in"
         )
 
 }

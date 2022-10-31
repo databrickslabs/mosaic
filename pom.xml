@@ -29,7 +29,7 @@
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.compat.version}</artifactId>
-            <version>3.2.12</version>
+            <version>3.2.14</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -88,6 +88,8 @@
         <dependency>
             <groupId>com.uber</groupId>
             <artifactId>h3</artifactId>
+            <!--H3 fixed at 3.7.0 until Photon updates the version-->
+            <!--suppress MavenPackageUpdate-->
             <version>3.7.0</version>
         </dependency>
         <dependency>
@@ -98,7 +100,7 @@
         <dependency>
             <groupId>org.locationtech.jts.io</groupId>
             <artifactId>jts-io-common</artifactId>
-            <version>1.18.2</version>
+            <version>1.19.0</version>
         </dependency>
         <dependency>
             <groupId>com.esri.geometry</groupId>
@@ -198,7 +200,7 @@
                 <artifactId>scalastyle-maven-plugin</artifactId>
                 <version>1.0.0</version>
                 <configuration>
-                    <verbose>false</verbose>
+                    <verbose>true</verbose>
                     <failOnViolation>true</failOnViolation>
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                     <failOnWarning>false</failOnWarning>
@@ -275,7 +277,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.2.1</spark.version>
+                <spark.version>3.2.2</spark.version>
             </properties>
         </profile>
     </profiles>
