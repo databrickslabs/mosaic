@@ -11,6 +11,9 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.internal.SQLConf
 import org.scalatest.{Assertions, BeforeAndAfterEach, Suite, Tag}
 
+/**
+  * Provides helper methods for running tests against a matrix of geometry apis, grid index systems and SQL confs.
+  */
 abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
 
     private val geometryApis = Seq(ESRI, JTS)
@@ -19,6 +22,10 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
 
     protected def spark: SparkSession
 
+    /**
+      * Runs the testcase with all different geometry APIs while the grid index system is mocked out.
+      * Tests the codegen path of the query plan.
+      */
     protected def testAllGeometriesCodegen(testName: String, testTags: Tag*)(testFun: MosaicContext => Unit): Unit = {
         val is = MockIndexSystem
         for (geom <- geometryApis) {
@@ -28,7 +35,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                 SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "true",
                 SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
               ) {
-                  withMosaicConf(geom, is) {
+                  withMosaicContext(geom, is) {
                       testFun
                   }
               }
@@ -37,6 +44,10 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
         }
     }
 
+    /**
+      * Runs the testcase with all different geometry APIs while the grid index system is mocked out.
+      * Tests the interpreted path of the query plan.
+      */
     protected def testAllGeometriesNoCodegen(testName: String, testTags: Tag*)(testFun: MosaicContext => Unit): Unit = {
         val is = MockIndexSystem
         for (geom <- geometryApis) {
@@ -45,7 +56,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                 SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
                 SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
               ) {
-                  withMosaicConf(geom, is) {
+                  withMosaicContext(geom, is) {
                       testFun
                   }
               }
@@ -53,6 +64,10 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
         }
     }
 
+    /**
+      * Runs the testcase with all valid combinations of geometry API + grid index system.
+      * Tests the codegen path of the query plan.
+      */
     protected def testAllCodegen(testName: String, testTags: Tag*)(testFun: MosaicContext => Unit): Unit = {
         for (geom <- geometryApis) {
             for (is <- indexSystems) {
@@ -62,7 +77,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                     SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "true",
                     SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
                   ) {
-                      withMosaicConf(geom, is) {
+                      withMosaicContext(geom, is) {
                           testFun
                       }
                   }
@@ -71,6 +86,10 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
         }
     }
 
+    /**
+      * Runs the testcase with all valid combinations of geometry API + grid index system.
+      * Tests the interpreted path of the query plan.
+      */
     protected def testAllNoCodegen(testName: String, testTags: Tag*)(testFun: MosaicContext => Unit): Unit = {
         for (geom <- geometryApis) {
             for (is <- indexSystems) {
@@ -79,7 +98,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                     SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
                     SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
                   ) {
-                      withMosaicConf(geom, is) {
+                      withMosaicContext(geom, is) {
                           testFun
                       }
                   }
@@ -100,6 +119,14 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
 }
 
 object MosaicSpatialQueryTest extends Assertions {
+    /**
+      * Runs the query plan and checks if the answer is toplogogically equal to the expected result.
+      *
+      * @param mc the mosaic context that performs the equality check.
+      * @param actualAnswer the actual result as a [[DataFrame]].
+      * @param expectedAnswer the expected result as a [[DataFrame]].
+      * @param geometryFieldName the name of the column containing the geometries to be compared.
+      */
     def checkGeometryTopo(
         mc: MosaicContext,
         actualAnswer: DataFrame,
@@ -128,7 +155,11 @@ object MosaicSpatialQueryTest extends Assertions {
 }
 
 trait MosaicHelper extends BeforeAndAfterEach { self: Suite =>
-    protected def withMosaicConf(geometry: GeometryAPI, indexSystem: IndexSystem)(f: MosaicContext => Unit): Unit = {
+
+    /**
+      * Constructs the MosaicContext from its parts and calls `f`.
+      */
+    protected def withMosaicContext(geometry: GeometryAPI, indexSystem: IndexSystem)(f: MosaicContext => Unit): Unit = {
         val mc: MosaicContext = MosaicContext.build(indexSystem, geometry)
         f(mc)
 
