@@ -31,6 +31,9 @@ __all__ = [
     "st_isvalid",
     "st_distance",
     "st_intersection",
+    "st_simplify",
+    "st_union",
+    "st_unaryunion",
     "st_geometrytype",
     "st_xmin",
     "st_xmax",
@@ -478,13 +481,70 @@ def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column
     -----
     The resulting geometry could give different results depending on the chosen
     geometry API (ESRI or JTS), especially for polygons that are invalid based on
-    the choosen geometry API.
+    the chosen geometry API.
 
     """
     return config.mosaic_context.invoke_function(
         "st_intersection",
         pyspark_to_java_column(left_geom),
         pyspark_to_java_column(right_geom),
+    )
+
+def st_simplify(geom: ColumnOrName, tolerance: ColumnOrName) -> Column:
+    """
+    Simplifies the geometry.
+
+    Parameters
+    ----------
+    geom: Column
+    tolerance: Column
+
+    Returns
+    -------
+    Column
+        The simplified geometry.
+
+    Notes
+    -----
+    The tolerance will be ignored by the ESRI geometry API.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_simplify", pyspark_to_java_column(geom), pyspark_to_java_column(tolerance)
+    )
+
+def st_union(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
+    """
+    Returns the union of the input geometries.
+
+    Parameters
+    ----------
+    left_geom: Column
+    right_geom: Column
+
+    Returns
+    -------
+    Column
+        The union geometry.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_union", pyspark_to_java_column(left_geom), pyspark_to_java_column(right_geom)
+    )
+
+def st_unaryunion(geom: ColumnOrName) -> Column:
+    """
+    Unions a geometry (which may be a geometry collection) together.
+
+    Parameters
+    ----------
+    geom: Column
+
+    Returns
+    -------
+    Column
+        The union geometry.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_unaryunion", pyspark_to_java_column(geom)
     )
 
 

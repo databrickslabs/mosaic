@@ -82,6 +82,14 @@ object Mosaic {
                     val kRing = indexSystem.kRing(current, 1)
                     val toQueue = kRing.filterNot(newTraversed.contains)
                     (toQueue, accumulator._2 ++ Seq(chip))
+                } else if (newTraversed.size == 1) {
+                    // The line segment intersection was empty, but we only intersected the first point
+                    // with a single cell.
+                    // We need to run an intersection with a first ring because the starting point might be laying
+                    // exactly on the cell boundary.
+                    val kRing = indexSystem.kRing(current, 1)
+                    val toQueue = kRing.filterNot(newTraversed.contains)
+                    (toQueue, accumulator._2)
                 } else {
                     accumulator
                 }

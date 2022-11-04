@@ -1,5 +1,5 @@
 repos = c(
-  "https://cran.ma.imperial.ac.uk" = "https://cran.ma.imperial.ac.uk"
+   "https://cran.ma.imperial.ac.uk" = "https://cran.ma.imperial.ac.uk"
   ,"https://www.stats.bris.ac.uk/R" = "https://www.stats.bris.ac.uk/R"
   ,"https://cran.rstudio.com/"  = "https://cran.rstudio.com/" 
 )
@@ -25,28 +25,34 @@ for(repo in names(mirror_status)){
 
 install.packages("pkgbuild", repos=repo)
 install.packages("roxygen2", repos=repo)
-
+install.packages("sparklyr", repos=repo)
 spark_location <- "/usr/spark-download/unzipped/spark-3.2.1-bin-hadoop2.7"
 Sys.setenv(SPARK_HOME = spark_location)
 
-library(pkgbuild)
-library(roxygen2)
 library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
 
 
-build_sparkr_mosaic <- function(){
+library(pkgbuild)
+library(roxygen2)
+library(sparklyr)
+
+
+
+build_mosaic_bindings <- function(){
   # build functions
-  scala_file_path <- "../../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
-  system_cmd <- paste0(c("Rscript --vanilla generate_sparkr_functions.R", scala_file_path), collapse = " ")
+  scala_file_path <- "../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
+  system_cmd <- paste0(c("Rscript --vanilla generate_R_bindings.R", scala_file_path), collapse = " ")
   system(system_cmd)
 
   # build doc
-  roxygen2::roxygenize("sparkrMosaic")
-
+  roxygen2::roxygenize("sparkR-mosaic/sparkrMosaic")
+  roxygen2::roxygenize("sparklyr-mosaic/sparklyrMosaic")
+  
+  
   ## build package
-  pkgbuild::build("sparkrMosaic")
+  pkgbuild::build("sparkR-mosaic/sparkrMosaic")
+  pkgbuild::build("sparklyr-mosaic/sparklyrMosaic")
   
 }
 
-
-build_sparkr_mosaic()
+build_mosaic_bindings()

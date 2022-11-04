@@ -106,6 +106,11 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def equals(other: java.lang.Object): Boolean = false
 
+    override def equalsTopo(other: MosaicGeometry): Boolean = {
+        var otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
+        this.geom.equalsTopo(otherGeom)
+    }
+
     override def hashCode: Int = geom.hashCode()
 
     override def getLength: Double = geom.getLength
@@ -116,6 +121,12 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         val convexHull = geom.convexHull()
         convexHull.setSRID(geom.getSRID)
         MosaicGeometryJTS(convexHull)
+    }
+
+    override def unaryUnion: MosaicGeometryJTS = {
+        val unaryUnion = geom.union()
+        unaryUnion.setSRID(geom.getSRID)
+        MosaicGeometryJTS(unaryUnion)
     }
 
     override def toWKT: String = new WKTWriter().write(geom)

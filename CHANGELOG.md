@@ -1,3 +1,20 @@
+## v0.3.3
+- Implemented `st_union` and `st_union_agg`
+- Fixed line tessellation traversal when the first point falls between two indexes 
+- Added sparklyR bindings
+- Added BNG grid notebook example
+
+## v0.3.2
+- Fixed bug in `mosaic_kepler` plot for H3
+
+## v0.3.1
+- Implemented `st_unaryunion` function
+- Added BNG grid plotting to mosaic_kepler
+- Added arbitrary CRS transformations to mosaic_kepler plotting
+- Added documentation for BNG grid
+- Bug fixes and improvements on the BNG grid implementation
+- Typo fixes
+
 ## v0.3.0
 - Integration with H3 functions from Databricks runtime 11.2
 - Refactored grid functions to reflect the naming convention of H3 functions from Databricks runtime
