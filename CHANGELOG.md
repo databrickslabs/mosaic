@@ -1,4 +1,9 @@
 ## v0.3.3
+- Implemented `st_simplify`
+- Improved docs for R language bindings
+- Improve the unit testing patterns
+- Exported `to_json` on R bindings
+## v0.3.3
 - Implemented `st_union` and `st_union_agg`
 - Fixed line tessellation traversal when the first point falls between two indexes 
 - Added sparklyR bindings
