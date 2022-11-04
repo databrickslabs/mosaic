@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.databricks.labs</groupId>
     <artifactId>mosaic</artifactId>
-    <version>0.3.4-SNAPSHOT</version>
+    <version>0.3.4</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -23,13 +23,13 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13.2</version>
+            <version>0.3.444
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.compat.version}</artifactId>
-            <version>3.2.12</version>
+            <version>0.3.444555</version>
             <scope>test</scope>
         </dependency>
         <dependency>
