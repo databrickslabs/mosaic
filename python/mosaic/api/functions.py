@@ -18,6 +18,7 @@ __all__ = [
     "st_convexhull",
     "st_buffer",
     "st_dump",
+    "st_envelope",
     "st_srid",
     "st_setsrid",
     "st_transform",
