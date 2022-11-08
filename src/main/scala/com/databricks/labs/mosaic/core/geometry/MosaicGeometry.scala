@@ -27,6 +27,8 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def distance(geom2: MosaicGeometry): Double
 
+    def difference(geom: MosaicGeometry): MosaicGeometry
+
     def isValid: Boolean
 
     def getGeometryType: String

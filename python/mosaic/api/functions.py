@@ -31,6 +31,7 @@ __all__ = [
     "st_isvalid",
     "st_distance",
     "st_intersection",
+    "st_difference",
     "st_simplify",
     "st_union",
     "st_unaryunion",
@@ -462,6 +463,25 @@ def st_distance(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
         pyspark_to_java_column(geom2),
     )
 
+def st_difference(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
+    """
+    Compute the difference between `geom1` and `geom2`.
+
+    Parameters
+    ----------
+    geom1 : Column
+    geom2 : Column
+
+    Returns
+    -------
+    Column
+        The difference geometry.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_difference",
+        pyspark_to_java_column(geom1),
+        pyspark_to_java_column(geom2)
+    )
 
 def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
     """
