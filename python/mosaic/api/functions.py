@@ -490,6 +490,23 @@ def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column
         pyspark_to_java_column(right_geom),
     )
 
+def st_envelope(geom: ColumnOrName) -> Column:
+    """
+    Returns the minimum bounding box for the supplied geomtery.
+
+    Parameters
+    ----------
+    geom : Column
+
+    Returns
+    -------
+    Column
+        The minimum bounding box as geometry.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_envelope", pyspark_to_java_column(geom)
+    )
+
 def st_simplify(geom: ColumnOrName, tolerance: ColumnOrName) -> Column:
     """
     Simplifies the geometry.
