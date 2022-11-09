@@ -1,6 +1,6 @@
 import re
 
-scala_file_path = "src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
+scala_file_path = "../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
 
 with open(scala_file_path, "r") as f:
     scala_code = f.readlines()
