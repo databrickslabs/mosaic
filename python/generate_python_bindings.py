@@ -61,14 +61,32 @@ Build a dictionary like the below to hold all functions;
         ,function_name_{n+1}: [(arg_names, type) for that particular function]
     }
 }
+
+Define each function once, with the full set of parameters. 
+Determine the common parameters and make mandatory. All other parameters are optional. 
+Use if statements to determine which parameters to pass to scala code. 
+
+For example, with the below overloaded functions
+f(x, y)
+f(x, y, z)
+f(x, y, z, w)
+
+will generate:
+def f(x, y, z=None, w=None):
+    if x is not None and y is not None:
+        f(x, y)
+    if x is not None and y is not None and z is not None:
+        f(x, y, z)
+    if x is not None and y is not None and z is not None and w is not None:
+        f(x, y, z, w)
+ 
 '''
 
 generated_function_data = {}
 for function in cleaned_functions:
-    function = function
     f = function["function_name"]
     inputs = map(lambda x: x[0], function['inputs'])
-    inputs = [x +': ColumnOrName' for x in inputs].copy()
+    inputs = [x +': ColumnOrName' for x in inputs].copy() #it broke without this copy - don't remove it
     function['inputs'] = inputs
     # handle first time seen functions
     if not generated_function_data.get(f):
@@ -96,11 +114,17 @@ for f in generated_function_data:
     function = generated_function_data[f]
     args_as_sets = []
     sub_functions = []
+    # this builds the if statement that will call out to the scala code
+    all_args =  function["all_args"]
     for k in function.keys():
         if k not in ['all_args', 'n_functions']:
             inputs = function[k]['inputs']
             args_as_sets.append(set(inputs))
-            input_names = [x.replace(": ColumnOrName", " is not None") for x in inputs]
+            input_names = [x.replace(": ColumnOrName", " is not None") for x in inputs] # need an is not None for an if statement later on
+            # need to add the remaining arguments as "is None" to ensure logical exclusivity
+            exclusions = [x.replace(": ColumnOrName", " is None") for x in all_args if x not in inputs ]
+            # add the exclusions
+            input_names.extend(exclusions)
             conditionals = " and ".join(input_names)
 
             java_call_outs = ', '.join([f'pyspark_to_java_column({x.replace(": ColumnOrName", "")})' for x in inputs])
