@@ -1,6 +1,6 @@
 import re
 
-scala_file_path = "../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
+scala_file_path = "src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
 
 with open(scala_file_path, "r") as f:
     scala_code = f.readlines()
@@ -35,7 +35,7 @@ functions_object_block = scala_code[start_index: i]
 # this regex will match the function signature. Include the start "def" and end "): Column" to guarentee catching end
 # for example re.findall(function_pattern, "def f(x,\ny): Column\na load of code")
 # ['def f(x,\ny):']
-function_pattern = re.compile("(def [a-zA-Z_]+\([a-zA-Z_: , \n]+\)\: Column)")
+function_pattern = re.compile("(def [a-zA-Z_0-9]+\([0-9a-zA-Z_: , \n]+\)\: Column)")
 functions = re.findall(function_pattern,"".join(functions_object_block))
 # need to clean the signatures
 
