@@ -9,11 +9,11 @@ from .utils import MosaicTestCase
 class TestFunctions(MosaicTestCase):
     def test_st_point(self):
         expected = [
-            "POINT (0 0)",
-            "POINT (1 1)",
-            "POINT (2 2)",
-            "POINT (3 3)",
-            "POINT (4 4)",
+            "POINT (0.0 0.0)",
+            "POINT (1.0 1.0)",
+            "POINT (2.0 2.0)",
+            "POINT (3.0 3.0)",
+            "POINT (4.0 4.0)",
         ]
         result = (
             self.spark.range(5)
@@ -30,7 +30,7 @@ class TestFunctions(MosaicTestCase):
         df = self.spark.createDataFrame(
             [
                 # 2x1 rectangle starting at (0 0)
-                ["POLYGON ((0 0, 0 2, 1 2, 1 0, 0 0))", "POINT (1 1)"]
+                ["POLYGON ((0.0 0.0, 0.0 2.0, 1.0 2.0, 1.0 0.0, 0.0 0.0))", "POINT (1.0 1.0)"]
             ],
             ["wkt", "point_wkt"],
         )
