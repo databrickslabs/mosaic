@@ -105,7 +105,7 @@ for f in generated_function_data:
 
             java_call_outs = ', '.join([f'pyspark_to_java_column({x.replace(": ColumnOrName", "")})' for x in inputs])
             pattern = f"""
-    if {conditionals}:
+    if {conditionals} is not None:
         return config.mosaic_context.invoke_function(
         "{f}", {java_call_outs}
     )"""
