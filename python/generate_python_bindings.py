@@ -100,12 +100,12 @@ for f in generated_function_data:
         if k not in ['all_args', 'n_functions']:
             inputs = function[k]['inputs']
             args_as_sets.append(set(inputs))
-            input_names = [x.replace(": ColumnOrName", "") for x in inputs]
+            input_names = [x.replace(": ColumnOrName", " is not None") for x in inputs]
             conditionals = " and ".join(input_names)
 
             java_call_outs = ', '.join([f'pyspark_to_java_column({x.replace(": ColumnOrName", "")})' for x in inputs])
             pattern = f"""
-    if {conditionals} is not None:
+    if {conditionals}:
         return config.mosaic_context.invoke_function(
         "{f}", {java_call_outs}
     )"""

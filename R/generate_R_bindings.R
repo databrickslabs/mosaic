@@ -139,7 +139,7 @@ get_function_names <- function(scala_file_path){
   }
   methods_to_bind = scala_file[start_index:i]
   # remove any line that doesn't start with def
-  def_mask = grepl("def ", methods_to_bind, fixed = T)
+  def_mask = grepl(' +def .*', methods_to_bind)
   methods_to_bind = methods_to_bind[def_mask]
   # parse the string to get just the function_name(input:type...) pattern
   methods_to_bind = unlist(lapply(methods_to_bind, function(x){
