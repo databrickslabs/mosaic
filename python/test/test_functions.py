@@ -9,11 +9,11 @@ from .utils import MosaicTestCase
 class TestFunctions(MosaicTestCase):
     def test_st_point(self):
         expected = [
-            "POINT (0.0 0.0)",
-            "POINT (1.0 1.0)",
-            "POINT (2.0 2.0)",
-            "POINT (3.0 3.0)",
-            "POINT (4.0 4.0)",
+            "POINT (0 0)",
+            "POINT (1 1)",
+            "POINT (2 2)",
+            "POINT (3 3)",
+            "POINT (4 4)",
         ]
         result = (
             self.spark.range(5)
@@ -30,7 +30,7 @@ class TestFunctions(MosaicTestCase):
         df = self.spark.createDataFrame(
             [
                 # 2x1 rectangle starting at (0 0)
-                ["POLYGON ((0.0 0.0, 0.0 2.0, 1.0 2.0, 1.0 0.0, 0.0 0.0))", "POINT (1.0 1.0)"]
+                ["POLYGON ((0 0, 0 2, 1 2, 1 0, 0 0))", "POINT (1 1)"]
             ],
             ["wkt", "point_wkt"],
         )
@@ -77,7 +77,7 @@ class TestFunctions(MosaicTestCase):
             )
 
             # Grid functions
-            .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1))
+            .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1.0), lit(1.0), lit(1))
             )
             .withColumn("grid_pointascellid", api.grid_pointascellid("point_wkt", lit(1)))
             .withColumn("grid_boundaryaswkb", api.grid_boundaryaswkb(lit(1)))
@@ -96,7 +96,7 @@ class TestFunctions(MosaicTestCase):
 
             # Deprecated
             .withColumn(
-                "point_index_lonlat", api.point_index_lonlat(lit(1), lit(1), lit(1))
+                "point_index_lonlat", api.point_index_lonlat(lit(1.0), lit(1.0), lit(1))
             )
             .withColumn("point_index_geom", api.point_index_geom("point_wkt", lit(1)))
             .withColumn("index_geometry", api.index_geometry(lit(1)))
