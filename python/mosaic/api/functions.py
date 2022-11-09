@@ -513,7 +513,8 @@ def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column
 
 def st_envelope(geom: ColumnOrName) -> Column:
     """
-    Returns the minimum bounding box for the supplied geomtery.
+    Returns the minimum bounding box for the supplied geomtery. This bounding box is defined by the rectangular polygon
+    with corner points `(x_min, y_min)`, `(x_max, y_min)`, `(x_min, y_max)`, `(x_max, y_max)`.
 
     Parameters
     ----------

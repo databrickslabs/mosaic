@@ -422,6 +422,7 @@ st_envelope
 .. function:: st_envelope(col)
 
     Returns the minimum bounding box of the input geometry, as a geometry.
+    This bounding box is defined by the rectangular polygon with corner points `(x_min, y_min)`, `(x_max, y_min)`, `(x_min, y_max)`, `(x_max, y_max)`.
 
     :param col: Geometry
     :type col: Column
