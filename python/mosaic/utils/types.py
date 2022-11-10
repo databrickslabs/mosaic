@@ -2,14 +2,14 @@ from typing import Any, Union
 
 from pyspark.sql import Column
 from pyspark.sql.column import _to_java_column
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, lit
 
 from mosaic.config import config
 
 ColumnOrName = Union[Column, str, bool]
 
 def columnIfNotColumn(value: ColumnOrName):
-    return value if isinstance(value, Column) else col(value)
+    return value if isinstance(value, Column) else lit(value)
 
 
 
