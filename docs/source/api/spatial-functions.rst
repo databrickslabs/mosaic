@@ -416,6 +416,61 @@ st_dump
     +-------------+
 
 
+st_envelope
+***********
+
+.. function:: st_envelope(col)
+
+    Returns the minimum bounding box of the input geometry, as a geometry.
+    This bounding box is defined by the rectangular polygon with corner points `(x_min, y_min)`, `(x_max, y_min)`, `(x_min, y_max)`, `(x_max, y_max)`.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((10 10, 20 10, 15 20, 10 10))'}])
+    >>> df.select(st_envelope('wkt')).show()
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> df = List(("POLYGON ((10 10, 20 10, 15 20, 10 10))")).toDF("wkt")
+    >>> df.select(st_envelope('wkt')).show()
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_envelope("POLYGON ((10 10, 20 10, 15 20, 10 10))")
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((10 10, 20 10, 15 20, 10 10))")
+    >>> showDF(select(df, st_envelope(column("wkt"))), truncate=F)
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+
 st_geometrytype
 ***************
 
@@ -1266,6 +1321,61 @@ st_simplify
 
 .. note::
     The specified tolerance will be ignored by the ESRI geometry API.
+
+st_difference
+*************
+
+.. function:: st_difference(left_geom, right_geom)
+
+    Returns the point set difference of the left and right geometry.
+
+    :param left_geom: Geometry
+    :type left_geom: Column
+    :param right_geom: Geometry
+    :type right_geom: Column
+    :rtype Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'left': 'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))', 'right': 'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'}])
+    >>> df.select(st_difference(col('left'), col('right'))).show()
+    +-----------------------------------------------------------+
+    | st_difference(left, right)                                |
+    +-----------------------------------------------------------+
+    |POLYGON ((10 10, 20 10, 20 15, 15 15, 15 20, 10 20, 10 10))|
+    +-----------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")).toDF("left", "right")
+    >>> df.select(st_difference(col('left'), col('right'))).show()
+    +-----------------------------------------------------------+
+    | st_difference(left, right)                                |
+    +-----------------------------------------------------------+
+    |POLYGON ((10 10, 20 10, 20 15, 15 15, 15 20, 10 20, 10 10))|
+    +-----------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_difference("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")
+    +-----------------------------------------------------------+
+    | st_difference(left, right)                                |
+    +-----------------------------------------------------------+
+    |POLYGON ((10 10, 20 10, 20 15, 15 15, 15 20, 10 20, 10 10))|
+    +-----------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(p1 = "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", p2 = "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))"))
+    >>> showDF(select(df, st_difference(column("p1"), column("p2"))), truncate=F)
+    +-----------------------------------------------------------+
+    | st_difference(left, right)                                |
+    +-----------------------------------------------------------+
+    |POLYGON ((10 10, 20 10, 20 15, 15 15, 15 20, 10 20, 10 10))|
+    +-----------------------------------------------------------+
 
 st_union
 ********

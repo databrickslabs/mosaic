@@ -283,6 +283,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_ConvexHull(exprs(0), geometryAPI.name)
         )
         registry.registerFunction(
+          FunctionIdentifier("st_difference", database),
+          ST_Difference.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_Difference(exprs(0), exprs(1), geometryAPI.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_union", database),
           ST_Union.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_Union(exprs(0), exprs(1), geometryAPI.name)
@@ -296,6 +301,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           FunctionIdentifier("st_simplify", database),
           ST_Simplify.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_Simplify(exprs(0), ColumnAdapter(exprs(1)).cast("double").expr, geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("st_envelope", database),
+            ST_Envelope.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_Envelope(exprs(0), geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("st_buffer", database),
@@ -486,6 +496,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     // scalastyle:off object.name
     object functions extends Serializable {
 
+        /**
+          * functions should follow the pattern `def fname(argName: Type, ...):
+          * returnType = ...` failing to do so may brake the R build.
+          */
+
         /** IndexSystem and GeometryAPI Agnostic methods */
         def as_hex(inGeom: Column): Column = ColumnAdapter(AsHex(inGeom.expr))
         def as_json(inGeom: Column): Column = ColumnAdapter(AsJSON(inGeom.expr))
@@ -502,8 +517,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_centroid2D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, geometryAPI.name))
         def st_centroid3D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, geometryAPI.name, 3))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))
+        def st_difference(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Difference(geom1.expr, geom2.expr, geometryAPI.name))
         def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, geometryAPI.name))
         def st_dump(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
+        def st_envelope(geom: Column): Column = ColumnAdapter(ST_Envelope(geom.expr, geometryAPI.name))
         def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr, geometryAPI.name))
         def st_hasvalidcoordinates(geom: Column, crsCode: Column, which: Column): Column =
             ColumnAdapter(ST_HasValidCoordinates(geom.expr, crsCode.expr, which.expr, geometryAPI.name))

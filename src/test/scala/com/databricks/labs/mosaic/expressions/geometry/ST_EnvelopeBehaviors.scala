@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions.{col, lit}
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
-trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
+trait ST_EnvelopeBehaviors extends MosaicSpatialQueryTest {
 
     def behavior(mc: MosaicContext): Unit = {
         val sc = spark
@@ -16,9 +16,9 @@ trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
         import sc.implicits._
         import mc.functions._
 
-        val input = List("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))").toDF("input_geom")
-        val expected = List("POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))").toDF("result_geom")
-        val result = input.withColumn("result_geom", st_unaryunion(col("input_geom")))
+        val input = List("POLYGON ((10 10, 20 10, 15 20, 10 10))").toDF("input_geom")
+        val expected = List("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").toDF("result_geom")
+        val result = input.withColumn("result_geom", st_envelope(col("input_geom")))
 
         checkGeometryTopo(mc, result, expected, "result_geom")
     }
@@ -31,7 +31,7 @@ trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
         import sc.implicits._
         import mc.functions._
 
-        val result = mocks.getWKTRowsDf(mc).select(st_unaryunion($"wkt"))
+        val result = mocks.getWKTRowsDf(mc).select(st_envelope($"wkt"))
 
         val plan = result.queryExecution.executedPlan
         val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
@@ -41,9 +41,9 @@ trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
         val (_, code) = codeGenStage.doCodeGen()
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stUnaryUnion = ST_UnaryUnion(lit(1).expr, "illegalAPI")
+        val stEnvelope = ST_Envelope(lit(1).expr, "illegalAPI")
         val ctx = new CodegenContext
-        an[Error] should be thrownBy stUnaryUnion.genCode(ctx)
+        an[Error] should be thrownBy stEnvelope.genCode(ctx)
     }
 
     def auxiliaryMethods(mc: MosaicContext): Unit = {
@@ -52,12 +52,12 @@ trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
         val sc = spark
         mc.register(sc)
 
-        val input = "MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))"
+        val input = "POLYGON (10 10, 20 10, 15 20, 10 10)"
 
-        val stUnaryUnion = ST_UnaryUnion(lit(input).expr, "illegalAPI")
-        stUnaryUnion.child shouldEqual lit(input).expr
-        stUnaryUnion.dataType shouldEqual lit(input).expr.dataType
-        noException should be thrownBy stUnaryUnion.makeCopy(Array(stUnaryUnion.child))
+        val stEnvelope = ST_Envelope(lit(input).expr, "illegalAPI")
+        stEnvelope.child shouldEqual lit(input).expr
+        stEnvelope.dataType shouldEqual lit(input).expr.dataType
+        noException should be thrownBy stEnvelope.makeCopy(Array(stEnvelope.child))
     }
 
 }

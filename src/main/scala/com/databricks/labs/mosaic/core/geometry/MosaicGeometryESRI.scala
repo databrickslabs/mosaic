@@ -67,6 +67,8 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def simplify(tolerance: Double): MosaicGeometry = MosaicGeometryESRI(geom.makeSimple())
 
+    override def envelope: MosaicGeometry = MosaicGeometryESRI(geom.envelope())
+
     override def intersection(other: MosaicGeometry): MosaicGeometry = {
         val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
         MosaicGeometryESRI(intersection(otherGeom))
@@ -83,6 +85,12 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def intersects(other: MosaicGeometry): Boolean = {
         val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
         this.geom.intersects(otherGeom)
+    }
+
+    override def difference(other: MosaicGeometry): MosaicGeometry = {
+        val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
+        val difference = this.getGeom.difference(otherGeom)
+        MosaicGeometryESRI(difference)
     }
 
     override def union(other: MosaicGeometry): MosaicGeometry = {

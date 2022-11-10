@@ -56,6 +56,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def boundary: MosaicGeometryJTS = MosaicGeometryJTS(geom.getBoundary)
 
+    override def envelope: MosaicGeometryJTS = MosaicGeometryJTS(geom.getEnvelope)
+
     override def buffer(distance: Double): MosaicGeometryJTS = {
         val buffered = geom.buffer(distance)
         buffered.setSRID(geom.getSRID)
@@ -80,6 +82,13 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
     override def intersects(other: MosaicGeometry): Boolean = {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
         this.geom.intersects(otherGeom)
+    }
+
+    override def difference(other: MosaicGeometry): MosaicGeometry = {
+        val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
+        val difference = this.geom.difference(otherGeom)
+        difference.setSRID(geom.getSRID)
+        MosaicGeometryJTS(difference)
     }
 
     override def union(other: MosaicGeometry): MosaicGeometry = {

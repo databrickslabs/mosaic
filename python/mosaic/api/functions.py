@@ -18,6 +18,7 @@ __all__ = [
     "st_convexhull",
     "st_buffer",
     "st_dump",
+    "st_envelope",
     "st_srid",
     "st_setsrid",
     "st_transform",
@@ -31,6 +32,7 @@ __all__ = [
     "st_isvalid",
     "st_distance",
     "st_intersection",
+    "st_difference",
     "st_simplify",
     "st_union",
     "st_unaryunion",
@@ -471,6 +473,25 @@ def st_distance(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
         pyspark_to_java_column(geom2),
     )
 
+def st_difference(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
+    """
+    Compute the difference between `geom1` and `geom2`.
+
+    Parameters
+    ----------
+    geom1 : Column
+    geom2 : Column
+
+    Returns
+    -------
+    Column
+        The difference geometry.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_difference",
+        pyspark_to_java_column(geom1),
+        pyspark_to_java_column(geom2)
+    )
 
 def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
     """
@@ -497,6 +518,24 @@ def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column
         "st_intersection",
         pyspark_to_java_column(left_geom),
         pyspark_to_java_column(right_geom),
+    )
+
+def st_envelope(geom: ColumnOrName) -> Column:
+    """
+    Returns the minimum bounding box for the supplied geomtery. This bounding box is defined by the rectangular polygon
+    with corner points `(x_min, y_min)`, `(x_max, y_min)`, `(x_min, y_max)`, `(x_max, y_max)`.
+
+    Parameters
+    ----------
+    geom : Column
+
+    Returns
+    -------
+    Column
+        The minimum bounding box as geometry.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_envelope", pyspark_to_java_column(geom)
     )
 
 def st_simplify(geom: ColumnOrName, tolerance: ColumnOrName) -> Column:
