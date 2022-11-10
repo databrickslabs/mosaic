@@ -8,6 +8,10 @@ from mosaic.config import config
 
 ColumnOrName = Union[Column, str, bool]
 
+def columnIfNotColumn(value: ColumnOrName):
+    return value if isinstance(value, Column) else col(value)
+
+
 
 def as_typed_col(value: ColumnOrName, data_type: str):
     return (

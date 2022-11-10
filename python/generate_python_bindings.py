@@ -127,7 +127,7 @@ for f in generated_function_data:
             input_names.extend(exclusions)
             conditionals = " and ".join(input_names)
             # wrap each input in col to make sure we're passing columns rather than single values (i.e. f(bool))
-            java_call_outs = ', '.join([f'pyspark_to_java_column(col({x.replace(": ColumnOrName", "")}))' for x in inputs])
+            java_call_outs = ', '.join([f'pyspark_to_java_column(columnIfNotColumn({x.replace(": ColumnOrName", "")}))' for x in inputs])
             pattern = f"""
     if {conditionals}:
         return config.mosaic_context.invoke_function(
@@ -178,11 +178,10 @@ def {function_name}({function_inputs}) -> Column:
 
 headers = """
 from pyspark.sql import Column
-from pyspark.sql.functions import col
 from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
 
 from mosaic.config import config
-from mosaic.utils.types import ColumnOrName
+from mosaic.utils.types import ColumnOrName, columnIfNotColumn
 """
 
 with open("mosaic/api/functions.py", "w") as f:
