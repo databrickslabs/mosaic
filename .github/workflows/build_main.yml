@@ -8,7 +8,8 @@ on:
       - "scala/*"
   pull_request:
     branches:
-      - '*'
+      - '**'
+      - 'main'
 jobs:
   build:
     runs-on: ubuntu-20.04
