@@ -301,6 +301,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_Simplify(exprs(0), ColumnAdapter(exprs(1)).cast("double").expr, geometryAPI.name)
         )
         registry.registerFunction(
+            FunctionIdentifier("st_envelope", database),
+            ST_Envelope.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_Envelope(exprs(0), geometryAPI.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_buffer", database),
           ST_Buffer.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_Buffer(exprs(0), ColumnAdapter(exprs(1)).cast("double").expr, geometryAPI.name)
@@ -510,6 +515,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_difference(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Difference(geom1.expr, geom2.expr, geometryAPI.name))
         def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, geometryAPI.name))
         def st_dump(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
+        def st_envelope(geom: Column): Column = ColumnAdapter(ST_Envelope(geom.expr, geometryAPI.name))
         def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr, geometryAPI.name))
         def st_hasvalidcoordinates(geom: Column, crsCode: Column, which: Column): Column =
             ColumnAdapter(ST_HasValidCoordinates(geom.expr, crsCode.expr, which.expr, geometryAPI.name))
