@@ -78,7 +78,8 @@ class TestFunctions(MosaicTestCase):
             .withColumn(
                 "transformed_geom", api.st_transform("geom_with_srid", lit(3857))
             )
-
+        )
+        result32 = (df
             # Grid functions
             .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1.0), lit(1.0), lit(1))
             )
@@ -90,6 +91,9 @@ class TestFunctions(MosaicTestCase):
                 "grid_tessellateexplode_no_core_chips",
                 api.grid_tessellateexplode("wkt", lit(1), lit(False)),
             )
+        )
+
+        result33 = (df
             .withColumn(
                 "grid_tessellateexplode_no_core_chips_bool",
                 api.grid_tessellateexplode("wkt", lit(1), False),
