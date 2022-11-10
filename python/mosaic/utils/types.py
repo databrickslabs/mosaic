@@ -8,8 +8,8 @@ from mosaic.config import config
 
 ColumnOrName = Union[Column, str, bool]
 
-def columnIfNotColumn(value: ColumnOrName):
-    return value if isinstance(value, Column) else lit(value)
+def boolAsColumn(value: ColumnOrName):
+    return lit(value) if isinstance(value, bool) else value
 
 
 
