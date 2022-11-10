@@ -83,12 +83,22 @@ class TestFunctions(MosaicTestCase):
             # Grid functions
             .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1.0), lit(1.0), lit(1))
             )
+                    )
+
+        result321 = (df
             .withColumn("grid_pointascellid", api.grid_pointascellid("point_wkt", lit(1)))
-            .withColumn("grid_boundaryaswkb", api.grid_boundaryaswkb(lit(1)))
-            .withColumn("grid_polyfill", api.grid_polyfill("wkt", lit(1)))
-            .withColumn("grid_tessellateexplode", api.grid_tessellateexplode("wkt", lit(1)))
-            .withColumn(
-                "grid_tessellateexplode_no_core_chips",
+                    )
+
+        result322 = (df.withColumn("grid_boundaryaswkb", api.grid_boundaryaswkb(lit(1)))
+                    )
+
+        result323 = (df.withColumn("grid_polyfill", api.grid_polyfill("wkt", lit(1)))
+                    )
+
+        result324 = (df.withColumn("grid_tessellateexplode", api.grid_tessellateexplode("wkt", lit(1)))
+                    )
+        result325 = (df.withColumn(
+            "grid_tessellateexplode_no_core_chips",
                 api.grid_tessellateexplode("wkt", lit(1), lit(False)),
             )
         )
@@ -132,6 +142,11 @@ class TestFunctions(MosaicTestCase):
         self.assertEqual(result2.count(), 1)
         self.assertEqual(result3.count(), 1)
         self.assertEqual(result32.count(), 1)
+        self.assertEqual(result321.count(), 1)
+        self.assertEqual(result322.count(), 1)
+        self.assertEqual(result323.count(), 1)
+        self.assertEqual(result324.count(), 1)
+        self.assertEqual(result325.count(), 1)
         self.assertEqual(result33.count(), 1)
         self.assertEqual(result4.count(), 1)
 
