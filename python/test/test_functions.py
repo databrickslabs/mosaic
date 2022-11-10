@@ -121,11 +121,11 @@ class TestFunctions(MosaicTestCase):
             .withColumn("mosaic_explode", api.mosaic_explode("wkt", lit(1)))
             .withColumn(
                 "mosaic_explode_no_core_chips",
-                api.mosaic_explode("wkt", lit(1), lit(False)),
+                api.mosaic_explode("wkt", lit(1), keepCoreGeometries=lit(False)),
             )
             .withColumn(
                 "mosaic_explode_no_core_chips_bool",
-                api.mosaic_explode("wkt", lit(1), False),
+                api.mosaic_explode("wkt", lit(1), keepCoreGeometries=False),
             )
             .withColumn("mosaicfill", api.mosaicfill("wkt", lit(1)))
             .withColumn(
