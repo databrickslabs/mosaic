@@ -99,14 +99,14 @@ class TestFunctions(MosaicTestCase):
                     )
         result325 = (df.withColumn(
             "grid_tessellateexplode_no_core_chips",
-                api.grid_tessellateexplode("wkt", lit(1), lit(False)),
+                api.grid_tessellateexplode("wkt", lit(1), keepCoreGeometries=lit(False)),
             )
         )
 
         result33 = (df
             .withColumn(
                 "grid_tessellateexplode_no_core_chips_bool",
-                api.grid_tessellateexplode("wkt", lit(1), False),
+                api.grid_tessellateexplode("wkt", lit(1), keepCoreGeometries=False),
             )
             .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
         )
