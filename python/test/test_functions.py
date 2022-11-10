@@ -35,7 +35,7 @@ class TestFunctions(MosaicTestCase):
             ["wkt", "point_wkt"],
         )
 
-        result = (
+        result1 = (
             df.withColumn("st_area", api.st_area("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
             .withColumn("st_buffer", api.st_buffer("wkt", lit(1.1)))
@@ -54,7 +54,9 @@ class TestFunctions(MosaicTestCase):
                 "st_hasvalidcoordinates",
                 api.st_hasvalidcoordinates("wkt", lit("EPSG:2192"), lit("bounds")),
             )
-            .withColumn("st_intersects", api.st_intersects("wkt", "wkt"))
+        )
+        result2 = (
+            df.withColumn("st_intersects", api.st_intersects("wkt", "wkt"))
             .withColumn("st_intersection", api.st_intersection("wkt", "wkt"))
             .withColumn("st_union", api.st_union("wkt", "wkt"))
             .withColumn("st_unaryunion", api.st_unaryunion("wkt"))
@@ -66,9 +68,10 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_zmin", api.st_zmin("wkt"))
             .withColumn("st_zmax", api.st_zmax("wkt"))
             .withColumn("flatten_polygons", api.flatten_polygons("wkt"))
-
+        )
+        result3 = (
             # SRID functions
-            .withColumn(
+            df.withColumn(
                 "geom_with_srid", api.st_setsrid(api.st_geomfromwkt("wkt"), lit(4326))
             )
             .withColumn("srid_check", api.st_srid("geom_with_srid"))
@@ -92,8 +95,8 @@ class TestFunctions(MosaicTestCase):
                 api.grid_tessellateexplode("wkt", lit(1), False),
             )
             .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
-
-
+        )
+        result4 = (df
             # Deprecated
             .withColumn(
                 "point_index_lonlat", api.point_index_lonlat(lit(1.0), lit(1.0), lit(1))
@@ -121,7 +124,10 @@ class TestFunctions(MosaicTestCase):
 
         )
 
-        self.assertEqual(result.count(), 1)
+        self.assertEqual(result1.count(), 1)
+        self.assertEqual(result2.count(), 1)
+        self.assertEqual(result3.count(), 1)
+        self.assertEqual(result4.count(), 1)
 
     def test_aggregation_functions(self):
         left_df = (
