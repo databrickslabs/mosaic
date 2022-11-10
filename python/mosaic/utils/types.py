@@ -6,7 +6,7 @@ from pyspark.sql.functions import col
 
 from mosaic.config import config
 
-ColumnOrName = Union[Column, str]
+ColumnOrName = Union[Column, str, bool]
 
 
 def as_typed_col(value: ColumnOrName, data_type: str):
