@@ -52,7 +52,8 @@ trait IterativeTransformer extends Transformer with IterativeTransformerParams w
 
         logInfo(s"Starting iterative transformation with $getMaxIterations iterations.")
 
-        val (_, _, _, result) = (0 until getMaxIterations)
+        // 1 based iteration counter
+        val (_, _, _, result) = (1 to getMaxIterations)
             .foldLeft((0, false, false, initialInput)) {
                 case ((earlyStoppingCount, previousEarlyStoppingCondition, stop, iterationInput), iteration) =>
                     if (!stop) {

@@ -28,9 +28,9 @@ class HexRingNeighboursTest extends QueryTest with SharedSparkSession with HexRi
     test("Test resultTransform for HexRingNeighbours (H3, ESRI).") { noCodegen { resultTransform(H3IndexSystem, ESRI, 5) } }
     test("Test resultTransform for HexRingNeighbours (BNG, JTS).") { noCodegen { resultTransform(BNGIndexSystem, JTS, -4) } }
     test("Test resultTransform for HexRingNeighbours (BNG, ESRI).") { noCodegen { resultTransform(BNGIndexSystem, ESRI, -4) } }
-    test("Test transform for HexRingNeighbours (H3, JTS).") { noCodegen { transform(H3IndexSystem, JTS, 5, 3) } }
-    test("Test transform for HexRingNeighbours (H3, ESRI).") { noCodegen { transform(H3IndexSystem, ESRI, 5, 3) } }
-    test("Test transform for HexRingNeighbours (BNG, JTS).") { noCodegen { transform(BNGIndexSystem, JTS, 4, 15) } }
-    test("Test transform for HexRingNeighbours (BNG, ESRI).") { noCodegen { transform(BNGIndexSystem, ESRI, -4, 1) } }
+    test("Test transform for HexRingNeighbours (H3, JTS).") { noCodegen { transform(H3IndexSystem, JTS, 5, 4) } }
+    test("Test transform for HexRingNeighbours (H3, ESRI).") { noCodegen { transform(H3IndexSystem, ESRI, 5, 4) } }
+    test("Test transform for HexRingNeighbours (BNG, JTS).") { noCodegen { transform(BNGIndexSystem, JTS, 4, 16) } }
+    test("Test transform for HexRingNeighbours (BNG, ESRI).") { noCodegen { transform(BNGIndexSystem, ESRI, -4, 2) } }
 
 }

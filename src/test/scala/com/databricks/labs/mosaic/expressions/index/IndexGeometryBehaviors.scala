@@ -1,31 +1,32 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import com.databricks.labs.mosaic.functions.MosaicContext
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types._
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-trait IndexGeometryBehaviors {
-    this: AnyFlatSpec =>
+//noinspection ScalaDeprecation
+trait IndexGeometryBehaviors extends QueryTest {
 
-    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
-        mosaicContext.register(spark)
+    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(spark)
 
-        val indexSystemName = mosaicContext.getIndexSystem.name
-        val geometryAPIName = mosaicContext.getGeometryAPI.name
+        val indexSystemName = indexSystem.name
+        val geometryAPIName = geometryAPI.name
 
-        val gridCellLong = MosaicContext.indexSystem match {
+        val gridCellLong = MosaicContext.indexSystem() match {
             case BNGIndexSystem => lit(1050138790L).expr
             case H3IndexSystem  => lit(623060282076758015L).expr
         }
-        val gridCellStr = MosaicContext.indexSystem match {
+        val gridCellStr = MosaicContext.indexSystem() match {
             case BNGIndexSystem => lit("TQ388791").expr
             case H3IndexSystem  => lit("8a58e0682d6ffff").expr
         }
@@ -55,7 +56,7 @@ trait IndexGeometryBehaviors {
         longIDGeom.makeCopy(Array(longIDGeom.left, longIDGeom.right)) shouldEqual longIDGeom
 
         // legacy API def tests
-        MosaicContext.indexSystem match {
+        MosaicContext.indexSystem() match {
             case BNGIndexSystem => noException should be thrownBy mc.functions.index_geometry(lit(1050138790L))
             case H3IndexSystem  => noException should be thrownBy mc.functions.index_geometry(lit(623060282076758015L))
         }

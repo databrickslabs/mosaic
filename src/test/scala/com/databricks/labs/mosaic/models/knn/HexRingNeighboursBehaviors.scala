@@ -37,7 +37,7 @@ trait HexRingNeighboursBehaviors extends QueryTest {
             .setIndexResolution(resolution)
 
         // test iteration 0
-        val hexRingNeighbours0 = hexRingNeighbours.setIterationID(0)
+        val hexRingNeighbours0 = hexRingNeighbours.setIterationID(1)
         val result0 = getCounts(hexRingNeighbours0.leftTransform(boroughs))
         val expected0 = getExpectedCounts(
           boroughs
@@ -50,7 +50,7 @@ trait HexRingNeighboursBehaviors extends QueryTest {
         val result3 = getCounts(hexRingNeighbours3.leftTransform(boroughs))
         val expected3 = getExpectedCounts(
           boroughs
-              .withColumn("neighbours", grid_geometrykdisc(col("wkt"), resolution, 4))
+              .withColumn("neighbours", grid_geometrykdisc(col("wkt"), resolution, 3))
         )
         result3 should contain theSameElementsAs expected3
 
@@ -60,7 +60,10 @@ trait HexRingNeighboursBehaviors extends QueryTest {
         val resultFinal = getCounts(hexRingNeighboursFinal.leftTransform(inputFinal))
         val expectedFinal = getExpectedCounts(
           inputFinal
-              .withColumn("neighbours", grid_geometrykdisc(col("wkt"), resolution, col("iteration") + 2))
+              .withColumn("neighbours_1", grid_geometrykdisc(col("wkt"), resolution, col("iteration") + 1))
+              .withColumn("neighbours_2", grid_geometrykdisc(col("wkt"), resolution, col("iteration") + 2))
+              .withColumn("neighbours", array_union(col("neighbours_1"), col("neighbours_2")))
+              .drop("neighbours_1", "neighbours_2")
         )
         resultFinal should contain theSameElementsAs expectedFinal
     }
@@ -146,22 +149,22 @@ trait HexRingNeighboursBehaviors extends QueryTest {
             .setIterationID(iteration)
 
         val leftInput = boroughs.withColumn("left_miid", monotonically_increasing_id())
-        val rightInput = boroughs.withColumn("right_miid", monotonically_increasing_id())
+        val rightInput = boroughs
+            .withColumn("right_miid", monotonically_increasing_id())
+            .withColumn("right_wkt_grid", grid_tessellateexplode(col("wkt"), resolution))
 
         val left = hexRingNeighbours
             .leftTransform(leftInput)
         val right = hexRingNeighbours
             .rightTransform(rightInput)
-            .withColumn("right_wkt_grid", grid_tessellateexplode(col("wkt"), resolution))
 
         val rightUniqueColumns = hexRingNeighbours.uniqueFields(right.schema, left.schema)
 
         val rightProjected = hexRingNeighbours.rightProjection(right, rightUniqueColumns.fieldNames)
 
-        val hexRingNeighboursNew = hexRingNeighbours.setRight(right)
+        val hexRingNeighboursNew = hexRingNeighbours.setRight(rightInput)
         val result = hexRingNeighboursNew
             .transform(leftInput)
-            //.where(col(hexRingNeighbours.getRightRowID).isNotNull)
 
         result.columns should contain allElementsOf left.columns.filterNot(_ == "left_wkt_kring")
         result.columns should contain allElementsOf rightProjected.columns.filterNot(_ == "right_wkt_grid")
@@ -197,6 +200,7 @@ trait HexRingNeighboursBehaviors extends QueryTest {
 
         val expectedNonNullCounts = expectedMatches
             .where("right_id is not null")
+            .where("right_id != id")
             .groupBy("id")
             .agg(count("*").as("expected_count"))
 

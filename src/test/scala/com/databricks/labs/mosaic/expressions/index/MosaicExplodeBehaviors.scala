@@ -1,7 +1,8 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.core.Mosaic
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.{getBoroughs, getWKTRowsDf}
 import com.databricks.labs.mosaic.test.mocks
@@ -9,17 +10,16 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
-trait MosaicExplodeBehaviors {
-    this: AnyFlatSpec =>
+trait MosaicExplodeBehaviors extends QueryTest {
 
-    def wktDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def wktDecompose(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -42,10 +42,11 @@ trait MosaicExplodeBehaviors {
         boroughs.collect().length should be <= mosaics2.length
     }
 
-    def wktDecomposeNoNulls(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def wktDecomposeNoNulls(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val rdd = spark.sparkContext.makeRDD(
           Seq(
@@ -68,10 +69,10 @@ trait MosaicExplodeBehaviors {
         noEmptyChips.collect().length should be >= 0
 
         val noEmptyChips2 = df
-          .select(
-            mosaic_explode(col("wkt"), resolution, keepCoreGeometries = lit(true))
-          )
-          .filter(col("index.wkb").isNull)
+            .select(
+              mosaic_explode(col("wkt"), resolution, keepCoreGeometries = lit(true))
+            )
+            .filter(col("index.wkb").isNull)
 
         noEmptyChips2.collect().length should be >= 0
 
@@ -84,16 +85,18 @@ trait MosaicExplodeBehaviors {
         emptyChips.collect().length should be >= 0
 
         val emptyChips2 = df
-          .select(
-            mosaic_explode(col("wkt"), resolution, keepCoreGeometries = lit(false))
-          )
-          .filter(col("index.wkb").isNull)
+            .select(
+              mosaic_explode(col("wkt"), resolution, keepCoreGeometries = lit(false))
+            )
+            .filter(col("index.wkb").isNull)
 
         emptyChips2.collect().length should be >= 0
     }
 
-    def wktDecomposeKeepCoreParamExpression(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        mosaicContext.register(spark)
+    def wktDecomposeKeepCoreParamExpression(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(spark)
 
         val rdd = spark.sparkContext.makeRDD(
           Seq(
@@ -120,10 +123,11 @@ trait MosaicExplodeBehaviors {
         noEmptyChips_2.collect().length should be >= 0
     }
 
-    def lineDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def lineDecompose(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val wktRows: DataFrame = getWKTRowsDf(mc).where(col("wkt").contains("LINESTRING"))
 
@@ -147,36 +151,39 @@ trait MosaicExplodeBehaviors {
 
     }
 
-    def lineDecomposeFirstPointOnBoundary(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-      mosaicContext.register(spark)
+    def lineDecomposeFirstPointOnBoundary(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(spark)
 
-      val rdd = spark.sparkContext.makeRDD(
-        Seq(
-          // The first point of this line is located exactly
-          // over the boundary of the relative h3 cell, while the second point
-          // is located outside of the first point's h3 cell.
-          Row("LINESTRING (-120.65246800000001 40.420067, -120.65228800000001 40.420528000000004)")
+        val rdd = spark.sparkContext.makeRDD(
+          Seq(
+            // The first point of this line is located exactly
+            // over the boundary of the relative h3 cell, while the second point
+            // is located outside of the first point's h3 cell.
+            Row("LINESTRING (-120.65246800000001 40.420067, -120.65228800000001 40.420528000000004)")
+          )
         )
-      )
-      val schema = StructType(
-        List(
-          StructField("wkt", StringType)
+        val schema = StructType(
+          List(
+            StructField("wkt", StringType)
+          )
         )
-      )
-      val df = spark.createDataFrame(rdd, schema)
+        val df = spark.createDataFrame(rdd, schema)
 
-      val noEmptyChips = df
-        .select(
-          expr(s"grid_tessellateexplode(wkt, 8, true)")
-        )
-      val res = noEmptyChips.collect()
-      res.length should be > 0
+        val noEmptyChips = df
+            .select(
+              expr(s"grid_tessellateexplode(wkt, 8, true)")
+            )
+        val res = noEmptyChips.collect()
+        res.length should be > 0
     }
 
-    def wkbDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def wkbDecompose(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -199,10 +206,11 @@ trait MosaicExplodeBehaviors {
         boroughs.collect().length should be <= mosaics2.length
     }
 
-    def hexDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def hexDecompose(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -225,10 +233,11 @@ trait MosaicExplodeBehaviors {
         boroughs.collect().length should be <= mosaics2.length
     }
 
-    def coordsDecompose(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def coordsDecompose(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -251,13 +260,14 @@ trait MosaicExplodeBehaviors {
         boroughs.collect().length should be <= mosaics2.length
     }
 
-    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
-        mosaicContext.register(spark)
+    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(spark)
         val sc = spark
         import sc.implicits._
 
-        val wkt = mocks.getWKTRowsDf(mosaicContext).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr

@@ -1,11 +1,17 @@
 from pyspark.sql import SparkSession, DataFrame, SQLContext
+from mosaic.utils import scala_utils
 
 class ApproximateSpatialKNN:
-    def __init__(self):
+    def __init__(self, right_df):
         self.spark = SparkSession.builder.getOrCreate()
         self.model = getattr(
-            self.spark._jvm.com.databricks.labs.mosaic.models, "ApproximateSpatialKNN"
+            self.spark._jvm.com.databricks.labs.mosaic.models.knn, "ApproximateSpatialKNN"
         )()
+        self.model.setRightDf(right_df._jdf)
+
+    def setUseTableCheckpoint(self, useTableCheckpoint):
+        self.model.setUseTableCheckpoint(useTableCheckpoint)
+        return self
 
     def setKNeighbours(self, k):
         self.model.setKNeighbours(k)
@@ -46,3 +52,17 @@ class ApproximateSpatialKNN:
     def transform(self, df):
         result = self.model.transform(df._jdf)
         return DataFrame(result, SQLContext(self.spark.sparkContext))
+
+    def getParams(self):
+        params = self.model.getParams()
+        return scala_utils.scala_map_to_python(params)
+
+    def getMetrics(self):
+        metrics = self.model.getMetrics()
+        return scala_utils.scala_map_to_python(metrics)
+
+    def write(self):
+        return self.model.write
+
+    def load(self):
+        return self.model.load

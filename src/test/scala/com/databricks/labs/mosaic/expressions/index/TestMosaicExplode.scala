@@ -2,71 +2,60 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
-import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.SparkSuite
-import org.scalatest.flatspec.AnyFlatSpec
+import org.apache.spark.sql.QueryTest
+import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
+import org.apache.spark.sql.internal.SQLConf
+import org.apache.spark.sql.test.SharedSparkSession
 
-class TestMosaicExplode extends AnyFlatSpec with MosaicExplodeBehaviors with SparkSuite {
+class TestMosaicExplode extends QueryTest with SharedSparkSession with MosaicExplodeBehaviors {
 
-    "Mosaic_Explode" should "decompose wkt geometries for any index system and any geometry API" in {
-        it should behave like wktDecompose(MosaicContext.build(H3IndexSystem, ESRI), spark, 8)
-        it should behave like wktDecompose(MosaicContext.build(H3IndexSystem, JTS), spark, 8)
-        it should behave like wktDecompose(MosaicContext.build(BNGIndexSystem, ESRI), spark, 5)
-        it should behave like wktDecompose(MosaicContext.build(BNGIndexSystem, JTS), spark, 5)
-    }
+    private val noCodegen =
+        withSQLConf(
+          SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
+          SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
+        ) _
 
-    "Mosaic_Explode" should "decompose wkt geometries for any index system and any geometry API with SQL expr" in {
-        it should behave like wktDecomposeKeepCoreParamExpression(MosaicContext.build(H3IndexSystem, ESRI), spark, 3)
-        it should behave like wktDecomposeKeepCoreParamExpression(MosaicContext.build(H3IndexSystem, JTS), spark, 3)
-        it should behave like wktDecomposeKeepCoreParamExpression(MosaicContext.build(BNGIndexSystem, ESRI), spark, 6)
-        it should behave like wktDecomposeKeepCoreParamExpression(MosaicContext.build(BNGIndexSystem, JTS), spark, 6)
-    }
+    test("Testing wktDecompose (H3, JTS) NO_CODEGEN") { noCodegen { wktDecompose(H3IndexSystem, JTS, 3) } }
+    test("Testing wktDecompose (H3, ESRI) NO_CODEGEN") { noCodegen { wktDecompose(H3IndexSystem, ESRI, 3) } }
+    test("Testing wktDecompose (BNG, JTS) NO_CODEGEN") { noCodegen { wktDecompose(BNGIndexSystem, JTS, 5) } }
+    test("Testing wktDecompose (BNG, ESRI) NO_CODEGEN") { noCodegen { wktDecompose(BNGIndexSystem, ESRI, 5) } }
 
-    "Mosaic_Explode" should "decompose wkt geometries with no null for any index system and any geometry API" in {
-        it should behave like wktDecomposeNoNulls(MosaicContext.build(H3IndexSystem, ESRI), spark, 3)
-        it should behave like wktDecomposeNoNulls(MosaicContext.build(H3IndexSystem, JTS), spark, 3)
-        it should behave like wktDecomposeNoNulls(MosaicContext.build(BNGIndexSystem, ESRI), spark, 6)
-        it should behave like wktDecomposeNoNulls(MosaicContext.build(BNGIndexSystem, JTS), spark, 6)
-    }
+    test("Testing wktDecomposeKeepCoreParamExpression (H3, JTS) NO_CODEGEN") { noCodegen { wktDecomposeKeepCoreParamExpression(H3IndexSystem, JTS, 3) } }
+    test("Testing wktDecomposeKeepCoreParamExpression (H3, ESRI) NO_CODEGEN") { noCodegen { wktDecomposeKeepCoreParamExpression(H3IndexSystem, ESRI, 3) } }
+    test("Testing wktDecomposeKeepCoreParamExpression (BNG, JTS) NO_CODEGEN") { noCodegen { wktDecomposeKeepCoreParamExpression(BNGIndexSystem, JTS, 5) } }
+    test("Testing wktDecomposeKeepCoreParamExpression (BNG, ESRI) NO_CODEGEN") { noCodegen { wktDecomposeKeepCoreParamExpression(BNGIndexSystem, ESRI, 5) } }
 
-    "Mosaic_Explode" should "decompose wkb geometries for any index system and any geometry API" in {
-        it should behave like wkbDecompose(MosaicContext.build(H3IndexSystem, ESRI), spark, 8)
-        it should behave like wkbDecompose(MosaicContext.build(H3IndexSystem, JTS), spark, 8)
-        it should behave like wkbDecompose(MosaicContext.build(BNGIndexSystem, ESRI), spark, 5)
-        it should behave like wkbDecompose(MosaicContext.build(BNGIndexSystem, JTS), spark, 5)
-    }
+    test("Testing wktDecomposeNoNulls (H3, JTS) NO_CODEGEN") { noCodegen { wktDecomposeNoNulls(H3IndexSystem, JTS, 3) } }
+    test("Testing wktDecomposeNoNulls (H3, ESRI) NO_CODEGEN") { noCodegen { wktDecomposeNoNulls(H3IndexSystem, ESRI, 3) } }
+    test("Testing wktDecomposeNoNulls (BNG, JTS) NO_CODEGEN") { noCodegen { wktDecomposeNoNulls(BNGIndexSystem, JTS, 5) } }
+    test("Testing wktDecomposeNoNulls (BNG, ESRI) NO_CODEGEN") { noCodegen { wktDecomposeNoNulls(BNGIndexSystem, ESRI, 5) } }
 
-    "Mosaic_Explode" should "decompose hex geometries for any index system and any geometry API" in {
-        it should behave like hexDecompose(MosaicContext.build(H3IndexSystem, ESRI), spark, 8)
-        it should behave like hexDecompose(MosaicContext.build(H3IndexSystem, JTS), spark, 8)
-        it should behave like hexDecompose(MosaicContext.build(BNGIndexSystem, ESRI), spark, 5)
-        it should behave like hexDecompose(MosaicContext.build(BNGIndexSystem, JTS), spark, 5)
-    }
+    test("Testing wkbDecompose (H3, JTS) NO_CODEGEN") { noCodegen { wkbDecompose(H3IndexSystem, JTS, 3) } }
+    test("Testing wkbDecompose (H3, ESRI) NO_CODEGEN") { noCodegen { wkbDecompose(H3IndexSystem, ESRI, 3) } }
+    test("Testing wkbDecompose (BNG, JTS) NO_CODEGEN") { noCodegen { wkbDecompose(BNGIndexSystem, JTS, 5) } }
+    test("Testing wkbDecompose (BNG, ESRI) NO_CODEGEN") { noCodegen { wkbDecompose(BNGIndexSystem, ESRI, 5) } }
 
-    "Mosaic_Explode" should "decompose coords geometries for any index system and any geometry API" in {
-        it should behave like coordsDecompose(MosaicContext.build(H3IndexSystem, ESRI), spark, 8)
-        it should behave like coordsDecompose(MosaicContext.build(H3IndexSystem, JTS), spark, 8)
-        it should behave like coordsDecompose(MosaicContext.build(BNGIndexSystem, ESRI), spark, 5)
-        it should behave like coordsDecompose(MosaicContext.build(BNGIndexSystem, JTS), spark, 5)
-    }
+    test("Testing hexDecompose (H3, JTS) NO_CODEGEN") { noCodegen { hexDecompose(H3IndexSystem, JTS, 3) } }
+    test("Testing hexDecompose (H3, ESRI) NO_CODEGEN") { noCodegen { hexDecompose(H3IndexSystem, ESRI, 3) } }
+    test("Testing hexDecompose (BNG, JTS) NO_CODEGEN") { noCodegen { hexDecompose(BNGIndexSystem, JTS, 5) } }
+    test("Testing hexDecompose (BNG, ESRI) NO_CODEGEN") { noCodegen { hexDecompose(BNGIndexSystem, ESRI, 5) } }
 
-    "Mosaic_Explode" should "decompose lines and multilines for any index system and any geometry API" in {
-        it should behave like lineDecompose(MosaicContext.build(H3IndexSystem, ESRI), spark, 3)
-        it should behave like lineDecompose(MosaicContext.build(H3IndexSystem, JTS), spark, 3)
-        it should behave like lineDecompose(MosaicContext.build(BNGIndexSystem, ESRI), spark, 5)
-        it should behave like lineDecompose(MosaicContext.build(BNGIndexSystem, JTS), spark, 5)
-    }
+    test("Testing coordsDecompose (H3, JTS) NO_CODEGEN") { noCodegen { coordsDecompose(H3IndexSystem, JTS, 3) } }
+    test("Testing coordsDecompose (H3, ESRI) NO_CODEGEN") { noCodegen { coordsDecompose(H3IndexSystem, ESRI, 3) } }
+    test("Testing coordsDecompose (BNG, JTS) NO_CODEGEN") { noCodegen { coordsDecompose(BNGIndexSystem, JTS, 5) } }
+    test("Testing coordsDecompose (BNG, ESRI) NO_CODEGEN") { noCodegen { coordsDecompose(BNGIndexSystem, ESRI, 5) } }
 
-    "Mosaic_Explode" should "decompose lines that have the first point on the cell boundary" in {
-        it should behave like lineDecomposeFirstPointOnBoundary(MosaicContext.build(H3IndexSystem, ESRI), spark)
-        it should behave like lineDecomposeFirstPointOnBoundary(MosaicContext.build(H3IndexSystem, JTS), spark)
-    }
+    test("Testing lineDecompose (H3, JTS) NO_CODEGEN") { noCodegen { lineDecompose(H3IndexSystem, JTS, 3) } }
+    test("Testing lineDecompose (H3, ESRI) NO_CODEGEN") { noCodegen { lineDecompose(H3IndexSystem, ESRI, 3) } }
+    test("Testing lineDecompose (BNG, JTS) NO_CODEGEN") { noCodegen { lineDecompose(BNGIndexSystem, JTS, 3) } }
+    test("Testing lineDecompose (BNG, ESRI) NO_CODEGEN") { noCodegen { lineDecompose(BNGIndexSystem, ESRI, 3) } }
 
-    "Mosaic_Explode" should "correctly evaluate auxiliary methods." in {
-        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, ESRI), spark)
-        it should behave like auxiliaryMethods(MosaicContext.build(H3IndexSystem, JTS), spark)
-        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, ESRI), spark)
-        it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, JTS), spark)
-    }
+    test("Testing lineDecomposeFirstPointOnBoundary (H3, JTS) NO_CODEGEN") { noCodegen { lineDecomposeFirstPointOnBoundary(H3IndexSystem, JTS) } }
+    test("Testing lineDecomposeFirstPointOnBoundary (H3, ESRI) NO_CODEGEN") { noCodegen { lineDecomposeFirstPointOnBoundary(H3IndexSystem, ESRI) } }
+
+    test("Testing auxiliaryMethods (H3, JTS) NO_CODEGEN") { noCodegen { auxiliaryMethods(H3IndexSystem, JTS) } }
+    test("Testing auxiliaryMethods (H3, ESRI) NO_CODEGEN") { noCodegen { auxiliaryMethods(H3IndexSystem, ESRI) } }
+    test("Testing auxiliaryMethods (BNG, JTS) NO_CODEGEN") { noCodegen { auxiliaryMethods(BNGIndexSystem, JTS) } }
+    test("Testing auxiliaryMethods (BNG, ESRI) NO_CODEGEN") { noCodegen { auxiliaryMethods(BNGIndexSystem, ESRI) } }
 
 }

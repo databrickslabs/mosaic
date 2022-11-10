@@ -1,1 +1,1 @@
-from .approximate_spatial_knn import ApproximateSpatialKNN
+from .knn import *

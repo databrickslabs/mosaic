@@ -81,7 +81,7 @@ class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
       * left_miid field exists. left_miid is the default value for
       * [[leftRowID]]. This can be changed using the [[setLeftRowID]] method.
       * left_miid is used to identify the left geometry in the result. Set the
-      * starting iteration to 0.
+      * starting iteration to 1.
       * @param input
       *   Input dataset
       * @return
@@ -90,7 +90,7 @@ class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
     override def inputTransform(input: Dataset[_]): DataFrame = {
         input
             .withColumn(getLeftRowID, monotonically_increasing_id())
-            .withColumn("iteration", lit(0))
+            .withColumn("iteration", lit(1))
     }
 
     /**
@@ -199,7 +199,7 @@ class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
             .setLeftFeatureCol(getLeftFeatureCol)
             .setRightFeatureCol(getRightFeatureCol)
             .setIndexResolution(getIndexResolution)
-            .setIterationID(0)
+            .setIterationID(1)
 
         iterate(dataset)
 

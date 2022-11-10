@@ -61,7 +61,7 @@ case class HexRingNeighbours(override val uid: String, var right: Dataset[_])
       * Transforms the left dataset before the join is performed. The left
       * transformations are: <ul> <li>If the iteration is 0: Add a column with
       * the kring of the left geometries.</li> <li>If the iteration is greater
-      * than 0: Add a column with the kdisc of the left geometries.</li> <li>If
+      * than 1: Add a column with the kdisc of the left geometries.</li> <li>If
       * the iteration is == -1: Add a column with the kring of the left
       * geometries based on the iteration column.</li> <li>Wrap the generated
       * index IDs into logical chips.</li> </ul>
@@ -90,10 +90,16 @@ case class HexRingNeighbours(override val uid: String, var right: Dataset[_])
       *   The function to apply to the geometry column.
       */
     def rippleFunction(geom: Column): Column = {
-        if (getIterationID == 0) grid_geometrykringexplode(geom, getIndexResolution, 1)
-        // k(n-1) = iteration(n-1) + 1, k(n) = iteration(n-1) + 2
-        else if (getIterationID == -1) grid_geometrykdiscexplode(geom, getIndexResolution, col("iteration") + 2)
-        else grid_geometrykdiscexplode(geom, getIndexResolution, getIterationID + 1)
+        if (getIterationID == 1) grid_geometrykringexplode(geom, getIndexResolution, getIterationID)
+        // due to the way hexes are forming the rings we need at least 2 additional iterations
+        // to avoid missing matches in the end result for converged iterations
+        else if (getIterationID == -1) explode(
+          array_union(
+            grid_geometrykdisc(geom, getIndexResolution, col("iteration") + 1),
+            grid_geometrykdisc(geom, getIndexResolution, col("iteration") + 2)
+          )
+        )
+        else grid_geometrykdiscexplode(geom, getIndexResolution, getIterationID)
     }
 
     /**

@@ -14,7 +14,7 @@ import java.util.UUID
  */
 case class DeltaTableCheckpoint(database: String, table: String) extends DeltaCheckpoint {
 
-    private val uniqueName = s"$database.${table}_${UUID.randomUUID().toString}"
+    private val uniqueName = s"$database.${table}_${UUID.randomUUID().toString.replace("-", "_")}"
 
     /**
       * Deletes the checkpoint table.

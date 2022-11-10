@@ -7,7 +7,7 @@ import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.test.SharedSparkSession
 
-class TestPointIndex extends QueryTest with SharedSparkSession with PointIndexBehaviors {
+class PointIndexTest extends QueryTest with SharedSparkSession with PointIndexBehaviors {
 
     private val noCodegen =
         withSQLConf(

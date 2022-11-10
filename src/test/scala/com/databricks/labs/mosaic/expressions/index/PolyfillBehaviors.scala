@@ -1,23 +1,23 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, QueryTest}
 import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.types._
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
-trait PolyfillBehaviors {
-    this: AnyFlatSpec =>
+trait PolyfillBehaviors extends QueryTest {
 
-    def polyfillOnComputedColumns(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def polyfillOnComputedColumns(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -30,10 +30,11 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics.length
     }
 
-    def wktPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def wktPolyfill(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -56,10 +57,11 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def wkbPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def wkbPolyfill(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -81,10 +83,11 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def hexPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def hexPolyfill(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -106,10 +109,11 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def coordsPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
-        val mc = mosaicContext
+    def coordsPolyfill(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -131,13 +135,14 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
-        mosaicContext.register(spark)
+    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val sc = spark
         import sc.implicits._
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(spark)
 
-        val wkt = mocks.getWKTRowsDf(mosaicContext).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr
