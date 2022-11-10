@@ -131,6 +131,8 @@ class TestFunctions(MosaicTestCase):
         self.assertEqual(result1.count(), 1)
         self.assertEqual(result2.count(), 1)
         self.assertEqual(result3.count(), 1)
+        self.assertEqual(result32.count(), 1)
+        self.assertEqual(result33.count(), 1)
         self.assertEqual(result4.count(), 1)
 
     def test_aggregation_functions(self):
