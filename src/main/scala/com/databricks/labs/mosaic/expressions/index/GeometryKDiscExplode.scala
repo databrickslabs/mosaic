@@ -37,6 +37,7 @@ case class GeometryKDiscExplode(geom: Expression, resolution: Expression, k: Exp
         }
     }
 
+    //noinspection DuplicatedCode
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val geometryRaw = geom.eval(input)
         val resolutionRaw = resolution.eval(input)
@@ -69,7 +70,8 @@ case class GeometryKDiscExplode(geom: Expression, resolution: Expression, k: Exp
 
     override def elementSchema: StructType = StructType(Seq(StructField("cellId", indexSystem.getCellIdDataType)))
 
-    override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = copy(newChildren(0), newChildren(1), newChildren(2))
+    override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression =
+        copy(newChildren(0), newChildren(1), newChildren(2))
 
 }
 
@@ -77,27 +79,27 @@ object GeometryKDiscExplode {
 
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-            classOf[GeometryKDiscExplode].getCanonicalName,
-            db.orNull,
-            "grid_cellkdiscexplode",
-            """
-              |    _FUNC_(cell_id, resolution)) - Generates the geometry based kdisc cell IDs set for the input
-              |    cell ID and the input k value.
+          classOf[GeometryKDiscExplode].getCanonicalName,
+          db.orNull,
+          "grid_cellkdiscexplode",
+          """
+            |    _FUNC_(cell_id, resolution)) - Generates the geometry based kdisc cell IDs set for the input
+            |    geometry and the input k value.
             """.stripMargin,
-            "",
-            """
-              |    Examples:
-              |      > SELECT _FUNC_(a, b);
-              |        622236721274716159
-              |        622236721274716160
-              |        622236721274716161
-              |        ...
-              |
-              |  """.stripMargin,
-            "",
-            "generator_funcs",
-            "1.0",
-            "",
-            "built-in"
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a, b);
+            |        622236721274716159
+            |        622236721274716160
+            |        622236721274716161
+            |        ...
+            |
+            |  """.stripMargin,
+          "",
+          "generator_funcs",
+          "1.0",
+          "",
+          "built-in"
         )
 }

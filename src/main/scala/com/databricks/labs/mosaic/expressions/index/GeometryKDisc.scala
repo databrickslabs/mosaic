@@ -4,22 +4,11 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
 import com.databricks.labs.mosaic.core.Mosaic
-import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant, TernaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
-@ExpressionDescription(
-  usage = "_FUNC_(cellId, k) - Returns k disc for a given cell." +
-      "The k disc is the set of cells that are within the k ring set of cells " +
-      "but are not within the k-1 ring set of cells.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a, b);
-       [622236721348804607, 622236721274716159, ...]
-        """,
-  since = "1.0"
-)
 case class GeometryKDisc(
     geom: Expression,
     resolution: Expression,
@@ -114,5 +103,31 @@ case class GeometryKDisc(
     ): Expression = {
         copy(newFirst, newSecond, newThird)
     }
+
+}
+
+object GeometryKDisc {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+          classOf[GeometryKDisc].getCanonicalName,
+          db.orNull,
+          "grid_cellkdisc",
+          "_FUNC_(cellId, k) - Returns k disc for a given geometry." +
+              "The k disc is the set of cells that are within the k ring set of cells " +
+              "but are not within the k-1 ring set of cells.",
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a, b);
+            |       [622236721348804607, 622236721274716159, ...]
+            |  """.stripMargin,
+          "",
+          "collection_funcs",
+          "1.0",
+          "",
+          "built-in"
+        )
 
 }

@@ -430,19 +430,39 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => CellKRing(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("grid_cellkdisc", database),
-            CellKRing.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => CellKDisc(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+            FunctionIdentifier("grid_cellkringexplode", database),
+            CellKRingExplode.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => CellKRingExplode(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("grid_geometrykring", database),
-            CellKRing.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => GeometryKRing(exprs(0), exprs(1), exprs(2), indexSystem.name, geometryAPI.name)
+          FunctionIdentifier("grid_cellkdisc", database),
+          CellKDisc.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => CellKDisc(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("grid_geometrykdisc", database),
-            CellKRing.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => GeometryKDisc(exprs(0), exprs(1), exprs(2), indexSystem.name, geometryAPI.name)
+            FunctionIdentifier("grid_cellkdiscexplode", database),
+            CellKDiscExplode.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => CellKDiscExplode(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("grid_geometrykring", database),
+          GeometryKRing.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => GeometryKRing(exprs(0), exprs(1), exprs(2), indexSystem.name, geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("grid_geometrykringexplode", database),
+            GeometryKRingExplode.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => GeometryKRingExplode(exprs(0), exprs(1), exprs(2), indexSystem.name, geometryAPI.name)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("grid_geometrykdisc", database),
+          GeometryKDisc.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => GeometryKDisc(exprs(0), exprs(1), exprs(2), indexSystem.name, geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("grid_geometrykdiscexplode", database),
+            GeometryKDiscExplode.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => GeometryKDiscExplode(exprs(0), exprs(1), exprs(2), indexSystem.name, geometryAPI.name)
         )
 
         // DataType keywords are needed at checkInput execution time.
@@ -497,8 +517,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     object functions extends Serializable {
 
         /**
-          * functions should follow the pattern `def fname(argName: Type, ...):
-          * returnType = ...` failing to do so may brake the R build.
+          * functions should follow the pattern "def fname(argName: Type, ...):
+          * returnType = ..." failing to do so may brake the R build.
           */
 
         /** IndexSystem and GeometryAPI Agnostic methods */
@@ -756,6 +776,7 @@ object MosaicContext {
 
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {
         instance = Some(new MosaicContext(indexSystem, geometryAPI))
+        instance.get.setCellIdDataType(indexSystem.getCellIdDataType.typeName)
         context()
     }
 

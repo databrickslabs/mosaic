@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
 import com.databricks.labs.mosaic.core.Mosaic
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
@@ -37,6 +37,7 @@ case class GeometryKRingExplode(geom: Expression, resolution: Expression, k: Exp
         }
     }
 
+    //noinspection DuplicatedCode
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val geometryRaw = geom.eval(input)
         val resolutionRaw = resolution.eval(input)
@@ -68,4 +69,32 @@ case class GeometryKRingExplode(geom: Expression, resolution: Expression, k: Exp
 
 }
 
+object GeometryKRingExplode {
+
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+            classOf[GeometryKRingExplode].getCanonicalName,
+            db.orNull,
+            "grid_cellkringexplode",
+            """
+              |    _FUNC_(cell_id, resolution)) - Generates the geometry based kring cell IDs set for the input
+              |    geometry and the input k value.
+            """.stripMargin,
+            "",
+            """
+              |    Examples:
+              |      > SELECT _FUNC_(a, b);
+              |        622236721274716159
+              |        622236721274716160
+              |        622236721274716161
+              |        ...
+              |
+              |  """.stripMargin,
+            "",
+            "generator_funcs",
+            "1.0",
+            "",
+            "built-in"
+        )
+}
 

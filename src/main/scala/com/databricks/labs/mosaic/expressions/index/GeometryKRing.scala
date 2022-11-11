@@ -4,23 +4,11 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
 import com.databricks.labs.mosaic.core.Mosaic
-import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionDescription, NullIntolerant, TernaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
-@ExpressionDescription(
-  usage = "_FUNC_(cellId, res, k) - Returns the k ring for a given geometry." +
-      "The k ring is the set of cells that are within the k distance of the input" +
-      "geometry boundary. The k ring is produced using grid_tessellation. For each" +
-      "border cell, the k ring is computed and the set union of all k rings is returned.",
-  examples = """
-    Examples:
-      > SELECT _FUNC_(a, b, c);
-       [622236721348804607, 622236721274716159, ...]
-  """,
-  since = "1.0"
-)
 case class GeometryKRing(
     geom: Expression,
     resolution: Expression,
@@ -107,5 +95,32 @@ case class GeometryKRing(
     ): Expression = {
         copy(newFirst, newSecond, newThird)
     }
+
+}
+
+object GeometryKRing {
+
+    /** Entry to use in the function registry. */
+    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
+        new ExpressionInfo(
+            classOf[GeometryKRing].getCanonicalName,
+            db.orNull,
+            "grid_cellkring",
+            "_FUNC_(cellId, res, k) - Returns the k ring for a given geometry." +
+                "The k ring is the set of cells that are within the k distance of the input" +
+                "geometry boundary. The k ring is produced using grid_tessellation. For each" +
+                "border cell, the k ring is computed and the set union of all k rings is returned.",
+            "",
+            """
+              |    Examples:
+              |      > SELECT _FUNC_(a, b, c);
+              |       [622236721348804607, 622236721274716159, ...]
+              |  """.stripMargin,
+            "",
+            "collection_funcs",
+            "1.0",
+            "",
+            "built-in"
+        )
 
 }

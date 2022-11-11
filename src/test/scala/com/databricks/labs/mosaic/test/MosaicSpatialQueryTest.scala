@@ -35,6 +35,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                 SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "true",
                 SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
               ) {
+                  spark.sparkContext.setLogLevel("FATAL")
                   withMosaicContext(geom, is) {
                       testFun
                   }
@@ -56,6 +57,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                 SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
                 SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
               ) {
+                  spark.sparkContext.setLogLevel("FATAL")
                   withMosaicContext(geom, is) {
                       testFun
                   }
@@ -77,6 +79,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                     SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "true",
                     SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
                   ) {
+                      spark.sparkContext.setLogLevel("FATAL")
                       withMosaicContext(geom, is) {
                           testFun
                       }
@@ -98,6 +101,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                     SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
                     SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
                   ) {
+                      spark.sparkContext.setLogLevel("FATAL")
                       withMosaicContext(geom, is) {
                           testFun
                       }
@@ -138,12 +142,14 @@ object MosaicSpatialQueryTest extends Assertions {
         val actualGeoms = actualAnswer
             .withColumn("answer_wkt", st_aswkt(col(geometryFieldName)))
             .select(col("answer_wkt"))
+            .orderBy("answer_wkt")
             .collect()
             .map(_.getString(0))
             .map(mc.getGeometryAPI.geometry(_, "WKT"))
         val expectedGeoms = expectedAnswer
             .withColumn("answer_wkt", st_aswkt(col(geometryFieldName)))
             .select(col("answer_wkt"))
+            .orderBy("answer_wkt")
             .collect()
             .map(_.getString(0))
             .map(mc.getGeometryAPI.geometry(_, "WKT"))
