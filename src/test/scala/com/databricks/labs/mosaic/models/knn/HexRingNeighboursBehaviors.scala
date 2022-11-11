@@ -4,20 +4,26 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.scalatest.matchers.should.Matchers._
 
-trait HexRingNeighboursBehaviors extends QueryTest {
+trait HexRingNeighboursBehaviors extends MosaicSpatialQueryTest {
 
-    def leftTransform(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+    def leftTransform(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val sc = spark
         import sc.implicits._
 
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         import mc.functions._
         mc.register()
+
+        val (resolution, distanceThreshold) = mc.getIndexSystem match {
+            case H3IndexSystem  => (7, 0.1)
+            case BNGIndexSystem => (2, 50000)
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -34,6 +40,7 @@ trait HexRingNeighboursBehaviors extends QueryTest {
 
         val hexRingNeighbours = HexRingNeighbours(boroughs)
             .setLeftFeatureCol("wkt")
+            .setRightFeatureCol("wkt")
             .setIndexResolution(resolution)
 
         // test iteration 0
@@ -56,26 +63,36 @@ trait HexRingNeighboursBehaviors extends QueryTest {
 
         // test final iteration, iteration ID == -1
         val hexRingNeighboursFinal = hexRingNeighbours.setIterationID(-1)
-        val inputFinal = boroughs.withColumn("iteration", pmod(col("id"), lit(5)).cast("int"))
+        val inputFinal = boroughs
+            .withColumn("iteration", pmod(col("id"), lit(5)).cast("int"))
+            .withColumn(hexRingNeighbours.distanceCol, lit(distanceThreshold))
+            .withColumn("left_miid", col("id"))
         val resultFinal = getCounts(hexRingNeighboursFinal.leftTransform(inputFinal))
         val expectedFinal = getExpectedCounts(
           inputFinal
-              .withColumn("neighbours_1", grid_geometrykdisc(col("wkt"), resolution, col("iteration") + 1))
-              .withColumn("neighbours_2", grid_geometrykdisc(col("wkt"), resolution, col("iteration") + 2))
-              .withColumn("neighbours", array_union(col("neighbours_1"), col("neighbours_2")))
-              .drop("neighbours_1", "neighbours_2")
+              .withColumn("to_exclude", grid_geometrykring(col("wkt"), resolution, col("iteration")))
+              // here it is fine not to use max over window since our distance is constant
+              .withColumn("buffer", st_buffer(col("wkt"), col(hexRingNeighbours.distanceCol)))
+              .withColumn("candidates", grid_tessellate(col("buffer"), resolution).getField("chips").getField("index_id"))
+              .withColumn("neighbours", array_except(col("candidates"), col("to_exclude")))
+              .drop("to_exclude", "buffer", "candidates")
         )
         resultFinal should contain theSameElementsAs expectedFinal
     }
 
-    def resultTransform(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+    def resultTransform(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val sc = spark
         import sc.implicits._
 
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         import mc.functions._
         mc.register()
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 5
+            case BNGIndexSystem => -4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -131,14 +148,19 @@ trait HexRingNeighboursBehaviors extends QueryTest {
 
     }
 
-    def transform(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int, iteration: Int): Unit = {
+    def transform(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val sc = spark
         import sc.implicits._
 
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         import mc.functions._
         mc.register()
+
+        val (resolution, iteration) = mc.getIndexSystem match {
+            case H3IndexSystem  => (5, 4)
+            case BNGIndexSystem => (-4, 2)
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 

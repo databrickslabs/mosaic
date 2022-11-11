@@ -1,23 +1,25 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
-import org.apache.spark.sql.{DataFrame, QueryTest}
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
-trait PointIndexBehaviors extends QueryTest {
+trait PointIndexBehaviors extends MosaicSpatialQueryTest {
 
-    def wktPointIndex(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
+    def behaviorInt(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
+
+        val resolution = 5
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -44,11 +46,16 @@ trait PointIndexBehaviors extends QueryTest {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def wktPointIndex(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: String): Unit = {
+    def behaviorString(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => "5"
+            case BNGIndexSystem => "100m"
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -75,11 +82,14 @@ trait PointIndexBehaviors extends QueryTest {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         mc.register(spark)
         import mc.functions._
+
+        val indexSystem = mc.getIndexSystem
+        val geometryAPI = mc.getGeometryAPI
 
         indexSystem match {
             case BNGIndexSystem =>

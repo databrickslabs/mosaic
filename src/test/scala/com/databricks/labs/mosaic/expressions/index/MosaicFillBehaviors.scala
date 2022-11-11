@@ -2,22 +2,25 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks
+import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
-trait MosaicFillBehaviors {
-    this: AnyFlatSpec =>
+trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
 
-    def wktMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def wktMosaicFill(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -40,10 +43,15 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def wkbMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def wkbMosaicFill(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -66,10 +74,15 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def hexMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def hexMosaicFill(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -92,10 +105,15 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def coordsMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def coordsMosaicFill(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -118,10 +136,15 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def wktMosaicFillKeepCoreGeom(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def wktMosaicFillKeepCoreGeom(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -144,7 +167,7 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         mosaicContext.register(spark)
         val sc = spark

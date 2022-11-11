@@ -1,24 +1,29 @@
 package com.databricks.labs.mosaic.models
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.models.knn.ApproximateSpatialKNN
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
-import org.apache.spark.sql.{DataFrame, QueryTest}
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.scalatest.matchers.must.Matchers.{be, contain, noException}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.nio.file.Files
 
-trait ApproximateSpatialKNNBehaviors extends QueryTest {
+trait ApproximateSpatialKNNBehaviors extends MosaicSpatialQueryTest {
 
-    def wktKNN(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int, distanceThreshold: Double): Unit = {
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+    def behavior(mosaicContext: MosaicContext): Unit = {
+        val mc = mosaicContext
         mc.register()
         val sc = spark
         import sc.implicits._
+
+        val (resolution, distanceThreshold) = mc.getIndexSystem match {
+            case H3IndexSystem  => (3, 100.0)
+            case BNGIndexSystem => (-3, 10000.0)
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 

@@ -7,10 +7,11 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.uber.h3core.H3Core
 import com.uber.h3core.util.GeoCoord
 import org.apache.spark.sql.types.LongType
+import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
 
 import scala.collection.JavaConverters._
-import scala.util.Try
+import scala.util.{Success, Try}
 
 /**
   * Implements the [[IndexSystem]] via [[H3Core]] java bindings.
@@ -34,7 +35,16 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       *   Int value representing the resolution.
       */
     override def getResolution(res: Any): Int = {
-        val resolution: Int = res.asInstanceOf[Int]
+        val resolution = (
+          Try(res.asInstanceOf[Int]),
+          Try(res.asInstanceOf[String]),
+          Try(res.asInstanceOf[UTF8String].toString)
+        ) match {
+            case (Success(i), _, _) => i
+            case (_, Success(s), _) => s.toInt
+            case (_, _, Success(s)) => s.toInt
+            case _                  => throw new IllegalArgumentException("Resolution must be an Int or String.")
+        }
         if (resolution < 0 | resolution > 15) {
             throw new IllegalStateException(s"H3 resolution has to be between 0 and 15; found $resolution")
         }

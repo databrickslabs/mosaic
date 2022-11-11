@@ -1,10 +1,9 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import com.databricks.labs.mosaic.functions.MosaicContext
-import org.apache.spark.sql.QueryTest
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.functions.lit
@@ -12,15 +11,15 @@ import org.apache.spark.sql.types._
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
-trait IndexGeometryBehaviors extends QueryTest {
+trait IndexGeometryBehaviors extends MosaicSpatialQueryTest {
 
-    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         mc.register(spark)
 
-        val indexSystemName = indexSystem.name
-        val geometryAPIName = geometryAPI.name
+        val indexSystemName = mc.getIndexSystem.name
+        val geometryAPIName = mc.getGeometryAPI.name
 
         val gridCellLong = MosaicContext.indexSystem() match {
             case BNGIndexSystem => lit(1050138790L).expr

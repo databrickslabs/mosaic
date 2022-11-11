@@ -313,6 +313,17 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_Buffer(exprs(0), ColumnAdapter(exprs(1)).cast("double").expr, geometryAPI.name)
         )
         registry.registerFunction(
+            FunctionIdentifier("st_bufferdisc", database),
+            ST_BufferDisc.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) =>
+                ST_BufferDisc(
+                    exprs(0),
+                    ColumnAdapter(exprs(1)).cast("double").expr,
+                    ColumnAdapter(exprs(2)).cast("double").expr,
+                    geometryAPI.name
+                )
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_numpoints", database),
           ST_NumPoints.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_NumPoints(exprs(0), geometryAPI.name)
@@ -534,6 +545,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_Buffer(geom.expr, radius.cast("double").expr, geometryAPI.name))
         def st_buffer(geom: Column, radius: Double): Column =
             ColumnAdapter(ST_Buffer(geom.expr, lit(radius).cast("double").expr, geometryAPI.name))
+        def st_bufferdisc(geom: Column, r1: Column, r2: Column): Column =
+            ColumnAdapter(ST_BufferDisc(geom.expr, r1.cast("double").expr, r2.cast("double").expr, geometryAPI.name))
+        def st_bufferdisc(geom: Column, r1: Double, r2: Double): Column =
+            ColumnAdapter(ST_BufferDisc(geom.expr, lit(r1).cast("double").expr, lit(r2).cast("double").expr, geometryAPI.name))
         def st_centroid2D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, geometryAPI.name))
         def st_centroid3D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, geometryAPI.name, 3))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))

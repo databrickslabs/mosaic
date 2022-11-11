@@ -31,35 +31,33 @@ class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
       with DefaultParamsWritable
       with Logging {
 
-    /**
-     * A default constructor that is needed for loading the transformer.
-     * Note that loaded transformers will not have a right DataFrame.
-     * And right DataFrame must be set before the transformer can be used.
-     */
-    def this() = this(Identifiable.randomUID("ApproximateSpatialKNN"), null)
-
-    /**
-     * A constructor that is needed for loading the transformer.
-     * Note that loaded transformers will not have a right DataFrame.
-     * And right DataFrame must be set before the transformer can be used.
-     */
-    def this(uid: String) = this(uid, null)
-
-
     // The MosaicContext is used to access the functions in the Mosaic library.
     private val mc = MosaicContext.context()
-    import mc.functions._
-
     // The HexRingNeighbours transformer is used to find the neighbours of each geometry.
     // It is configured using the parameters of this transformer.
     private val hexRingNeighboursTf = HexRingNeighbours(rightDf)
     // The checkpoint manager is used to manage the checkpointing of the interim matches.
     // We are using delta checkpoints to avoid the overhead of writing the entire DataFrame and unneeded unions.
     var matchesCheckpoint: CheckpointManager = _
+    import mc.functions._
     // A variable Dataset used to store current state of the matching process.
     private var matches: Dataset[_] = _
     // The number of current matches.
     private var matchCount: Long = 0
+
+    /**
+      * A default constructor that is needed for loading the transformer. Note
+      * that loaded transformers will not have a right DataFrame. And right
+      * DataFrame must be set before the transformer can be used.
+      */
+    def this() = this(Identifiable.randomUID("ApproximateSpatialKNN"), null)
+
+    /**
+      * A constructor that is needed for loading the transformer. Note that
+      * loaded transformers will not have a right DataFrame. And right DataFrame
+      * must be set before the transformer can be used.
+      */
+    def this(uid: String) = this(uid, null)
 
     /**
       * A copy constructor that takes a new right DataFrame. The right DataFrame
@@ -91,6 +89,7 @@ class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
         input
             .withColumn(getLeftRowID, monotonically_increasing_id())
             .withColumn("iteration", lit(1))
+            .withColumn("match_radius", lit(0.0))
     }
 
     /**
@@ -134,14 +133,15 @@ class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
         val newMatches = hexRingNeighboursTf.transform(dataset)
         matches = matchesCheckpoint.append(newMatches)
 
-        val groupByCols = dataset.columns.filterNot(Seq("iteration", getLeftRowID).contains)
+        val groupByCols = dataset.columns.filterNot(Seq("iteration", "match_radius", getLeftRowID).contains)
         val result = matches
             // Apply distance threshold but dont drop null matches
             .where(coalesce(col(hexRingNeighboursTf.distanceCol) <= getDistanceThreshold, lit(true)))
             .groupBy(getLeftRowID, groupByCols: _*)
             .agg(
               sum(col(getRightRowID).isNotNull.cast("int")).alias("match_count"),
-              max("iteration").alias("iteration")
+              max("iteration").alias("iteration"),
+              max(hexRingNeighboursTf.distanceCol).alias("match_radius")
             )
             // Null matches are still counted, so we need to subtract 1
             .where(col("match_count") - 1 < getKNeighbours)
@@ -169,7 +169,7 @@ class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
         // The final iteration uses last match iteration number + 1 for determining the hex ring neighbours.
         hexRingNeighboursTf
             .setIterationID(-1)
-        iterationTransform(result)
+        iterationTransform(result.withColumnRenamed("match_radius", hexRingNeighboursTf.distanceCol))
     }
 
     /**

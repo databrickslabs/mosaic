@@ -59,12 +59,15 @@ case class HexRingNeighbours(override val uid: String, var right: Dataset[_])
 
     /**
       * Transforms the left dataset before the join is performed. The left
-      * transformations are: <ul> <li>If the iteration is 0: Add a column with
+      * transformations are: <ul> <li>If the iteration is 1: Add a column with
       * the kring of the left geometries.</li> <li>If the iteration is greater
       * than 1: Add a column with the kdisc of the left geometries.</li> <li>If
-      * the iteration is == -1: Add a column with the kring of the left
-      * geometries based on the iteration column.</li> <li>Wrap the generated
-      * index IDs into logical chips.</li> </ul>
+      * the iteration is == -1: Add last iteration logic that ensures exactness
+      * of the neighbour candidates. The last iteration is based on the buffered
+      * geometry by the distance between geometry and Kth neighbour candidate.
+      * We will use this buffer to check for any neighbor closer than current
+      * Kth neighbour that we may have missed due to grid cell distortions.</li>
+      * <li>Wrap the generated index IDs into logical chips.</li> </ul>
       * @param left
       *   The left DataFrame to transform.
       * @return
@@ -73,33 +76,26 @@ case class HexRingNeighbours(override val uid: String, var right: Dataset[_])
     override def leftTransform(left: Dataset[_]): DataFrame = {
         // Ensure logical projection doesnt break leftTransform
         val featureCol = left.columns.find(_ == getLeftFeatureCol).getOrElse(s"left_$getLeftFeatureCol")
-        left
-            .withColumn(leftKringCol, rippleFunction(col(featureCol)))
-            .withColumn(leftKringCol, grid_wrapaschip(col(leftKringCol), isCore = true, getCellGeom = false))
-    }
+        val i = getIterationID
+        val res = getIndexResolution
+        val result =
+            if (i == -1) {
+                left
+                    .withColumn(s"max_$distanceCol", max(distanceCol).over(window))
+                    .withColumn("max_iteration", max("iteration").over(window))
+                    .withColumn("iteratedCells", grid_geometrykring(col(featureCol), res, col("max_iteration")))
+                    .withColumn("missedCandidateCells", grid_tessellate(st_buffer(col(featureCol), col(s"max_$distanceCol")), res))
+                    .withColumn("missedCandidateCells", col("missedCandidateCells").getField("chips").getField("index_id"))
+                    .withColumn(leftKringCol, explode(array_except(col("missedCandidateCells"), col("iteratedCells"))))
+                    .drop(s"max_$distanceCol", "max_iteration", "iteratedCells", "missedCandidateCells")
+            } else if (i == 1) {
+                left.withColumn(leftKringCol, grid_geometrykringexplode(col(featureCol), res, i))
+            } else {
+                left.withColumn(leftKringCol, grid_geometrykdiscexplode(col(featureCol), res, i))
+            }
 
-    /**
-      * Select and apply the correct ring/disc grid function based on the
-      * iteration. If the iteration is 0, the kring function is used. If the
-      * iteration is greater than 0, the kdisc function is used. The iteration
-      * and resolution are passed to the kdisc function from the Params context.
-      *
-      * @param geom
-      *   The geometry column to apply the function to.
-      * @return
-      *   The function to apply to the geometry column.
-      */
-    def rippleFunction(geom: Column): Column = {
-        if (getIterationID == 1) grid_geometrykringexplode(geom, getIndexResolution, getIterationID)
-        // due to the way hexes are forming the rings we need at least 2 additional iterations
-        // to avoid missing matches in the end result for converged iterations
-        else if (getIterationID == -1) explode(
-          array_union(
-            grid_geometrykdisc(geom, getIndexResolution, col("iteration") + 1),
-            grid_geometrykdisc(geom, getIndexResolution, col("iteration") + 2)
-          )
-        )
-        else grid_geometrykdiscexplode(geom, getIndexResolution, getIterationID)
+        result
+            .withColumn(leftKringCol, grid_wrapaschip(col(leftKringCol), isCore = true, getCellGeom = false))
     }
 
     /**
