@@ -3,7 +3,12 @@ package com.databricks.labs.mosaic.functions
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.test.SharedSparkSession
 
+import scala.util.Try
+
 class MosaicContextTest extends MosaicSpatialQueryTest with SharedSparkSession with MosaicContextBehaviors {
+
+    // Hotfix for SharedSparkSession afterAll cleanup.
+    override def afterAll(): Unit = Try(super.afterAll())
 
     testAllNoCodegen("MosaicContext context creation") { creationOfContext }
     testAllNoCodegen("MosaicContext sql registration") { sqlRegistration }

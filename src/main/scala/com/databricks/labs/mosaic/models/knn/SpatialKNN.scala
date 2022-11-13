@@ -15,7 +15,7 @@ import org.apache.spark.sql.types._
   * A transformer that takes a DataFrame with a column of geometries and returns
   * a DataFrame with matching geometries and their neighbours from the right
   * DataFrame. The right DataFrame must have a column of geometries. The
-  * transformer is configured using the [[ApproximateSpatialKNNParams]] class.
+  * transformer is configured using the [[SpatialKNNParams]] class.
   * @param uid
   *   A unique identifier for the transformer. This is used to identify the
   *   transformer when saving and loading the transformer. The default value is
@@ -24,10 +24,10 @@ import org.apache.spark.sql.types._
   *   The right DataFrame to join with. This DataFrame must have a column of
   *   geometries.
   */
-class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
+class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
     extends Transformer
       with IterativeTransformer
-      with ApproximateSpatialKNNParams
+      with SpatialKNNParams
       with DefaultParamsWritable
       with Logging {
 
@@ -166,10 +166,16 @@ class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
       */
     override def resultTransform(result: Dataset[_]): DataFrame = {
         // Final iteration logic is encoded with iterationID == -1.
-        // The final iteration uses last match iteration number + 1 for determining the hex ring neighbours.
-        hexRingNeighboursTf
-            .setIterationID(-1)
-        iterationTransform(result.withColumnRenamed("match_radius", hexRingNeighboursTf.distanceCol))
+        // The final iteration uses Kth neighbour distance for the match radius.
+        if (getApproximate) {
+            result.toDF()
+        } else {
+            val finalInput = result
+                .withColumn("iteration", col("iteration") + 1)
+                .withColumnRenamed("match_radius", hexRingNeighboursTf.distanceCol)
+            hexRingNeighboursTf
+                .setIterationID(-1)
+            iterationTransform(finalInput)        }
     }
 
     /**
@@ -232,7 +238,7 @@ class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
             .add("neighbour_number", IntegerType, nullable = false)
     }
 
-    override def copy(extra: ParamMap): ApproximateSpatialKNN = defaultCopy(extra)
+    override def copy(extra: ParamMap): SpatialKNN = defaultCopy(extra)
 
     /**
       * @return
@@ -301,13 +307,13 @@ class ApproximateSpatialKNN(override val uid: String, var rightDf: Dataset[_])
 }
 
 /**
-  * A companion object for the [[ApproximateSpatialKNN]] transformer. Implements
-  * the apply constructor for the [[ApproximateSpatialKNN]] transformer.
-  * Implements the default reader for the [[ApproximateSpatialKNN]] transformer.
+  * A companion object for the [[SpatialKNN]] transformer. Implements
+  * the apply constructor for the [[SpatialKNN]] transformer.
+  * Implements the default reader for the [[SpatialKNN]] transformer.
   */
-object ApproximateSpatialKNN extends DefaultParamsReadable[ApproximateSpatialKNN] {
+object SpatialKNN extends DefaultParamsReadable[SpatialKNN] {
 
-    def apply(rightDf: Dataset[_]): ApproximateSpatialKNN =
-        new ApproximateSpatialKNN(Identifiable.randomUID("approximate_spatial_knn"), rightDf)
+    def apply(rightDf: Dataset[_]): SpatialKNN =
+        new SpatialKNN(Identifiable.randomUID("approximate_spatial_knn"), rightDf)
 
 }

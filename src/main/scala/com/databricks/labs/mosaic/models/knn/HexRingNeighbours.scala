@@ -154,7 +154,7 @@ case class HexRingNeighbours(override val uid: String, var right: Dataset[_])
             .withColumn("is_self_match", hash(col(getLeftFeatureCol)) === hash(col(projectedRightFeature)))
             .where(!col("is_self_match"))
             .withColumn("neighbour_number", row_number().over(window))
-            .withColumn("iteration", lit(getIterationID))
+            .withColumn("iteration", if (getIterationID == -1) col("iteration") else lit(getIterationID))
             .drop("is_self_match")
 
     }

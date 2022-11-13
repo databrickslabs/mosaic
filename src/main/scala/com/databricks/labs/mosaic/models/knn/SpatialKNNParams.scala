@@ -3,10 +3,13 @@ package com.databricks.labs.mosaic.models.knn
 import com.databricks.labs.mosaic.models.core.IterativeTransformerParams
 import org.apache.spark.ml.param._
 
-trait ApproximateSpatialKNNParams extends Params with IterativeTransformerParams {
+trait SpatialKNNParams extends Params with IterativeTransformerParams {
 
     val useTableCheckpoint: BooleanParam =
         new BooleanParam(this, "useTableCheckpoint", "Use a table checkpoint to store intermediate results.")
+
+    val approximate: BooleanParam =
+        new BooleanParam(this, "approximate", "Whether to use approximation that runs faster or to ensure exactness.")
 
     val leftFeatureCol: Param[String] = new Param[String](this, "leftFeatureCol", "Column name of a column containing the geo feature.")
 
@@ -34,6 +37,8 @@ trait ApproximateSpatialKNNParams extends Params with IterativeTransformerParams
 
     def getUseTableCheckpoint: Boolean = $(useTableCheckpoint)
 
+    def getApproximate: Boolean = $(approximate)
+
     def getLeftFeatureCol: String = $(leftFeatureCol)
 
     def getLeftRowID: String = if (isDefined(leftRowID)) $(leftRowID) else "left_miid"
@@ -51,6 +56,8 @@ trait ApproximateSpatialKNNParams extends Params with IterativeTransformerParams
     def getKNeighbours: Int = $(kNeighbours)
 
     def setUseTableCheckpoint(b: Boolean): this.type = set(useTableCheckpoint, b)
+
+    def setApproximate(b: Boolean): this.type = set(approximate, b)
 
     def setLeftFeatureCol(col: String): this.type = set(leftFeatureCol, col)
 
