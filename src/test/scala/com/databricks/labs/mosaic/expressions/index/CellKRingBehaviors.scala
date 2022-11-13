@@ -68,6 +68,8 @@ trait CellKRingBehaviors extends MosaicSpatialQueryTest {
 
         noException should be thrownBy mc.functions.grid_cellkring(lit(""), lit(k))
         noException should be thrownBy mc.functions.grid_cellkring(lit(""), k)
+
+        noException should be thrownBy cellKRingExpr.makeCopy(cellKRingExpr.children.toArray)
     }
 
 }

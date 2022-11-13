@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.functions._
 import org.scalatest.matchers.should.Matchers._
 
@@ -45,17 +46,19 @@ trait GeometryKRingExplodeBehaviors extends MosaicSpatialQueryTest {
         val k = 4
         val resolution = 3
 
-        val cellKRingExplodeExpr = GeometryKRingExplode(
+        val geomKRingExplodeExpr = GeometryKRingExplode(
           lit(wkt).expr,
           lit(resolution).expr,
           lit(k).expr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
+        val withNull = geomKRingExplodeExpr.copy(geom = lit(null).expr)
 
-        cellKRingExplodeExpr.position shouldEqual false
-        cellKRingExplodeExpr.inline shouldEqual false
-        cellKRingExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
+        geomKRingExplodeExpr.position shouldEqual false
+        geomKRingExplodeExpr.inline shouldEqual false
+        geomKRingExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
+        withNull.eval(InternalRow.fromSeq(Seq(null, null, null))) shouldEqual Seq.empty
 
         val badExpr = GeometryKRingExplode(
           lit(10).expr,
@@ -70,11 +73,16 @@ trait GeometryKRingExplodeBehaviors extends MosaicSpatialQueryTest {
             .withNewChildren(Array(lit(wkt).expr, lit(true).expr, lit(true).expr))
             .checkInputDataTypes()
             .isFailure shouldEqual true
+        geomKRingExplodeExpr
+            .copy(k = lit(true).expr)
+            .checkInputDataTypes()
+            .isFailure shouldEqual true
+
 
         // Default getters
-        noException should be thrownBy cellKRingExplodeExpr.geom
-        noException should be thrownBy cellKRingExplodeExpr.resolution
-        noException should be thrownBy cellKRingExplodeExpr.k
+        noException should be thrownBy geomKRingExplodeExpr.geom
+        noException should be thrownBy geomKRingExplodeExpr.resolution
+        noException should be thrownBy geomKRingExplodeExpr.k
 
         noException should be thrownBy mc.functions.grid_cellkdiscexplode(lit(""), lit(5))
         noException should be thrownBy mc.functions.grid_cellkdiscexplode(lit(""), 5)

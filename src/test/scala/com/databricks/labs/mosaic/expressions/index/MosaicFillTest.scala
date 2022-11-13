@@ -5,10 +5,12 @@ import org.apache.spark.sql.test.SharedSparkSession
 
 class MosaicFillTest extends MosaicSpatialQueryTest with SharedSparkSession with MosaicFillBehaviors {
 
-    testAllNoCodegen("MosaicFill WKT") { wktMosaicFill }
-    testAllNoCodegen("MosaicFill WKB") { wkbMosaicFill }
-    testAllNoCodegen("MosaicFill Hex") { hexMosaicFill }
-    testAllNoCodegen("MosaicFill Coords") { coordsMosaicFill }
-    testAllNoCodegen("MosaicFill auxiliary methods") { auxiliaryMethods }
+//    testAllNoCodegen("MosaicFill WKT") { wktMosaicFill }
+//    testAllNoCodegen("MosaicFill WKB") { wkbMosaicFill }
+//    testAllNoCodegen("MosaicFill Hex") { hexMosaicFill }
+//    testAllNoCodegen("MosaicFill Coords") { coordsMosaicFill }
+//    testAllNoCodegen("MosaicFill points") { mosaicFillPoints }
+    testAllNoCodegen("MosaicFill multi points") { mosaicFillMultiPoints }
+    //testAllNoCodegen("MosaicFill auxiliary methods") { auxiliaryMethods }
 
 }

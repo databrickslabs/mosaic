@@ -10,7 +10,7 @@ import org.apache.spark.sql.types._
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
-trait GeometryRingBehaviors extends MosaicSpatialQueryTest {
+trait GeometryKRingBehaviors extends MosaicSpatialQueryTest {
 
     def behavior(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
@@ -43,7 +43,7 @@ trait GeometryRingBehaviors extends MosaicSpatialQueryTest {
         val k = 4
         val resolution = 3
 
-        val cellKRingExpr = GeometryKRing(
+        val geometryKRingExpr = GeometryKRing(
           lit(wkt).expr,
           lit(resolution).expr,
           lit(k).expr,
@@ -52,8 +52,8 @@ trait GeometryRingBehaviors extends MosaicSpatialQueryTest {
         )
 
         mc.getIndexSystem match {
-            case H3IndexSystem  => cellKRingExpr.dataType shouldEqual ArrayType(LongType)
-            case BNGIndexSystem => cellKRingExpr.dataType shouldEqual ArrayType(StringType)
+            case H3IndexSystem  => geometryKRingExpr.dataType shouldEqual ArrayType(LongType)
+            case BNGIndexSystem => geometryKRingExpr.dataType shouldEqual ArrayType(StringType)
         }
 
         val badExpr = GeometryKRing(
@@ -70,6 +70,8 @@ trait GeometryRingBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy mc.functions.grid_geometrykring(lit(""), lit(resolution), k)
         noException should be thrownBy mc.functions.grid_geometrykring(lit(""), resolution, lit(k))
         noException should be thrownBy mc.functions.grid_geometrykring(lit(""), resolution, k)
+
+        noException should be thrownBy geometryKRingExpr.makeCopy(geometryKRingExpr.children.toArray)
     }
 
 }

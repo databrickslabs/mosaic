@@ -66,6 +66,9 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(105013887911L)) shouldBe -5
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(10501388279114L)) shouldBe -6
 
+        an[IllegalStateException] should be thrownBy BNGIndexSystem.pointToIndex(Double.NaN, 100.0, 5)
+        an[IllegalStateException] should be thrownBy BNGIndexSystem.pointToIndex(100.0, Double.NaN, 5)
+
     }
 
     "Parse and Format" should "generate consistent results." in {
@@ -149,12 +152,23 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         kRing3 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2).union(kDisk3)
     }
 
+    "IsValid" should "return correct validity" in {
+        val cellId = BNGIndexSystem.pointToIndex(-50000.0, 50.0, 3)
+        val cellId2 = BNGIndexSystem.pointToIndex(50.0, 500000000.0, 4)
+        BNGIndexSystem.isValid(cellId) shouldBe false
+        BNGIndexSystem.isValid(cellId2) shouldBe false
+
+    }
+
     "Auxiliary methods" should "not throw exceptions" in {
         noException should be thrownBy BNGIndexSystem.getResolution(5)
         noException should be thrownBy BNGIndexSystem.getResolution("100m")
         noException should be thrownBy BNGIndexSystem.getResolution(UTF8String.fromString("100m"))
+        an[IllegalStateException] should be thrownBy BNGIndexSystem.getResolution(true)
         BNGIndexSystem.getResolutionStr(4) shouldEqual "100m"
         BNGIndexSystem.getResolutionStr(-4) shouldEqual "500m"
+        BNGIndexSystem.getResolutionStr(7) shouldEqual ""
+        an[Exception] should be thrownBy BNGIndexSystem.polyfill(null, 0, None)
     }
 
 }

@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.index
 
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
@@ -167,6 +168,63 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
+    def mosaicFillPoints(mosaicContext: MosaicContext): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+        mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
+
+        val boroughs: DataFrame = getBoroughs(mc)
+            .withColumn("centroid", st_centroid2D(col("wkt")))
+            .withColumn("centroid", st_point(col("centroid.x"), col("centroid.y")))
+
+        val mosaics = boroughs
+            .select(
+              mosaicfill(col("centroid"), resolution, keepCoreGeometries = true)
+            )
+            .collect()
+
+        boroughs.collect().length shouldEqual mosaics.length
+    }
+
+    def mosaicFillMultiPoints(mosaicContext: MosaicContext): Unit = {
+        val sc = spark
+        val mc = mosaicContext
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
+
+        val geometryAPI = mc.getGeometryAPI
+
+        val boroughs: DataFrame = getBoroughs(mc)
+            .select("wkt")
+            .as[String]
+            .map(wkt => {
+                val geom = geometryAPI.geometry(wkt, "WKT")
+                val boundaryPoints = geom.getBoundary.getShellPoints.flatten
+                val multiPoint = boundaryPoints.tail.fold(boundaryPoints.head.asInstanceOf[MosaicGeometry])((mp, p) => mp.union(p))
+                multiPoint.toWKT
+            })
+            .toDF("wkt")
+
+        val mosaics = boroughs
+            .select(
+              mosaicfill(col("wkt"), resolution, keepCoreGeometries = true)
+            )
+            .collect()
+
+        boroughs.collect().length shouldEqual mosaics.length
+    }
+
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         mosaicContext.register(spark)
@@ -214,6 +272,8 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), lit(true))
         noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), keepCoreGeometries = true)
         noException should be thrownBy mc.functions.mosaicfill(lit(""), 5, keepCoreGeometries = true)
+
+        noException should be thrownBy mosaicfillExpr.makeCopy(mosaicfillExpr.children.toArray)
     }
 
 }

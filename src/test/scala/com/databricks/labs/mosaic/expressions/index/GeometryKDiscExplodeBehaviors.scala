@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.functions._
 import org.scalatest.matchers.should.Matchers._
 
@@ -53,9 +54,12 @@ trait GeometryKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
           mc.getGeometryAPI.name
         )
 
+        val withNull = geomKDiscExplodeExpr.copy(geom = lit(null).expr)
+
         geomKDiscExplodeExpr.position shouldEqual false
         geomKDiscExplodeExpr.inline shouldEqual false
         geomKDiscExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
+        withNull.eval(InternalRow.fromSeq(Seq(null, null, null))) shouldEqual Seq.empty
 
         val badExpr = GeometryKDiscExplode(
           lit(10).expr,
@@ -68,6 +72,10 @@ trait GeometryKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
         badExpr.checkInputDataTypes().isFailure shouldEqual true
         badExpr
             .withNewChildren(Array(lit(wkt).expr, lit(true).expr, lit(true).expr))
+            .checkInputDataTypes()
+            .isFailure shouldEqual true
+        geomKDiscExplodeExpr
+            .copy(k = lit(true).expr)
             .checkInputDataTypes()
             .isFailure shouldEqual true
 

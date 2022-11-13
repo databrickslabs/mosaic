@@ -43,7 +43,7 @@ trait GeometryKDiscBehaviors extends MosaicSpatialQueryTest {
         val k = 4
         val resolution = 3
 
-        val cellKDiscExpr = GeometryKDisc(
+        val geometryKDiscExpr = GeometryKDisc(
           lit(wkt).expr,
           lit(resolution).expr,
           lit(k).expr,
@@ -52,8 +52,8 @@ trait GeometryKDiscBehaviors extends MosaicSpatialQueryTest {
         )
 
         mc.getIndexSystem match {
-            case H3IndexSystem  => cellKDiscExpr.dataType shouldEqual ArrayType(LongType)
-            case BNGIndexSystem => cellKDiscExpr.dataType shouldEqual ArrayType(StringType)
+            case H3IndexSystem  => geometryKDiscExpr.dataType shouldEqual ArrayType(LongType)
+            case BNGIndexSystem => geometryKDiscExpr.dataType shouldEqual ArrayType(StringType)
         }
 
         val badExpr = GeometryKDisc(
@@ -70,6 +70,8 @@ trait GeometryKDiscBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy mc.functions.grid_geometrykdisc(lit(""), lit(resolution), k)
         noException should be thrownBy mc.functions.grid_geometrykdisc(lit(""), resolution, lit(k))
         noException should be thrownBy mc.functions.grid_geometrykdisc(lit(""), resolution, k)
+
+        noException should be thrownBy geometryKDiscExpr.makeCopy(geometryKDiscExpr.children.toArray)
     }
 
 }

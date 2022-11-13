@@ -196,6 +196,8 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
         // legacy API def tests
         noException should be thrownBy mc.functions.polyfill(lit(""), lit(5))
         noException should be thrownBy mc.functions.polyfill(lit(""), 5)
+
+        noException should be thrownBy polyfillExpr.makeCopy(polyfillExpr.children.toArray)
     }
 
 }

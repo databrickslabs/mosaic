@@ -68,6 +68,9 @@ trait CellKDiscBehaviors extends MosaicSpatialQueryTest {
 
         noException should be thrownBy mc.functions.grid_cellkdisc(lit(""), lit(k))
         noException should be thrownBy mc.functions.grid_cellkdisc(lit(""), k)
+
+        noException should be thrownBy cellKDiscExpr.makeCopy(cellKDiscExpr.children.toArray)
+        noException should be thrownBy cellKDiscExpr.withNewChildrenInternal(Array(cellKDiscExpr.children: _*))
     }
 
 }
