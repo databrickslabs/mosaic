@@ -1,11 +1,11 @@
 from pyspark.sql import SparkSession, DataFrame, SQLContext
 from mosaic.utils import scala_utils
 
-class ApproximateSpatialKNN:
+class SpatialKNN:
     def __init__(self, right_df):
         self.spark = SparkSession.builder.getOrCreate()
         self.model = getattr(
-            self.spark._jvm.com.databricks.labs.mosaic.models.knn, "ApproximateSpatialKNN"
+            self.spark._jvm.com.databricks.labs.mosaic.models.knn, "SpatialKNN"
         )()
         self.model.setRightDf(right_df._jdf)
 
@@ -13,16 +13,36 @@ class ApproximateSpatialKNN:
         self.model.setUseTableCheckpoint(useTableCheckpoint)
         return self
 
-    def setKNeighbours(self, k):
-        self.model.setKNeighbours(k)
+    def approximate(self, approximate):
+        self.model.setApproximate(approximate)
         return self
 
     def setLeftFeatureCol(self, feature):
         self.model.setLeftFeatureCol(feature)
         return self
-
+        
+    def setLeftRowID(self, rowID):
+        self.model.setLeftRowID(rowID)
+        return self
+        
     def setRightFeatureCol(self, feature):
         self.model.setRightFeatureCol(feature)
+        return self
+        
+    def setRightRowID(self, rowID):
+        self.model.setRightRowID(rowID)
+        return self
+        
+    def setDistanceThreshold(self, n):
+        self.model.setDistanceThreshold(n)
+        return self
+        
+    def setIndexResolution(self, resolution):
+        self.model.setIndexResolution(resolution)
+        return self
+
+    def setKNeighbours(self, k):
+        self.model.setKNeighbours(k)
         return self
 
     def setMaxIterations(self, n):
@@ -33,16 +53,8 @@ class ApproximateSpatialKNN:
         self.model.setEarlyStopping(n)
         return self
 
-    def setDistanceThreshold(self, n):
-        self.model.setDistanceThreshold(n)
-        return self
-
     def setCheckpointTablePrefix(self, prefix):
         self.model.setCheckpointTablePrefix(prefix)
-        return self
-
-    def setIndexResolution(self, resolution):
-        self.model.setIndexResolution(resolution)
         return self
 
     def setRightDf(self, df):
