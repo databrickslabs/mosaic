@@ -59,7 +59,7 @@ trait CellKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
         cellKDiscExplodeExpr.position shouldEqual false
         cellKDiscExplodeExpr.inline shouldEqual false
         cellKDiscExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
-        cellKDiscExplodeExpr.eval(InternalRow.fromSeq(Seq(null, null))) shouldEqual Seq.empty
+        withNull.eval(InternalRow.fromSeq(Seq(null, null))) shouldEqual Seq.empty
 
         val badExpr = CellKDiscExplode(
           lit(10).expr,

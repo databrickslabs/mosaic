@@ -32,17 +32,18 @@ class TypesTests extends AnyFunSuite {
         H3IndexSystem.setCellIdDataType(BooleanType)
         an[IllegalArgumentException] should be thrownBy chip.formatCellId(H3IndexSystem)
 
-        H3IndexSystem.setCellIdDataType(LongType)
-        chip.formatCellId(H3IndexSystem).index.left.get shouldBe cellId
-        hexChip.formatCellId(H3IndexSystem).index.left.get shouldBe cellId
-        chip.cellIdAsLong(H3IndexSystem) shouldBe cellId
-        hexChip.cellIdAsLong(H3IndexSystem) shouldBe cellId
 
         H3IndexSystem.setCellIdDataType(StringType)
         chip.formatCellId(H3IndexSystem).index.right.get shouldBe hexCellId
         hexChip.formatCellId(H3IndexSystem).index.right.get shouldBe hexCellId
         chip.cellIdAsStr(H3IndexSystem) shouldBe hexCellId
         hexChip.cellIdAsStr(H3IndexSystem) shouldBe hexCellId
+
+        H3IndexSystem.setCellIdDataType(LongType)
+        chip.formatCellId(H3IndexSystem).index.left.get shouldBe cellId
+        hexChip.formatCellId(H3IndexSystem).index.left.get shouldBe cellId
+        chip.cellIdAsLong(H3IndexSystem) shouldBe cellId
+        hexChip.cellIdAsLong(H3IndexSystem) shouldBe cellId
 
     }
 
