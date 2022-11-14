@@ -10,6 +10,7 @@ class PolyfillTest extends MosaicSpatialQueryTest with SharedSparkSession with P
     testAllNoCodegen("Polyfill WKB") { wkbPolyfill }
     testAllNoCodegen("Polyfill Hex") { hexPolyfill }
     testAllNoCodegen("Polyfill Coords") { coordsPolyfill }
+    testAllNoCodegen("Polyfill column function signatures") { columnFunctionSignatures }
     testAllNoCodegen("Polyfill auxiliary methods") { auxiliaryMethods }
 
 }

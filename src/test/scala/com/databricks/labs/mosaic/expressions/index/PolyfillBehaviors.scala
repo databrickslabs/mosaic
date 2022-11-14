@@ -159,6 +159,12 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
+    def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
+        val funcs = mosaicContext.functions
+        noException should be thrownBy funcs.grid_polyfill(col("wkt"), 3)
+        noException should be thrownBy funcs.grid_polyfill(col("wkt"), lit(3))
+    }
+
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val sc = spark

@@ -299,6 +299,21 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         boroughs.collect().length should be <= mosaics2.length
     }
 
+    def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
+        val funcs = mosaicContext.functions
+        noException should be thrownBy funcs.grid_tessellateexplode(col("wkt"), lit(3))
+        noException should be thrownBy funcs.grid_tessellateexplode(col("wkt"), 3)
+        noException should be thrownBy funcs.grid_tessellateexplode(col("wkt"), 3, keepCoreGeometries = true)
+        noException should be thrownBy funcs.grid_tessellateexplode(col("wkt"), 3, lit(false))
+        noException should be thrownBy funcs.grid_tessellateexplode(col("wkt"), lit(3), lit(false))
+        //legacy APIs
+        noException should be thrownBy funcs.mosaic_explode(col("wkt"), 3)
+        noException should be thrownBy funcs.mosaic_explode(col("wkt"), lit(3))
+        noException should be thrownBy funcs.mosaic_explode(col("wkt"), 3, keepCoreGeometries = true)
+        noException should be thrownBy funcs.mosaic_explode(col("wkt"), 3, lit(false))
+        noException should be thrownBy funcs.mosaic_explode(col("wkt"), lit(3), lit(false))
+    }
+
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext

@@ -6,6 +6,7 @@ import org.apache.spark.sql.test.SharedSparkSession
 class CellKDiscExplodeTest extends MosaicSpatialQueryTest with SharedSparkSession with CellKDiscExplodeBehaviors {
 
     testAllNoCodegen("CellKDiscExplode behavior on computed columns") { behaviorComputedColumns }
+    testAllNoCodegen("CellKDiscExplode column function signatures") { columnFunctionSignatures }
     testAllNoCodegen("CellKDiscExplode auxiliary methods") { auxiliaryMethods }
 
 }

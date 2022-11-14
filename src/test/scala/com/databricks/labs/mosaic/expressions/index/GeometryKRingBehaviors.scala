@@ -32,6 +32,16 @@ trait GeometryKRingBehaviors extends MosaicSpatialQueryTest {
         boroughs.collect().length shouldEqual mosaics.length
     }
 
+    def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
+        val funcs = mosaicContext.functions
+        noException should be thrownBy funcs.grid_geometrykring(col("wkt"), lit(3), lit(3))
+        noException should be thrownBy funcs.grid_geometrykring(col("wkt"), lit(3), 3)
+        noException should be thrownBy funcs.grid_geometrykring(col("wkt"), 3, lit(3))
+        noException should be thrownBy funcs.grid_geometrykring(col("wkt"), 3, 3)
+        noException should be thrownBy funcs.grid_geometrykring(col("wkt"), "3", lit(3))
+        noException should be thrownBy funcs.grid_geometrykring(col("wkt"), "3", 3)
+    }
+
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val sc = spark

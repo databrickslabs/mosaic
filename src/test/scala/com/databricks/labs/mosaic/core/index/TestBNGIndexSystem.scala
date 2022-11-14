@@ -2,11 +2,12 @@ package com.databricks.labs.mosaic.core.index
 
 import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
-class TestBNGIndexSystem extends AnyFlatSpec {
+class TestBNGIndexSystem extends AnyFunSuite {
 
-    "Point to Index" should "generate index ID for positive resolutions." in {
+    test("Point to Index should generate index ID for positive resolutions.") {
         val indexRes1 = BNGIndexSystem.pointToIndex(538825, 179111, 1)
         val indexRes2 = BNGIndexSystem.pointToIndex(538825, 179111, 2)
         val indexRes3 = BNGIndexSystem.pointToIndex(538825, 179111, 3)
@@ -37,7 +38,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
 
     }
 
-    "Point to Index" should "generate index ID for negative resolutions." in {
+    test("Point to Index should generate index ID for negative resolutions.") {
         val indexResN1 = BNGIndexSystem.pointToIndex(538825, 179111, -1)
         val indexResN2 = BNGIndexSystem.pointToIndex(538825, 179111, -2)
         val indexResN3 = BNGIndexSystem.pointToIndex(538825, 179111, -3)
@@ -71,7 +72,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
 
     }
 
-    "Parse and Format" should "generate consistent results." in {
+    test("Parse and Format should generate consistent results.") {
         BNGIndexSystem.parse("T") shouldBe 1050
         BNGIndexSystem.format(1050) shouldBe "T"
 
@@ -88,7 +89,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         BNGIndexSystem.format(10501388279114L) shouldBe "TQ38827911SE"
     }
 
-    "KDisk" should "generate index IDs for negative resolutions." in {
+    test("KDisk should generate index IDs for negative resolutions.") {
         val index = 1050138794L // "TQ3879SE" res -4
 
         val kDisk1 = BNGIndexSystem.kDisc(index, 1).map(BNGIndexSystem.format)
@@ -114,7 +115,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         ).flatten
     }
 
-    "KDisk" should "generate index IDs for positive resolutions." in {
+    test("KDisk should generate index IDs for positive resolutions.") {
         val index = 1050138790
         val kDisk1 = BNGIndexSystem.kDisc(index, 1).map(BNGIndexSystem.format)
         val kDisk2 = BNGIndexSystem.kDisc(index, 2).map(BNGIndexSystem.format)
@@ -139,7 +140,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         ).flatten
     }
 
-    "KRing" should "generate index IDs for positive resolutions." in {
+    test("KRing should generate index IDs for positive resolutions.") {
         val index = 1050138790
         val kRing1 = BNGIndexSystem.kRing(index, 1).map(BNGIndexSystem.format)
         val kRing2 = BNGIndexSystem.kRing(index, 2).map(BNGIndexSystem.format)
@@ -152,15 +153,14 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         kRing3 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2).union(kDisk3)
     }
 
-    "IsValid" should "return correct validity" in {
+    test("IsValid should return correct validity") {
         val cellId = BNGIndexSystem.pointToIndex(-50000.0, 50.0, 3)
         val cellId2 = BNGIndexSystem.pointToIndex(50.0, 500000000.0, 4)
         BNGIndexSystem.isValid(cellId) shouldBe false
         BNGIndexSystem.isValid(cellId2) shouldBe false
-
     }
 
-    "Auxiliary methods" should "not throw exceptions" in {
+    test("Auxiliary methods should not throw exceptions") {
         noException should be thrownBy BNGIndexSystem.getResolution(5)
         noException should be thrownBy BNGIndexSystem.getResolution("100m")
         noException should be thrownBy BNGIndexSystem.getResolution(UTF8String.fromString("100m"))

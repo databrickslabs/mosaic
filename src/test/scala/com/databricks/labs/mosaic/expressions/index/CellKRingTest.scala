@@ -6,6 +6,7 @@ import org.apache.spark.sql.test.SharedSparkSession
 class CellKRingTest extends MosaicSpatialQueryTest with SharedSparkSession with CellKRingBehaviors {
 
     testAllNoCodegen("CellKRing behavior on computed columns") { behaviorComputedColumns }
+    testAllNoCodegen("CellKRing column function signatures") { columnFunctionSignatures }
     testAllNoCodegen("CellKRing auxiliary methods") { auxiliaryMethods }
 
 }

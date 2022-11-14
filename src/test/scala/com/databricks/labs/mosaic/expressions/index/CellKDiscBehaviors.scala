@@ -35,6 +35,12 @@ trait CellKDiscBehaviors extends MosaicSpatialQueryTest {
         boroughs.collect().length shouldEqual mosaics.length
     }
 
+    def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
+        val funcs = mosaicContext.functions
+        noException should be thrownBy funcs.grid_cellkdisc(col("wkt"), lit(3))
+        noException should be thrownBy funcs.grid_cellkdisc(col("wkt"), 3)
+    }
+
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val sc = spark

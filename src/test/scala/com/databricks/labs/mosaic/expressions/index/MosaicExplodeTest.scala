@@ -13,6 +13,7 @@ class MosaicExplodeTest extends MosaicSpatialQueryTest with SharedSparkSession w
     testAllNoCodegen("MosaicExplode Coords decompose") { coordsDecompose }
     testAllNoCodegen("MosaicExplode Line decompose") { lineDecompose }
     testAllNoCodegen("MosaicExplode Line decompose first point on boundary") { lineDecomposeFirstPointOnBoundary }
+    testAllNoCodegen("MosaicExplode column function signatures") { columnFunctionSignatures }
     testAllNoCodegen("MosaicExplode auxiliary methods") { auxiliaryMethods }
 
 }

@@ -4,8 +4,6 @@ import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.types._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -86,19 +84,12 @@ case class MosaicFill(
         val resolution: Int = indexSystem.getResolution(input2)
         val keepCoreGeom: Boolean = input3.asInstanceOf[Boolean]
 
-        val chips = GeometryTypeEnum.fromString(geometry.getGeometryType) match {
-            case LINESTRING      => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
-            case MULTILINESTRING => Mosaic.lineFill(geometry, resolution, indexSystem, geometryAPI)
-            case _               => Mosaic.mosaicFill(geometry, resolution, keepCoreGeom, indexSystem, geometryAPI)
-        }
+        val chips = Mosaic
+            .getChips(geometry, resolution, keepCoreGeom, indexSystem, geometryAPI)
+            .map(_.formatCellId(indexSystem))
+            .map(_.serialize)
 
-        val formatted = chips.map(_.formatCellId(indexSystem))
-
-        InternalRow.fromSeq(
-          Seq(
-            ArrayData.toArrayData(formatted.map(_.serialize))
-          )
-        )
+        InternalRow.fromSeq(Seq(ArrayData.toArrayData(chips)))
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {

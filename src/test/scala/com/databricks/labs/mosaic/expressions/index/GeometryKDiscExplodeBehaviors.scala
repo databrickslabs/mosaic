@@ -35,6 +35,16 @@ trait GeometryKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
         boroughs.collect().length shouldEqual mosaics.length
     }
 
+    def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
+        val funcs = mosaicContext.functions
+        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), lit(3), lit(3))
+        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), lit(3), 3)
+        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), 3, lit(3))
+        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), 3, 3)
+        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), "3", lit(3))
+        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), "3", 3)
+    }
+
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
