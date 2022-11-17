@@ -416,6 +416,61 @@ st_dump
     +-------------+
 
 
+st_envelope
+***********
+
+.. function:: st_envelope(col)
+
+    Returns the minimum bounding box of the input geometry, as a geometry.
+    This bounding box is defined by the rectangular polygon with corner points `(x_min, y_min)`, `(x_max, y_min)`, `(x_min, y_max)`, `(x_max, y_max)`.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((10 10, 20 10, 15 20, 10 10))'}])
+    >>> df.select(st_envelope('wkt')).show()
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> df = List(("POLYGON ((10 10, 20 10, 15 20, 10 10))")).toDF("wkt")
+    >>> df.select(st_envelope('wkt')).show()
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_envelope("POLYGON ((10 10, 20 10, 15 20, 10 10))")
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((10 10, 20 10, 15 20, 10 10))")
+    >>> showDF(select(df, st_envelope(column("wkt"))), truncate=F)
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+
 st_geometrytype
 ***************
 

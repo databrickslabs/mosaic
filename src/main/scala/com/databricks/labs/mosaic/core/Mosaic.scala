@@ -37,7 +37,7 @@ object Mosaic {
             }
 
         val coreIndices = indexSystem.polyfill(carvedGeometry, resolution, Some(geometryAPI))
-        val borderIndices = indexSystem.polyfill(borderGeometry, resolution, Some(geometryAPI))
+        val borderIndices = indexSystem.polyfill(borderGeometry, resolution, Some(geometryAPI)).diff(coreIndices)
 
         val coreChips = indexSystem.getCoreChips(coreIndices, keepCoreGeom, geometryAPI)
         val borderChips = indexSystem.getBorderChips(geometry, borderIndices, keepCoreGeom, geometryAPI)
