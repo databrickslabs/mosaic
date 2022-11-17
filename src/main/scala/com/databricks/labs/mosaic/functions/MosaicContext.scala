@@ -33,7 +33,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         aliasFunction(registry, "grid_boundaryaswkb", dbName, "h3_boundaryaswkb", None)
     }
 
-    def aliasFunction(
+    def aliasFunction( 
         registry: FunctionRegistry,
         alias: String,
         aliasDbName: Option[String],

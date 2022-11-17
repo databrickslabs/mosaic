@@ -22,12 +22,12 @@ case class ST_Buffer(inputGeom: Expression, radius: Expression, geometryAPIName:
         geometryAPI.serialize(buffered, inputGeom.dataType)
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = ST_Buffer(asArray.head, asArray(1), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
-    }
+//    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
+//        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
+//        val res = ST_Buffer(asArray.head, asArray(1), geometryAPIName)
+//        res.copyTagsFrom(this)
+//        res
+//    }
 
     override def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = copy(newLeft, newRight)
 
