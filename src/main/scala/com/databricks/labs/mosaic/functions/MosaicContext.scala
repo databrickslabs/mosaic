@@ -180,67 +180,67 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         registry.registerFunction(
           FunctionIdentifier("st_geomfromwkt", database),
           ConvertTo.registryExpressionInfo(database, "st_geomfromwkt"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name, Some("st_geomfromwkt"))
         )
         registry.registerFunction(
           FunctionIdentifier("st_geomfromwkb", database),
           ConvertTo.registryExpressionInfo(database, "st_geomfromwkb"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name, Some("st_geomfromwkb"))
         )
         registry.registerFunction(
           FunctionIdentifier("st_geomfromgeojson", database),
           ConvertTo.registryExpressionInfo(database, "st_geomfromgeojson"),
-          (exprs: Seq[Expression]) => ConvertTo(AsJSON(exprs(0)), "coords", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(AsJSON(exprs(0)), "coords", geometryAPI.name, Some("st_geomfromgeojson"))
         )
         registry.registerFunction(
           FunctionIdentifier("convert_to_hex", database),
           ConvertTo.registryExpressionInfo(database, "convert_to_hex"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "hex", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "hex", geometryAPI.name, Some("convert_to_hex"))
         )
         registry.registerFunction(
           FunctionIdentifier("convert_to_wkt", database),
           ConvertTo.registryExpressionInfo(database, "convert_to_wkt"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt", geometryAPI.name, Some("convert_to_wkt"))
         )
         registry.registerFunction(
           FunctionIdentifier("convert_to_wkb", database),
           ConvertTo.registryExpressionInfo(database, "convert_to_wkb"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name, Some("convert_to_wkb"))
         )
         registry.registerFunction(
           FunctionIdentifier("convert_to_coords", database),
           ConvertTo.registryExpressionInfo(database, "convert_to_coords"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name, Some("convert_to_coords"))
         )
         registry.registerFunction(
           FunctionIdentifier("convert_to_geojson", database),
           ConvertTo.registryExpressionInfo(database, "convert_to_geojson"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson", geometryAPI.name, Some("convert_to_geojson"))
         )
         registry.registerFunction(
           FunctionIdentifier("st_aswkt", database),
           ConvertTo.registryExpressionInfo(database, "st_aswkt"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt", geometryAPI.name, Some("st_aswkt"))
         )
         registry.registerFunction(
           FunctionIdentifier("st_astext", database),
           ConvertTo.registryExpressionInfo(database, "st_astext"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkt", geometryAPI.name, Some("st_astext"))
         )
         registry.registerFunction(
           FunctionIdentifier("st_aswkb", database),
           ConvertTo.registryExpressionInfo(database, "st_aswkb"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name, Some("st_aswkb"))
         )
         registry.registerFunction(
           FunctionIdentifier("st_asbinary", database),
           ConvertTo.registryExpressionInfo(database, "st_asbinary"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "wkb", geometryAPI.name, Some("st_asbinary"))
         )
         registry.registerFunction(
           FunctionIdentifier("st_asgeojson", database),
           ConvertTo.registryExpressionInfo(database, "st_asgeojson"),
-          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson", geometryAPI.name)
+          (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson", geometryAPI.name, Some("st_asgeojson"))
         )
         registry.registerFunction(
           FunctionIdentifier("st_length", database),
@@ -586,24 +586,24 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_unaryunion(geom: Column): Column = ColumnAdapter(ST_UnaryUnion(geom.expr, geometryAPI.name))
 
         /** Undocumented helper */
-        def convert_to(inGeom: Column, outDataType: String): Column = ColumnAdapter(ConvertTo(inGeom.expr, outDataType, geometryAPI.name))
+        def convert_to(inGeom: Column, outDataType: String): Column = ColumnAdapter(ConvertTo(inGeom.expr, outDataType, geometryAPI.name, Some("convert_to")))
 
         /** Geometry constructors */
         def st_point(xVal: Column, yVal: Column): Column = ColumnAdapter(ST_Point(xVal.expr, yVal.expr))
-        def st_geomfromwkt(inGeom: Column): Column = ColumnAdapter(ConvertTo(inGeom.expr, "coords", geometryAPI.name))
-        def st_geomfromwkb(inGeom: Column): Column = ColumnAdapter(ConvertTo(inGeom.expr, "coords", geometryAPI.name))
-        def st_geomfromgeojson(inGeom: Column): Column = ColumnAdapter(ConvertTo(AsJSON(inGeom.expr), "coords", geometryAPI.name))
+        def st_geomfromwkt(inGeom: Column): Column = ColumnAdapter(ConvertTo(inGeom.expr, "coords", geometryAPI.name, Some("st_geomfromwkt")))
+        def st_geomfromwkb(inGeom: Column): Column = ColumnAdapter(ConvertTo(inGeom.expr, "coords", geometryAPI.name, Some("st_geomfromwkb")))
+        def st_geomfromgeojson(inGeom: Column): Column = ColumnAdapter(ConvertTo(AsJSON(inGeom.expr), "coords", geometryAPI.name, Some("st_geomfromgeojson")))
         def st_makeline(points: Column): Column = ColumnAdapter(ST_MakeLine(points.expr, geometryAPI.name))
         def st_makepolygon(boundaryRing: Column): Column = ColumnAdapter(ST_MakePolygon(boundaryRing.expr, array().expr))
         def st_makepolygon(boundaryRing: Column, holeRingArray: Column): Column =
             ColumnAdapter(ST_MakePolygon(boundaryRing.expr, holeRingArray.expr))
 
         /** Geometry accessors */
-        def st_asbinary(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb", geometryAPI.name))
-        def st_asgeojson(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "geojson", geometryAPI.name))
-        def st_astext(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt", geometryAPI.name))
-        def st_aswkb(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb", geometryAPI.name))
-        def st_aswkt(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt", geometryAPI.name))
+        def st_asbinary(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb", geometryAPI.name, Some("st_asbinary")))
+        def st_asgeojson(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "geojson", geometryAPI.name, Some("st_asgeojson")))
+        def st_astext(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt", geometryAPI.name, Some("st_astext")))
+        def st_aswkb(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb", geometryAPI.name, Some("st_aswkb")))
+        def st_aswkt(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt", geometryAPI.name, Some("st_aswkt")))
 
         /** Spatial predicates */
         def st_contains(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Contains(geom1.expr, geom2.expr, geometryAPI.name))
