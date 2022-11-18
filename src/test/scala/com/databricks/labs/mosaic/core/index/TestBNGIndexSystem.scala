@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic.core.index
 import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
 
 class TestBNGIndexSystem extends AnyFlatSpec {
 
@@ -155,6 +156,15 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         noException should be thrownBy BNGIndexSystem.getResolution(UTF8String.fromString("100m"))
         BNGIndexSystem.getResolutionStr(4) shouldEqual "100m"
         BNGIndexSystem.getResolutionStr(-4) shouldEqual "500m"
+    }
+
+    "GridCenterAsWKB" should "generate the correct centroids for an index in all Geometry APIs." in {
+        val index = 1050138790
+        val centroid1 = BNGIndexSystem.GridCenterAsWKB(index, JTS)
+        val centroid2 = BNGIndexSystem.GridCenterAsWKB(index, ESRI)
+
+        centroid1.toWKT shouldBe BNGIndexSystem.indexToGeometry(index, JTS).getCentroid.toWKT
+        centroid2.toWKT shouldBe BNGIndexSystem.indexToGeometry(index, ESRI).getCentroid.toWKT
     }
 
 }
