@@ -534,4 +534,13 @@ object BNGIndexSystem extends IndexSystem with Serializable {
 
     override def getResolutionStr(resolution: Int): String = resolutionMap.find(_._2 == resolution).map(_._1).getOrElse("")
 
+    override def GridCenterAsWKB(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
+        val digits = indexDigits(index)
+        val resolution = getResolution(digits)
+        val edgeSize = getEdgeSize(resolution)
+        val x = getX(digits, edgeSize)
+        val y = getY(digits, edgeSize)
+        geometryAPI.fromCoords(Seq(x + edgeSize / 2, y + edgeSize / 2))
+    }
+
 }

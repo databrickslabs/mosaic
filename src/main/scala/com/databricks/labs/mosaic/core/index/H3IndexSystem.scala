@@ -208,4 +208,18 @@ object H3IndexSystem extends IndexSystem with Serializable {
 
     override def getResolutionStr(resolution: Int): String = resolution.toString
 
+    /**
+     * Get the centroid of an index by providing index id.
+     *
+     * @param index
+     * Id of the index whose centroid geometry should be returned.
+     * @return
+     * An instance of [[MosaicGeometry]] corresponding to the centroid of the
+     * index.
+     */
+    override def GridCenterAsWKB(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
+        val p = h3.h3ToGeo(index)
+        geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))
+    }
+
 }

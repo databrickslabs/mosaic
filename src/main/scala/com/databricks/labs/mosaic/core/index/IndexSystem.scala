@@ -193,4 +193,17 @@ trait IndexSystem extends Serializable {
       */
     def pointToIndex(lon: Double, lat: Double, resolution: Int): Long
 
+    /**
+     * Get the centroid of an index ID.
+     *
+     * @param index
+     * Id of the index whose centroid geometry should be returned.
+     * @return
+     * An instance of [[MosaicGeometry]] corresponding to the centroid of the
+     * index.
+     */
+    def GridCenterAsWKB(index: Long, geometryAPI: GeometryAPI): MosaicGeometry
+
 }
+
+

@@ -657,6 +657,14 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(IndexGeometry(indexID.expr, format.expr, indexSystem.name, geometryAPI.name))
         def grid_boundary(indexID: Column, format: String): Column =
             ColumnAdapter(IndexGeometry(indexID.expr, lit(format).expr, indexSystem.name, geometryAPI.name))
+        def grid_centeraswkb(indexID: Column): Column =
+            if (shouldUseDatabricksH3()) {
+                getProductMethod("h3_centeraswkb")
+                    .apply(indexID)
+                    .asInstanceOf[Column]
+            } else {
+                ColumnAdapter(GridCenterAsWKB(indexID.expr, indexSystem.name, getGeometryAPI.name))
+            }
 
         // Not specific to Mosaic
         def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
