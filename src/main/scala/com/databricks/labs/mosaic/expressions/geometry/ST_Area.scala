@@ -6,13 +6,6 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, Nu
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{DataType, DoubleType}
 
-import org.apache.spark.sql.functions.lit
-
-//
-//abstract class UnarySpatioTemporalExpression extends UnaryExpression {
-//    override def dataType
-//}
-
 case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
     /**
@@ -32,12 +25,12 @@ case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends Unary
         geom.getArea
     }
 
-//    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-//        val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-//        val res = ST_Area(asArray(0), geometryAPIName)
-//        res.copyTagsFrom(this)
-//        res
-//    }
+    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
+        val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
+        val res = ST_Area(asArray(0), geometryAPIName)
+        res.copyTagsFrom(this)
+        res
+    }
 
     override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
         nullSafeCodeGen(
