@@ -359,6 +359,8 @@ package object test {
 
         override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = ???
 
+        override def GridCenterAsWKB(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = ???
+
     }
 
 }

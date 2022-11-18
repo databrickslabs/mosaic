@@ -32,4 +32,6 @@ object BadIndexSystem extends IndexSystem {
     override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = throw new UnsupportedOperationException
 
     override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = throw new UnsupportedOperationException
+
+    override def GridCenterAsWKB(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = throw new UnsupportedOperationException
 }
