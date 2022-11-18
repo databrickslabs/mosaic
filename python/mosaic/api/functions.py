@@ -51,6 +51,7 @@ __all__ = [
     "grid_polyfill",
     "grid_tessellate",
     "grid_tessellateexplode",
+    "grid_centeraswkb",
 
     "point_index_geom",
     "point_index_lonlat",
@@ -1037,3 +1038,21 @@ def mosaicfill(
         pyspark_to_java_column(resolution),
         pyspark_to_java_column(keep_core_geometries),
     )
+
+def grid_centeraswkb(geom: ColumnOrName) -> Column:
+    """
+    Return the centroid of an index by providing the index id.
+
+    index_id : Column
+    The grid cell ID
+
+    Returns
+    -------
+    Column
+    A geometry in WKB format
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_centeraswkb", pyspark_to_java_column(geom)
+    )
+
