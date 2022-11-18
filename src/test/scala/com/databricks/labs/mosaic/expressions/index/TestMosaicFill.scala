@@ -50,4 +50,9 @@ class TestMosaicFill extends AnyFlatSpec with MosaicFillBehaviors with SparkSuit
         it should behave like auxiliaryMethods(MosaicContext.build(BNGIndexSystem, JTS), spark)
     }
 
+    "MosaicFill" should "fill wkt geometries for H3 cells with icosahedron crossing two edges  (#260)" in {
+        it should behave like wktMosaicTessellate(MosaicContext.build(H3IndexSystem, ESRI), spark, 3)
+        it should behave like wktMosaicTessellate(MosaicContext.build(H3IndexSystem, JTS), spark, 3)
+    }
+
 }
