@@ -17,7 +17,7 @@ __all__ = [
     "st_perimeter",
     "st_convexhull",
     "st_buffer",
-    "st_buffer_disc",
+    "st_bufferdisc",
     "st_dump",
     "st_envelope",
     "st_srid",
@@ -47,6 +47,7 @@ __all__ = [
     "flatten_polygons",
 
     "grid_boundaryaswkb",
+    "grid_boundary",
     "grid_longlatascellid",
     "grid_pointascellid",
     "grid_polyfill",
@@ -170,7 +171,7 @@ def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
         "st_buffer", pyspark_to_java_column(geom), pyspark_to_java_column(radius)
     )
 
-def st_buffer_disc(geom: ColumnOrName, innerRadius: ColumnOrName, outerRadius: ColumnOrName) -> Column:
+def st_bufferdisc(geom: ColumnOrName, innerRadius: ColumnOrName, outerRadius: ColumnOrName) -> Column:
     """
     Compute the buffered geometry disc based on geom and provided radiuses.
     The result geometry is a polygon/multipolygon with a hole in the center.
@@ -193,7 +194,7 @@ def st_buffer_disc(geom: ColumnOrName, innerRadius: ColumnOrName, outerRadius: C
 
     """
     return config.mosaic_context.invoke_function(
-        "st_buffer_disc",
+        "st_bufferdisc",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(innerRadius),
         pyspark_to_java_column(outerRadius)
@@ -788,6 +789,28 @@ def grid_boundaryaswkb(index_id: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "grid_boundaryaswkb", pyspark_to_java_column(index_id)
+    )
+
+def grid_boundary(index_id: ColumnOrName, format: ColumnOrName) -> Column:
+    """
+    Returns a geometry representing the grid cell boundary using specified format.
+
+    Parameters
+    ----------
+    index_id : Column
+        The grid cell ID
+    format : Column
+        The format of the geometry to return. One of "wkb", "wkt", "geojson"
+
+    Returns
+    -------
+    Column
+        A geometry
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_boundary",
+        pyspark_to_java_column(index_id),
+        pyspark_to_java_column(format)
     )
 
 

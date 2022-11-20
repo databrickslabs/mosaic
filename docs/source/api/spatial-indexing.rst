@@ -63,6 +63,26 @@ grid_longlatascellid
     |                623385352048508927|
     +----------------------------------+
 
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_longlatascellid/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Point to grid cell in H3(9)
+
+
+.. figure:: ../images/grid_longlatascellid/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Point to grid cell in BNG(4)
+
+
+.. raw:: html
+
+   </div>
 
 
 grid_pointascellid
@@ -120,6 +140,28 @@ grid_pointascellid
     +------------------------------------------+
     |623385352048508927                        |
     +------------------------------------------+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_longlatascellid/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Point to grid cell in H3(9)
+
+
+.. figure:: ../images/grid_longlatascellid/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Point to grid cell in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
 
 
 
@@ -182,6 +224,28 @@ grid_polyfill
     +------------------------------------------------------------+
     |[577586652210266111, 578360708396220415, 577269992861466623]|
     +------------------------------------------------------------+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_polyfill/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Polyfill of a polygon in H3(8)
+
+
+.. figure:: ../images/grid_polyfill/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Polyfill of a polygon in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
 
 
 grid_tessellate
@@ -282,6 +346,27 @@ grid_tessellate
     +-----------------------+
     |   {[{false, 5774810...|
     +-----------------------+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_tessellate/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Tessellation of a polygon in H3(8)
+
+
+.. figure:: ../images/grid_tessellate/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Tessellation of a polygon in BNG(4)
+
+
+.. raw:: html
+
+   </div>
 
 
 
@@ -384,6 +469,729 @@ grid_tessellateexplode
     |  false|577269992861466623|[01 03 00 00 00 0...|
     |  false|578360708396220415|[01 03 00 00 00 0...|
     +-------+------------------+--------------------+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_tessellate/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Tessellation of a polygon in H3(8)
+
+
+.. figure:: ../images/grid_tessellate/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Tessellation of a polygon in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
+
+grid_cellkring
+**************
+
+.. function:: grid_cellkring(index_id, k)
+
+    Returns the k-ring of a given index.
+
+    :param index_id: Index ID
+    :type index_id: Column: Long
+    :param k: K-ring size
+    :type k: Column: Integer
+    :rtype: Column: ArrayType(Long)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    >>> df.select(grid_cellkring('grid_cellid', lit(2)).alias("kring")).show()
+    +-------------------------------------------------------------------+
+    |         grid_cellid|                                         kring|
+    +--------------------+----------------------------------------------+
+    |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((613177664827555839)).toDF("grid_cellid")
+    >>> df.select(grid_cellkring('grid_cellid', lit(2)).alias("kring")).show()
+    +-------------------------------------------------------------------+
+    |         grid_cellid|                                         kring|
+    +--------------------+----------------------------------------------+
+    |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_cellkring(613177664827555839, 2)
+    +-------------------------------------------------------------------+
+    |         grid_cellid|                                         kring|
+    +--------------------+----------------------------------------------+
+    |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    >>> showDF(select(df, grid_cellkring(column("grid_cellid"), lit(2L))))
+    +-------------------------------------------------------------------+
+    |         grid_cellid|                                         kring|
+    +--------------------+----------------------------------------------+
+    |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_cellkring/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Cell based kring(2) in H3(8)
+
+
+.. figure:: ../images/grid_cellkring/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Cell based kring(2) in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
+
+grid_cellkringexplode
+*********************
+
+.. function:: grid_cellkringexplode(index_id, k)
+
+    Returns the k-ring of a given index exploded.
+
+    :param index_id: Index ID
+    :type index_id: Column: Long
+    :param k: K-ring size
+    :type k: Column: Integer
+    :rtype: Column: Long
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    >>> df.select(grid_cellkringexplode('grid_cellid', lit(2)).alias("kring")).show()
+    +------------------+
+    |             kring|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+
+   .. code-tab:: scala
+
+    >>> val df = List((613177664827555839)).toDF("grid_cellid")
+    >>> df.select(grid_cellkringexplode('grid_cellid', lit(2)).alias("kring")).show()
+    +------------------+
+    |             kring|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_cellkringexplode(613177664827555839, 2)
+    +------------------+
+    |             kring|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    >>> showDF(select(df, grid_cellkringexplode(column("grid_cellid"), lit(2L))))
+    +------------------+
+    |             kring|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_cellkring/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Cell based kring(2) in H3(8)
+
+
+.. figure:: ../images/grid_cellkring/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Cell based kring(2) in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
+
+grid_cellkdisc
+**************
+
+.. function:: grid_cellkdisc(index_id, k)
+
+    Returns the k-disc/hex-ring of a given index.
+
+    :param index_id: Index ID
+    :type index_id: Column: Long
+    :param k: K-disc/hex-ring size
+    :type k: Column: Integer
+    :rtype: Column: ArrayType(Long)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    >>> df.select(grid_cellkdisc('grid_cellid', lit(2)).alias("kdisc")).show()
+    +-------------------------------------------------------------------+
+    |         grid_cellid|                                         kdisc|
+    +--------------------+----------------------------------------------+
+    |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((613177664827555839)).toDF("grid_cellid")
+    >>> df.select(grid_cellkdisc('grid_cellid', lit(2)).alias("kdisc")).show()
+    +-------------------------------------------------------------------+
+    |         grid_cellid|                                         kdisc|
+    +--------------------+----------------------------------------------+
+    |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_cellkdisc(613177664827555839, 2)
+    +-------------------------------------------------------------------+
+    |         grid_cellid|                                         kdisc|
+    +--------------------+----------------------------------------------+
+    |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    >>> showDF(select(df, grid_cellkdisc(column("grid_cellid"), lit(2L))))
+    +-------------------------------------------------------------------+
+    |         grid_cellid|                                         kdisc|
+    +--------------------+----------------------------------------------+
+    |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_cellkdisc/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Cell based kring(2) in H3(8)
+
+
+.. figure:: ../images/grid_cellkdisc/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Cell based kring(2) in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
+
+grid_cellkdiscexplode
+*********************
+
+.. function:: grid_cellkdiscexplode(index_id, k)
+
+    Returns the k-disc/hex-ring of a given index exploded.
+
+    :param index_id: Index ID
+    :type index_id: Column: Long
+    :param k: K-disc/hex-ring size
+    :type k: Column: Integer
+    :rtype: Column: Long
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    >>> df.select(grid_cellkdiscexplode('grid_cellid', lit(2)).alias("kdisc")).show()
+    +------------------+
+    |             kdisc|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+
+   .. code-tab:: scala
+
+    >>> val df = List((613177664827555839)).toDF("grid_cellid")
+    >>> df.select(grid_cellkdiscexplode('grid_cellid', lit(2)).alias("kdisc")).show()
+    +------------------+
+    |             kdisc|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_cellkdiscexplode(613177664827555839, 2)
+    +------------------+
+    |             kdisc|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    >>> showDF(select(df, grid_cellkdiscexplode(column("grid_cellid"), lit(2L))))
+    +------------------+
+    |             kdisc|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_cellkdisc/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Cell based kring(2) in H3(8)
+
+
+.. figure:: ../images/grid_cellkdisc/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Cell based kring(2) in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
+
+
+grid_geometrykring
+******************
+
+.. function:: grid_geometrykring(geometry, resolution, k)
+
+    Returns the k-ring of a given geometry respecting the boundary shape.
+
+    :param geometry: Geometry to be used
+    :type geometry: Column
+    :param resolution: Resolution of the index used to calculate the k-ring
+    :type resolution: Column: Integer
+    :param k: K-ring size
+    :type k: Column: Integer
+    :rtype: Column: ArrayType(Long)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
+    >>> df.select(grid_geometrykring('geometry', lit(8), lit(1)).alias("kring")).show()
+    +-------------------------------------------------------------------+
+    |            geometry|                                         kring|
+    +--------------------+----------------------------------------------+
+    |  "MULTIPOLYGON(..."|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((613177664827555839)).toDF("geometry")
+    >>> df.select(grid_geometrykring('geometry', lit(8), lit(1)).alias("kring")).show()
+    +-------------------------------------------------------------------+
+    |            geometry|                                         kring|
+    +--------------------+----------------------------------------------+
+    |  "MULTIPOLYGON(..."|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_geometrykring('MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))', 8, 1)
+    +-------------------------------------------------------------------+
+    |            geometry|                                         kring|
+    +--------------------+----------------------------------------------+
+    |  "MULTIPOLYGON(..."|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(geometry = 613177664827555839))
+    >>> showDF(select(df, grid_geometrykring('geometry', lit(8L), lit(1L))))
+    +-------------------------------------------------------------------+
+    |            geometry|                                         kring|
+    +--------------------+----------------------------------------------+
+    |  "MULTIPOLYGON(..."|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_geometrykring/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Geometry based kring(1) in H3(8)
+
+
+.. figure:: ../images/grid_geometrykring/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Geometry based kring(1) in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
+
+grid_geometrykringexplode
+*************************
+
+.. function:: grid_geometrykringexplode(geometry, resolution, k)
+
+    Returns the k-ring of a given index exploded.
+
+    :param geometry: Geometry to be used
+    :type geometry: Column
+    :param resolution: Resolution of the index used to calculate the k-ring
+    :type resolution: Column: Integer
+    :param k: K-ring size
+    :type k: Column: Integer
+    :rtype: Column: Long
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
+    >>> df.select(grid_geometrykringexplode('geometry', lit(8), lit(2)).alias("kring")).show()
+    +------------------+
+    |             kring|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
+    >>> df.select(grid_geometrykringexplode('geometry', lit(8), lit(2)).alias("kring")).show()
+    +------------------+
+    |             kring|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_geometrykringexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 8, 2)
+    +------------------+
+    |             kring|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+    >>> showDF(select(df, grid_cellkringexplode(column("geometry"), lit(8L), lit(2L))))
+    +------------------+
+    |             kring|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_geometrykring/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Cell based kring(2) in H3(8)
+
+
+.. figure:: ../images/grid_geometrykring/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Cell based kring(2) in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
+
+grid_geometrykdisc
+******************
+
+.. function:: grid_geometrykdisc(geometry, resolution, k)
+
+    Returns the k-disc/hex-ring of a given geometry.
+
+    :param geometry: Geometry to be used
+    :type geometry: Column
+    :param resolution: Resolution of the index used to calculate the k-disc/hex-ring
+    :type resolution: Column: Integer
+    :param k: K-disc/hex-ring size
+    :type k: Column: Integer
+    :rtype: Column: ArrayType(Long)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
+    >>> df.select(grid_geometrykdisc('geometry', lit(2)).alias("kdisc")).show()
+    +-------------------------------------------------------------------+
+    |            geometry|                                         kdisc|
+    +--------------------+----------------------------------------------+
+    |  MULTIPOLYGON ((...|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
+    >>> df.select(grid_cellkdisc('geometry', lit(2)).alias("kdisc")).show()
+    +-------------------------------------------------------------------+
+    |            geometry|                                         kdisc|
+    +--------------------+----------------------------------------------+
+    |  MULTIPOLYGON ((...|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_cellkdisc("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 2)
+    +-------------------------------------------------------------------+
+    |            geometry|                                         kdisc|
+    +--------------------+----------------------------------------------+
+    |  MULTIPOLYGON ((...|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+    >>> showDF(select(df, grid_cellkdisc(column("geometry"), lit(2L))))
+    +-------------------------------------------------------------------+
+    |            geometry|                                         kdisc|
+    +--------------------+----------------------------------------------+
+    |  MULTIPOLYGON ((...|[613177664827555839, 613177664825458687, ....]|
+    +--------------------+----------------------------------------------+
+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_geometrykdisc/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Cell based kring(2) in H3(8)
+
+
+.. figure:: ../images/grid_geometrykdisc/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Cell based kring(2) in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
+
+grid_geometrykdiscexplode
+*************************
+
+.. function:: grid_geometrykdiscexplode(geometry, resolution, k)
+
+    Returns the k-disc/hex-ring of a given geometry exploded.
+
+    :param geometry: Geometry to be used
+    :type geometry: Column
+    :param resolution: Resolution of the index used to calculate the k-disc/hex-ring
+    :type resolution: Column: Integer
+    :param k: K-disc/hex-ring size
+    :type k: Column: Integer
+    :rtype: Column: Long
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
+    >>> df.select(grid_geometrykdiscexplode('geometry', lit(8), lit(2)).alias("kdisc")).show()
+    +------------------+
+    |             kdisc|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
+    >>> df.select(grid_geometrykdiscexplode('geometry', lit(8), lit(2)).alias("kdisc")).show()
+    +------------------+
+    |             kdisc|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_geometrykdiscexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 8, 2)
+    +------------------+
+    |             kdisc|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+    >>> showDF(select(df, grid_geometrykdiscexplode(column("geometry"), lit(8L), lit(2L))))
+    +------------------+
+    |             kdisc|
+    +------------------+
+    |613177664827555839|
+    |613177664825458687|
+    |613177664831750143|
+    |613177664884178943|
+    |               ...|
+    +------------------+
+
+
+.. raw:: html
+
+   <div class="figure-group">
+
+
+.. figure:: ../images/grid_geometrykdisc/h3.png
+   :figclass: doc-figure-float-left
+
+   Fig 1. Cell based kring(2) in H3(8)
+
+
+.. figure:: ../images/grid_geometrykdisc/bng.png
+   :figclass: doc-figure-float-left
+
+   Fig 2. Cell based kring(2) in BNG(4)
+
+
+.. raw:: html
+
+   </div>
+
 
 
 mosaic_explode [Deprecated]

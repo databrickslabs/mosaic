@@ -48,9 +48,9 @@ is defined as follows:
 * For each landmark geometry L[i] count the matches and stop if the count is equal to k
 * If the count is less than k, increase the size of the hex ring and repeat the process
 * If the count exceeds k, remove the matches that are furthest from the landmark and stop
-  iterating over the hex ring for L[i]
+iterating over the hex ring for L[i]
 * Evaluate early stopping condition (if enabled): Stop if no new match candidates are found
-  in the hex ring for any L[i] geometry in the set L for N iterations (knn.setEarlyStopIterations(N))
+in the hex ring for any L[i] geometry in the set L for N iterations (knn.setEarlyStopIterations(N))
 * Continue with the next hex ring until max number of iterations is performed
 * Return the geometries that have the smallest distance to the query geometries
 
