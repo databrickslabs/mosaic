@@ -1,8 +1,7 @@
-package com.databricks.labs.mosaic.models
+package com.databricks.labs.mosaic.models.knn
 
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.models.knn.SpatialKNN
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.DataFrame
@@ -67,7 +66,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
 
         matches
             .select(
-              countDistinct("left_miid")
+              countDistinct("landmarks_miid")
             )
             .as[Long]
             .collect()
@@ -75,7 +74,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
 
         matches
             .select(
-              countDistinct("right_miid")
+              countDistinct("candidates_miid")
             )
             .as[Long]
             .collect()
@@ -155,7 +154,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
 
         matches
             .select(
-              countDistinct("left_miid")
+              countDistinct("landmarks_miid")
             )
             .as[Long]
             .collect()
@@ -163,7 +162,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
 
         matches
             .select(
-              countDistinct("right_miid")
+              countDistinct("candidates_miid")
             )
             .as[Long]
             .collect()

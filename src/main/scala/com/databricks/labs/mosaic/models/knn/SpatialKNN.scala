@@ -198,7 +198,7 @@ class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
         matchesCheckpoint = CheckpointManager(getCheckpointTablePrefix, "matches", isTable = getUseTableCheckpoint)
 
         val candidatesDfIndexed = candidatesDf
-            .withColumn(getCandidatesFeatureCol, monotonically_increasing_id())
+            .withColumn(getCandidatesRowID, monotonically_increasing_id())
             .withColumn(
               hexRingNeighboursTf.rightGridCol(getCandidatesFeatureCol),
               grid_tessellateexplode(col(getCandidatesFeatureCol), getIndexResolution, keepCoreGeometries = false)
@@ -207,8 +207,10 @@ class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
 
         hexRingNeighboursTf
             .setRight(candidatesDfIndexed)
-            .setLeftFeatureCol(getLandmarksFeatureCol)
             .setRightFeatureCol(getCandidatesFeatureCol)
+            .setRightRowID(getCandidatesRowID)
+            .setLeftFeatureCol(getLandmarksFeatureCol)
+            .setLeftRowID(getLandmarksRowID)
             .setIndexResolution(getIndexResolution)
             .setIterationID(1)
 
