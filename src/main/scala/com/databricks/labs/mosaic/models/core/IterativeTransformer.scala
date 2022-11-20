@@ -69,7 +69,7 @@ trait IterativeTransformer extends Transformer with IterativeTransformerParams w
                             if (earlyStoppingCondition != previousEarlyStoppingCondition) 0
                             else earlyStoppingCount + 1
 
-                        if (earlyStoppingCondition && (newEarlyStoppingCount == getEarlyStopping)) {
+                        if (earlyStoppingCondition && (newEarlyStoppingCount == getEarlyStopIterations)) {
                             logInfo(s"Stopping iteration $iteration. No change in dataset.")
                             (newEarlyStoppingCount, earlyStoppingCondition, true, iterationOutput)
                         } else {

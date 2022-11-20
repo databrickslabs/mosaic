@@ -13,18 +13,19 @@ import org.apache.spark.sql.types._
 
 /**
   * A transformer that takes a DataFrame with a column of geometries and returns
-  * a DataFrame with matching geometries and their neighbours from the right
-  * DataFrame. The right DataFrame must have a column of geometries. The
-  * transformer is configured using the [[SpatialKNNParams]] class.
+  * a DataFrame with matching geometries and their neighbours from the
+  * candidates DataFrame. The candidates DataFrame must have a column of
+  * geometries. The transformer is configured using the [[SpatialKNNParams]]
+  * class.
   * @param uid
   *   A unique identifier for the transformer. This is used to identify the
   *   transformer when saving and loading the transformer. The default value is
   *   [[Identifiable.randomUID]].
-  * @param rightDf
-  *   The right DataFrame to join with. This DataFrame must have a column of
-  *   geometries.
+  * @param candidatesDf
+  *   The candidates DataFrame to join with. This DataFrame must have a column
+  *   of geometries.
   */
-class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
+class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
     extends Transformer
       with IterativeTransformer
       with SpatialKNNParams
@@ -35,7 +36,7 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
     private val mc = MosaicContext.context()
     // The HexRingNeighbours transformer is used to find the neighbours of each geometry.
     // It is configured using the parameters of this transformer.
-    private val hexRingNeighboursTf = HexRingNeighbours(rightDf)
+    private val hexRingNeighboursTf = HexRingNeighbours(candidatesDf)
     // The checkpoint manager is used to manage the checkpointing of the interim matches.
     // We are using delta checkpoints to avoid the overhead of writing the entire DataFrame and unneeded unions.
     var matchesCheckpoint: CheckpointManager = _
@@ -47,39 +48,40 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
 
     /**
       * A default constructor that is needed for loading the transformer. Note
-      * that loaded transformers will not have a right DataFrame. And right
-      * DataFrame must be set before the transformer can be used.
+      * that loaded transformers will not have a candidates DataFrame. And
+      * candidates DataFrame must be set before the transformer can be used.
       */
     def this() = this(Identifiable.randomUID("ApproximateSpatialKNN"), null)
 
     /**
       * A constructor that is needed for loading the transformer. Note that
-      * loaded transformers will not have a right DataFrame. And right DataFrame
-      * must be set before the transformer can be used.
+      * loaded transformers will not have a candidates DataFrame. And candidates
+      * DataFrame must be set before the transformer can be used.
       */
     def this(uid: String) = this(uid, null)
 
     /**
-      * A copy constructor that takes a new right DataFrame. The right DataFrame
-      * must have a column of geometries. This is used to emulate the behaviour
-      * of the setParamName methods in the [[Params]] API.
-      * @param right
-      *   The right DataFrame to join with using KNN relation.
+      * A copy constructor that takes a new candidates DataFrame. The candidates
+      * DataFrame must have a column of geometries. This is used to emulate the
+      * behaviour of the setParamName methods in the [[Params]] API.
+      * @param candidatesDf
+      *   The candidates DataFrame to join with using KNN relation.
       * @return
-      *   A copy of this transformer with the right DataFrame set.
+      *   A copy of this transformer with the candidates DataFrame set.
       */
-    def setRightDf(right: Dataset[_]): this.type = {
-        this.rightDf = right
-        hexRingNeighboursTf.setRight(right)
+    def setCandidatesDf(candidatesDf: Dataset[_]): this.type = {
+        this.candidatesDf = candidatesDf
+        hexRingNeighboursTf.setRight(candidatesDf)
         this
     }
 
     /**
       * Transform the input dataset before the first iteration. Make sure
-      * left_miid field exists. left_miid is the default value for
-      * [[leftRowID]]. This can be changed using the [[setLeftRowID]] method.
-      * left_miid is used to identify the left geometry in the result. Set the
-      * starting iteration to 1.
+      * landmarks_miid field exists. landmarks_miid is the default value for
+      * [[landmarksRowID]]. This can be changed using the [[setLandmarksRowID]]
+      * method. landmarks_miid is used to identify the landmarks dataset rows in
+      * the result. Set the starting iteration to 1. Set the starting match
+      * radius to 0.0.
       * @param input
       *   Input dataset
       * @return
@@ -87,15 +89,15 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
       */
     override def inputTransform(input: Dataset[_]): DataFrame = {
         input
-            .withColumn(getLeftRowID, monotonically_increasing_id())
+            .withColumn(getLandmarksRowID, monotonically_increasing_id())
             .withColumn("iteration", lit(1))
             .withColumn("match_radius", lit(0.0))
     }
 
     /**
       * Early stopping condition. Stop when the number of matches doesnt change
-      * for [[getEarlyStopping]] iterations or when the number of candidates
-      * left to match doesnt change for [[getEarlyStopping]] iterations.
+      * for [[getEarlyStopIterations]] iterations or when the number of candidates
+      * left to match doesnt change for [[getEarlyStopIterations]] iterations.
       * @param preDf
       *   Dataset containing the previous candidates left to match.
       * @param postDf
@@ -108,8 +110,8 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
         val postCount = postDf.count()
         val newMatchesCount = matchesCheckpoint
             .load()
-            .where("right_miid is not null")
-            .groupBy("left_miid", "right_miid")
+            .where("candidates_miid is not null")
+            .groupBy("landmarks_miid", "candidates_miid")
             .count()
             .count()
         val condition = (preCount == postCount) && (matchCount == newMatchesCount) && (newMatchesCount > 0)
@@ -122,10 +124,12 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
       * [[HexRingNeighbours]] as a function of the current iteration. After each
       * iteration increment the iteration by 1.
       * @param dataset
-      *   Previous iteration matching candidates from the left input dataset.
+      *   Previous iteration matching candidates from the landmarks input
+      *   dataset.
       * @return
-      *   Current iteration matching candidates from the left input dataset.
-      *   Only the rows that do not have sufficient neighbours are returned.
+      *   Current iteration matching candidates from the landmarks input
+      *   dataset. Only the rows that do not have sufficient neighbours are
+      *   returned.
       */
     override def iterationTransform(dataset: Dataset[_]): DataFrame = {
         // We are using delta checkpoints to avoid the overhead of writing the entire DataFrame and unneeded unions.
@@ -133,13 +137,13 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
         val newMatches = hexRingNeighboursTf.transform(dataset)
         matches = matchesCheckpoint.append(newMatches)
 
-        val groupByCols = dataset.columns.filterNot(Seq("iteration", "match_radius", getLeftRowID).contains)
+        val groupByCols = dataset.columns.filterNot(Seq("iteration", "match_radius", getLandmarksRowID).contains)
         val result = matches
             // Apply distance threshold but dont drop null matches
             .where(coalesce(col(hexRingNeighboursTf.distanceCol) <= getDistanceThreshold, lit(true)))
-            .groupBy(getLeftRowID, groupByCols: _*)
+            .groupBy(getLandmarksRowID, groupByCols: _*)
             .agg(
-              sum(col(getRightRowID).isNotNull.cast("int")).alias("match_count"),
+              sum(col(getCandidatesRowID).isNotNull.cast("int")).alias("match_count"),
               max("iteration").alias("iteration"),
               max(hexRingNeighboursTf.distanceCol).alias("match_radius")
             )
@@ -175,15 +179,16 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
                 .withColumnRenamed("match_radius", hexRingNeighboursTf.distanceCol)
             hexRingNeighboursTf
                 .setIterationID(-1)
-            iterationTransform(finalInput)        }
+            iterationTransform(finalInput)
+        }
     }
 
     /**
       * Transform the input dataset. The input dataset must have a column of
-      * geometries. The output dataset contains the left geometry, the right
-      * geometry and the distance between the two geometries. It also contains
-      * the iteration when the match occurred and the order number of the
-      * neighbour based on the distance.
+      * geometries. The output dataset contains the landmark geo features, the
+      * candidates geo features and the distance between the two geometries. It
+      * also contains the iteration when the match occurred and the order number
+      * of the neighbour based on the distance.
       * @param dataset
       *   Input dataset
       * @return
@@ -192,18 +197,18 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
     override def transform(dataset: Dataset[_]): DataFrame = {
         matchesCheckpoint = CheckpointManager(getCheckpointTablePrefix, "matches", isTable = getUseTableCheckpoint)
 
-        val rightDfIndexed = rightDf
-            .withColumn(getRightRowID, monotonically_increasing_id())
+        val candidatesDfIndexed = candidatesDf
+            .withColumn(getCandidatesFeatureCol, monotonically_increasing_id())
             .withColumn(
-              hexRingNeighboursTf.rightGridCol(getRightFeatureCol),
-              grid_tessellateexplode(col(getRightFeatureCol), getIndexResolution, keepCoreGeometries = false)
+              hexRingNeighboursTf.rightGridCol(getCandidatesFeatureCol),
+              grid_tessellateexplode(col(getCandidatesFeatureCol), getIndexResolution, keepCoreGeometries = false)
             )
             .checkpoint(true)
 
         hexRingNeighboursTf
-            .setRight(rightDfIndexed)
-            .setLeftFeatureCol(getLeftFeatureCol)
-            .setRightFeatureCol(getRightFeatureCol)
+            .setRight(candidatesDfIndexed)
+            .setLeftFeatureCol(getLandmarksFeatureCol)
+            .setRightFeatureCol(getCandidatesFeatureCol)
             .setIndexResolution(getIndexResolution)
             .setIterationID(1)
 
@@ -212,7 +217,7 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
         matches = matchesCheckpoint
             .load()
             // Drop null matches (needed during iterations for proper hex ring neighbour calculation).
-            .where(col("right_miid").isNotNull)
+            .where(col("candidates_miid").isNotNull)
             .withColumn("neighbour_number", row_number().over(hexRingNeighboursTf.window))
             .where(col("neighbour_number") <= getKNeighbours)
             // Apply distance threshold
@@ -223,17 +228,18 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
     }
 
     /**
-      * Generate the output schema. The output schema contains the left schema,
-      * the projected right schema, left_miid, right_miid, distance, iteration
-      * and neighbour_number.
+      * Generate the output schema. The output schema contains the landmarks
+      * dataset schema, the projected candidates dataset schema, landmarks_miid,
+      * candidates_miid, distance, iteration and neighbour_number.
       * @return
-      *   Left geometry column name
+      *   Output dataset schema.
       */
     override def transformSchema(schema: StructType): StructType = {
         val neighboursSchema = hexRingNeighboursTf.transformSchema(schema).copy()
         neighboursSchema
-            .add(getLeftRowID, LongType, nullable = false)
-            .add(getRightRowID, LongType, nullable = true)
+            .add(getLandmarksRowID, LongType, nullable = false)
+            .add(getCandidatesRowID, LongType, nullable = true)
+            .add(hexRingNeighboursTf.distanceCol, DoubleType, nullable = false)
             .add("iteration", IntegerType, nullable = false)
             .add("neighbour_number", IntegerType, nullable = false)
     }
@@ -268,26 +274,26 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
         val matches = matchesCheckpoint.load()
         val matchCount = matches.count().toDouble
         val maxNeighbours = matches
-            .groupBy(getLeftRowID)
+            .groupBy(getLandmarksRowID)
             .agg(max("neighbour_number"))
             .agg(max("max(neighbour_number)"))
             .first()
             .getInt(0)
             .toDouble
         val maxRadius = matches
-            .groupBy(getLeftRowID)
+            .groupBy(getLandmarksRowID)
             .agg(max(hexRingNeighboursTf.distanceCol).alias("max(distance)"))
             .agg(max("max(distance)"))
             .first()
             .getDouble(0)
         val minRadius = matches
-            .groupBy(getLeftRowID)
+            .groupBy(getLandmarksRowID)
             .agg(min(hexRingNeighboursTf.distanceCol).alias("min(distance)"))
             .agg(min("min(distance)"))
             .first()
             .getDouble(0)
         val convergenceIteration = matches
-            .groupBy(getLeftRowID)
+            .groupBy(getLandmarksRowID)
             .agg(max("iteration"))
             .agg(max("max(iteration)"))
             .first()
@@ -307,13 +313,12 @@ class SpatialKNN(override val uid: String, var rightDf: Dataset[_])
 }
 
 /**
-  * A companion object for the [[SpatialKNN]] transformer. Implements
-  * the apply constructor for the [[SpatialKNN]] transformer.
-  * Implements the default reader for the [[SpatialKNN]] transformer.
+  * A companion object for the [[SpatialKNN]] transformer. Implements the apply
+  * constructor for the [[SpatialKNN]] transformer. Implements the default
+  * reader for the [[SpatialKNN]] transformer.
   */
 object SpatialKNN extends DefaultParamsReadable[SpatialKNN] {
 
-    def apply(rightDf: Dataset[_]): SpatialKNN =
-        new SpatialKNN(Identifiable.randomUID("approximate_spatial_knn"), rightDf)
+    def apply(candidatesDf: Dataset[_]): SpatialKNN = new SpatialKNN(Identifiable.randomUID("approximate_spatial_knn"), candidatesDf)
 
 }

@@ -11,13 +11,17 @@ trait SpatialKNNParams extends Params with IterativeTransformerParams {
     val approximate: BooleanParam =
         new BooleanParam(this, "approximate", "Whether to use approximation that runs faster or to ensure exactness.")
 
-    val leftFeatureCol: Param[String] = new Param[String](this, "leftFeatureCol", "Column name of a column containing the geo feature.")
+    val landmarksFeatureCol: Param[String] =
+        new Param[String](this, "landmarksFeatureCol", "Column name of a column containing the landmarks geo feature.")
 
-    val leftRowID: Param[String] = new Param[String](this, "leftRowID", "Column name of a column containing the row ID.")
+    val landmarksRowID: Param[String] =
+        new Param[String](this, "landmarksRowID", "Column name of a column containing the landmarks row ID.")
 
-    val rightFeatureCol: Param[String] = new Param[String](this, "rightFeatureCol", "Column name of a column containing the geo feature.")
+    val candidatesFeatureCol: Param[String] =
+        new Param[String](this, "candidatesFeatureCol", "Column name of a column containing the candidates geo feature.")
 
-    val rightRowID: Param[String] = new Param[String](this, "rightRowID", "Column name of a column containing the row ID.")
+    val candidatesRowID: Param[String] =
+        new Param[String](this, "candidatesRowID", "Column name of a column containing the candidates row ID.")
 
     val distanceThreshold: DoubleParam = new DoubleParam(this, "distanceThreshold", "Distance threshold to stop the algorithm.")
 
@@ -32,20 +36,20 @@ trait SpatialKNNParams extends Params with IterativeTransformerParams {
         new IntParam(
           this,
           "kNeighbours",
-          "Number defining how many neighbours will be returned for each left feature from right feature."
+          "Number defining how many neighbours will be returned for each landmark feature from candidates features."
         )
 
     def getUseTableCheckpoint: Boolean = $(useTableCheckpoint)
 
     def getApproximate: Boolean = $(approximate)
 
-    def getLeftFeatureCol: String = $(leftFeatureCol)
+    def getLandmarksFeatureCol: String = $(landmarksFeatureCol)
 
-    def getLeftRowID: String = if (isDefined(leftRowID)) $(leftRowID) else "left_miid"
+    def getLandmarksRowID: String = if (isDefined(landmarksRowID)) $(landmarksRowID) else "landmarks_miid"
 
-    def getRightFeatureCol: String = $(rightFeatureCol)
+    def getCandidatesFeatureCol: String = $(candidatesFeatureCol)
 
-    def getRightRowID: String = if (isDefined(rightRowID)) $(rightRowID) else "right_miid"
+    def getCandidatesRowID: String = if (isDefined(candidatesRowID)) $(candidatesRowID) else "candidates_miid"
 
     // If no distance threshold is set, we will use a very large number that is outside of
     // the bounds of any CRS being used.
@@ -59,13 +63,13 @@ trait SpatialKNNParams extends Params with IterativeTransformerParams {
 
     def setApproximate(b: Boolean): this.type = set(approximate, b)
 
-    def setLeftFeatureCol(col: String): this.type = set(leftFeatureCol, col)
+    def setLandmarksFeatureCol(col: String): this.type = set(landmarksFeatureCol, col)
 
-    def setLeftRowID(col: String): this.type = set(leftRowID, col)
+    def setLandmarksRowID(col: String): this.type = set(landmarksRowID, col)
 
-    def setRightFeatureCol(col: String): this.type = set(rightFeatureCol, col)
+    def setCandidatesFeatureCol(col: String): this.type = set(candidatesFeatureCol, col)
 
-    def setRightRowID(col: String): this.type = set(rightRowID, col)
+    def setCandidatesRowID(col: String): this.type = set(candidatesRowID, col)
 
     def setDistanceThreshold(n: Double): this.type = set(distanceThreshold, n)
 

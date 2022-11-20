@@ -17,6 +17,7 @@ __all__ = [
     "st_perimeter",
     "st_convexhull",
     "st_buffer",
+    "st_buffer_disc",
     "st_dump",
     "st_envelope",
     "st_srid",
@@ -167,6 +168,35 @@ def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "st_buffer", pyspark_to_java_column(geom), pyspark_to_java_column(radius)
+    )
+
+def st_buffer_disc(geom: ColumnOrName, innerRadius: ColumnOrName, outerRadius: ColumnOrName) -> Column:
+    """
+    Compute the buffered geometry disc based on geom and provided radiuses.
+    The result geometry is a polygon/multipolygon with a hole in the center.
+    The hole covers the area of st_buffer(geom, innerRadius).
+    The result geometry covers the area of st_difference(st_buffer(geom, outerRadius), st_buffer(geom, innerRadius)).
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+    innerRadius : Column
+        The inner radius of buffering
+    outerRadius : Column
+        The outer radius of buffering
+
+    Returns
+    -------
+    Column
+        A geometry
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_buffer_disc",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(innerRadius),
+        pyspark_to_java_column(outerRadius)
     )
 
 

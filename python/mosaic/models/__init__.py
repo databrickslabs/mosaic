@@ -1,1 +1,1 @@
-from .knn import *
+from .knn import SpatialKNN
