@@ -10,7 +10,7 @@ import org.apache.spark.sql.types._
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
-trait CellKDiscBehaviors extends MosaicSpatialQueryTest {
+trait CellKLoopBehaviors extends MosaicSpatialQueryTest {
 
     def behaviorComputedColumns(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
@@ -28,7 +28,7 @@ trait CellKDiscBehaviors extends MosaicSpatialQueryTest {
 
         val mosaics = boroughs
             .select(
-              grid_cellkdisc(col("cell_id"), k)
+              grid_cellkloop(col("cell_id"), k)
             )
             .collect()
 
@@ -37,8 +37,8 @@ trait CellKDiscBehaviors extends MosaicSpatialQueryTest {
 
     def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
         val funcs = mosaicContext.functions
-        noException should be thrownBy funcs.grid_cellkdisc(col("wkt"), lit(3))
-        noException should be thrownBy funcs.grid_cellkdisc(col("wkt"), 3)
+        noException should be thrownBy funcs.grid_cellkloop(col("wkt"), lit(3))
+        noException should be thrownBy funcs.grid_cellkloop(col("wkt"), 3)
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
@@ -51,7 +51,7 @@ trait CellKDiscBehaviors extends MosaicSpatialQueryTest {
         val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
         val k = 4
 
-        val cellKDiscExpr = CellKDisc(
+        val cellKLoopExpr = CellKLoop(
           lit(wkt).expr,
           lit(k).expr,
           mc.getIndexSystem.name,
@@ -59,11 +59,11 @@ trait CellKDiscBehaviors extends MosaicSpatialQueryTest {
         )
 
         mc.getIndexSystem match {
-            case H3IndexSystem  => cellKDiscExpr.dataType shouldEqual ArrayType(LongType)
-            case BNGIndexSystem => cellKDiscExpr.dataType shouldEqual ArrayType(StringType)
+            case H3IndexSystem  => cellKLoopExpr.dataType shouldEqual ArrayType(LongType)
+            case BNGIndexSystem => cellKLoopExpr.dataType shouldEqual ArrayType(StringType)
         }
 
-        val badExpr = CellKDisc(
+        val badExpr = CellKLoop(
           lit(10).expr,
           lit(true).expr,
           mc.getIndexSystem.name,
@@ -72,11 +72,11 @@ trait CellKDiscBehaviors extends MosaicSpatialQueryTest {
 
         an[Error] should be thrownBy badExpr.inputTypes
 
-        noException should be thrownBy mc.functions.grid_cellkdisc(lit(""), lit(k))
-        noException should be thrownBy mc.functions.grid_cellkdisc(lit(""), k)
+        noException should be thrownBy mc.functions.grid_cellkloop(lit(""), lit(k))
+        noException should be thrownBy mc.functions.grid_cellkloop(lit(""), k)
 
-        noException should be thrownBy cellKDiscExpr.makeCopy(cellKDiscExpr.children.toArray)
-        noException should be thrownBy cellKDiscExpr.withNewChildrenInternal(Array(cellKDiscExpr.children: _*))
+        noException should be thrownBy cellKLoopExpr.makeCopy(cellKLoopExpr.children.toArray)
+        noException should be thrownBy cellKLoopExpr.withNewChildrenInternal(Array(cellKLoopExpr.children: _*))
     }
 
 }

@@ -13,7 +13,7 @@ object BadIndexSystem extends IndexSystem(BooleanType) {
 
     override def kRing(index: Long, n: Int): Seq[Long] = throw new UnsupportedOperationException
 
-    override def kDisc(index: Long, n: Int): Seq[Long] = throw new UnsupportedOperationException
+    override def kLoop(index: Long, n: Int): Seq[Long] = throw new UnsupportedOperationException
 
     override def resolutions: Set[Int] = throw new UnsupportedOperationException
 

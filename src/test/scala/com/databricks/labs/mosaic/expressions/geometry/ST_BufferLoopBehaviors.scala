@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions.lit
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
-trait ST_BufferDiscBehaviors extends MosaicSpatialQueryTest {
+trait ST_BufferLoopBehaviors extends MosaicSpatialQueryTest {
 
     def behavior(mc: MosaicContext): Unit = {
         val sc = spark
@@ -20,7 +20,7 @@ trait ST_BufferDiscBehaviors extends MosaicSpatialQueryTest {
             .getWKTRowsDf(mc)
             .orderBy("id")
             .select("wkt")
-            .withColumn("wkt", st_bufferdisc($"wkt", lit(0.1), lit(0.2)))
+            .withColumn("wkt", st_bufferloop($"wkt", lit(0.1), lit(0.2)))
 
         val expected = mocks
             .getWKTRowsDf(mc)
@@ -41,7 +41,7 @@ trait ST_BufferDiscBehaviors extends MosaicSpatialQueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val result = mocks.getWKTRowsDf(mc).select(st_bufferdisc($"wkt", 0.1, 0.2))
+        val result = mocks.getWKTRowsDf(mc).select(st_bufferloop($"wkt", 0.1, 0.2))
 
         val plan = result.queryExecution.executedPlan
         val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
@@ -64,11 +64,11 @@ trait ST_BufferDiscBehaviors extends MosaicSpatialQueryTest {
 
         val input = "POLYGON (10 10, 20 10, 15 20, 10 10)"
 
-        val stBufferDisc =  ST_BufferDisc(lit(input).expr, lit(0.1).expr, lit(0.2).expr, "illegalAPI")
-        stBufferDisc.first shouldEqual lit(input).expr
-        stBufferDisc.second shouldEqual lit(0.1).expr
-        stBufferDisc.third shouldEqual lit(0.2).expr
-        noException should be thrownBy stBufferDisc.makeCopy(Array(stBufferDisc.first, stBufferDisc.second, stBufferDisc.third))
+        val stBufferLoop =  ST_BufferLoop(lit(input).expr, lit(0.1).expr, lit(0.2).expr, "illegalAPI")
+        stBufferLoop.first shouldEqual lit(input).expr
+        stBufferLoop.second shouldEqual lit(0.1).expr
+        stBufferLoop.third shouldEqual lit(0.2).expr
+        noException should be thrownBy stBufferLoop.makeCopy(Array(stBufferLoop.first, stBufferLoop.second, stBufferLoop.third))
     }
 
 }

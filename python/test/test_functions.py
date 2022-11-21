@@ -39,6 +39,7 @@ class TestFunctions(MosaicTestCase):
             df.withColumn("st_area", api.st_area("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
             .withColumn("st_buffer", api.st_buffer("wkt", lit(1.1)))
+            .withColumn("st_buffer", api.st_bufferloop("wkt", lit(1.1), lit(1.2)))
             .withColumn("st_perimeter", api.st_perimeter("wkt"))
             .withColumn("st_convexhull", api.st_convexhull("wkt"))
             .withColumn("st_dump", api.st_dump("wkt"))
@@ -95,6 +96,14 @@ class TestFunctions(MosaicTestCase):
                 api.grid_tessellateexplode("wkt", lit(1), False),
             )
             .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
+            .withColumn("grid_cellkring", api.grid_cellkring("grid_pointascellid", lit(1)))
+            .withColumn("grid_cellkloop", api.grid_cellkring("grid_pointascellid", lit(1)))
+            .withColumn("grid_cellkringexplode", api.grid_cellkring("grid_pointascellid", lit(1)))
+            .withColumn("grid_cellkloopexplode", api.grid_cellkring("grid_pointascellid", lit(1)))
+            .withColumn("grid_geometrykring", api.grid_cellkring("wkt", lit(4), lit(1))
+            .withColumn("grid_geometrykloop", api.grid_cellkring("wkt", lit(4), lit(1))
+            .withColumn("grid_geometrykringexplode", api.grid_cellkring("wkt", lit(4), lit(1))
+            .withColumn("grid_geometrykloopexplode", api.grid_cellkring("wkt", lit(4), lit(1))
 
 
             # Deprecated

@@ -8,8 +8,8 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
 @ExpressionDescription(
-  usage = "_FUNC_(cellId, k) - Returns k disc for a given cell." +
-      "The k disc is the set of cells that are within the k ring set of cells " +
+  usage = "_FUNC_(cellId, k) - Returns k loop (hollow ring) for a given cell." +
+      "The k loop is the set of cells that are within the k ring set of cells " +
       "but are not within the k-1 ring set of cells.",
   examples = """
     Examples:
@@ -18,7 +18,7 @@ import org.apache.spark.sql.types._
   """,
   since = "1.0"
 )
-case class CellKDisc(cellId: Expression, k: Expression, indexSystemName: String, geometryAPIName: String)
+case class CellKLoop(cellId: Expression, k: Expression, indexSystemName: String, geometryAPIName: String)
     extends BinaryExpression
       with ExpectsInputTypes
       with NullIntolerant
@@ -42,10 +42,10 @@ case class CellKDisc(cellId: Expression, k: Expression, indexSystemName: String,
     /** Expression output DataType. */
     override def dataType: DataType = ArrayType(indexSystem.getCellIdDataType)
 
-    override def toString: String = s"grid_cellkdisc($cellId, $k)"
+    override def toString: String = s"grid_cellkloop($cellId, $k)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "grid_cellkdisc"
+    override def prettyName: String = "grid_cellkloop"
 
     /**
       * Generates a set of indices corresponding to kring call over the input
@@ -61,14 +61,14 @@ case class CellKDisc(cellId: Expression, k: Expression, indexSystemName: String,
     // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any): Any = {
         val cellId = indexSystem.formatCellId(input1, LongType).asInstanceOf[Long]
-        val indices = indexSystem.kDisc(cellId, input2.asInstanceOf[Int])
+        val indices = indexSystem.kLoop(cellId, input2.asInstanceOf[Int])
         val serialized = ArrayData.toArrayData(indices.map(indexSystem.serializeCellId))
         serialized
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = CellKDisc(asArray(0), asArray(1), indexSystemName, geometryAPIName)
+        val res = CellKLoop(asArray(0), asArray(1), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -78,15 +78,15 @@ case class CellKDisc(cellId: Expression, k: Expression, indexSystemName: String,
 
 }
 
-object CellKDisc {
+object CellKLoop {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[CellKDisc].getCanonicalName,
+          classOf[CellKLoop].getCanonicalName,
           db.orNull,
-          "grid_cellkdisc",
-          "_FUNC_(cellId, k) - Returns k disc for a given cell.",
+          "grid_cellkloop",
+          "_FUNC_(cellId, k) - Returns k loop (hollow ring) for a given cell.",
           "",
           """
             |    Examples:

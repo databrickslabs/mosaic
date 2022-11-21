@@ -94,8 +94,10 @@ trait GeometryKRingExplodeBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy geomKRingExplodeExpr.resolution
         noException should be thrownBy geomKRingExplodeExpr.k
 
-        noException should be thrownBy mc.functions.grid_cellkdiscexplode(lit(""), lit(5))
-        noException should be thrownBy mc.functions.grid_cellkdiscexplode(lit(""), 5)
+        noException should be thrownBy mc.functions.grid_geometrykringexplode(lit(""), lit(5), lit(2))
+        noException should be thrownBy mc.functions.grid_geometrykringexplode(lit(""), lit(5), 2)
+        noException should be thrownBy mc.functions.grid_geometrykringexplode(lit(""), 5, lit(2))
+        noException should be thrownBy mc.functions.grid_geometrykringexplode(lit(""), 5, 2)
     }
 
 }

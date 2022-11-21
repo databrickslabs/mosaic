@@ -665,16 +665,16 @@ grid_cellkringexplode
    </div>
 
 
-grid_cellkdisc
+grid_cellkloop
 **************
 
-.. function:: grid_cellkdisc(index_id, k)
+.. function:: grid_cellkloop(index_id, k)
 
-    Returns the k-disc/hex-ring of a given index.
+    Returns the k loop (hollow ring) of a given index.
 
     :param index_id: Index ID
     :type index_id: Column: Long
-    :param k: K-disc/hex-ring size
+    :param k: K-loop size
     :type k: Column: Integer
     :rtype: Column: ArrayType(Long)
 
@@ -684,9 +684,9 @@ grid_cellkdisc
    .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
-    >>> df.select(grid_cellkdisc('grid_cellid', lit(2)).alias("kdisc")).show()
+    >>> df.select(grid_cellkloop('grid_cellid', lit(2)).alias("kloop")).show()
     +-------------------------------------------------------------------+
-    |         grid_cellid|                                         kdisc|
+    |         grid_cellid|                                         kloop|
     +--------------------+----------------------------------------------+
     |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
     +--------------------+----------------------------------------------+
@@ -694,18 +694,18 @@ grid_cellkdisc
    .. code-tab:: scala
 
     >>> val df = List((613177664827555839)).toDF("grid_cellid")
-    >>> df.select(grid_cellkdisc('grid_cellid', lit(2)).alias("kdisc")).show()
+    >>> df.select(grid_cellkloop('grid_cellid', lit(2)).alias("kloop")).show()
     +-------------------------------------------------------------------+
-    |         grid_cellid|                                         kdisc|
+    |         grid_cellid|                                         kloop|
     +--------------------+----------------------------------------------+
     |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
     +--------------------+----------------------------------------------+
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cellkdisc(613177664827555839, 2)
+    >>> SELECT grid_cellkloop(613177664827555839, 2)
     +-------------------------------------------------------------------+
-    |         grid_cellid|                                         kdisc|
+    |         grid_cellid|                                         kloop|
     +--------------------+----------------------------------------------+
     |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
     +--------------------+----------------------------------------------+
@@ -713,9 +713,9 @@ grid_cellkdisc
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
-    >>> showDF(select(df, grid_cellkdisc(column("grid_cellid"), lit(2L))))
+    >>> showDF(select(df, grid_cellkloop(column("grid_cellid"), lit(2L))))
     +-------------------------------------------------------------------+
-    |         grid_cellid|                                         kdisc|
+    |         grid_cellid|                                         kloop|
     +--------------------+----------------------------------------------+
     |  613177664827555839|[613177664827555839, 613177664825458687, ....]|
     +--------------------+----------------------------------------------+
@@ -726,13 +726,13 @@ grid_cellkdisc
    <div class="figure-group">
 
 
-.. figure:: ../images/grid_cellkdisc/h3.png
+.. figure:: ../images/grid_cellkloop/h3.png
    :figclass: doc-figure-float-left
 
    Fig 1. Cell based kring(2) in H3(8)
 
 
-.. figure:: ../images/grid_cellkdisc/bng.png
+.. figure:: ../images/grid_cellkloop/bng.png
    :figclass: doc-figure-float-left
 
    Fig 2. Cell based kring(2) in BNG(4)
@@ -743,16 +743,16 @@ grid_cellkdisc
    </div>
 
 
-grid_cellkdiscexplode
+grid_cellkloopexplode
 *********************
 
-.. function:: grid_cellkdiscexplode(index_id, k)
+.. function:: grid_cellkloopexplode(index_id, k)
 
-    Returns the k-disc/hex-ring of a given index exploded.
+    Returns the k loop (hollow ring) of a given index exploded.
 
     :param index_id: Index ID
     :type index_id: Column: Long
-    :param k: K-disc/hex-ring size
+    :param k: K-loop size
     :type k: Column: Integer
     :rtype: Column: Long
 
@@ -762,9 +762,9 @@ grid_cellkdiscexplode
    .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
-    >>> df.select(grid_cellkdiscexplode('grid_cellid', lit(2)).alias("kdisc")).show()
+    >>> df.select(grid_cellkloopexplode('grid_cellid', lit(2)).alias("kloop")).show()
     +------------------+
-    |             kdisc|
+    |             kloop|
     +------------------+
     |613177664827555839|
     |613177664825458687|
@@ -777,9 +777,9 @@ grid_cellkdiscexplode
    .. code-tab:: scala
 
     >>> val df = List((613177664827555839)).toDF("grid_cellid")
-    >>> df.select(grid_cellkdiscexplode('grid_cellid', lit(2)).alias("kdisc")).show()
+    >>> df.select(grid_cellkloopexplode('grid_cellid', lit(2)).alias("kloop")).show()
     +------------------+
-    |             kdisc|
+    |             kloop|
     +------------------+
     |613177664827555839|
     |613177664825458687|
@@ -790,9 +790,9 @@ grid_cellkdiscexplode
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cellkdiscexplode(613177664827555839, 2)
+    >>> SELECT grid_cellkloopexplode(613177664827555839, 2)
     +------------------+
-    |             kdisc|
+    |             kloop|
     +------------------+
     |613177664827555839|
     |613177664825458687|
@@ -804,9 +804,9 @@ grid_cellkdiscexplode
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
-    >>> showDF(select(df, grid_cellkdiscexplode(column("grid_cellid"), lit(2L))))
+    >>> showDF(select(df, grid_cellkloopexplode(column("grid_cellid"), lit(2L))))
     +------------------+
-    |             kdisc|
+    |             kloop|
     +------------------+
     |613177664827555839|
     |613177664825458687|
@@ -821,13 +821,13 @@ grid_cellkdiscexplode
    <div class="figure-group">
 
 
-.. figure:: ../images/grid_cellkdisc/h3.png
+.. figure:: ../images/grid_cellkloop/h3.png
    :figclass: doc-figure-float-left
 
    Fig 1. Cell based kring(2) in H3(8)
 
 
-.. figure:: ../images/grid_cellkdisc/bng.png
+.. figure:: ../images/grid_cellkloop/bng.png
    :figclass: doc-figure-float-left
 
    Fig 2. Cell based kring(2) in BNG(4)
@@ -1016,18 +1016,18 @@ grid_geometrykringexplode
    </div>
 
 
-grid_geometrykdisc
+grid_geometrykloop
 ******************
 
-.. function:: grid_geometrykdisc(geometry, resolution, k)
+.. function:: grid_geometrykloop(geometry, resolution, k)
 
-    Returns the k-disc/hex-ring of a given geometry.
+    Returns the k-loop (hollow ring) of a given geometry.
 
     :param geometry: Geometry to be used
     :type geometry: Column
-    :param resolution: Resolution of the index used to calculate the k-disc/hex-ring
+    :param resolution: Resolution of the index used to calculate the k loop
     :type resolution: Column: Integer
-    :param k: K-disc/hex-ring size
+    :param k: K-Loop size
     :type k: Column: Integer
     :rtype: Column: ArrayType(Long)
 
@@ -1037,9 +1037,9 @@ grid_geometrykdisc
    .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
-    >>> df.select(grid_geometrykdisc('geometry', lit(2)).alias("kdisc")).show()
+    >>> df.select(grid_geometrykloop('geometry', lit(2)).alias("kloop")).show()
     +-------------------------------------------------------------------+
-    |            geometry|                                         kdisc|
+    |            geometry|                                         kloop|
     +--------------------+----------------------------------------------+
     |  MULTIPOLYGON ((...|[613177664827555839, 613177664825458687, ....]|
     +--------------------+----------------------------------------------+
@@ -1047,18 +1047,18 @@ grid_geometrykdisc
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
-    >>> df.select(grid_cellkdisc('geometry', lit(2)).alias("kdisc")).show()
+    >>> df.select(grid_cellkloop('geometry', lit(2)).alias("kloop")).show()
     +-------------------------------------------------------------------+
-    |            geometry|                                         kdisc|
+    |            geometry|                                         kloop|
     +--------------------+----------------------------------------------+
     |  MULTIPOLYGON ((...|[613177664827555839, 613177664825458687, ....]|
     +--------------------+----------------------------------------------+
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cellkdisc("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 2)
+    >>> SELECT grid_cellkloop("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 2)
     +-------------------------------------------------------------------+
-    |            geometry|                                         kdisc|
+    |            geometry|                                         kloop|
     +--------------------+----------------------------------------------+
     |  MULTIPOLYGON ((...|[613177664827555839, 613177664825458687, ....]|
     +--------------------+----------------------------------------------+
@@ -1066,9 +1066,9 @@ grid_geometrykdisc
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
-    >>> showDF(select(df, grid_cellkdisc(column("geometry"), lit(2L))))
+    >>> showDF(select(df, grid_cellkloop(column("geometry"), lit(2L))))
     +-------------------------------------------------------------------+
-    |            geometry|                                         kdisc|
+    |            geometry|                                         kloop|
     +--------------------+----------------------------------------------+
     |  MULTIPOLYGON ((...|[613177664827555839, 613177664825458687, ....]|
     +--------------------+----------------------------------------------+
@@ -1079,13 +1079,13 @@ grid_geometrykdisc
    <div class="figure-group">
 
 
-.. figure:: ../images/grid_geometrykdisc/h3.png
+.. figure:: ../images/grid_geometrykloop/h3.png
    :figclass: doc-figure-float-left
 
    Fig 1. Cell based kring(2) in H3(8)
 
 
-.. figure:: ../images/grid_geometrykdisc/bng.png
+.. figure:: ../images/grid_geometrykloop/bng.png
    :figclass: doc-figure-float-left
 
    Fig 2. Cell based kring(2) in BNG(4)
@@ -1096,18 +1096,18 @@ grid_geometrykdisc
    </div>
 
 
-grid_geometrykdiscexplode
+grid_geometrykloopexplode
 *************************
 
-.. function:: grid_geometrykdiscexplode(geometry, resolution, k)
+.. function:: grid_geometrykloopexplode(geometry, resolution, k)
 
-    Returns the k-disc/hex-ring of a given geometry exploded.
+    Returns the k loop (hollow ring) of a given geometry exploded.
 
     :param geometry: Geometry to be used
     :type geometry: Column
-    :param resolution: Resolution of the index used to calculate the k-disc/hex-ring
+    :param resolution: Resolution of the index used to calculate the k loop
     :type resolution: Column: Integer
-    :param k: K-disc/hex-ring size
+    :param k: K-loop size
     :type k: Column: Integer
     :rtype: Column: Long
 
@@ -1117,9 +1117,9 @@ grid_geometrykdiscexplode
    .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
-    >>> df.select(grid_geometrykdiscexplode('geometry', lit(8), lit(2)).alias("kdisc")).show()
+    >>> df.select(grid_geometrykloopexplode('geometry', lit(8), lit(2)).alias("kloop")).show()
     +------------------+
-    |             kdisc|
+    |             kloop|
     +------------------+
     |613177664827555839|
     |613177664825458687|
@@ -1132,9 +1132,9 @@ grid_geometrykdiscexplode
    .. code-tab:: scala
 
     >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
-    >>> df.select(grid_geometrykdiscexplode('geometry', lit(8), lit(2)).alias("kdisc")).show()
+    >>> df.select(grid_geometrykloopexplode('geometry', lit(8), lit(2)).alias("kloop")).show()
     +------------------+
-    |             kdisc|
+    |             kloop|
     +------------------+
     |613177664827555839|
     |613177664825458687|
@@ -1145,9 +1145,9 @@ grid_geometrykdiscexplode
 
    .. code-tab:: sql
 
-    >>> SELECT grid_geometrykdiscexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 8, 2)
+    >>> SELECT grid_geometrykloopexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 8, 2)
     +------------------+
-    |             kdisc|
+    |             kloop|
     +------------------+
     |613177664827555839|
     |613177664825458687|
@@ -1159,9 +1159,9 @@ grid_geometrykdiscexplode
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
-    >>> showDF(select(df, grid_geometrykdiscexplode(column("geometry"), lit(8L), lit(2L))))
+    >>> showDF(select(df, grid_geometrykloopexplode(column("geometry"), lit(8L), lit(2L))))
     +------------------+
-    |             kdisc|
+    |             kloop|
     +------------------+
     |613177664827555839|
     |613177664825458687|
@@ -1176,13 +1176,13 @@ grid_geometrykdiscexplode
    <div class="figure-group">
 
 
-.. figure:: ../images/grid_geometrykdisc/h3.png
+.. figure:: ../images/grid_geometrykloop/h3.png
    :figclass: doc-figure-float-left
 
    Fig 1. Cell based kring(2) in H3(8)
 
 
-.. figure:: ../images/grid_geometrykdisc/bng.png
+.. figure:: ../images/grid_geometrykloop/bng.png
    :figclass: doc-figure-float-left
 
    Fig 2. Cell based kring(2) in BNG(4)

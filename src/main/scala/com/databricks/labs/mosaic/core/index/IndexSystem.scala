@@ -62,18 +62,18 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
     def kRing(index: String, n: Int): Seq[String] = kRing(parse(index), n).map(format)
 
     /**
-      * Get the k disk of indices around the provided index id.
+      * Get the k loop (hollow ring) of indices around the provided index id.
       *
       * @param index
-      *   Index ID to be used as a center of k disk.
+      *   Index ID to be used as a center of k loop.
       * @param n
-      *   Distance of k disk to be generated around the input index.
+      *   Distance of k loop to be generated around the input index.
       * @return
-      *   A collection of index IDs forming a k disk.
+      *   A collection of index IDs forming a k loop.
       */
-    def kDisc(index: Long, n: Int): Seq[Long]
+    def kLoop(index: Long, n: Int): Seq[Long]
 
-    def kDisc(index: String, n: Int): Seq[String] = kDisc(parse(index), n).map(format)
+    def kLoop(index: String, n: Int): Seq[String] = kLoop(parse(index), n).map(format)
 
     /**
       * Returns the set of supported resolutions for the given index system.

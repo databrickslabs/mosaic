@@ -84,8 +84,8 @@ trait CellKRingExplodeBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy cellKRingExplodeExpr.cellId
         noException should be thrownBy cellKRingExplodeExpr.k
 
-        noException should be thrownBy mc.functions.grid_cellkdiscexplode(lit(""), lit(5))
-        noException should be thrownBy mc.functions.grid_cellkdiscexplode(lit(""), 5)
+        noException should be thrownBy mc.functions.grid_cellkringexplode(lit(""), lit(5))
+        noException should be thrownBy mc.functions.grid_cellkringexplode(lit(""), 5)
     }
 
 }

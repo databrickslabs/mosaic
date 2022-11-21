@@ -10,7 +10,7 @@ import org.apache.spark.sql.functions._
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
-trait GeometryKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
+trait GeometryKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
 
     def behavior(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
@@ -26,10 +26,10 @@ trait GeometryKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
         val mosaics = boroughs
             .select(
               col("id"),
-              grid_geometrykdiscexplode(col("wkt"), resolution, k).alias("kdisc")
+              grid_geometrykloopexplode(col("wkt"), resolution, k).alias("kloop")
             )
             .groupBy(col("id"))
-            .agg(collect_set("kdisc"))
+            .agg(collect_set("kloop"))
             .collect()
 
         boroughs.collect().length shouldEqual mosaics.length
@@ -37,12 +37,12 @@ trait GeometryKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
 
     def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
         val funcs = mosaicContext.functions
-        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), lit(3), lit(3))
-        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), lit(3), 3)
-        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), 3, lit(3))
-        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), 3, 3)
-        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), "3", lit(3))
-        noException should be thrownBy funcs.grid_geometrykdiscexplode(col("wkt"), "3", 3)
+        noException should be thrownBy funcs.grid_geometrykloopexplode(col("wkt"), lit(3), lit(3))
+        noException should be thrownBy funcs.grid_geometrykloopexplode(col("wkt"), lit(3), 3)
+        noException should be thrownBy funcs.grid_geometrykloopexplode(col("wkt"), 3, lit(3))
+        noException should be thrownBy funcs.grid_geometrykloopexplode(col("wkt"), 3, 3)
+        noException should be thrownBy funcs.grid_geometrykloopexplode(col("wkt"), "3", lit(3))
+        noException should be thrownBy funcs.grid_geometrykloopexplode(col("wkt"), "3", 3)
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
@@ -56,7 +56,7 @@ trait GeometryKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
         val k = 4
         val resolution = 3
 
-        val geomKDiscExplodeExpr = GeometryKDiscExplode(
+        val geomKLoopExplodeExpr = GeometryKLoopExplode(
           lit(wkt).expr,
           lit(resolution).expr,
           lit(k).expr,
@@ -64,14 +64,14 @@ trait GeometryKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
           mc.getGeometryAPI.name
         )
 
-        val withNull = geomKDiscExplodeExpr.copy(geom = lit(null).expr)
+        val withNull = geomKLoopExplodeExpr.copy(geom = lit(null).expr)
 
-        geomKDiscExplodeExpr.position shouldEqual false
-        geomKDiscExplodeExpr.inline shouldEqual false
-        geomKDiscExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
+        geomKLoopExplodeExpr.position shouldEqual false
+        geomKLoopExplodeExpr.inline shouldEqual false
+        geomKLoopExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
         withNull.eval(InternalRow.fromSeq(Seq(null, null, null))) shouldEqual Seq.empty
 
-        val badExpr = GeometryKDiscExplode(
+        val badExpr = GeometryKLoopExplode(
           lit(10).expr,
           lit(resolution).expr,
           lit(k).expr,
@@ -84,20 +84,20 @@ trait GeometryKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
             .withNewChildren(Array(lit(wkt).expr, lit(true).expr, lit(true).expr))
             .checkInputDataTypes()
             .isFailure shouldEqual true
-        geomKDiscExplodeExpr
+        geomKLoopExplodeExpr
             .copy(k = lit(true).expr)
             .checkInputDataTypes()
             .isFailure shouldEqual true
 
         // Default getters
-        noException should be thrownBy geomKDiscExplodeExpr.geom
-        noException should be thrownBy geomKDiscExplodeExpr.resolution
-        noException should be thrownBy geomKDiscExplodeExpr.k
+        noException should be thrownBy geomKLoopExplodeExpr.geom
+        noException should be thrownBy geomKLoopExplodeExpr.resolution
+        noException should be thrownBy geomKLoopExplodeExpr.k
 
-        noException should be thrownBy mc.functions.grid_geometrykdiscexplode(lit(""), lit(5), lit(5))
-        noException should be thrownBy mc.functions.grid_geometrykdiscexplode(lit(""), lit(5), 5)
-        noException should be thrownBy mc.functions.grid_geometrykdiscexplode(lit(""), 5, lit(5))
-        noException should be thrownBy mc.functions.grid_geometrykdiscexplode(lit(""), 5, 5)
+        noException should be thrownBy mc.functions.grid_geometrykloopexplode(lit(""), lit(5), lit(5))
+        noException should be thrownBy mc.functions.grid_geometrykloopexplode(lit(""), lit(5), 5)
+        noException should be thrownBy mc.functions.grid_geometrykloopexplode(lit(""), 5, lit(5))
+        noException should be thrownBy mc.functions.grid_geometrykloopexplode(lit(""), 5, 5)
     }
 
 }

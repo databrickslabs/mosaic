@@ -91,7 +91,7 @@ case class HexRingNeighbours(override val uid: String, var right: Dataset[_])
             } else if (i == 1) {
                 left.withColumn(leftKringCol, grid_geometrykringexplode(col(featureCol), res, i))
             } else {
-                left.withColumn(leftKringCol, grid_geometrykdiscexplode(col(featureCol), res, i))
+                left.withColumn(leftKringCol, grid_geometrykloopexplode(col(featureCol), res, i))
             }
 
         result

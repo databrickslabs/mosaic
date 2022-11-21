@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 
-case class GeometryKDiscExplode(geom: Expression, resolution: Expression, k: Expression, indexSystemName: String, geometryAPIName: String)
+case class GeometryKLoopExplode(geom: Expression, resolution: Expression, k: Expression, indexSystemName: String, geometryAPIName: String)
     extends CollectionGenerator
       with Serializable
       with CodegenFallback {
@@ -60,11 +60,11 @@ case class GeometryKDiscExplode(geom: Expression, resolution: Expression, k: Exp
             val borderNRing = borderIndices.flatMap(indexSystem.kRing(_, n)).toSet
             val nRing = coreIndices ++ borderNRing
 
-            val borderKDisc = borderIndices.flatMap(indexSystem.kDisc(_, kVal)).toSet
+            val borderKLoop = borderIndices.flatMap(indexSystem.kLoop(_, kVal)).toSet
 
-            val kDisc = borderKDisc -- nRing
+            val kLoop = borderKLoop -- nRing
 
-            kDisc.map(row => InternalRow.fromSeq(Seq(indexSystem.serializeCellId(row))))
+            kLoop.map(row => InternalRow.fromSeq(Seq(indexSystem.serializeCellId(row))))
         }
     }
 
@@ -75,15 +75,15 @@ case class GeometryKDiscExplode(geom: Expression, resolution: Expression, k: Exp
 
 }
 
-object GeometryKDiscExplode {
+object GeometryKLoopExplode {
 
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[GeometryKDiscExplode].getCanonicalName,
+          classOf[GeometryKLoopExplode].getCanonicalName,
           db.orNull,
-          "grid_cellkdiscexplode",
+          "grid_cellkloopexplode",
           """
-            |    _FUNC_(cell_id, resolution)) - Generates the geometry based kdisc cell IDs set for the input
+            |    _FUNC_(cell_id, resolution)) - Generates the geometry based k loop (hollow ring) cell IDs set for the input
             |    geometry and the input k value.
             """.stripMargin,
           "",

@@ -344,7 +344,7 @@ package object test {
 
         override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = ???
 
-        override def kDisc(index: Long, n: Int): Seq[Long] = ???
+        override def kLoop(index: Long, n: Int): Seq[Long] = ???
 
         override def kRing(index: Long, n: Int): Seq[Long] = ???
 

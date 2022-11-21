@@ -6,7 +6,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, Nu
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.DataType
 
-case class ST_BufferDisc(inputGeom: Expression, innerRadius: Expression, outerRadius: Expression, geometryAPIName: String)
+case class ST_BufferLoop(inputGeom: Expression, innerRadius: Expression, outerRadius: Expression, geometryAPIName: String)
     extends TernaryExpression
       with NullIntolerant {
 
@@ -29,7 +29,7 @@ case class ST_BufferDisc(inputGeom: Expression, innerRadius: Expression, outerRa
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = ST_BufferDisc(asArray.head, asArray(1), asArray(2), geometryAPIName)
+        val res = ST_BufferLoop(asArray.head, asArray(1), asArray(2), geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -60,16 +60,17 @@ case class ST_BufferDisc(inputGeom: Expression, innerRadius: Expression, outerRa
 
 }
 
-object ST_BufferDisc {
+object ST_BufferLoop {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[ST_BufferDisc].getCanonicalName,
+          classOf[ST_BufferLoop].getCanonicalName,
           db.orNull,
-          "st_bufferdisc",
+          "st_bufferloop",
           """
-            |    _FUNC_(expr1) - Returns the centroid of the geometry.
+            |    _FUNC_(expr1) - Returns the buffer loop of the geometry.
+            |    Buffer loop is the difference between the outer buffer and the inner buffer.
             """.stripMargin,
           "",
           """

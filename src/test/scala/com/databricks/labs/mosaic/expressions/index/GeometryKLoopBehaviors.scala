@@ -10,7 +10,7 @@ import org.apache.spark.sql.types._
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
-trait GeometryKDiscBehaviors extends MosaicSpatialQueryTest {
+trait GeometryKLoopBehaviors extends MosaicSpatialQueryTest {
 
     def behavior(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
@@ -25,7 +25,7 @@ trait GeometryKDiscBehaviors extends MosaicSpatialQueryTest {
 
         val mosaics = boroughs
             .select(
-              grid_geometrykdisc(col("wkt"), resolution, k)
+              grid_geometrykloop(col("wkt"), resolution, k)
             )
             .collect()
 
@@ -34,12 +34,12 @@ trait GeometryKDiscBehaviors extends MosaicSpatialQueryTest {
 
     def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
         val funcs = mosaicContext.functions
-        noException should be thrownBy funcs.grid_geometrykdisc(col("wkt"), lit(3), lit(3))
-        noException should be thrownBy funcs.grid_geometrykdisc(col("wkt"), lit(3), 3)
-        noException should be thrownBy funcs.grid_geometrykdisc(col("wkt"), 3, lit(3))
-        noException should be thrownBy funcs.grid_geometrykdisc(col("wkt"), 3, 3)
-        noException should be thrownBy funcs.grid_geometrykdisc(col("wkt"), "3", lit(3))
-        noException should be thrownBy funcs.grid_geometrykdisc(col("wkt"), "3", 3)
+        noException should be thrownBy funcs.grid_geometrykloop(col("wkt"), lit(3), lit(3))
+        noException should be thrownBy funcs.grid_geometrykloop(col("wkt"), lit(3), 3)
+        noException should be thrownBy funcs.grid_geometrykloop(col("wkt"), 3, lit(3))
+        noException should be thrownBy funcs.grid_geometrykloop(col("wkt"), 3, 3)
+        noException should be thrownBy funcs.grid_geometrykloop(col("wkt"), "3", lit(3))
+        noException should be thrownBy funcs.grid_geometrykloop(col("wkt"), "3", 3)
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
@@ -53,7 +53,7 @@ trait GeometryKDiscBehaviors extends MosaicSpatialQueryTest {
         val k = 4
         val resolution = 3
 
-        val geometryKDiscExpr = GeometryKDisc(
+        val geometryKLoopExpr = GeometryKLoop(
           lit(wkt).expr,
           lit(resolution).expr,
           lit(k).expr,
@@ -62,11 +62,11 @@ trait GeometryKDiscBehaviors extends MosaicSpatialQueryTest {
         )
 
         mc.getIndexSystem match {
-            case H3IndexSystem  => geometryKDiscExpr.dataType shouldEqual ArrayType(LongType)
-            case BNGIndexSystem => geometryKDiscExpr.dataType shouldEqual ArrayType(StringType)
+            case H3IndexSystem  => geometryKLoopExpr.dataType shouldEqual ArrayType(LongType)
+            case BNGIndexSystem => geometryKLoopExpr.dataType shouldEqual ArrayType(StringType)
         }
 
-        val badExpr = GeometryKDisc(
+        val badExpr = GeometryKLoop(
           lit(10).expr,
           lit(resolution).expr,
           lit(true).expr,
@@ -76,12 +76,12 @@ trait GeometryKDiscBehaviors extends MosaicSpatialQueryTest {
 
         an[Error] should be thrownBy badExpr.inputTypes
 
-        noException should be thrownBy mc.functions.grid_geometrykdisc(lit(""), lit(resolution), lit(k))
-        noException should be thrownBy mc.functions.grid_geometrykdisc(lit(""), lit(resolution), k)
-        noException should be thrownBy mc.functions.grid_geometrykdisc(lit(""), resolution, lit(k))
-        noException should be thrownBy mc.functions.grid_geometrykdisc(lit(""), resolution, k)
+        noException should be thrownBy mc.functions.grid_geometrykloop(lit(""), lit(resolution), lit(k))
+        noException should be thrownBy mc.functions.grid_geometrykloop(lit(""), lit(resolution), k)
+        noException should be thrownBy mc.functions.grid_geometrykloop(lit(""), resolution, lit(k))
+        noException should be thrownBy mc.functions.grid_geometrykloop(lit(""), resolution, k)
 
-        noException should be thrownBy geometryKDiscExpr.makeCopy(geometryKDiscExpr.children.toArray)
+        noException should be thrownBy geometryKLoopExpr.makeCopy(geometryKLoopExpr.children.toArray)
     }
 
 }

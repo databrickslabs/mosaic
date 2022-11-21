@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
-case class GeometryKDisc(
+case class GeometryKLoop(
     geom: Expression,
     resolution: Expression,
     k: Expression,
@@ -45,10 +45,10 @@ case class GeometryKDisc(
     /** Expression output DataType. */
     override def dataType: DataType = ArrayType(indexSystem.getCellIdDataType)
 
-    override def toString: String = s"grid_geometrykdisc($geom, $k)"
+    override def toString: String = s"grid_geometrykloop($geom, $k)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "grid_geometrykdisc"
+    override def prettyName: String = "grid_geometrykloop"
 
     /**
       * Generates a set of indices corresponding to kdisc call over the input
@@ -80,18 +80,18 @@ case class GeometryKDisc(
         val borderNRing = borderIndices.flatMap(indexSystem.kRing(_, n)).toSet
         val nRing = coreIndices ++ borderNRing
 
-        val borderKDisc = borderIndices.flatMap(indexSystem.kDisc(_, k)).toSet
+        val borderKLoop = borderIndices.flatMap(indexSystem.kLoop(_, k)).toSet
 
-        val kDisc = borderKDisc -- nRing
+        val kLoop = borderKLoop -- nRing
 
-        val formatted = kDisc.map(indexSystem.serializeCellId)
+        val formatted = kLoop.map(indexSystem.serializeCellId)
         val serialized = ArrayData.toArrayData(formatted.toArray)
         serialized
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = GeometryKDisc(asArray(0), asArray(1), asArray(2), indexSystemName, geometryAPIName)
+        val res = GeometryKLoop(asArray(0), asArray(1), asArray(2), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -106,16 +106,16 @@ case class GeometryKDisc(
 
 }
 
-object GeometryKDisc {
+object GeometryKLoop {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[GeometryKDisc].getCanonicalName,
+          classOf[GeometryKLoop].getCanonicalName,
           db.orNull,
-          "grid_cellkdisc",
-          "_FUNC_(cellId, k) - Returns k disc for a given geometry." +
-              "The k disc is the set of cells that are within the k ring set of cells " +
+          "grid_cellkloop",
+          "_FUNC_(cellId, k) - Returns k loop (hollow ring) for a given geometry." +
+              "The k loop is the set of cells that are within the k ring set of cells " +
               "but are not within the k-1 ring set of cells.",
           "",
           """

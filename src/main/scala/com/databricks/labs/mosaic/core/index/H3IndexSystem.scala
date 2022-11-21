@@ -179,7 +179,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       * @return
       *   A collection of index IDs forming a k disk.
       */
-    override def kDisc(index: Long, n: Int): Seq[Long] = {
+    override def kLoop(index: Long, n: Int): Seq[Long] = {
         // HexRing crashes in case of pentagons.
         // Ensure a KRing fallback in said case.
         Try(

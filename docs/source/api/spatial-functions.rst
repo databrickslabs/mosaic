@@ -174,10 +174,10 @@ st_buffer
     |POLYGON ((29.1055...|
     +--------------------+
 
-st_bufferdisc
+st_bufferloop
 *************
 
-.. function:: st_bufferdisc(col, innerRadius, outerRadius)
+.. function:: st_bufferloop(col, innerRadius, outerRadius)
 
     Buffer the input geometry by radius `radius` and return a new, buffered geometry.
 
@@ -197,7 +197,7 @@ st_bufferdisc
    .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_bufferdisc('wkt', lit(2.), lit(2.1)).show()
+    >>> df.select(st_bufferloop('wkt', lit(2.), lit(2.1)).show()
     +-------------------------+
     | st_buffer(wkt, 2.0, 2.1)|
     +-------------------------+
@@ -207,7 +207,7 @@ st_bufferdisc
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_bufferdisc('wkt', lit(2.), lit(2.1))).show()
+    >>> df.select(st_bufferloop('wkt', lit(2.), lit(2.1))).show()
     +-------------------------+
     | st_buffer(wkt, 2.0, 2.1)|
     +-------------------------+
@@ -216,7 +216,7 @@ st_bufferdisc
 
    .. code-tab:: sql
 
-    >>> SELECT st_bufferdisc("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d, 2.1d)
+    >>> SELECT st_bufferloop("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d, 2.1d)
     +-------------------------+
     | st_buffer(wkt, 2.0, 2.1)|
     +-------------------------+
@@ -226,7 +226,7 @@ st_bufferdisc
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_bufferdisc('wkt', lit(2.), lit(2.1))))
+    >>> showDF(select(df, st_bufferloop('wkt', lit(2.), lit(2.1))))
     +-------------------------+
     | st_buffer(wkt, 2.0, 2.1)|
     +-------------------------+
@@ -234,10 +234,10 @@ st_bufferdisc
     +-------------------------+
 
 
-.. figure:: ../images/st_bufferdisc/geom.png
+.. figure:: ../images/st_bufferloop/geom.png
    :figclass: doc-figure
 
-   Fig 1. ST_BufferDisc(geom, 0.02, 0.04)
+   Fig 1. ST_BufferLoop(geom, 0.02, 0.04)
 
 st_centroid2D
 *************

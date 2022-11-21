@@ -17,7 +17,7 @@ __all__ = [
     "st_perimeter",
     "st_convexhull",
     "st_buffer",
-    "st_bufferdisc",
+    "st_bufferloop",
     "st_dump",
     "st_envelope",
     "st_srid",
@@ -55,13 +55,13 @@ __all__ = [
     "grid_tessellateexplode",
 
     "grid_cellkring",
-    "grid_cellkdisc",
+    "grid_cellkloop",
     "grid_cellkringexplode",
-    "grid_cellkdiscexplode",
+    "grid_cellkloopexplode",
     "grid_geometrykring",
-    "grid_geometrykdisc",
+    "grid_geometrykloop",
     "grid_geometrykringexplode",
-    "grid_geometrykdiscexplode",
+    "grid_geometrykloopexplode",
 
     "point_index_geom",
     "point_index_lonlat",
@@ -171,9 +171,9 @@ def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
         "st_buffer", pyspark_to_java_column(geom), pyspark_to_java_column(radius)
     )
 
-def st_bufferdisc(geom: ColumnOrName, innerRadius: ColumnOrName, outerRadius: ColumnOrName) -> Column:
+def st_bufferloop(geom: ColumnOrName, innerRadius: ColumnOrName, outerRadius: ColumnOrName) -> Column:
     """
-    Compute the buffered geometry disc based on geom and provided radiuses.
+    Compute the buffered geometry loop (hollow ring) based on geom and provided radiuses.
     The result geometry is a polygon/multipolygon with a hole in the center.
     The hole covers the area of st_buffer(geom, innerRadius).
     The result geometry covers the area of st_difference(st_buffer(geom, outerRadius), st_buffer(geom, innerRadius)).
@@ -194,7 +194,7 @@ def st_bufferdisc(geom: ColumnOrName, innerRadius: ColumnOrName, outerRadius: Co
 
     """
     return config.mosaic_context.invoke_function(
-        "st_bufferdisc",
+        "st_bufferloop",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(innerRadius),
         pyspark_to_java_column(outerRadius)
@@ -972,11 +972,11 @@ def grid_cellkring(
         pyspark_to_java_column(k),
     )
 
-def grid_cellkdisc(
+def grid_cellkloop(
     index_id: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
-    Returns the k-disc of cells around the input cell ID.
+    Returns the k loop (hollow ring) of cells around the input cell ID.
 
     Parameters
     ----------
@@ -989,7 +989,7 @@ def grid_cellkdisc(
 
     """
     return config.mosaic_context.invoke_function(
-        "grid_cellkdisc",
+        "grid_cellkloop",
         pyspark_to_java_column(index_id),
         pyspark_to_java_column(k),
     )
@@ -1016,11 +1016,11 @@ def grid_cellkringexplode(
         pyspark_to_java_column(k),
     )
 
-def grid_cellkdiscexplode(
+def grid_cellkloopexplode(
     index_id: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
-    Returns the exploded k-disc of cells around the input cell ID.
+    Returns the exploded k loop (hollow ring) of cells around the input cell ID.
 
     Parameters
     ----------
@@ -1033,7 +1033,7 @@ def grid_cellkdiscexplode(
 
     """
     return config.mosaic_context.invoke_function(
-        "grid_cellkdiscexplode",
+        "grid_cellkloopexplode",
         pyspark_to_java_column(index_id),
         pyspark_to_java_column(k),
     )
@@ -1062,11 +1062,11 @@ def grid_geometrykring(
         pyspark_to_java_column(k),
     )
 
-def grid_geometrykdisc(
+def grid_geometrykloop(
     geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
-    Returns the k-disc of cells around the input geometry.
+    Returns the k loop (hollow ring) of cells around the input geometry.
 
     Parameters
     ----------
@@ -1080,7 +1080,7 @@ def grid_geometrykdisc(
 
     """
     return config.mosaic_context.invoke_function(
-        "grid_geometrykdisc",
+        "grid_geometrykloop",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
         pyspark_to_java_column(k),
@@ -1110,11 +1110,11 @@ def grid_geometrykringexplode(
         pyspark_to_java_column(k),
     )
 
-def grid_geometrykdiscexplode(
+def grid_geometrykloopexplode(
     geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
-    Returns the exploded k-disc of cells around the input geometry.
+    Returns the exploded k loop (hollow ring) of cells around the input geometry.
 
     Parameters
     ----------
@@ -1128,7 +1128,7 @@ def grid_geometrykdiscexplode(
 
     """
     return config.mosaic_context.invoke_function(
-        "grid_geometrykdiscexplode",
+        "grid_geometrykloopexplode",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
         pyspark_to_java_column(k),

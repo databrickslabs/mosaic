@@ -57,7 +57,7 @@ trait HexRingNeighboursBehaviors extends MosaicSpatialQueryTest {
         val result3 = getCounts(hexRingNeighbours3.leftTransform(boroughs))
         val expected3 = getExpectedCounts(
           boroughs
-              .withColumn("neighbours", grid_geometrykdisc(col("wkt"), resolution, 3))
+              .withColumn("neighbours", grid_geometrykloop(col("wkt"), resolution, 3))
         )
         result3 should contain theSameElementsAs expected3
 

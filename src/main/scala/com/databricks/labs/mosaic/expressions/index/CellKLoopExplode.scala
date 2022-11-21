@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 
-case class CellKDiscExplode(cellId: Expression, k: Expression, indexSystemName: String, geometryAPIName: String)
+case class CellKLoopExplode(cellId: Expression, k: Expression, indexSystemName: String, geometryAPIName: String)
     extends CollectionGenerator
       with Serializable
       with CodegenFallback {
@@ -40,7 +40,7 @@ case class CellKDiscExplode(cellId: Expression, k: Expression, indexSystemName: 
             Seq.empty
         } else {
             val cellId = indexSystem.formatCellId(cellIdValue, LongType).asInstanceOf[Long]
-            val indices = indexSystem.kDisc(cellId, kValue.asInstanceOf[Int])
+            val indices = indexSystem.kLoop(cellId, kValue.asInstanceOf[Int])
             indices.map(row => InternalRow.fromSeq(Seq(indexSystem.serializeCellId(row))))
         }
     }
@@ -51,15 +51,15 @@ case class CellKDiscExplode(cellId: Expression, k: Expression, indexSystemName: 
 
 }
 
-object CellKDiscExplode {
+object CellKLoopExplode {
 
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[CellKDiscExplode].getCanonicalName,
+          classOf[CellKLoopExplode].getCanonicalName,
           db.orNull,
-          "grid_cellkdiscexplode",
+          "grid_cellkloopexplode",
           """
-            |    _FUNC_(cell_id, resolution)) - Generates the cell based kdisc cell IDs set for the input
+            |    _FUNC_(cell_id, resolution)) - Generates the cell based k loop (hollow ring) cell IDs set for the input
             |    cell ID and the input k value.
             """.stripMargin,
           "",

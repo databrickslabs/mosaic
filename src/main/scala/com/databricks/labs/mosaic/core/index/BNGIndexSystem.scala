@@ -182,7 +182,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
             val visits = queue.map(index => (index, geometry.contains(indexToGeometry(index, geometryAPI.get).getCentroid)))
             val matches = visits.filter(_._2)
             val newVisited = visited ++ visits.map(_._1)
-            val newQueue = matches.flatMap(c => kDisc(c._1, 1).filterNot(newVisited.contains))
+            val newQueue = matches.flatMap(c => kLoop(c._1, 1).filterNot(newVisited.contains))
             val newResult = result ++ matches.map(_._1)
             if (newQueue.isEmpty) {
                 newResult
@@ -222,9 +222,9 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       */
     override def kRing(index: Long, n: Int): Seq[Long] = {
         if (n == 1) {
-            Seq(index) ++ kDisc(index, 1)
+            Seq(index) ++ kLoop(index, 1)
         } else {
-            Seq(index) ++ (1 to n).flatMap(kDisc(index, _))
+            Seq(index) ++ (1 to n).flatMap(kLoop(index, _))
         }
     }
 
@@ -238,7 +238,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       * @return
       *   A collection of index IDs forming a k disk.
       */
-    override def kDisc(index: Long, k: Int): Seq[Long] = {
+    override def kLoop(index: Long, k: Int): Seq[Long] = {
         val digits = indexDigits(index)
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution)

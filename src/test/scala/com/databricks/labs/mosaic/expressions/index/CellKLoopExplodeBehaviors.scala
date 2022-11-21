@@ -10,7 +10,7 @@ import org.apache.spark.sql.functions._
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
-trait CellKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
+trait CellKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
 
     def behaviorComputedColumns(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
@@ -29,10 +29,10 @@ trait CellKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
         val mosaics = boroughs
             .select(
               col("id"),
-              grid_cellkdiscexplode(col("cell_id"), k).alias("kdisc")
+              grid_cellkloopexplode(col("cell_id"), k).alias("kloop")
             )
             .groupBy(col("id"))
-            .agg(collect_set("kdisc"))
+            .agg(collect_set("kloop"))
             .collect()
 
         boroughs.collect().length shouldEqual mosaics.length
@@ -40,8 +40,8 @@ trait CellKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
 
     def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
         val funcs = mosaicContext.functions
-        noException should be thrownBy funcs.grid_cellkdiscexplode(col("wkt"), lit(3))
-        noException should be thrownBy funcs.grid_cellkdiscexplode(col("wkt"), 3)
+        noException should be thrownBy funcs.grid_cellkloopexplode(col("wkt"), lit(3))
+        noException should be thrownBy funcs.grid_cellkloopexplode(col("wkt"), 3)
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
@@ -54,20 +54,20 @@ trait CellKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
         val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
         val k = 4
 
-        val cellKDiscExplodeExpr = CellKDiscExplode(
+        val cellKLoopExplodeExpr = CellKLoopExplode(
           lit(wkt).expr,
           lit(k).expr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
-        val withNull = cellKDiscExplodeExpr.copy(cellId = lit(null).expr)
+        val withNull = cellKLoopExplodeExpr.copy(cellId = lit(null).expr)
 
-        cellKDiscExplodeExpr.position shouldEqual false
-        cellKDiscExplodeExpr.inline shouldEqual false
-        cellKDiscExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
+        cellKLoopExplodeExpr.position shouldEqual false
+        cellKLoopExplodeExpr.inline shouldEqual false
+        cellKLoopExplodeExpr.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
         withNull.eval(InternalRow.fromSeq(Seq(null, null))) shouldEqual Seq.empty
 
-        val badExpr = CellKDiscExplode(
+        val badExpr = CellKLoopExplode(
           lit(10).expr,
           lit(k).expr,
           mc.getIndexSystem.name,
@@ -81,11 +81,11 @@ trait CellKDiscExplodeBehaviors extends MosaicSpatialQueryTest {
             .isFailure shouldEqual true
 
         // Default getters
-        noException should be thrownBy cellKDiscExplodeExpr.cellId
-        noException should be thrownBy cellKDiscExplodeExpr.k
+        noException should be thrownBy cellKLoopExplodeExpr.cellId
+        noException should be thrownBy cellKLoopExplodeExpr.k
 
-        noException should be thrownBy mc.functions.grid_cellkdiscexplode(lit(""), lit(5))
-        noException should be thrownBy mc.functions.grid_cellkdiscexplode(lit(""), 5)
+        noException should be thrownBy mc.functions.grid_cellkloopexplode(lit(""), lit(5))
+        noException should be thrownBy mc.functions.grid_cellkloopexplode(lit(""), 5)
     }
 
 }
