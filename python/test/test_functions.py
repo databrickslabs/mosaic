@@ -97,13 +97,13 @@ class TestFunctions(MosaicTestCase):
             )
             .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
             .withColumn("grid_cellkring", api.grid_cellkring("grid_pointascellid", lit(1)))
-            .withColumn("grid_cellkloop", api.grid_cellkring("grid_pointascellid", lit(1)))
-            .withColumn("grid_cellkringexplode", api.grid_cellkring("grid_pointascellid", lit(1)))
-            .withColumn("grid_cellkloopexplode", api.grid_cellkring("grid_pointascellid", lit(1)))
-            .withColumn("grid_geometrykring", api.grid_cellkring("wkt", lit(4), lit(1)))
-            .withColumn("grid_geometrykloop", api.grid_cellkring("wkt", lit(4), lit(1)))
-            .withColumn("grid_geometrykringexplode", api.grid_cellkring("wkt", lit(4), lit(1)))
-            .withColumn("grid_geometrykloopexplode", api.grid_cellkring("wkt", lit(4), lit(1)))
+            .withColumn("grid_cellkloop", api.grid_cellkloop("grid_pointascellid", lit(1)))
+            .withColumn("grid_cellkringexplode", api.grid_cellkringexplode("grid_pointascellid", lit(1)))
+            .withColumn("grid_cellkloopexplode", api.grid_cellkloopexplode("grid_pointascellid", lit(1)))
+            .withColumn("grid_geometrykring", api.grid_geometrykring("wkt", lit(4), lit(1)))
+            .withColumn("grid_geometrykloop", api.grid_geometrykloop("wkt", lit(4), lit(1)))
+            .withColumn("grid_geometrykringexplode", api.grid_geometrykringexplode("wkt", lit(4), lit(1)))
+            .withColumn("grid_geometrykloopexplode", api.grid_geometrykloopexplode("wkt", lit(4), lit(1)))
 
 
             # Deprecated
