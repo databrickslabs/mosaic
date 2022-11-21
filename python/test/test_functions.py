@@ -81,8 +81,7 @@ class TestFunctions(MosaicTestCase):
             )
 
             # Grid functions
-            .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1))
-            )
+            .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1)))
             .withColumn("grid_pointascellid", api.grid_pointascellid("point_wkt", lit(1)))
             .withColumn("grid_boundaryaswkb", api.grid_boundaryaswkb(lit(1)))
             .withColumn("grid_polyfill", api.grid_polyfill("wkt", lit(1)))
@@ -96,14 +95,6 @@ class TestFunctions(MosaicTestCase):
                 api.grid_tessellateexplode("wkt", lit(1), False),
             )
             .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
-            .withColumn("grid_cellkring", api.grid_cellkring("grid_pointascellid", lit(1)))
-            .withColumn("grid_cellkloop", api.grid_cellkloop("grid_pointascellid", lit(1)))
-            .withColumn("grid_cellkringexplode", api.grid_cellkringexplode("grid_pointascellid", lit(1)))
-            .withColumn("grid_cellkloopexplode", api.grid_cellkloopexplode("grid_pointascellid", lit(1)))
-            .withColumn("grid_geometrykring", api.grid_geometrykring("wkt", lit(4), lit(1)))
-            .withColumn("grid_geometrykloop", api.grid_geometrykloop("wkt", lit(4), lit(1)))
-            .withColumn("grid_geometrykringexplode", api.grid_geometrykringexplode("wkt", lit(4), lit(1)))
-            .withColumn("grid_geometrykloopexplode", api.grid_geometrykloopexplode("wkt", lit(4), lit(1)))
 
 
             # Deprecated
@@ -212,3 +203,22 @@ class TestFunctions(MosaicTestCase):
         df = self.generate_input_polygon_collection()
         result = df.groupBy().agg(api.st_union_agg(col("geometry")))
         self.assertEqual(result.count(), 1)
+
+    def test_grid_kring_kloop(self):
+        df = self.spark.createDataFrame(
+            [
+                # 2x1 rectangle starting at (0 0)
+                ["POLYGON ((0 0, 0 2, 1 2, 1 0, 0 0))", "POINT (1 1)"]
+            ],
+            ["wkt", "point_wkt"],
+        )
+        .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1)))
+        .withColumn("grid_cellkring", api.grid_cellkring("grid_pointascellid", lit(1)))
+        .withColumn("grid_cellkloop", api.grid_cellkloop("grid_pointascellid", lit(1)))
+        .withColumn("grid_cellkringexplode", api.grid_cellkringexplode("grid_pointascellid", lit(1)))
+        .withColumn("grid_cellkloopexplode", api.grid_cellkloopexplode("grid_pointascellid", lit(1)))
+        .withColumn("grid_geometrykring", api.grid_geometrykring("wkt", lit(4), lit(1)))
+        .withColumn("grid_geometrykloop", api.grid_geometrykloop("wkt", lit(4), lit(1)))
+        .withColumn("grid_geometrykringexplode", api.grid_geometrykringexplode("wkt", lit(4), lit(1)))
+        .withColumn("grid_geometrykloopexplode", api.grid_geometrykloopexplode("wkt", lit(4), lit(1)))
+        self.assertEqual(result.count() > 1, True)
