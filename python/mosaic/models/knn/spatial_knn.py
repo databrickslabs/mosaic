@@ -72,7 +72,7 @@ class SpatialKNN:
         :return: SpatialKNN model with the param set to provided value.
         """
 
-        self.model.setRightFeatureCol(feature)
+        self.model.setCandidatesFeatureCol(feature)
         return self
         
     def setCandidatesRowID(self, rowID):
@@ -82,7 +82,7 @@ class SpatialKNN:
         :return: SpatialKNN model with the param set to provided value.
         """
 
-        self.model.setRightRowID(rowID)
+        self.model.setCandidatesRowID(rowID)
         return self
         
     def setDistanceThreshold(self, d):
