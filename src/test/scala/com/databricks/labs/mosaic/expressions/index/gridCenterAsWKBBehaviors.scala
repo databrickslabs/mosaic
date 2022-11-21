@@ -7,10 +7,10 @@ import org.apache.spark.sql.SparkSession
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-trait GridCenterAsWKBBehaviors {
+trait gridCenterAsWKBBehaviors {
     this: AnyFlatSpec =>
 
-    def GridCenterAsWKB(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def gridCenterAsWKB(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
