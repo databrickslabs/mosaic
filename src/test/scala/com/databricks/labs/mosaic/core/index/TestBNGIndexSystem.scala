@@ -158,7 +158,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         BNGIndexSystem.getResolutionStr(-4) shouldEqual "500m"
     }
 
-    "GridCenterAsWKB" should "generate the correct centroids for an index in all Geometry APIs." in {
+    "gridCenterAsWKB" should "generate the correct centroids for an index in all Geometry APIs." in {
         val index = 1050138790
         val centroid1 = BNGIndexSystem.GridCenterAsWKB(index, JTS)
         val centroid2 = BNGIndexSystem.GridCenterAsWKB(index, ESRI)

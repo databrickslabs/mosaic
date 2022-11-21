@@ -50,7 +50,7 @@ class TestH3IndexSystem extends AnyFlatSpec {
 
     }
 
-    "GridCenterAsWKB" should "generate index Centroid for valid Indexes for all geometries." in {
+    "gridCenterAsWKB" should "generate index Centroid for valid Indexes for all geometries." in {
         val indexRes0 = H3IndexSystem.pointToIndex(-0.075441, 51.505480, 0)
         val indexRes9 = H3IndexSystem.pointToIndex(-0.075441, 51.505480, 9)
         val indexRes15 = H3IndexSystem.pointToIndex(-0.075441, 51.505480, 15)

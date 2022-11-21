@@ -663,7 +663,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
                     .apply(indexID)
                     .asInstanceOf[Column]
             } else {
-                ColumnAdapter(GridCenterAsWKB(indexID.expr, indexSystem.name, getGeometryAPI.name))
+                ColumnAdapter(gridCenterAsWKB(indexID.expr, indexSystem.name, getGeometryAPI.name))
             }
 
         // Not specific to Mosaic

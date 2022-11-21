@@ -15,7 +15,7 @@ import org.apache.spark.sql.types._
   """,
     since = "1.0"
 )
-case class GridCenterAsWKB(indexID: Expression, indexSystemName: String, geometryAPIName: String)
+case class gridCenterAsWKB(indexID: Expression, indexSystemName: String, geometryAPIName: String)
     extends UnaryExpression
         with NullIntolerant
         with CodegenFallback {
@@ -46,7 +46,7 @@ case class GridCenterAsWKB(indexID: Expression, indexSystemName: String, geometr
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val arg1 = newArgs.head.asInstanceOf[Expression]
-        val res = GridCenterAsWKB(indexID, indexSystemName, geometryAPIName)
+        val res = gridCenterAsWKB(arg1, indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
@@ -57,12 +57,12 @@ case class GridCenterAsWKB(indexID: Expression, indexSystemName: String, geometr
 
 }
 
-object GridCenterAsWKB {
+object gridCenterAsWKB {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-            classOf[GridCenterAsWKB].getCanonicalName,
+            classOf[gridCenterAsWKB].getCanonicalName,
             db.orNull,
             "grid_centeraswkb",
             """
