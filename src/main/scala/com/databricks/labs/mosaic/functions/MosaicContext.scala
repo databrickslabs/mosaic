@@ -8,7 +8,7 @@ import com.databricks.labs.mosaic.core.types.ChipType
 import com.databricks.labs.mosaic.expressions.constructors._
 import com.databricks.labs.mosaic.expressions.format._
 import com.databricks.labs.mosaic.expressions.geometry._
-import com.databricks.labs.mosaic.expressions.util.{TopNAggregate, TrySql}
+import com.databricks.labs.mosaic.expressions.util.TrySql
 import com.databricks.labs.mosaic.expressions.index._
 import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
@@ -729,7 +729,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
         // Not specific to Mosaic
         def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
-        def top_n_agg(inCol: Column, n: Int): Column = ColumnAdapter(TopNAggregate(inCol.expr, n).toAggregateExpression(isDistinct = false))
 
         // Legacy API
         @deprecated("Please use 'grid_boundaryaswkb' or 'grid_boundary(..., format_name)' expressions instead.")
