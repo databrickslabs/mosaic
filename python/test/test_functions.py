@@ -100,10 +100,10 @@ class TestFunctions(MosaicTestCase):
             .withColumn("grid_cellkloop", api.grid_cellkring("grid_pointascellid", lit(1)))
             .withColumn("grid_cellkringexplode", api.grid_cellkring("grid_pointascellid", lit(1)))
             .withColumn("grid_cellkloopexplode", api.grid_cellkring("grid_pointascellid", lit(1)))
-            .withColumn("grid_geometrykring", api.grid_cellkring("wkt", lit(4), lit(1))
-            .withColumn("grid_geometrykloop", api.grid_cellkring("wkt", lit(4), lit(1))
-            .withColumn("grid_geometrykringexplode", api.grid_cellkring("wkt", lit(4), lit(1))
-            .withColumn("grid_geometrykloopexplode", api.grid_cellkring("wkt", lit(4), lit(1))
+            .withColumn("grid_geometrykring", api.grid_cellkring("wkt", lit(4), lit(1)))
+            .withColumn("grid_geometrykloop", api.grid_cellkring("wkt", lit(4), lit(1)))
+            .withColumn("grid_geometrykringexplode", api.grid_cellkring("wkt", lit(4), lit(1)))
+            .withColumn("grid_geometrykloopexplode", api.grid_cellkring("wkt", lit(4), lit(1)))
 
 
             # Deprecated
