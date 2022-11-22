@@ -172,7 +172,7 @@ class SpatialKNN:
         """
 
         params = self.model.getParams()
-        return scala_utils.scala_map_to_python(params)
+        return scala_utils.scala_map_to_dict(params)
 
     def getMetrics(self):
         """
@@ -181,7 +181,7 @@ class SpatialKNN:
         """
 
         metrics = self.model.getMetrics()
-        return scala_utils.scala_map_to_python(metrics)
+        return scala_utils.scala_map_to_dict(metrics)
 
     def write(self):
         """
