@@ -125,14 +125,14 @@ class SpatialKNN:
         self.model.setMaxIterations(n)
         return self
 
-    def setEarlyStopping(self, n):
+    def setEarlyStopIterations(self, n):
         """
         Set the number of iterations to run before early stopping.
         :param n: Number of iterations to run before early stopping.
         :return: SpatialKNN model with the param set to provided value.
         """
 
-        self.model.setEarlyStopping(n)
+        self.model.setEarlyStopIterations(n)
         return self
 
     def setCheckpointTablePrefix(self, prefix):
