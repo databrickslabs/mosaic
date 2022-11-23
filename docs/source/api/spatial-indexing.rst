@@ -248,6 +248,116 @@ grid_polyfill
 
 
 
+grid_boundaryaswkb
+******************
+
+.. function:: grid_boundaryaswkb(cellid)
+
+    Returns the boundary of the grid cell as a WKB.
+
+    :param cellid: Grid cell id
+    :type cellid: Column: Union(LongType, StringType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'cellid': 613177664827555839}])
+    >>> df.select(grid_boundaryaswkb("cellid").show(1, False)
+    +--------------------------+
+    |grid_boundaryaswkb(cellid)|
+    +--------------------------+
+    |[01 03 00 00 00 00 00 00..|
+    +--------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((613177664827555839)).toDF("cellid")
+    >>> df.select(grid_boundaryaswkb(col("cellid")).show()
+    +--------------------------+
+    |grid_boundaryaswkb(cellid)|
+    +--------------------------+
+    |[01 03 00 00 00 00 00 00..|
+    +--------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_boundaryaswkb(613177664827555839)
+    +--------------------------+
+    |grid_boundaryaswkb(cellid)|
+    +--------------------------+
+    |[01 03 00 00 00 00 00 00..|
+    +--------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(cellid = 613177664827555839))
+    >>> showDF(select(df, grid_boundaryaswkb(column("cellid")), truncate=F)
+    +--------------------------+
+    |grid_boundaryaswkb(cellid)|
+    +--------------------------+
+    |[01 03 00 00 00 00 00 00..|
+    +--------------------------+
+
+
+
+grid_boundary
+******************
+
+.. function:: grid_boundary(cellid, format)
+
+    Returns the boundary of the grid cell as a geometry in specified format.
+
+    :param cellid: Grid cell id
+    :type cellid: Column: Union(LongType, StringType)
+    :param format: Geometry format
+    :type format: Column: StringType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'cellid': 613177664827555839}])
+    >>> df.select(grid_boundary("cellid", "WKT").show(1, False)
+    +--------------------------+
+    |grid_boundary(cellid, WKT)|
+    +--------------------------+
+    |          "POLYGON (( ..."|
+    +--------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((613177664827555839)).toDF("cellid")
+    >>> df.select(grid_boundary(col("cellid"), lit("WKT").show()
+    +--------------------------+
+    |grid_boundary(cellid, WKT)|
+    +--------------------------+
+    |          "POLYGON (( ..."|
+    +--------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_boundary(613177664827555839, "WKT")
+    +--------------------------+
+    |grid_boundary(cellid, WKT)|
+    +--------------------------+
+    |          "POLYGON (( ..."|
+    +--------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(cellid = 613177664827555839))
+    >>> showDF(select(df, grid_boundary(column("cellid"), lit("WKT")), truncate=F)
+    +--------------------------+
+    |grid_boundary(cellid, WKT)|
+    +--------------------------+
+    |          "POLYGON (( ..."|
+    +--------------------------+
+
+
+
 grid_tessellate
 ***************
 
@@ -495,12 +605,12 @@ grid_tessellateexplode
 grid_cellkring
 **************
 
-.. function:: grid_cellkring(index_id, k)
+.. function:: grid_cellkring(cellid, k)
 
-    Returns the k-ring of a given index.
+    Returns the k-ring of a given cell.
 
-    :param index_id: Index ID
-    :type index_id: Column: Long
+    :param cellid: Grid cell ID
+    :type cellid: Column: Long
     :param k: K-ring size
     :type k: Column: Integer
     :rtype: Column: ArrayType(Long)
@@ -573,12 +683,12 @@ grid_cellkring
 grid_cellkringexplode
 *********************
 
-.. function:: grid_cellkringexplode(index_id, k)
+.. function:: grid_cellkringexplode(cellid, k)
 
-    Returns the k-ring of a given index exploded.
+    Returns the k-ring of a given cell exploded.
 
-    :param index_id: Index ID
-    :type index_id: Column: Long
+    :param cellid: Grid cell ID
+    :type cellid: Column: Long
     :param k: K-ring size
     :type k: Column: Integer
     :rtype: Column: Long
@@ -668,12 +778,12 @@ grid_cellkringexplode
 grid_cellkloop
 **************
 
-.. function:: grid_cellkloop(index_id, k)
+.. function:: grid_cellkloop(cellid, k)
 
-    Returns the k loop (hollow ring) of a given index.
+    Returns the k loop (hollow ring) of a given cell.
 
-    :param index_id: Index ID
-    :type index_id: Column: Long
+    :param cellid: Grid cell ID
+    :type cellid: Column: Long
     :param k: K-loop size
     :type k: Column: Integer
     :rtype: Column: ArrayType(Long)
@@ -746,12 +856,12 @@ grid_cellkloop
 grid_cellkloopexplode
 *********************
 
-.. function:: grid_cellkloopexplode(index_id, k)
+.. function:: grid_cellkloopexplode(cellid, k)
 
-    Returns the k loop (hollow ring) of a given index exploded.
+    Returns the k loop (hollow ring) of a given cell exploded.
 
-    :param index_id: Index ID
-    :type index_id: Column: Long
+    :param cellid: Grid cell ID
+    :type cellid: Column: Long
     :param k: K-loop size
     :type k: Column: Integer
     :rtype: Column: Long
@@ -924,7 +1034,7 @@ grid_geometrykringexplode
 
 .. function:: grid_geometrykringexplode(geometry, resolution, k)
 
-    Returns the k-ring of a given index exploded.
+    Returns the k-ring of a given geometry exploded.
 
     :param geometry: Geometry to be used
     :type geometry: Column

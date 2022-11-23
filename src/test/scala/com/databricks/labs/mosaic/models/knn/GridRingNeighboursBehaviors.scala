@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.models.knn
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
@@ -9,7 +8,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.scalatest.matchers.should.Matchers._
 
-trait HexRingNeighboursBehaviors extends MosaicSpatialQueryTest {
+trait GridRingNeighboursBehaviors extends MosaicSpatialQueryTest {
 
     def leftTransform(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
@@ -38,7 +37,7 @@ trait HexRingNeighboursBehaviors extends MosaicSpatialQueryTest {
             .as[Long]
             .collect()
 
-        val hexRingNeighbours = HexRingNeighbours(boroughs)
+        val hexRingNeighbours = GridRingNeighbours(boroughs)
             .setLeftFeatureCol("wkt")
             .setRightFeatureCol("wkt")
             .setIndexResolution(resolution)
@@ -96,7 +95,7 @@ trait HexRingNeighboursBehaviors extends MosaicSpatialQueryTest {
 
         val boroughs: DataFrame = getBoroughs(mc)
 
-        val hexRingNeighbours = HexRingNeighbours(boroughs)
+        val hexRingNeighbours = GridRingNeighbours(boroughs)
             .setLeftFeatureCol("wkt")
             .setRightFeatureCol("wkt")
             .setIndexResolution(resolution)
@@ -164,7 +163,7 @@ trait HexRingNeighboursBehaviors extends MosaicSpatialQueryTest {
 
         val boroughs: DataFrame = getBoroughs(mc)
 
-        val hexRingNeighbours = HexRingNeighbours(boroughs)
+        val hexRingNeighbours = GridRingNeighbours(boroughs)
             .setLeftFeatureCol("wkt")
             .setRightFeatureCol("wkt")
             .setIndexResolution(resolution)

@@ -2,7 +2,11 @@ package com.databricks.labs.mosaic.models.knn
 
 import org.apache.spark.ml.param._
 
-trait HexRingNeighboursParams extends Params {
+/**
+ * A trait for shared parameters for [[GridRingNeighbours]].
+ * Note: miid is a shorthand for monotonically_increasing_id.
+ */
+trait GridRingNeighboursParams extends Params {
 
     val leftFeatureCol: Param[String] = new Param[String](this, "leftFeatureCol", "Column name of a column containing the geo feature.")
 

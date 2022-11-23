@@ -179,7 +179,8 @@ st_bufferloop
 
 .. function:: st_bufferloop(col, innerRadius, outerRadius)
 
-    Buffer the input geometry by radius `radius` and return a new, buffered geometry.
+    Returns a difference between st_buffer(col, outerRadius) and st_buffer(col, innerRadius).
+    The resulting geometry is a loop with a width of outerRadius - innerRadius.
 
     :param col: Geometry
     :type col: Column

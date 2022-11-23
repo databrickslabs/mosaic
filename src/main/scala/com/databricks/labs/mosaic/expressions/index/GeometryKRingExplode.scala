@@ -37,7 +37,7 @@ case class GeometryKRingExplode(geom: Expression, resolution: Expression, k: Exp
         }
     }
 
-    //noinspection DuplicatedCode
+    // noinspection DuplicatedCode
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val geometryRaw = geom.eval(input)
         val resolutionRaw = resolution.eval(input)
@@ -49,15 +49,7 @@ case class GeometryKRingExplode(geom: Expression, resolution: Expression, k: Exp
             val resolutionVal = indexSystem.getResolution(resolutionRaw)
             val kVal = kRaw.asInstanceOf[Int]
 
-            val chips = Mosaic.getChips(geometryVal, resolutionVal, keepCoreGeom = false, indexSystem, geometryAPI)
-            val (coreChips, borderChips) = chips.partition(_.isCore)
-
-            val coreIndices = coreChips.map(_.cellIdAsLong(indexSystem)).toSet
-            val borderIndices = borderChips.map(_.cellIdAsLong(indexSystem))
-
-            val borderKRing = borderIndices.flatMap(indexSystem.kRing(_, kVal)).toSet
-            val kRing = coreIndices ++ borderKRing
-
+            val kRing = Mosaic.geometryKRing(geometryVal, resolutionVal, kVal, indexSystem, geometryAPI)
 
             kRing.map(row => InternalRow.fromSeq(Seq(indexSystem.serializeCellId(row))))
         }
@@ -65,7 +57,8 @@ case class GeometryKRingExplode(geom: Expression, resolution: Expression, k: Exp
 
     override def elementSchema: StructType = StructType(Seq(StructField("cellId", indexSystem.getCellIdDataType)))
 
-    override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = copy(newChildren(0), newChildren(1), newChildren(2))
+    override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression =
+        copy(newChildren(0), newChildren(1), newChildren(2))
 
 }
 
@@ -73,28 +66,27 @@ object GeometryKRingExplode {
 
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-            classOf[GeometryKRingExplode].getCanonicalName,
-            db.orNull,
-            "grid_cellkringexplode",
-            """
-              |    _FUNC_(cell_id, resolution)) - Generates the geometry based kring cell IDs set for the input
-              |    geometry and the input k value.
+          classOf[GeometryKRingExplode].getCanonicalName,
+          db.orNull,
+          "grid_cellkringexplode",
+          """
+            |    _FUNC_(cell_id, resolution)) - Generates the geometry based kring cell IDs set for the input
+            |    geometry and the input k value.
             """.stripMargin,
-            "",
-            """
-              |    Examples:
-              |      > SELECT _FUNC_(a, b);
-              |        622236721274716159
-              |        622236721274716160
-              |        622236721274716161
-              |        ...
-              |
-              |  """.stripMargin,
-            "",
-            "generator_funcs",
-            "1.0",
-            "",
-            "built-in"
+          "",
+          """
+            |    Examples:
+            |      > SELECT _FUNC_(a, b);
+            |        622236721274716159
+            |        622236721274716160
+            |        622236721274716161
+            |        ...
+            |
+            |  """.stripMargin,
+          "",
+          "generator_funcs",
+          "1.0",
+          "",
+          "built-in"
         )
 }
-

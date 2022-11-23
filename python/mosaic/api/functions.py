@@ -951,14 +951,14 @@ def grid_tessellateexplode(
     )
 
 def grid_cellkring(
-    index_id: ColumnOrName, k: ColumnOrName
+    cellid: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the k-ring of cells around the input cell ID.
 
     Parameters
     ----------
-    index_id : Column (LongType)
+    cellid : Column (LongType)
     k : Column (IntegerType)
 
     Returns
@@ -968,19 +968,19 @@ def grid_cellkring(
     """
     return config.mosaic_context.invoke_function(
         "grid_cellkring",
-        pyspark_to_java_column(index_id),
+        pyspark_to_java_column(cellid),
         pyspark_to_java_column(k),
     )
 
 def grid_cellkloop(
-    index_id: ColumnOrName, k: ColumnOrName
+    cellid: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the k loop (hollow ring) of cells around the input cell ID.
 
     Parameters
     ----------
-    index_id : Column (LongType)
+    cellid : Column (LongType)
     k : Column (IntegerType)
 
     Returns
@@ -990,19 +990,19 @@ def grid_cellkloop(
     """
     return config.mosaic_context.invoke_function(
         "grid_cellkloop",
-        pyspark_to_java_column(index_id),
+        pyspark_to_java_column(cellid),
         pyspark_to_java_column(k),
     )
 
 def grid_cellkringexplode(
-    index_id: ColumnOrName, k: ColumnOrName
+    cellid: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the exploded k-ring of cells around the input cell ID.
 
     Parameters
     ----------
-    index_id : Column (LongType)
+    cellid : Column (LongType)
     k : Column (IntegerType)
 
     Returns
@@ -1012,19 +1012,19 @@ def grid_cellkringexplode(
     """
     return config.mosaic_context.invoke_function(
         "grid_cellkringexplode",
-        pyspark_to_java_column(index_id),
+        pyspark_to_java_column(cellid),
         pyspark_to_java_column(k),
     )
 
 def grid_cellkloopexplode(
-    index_id: ColumnOrName, k: ColumnOrName
+    cellid: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the exploded k loop (hollow ring) of cells around the input cell ID.
 
     Parameters
     ----------
-    index_id : Column (LongType)
+    cellid : Column (LongType)
     k : Column (IntegerType)
 
     Returns
@@ -1034,7 +1034,7 @@ def grid_cellkloopexplode(
     """
     return config.mosaic_context.invoke_function(
         "grid_cellkloopexplode",
-        pyspark_to_java_column(index_id),
+        pyspark_to_java_column(cellid),
         pyspark_to_java_column(k),
     )
 

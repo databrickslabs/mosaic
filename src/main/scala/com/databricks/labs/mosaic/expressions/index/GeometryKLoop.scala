@@ -66,23 +66,8 @@ case class GeometryKLoop(
         val geometry = geometryAPI.geometry(input1, first.dataType)
         val resolution: Int = indexSystem.getResolution(input2)
         val k: Int = input3.asInstanceOf[Int]
-        val n: Int = k - 1
 
-        // This would be much more efficient if we could use the
-        // pre-computed tessellation of the geometry for repeated calls.
-        val chips = Mosaic.getChips(geometry, resolution, keepCoreGeom = false, indexSystem, geometryAPI)
-        val (coreChips, borderChips) = chips.partition(_.isCore)
-
-        val coreIndices = coreChips.map(_.cellIdAsLong(indexSystem)).toSet
-        val borderIndices = borderChips.map(_.cellIdAsLong(indexSystem))
-
-        // We use nRing as naming for kRing where k = n
-        val borderNRing = borderIndices.flatMap(indexSystem.kRing(_, n)).toSet
-        val nRing = coreIndices ++ borderNRing
-
-        val borderKLoop = borderIndices.flatMap(indexSystem.kLoop(_, k)).toSet
-
-        val kLoop = borderKLoop -- nRing
+        val kLoop = Mosaic.geometryKLoop(geometry, resolution, k, indexSystem, geometryAPI)
 
         val formatted = kLoop.map(indexSystem.serializeCellId)
         val serialized = ArrayData.toArrayData(formatted.toArray)

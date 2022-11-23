@@ -36,7 +36,7 @@ class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
     private val mc = MosaicContext.context()
     // The HexRingNeighbours transformer is used to find the neighbours of each geometry.
     // It is configured using the parameters of this transformer.
-    private val hexRingNeighboursTf = HexRingNeighbours(candidatesDf)
+    private val hexRingNeighboursTf = GridRingNeighbours(candidatesDf)
     // The checkpoint manager is used to manage the checkpointing of the interim matches.
     // We are using delta checkpoints to avoid the overhead of writing the entire DataFrame and unneeded unions.
     var matchesCheckpoint: CheckpointManager = _
@@ -96,8 +96,9 @@ class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
 
     /**
       * Early stopping condition. Stop when the number of matches doesnt change
-      * for [[getEarlyStopIterations]] iterations or when the number of candidates
-      * left to match doesnt change for [[getEarlyStopIterations]] iterations.
+      * for [[getEarlyStopIterations]] iterations or when the number of
+      * candidates left to match doesnt change for [[getEarlyStopIterations]]
+      * iterations.
       * @param preDf
       *   Dataset containing the previous candidates left to match.
       * @param postDf
@@ -114,15 +115,16 @@ class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
             .groupBy("landmarks_miid", "candidates_miid")
             .count()
             .count()
-        val condition = (preCount == postCount) && (matchCount == newMatchesCount) && (newMatchesCount > 0)
+        val shouldStop = (preCount == postCount) && (matchCount == newMatchesCount) && (newMatchesCount > 0)
         matchCount = newMatchesCount
-        condition
+        shouldStop
     }
 
     /**
       * Transform each interim result using the k distance of
-      * [[HexRingNeighbours]] as a function of the current iteration. After each
-      * iteration increment the iteration by 1.
+      * [[GridRingNeighbours]] as a function of the current iteration. After
+      * each iteration increment the iteration by 1.
+      *
       * @param dataset
       *   Previous iteration matching candidates from the landmarks input
       *   dataset.
@@ -143,6 +145,9 @@ class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
             .where(coalesce(col(hexRingNeighboursTf.distanceCol) <= getDistanceThreshold, lit(true)))
             .groupBy(getLandmarksRowID, groupByCols: _*)
             .agg(
+              // col(getCandidatesRowID).isNotNull.cast("int") = 1 when rowId is not null and 0 otherwise.
+              // sum(col(getCandidatesRowID).isNotNull.cast("int")) is used to count the number of neighbours for each row.
+              // Note that count("*") would not return the correct count.
               sum(col(getCandidatesRowID).isNotNull.cast("int")).alias("match_count"),
               max("iteration").alias("iteration"),
               max(hexRingNeighboursTf.distanceCol).alias("match_radius")
@@ -321,6 +326,6 @@ class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
   */
 object SpatialKNN extends DefaultParamsReadable[SpatialKNN] {
 
-    def apply(candidatesDf: Dataset[_]): SpatialKNN = new SpatialKNN(Identifiable.randomUID("approximate_spatial_knn"), candidatesDf)
+    def apply(candidatesDf: Dataset[_]): SpatialKNN = new SpatialKNN(Identifiable.randomUID("spatial_knn"), candidatesDf)
 
 }

@@ -16,7 +16,7 @@ problem is defined as finding k observations from a set S that are the most simi
    Fig 1. Nearest neighbour problem
 
 We define spatial k-nearest neighbour problem as finding k observations from a set of candidates C that are the most similar to the
-given a landmark L[i], where the similarity is defined by a distance function d(L[i], S[j]) is defined by st_distance(L[i], S[j]) function.
+given a landmark L[i], where the similarity is defined by a distance function d(L[i], S[j]) = st_distance(L[i], S[j]).
 In our case we further define the similarity as the inverse of the distance, so the most similar observation is the one with
 the smallest distance. ST_Distance function is defined as the shortest distance between two geometries in projected units.
 We do not restrict the type of geometries that can be used in the problem. The only requirement is that the geometries
@@ -279,6 +279,101 @@ transformer after the convergence.
 
    </div>
 
+
+Model serialisation
+###################
+
+The transformer can be serialised and deserialised using the model.write.save() and model.read.load() methods.
+The serialised model can be used for audit purposes only.
+The transformers are not models in a pure sense - they do not create a new object that can be called on each row.
+The outputs of knn transformer is a dataframe with the neighbours of each geometry.
+To run the transform method one has to have access to both the landmarks and the candidates datasets.
+These datasets are not serialised with the model, and neither are the model outputs.
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> import mosaic as mos
+    >>> mos.enable_mosaic(spark, dbutils)
+    >>>
+    >>> spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
+    >>>
+    >>> buildings_df = spark.read.table("buildings")
+    >>> buildings_df = buildings_df.withColumn("left_id", monotonically_increasing_id())
+    >>> roads_df = spark.read.table("roads")
+    >>> roads_df = roads_df.withColumn("right_id", monotonically_increasing_id())
+    >>>
+    >>> from mosaic.models import SpatialKnn
+    >>> knn = SpatialKNN()
+    >>> knn.setCandidates(roads_df)
+    >>> knn.setCandidatesGeometryColumn("geometry")
+    >>> knn.setCandidatesIdColumn("right_id")
+    >>> knn.setLandmarksGeometryColumn("geometry")
+    >>> knn.setLandmarksIdColumn("left_id")
+    >>> knn.setK(5)
+    >>> knn.setMaxIterations(10)
+    >>> knn.setDistanceThreshold(1.0)
+    >>> knn.setCheckpointTablePrefix("checkpoint_table_knn")
+    >>> knn.setIndexResolution(10)
+    >>>
+    >>> neighbours = knn.transform(buildings_df)
+    >>>
+    >>> knn.write.save("dbfs:/tmp/mosaic/username/knn_model")
+    >>> loaded_knn = SpatialKNN.read.load("dbfs:/tmp/mosaic/username/knn_model")
+    >>> loaded_knn.getParams()
+    {'candidates_geometry_column': 'geometry',
+     'candidates_id_column': 'right_id',
+     'distance_threshold': 1.0,
+     'index_resolution': 10,
+     'k': 5,
+     'landmarks_geometry_column': 'geometry',
+     'landmarks_id_column': 'left_id',
+     'max_iterations': 10,
+     'checkpoint_table_prefix': 'checkpoint_table_knn'}
+
+   .. code-tab:: scala
+
+    >>> import com.databricks.labs.mosaic.models.knn.SpatialKNN
+    >>> import com.databricks.labs.mosaic.functions.MosaicContext
+    >>> import com.databricks.labs.mosaic.H3
+    >>> import com.databricks.labs.mosaic.ESRI
+    >>>
+    >>> val mosaicContext = MosaicContext.build(H3, ESRI)
+    >>> import mosaicContext.functions._
+    >>> mosaicContext.register(spark)
+    >>>
+    >>> spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
+    >>>
+    >>> val buildingsDf = spark.read.table("buildings")
+    >>>                     .withColumn("left_id", monotonically_increasing_id())
+    >>> val roads_df = spark.read.table("roads")
+    >>>                     .withColumn("right_id", monotonically_increasing_id())
+    >>>
+    >>> val knn = SpatialKNN()
+    >>>             .setCandidates(roads_df)
+    >>>             .setCandidatesGeometryColumn("geometry")
+    >>>             .setCandidatesIdColumn("right_id")
+    >>>             .setLandmarksGeometryColumn("geometry")
+    >>>             .setLandmarksIdColumn("left_id")
+    >>>             .setK(5)
+    >>>             .setMaxIterations(10)
+    >>>             .setDistanceThreshold(1.0)
+    >>>             .setCheckpointTablePrefix("checkpoint_table_knn")
+    >>>             .setIndexResolution(10)
+    >>>
+    >>> knn.write.save("dbfs:/tmp/mosaic/username/knn_model")
+    >>> val loadedKnn = SpatialKNN.read.load("dbfs:/tmp/mosaic/username/knn_model")
+    >>> val params = loadedKnn.getParams()
+    >>> params.foreach(println)
+    ('candidates_geometry_column': 'geometry')
+    ('candidates_id_column': 'right_id')
+    ('distance_threshold': 1.0)
+    ('index_resolution': 10)
+    ('k': 5)
+    ('landmarks_geometry_column': 'geometry')
+    ('landmarks_id_column': 'left_id')
+    ('max_iterations': 10)
+    ('checkpoint_table_prefix': 'checkpoint_table_knn')
 
 
 Shape Aware Hex Rings

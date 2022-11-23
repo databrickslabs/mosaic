@@ -192,11 +192,19 @@ class SpatialKNN:
 
         return self.model.write
 
-    def load(self):
+    @staticmethod
+    def read(self):
         """
         return: a SpatialKNNReader instance for this SpatialKNN instance.
             To load this SpatialKNN instance from persistent storage, use the load method
             on the returned instance.
         """
 
-        return self.model.load
+        return self.model.read
+
+    def load(self, path):
+        """
+
+        """
+
+        return self.model.load(path)

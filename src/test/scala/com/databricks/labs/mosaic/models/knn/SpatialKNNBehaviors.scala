@@ -183,7 +183,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
             .overwrite()
             .save(s"$tempLocation/knn")
 
-        val loadedKnn = SpatialKNN.load(s"$tempLocation/knn")
+        val loadedKnn = SpatialKNN.read.load(s"$tempLocation/knn")
 
         knn.getParams should contain theSameElementsAs loadedKnn.getParams
     }

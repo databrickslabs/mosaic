@@ -15,7 +15,7 @@ import org.apache.spark.sql.types._
   * A transformer that takes a DataFrame with a column of geometries and returns
   * a DataFrame with matching geometries and their neighbours from the right
   * DataFrame. The right DataFrame must have a column of geometries. The
-  * transformer is configured using the [[HexRingNeighboursParams]] class.
+  * transformer is configured using the [[GridRingNeighboursParams]] class.
   *
   * @param uid
   *   A unique identifier for the transformer. This is used to identify the
@@ -25,9 +25,9 @@ import org.apache.spark.sql.types._
   *   The right DataFrame to join with. This DataFrame must have a column of
   *   geometries.
   */
-case class HexRingNeighbours(override val uid: String, var right: Dataset[_])
+case class GridRingNeighbours(override val uid: String, var right: Dataset[_])
     extends BinaryTransformer
-      with HexRingNeighboursParams
+      with GridRingNeighboursParams
       with DefaultParamsWritable
       with Logging {
 
@@ -197,10 +197,10 @@ case class HexRingNeighbours(override val uid: String, var right: Dataset[_])
 
 }
 
-//  extends DefaultParamsReadable[HexRingNeighbours]
-object HexRingNeighbours {
+//  extends DefaultParamsReadable[GridRingNeighbours]
+object GridRingNeighbours {
 
-    def apply(right: Dataset[_]): HexRingNeighbours =
-        new HexRingNeighbours(uid = Identifiable.randomUID("approximate_spatial_knn"), right = right)
+    def apply(right: Dataset[_]): GridRingNeighbours =
+        new GridRingNeighbours(uid = Identifiable.randomUID("grid_ring_neighbours"), right = right)
 
 }

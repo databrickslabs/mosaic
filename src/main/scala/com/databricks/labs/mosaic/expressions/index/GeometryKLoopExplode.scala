@@ -37,7 +37,7 @@ case class GeometryKLoopExplode(geom: Expression, resolution: Expression, k: Exp
         }
     }
 
-    //noinspection DuplicatedCode
+    // noinspection DuplicatedCode
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val geometryRaw = geom.eval(input)
         val resolutionRaw = resolution.eval(input)
@@ -48,21 +48,8 @@ case class GeometryKLoopExplode(geom: Expression, resolution: Expression, k: Exp
             val geometryVal = geometryAPI.geometry(geometryRaw, geom.dataType)
             val resolutionVal = indexSystem.getResolution(resolutionRaw)
             val kVal = kRaw.asInstanceOf[Int]
-            val n = kVal - 1
 
-            val chips = Mosaic.getChips(geometryVal, resolutionVal, keepCoreGeom = false, indexSystem, geometryAPI)
-            val (coreChips, borderChips) = chips.partition(_.isCore)
-
-            val coreIndices = coreChips.map(_.cellIdAsLong(indexSystem)).toSet
-            val borderIndices = borderChips.map(_.cellIdAsLong(indexSystem))
-
-            // We use nRing as naming for kRing where k = n
-            val borderNRing = borderIndices.flatMap(indexSystem.kRing(_, n)).toSet
-            val nRing = coreIndices ++ borderNRing
-
-            val borderKLoop = borderIndices.flatMap(indexSystem.kLoop(_, kVal)).toSet
-
-            val kLoop = borderKLoop -- nRing
+            val kLoop = Mosaic.geometryKLoop(geometryVal, resolutionVal, kVal, indexSystem, geometryAPI)
 
             kLoop.map(row => InternalRow.fromSeq(Seq(indexSystem.serializeCellId(row))))
         }

@@ -67,14 +67,7 @@ case class GeometryKRing(
         val resolution: Int = indexSystem.getResolution(input2)
         val k: Int = input3.asInstanceOf[Int]
 
-        val chips = Mosaic.getChips(geometry, resolution, keepCoreGeom = false, indexSystem, geometryAPI)
-        val (coreChips, borderChips) = chips.partition(_.isCore)
-
-        val coreIndices = coreChips.map(_.cellIdAsLong(indexSystem)).toSet
-        val borderIndices = borderChips.map(_.cellIdAsLong(indexSystem))
-
-        val borderKRing = borderIndices.flatMap(indexSystem.kRing(_, k)).toSet
-        val kRing = coreIndices ++ borderKRing
+        val kRing = Mosaic.geometryKRing(geometry, resolution, k, indexSystem, geometryAPI)
 
         val formatted = kRing.map(indexSystem.serializeCellId)
         val serialized = ArrayData.toArrayData(formatted.toArray)

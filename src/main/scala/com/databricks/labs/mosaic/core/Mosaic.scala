@@ -96,6 +96,53 @@ object Mosaic {
         }
     }
 
+    /**
+      * @param geometry
+      *   Geometry to get k ring cells for.
+      * @param resolution
+      *   Resolution of the cells to get.
+      * @param indexSystem
+      *   Index system to use.
+      * @param geometryAPI
+      *   Geometry API to use.
+      * @return
+      *   A set of k ring cells for the geometry.
+      */
+    def geometryKRing(geometry: MosaicGeometry, resolution: Int, k: Int, indexSystem: IndexSystem, geometryAPI: GeometryAPI): Set[Long] = {
+        val (coreCells, borderCells) = getCellSets(geometry, resolution, indexSystem, geometryAPI)
+        val borderKRing = borderCells.flatMap(indexSystem.kRing(_, k))
+        val kRing = coreCells ++ borderKRing
+        kRing
+    }
+
+    /**
+      * @param geometry
+      *   Geometry to get k loop around
+      * @param resolution
+      *   Resolution of the cells
+      * @param indexSystem
+      *   Index system to use
+      * @param geometryAPI
+      *   Geometry API to use
+      * @return
+      *   Set of cells that form a k loop around geometry
+      */
+    def geometryKLoop(geometry: MosaicGeometry, resolution: Int, k: Int, indexSystem: IndexSystem, geometryAPI: GeometryAPI): Set[Long] = {
+        val n: Int = k - 1
+        // This would be much more efficient if we could use the
+        // pre-computed tessellation of the geometry for repeated calls.
+        val (coreCells, borderCells) = getCellSets(geometry, resolution, indexSystem, geometryAPI)
+
+        // We use nRing as naming for kRing where k = n
+        val borderNRing = borderCells.flatMap(indexSystem.kRing(_, n))
+        val nRing = coreCells ++ borderNRing
+
+        val borderKLoop = borderCells.flatMap(indexSystem.kLoop(_, k))
+
+        val kLoop = borderKLoop -- nRing
+        kLoop
+    }
+
     private def lineDecompose(
         line: MosaicLineString,
         resolution: Int,
@@ -144,6 +191,35 @@ object Mosaic {
 
         val result = traverseLine(line, Seq(startIndex), Set.empty[Long], Seq.empty[MosaicChip])
         result
+    }
+
+    /**
+      * Returns core cells and border cells as a sets of Longs. The
+      * implementation currently depends on [[getChips()]] method.
+      *
+      * @param geometry
+      *   Geometry to fill with cells.
+      * @param resolution
+      *   Resolution of the cells.
+      * @param indexSystem
+      *   Index system to use.
+      * @param geometryAPI
+      *   Geometry API to use.
+      * @return
+      *   Tuple of core cells and border cells.
+      */
+    private def getCellSets(
+        geometry: MosaicGeometry,
+        resolution: Int,
+        indexSystem: IndexSystem,
+        geometryAPI: GeometryAPI
+    ): (Set[Long], Set[Long]) = {
+        val chips = Mosaic.getChips(geometry, resolution, keepCoreGeom = false, indexSystem, geometryAPI)
+        val (coreChips, borderChips) = chips.partition(_.isCore)
+
+        val coreCells = coreChips.map(_.cellIdAsLong(indexSystem)).toSet
+        val borderCells = borderChips.map(_.cellIdAsLong(indexSystem)).toSet
+        (coreCells, borderCells)
     }
 
 }
