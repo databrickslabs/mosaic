@@ -188,8 +188,6 @@ st_bufferloop
     :type innerRadius: Column (DoubleType)
     :param outerRadius: Radius of the resulting geometry.
     :type outerRadius: Column (DoubleType)
-    :param radius: Double
-    :type radius: Column (DoubleType)
     :rtype: Column: Geometry
 
     :example:
