@@ -1,21 +1,31 @@
 package com.databricks.labs.mosaic.functions
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.auxiliary.BadIndexSystem
-import org.apache.spark.sql.QueryTest
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import com.databricks.labs.mosaic.{H3, SPARK_DATABRICKS_GEO_H3_ENABLED}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.catalog.CatalogDatabase
-import org.apache.spark.sql.catalyst.expressions.Literal
-import org.apache.spark.sql.functions.{array, lit}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, Literal}
+import org.apache.spark.sql.functions.{array, col, lit}
+import org.apache.spark.sql.types.{LongType, StringType}
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
 import java.net.URI
 
-trait MosaicContextBehaviors extends QueryTest {
+trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
 
-    def creationOfContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    import MosaicContextBehaviors._
+
+    // noinspection EmptyParenMethodAccessedAsParameterless
+    def creationOfContext(mosaicContext: MosaicContext): Unit = {
+        val indexSystem = mosaicContext.getIndexSystem
+        val geometryAPI = mosaicContext.getGeometryAPI
         spark.sparkContext.setLogLevel("FATAL")
         MosaicContext.reset()
         an[Error] should be thrownBy MosaicContext.context
@@ -23,15 +33,16 @@ trait MosaicContextBehaviors extends QueryTest {
         MosaicContext.indexSystem shouldEqual indexSystem
         MosaicContext.geometryAPI shouldEqual geometryAPI
         MosaicContext.indexSystem match {
-            case BNGIndexSystem => mc.idAsLongDefaultExpr.asInstanceOf[Literal].value shouldEqual false
-            case H3IndexSystem  => mc.idAsLongDefaultExpr.asInstanceOf[Literal].value shouldEqual true
+            case BNGIndexSystem => mc.getIndexSystem.getCellIdDataType shouldEqual StringType
+            case H3IndexSystem  => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
         }
         an[Error] should be thrownBy MosaicContext.build(BadIndexSystem, geometryAPI)
     }
 
-    def sqlRegistration(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def sqlRegistration(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
+        val indexSystem = mc.getIndexSystem
         import mc.functions._
         mc.register()
 
@@ -98,6 +109,13 @@ trait MosaicContextBehaviors extends QueryTest {
         noException should be thrownBy getFunc("st_scale").apply(Seq(multiPolygon.expr, xLit, yLit))
         noException should be thrownBy getFunc("st_rotate").apply(Seq(multiPolygon.expr, xLit, yLit))
         noException should be thrownBy getFunc("st_convexhull").apply(Seq(multiPolygon.expr))
+        noException should be thrownBy getFunc("st_difference").apply(Seq(multiPolygon.expr, multiPolygon.expr))
+        noException should be thrownBy getFunc("st_union").apply(Seq(multiPolygon.expr, multiPolygon.expr))
+        noException should be thrownBy getFunc("st_unaryunion").apply(Seq(multiPolygon.expr))
+        noException should be thrownBy getFunc("st_simplify").apply(Seq(multiPolygon.expr, xLit))
+        noException should be thrownBy getFunc("st_envelope").apply(Seq(multiPolygon.expr))
+        noException should be thrownBy getFunc("st_buffer").apply(Seq(multiPolygon.expr, xLit))
+        noException should be thrownBy getFunc("st_bufferloop").apply(Seq(multiPolygon.expr, xLit, yLit))
         noException should be thrownBy getFunc("st_numpoints").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_intersects").apply(Seq(multiPolygon.expr, pointsWkt))
         noException should be thrownBy getFunc("st_intersection").apply(Seq(multiPolygon.expr, multiPolygon.expr))
@@ -119,6 +137,7 @@ trait MosaicContextBehaviors extends QueryTest {
             grid_tessellateexplode(multiPolygon, lit(5)).expr
           )
         )
+        noException should be thrownBy getFunc("st_union_agg").apply(Seq(holePointsWkt))
         noException should be thrownBy getFunc("grid_tessellateexplode").apply(Seq(multiPolygon.expr, lit(5).expr))
         noException should be thrownBy getFunc("grid_tessellateexplode").apply(Seq(multiPolygon.expr, lit(5).expr, lit(false).expr))
         noException should be thrownBy getFunc("grid_tessellateexplode").apply(
@@ -133,9 +152,20 @@ trait MosaicContextBehaviors extends QueryTest {
         noException should be thrownBy getFunc("grid_longlatascellid").apply(Seq(xLit, yLit, lit(5).expr, lit(false).expr))
         noException should be thrownBy getFunc("grid_pointascellid").apply(Seq(pointsWkt, lit(5).expr, lit(false).expr))
         noException should be thrownBy getFunc("grid_polyfill").apply(Seq(multiPolygon.expr, lit(5).expr, lit(false).expr))
-        noException should be thrownBy getFunc("grid_tessellateaslong").apply(Seq(multiPolygon.expr, lit(5).expr))
+        noException should be thrownBy getFunc("grid_boundaryaswkb").apply(Seq(multiPolygon.expr))
+        noException should be thrownBy getFunc("grid_boundary").apply(Seq(multiPolygon.expr, lit("wkt").expr))
+        noException should be thrownBy getFunc("grid_cellkring").apply(Seq(multiPolygon.expr, lit(5).expr))
+        noException should be thrownBy getFunc("grid_cellkringexplode").apply(Seq(multiPolygon.expr, lit(5).expr))
+        noException should be thrownBy getFunc("grid_cellkloop").apply(Seq(multiPolygon.expr, lit(5).expr))
+        noException should be thrownBy getFunc("grid_cellkloopexplode").apply(Seq(multiPolygon.expr, lit(5).expr))
+        noException should be thrownBy getFunc("grid_geometrykring").apply(Seq(multiPolygon.expr, lit(5).expr, lit(5).expr))
+        noException should be thrownBy getFunc("grid_geometrykringexplode").apply(Seq(multiPolygon.expr, lit(5).expr, lit(5).expr))
+        noException should be thrownBy getFunc("grid_geometrykloop").apply(Seq(multiPolygon.expr, lit(5).expr, lit(5).expr))
+        noException should be thrownBy getFunc("grid_geometrykloopexplode").apply(Seq(multiPolygon.expr, lit(5).expr, lit(5).expr))
+
         noException should be thrownBy getFunc("st_dump").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("try_sql").apply(Seq(st_area(multiPolygon).expr))
+
         noException should be thrownBy getFunc("index_geometry").apply(Seq(multiPolygon.expr, lit(5).expr))
         noException should be thrownBy getFunc("mosaic_explode").apply(Seq(multiPolygon.expr, lit(5).expr))
         noException should be thrownBy getFunc("mosaic_explode").apply(Seq(multiPolygon.expr, lit(5).expr, lit(false).expr))
@@ -145,10 +175,83 @@ trait MosaicContextBehaviors extends QueryTest {
         noException should be thrownBy getFunc("point_index_lonlat").apply(Seq(xLit, yLit, lit(5).expr, lit(false).expr))
         noException should be thrownBy getFunc("polyfill").apply(Seq(multiPolygon.expr, lit(5).expr, lit(false).expr))
 
-        spark.sessionState.catalog.createDatabase(
-            CatalogDatabase("test", "", new URI("loc"), Map.empty),
-            ignoreIfExists = true)
+        spark.sessionState.catalog.createDatabase(CatalogDatabase("test", "", new URI("loc"), Map.empty), ignoreIfExists = true)
         noException should be thrownBy mc.register("test")
+    }
+
+    def productH3Detection(): Unit = {
+        val mc = h3MosaicContext
+        mc.shouldUseDatabricksH3() shouldBe false
+        spark.conf.set(SPARK_DATABRICKS_GEO_H3_ENABLED, "false")
+        mc.shouldUseDatabricksH3() shouldBe false
+        spark.conf.set(SPARK_DATABRICKS_GEO_H3_ENABLED, "true")
+        mc.shouldUseDatabricksH3() shouldBe true
+    }
+
+    def sqlFunctionLookup(): Unit = {
+        val functionBuilder = stub[FunctionBuilder]
+        val mc = h3MosaicContext
+        val registry = spark.sessionState.functionRegistry
+
+        spark.conf.set(SPARK_DATABRICKS_GEO_H3_ENABLED, "true")
+
+        // Register mock product functions
+        registry.registerFunction(
+            FunctionIdentifier("h3_longlatash3", None),
+            new ExpressionInfo("product", "h3_longlatash3"),
+            (exprs: Seq[Expression]) => Column(exprs.head).expr
+        )
+        registry.registerFunction(
+            FunctionIdentifier("h3_polyfillash3", None),
+            new ExpressionInfo("product", "h3_polyfillash3"),
+            functionBuilder
+        )
+        registry.registerFunction(
+            FunctionIdentifier("h3_boundaryaswkb", None),
+            new ExpressionInfo("product", "h3_boundaryaswkb"),
+            functionBuilder
+        )
+
+        mc.register(spark)
+
+        registry.lookupFunction(FunctionIdentifier("grid_longlatascellid", None)).get.getName shouldBe "h3_longlatash3"
+        registry.lookupFunction(FunctionIdentifier("grid_polyfill", None)).get.getName shouldBe "h3_polyfillash3"
+        registry.lookupFunction(FunctionIdentifier("grid_boundaryaswkb", None)).get.getName shouldBe "h3_boundaryaswkb"
+    }
+
+    def callDatabricksH3(): Unit = {
+        val mc = h3MosaicContext
+        spark.conf.set(SPARK_DATABRICKS_GEO_H3_ENABLED, "true")
+        import mc.functions._
+
+        val result = spark
+            .range(10)
+            .withColumn("grid_longlatascellid", grid_longlatascellid(col("id"), col("id"), col("id")))
+            .withColumn("grid_polyfill", grid_polyfill(col("id"), col("id")))
+            .withColumn("grid_boundaryaswkb", grid_boundaryaswkb(col("id")))
+            .collect()
+
+        result.length shouldBe 10
+        result.forall(_.getAs[String]("grid_longlatascellid") == "dummy_h3_longlatascellid")
+        result.forall(_.getAs[String]("grid_polyfill") == "dummy_h3_polyfill")
+        result.forall(_.getAs[String]("grid_boundaryaswkb") == "dummy_h3_boundaryaswkb")
+    }
+
+    def reflectedMethods(): Unit = {
+        val mc = h3MosaicContext
+        val method = mc.getProductMethod("sample_increment")
+        method.apply(1).asInstanceOf[Int] shouldBe 2
+    }
+
+}
+
+object MosaicContextBehaviors extends MockFactory {
+
+    def h3MosaicContext: MosaicContext = {
+        val ix = stub[IndexSystem]
+        ix.getCellIdDataType _ when () returns LongType
+        ix.name _ when () returns H3.name
+        MosaicContext.build(H3IndexSystem, stub[GeometryAPI])
     }
 
 }

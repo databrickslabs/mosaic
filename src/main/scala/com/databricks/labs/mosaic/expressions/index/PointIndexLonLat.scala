@@ -1,32 +1,29 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.index.IndexSystemID
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
 
-case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expression, idAsLong: Expression, indexSystemName: String)
-    extends QuaternaryExpression
+case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expression, indexSystemName: String)
+    extends TernaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
 
+    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+
     override def inputTypes: Seq[DataType] =
-        (lon.dataType, lat.dataType, resolution.dataType, idAsLong.dataType) match {
-            case (DoubleType, DoubleType, IntegerType, BooleanType) => Seq(DoubleType, DoubleType, IntegerType, BooleanType)
-            case (DoubleType, DoubleType, StringType, BooleanType)  => Seq(DoubleType, DoubleType, StringType, BooleanType)
-            case _                                                  => throw new Error(
-                  s"Not supported data type: (${lon.dataType}, ${lat.dataType}, ${resolution.dataType}, ${idAsLong.dataType})."
+        (lon.dataType, lat.dataType, resolution.dataType) match {
+            case (DoubleType, DoubleType, IntegerType) => Seq(DoubleType, DoubleType, IntegerType, BooleanType)
+            case (DoubleType, DoubleType, StringType)  => Seq(DoubleType, DoubleType, StringType, BooleanType)
+            case _                                     => throw new Error(
+                  s"Not supported data type: (${lon.dataType}, ${lat.dataType}, ${resolution.dataType})."
                 )
         }
 
     /** Expression output DataType. */
-    override def dataType: DataType =
-        idAsLong match {
-            case Literal(f: Boolean, BooleanType) => if (f) LongType else StringType
-            case _                                => throw new Error("idAsLong has to be Boolean type.")
-        }
+    override def dataType: DataType = indexSystem.getCellIdDataType
 
     override def toString: String = s"grid_longlatascellid($lon, $lat, $resolution)"
 
@@ -46,20 +43,18 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
       * @return
       *   Index id in Long.
       */
-    override def nullSafeEval(input1: Any, input2: Any, input3: Any, input4: Any): Any = {
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+    override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
         val resolution: Int = indexSystem.getResolution(input3)
         val lon: Double = input1.asInstanceOf[Double]
         val lat: Double = input2.asInstanceOf[Double]
-        val idAsLongVal = input4.asInstanceOf[Boolean]
 
         val cellID = indexSystem.pointToIndex(lon, lat, resolution)
-        if (idAsLongVal) cellID else UTF8String.fromString(indexSystem.format(cellID))
+        indexSystem.serializeCellId(cellID)
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(4).map(_.asInstanceOf[Expression])
-        val res = PointIndexLonLat(asArray(0), asArray(1), asArray(2), asArray(3), indexSystemName)
+        val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
+        val res = PointIndexLonLat(asArray(0), asArray(1), asArray(2), indexSystemName)
         res.copyTagsFrom(this)
         res
     }
@@ -70,14 +65,11 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
 
     override def third: Expression = resolution
 
-    override def fourth: Expression = idAsLong
-
     override protected def withNewChildrenInternal(
         newFirst: Expression,
         newSecond: Expression,
-        newThird: Expression,
-        newFourth: Expression
-    ): Expression = copy(newFirst, newSecond, newThird, newFourth)
+        newThird: Expression
+    ): Expression = copy(newFirst, newSecond, newThird)
 
 }
 

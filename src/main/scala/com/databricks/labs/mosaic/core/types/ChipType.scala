@@ -15,6 +15,7 @@ class ChipType(fields: Array[StructField]) extends StructType(fields) {
 }
 
 object ChipType {
+
     def apply(idType: DataType): ChipType = {
         require(Seq(LongType, IntegerType, StringType).contains(idType))
         new ChipType(
@@ -25,4 +26,5 @@ object ChipType {
           )
         )
     }
+
 }
