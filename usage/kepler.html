@@ -50,6 +50,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/material.css" />
     <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -59,8 +60,8 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Geometry constructors" href="../api/geometry-constructors.html" />
-    <link rel="prev" title="Automatic SQL registration" href="automatic-sql-registration.html" />
+    <link rel="next" title="Automatic SQL registration" href="automatic-sql-registration.html" />
+    <link rel="prev" title="Quickstart notebook" href="quickstart.html" />
   
    
 
@@ -168,6 +169,14 @@
     
     
     
+  <nav class="md-tabs" data-md-component="tabs">
+    <div class="md-tabs__inner md-grid">
+      <ul class="md-tabs__list">
+          <li class="md-tabs__item"><a href="../index.html" class="md-tabs__link">Mosaic</a></li>
+          <li class="md-tabs__item"><a href="usage.html" class="md-tabs__link">Usage</a></li>
+      </ul>
+    </div>
+  </nav>
     <main class="md-main">
       <div class="md-main__inner md-grid" data-md-component="container">
         
@@ -211,14 +220,61 @@
     <li class="md-nav__item">
     
     
-      <a href="installation.html" class="md-nav__link">Installation guide</a>
+      <a href="../api/api.html" class="md-nav__link">API Documentation</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/geometry-constructors.html" class="md-nav__link">Geometry constructors</a>
       
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="quickstart.html" class="md-nav__link">Quickstart notebook</a>
+      <a href="../api/geometry-accessors.html" class="md-nav__link">Geometry accessors</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/spatial-functions.html" class="md-nav__link">Spatial functions</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/spatial-indexing.html" class="md-nav__link">Spatial grid indexing</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/spatial-predicates.html" class="md-nav__link">Spatial predicates</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/spatial-aggregations.html" class="md-nav__link">Spatial aggregation functions</a>
+      
+    
+    </li></ul>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="usage.html" class="md-nav__link">Usage</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="installation.html" class="md-nav__link">Installation guide</a>
       
     
     </li>
@@ -239,7 +295,7 @@
     <li class="md-nav__item">
     
     
-      <a href="automatic-sql-registration.html" class="md-nav__link">Automatic SQL registration</a>
+      <a href="quickstart.html" class="md-nav__link">Quickstart notebook</a>
       
     
     </li>
@@ -292,43 +348,24 @@
     <li class="md-nav__item">
     
     
-      <a href="../api/geometry-constructors.html" class="md-nav__link">Geometry constructors</a>
+      <a href="automatic-sql-registration.html" class="md-nav__link">Automatic SQL registration</a>
       
+    
+    </li></ul>
     
     </li>
     <li class="md-nav__item">
     
     
-      <a href="../api/geometry-accessors.html" class="md-nav__link">Geometry accessors</a>
-      
-    
-    </li>
+      <a href="../models/models.html" class="md-nav__link">Models</a>
+      <ul class="md-nav__list"> 
     <li class="md-nav__item">
     
     
-      <a href="../api/spatial-functions.html" class="md-nav__link">Spatial functions</a>
+      <a href="../models/spatial-knn.html" class="md-nav__link">Spatial K Nearest Neighbours</a>
       
     
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/spatial-indexing.html" class="md-nav__link">Spatial grid indexing</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/spatial-predicates.html" class="md-nav__link">Spatial predicates</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/spatial-aggregations.html" class="md-nav__link">Spatial aggregation functions</a>
-      
+    </li></ul>
     
     </li>
   </ul>
@@ -1273,7 +1310,7 @@ neighbourhood_chips "wkb" "geometry"
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
           
-            <a href="automatic-sql-registration.html" title="Automatic SQL registration"
+            <a href="quickstart.html" title="Quickstart notebook"
                class="md-flex md-footer-nav__link md-footer-nav__link--prev"
                rel="prev">
               <div class="md-flex__cell md-flex__cell--shrink">
@@ -1282,17 +1319,17 @@ neighbourhood_chips "wkb" "geometry"
               <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
                 <span class="md-flex__ellipsis">
                   <span
-                      class="md-footer-nav__direction"> Previous </span> Automatic SQL registration </span>
+                      class="md-footer-nav__direction"> Previous </span> Quickstart notebook </span>
               </div>
             </a>
           
           
-            <a href="../api/geometry-constructors.html" title="Geometry constructors"
+            <a href="automatic-sql-registration.html" title="Automatic SQL registration"
                class="md-flex md-footer-nav__link md-footer-nav__link--next"
                rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
                 class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> Geometry constructors </span>
+                class="md-footer-nav__direction"> Next </span> Automatic SQL registration </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink"><i
                 class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>

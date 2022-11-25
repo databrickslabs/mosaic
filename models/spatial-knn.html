@@ -1,0 +1,824 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="lang:clipboard.copy" content="Copy to clipboard">
+  <meta name="lang:clipboard.copied" content="Copied to clipboard">
+  <meta name="lang:search.language" content="en">
+  <meta name="lang:search.pipeline.stopwords" content="True">
+  <meta name="lang:search.pipeline.trimmer" content="True">
+  <meta name="lang:search.result.none" content="No matching documents">
+  <meta name="lang:search.result.one" content="1 matching document">
+  <meta name="lang:search.result.other" content="# matching documents">
+  <meta name="lang:search.tokenizer" content="[\s\-]+">
+
+  
+    <link href="https://fonts.gstatic.com/" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700|Roboto:300,400,400i,700&display=fallback" rel="stylesheet">
+
+    <style>
+      body,
+      input {
+        font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif
+      }
+
+      code,
+      kbd,
+      pre {
+        font-family: "Roboto Mono", "Courier New", Courier, monospace
+      }
+    </style>
+  
+
+  <link rel="stylesheet" href="../_static/stylesheets/application.css"/>
+  <link rel="stylesheet" href="../_static/stylesheets/application-palette.css"/>
+  <link rel="stylesheet" href="../_static/stylesheets/application-fixes.css"/>
+  
+  <link rel="stylesheet" href="../_static/fonts/material-icons.css"/>
+  
+  <meta name="theme-color" content="#3f51b5">
+  <script src="../_static/javascripts/modernizr.js"></script>
+  
+  
+  
+    <title>Spatial K Nearest Neighbours &#8212; Mosaic</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/material.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/tabs.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Models" href="models.html" />
+  
+   
+
+  </head>
+  <body dir=ltr
+        data-md-color-primary=green data-md-color-accent=green>
+  
+  <svg class="md-svg">
+    <defs data-children-count="0">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+      
+    </defs>
+  </svg>
+  
+  <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer">
+  <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search">
+  <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+  <a href="#models/spatial-knn" tabindex="1" class="md-skip"> Skip to content </a>
+  <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex navheader">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../index.html" title="Mosaic"
+           class="md-header-nav__button md-logo">
+          
+              <img src="../_static/mosaic_logo.svg" height="26"
+                   alt="Mosaic logo">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          <span class="md-header-nav__topic">Mosaic v0.3.4</span>
+          <span class="md-header-nav__topic"> Spatial K Nearest Neighbours </span>
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+        
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" action="../search.html" method="get" name="search">
+      <input type="text" class="md-search__input" name="q" placeholder="Search"
+             autocapitalize="off" autocomplete="off" spellcheck="false"
+             data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            <a href="https://github.com/databrickslabs/mosaic/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    Mosaic
+  </div>
+</a>
+          </div>
+        </div>
+      
+      
+  
+  <script src="../_static/javascripts/version_dropdown.js"></script>
+  <script>
+    var json_loc = "../"versions.json"",
+        target_loc = "../../",
+        text = "Versions";
+    $( document ).ready( add_version_dropdown(json_loc, target_loc, text));
+  </script>
+  
+
+    </div>
+  </nav>
+</header>
+
+  
+  <div class="md-container">
+    
+    
+    
+  <nav class="md-tabs" data-md-component="tabs">
+    <div class="md-tabs__inner md-grid">
+      <ul class="md-tabs__list">
+          <li class="md-tabs__item"><a href="../index.html" class="md-tabs__link">Mosaic</a></li>
+          <li class="md-tabs__item"><a href="models.html" class="md-tabs__link">Models</a></li>
+      </ul>
+    </div>
+  </nav>
+    <main class="md-main">
+      <div class="md-main__inner md-grid" data-md-component="container">
+        
+          <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../index.html" title="Mosaic" class="md-nav__button md-logo">
+      
+        <img src="../_static/mosaic_logo.svg" alt=" logo" width="48" height="48">
+      
+    </a>
+    <a href="../index.html"
+       title="Mosaic">Mosaic v0.3.4</a>
+  </label>
+    <div class="md-nav__source">
+      <a href="https://github.com/databrickslabs/mosaic/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    Mosaic
+  </div>
+</a>
+    </div>
+  
+  
+
+  
+  <ul class="md-nav__list">
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Contents:</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/api.html" class="md-nav__link">API Documentation</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/geometry-constructors.html" class="md-nav__link">Geometry constructors</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/geometry-accessors.html" class="md-nav__link">Geometry accessors</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/spatial-functions.html" class="md-nav__link">Spatial functions</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/spatial-indexing.html" class="md-nav__link">Spatial grid indexing</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/spatial-predicates.html" class="md-nav__link">Spatial predicates</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../api/spatial-aggregations.html" class="md-nav__link">Spatial aggregation functions</a>
+      
+    
+    </li></ul>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/usage.html" class="md-nav__link">Usage</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/installation.html" class="md-nav__link">Installation guide</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/grid-indexes.html" class="md-nav__link">Using grid index systems in Mosaic</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/grid-indexes-bng.html" class="md-nav__link">BNG - British National Grid</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/quickstart.html" class="md-nav__link">Quickstart notebook</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/kepler.html" class="md-nav__link">Kepler visualizations</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/automatic-sql-registration.html" class="md-nav__link">Automatic SQL registration</a>
+      
+    
+    </li></ul>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="models.html" class="md-nav__link">Models</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <label class="md-nav__link md-nav__link--active" for="__toc"> Spatial K Nearest Neighbours </label>
+    
+      <a href="#" class="md-nav__link md-nav__link--active">Spatial K Nearest Neighbours</a>
+      
+        
+<nav class="md-nav md-nav--secondary">
+    <label class="md-nav__title" for="__toc">Contents</label>
+  <ul class="md-nav__list" data-md-scrollfix="">
+        <li class="md-nav__item"><a href="#models-spatial-knn--page-root" class="md-nav__link">Spatial K Nearest Neighbours</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#intro" class="md-nav__link">Intro</a>
+        </li>
+        <li class="md-nav__item"><a href="#spatial-knn-as-a-join-relation" class="md-nav__link">Spatial KNN as a Join Relation</a>
+        </li>
+        <li class="md-nav__item"><a href="#spatial-knn-as-an-iterative-transformation" class="md-nav__link">Spatial KNN as an Iterative Transformation</a>
+        </li>
+        <li class="md-nav__item"><a href="#usage" class="md-nav__link">Usage</a>
+        </li>
+        <li class="md-nav__item"><a href="#parameters" class="md-nav__link">Parameters</a>
+        </li>
+        <li class="md-nav__item"><a href="#visualisation" class="md-nav__link">Visualisation</a>
+        </li>
+        <li class="md-nav__item"><a href="#mlflow-integration" class="md-nav__link">Mlflow Integration</a>
+        </li>
+        <li class="md-nav__item"><a href="#model-serialisation" class="md-nav__link">Model serialisation</a>
+        </li>
+        <li class="md-nav__item"><a href="#shape-aware-hex-rings" class="md-nav__link">Shape Aware Hex Rings</a>
+        </li></ul>
+            </nav>
+        </li>
+    
+<li class="md-nav__item"><a class="md-nav__extra_link" href="../_sources/models/spatial-knn.rst.txt">Show Source</a> </li>
+
+  </ul>
+</nav>
+      
+    
+    </li></ul>
+    
+    </li>
+  </ul>
+  
+
+</nav>
+              </div>
+            </div>
+          </div>
+          <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                
+<nav class="md-nav md-nav--secondary">
+    <label class="md-nav__title" for="__toc">Contents</label>
+  <ul class="md-nav__list" data-md-scrollfix="">
+        <li class="md-nav__item"><a href="#models-spatial-knn--page-root" class="md-nav__link">Spatial K Nearest Neighbours</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#intro" class="md-nav__link">Intro</a>
+        </li>
+        <li class="md-nav__item"><a href="#spatial-knn-as-a-join-relation" class="md-nav__link">Spatial KNN as a Join Relation</a>
+        </li>
+        <li class="md-nav__item"><a href="#spatial-knn-as-an-iterative-transformation" class="md-nav__link">Spatial KNN as an Iterative Transformation</a>
+        </li>
+        <li class="md-nav__item"><a href="#usage" class="md-nav__link">Usage</a>
+        </li>
+        <li class="md-nav__item"><a href="#parameters" class="md-nav__link">Parameters</a>
+        </li>
+        <li class="md-nav__item"><a href="#visualisation" class="md-nav__link">Visualisation</a>
+        </li>
+        <li class="md-nav__item"><a href="#mlflow-integration" class="md-nav__link">Mlflow Integration</a>
+        </li>
+        <li class="md-nav__item"><a href="#model-serialisation" class="md-nav__link">Model serialisation</a>
+        </li>
+        <li class="md-nav__item"><a href="#shape-aware-hex-rings" class="md-nav__link">Shape Aware Hex Rings</a>
+        </li></ul>
+            </nav>
+        </li>
+    
+<li class="md-nav__item"><a class="md-nav__extra_link" href="../_sources/models/spatial-knn.rst.txt">Show Source</a> </li>
+
+<li id="searchbox" class="md-nav__item"></li>
+
+  </ul>
+</nav>
+              </div>
+            </div>
+          </div>
+        
+        <div class="md-content">
+          <article class="md-content__inner md-typeset" role="main">
+            
+  
+<h1 id="models-spatial-knn--page-root">Spatial K Nearest Neighbours<a class="headerlink" href="#models-spatial-knn--page-root" title="Permalink to this headline">¶</a></h1>
+
+<h2 id="intro">Intro<a class="headerlink" href="#intro" title="Permalink to this headline">¶</a></h2>
+<p>Nearest neighbour problem is defined as finding an observation from a set S that is the most similar to the given
+observation O. The similarity is defined by a distance function d(O, S[i]). The most common distance function is the Euclidean.
+The nearest neighbour problem is a special case of the k-nearest neighbour problem, where k=1. The k-nearest neighbour
+problem is defined as finding k observations from a set S that are the most similar to the given observation O.</p>
+<div class="doc-figure figure align-default" id="id1">
+<img alt="../_images/nearest_neighbour.png" src="../_images/nearest_neighbour.png"/>
+<p class="caption"><span class="caption-text">Fig 1. Nearest neighbour problem</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>We define spatial k-nearest neighbour problem as finding k observations from a set of candidates C that are the most similar to the
+given a landmark L[i], where the similarity is defined by a distance function d(L[i], S[j]) = st_distance(L[i], S[j]).
+In our case we further define the similarity as the inverse of the distance, so the most similar observation is the one with
+the smallest distance. ST_Distance function is defined as the shortest distance between two geometries in projected units.
+We do not restrict the type of geometries that can be used in the problem. The only requirement is that the geometries
+must be in the same coordinate system.</p>
+
+
+<h2 id="spatial-knn-as-a-join-relation">Spatial KNN as a Join Relation<a class="headerlink" href="#spatial-knn-as-a-join-relation" title="Permalink to this headline">¶</a></h2>
+<p>The traditional definition of the nearest neighbour problem is defined as:
+“given a set S of points in a space M and a query point q in M, find the point in S that is closest to q”.
+We have relaxed this definition by allowing the query point to be a set of points. In our case the result of the nearest
+neighbour problem is a set of geometries from the candidates set C that are closest to each query geometry from the
+set of landmarks L. This in effect formulates a join condition where a point pair (L[i], C[j]) is a match if
+st_distance(L[i], C[j]) &lt;= st_distance(L[i], C[k]) where C[k] is the kth nearest neighbour of L[i].</p>
+<p>The above definition of k nearest neighbour problem is in effect a left join between the set of landmarks L and the set of
+candidates C. The result set isnt symmetric and it does depend on the direction of operation. If S[j] is in the knn set of Q[i]
+it does not imply that Q[i] is in the knn set of S[j]. This join would default to a Cartesian product if we were to
+use the traditional join syntax. We have to use a different approach.</p>
+
+
+<h2 id="spatial-knn-as-an-iterative-transformation">Spatial KNN as an Iterative Transformation<a class="headerlink" href="#spatial-knn-as-an-iterative-transformation" title="Permalink to this headline">¶</a></h2>
+<p>The problem of finding the k-nearest neighbours can be formulated as an iterative transformation. The transformation
+is defined as follows:
+* For each geometry in set L generate a hex ring in grid index space
+* Generate match candidates in the hex ring
+* For each match candidate C[j] calculate the distance to the landmark geometry L[i]
+* For each landmark geometry L[i] count the matches and stop if the count is equal to k
+* If the count is less than k, increase the size of the hex ring and repeat the process
+* If the count exceeds k, remove the matches that are furthest from the landmark and stop
+iterating over the hex ring for L[i]
+* Evaluate early stopping condition (if enabled): Stop if no new match candidates are found
+in the hex ring for any L[i] geometry in the set L for N iterations (knn.setEarlyStopIterations(N))
+* Continue with the next hex ring until max number of iterations is performed
+* Return the geometries that have the smallest distance to the query geometries</p>
+<div class="doc-figure figure align-default" id="id2">
+<img alt="../_images/spatial_knn_iterations.png" src="../_images/spatial_knn_iterations.png"/>
+<p class="caption"><span class="caption-text">Fig 2. Spatial KNN example over 4 iterations.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+
+
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>Mosaic implements a transformer that implements the iterative approach outlined above.
+The transformer is called SpatialKnn and it is used as follows:</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spark</span><span class="o">.</span><span class="n">sparkContext</span><span class="o">.</span><span class="n">setCheckpointDir</span><span class="p">(</span><span class="s2">"dbfs:/tmp/mosaic/username/checkpoints"</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">buildings_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"buildings"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">buildings_df</span> <span class="o">=</span> <span class="n">buildings_df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"left_id"</span><span class="p">,</span> <span class="n">monotonically_increasing_id</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">roads_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"roads"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">roads_df</span> <span class="o">=</span> <span class="n">roads_df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"right_id"</span><span class="p">,</span> <span class="n">monotonically_increasing_id</span><span class="p">())</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mosaic.models</span> <span class="kn">import</span> <span class="n">SpatialKnn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span> <span class="o">=</span> <span class="n">SpatialKNN</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCandidates</span><span class="p">(</span><span class="n">roads_df</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCandidatesGeometryColumn</span><span class="p">(</span><span class="s2">"geometry"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCandidatesIdColumn</span><span class="p">(</span><span class="s2">"right_id"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setLandmarksGeometryColumn</span><span class="p">(</span><span class="s2">"geometry"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setLandmarksIdColumn</span><span class="p">(</span><span class="s2">"left_id"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setK</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setMaxIterations</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setDistanceThreshold</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCheckpointTablePrefix</span><span class="p">(</span><span class="s2">"checkpoint_table_knn"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setIndexResolution</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">neighbours</span> <span class="o">=</span> <span class="n">knn</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">buildings_df</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">neighbours</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+<span class="go">+-------+--------+-----------+--------------+--------------------------+---------+----------------+</span>
+<span class="go">|left_id|right_id|   geometry|right_geometry|geometry_geometry_distance|iteration|neighbour_number|</span>
+<span class="go">+-------+--------+-----------+--------------+--------------------------+---------+----------------+</span>
+<span class="go">|   1012|    2012|POLYGON(...|LINESTRING(...|                       0.0|        0|               1|</span>
+<span class="go">|   1012|    2013|POLYGON(...|LINESTRING(...|                     2.145|        0|               2|</span>
+<span class="go">|   1012|    2014|POLYGON(...|LINESTRING(...|                    2.1787|        2|               3|</span>
+<span class="go">|   1013|    2013|POLYGON(...|LINESTRING(...|                       0.0|        0|               1|</span>
+<span class="go">|   1013|    2014|POLYGON(...|LINESTRING(...|                    1.1112|        1|               1|</span>
+<span class="go">+-------+--------+-----------+--------------+--------------------------+---------+----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-0-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nn">models</span><span class="p">.</span><span class="nn">knn</span><span class="p">.</span><span class="nc">SpatialKNN</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nn">functions</span><span class="p">.</span><span class="nc">MosaicContext</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">H3</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">ESRI</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">mosaicContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MosaicContext</span><span class="p">.</span><span class="n">build</span><span class="p">(</span><span class="nc">H3</span><span class="p">,</span><span class="w"> </span><span class="nc">ESRI</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">mosaicContext</span><span class="p">.</span><span class="nn">functions</span><span class="p">.</span><span class="n">_</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">mosaicContext</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">spark</span><span class="p">.</span><span class="n">sparkContext</span><span class="p">.</span><span class="n">setCheckpointDir</span><span class="p">(</span><span class="s">"dbfs:/tmp/mosaic/username/checkpoints"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">buildingsDf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spark</span><span class="p">.</span><span class="n">read</span><span class="p">.</span><span class="n">table</span><span class="p">(</span><span class="s">"buildings"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">                     </span><span class="p">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">"left_id"</span><span class="p">,</span><span class="w"> </span><span class="n">monotonically_increasing_id</span><span class="p">())</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">roads_df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spark</span><span class="p">.</span><span class="n">read</span><span class="p">.</span><span class="n">table</span><span class="p">(</span><span class="s">"roads"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">                     </span><span class="p">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">"right_id"</span><span class="p">,</span><span class="w"> </span><span class="n">monotonically_increasing_id</span><span class="p">())</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">knn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">SpatialKNN</span><span class="p">()</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">             </span><span class="p">.</span><span class="n">setCandidates</span><span class="p">(</span><span class="n">roads_df</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">             </span><span class="p">.</span><span class="n">setCandidatesGeometryColumn</span><span class="p">(</span><span class="s">"geometry"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">             </span><span class="p">.</span><span class="n">setCandidatesIdColumn</span><span class="p">(</span><span class="s">"right_id"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">             </span><span class="p">.</span><span class="n">setLandmarksGeometryColumn</span><span class="p">(</span><span class="s">"geometry"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">             </span><span class="p">.</span><span class="n">setLandmarksIdColumn</span><span class="p">(</span><span class="s">"left_id"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">             </span><span class="p">.</span><span class="n">setK</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">             </span><span class="p">.</span><span class="n">setMaxIterations</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">             </span><span class="p">.</span><span class="n">setDistanceThreshold</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">             </span><span class="p">.</span><span class="n">setCheckpointTablePrefix</span><span class="p">(</span><span class="s">"checkpoint_table_knn"</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w">             </span><span class="p">.</span><span class="n">setIndexResolution</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">neighbours</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">knn</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">buildings_df</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">neighbours</span><span class="p">.</span><span class="n">display</span><span class="p">()</span><span class="w"></span>
+<span class="o">+-------+--------+-----------+--------------+--------------------------+---------+----------------+</span><span class="w"></span>
+<span class="o">|</span><span class="n">left_id</span><span class="o">|</span><span class="n">right_id</span><span class="o">|</span><span class="w">   </span><span class="n">geometry</span><span class="o">|</span><span class="n">right_geometry</span><span class="o">|</span><span class="n">geometry_geometry_distance</span><span class="o">|</span><span class="n">iteration</span><span class="o">|</span><span class="n">neighbour_number</span><span class="o">|</span><span class="w"></span>
+<span class="o">+-------+--------+-----------+--------------+--------------------------+---------+----------------+</span><span class="w"></span>
+<span class="o">|</span><span class="w">   </span><span class="mi">1012</span><span class="o">|</span><span class="w">    </span><span class="mi">2012</span><span class="o">|</span><span class="nc">POLYGON</span><span class="p">(...</span><span class="o">|</span><span class="nc">LINESTRING</span><span class="p">(...</span><span class="o">|</span><span class="w">                       </span><span class="mf">0.0</span><span class="o">|</span><span class="w">        </span><span class="mi">0</span><span class="o">|</span><span class="w">               </span><span class="mi">1</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">   </span><span class="mi">1012</span><span class="o">|</span><span class="w">    </span><span class="mi">2013</span><span class="o">|</span><span class="nc">POLYGON</span><span class="p">(...</span><span class="o">|</span><span class="nc">LINESTRING</span><span class="p">(...</span><span class="o">|</span><span class="w">                     </span><span class="mf">2.145</span><span class="o">|</span><span class="w">        </span><span class="mi">0</span><span class="o">|</span><span class="w">               </span><span class="mi">2</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">   </span><span class="mi">1012</span><span class="o">|</span><span class="w">    </span><span class="mi">2014</span><span class="o">|</span><span class="nc">POLYGON</span><span class="p">(...</span><span class="o">|</span><span class="nc">LINESTRING</span><span class="p">(...</span><span class="o">|</span><span class="w">                    </span><span class="mf">2.1787</span><span class="o">|</span><span class="w">        </span><span class="mi">2</span><span class="o">|</span><span class="w">               </span><span class="mi">3</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">   </span><span class="mi">1013</span><span class="o">|</span><span class="w">    </span><span class="mi">2013</span><span class="o">|</span><span class="nc">POLYGON</span><span class="p">(...</span><span class="o">|</span><span class="nc">LINESTRING</span><span class="p">(...</span><span class="o">|</span><span class="w">                       </span><span class="mf">0.0</span><span class="o">|</span><span class="w">        </span><span class="mi">0</span><span class="o">|</span><span class="w">               </span><span class="mi">1</span><span class="o">|</span><span class="w"></span>
+<span class="o">|</span><span class="w">   </span><span class="mi">1013</span><span class="o">|</span><span class="w">    </span><span class="mi">2014</span><span class="o">|</span><span class="nc">POLYGON</span><span class="p">(...</span><span class="o">|</span><span class="nc">LINESTRING</span><span class="p">(...</span><span class="o">|</span><span class="w">                    </span><span class="mf">1.1112</span><span class="o">|</span><span class="w">        </span><span class="mi">1</span><span class="o">|</span><span class="w">               </span><span class="mi">1</span><span class="o">|</span><span class="w"></span>
+<span class="o">+-------+--------+-----------+--------------+--------------------------+---------+----------------+</span><span class="w"></span>
+</pre></div>
+</div>
+</div></div>
+<p>Note: the transformer is implemented only in python and scala at the moment.</p>
+<p>Mosaic supports all indexing systems for this transformer.
+Please see <a class="reference internal" href="../api/spatial-indexing.html"><span class="doc">Spatial Indexing</span></a> for supported indexing operations.</p>
+
+
+<h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h2>
+<p>The transformer has the following parameters:</p>
+<ul class="simple">
+<li><p>candidatesDf: the dataframe containing the geometries that will be used as candidates for the KNN search</p></li>
+<li><p>candidatesGeometryColumn: the name of the column that contains the candidates geometries</p></li>
+<li><p>candidatesIdColumn: the name of the column that contains the candidates ids</p></li>
+<li><p>landmarksGeometryColumn: the name of the column that contains the landmarks geometries</p></li>
+<li><p>landmarksIdColumn: the name of the column that contains the landmarks ids</p></li>
+<li><p>k: the number of neighbours to return</p></li>
+<li><p>maxIterations: the maximum number of iterations to perform</p></li>
+<li><p>distanceThreshold: the distance threshold to stop the iterations</p></li>
+<li><p>checkpointTablePrefix: the prefix of the checkpoint table</p></li>
+<li><p>indexResolution: the resolution of the index</p></li>
+<li><p>approximate: whether to stop after max iterations (approximate = true) or to
+perform the finalisation step (approximate = false) - no default value, the caller must specify this parameter</p></li>
+</ul>
+<p>If the approximate is set to true the transformer wont perform the finalisation step.
+The finalisation takes into account that grid index cells may be skewed at different
+locations and we cant ensure radial growth between iterations. That means that some
+of the neighbours in returned K set arent nearest neighbours. The finalisation step
+will take the distance between the neighbours and the target geometry and will generate
+a buffered geometry around the target geometry. The buffered geometry will be used to
+identify missed neighbours. The missed neighbours will be added to the K set and the
+set will be sorted by distance to the target geometry. Grid cells can be skewed at different
+locations in a different way, meaning the hex rings are more of ellipses than circles.
+To account for that we need to perform the finalisation step that is based on buffer geometries.</p>
+
+
+<h2 id="visualisation">Visualisation<a class="headerlink" href="#visualisation" title="Permalink to this headline">¶</a></h2>
+<p>The transformer returns a dataframe with the following columns:</p>
+<ul class="simple">
+<li><p>left_id: the id of the left geometry</p></li>
+<li><p>right_id: the id of the right geometry</p></li>
+<li><p>geometry: the left geometry</p></li>
+<li><p>right_geometry: the right geometry</p></li>
+<li><p>geometry_geometry_distance: the distance between the left and right geometry</p></li>
+<li><p>iteration: the iteration number</p></li>
+<li><p>neighbour_number: the number of the neighbour in the K set</p></li>
+<li><p>any other column from left dataset will be returned as well</p></li>
+<li><p>any other column from right dataset will be returned as well</p></li>
+<li><dl class="simple">
+<dt>any column name that appears in both datasets will be suffixed with _right for the right dataset,</dt><dd><p>left dataset column names wont be altered</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>For visualisation purposes we advise that you select the following columns:</p>
+<ul class="simple">
+<li><p>left_id</p></li>
+<li><p>right_id</p></li>
+<li><p>geometry</p></li>
+<li><p>right_geometry</p></li>
+<li><p>geometry_geometry_distance</p></li>
+</ul>
+<p>The following image shows the result of the transformer applied on the buildings and taxi trip pickup locations:</p>
+<div class="doc-figure figure align-default" id="id3">
+<img alt="../_images/knn_result_visualisation.png" src="../_images/knn_result_visualisation.png"/>
+<p class="caption"><span class="caption-text">Fig 3. Spatial KNN example visualisation.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+
+
+<h2 id="mlflow-integration">Mlflow Integration<a class="headerlink" href="#mlflow-integration" title="Permalink to this headline">¶</a></h2>
+<p>SpatialKNN transformer supports mlflow integration since it extends spark.mllib APIs.
+In addition the transformer comes with .getParams() and .getMetrics() methods to facilitate
+easy logging with mlflow. The .getParams() method returns a dictionary with the parameters
+of the transformer. The .getMetrics() method returns a dictionary with the metrics of the
+transformer after the convergence.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">buildings_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"buildings"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">buildings_df</span> <span class="o">=</span> <span class="n">buildings_df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"left_id"</span><span class="p">,</span> <span class="n">monotonically_increasing_id</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">roads_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"roads"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">roads_df</span> <span class="o">=</span> <span class="n">roads_df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"right_id"</span><span class="p">,</span> <span class="n">monotonically_increasing_id</span><span class="p">())</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mosaic.models</span> <span class="kn">import</span> <span class="n">SpatialKnn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mlflow</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">mlflow</span><span class="o">.</span><span class="n">start_run</span><span class="p">():</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span> <span class="o">=</span> <span class="n">SpatialKNN</span><span class="p">(</span><span class="n">roads_df</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span><span class="o">.</span><span class="n">setLeftGeometryColumn</span><span class="p">(</span><span class="s2">"geometry"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span><span class="o">.</span><span class="n">setRightGeometryColumn</span><span class="p">(</span><span class="s2">"geometry"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span><span class="o">.</span><span class="n">setLeftIdColumn</span><span class="p">(</span><span class="s2">"left_id"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span><span class="o">.</span><span class="n">setRightIdColumn</span><span class="p">(</span><span class="s2">"right_id"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span><span class="o">.</span><span class="n">setK</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span><span class="o">.</span><span class="n">setMaxIterations</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span><span class="o">.</span><span class="n">setDistanceThreshold</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span><span class="o">.</span><span class="n">setCheckpointTablePrefix</span><span class="p">(</span><span class="s2">"checkpoint_table_knn"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span><span class="o">.</span><span class="n">setIndexResolution</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">neighbours</span> <span class="o">=</span> <span class="n">knn</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">buildings_df</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">mlflow</span><span class="o">.</span><span class="n">log_params</span><span class="p">(</span><span class="n">knn</span><span class="o">.</span><span class="n">getParams</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">mlflow</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">(</span><span class="n">knn</span><span class="o">.</span><span class="n">getMetrics</span><span class="p">())</span>
+</pre></div>
+</div>
+</div></div>
+<div class="doc-figure-full figure align-default" id="id4">
+<img alt="../_images/knn_mlflow_notebook.png" src="../_images/knn_mlflow_notebook.png"/>
+<p class="caption"><span class="caption-text">Fig 4. Spatial KNN mlflow integration in notebooks.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id5">
+<img alt="../_images/knn_mlflow_params.png" src="../_images/knn_mlflow_params.png"/>
+<p class="caption"><span class="caption-text">Fig 5. Spatial KNN mlflow integration params.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
+<div class="doc-figure-float-left figure align-default" id="id6">
+<img alt="../_images/knn_mlflow_metrics.png" src="../_images/knn_mlflow_metrics.png"/>
+<p class="caption"><span class="caption-text">Fig 6. Spatial KNN mlflow integration metrics.</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+
+<h2 id="model-serialisation">Model serialisation<a class="headerlink" href="#model-serialisation" title="Permalink to this headline">¶</a></h2>
+<p>The transformer can be serialised and deserialised using the model.write.save() and model.read.load() methods.
+The serialised model can be used for audit purposes only.
+The transformers are not models in a pure sense - they do not create a new object that can be called on each row.
+The outputs of knn transformer is a dataframe with the neighbours of each geometry.
+To run the transform method one has to have access to both the landmarks and the candidates datasets.
+These datasets are not serialised with the model, and neither are the model outputs.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-2-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-2-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-2-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-2-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spark</span><span class="o">.</span><span class="n">sparkContext</span><span class="o">.</span><span class="n">setCheckpointDir</span><span class="p">(</span><span class="s2">"dbfs:/tmp/mosaic/username/checkpoints"</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">buildings_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"buildings"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">buildings_df</span> <span class="o">=</span> <span class="n">buildings_df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"left_id"</span><span class="p">,</span> <span class="n">monotonically_increasing_id</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">roads_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"roads"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">roads_df</span> <span class="o">=</span> <span class="n">roads_df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">"right_id"</span><span class="p">,</span> <span class="n">monotonically_increasing_id</span><span class="p">())</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mosaic.models</span> <span class="kn">import</span> <span class="n">SpatialKnn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span> <span class="o">=</span> <span class="n">SpatialKNN</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCandidates</span><span class="p">(</span><span class="n">roads_df</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCandidatesGeometryColumn</span><span class="p">(</span><span class="s2">"geometry"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCandidatesIdColumn</span><span class="p">(</span><span class="s2">"right_id"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setLandmarksGeometryColumn</span><span class="p">(</span><span class="s2">"geometry"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setLandmarksIdColumn</span><span class="p">(</span><span class="s2">"left_id"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setK</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setMaxIterations</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setDistanceThreshold</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCheckpointTablePrefix</span><span class="p">(</span><span class="s2">"checkpoint_table_knn"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setIndexResolution</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">neighbours</span> <span class="o">=</span> <span class="n">knn</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">buildings_df</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"dbfs:/tmp/mosaic/username/knn_model"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loaded_knn</span> <span class="o">=</span> <span class="n">SpatialKNN</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"dbfs:/tmp/mosaic/username/knn_model"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loaded_knn</span><span class="o">.</span><span class="n">getParams</span><span class="p">()</span>
+<span class="go">{'candidates_geometry_column': 'geometry',</span>
+<span class="go"> 'candidates_id_column': 'right_id',</span>
+<span class="go"> 'distance_threshold': 1.0,</span>
+<span class="go"> 'index_resolution': 10,</span>
+<span class="go"> 'k': 5,</span>
+<span class="go"> 'landmarks_geometry_column': 'geometry',</span>
+<span class="go"> 'landmarks_id_column': 'left_id',</span>
+<span class="go"> 'max_iterations': 10,</span>
+<span class="go"> 'checkpoint_table_prefix': 'checkpoint_table_knn'}</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-2-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; import com.databricks.labs.mosaic.models.knn.SpatialKNN
+&gt;&gt;&gt; import com.databricks.labs.mosaic.functions.MosaicContext
+&gt;&gt;&gt; import com.databricks.labs.mosaic.H3
+&gt;&gt;&gt; import com.databricks.labs.mosaic.ESRI
+&gt;&gt;&gt;
+&gt;&gt;&gt; val mosaicContext = MosaicContext.build(H3, ESRI)
+&gt;&gt;&gt; import mosaicContext.functions._
+&gt;&gt;&gt; mosaicContext.register(spark)
+&gt;&gt;&gt;
+&gt;&gt;&gt; spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
+&gt;&gt;&gt;
+&gt;&gt;&gt; val buildingsDf = spark.read.table("buildings")
+&gt;&gt;&gt;                     .withColumn("left_id", monotonically_increasing_id())
+&gt;&gt;&gt; val roads_df = spark.read.table("roads")
+&gt;&gt;&gt;                     .withColumn("right_id", monotonically_increasing_id())
+&gt;&gt;&gt;
+&gt;&gt;&gt; val knn = SpatialKNN()
+&gt;&gt;&gt;             .setCandidates(roads_df)
+&gt;&gt;&gt;             .setCandidatesGeometryColumn("geometry")
+&gt;&gt;&gt;             .setCandidatesIdColumn("right_id")
+&gt;&gt;&gt;             .setLandmarksGeometryColumn("geometry")
+&gt;&gt;&gt;             .setLandmarksIdColumn("left_id")
+&gt;&gt;&gt;             .setK(5)
+&gt;&gt;&gt;             .setMaxIterations(10)
+&gt;&gt;&gt;             .setDistanceThreshold(1.0)
+&gt;&gt;&gt;             .setCheckpointTablePrefix("checkpoint_table_knn")
+&gt;&gt;&gt;             .setIndexResolution(10)
+&gt;&gt;&gt;
+&gt;&gt;&gt; knn.write.save("dbfs:/tmp/mosaic/username/knn_model")
+&gt;&gt;&gt; val loadedKnn = SpatialKNN.read.load("dbfs:/tmp/mosaic/username/knn_model")
+&gt;&gt;&gt; val params = loadedKnn.getParams()
+&gt;&gt;&gt; params.foreach(println)
+('candidates_geometry_column': 'geometry')
+('candidates_id_column': 'right_id')
+('distance_threshold': 1.0)
+('index_resolution': 10)
+('k': 5)
+('landmarks_geometry_column': 'geometry')
+('landmarks_id_column': 'left_id')
+('max_iterations': 10)
+('checkpoint_table_prefix': 'checkpoint_table_knn')
+</pre></div>
+</div>
+</div></div>
+
+
+<h2 id="shape-aware-hex-rings">Shape Aware Hex Rings<a class="headerlink" href="#shape-aware-hex-rings" title="Permalink to this headline">¶</a></h2>
+<p>When performing the iterations the transformer will use the grid to identify
+the candidates for the K set. The grid is generated using the shape aware
+hex rings algorithm. The algorithm will generate a grid that will be skewed
+in the direction of the target geometry.
+If the target geometry is a point the hex ring will coincide with the grid
+base implementation. If the target geometry is a line the hex ring will be skewed in
+the direction of the line. If the target geometry is a polygon the hex ring will be
+skewed around the shape of the polygon, the polygon holes will be considered.</p>
+<div class="doc-figure figure align-default" id="id7">
+<img alt="../_images/knn_line_hexrings.png" src="../_images/knn_line_hexrings.png"/>
+<p class="caption"><span class="caption-text">Fig 7. Spatial KNN example of shape aware hex rings.</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</div>
+
+
+
+
+          </article>
+        </div>
+      </div>
+    </main>
+  </div>
+  <footer class="md-footer">
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+          
+            <a href="models.html" title="Models"
+               class="md-flex md-footer-nav__link md-footer-nav__link--prev"
+               rel="prev">
+              <div class="md-flex__cell md-flex__cell--shrink">
+                <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+              </div>
+              <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+                <span class="md-flex__ellipsis">
+                  <span
+                      class="md-footer-nav__direction"> Previous </span> Models </span>
+              </div>
+            </a>
+          
+          
+        </a>
+        
+      </nav>
+    </div>
+    <div class="md-footer-meta md-typeset">
+      <div class="md-footer-meta__inner md-grid">
+        <div class="md-footer-copyright">
+          <div class="md-footer-copyright__highlight">
+              &#169; Copyright 2022, Databricks Inc.
+              
+          </div>
+            Created using
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+             and
+            <a href="https://github.com/bashtage/sphinx-material/">Material for
+              Sphinx</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <script src="../_static/javascripts/application.js"></script>
+  <script>app.initialize({version: "1.0.4", url: {base: ".."}})</script>
+  </body>
+</html>
