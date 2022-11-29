@@ -36,4 +36,9 @@ with open(local_taxi_zones_path / f'nyc_taxi_zones.geojson', 'wb') as f:
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Verify GeoJSON was downloaded
+
+# COMMAND ----------
+
 display(dbutils.fs.ls(raw_taxi_zones_path))

@@ -1,11 +1,14 @@
 package com.databricks.labs.mosaic
 
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index._
 import java.nio.file.{Files, Paths}
 
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{IntegerType, StringType}
+import org.apache.spark.sql.types._
 
 package object test {
 
@@ -257,6 +260,7 @@ package object test {
             val rows = indexSystem match {
                 case H3IndexSystem  => wkt_rows_epsg4326.map { x => Row(x: _*) }
                 case BNGIndexSystem => wkt_rows_epsg27700.map { x => Row(x: _*) }
+                case _              => wkt_rows_epsg4326.map { x => Row(x: _*) }
             }
             val rdd = spark.sparkContext.makeRDD(rows)
             val schema = StructType(
@@ -346,4 +350,37 @@ package object test {
         def getNetCDFBinaryDf(spark: SparkSession): DataFrame = getBinaryDf(spark, "src/test/resources/binary/netcdf-coral", "*.nc")
 
     }
+
+    //noinspection NotImplementedCode, ScalaStyle
+    object MockIndexSystem extends IndexSystem(LongType) {
+
+        override def name: String = "MOCK"
+
+        override def getIndexSystemID: IndexSystemID = ???
+
+        override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = ???
+
+        override def format(id: Long): String = ???
+
+        override def getResolutionStr(resolution: Int): String = ???
+
+        override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = ???
+
+        override def kLoop(index: Long, n: Int): Seq[Long] = ???
+
+        override def kRing(index: Long, n: Int): Seq[Long] = ???
+
+        override def getResolution(res: Any): Int = ???
+
+        override def resolutions: Set[Int] = ???
+
+        override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = ???
+
+        override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = ???
+
+        override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = ???
+
+        override def parse(id: String): Long = ???
+    }
+
 }

@@ -56,6 +56,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def boundary: MosaicGeometryJTS = MosaicGeometryJTS(geom.getBoundary)
 
+    override def envelope: MosaicGeometryJTS = MosaicGeometryJTS(geom.getEnvelope)
+
     override def buffer(distance: Double): MosaicGeometryJTS = {
         val buffered = geom.buffer(distance)
         buffered.setSRID(geom.getSRID)
@@ -82,6 +84,13 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         this.geom.intersects(otherGeom)
     }
 
+    override def difference(other: MosaicGeometry): MosaicGeometry = {
+        val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
+        val difference = this.geom.difference(otherGeom)
+        difference.setSRID(geom.getSRID)
+        MosaicGeometryJTS(difference)
+    }
+
     override def union(other: MosaicGeometry): MosaicGeometry = {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
         val union = this.geom.union(otherGeom)
@@ -106,6 +115,11 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def equals(other: java.lang.Object): Boolean = false
 
+    override def equalsTopo(other: MosaicGeometry): Boolean = {
+        var otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
+        this.geom.equalsTopo(otherGeom)
+    }
+
     override def hashCode: Int = geom.hashCode()
 
     override def getLength: Double = geom.getLength
@@ -116,6 +130,12 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         val convexHull = geom.convexHull()
         convexHull.setSRID(geom.getSRID)
         MosaicGeometryJTS(convexHull)
+    }
+
+    override def unaryUnion: MosaicGeometryJTS = {
+        val unaryUnion = geom.union()
+        unaryUnion.setSRID(geom.getSRID)
+        MosaicGeometryJTS(unaryUnion)
     }
 
     override def toWKT: String = new WKTWriter().write(geom)
