@@ -29,3 +29,7 @@ case object H3 extends IndexSystemID {
 case object BNG extends IndexSystemID {
     override def name: String = "BNG"
 }
+
+case object CustomGrid extends IndexSystemID {
+    override def name: String = "CustomGrid"
+}
