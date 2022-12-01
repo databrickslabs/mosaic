@@ -1,28 +1,21 @@
 package com.databricks.labs.mosaic.functions
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
-import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
-import org.apache.spark.sql.internal.SQLConf
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.test.SharedSparkSession
 
 import scala.util.Try
 
-class MosaicContextTest extends QueryTest with SharedSparkSession with MosaicContextBehaviors {
+class MosaicContextTest extends MosaicSpatialQueryTest with SharedSparkSession with MosaicContextBehaviors {
 
-    //Hotfix for SharedSparkSession afterAll cleanup.
+    // Hotfix for SharedSparkSession afterAll cleanup.
     override def afterAll(): Unit = Try(super.afterAll())
 
-    private val noCodegen =
-        withSQLConf(
-          SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
-          SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
-        ) _
+    testAllNoCodegen("MosaicContext context creation") { creationOfContext }
+    testAllNoCodegen("MosaicContext sql registration") { sqlRegistration }
 
-    test("Testing sql registration (H3, JTS).") { noCodegen { sqlRegistration(H3IndexSystem, JTS) } }
-    test("Testing sql registration (H3, ESRI).") { noCodegen { sqlRegistration(H3IndexSystem, ESRI) } }
-    test("Testing sql registration (BNG, JTS).") { noCodegen { sqlRegistration(BNGIndexSystem, JTS) } }
-    test("Testing sql registration (BNG, ESRI).") { noCodegen { sqlRegistration(BNGIndexSystem, ESRI) } }
+    test("MosaicContext detect if product H3 is enabled") { productH3Detection() }
+    test("MosaicContext lookup correct sql functions") { sqlFunctionLookup() }
+    test("MosaicContext should use databricks h3") { callDatabricksH3() }
+    test("MosaicContext should correctly reflect functions") { reflectedMethods() }
 
 }

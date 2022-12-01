@@ -17,6 +17,7 @@ __all__ = [
     "st_perimeter",
     "st_convexhull",
     "st_buffer",
+    "st_bufferloop",
     "st_dump",
     "st_envelope",
     "st_srid",
@@ -46,11 +47,21 @@ __all__ = [
     "flatten_polygons",
 
     "grid_boundaryaswkb",
+    "grid_boundary",
     "grid_longlatascellid",
     "grid_pointascellid",
     "grid_polyfill",
     "grid_tessellate",
     "grid_tessellateexplode",
+
+    "grid_cellkring",
+    "grid_cellkloop",
+    "grid_cellkringexplode",
+    "grid_cellkloopexplode",
+    "grid_geometrykring",
+    "grid_geometrykloop",
+    "grid_geometrykringexplode",
+    "grid_geometrykloopexplode",
 
     "point_index_geom",
     "point_index_lonlat",
@@ -158,6 +169,35 @@ def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "st_buffer", pyspark_to_java_column(geom), pyspark_to_java_column(radius)
+    )
+
+def st_bufferloop(geom: ColumnOrName, innerRadius: ColumnOrName, outerRadius: ColumnOrName) -> Column:
+    """
+    Compute the buffered geometry loop (hollow ring) based on geom and provided radiuses.
+    The result geometry is a polygon/multipolygon with a hole in the center.
+    The hole covers the area of st_buffer(geom, innerRadius).
+    The result geometry covers the area of st_difference(st_buffer(geom, outerRadius), st_buffer(geom, innerRadius)).
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+    innerRadius : Column
+        The inner radius of buffering
+    outerRadius : Column
+        The outer radius of buffering
+
+    Returns
+    -------
+    Column
+        A geometry
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_bufferloop",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(innerRadius),
+        pyspark_to_java_column(outerRadius)
     )
 
 
@@ -751,6 +791,28 @@ def grid_boundaryaswkb(index_id: ColumnOrName) -> Column:
         "grid_boundaryaswkb", pyspark_to_java_column(index_id)
     )
 
+def grid_boundary(index_id: ColumnOrName, format: ColumnOrName) -> Column:
+    """
+    Returns a geometry representing the grid cell boundary using specified format.
+
+    Parameters
+    ----------
+    index_id : Column
+        The grid cell ID
+    format : Column
+        The format of the geometry to return. One of "wkb", "wkt", "geojson"
+
+    Returns
+    -------
+    Column
+        A geometry
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_boundary",
+        pyspark_to_java_column(index_id),
+        pyspark_to_java_column(format)
+    )
+
 
 def grid_longlatascellid(
     lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
@@ -886,6 +948,190 @@ def grid_tessellateexplode(
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
         pyspark_to_java_column(keep_core_geometries),
+    )
+
+def grid_cellkring(
+    cellid: ColumnOrName, k: ColumnOrName
+) -> Column:
+    """
+    Returns the k-ring of cells around the input cell ID.
+
+    Parameters
+    ----------
+    cellid : Column (LongType)
+    k : Column (IntegerType)
+
+    Returns
+    -------
+    Column (ArrayType[LongType])
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_cellkring",
+        pyspark_to_java_column(cellid),
+        pyspark_to_java_column(k),
+    )
+
+def grid_cellkloop(
+    cellid: ColumnOrName, k: ColumnOrName
+) -> Column:
+    """
+    Returns the k loop (hollow ring) of cells around the input cell ID.
+
+    Parameters
+    ----------
+    cellid : Column (LongType)
+    k : Column (IntegerType)
+
+    Returns
+    -------
+    Column (ArrayType[LongType])
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_cellkloop",
+        pyspark_to_java_column(cellid),
+        pyspark_to_java_column(k),
+    )
+
+def grid_cellkringexplode(
+    cellid: ColumnOrName, k: ColumnOrName
+) -> Column:
+    """
+    Returns the exploded k-ring of cells around the input cell ID.
+
+    Parameters
+    ----------
+    cellid : Column (LongType)
+    k : Column (IntegerType)
+
+    Returns
+    -------
+    Column (LongType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_cellkringexplode",
+        pyspark_to_java_column(cellid),
+        pyspark_to_java_column(k),
+    )
+
+def grid_cellkloopexplode(
+    cellid: ColumnOrName, k: ColumnOrName
+) -> Column:
+    """
+    Returns the exploded k loop (hollow ring) of cells around the input cell ID.
+
+    Parameters
+    ----------
+    cellid : Column (LongType)
+    k : Column (IntegerType)
+
+    Returns
+    -------
+    Column (LongType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_cellkloopexplode",
+        pyspark_to_java_column(cellid),
+        pyspark_to_java_column(k),
+    )
+
+def grid_geometrykring(
+    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+) -> Column:
+    """
+    Returns the k-ring of cells around the input geometry.
+
+    Parameters
+    ----------
+    geom : Column
+    resolution : Column (IntegerType)
+    k : Column (IntegerType)
+
+    Returns
+    -------
+    Column (ArrayType[LongType])
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_geometrykring",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(resolution),
+        pyspark_to_java_column(k),
+    )
+
+def grid_geometrykloop(
+    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+) -> Column:
+    """
+    Returns the k loop (hollow ring) of cells around the input geometry.
+
+    Parameters
+    ----------
+    geom : Column
+    resolution : Column (IntegerType)
+    k : Column (IntegerType)
+
+    Returns
+    -------
+    Column (ArrayType[LongType])
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_geometrykloop",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(resolution),
+        pyspark_to_java_column(k),
+    )
+
+def grid_geometrykringexplode(
+    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+) -> Column:
+    """
+    Returns the exploded k-ring of cells around the input geometry.
+
+    Parameters
+    ----------
+    geom : Column
+    resolution : Column (IntegerType)
+    k : Column (IntegerType)
+
+    Returns
+    -------
+    Column (LongType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_geometrykringexplode",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(resolution),
+        pyspark_to_java_column(k),
+    )
+
+def grid_geometrykloopexplode(
+    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+) -> Column:
+    """
+    Returns the exploded k loop (hollow ring) of cells around the input geometry.
+
+    Parameters
+    ----------
+    geom : Column
+    resolution : Column (IntegerType)
+    k : Column (IntegerType)
+
+    Returns
+    -------
+    Column (LongType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_geometrykloopexplode",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(resolution),
+        pyspark_to_java_column(k),
     )
 
 

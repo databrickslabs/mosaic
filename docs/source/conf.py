@@ -79,10 +79,8 @@ html_theme_options = {
     'repo_url': 'https://github.com/databrickslabs/mosaic/',
     'repo_name': 'Mosaic',
 
-    'master_doc': False,
-
-    'globaltoc_depth': 1,
-    'globaltoc_collapse': True,
+    'globaltoc_depth': 3,
+    'globaltoc_collapse': False,
     'globaltoc_includehidden': True,    
     'heroes': {'index': 'Simple, scalable geospatial analytics on Databricks',
                'examples/index': 'examples and tutorials to get started with '
@@ -102,3 +100,4 @@ html_sidebars = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_css_files = ["css/custom.css"]

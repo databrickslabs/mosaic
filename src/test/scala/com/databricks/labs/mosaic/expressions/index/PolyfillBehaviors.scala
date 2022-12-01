@@ -1,22 +1,27 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks
+import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.types._
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-trait PolyfillBehaviors {
-    this: AnyFlatSpec =>
+//noinspection ScalaDeprecation
+trait PolyfillBehaviors extends MosaicSpatialQueryTest {
 
-    def polyfillOnComputedColumns(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def polyfillOnComputedColumns(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -29,10 +34,16 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics.length
     }
 
-    def wktPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def wktPolyfill(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -55,10 +66,16 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def wkbPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def wkbPolyfill(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -80,10 +97,16 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def hexPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def hexPolyfill(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -105,10 +128,16 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def coordsPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def coordsPolyfill(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -130,17 +159,20 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
-        val mc = mosaicContext
-        mosaicContext.register(spark)
+    def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
+        val funcs = mosaicContext.functions
+        noException should be thrownBy funcs.grid_polyfill(col("wkt"), 3)
+        noException should be thrownBy funcs.grid_polyfill(col("wkt"), lit(3))
+    }
+
+    def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val sc = spark
         import sc.implicits._
+        val mc = mosaicContext
+        mc.register(spark)
 
-        val wkt = mocks.getWKTRowsDf(mosaicContext).limit(1).select("wkt").as[String].collect().head
-        val idAsLongExpr = mc.getIndexSystem.defaultDataTypeID match {
-            case LongType   => lit(true).expr
-            case StringType => lit(false).expr
-        }
+        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr
@@ -149,7 +181,6 @@ trait PolyfillBehaviors {
         val polyfillExpr = Polyfill(
           lit(wkt).expr,
           resExpr,
-          idAsLongExpr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
@@ -162,17 +193,17 @@ trait PolyfillBehaviors {
         val badExpr = Polyfill(
           lit(10).expr,
           lit(true).expr,
-          lit(5).expr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
 
-        an[Error] should be thrownBy badExpr.dataType
         an[Error] should be thrownBy badExpr.inputTypes
 
         // legacy API def tests
         noException should be thrownBy mc.functions.polyfill(lit(""), lit(5))
         noException should be thrownBy mc.functions.polyfill(lit(""), 5)
+
+        noException should be thrownBy polyfillExpr.makeCopy(polyfillExpr.children.toArray)
     }
 
 }

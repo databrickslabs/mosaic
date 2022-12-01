@@ -4,11 +4,9 @@ import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.types._
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo, Literal}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 import org.locationtech.jts.geom.Geometry
@@ -19,7 +17,6 @@ case class MosaicExplode(
     geom: Expression,
     resolution: Expression,
     keepCoreGeom: Expression,
-    idAsLong: Expression,
     indexSystemName: String,
     geometryAPIName: String
 ) extends CollectionGenerator
@@ -34,7 +31,7 @@ case class MosaicExplode(
 
     override def inline: Boolean = false
 
-    override def children: Seq[Expression] = Seq(geom, resolution, keepCoreGeom, idAsLong)
+    override def children: Seq[Expression] = Seq(geom, resolution, keepCoreGeom)
 
     /**
       * [[MosaicExplode]] expression can only be called on supported data types.
@@ -51,8 +48,8 @@ case class MosaicExplode(
             TypeCheckResult.TypeCheckFailure("Unsupported geom type.")
         } else if (!Seq(IntegerType, StringType).contains(resolution.dataType)) {
             TypeCheckResult.TypeCheckFailure("Unsupported resolution type.")
-        } else if (!Seq(BooleanType).contains(keepCoreGeom.dataType)) {
-            TypeCheckResult.TypeCheckFailure("Unsupported boolean flag.")
+        } else if (keepCoreGeom.dataType != BooleanType) {
+            TypeCheckResult.TypeCheckFailure("Unsupported flag type type.")
         } else {
             TypeCheckResult.TypeCheckSuccess
         }
@@ -77,25 +74,18 @@ case class MosaicExplode(
         val resolutionVal = indexSystem.getResolution(resolution.eval(input))
         val geometryVal = geometryAPI.geometry(geomRaw, geom.dataType)
         val keepCoreGeomVal = keepCoreGeom.eval(input).asInstanceOf[Boolean]
-        val idAsLongVal = idAsLong.asInstanceOf[Literal].value.asInstanceOf[Boolean]
 
-        val chips = GeometryTypeEnum.fromString(geometryVal.getGeometryType) match {
-            case LINESTRING      => Mosaic.lineFill(geometryVal, resolutionVal, indexSystem, geometryAPI)
-            case MULTILINESTRING => Mosaic.lineFill(geometryVal, resolutionVal, indexSystem, geometryAPI)
-            case _               => Mosaic.mosaicFill(geometryVal, resolutionVal, keepCoreGeomVal, indexSystem, geometryAPI)
-        }
-
-        val formatted = if (!idAsLongVal) chips.map(_.toStringID(indexSystem)) else chips
-        formatted.map(row => InternalRow.fromSeq(Seq(row.serialize)))
+        Mosaic.getChips(geometryVal, resolutionVal, keepCoreGeomVal, indexSystem, geometryAPI)
+            .map(_.formatCellId(indexSystem))
+            .map(row => InternalRow.fromSeq(Seq(row.serialize)))
     }
 
     override def elementSchema: StructType = {
-        val chipType = if (idAsLong.asInstanceOf[Literal].value.asInstanceOf[Boolean]) ChipType(LongType) else ChipType(StringType)
-        StructType(Array(StructField("index", chipType)))
+        StructType(Array(StructField("index", ChipType(indexSystem.getCellIdDataType))))
     }
 
     override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression =
-        copy(newChildren(0), newChildren(1), newChildren(2), newChildren(3))
+        copy(newChildren(0), newChildren(1), newChildren(2))
 
 }
 

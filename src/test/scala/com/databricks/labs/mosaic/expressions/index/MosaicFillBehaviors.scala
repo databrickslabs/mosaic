@@ -1,22 +1,27 @@
 package com.databricks.labs.mosaic.expressions.index
 
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks
+import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-trait MosaicFillBehaviors {
-    this: AnyFlatSpec =>
+//noinspection ScalaDeprecation
+trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
 
-    def wktMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def wktMosaicFill(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -39,10 +44,15 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def wkbMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def wkbMosaicFill(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -65,10 +75,15 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def hexMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def hexMosaicFill(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -91,10 +106,15 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def coordsMosaicFill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def coordsMosaicFill(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -117,10 +137,15 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def wktMosaicFillKeepCoreGeom(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def wktMosaicFillKeepCoreGeom(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         import mc.functions._
         mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -143,17 +168,85 @@ trait MosaicFillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def auxiliaryMethods(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+    def mosaicFillPoints(mosaicContext: MosaicContext): Unit = {
+        val mc = mosaicContext
+        import mc.functions._
+        mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
+
+        val boroughs: DataFrame = getBoroughs(mc)
+            .withColumn("centroid", st_centroid2D(col("wkt")))
+            .withColumn("centroid", st_point(col("centroid.x"), col("centroid.y")))
+
+        val mosaics = boroughs
+            .select(
+              mosaicfill(col("centroid"), resolution, keepCoreGeometries = true)
+            )
+            .collect()
+
+        boroughs.collect().length shouldEqual mosaics.length
+    }
+
+    def mosaicFillMultiPoints(mosaicContext: MosaicContext): Unit = {
+        val sc = spark
+        val mc = mosaicContext
+        import mc.functions._
+        import sc.implicits._
+        mosaicContext.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
+
+        val geometryAPI = mc.getGeometryAPI
+
+        val boroughs: DataFrame = getBoroughs(mc)
+            .select("wkt")
+            .as[String]
+            .map(wkt => {
+                val geom = geometryAPI.geometry(wkt, "WKT")
+                val boundaryPoints = geom.getBoundary.getShellPoints.flatten
+                val multiPoint = boundaryPoints.tail.fold(boundaryPoints.head.asInstanceOf[MosaicGeometry])((mp, p) => mp.union(p))
+                multiPoint.toWKT
+            })
+            .toDF("wkt")
+
+        val mosaics = boroughs
+            .select(
+              mosaicfill(col("wkt"), resolution, keepCoreGeometries = true)
+            )
+            .collect()
+
+        boroughs.collect().length shouldEqual mosaics.length
+    }
+
+    def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
+        val funcs = mosaicContext.functions
+        noException should be thrownBy funcs.grid_tessellate(col("wkt"), lit(3))
+        noException should be thrownBy funcs.grid_tessellate(col("wkt"), 3)
+        noException should be thrownBy funcs.grid_tessellate(col("wkt"), 3, keepCoreGeometries = true)
+        noException should be thrownBy funcs.grid_tessellate(col("wkt"), lit(3), keepCoreGeometries = true)
+        noException should be thrownBy funcs.grid_tessellate(col("wkt"), lit(3), lit(false))
+        //legacy API
+        noException should be thrownBy funcs.mosaicfill(col("wkt"), lit(3))
+        noException should be thrownBy funcs.mosaicfill(col("wkt"), 3)
+        noException should be thrownBy funcs.mosaicfill(col("wkt"), 3, keepCoreGeometries = true)
+        noException should be thrownBy funcs.mosaicfill(col("wkt"), lit(3), keepCoreGeometries = true)
+        noException should be thrownBy funcs.mosaicfill(col("wkt"), lit(3), lit(false))
+    }
+
+    def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         val mc = mosaicContext
         mosaicContext.register(spark)
         val sc = spark
         import sc.implicits._
 
         val wkt = mocks.getWKTRowsDf(mosaicContext).limit(1).select("wkt").as[String].collect().head
-        val idAsLongExpr = mc.getIndexSystem.defaultDataTypeID match {
-            case LongType   => lit(true).expr
-            case StringType => lit(false).expr
-        }
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr
@@ -163,7 +256,6 @@ trait MosaicFillBehaviors {
           lit(wkt).expr,
           resExpr,
           lit(false).expr,
-          idAsLongExpr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
@@ -171,35 +263,32 @@ trait MosaicFillBehaviors {
         mosaicfillExpr.first shouldEqual lit(wkt).expr
         mosaicfillExpr.second shouldEqual resExpr
         mosaicfillExpr.third shouldEqual lit(false).expr
-        mosaicfillExpr.fourth shouldEqual idAsLongExpr
 
         mc.getIndexSystem match {
             case H3IndexSystem  => mosaicfillExpr.inputTypes should contain theSameElementsAs
-                    Seq(StringType, IntegerType, BooleanType, BooleanType)
+                    Seq(StringType, IntegerType, BooleanType)
             case BNGIndexSystem => mosaicfillExpr.inputTypes should contain theSameElementsAs
-                    Seq(StringType, StringType, BooleanType, BooleanType)
+                    Seq(StringType, StringType, BooleanType)
         }
 
         val badExpr = MosaicFill(
           lit(10).expr,
           resExpr,
           lit(false).expr,
-          idAsLongExpr,
           mc.getIndexSystem.name,
           mc.getGeometryAPI.name
         )
 
         an[Error] should be thrownBy badExpr.inputTypes
-        an[Error] should be thrownBy badExpr
-            .makeCopy(Array(lit(wkt).expr, resExpr, lit(5).expr, lit(5).expr))
-            .dataType
 
         // legacy API def tests
         noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5))
         noException should be thrownBy mc.functions.mosaicfill(lit(""), 5)
         noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), lit(true))
-        noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), true)
-        noException should be thrownBy mc.functions.mosaicfill(lit(""), 5, true)
+        noException should be thrownBy mc.functions.mosaicfill(lit(""), lit(5), keepCoreGeometries = true)
+        noException should be thrownBy mc.functions.mosaicfill(lit(""), 5, keepCoreGeometries = true)
+
+        noException should be thrownBy mosaicfillExpr.makeCopy(mosaicfillExpr.children.toArray)
     }
 
 }
