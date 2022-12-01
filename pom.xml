@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.databricks.labs</groupId>
@@ -7,6 +8,8 @@
     <version>0.3.5-SNAPSHOT</version>
 
     <properties>
+        <minimum.coverage>80</minimum.coverage>
+        <skipTests>true</skipTests>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>
@@ -29,7 +32,7 @@
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.compat.version}</artifactId>
-            <version>3.2.12</version>
+            <version>3.2.14</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -72,10 +75,24 @@
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-mllib_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.delta</groupId>
+            <artifactId>delta-core_${scala.compat.version}</artifactId>
+            <version>2.1.0</version>
+            <scope>provided</scope>
+        </dependency>
         <!--geo dependencies-->
         <dependency>
             <groupId>com.uber</groupId>
             <artifactId>h3</artifactId>
+            <!--H3 fixed at 3.7.0 until Photon updates the version-->
+            <!--suppress MavenPackageUpdate-->
             <version>3.7.0</version>
         </dependency>
         <dependency>
@@ -86,7 +103,7 @@
         <dependency>
             <groupId>org.locationtech.jts.io</groupId>
             <artifactId>jts-io-common</artifactId>
-            <version>1.18.2</version>
+            <version>1.19.0</version>
         </dependency>
         <dependency>
             <groupId>com.esri.geometry</groupId>
@@ -165,12 +182,7 @@
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>2.0.0</version>
                 <configuration>
-                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-                    <junitxml>.</junitxml>
-                    <filereports>TestSuiteReport.txt</filereports>
-                    <!-- Comma separated list of suites to execute -->
-                    <!-- <suites>com.databricks.labs.mosaic.expressions.format.ConvertToTest</suites> -->
-                    <!-- <wildcardSuites>com.databricks.labs.mosaic.expressions</wildcardSuites> -->
+                    <reportsDirectory>${project.build.directory}/test-reports</reportsDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -186,7 +198,7 @@
                 <artifactId>scalastyle-maven-plugin</artifactId>
                 <version>1.0.0</version>
                 <configuration>
-                    <verbose>false</verbose>
+                    <verbose>true</verbose>
                     <failOnViolation>true</failOnViolation>
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                     <failOnWarning>false</failOnWarning>
@@ -206,23 +218,25 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.8</version>
+                <groupId>org.scoverage</groupId>
+                <artifactId>scoverage-maven-plugin</artifactId>
+                <version>1.4.11</version>
                 <executions>
                     <execution>
+                        <id>scoverage-report</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
+                            <goal>check</goal>
+                            <goal>report-only</goal>
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <minimumCoverage>${minimum.coverage}</minimumCoverage>
+                    <failOnMinimumCoverage>true</failOnMinimumCoverage>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                    <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -263,7 +277,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.2.1</spark.version>
+                <spark.version>3.2.2</spark.version>
             </properties>
         </profile>
     </profiles>

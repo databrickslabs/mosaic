@@ -2,10 +2,10 @@ package com.databricks.labs.mosaic
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem, IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{DataType, IntegerType, StringType}
+import org.apache.spark.sql.types._
 
 package object test {
 
@@ -329,11 +329,10 @@ package object test {
 
     }
 
-    object MockIndexSystem extends IndexSystem {
+    //noinspection NotImplementedCode, ScalaStyle
+    object MockIndexSystem extends IndexSystem(LongType) {
 
         override def name: String = "MOCK"
-
-        override def defaultDataTypeID: DataType = StringType
 
         override def getIndexSystemID: IndexSystemID = ???
 
@@ -345,7 +344,7 @@ package object test {
 
         override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = ???
 
-        override def kDisk(index: Long, n: Int): Seq[Long] = ???
+        override def kLoop(index: Long, n: Int): Seq[Long] = ???
 
         override def kRing(index: Long, n: Int): Seq[Long] = ???
 
@@ -359,6 +358,7 @@ package object test {
 
         override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = ???
 
+        override def parse(id: String): Long = ???
     }
 
 }

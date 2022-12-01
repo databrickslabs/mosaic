@@ -3,19 +3,17 @@ package com.databricks.labs.mosaic.functions.auxiliary
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
-import org.apache.spark.sql.types.{ArrayType, BinaryType, DataType}
+import org.apache.spark.sql.types.{ArrayType, BinaryType, BooleanType, DataType}
 
 // Used for testing only
-object BadIndexSystem extends IndexSystem {
+object BadIndexSystem extends IndexSystem(BooleanType) {
     override def getResolutionStr(resolution: Int): String = throw new UnsupportedOperationException
 
     override def format(id: Long): String = throw new UnsupportedOperationException
 
-    override def defaultDataTypeID: DataType = ArrayType(BinaryType)
-
     override def kRing(index: Long, n: Int): Seq[Long] = throw new UnsupportedOperationException
 
-    override def kDisk(index: Long, n: Int): Seq[Long] = throw new UnsupportedOperationException
+    override def kLoop(index: Long, n: Int): Seq[Long] = throw new UnsupportedOperationException
 
     override def resolutions: Set[Int] = throw new UnsupportedOperationException
 
@@ -32,4 +30,6 @@ object BadIndexSystem extends IndexSystem {
     override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = throw new UnsupportedOperationException
 
     override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = throw new UnsupportedOperationException
+
+    override def parse(id: String): Long = throw new UnsupportedOperationException
 }

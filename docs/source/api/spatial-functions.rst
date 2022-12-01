@@ -122,7 +122,7 @@ st_area
 st_buffer
 *********
 
-.. function:: st_buffer(col)
+.. function:: st_buffer(col, radius)
 
     Buffer the input geometry by radius `radius` and return a new, buffered geometry.
 
@@ -173,6 +173,70 @@ st_buffer
     +--------------------+
     |POLYGON ((29.1055...|
     +--------------------+
+
+st_bufferloop
+*************
+
+.. function:: st_bufferloop(col, innerRadius, outerRadius)
+
+    Returns a difference between st_buffer(col, outerRadius) and st_buffer(col, innerRadius).
+    The resulting geometry is a loop with a width of outerRadius - innerRadius.
+
+    :param col: Geometry
+    :type col: Column
+    :param innerRadius: Radius of the resulting geometry hole.
+    :type innerRadius: Column (DoubleType)
+    :param outerRadius: Radius of the resulting geometry.
+    :type outerRadius: Column (DoubleType)
+    :rtype: Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_bufferloop('wkt', lit(2.), lit(2.1)).show()
+    +-------------------------+
+    | st_buffer(wkt, 2.0, 2.1)|
+    +-------------------------+
+    |     POLYGON ((29.1055...|
+    +-------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_bufferloop('wkt', lit(2.), lit(2.1))).show()
+    +-------------------------+
+    | st_buffer(wkt, 2.0, 2.1)|
+    +-------------------------+
+    |     POLYGON ((29.1055...|
+    +-------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_bufferloop("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d, 2.1d)
+    +-------------------------+
+    | st_buffer(wkt, 2.0, 2.1)|
+    +-------------------------+
+    |     POLYGON ((29.1055...|
+    +-------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_bufferloop('wkt', lit(2.), lit(2.1))))
+    +-------------------------+
+    | st_buffer(wkt, 2.0, 2.1)|
+    +-------------------------+
+    |     POLYGON ((29.1055...|
+    +-------------------------+
+
+
+.. figure:: ../images/st_bufferloop/geom.png
+   :figclass: doc-figure
+
+   Fig 1. ST_BufferLoop(geom, 0.02, 0.04)
 
 st_centroid2D
 *************
@@ -1723,5 +1787,4 @@ st_zmin
     :param col: Geometry
     :type col: Column
     :rtype: Column: DoubleType
-
 
