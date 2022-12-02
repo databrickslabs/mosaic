@@ -3,4 +3,4 @@ from .core import MosaicLibraryHandler, MosaicContext, MosaicFrame
 from .utils.display_handler import displayMosaic
 from .models import SpatialKNN
 
-__version__ = "0.3.5"
+__version__ = "0.3.6-SNAPSHOT"
