@@ -27,7 +27,7 @@ case class ST_BufferLoop(inputGeom: Expression, innerRadius: Expression, outerRa
 
 object ST_BufferLoop extends WithExpressionInfo {
 
-    override def name: String = "st_buffer_loop"
+    override def name: String = "st_bufferloop"
 
     override def builder: Seq[Expression] => Expression =
         (children: Seq[Expression]) =>
