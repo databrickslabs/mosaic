@@ -1,3 +1,13 @@
+## v0.3.5
+- Implemented KNN (K Nearest Neighbours) transformer
+- Implemented grid cell functions `grid_cellkring`, `grid_cellkloop`, `grid_cellkringexplode`, and `grid_cellkloopexplode`
+- Implemented geometry grid functions `grid_geometrykring`, `grid_geometrykloop`, `grid_geometrykringexplode`, and `grid_geometrykloopexplode`
+- Implemented `st_envelope`, `st_difference`, and `st_bufferloop` geometry functions
+- Fixed the function names for `convert_to` functions
+- Fixed corner case of duplicate H3 indexes in grid tessellation
+- Fixed corner case of possible missing H3 indexes crossing the icosahedron edges
+- Improved documentation
+
 ## v0.3.4
 - Implemented `st_simplify`
 - Improved docs for R language bindings
