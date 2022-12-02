@@ -12,9 +12,9 @@ import com.databricks.labs.mosaic.expressions.util.TrySql
 import com.databricks.labs.mosaic.expressions.index._
 import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.types.{LongType, StringType}
 
 import scala.reflect.runtime.universe
@@ -83,6 +83,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         database: Option[String] = None
     ): Unit = {
         val registry = spark.sessionState.functionRegistry
+
+        // noinspection UnitMethodIsParameterless
+        val mosaicRegistry = MosaicRegistry(registry, database)
 
         /** IndexSystem and GeometryAPI Agnostic methods */
         registry.registerFunction(
@@ -162,11 +165,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           ST_GeometryType.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_GeometryType(exprs(0), geometryAPI.name)
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_area", database),
-          ST_Area.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_Area(exprs(0), geometryAPI.name)
-        )
+        mosaicRegistry.registerExpression[ST_Area]()
         registry.registerFunction(
           FunctionIdentifier("st_centroid2D", database),
           ST_Centroid.registryExpressionInfo(database, "st_centroid2D"),
@@ -257,11 +256,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           ST_Distance.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_Distance(exprs(0), exprs(1), geometryAPI.name)
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_contains", database),
-          ST_Contains.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_Contains(exprs(0), exprs(1), geometryAPI.name)
-        )
+        mosaicRegistry.registerExpression[ST_Contains]()
         registry.registerFunction(
           FunctionIdentifier("st_translate", database),
           ST_Translate.registryExpressionInfo(database, "st_translate"),
@@ -307,22 +302,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ST_Envelope.registryExpressionInfo(database),
             (exprs: Seq[Expression]) => ST_Envelope(exprs(0), geometryAPI.name)
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_buffer", database),
-          ST_Buffer.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_Buffer(exprs(0), ColumnAdapter(exprs(1)).cast("double").expr, geometryAPI.name)
-        )
-        registry.registerFunction(
-            FunctionIdentifier("st_bufferloop", database),
-            ST_BufferLoop.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) =>
-                ST_BufferLoop(
-                    exprs(0),
-                    ColumnAdapter(exprs(1)).cast("double").expr,
-                    ColumnAdapter(exprs(2)).cast("double").expr,
-                    geometryAPI.name
-                )
-        )
+        mosaicRegistry.registerExpression[ST_Buffer]()
+        mosaicRegistry.registerExpression[ST_BufferLoop]()
         registry.registerFunction(
           FunctionIdentifier("st_numpoints", database),
           ST_NumPoints.registryExpressionInfo(database),
@@ -333,11 +314,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           ST_Intersects.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_Intersects(exprs(0), exprs(1), geometryAPI.name)
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_intersection", database),
-          ST_Intersection.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_Intersection(exprs(0), exprs(1), geometryAPI.name)
-        )
+        mosaicRegistry.registerExpression[ST_Intersection]()
         registry.registerFunction(
           FunctionIdentifier("st_srid", database),
           ST_SRID.registryExpressionInfo(database),
@@ -540,15 +517,15 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
         /** Spatial functions */
         def flatten_polygons(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
-        def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr, geometryAPI.name))
+        def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr))
         def st_buffer(geom: Column, radius: Column): Column =
-            ColumnAdapter(ST_Buffer(geom.expr, radius.cast("double").expr, geometryAPI.name))
+            ColumnAdapter(ST_Buffer(geom.expr, radius.cast("double").expr))
         def st_buffer(geom: Column, radius: Double): Column =
-            ColumnAdapter(ST_Buffer(geom.expr, lit(radius).cast("double").expr, geometryAPI.name))
+            ColumnAdapter(ST_Buffer(geom.expr, lit(radius).cast("double").expr))
         def st_bufferloop(geom: Column, r1: Column, r2: Column): Column =
-            ColumnAdapter(ST_BufferLoop(geom.expr, r1.cast("double").expr, r2.cast("double").expr, geometryAPI.name))
+            ColumnAdapter(ST_BufferLoop(geom.expr, r1.cast("double").expr, r2.cast("double").expr))
         def st_bufferloop(geom: Column, r1: Double, r2: Double): Column =
-            ColumnAdapter(ST_BufferLoop(geom.expr, lit(r1).cast("double").expr, lit(r2).cast("double").expr, geometryAPI.name))
+            ColumnAdapter(ST_BufferLoop(geom.expr, lit(r1).cast("double").expr, lit(r2).cast("double").expr))
         def st_centroid2D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, geometryAPI.name))
         def st_centroid3D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, geometryAPI.name, 3))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))
@@ -559,7 +536,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr, geometryAPI.name))
         def st_hasvalidcoordinates(geom: Column, crsCode: Column, which: Column): Column =
             ColumnAdapter(ST_HasValidCoordinates(geom.expr, crsCode.expr, which.expr, geometryAPI.name))
-        def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))
+        def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr))
         def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr, geometryAPI.name))
         def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
         def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
@@ -606,7 +583,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_aswkt(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt", geometryAPI.name, Some("st_aswkt")))
 
         /** Spatial predicates */
-        def st_contains(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Contains(geom1.expr, geom2.expr, geometryAPI.name))
+        def st_contains(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Contains(geom1.expr, geom2.expr))
         def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, geometryAPI.name))
 
         /** Aggregators */

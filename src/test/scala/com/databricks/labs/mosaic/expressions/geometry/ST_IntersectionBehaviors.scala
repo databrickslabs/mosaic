@@ -208,7 +208,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
         mc.register(spark)
 
         val stIntersection =
-            ST_Intersection(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, lit("POLYGON (1 2, 2 2, 3 3, 4 2, 1 2)").expr, geometryAPI.name)
+            ST_Intersection(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, lit("POLYGON (1 2, 2 2, 3 3, 4 2, 1 2)").expr)
 
         stIntersection.left shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
         stIntersection.right shouldEqual lit("POLYGON (1 2, 2 2, 3 3, 4 2, 1 2)").expr
