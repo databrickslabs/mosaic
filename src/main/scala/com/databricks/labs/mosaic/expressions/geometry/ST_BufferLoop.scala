@@ -29,7 +29,7 @@ object ST_BufferLoop extends WithExpressionInfo {
 
     override def name: String = "st_buffer_loop"
 
-    override def builder: (Seq[Expression]) => Expression =
+    override def builder: Seq[Expression] => Expression =
         (children: Seq[Expression]) =>
             ST_BufferLoop(children(0), Column(children(1)).cast("double").expr, Column(children(2)).cast("double").expr)
 
