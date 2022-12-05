@@ -1,65 +1,42 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
+import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.expressions.base.{RasterExpression, WithExpressionInfo}
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.util.{ArrayBasedMapBuilder, ArrayData}
+import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
 
-case class ST_MetaData(inputRaster: Expression, path: Expression, rasterAPIName: String)
-    extends BinaryExpression
+case class ST_MetaData(inputRaster: Expression, path: Expression)
+    extends RasterExpression[ST_MetaData](inputRaster, path, MapType(StringType, StringType))
       with NullIntolerant
       with CodegenFallback {
 
-    val rasterAPI: RasterAPI = RasterAPI(rasterAPIName)
-
-    override def left: Expression = inputRaster
-
-    override def right: Expression = path
-
-    override def dataType: DataType = MapType(keyType = StringType, valueType = StringType)
-
-    override protected def nullSafeEval(rasterRow: Any, pathRow: Any): Any = {
-        val path = pathRow.asInstanceOf[UTF8String].toString
-
-        val baseRaster = rasterAPI.raster(rasterRow)
-        val raster = rasterAPI.raster(rasterRow, path)
+    override def rasterTransform(raster: MosaicRaster): Any = {
         val metaData = raster.metadata
-        val result = buildMap(metaData)
-
-        baseRaster.cleanUp()
-        raster.cleanUp()
-        result
+        buildMap(metaData)
     }
-
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
-        copy(inputRaster = newLeft, path = newRight)
-
 }
 
-object ST_MetaData {
+object ST_MetaData extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_MetaData].getCanonicalName,
-          db.orNull,
-          "st_metadata",
-          """
-            |    _FUNC_(expr1) - Extracts metadata from a raster dataset.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        {"NC_GLOBAL#acknowledgement":"NOAA Coral Reef Watch Program","NC_GLOBAL#cdm_data_type":"Grid"}
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_metadata"
+
+    override def usage: String = "_FUNC_(expr1) - Extracts metadata from a raster dataset."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a);
+          |        {"NC_GLOBAL#acknowledgement":"NOAA Coral Reef Watch Program","NC_GLOBAL#cdm_data_type":"Grid"}
+          |  """.stripMargin
+
+    override def builder: FunctionBuilder =
+        (exprs: Seq[Expression]) =>
+            exprs match {
+                case e if e.length == 1 => ST_MetaData(exprs(0), lit("").expr)
+                case e if e.length == 2 => ST_MetaData(exprs(0), exprs(1))
+            }
 
 }

@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.functions
 
-import com.databricks.labs.mosaic.{DATABRICKS_SQL_FUNCTIONS_MODULE, GDAL, H3, SPARK_DATABRICKS_GEO_H3_ENABLED}
+import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
@@ -15,9 +15,9 @@ import com.databricks.labs.mosaic.expressions.raster._
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.types.{LongType, StringType}
 
 import scala.reflect.runtime.universe
@@ -30,6 +30,12 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
     val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
 
     val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
+    val idAsLongDefaultExpr: Expression =
+        indexSystem.defaultDataTypeID match {
+            case LongType   => lit(true).expr
+            case StringType => lit(false).expr
+            case _          => throw new Error("Id can either be long or string.")
+        }
 
     def setCellIdDataType(dataType: String): Unit = if (dataType == "string") {
         indexSystem.setCellIdDataType(StringType)
@@ -365,26 +371,18 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         /** RasterAPI dependent functions */
         registry.registerFunction(
           FunctionIdentifier("st_metadata", database),
-          ST_MetaData.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) =>
-              exprs match {
-                  case e if e.length == 1 => ST_MetaData(exprs(0), lit("").expr, rasterAPI.name)
-                  case e if e.length == 2 => ST_MetaData(exprs(0), exprs(1), rasterAPI.name)
-              }
+          ST_MetaData.getExpressionInfo(database),
+          ST_MetaData.builder
         )
         registry.registerFunction(
           FunctionIdentifier("st_bandmetadata", database),
-          ST_BandMetaData.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) =>
-              exprs match {
-                  case e if e.length == 2 => ST_BandMetaData(exprs(0), exprs(1), lit("").expr, rasterAPI.name)
-                  case e if e.length == 3 => ST_BandMetaData(exprs(0), exprs(1), exprs(2), rasterAPI.name)
-              }
+          ST_BandMetaData.getExpressionInfo(database),
+          ST_BandMetaData.builder
         )
         registry.registerFunction(
           FunctionIdentifier("st_subdatasets", database),
-          ST_Subdatasets.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_Subdatasets(exprs(0), rasterAPI.name)
+          ST_Subdatasets.getExpressionInfo(database),
+          ST_Subdatasets.builder
         )
 
         /** Aggregators */
@@ -538,7 +536,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 
     def getIndexSystem: IndexSystem = this.indexSystem
 
-
     def getProductMethod(methodName: String): universe.MethodMirror = {
         val functionsModuleSymbol: universe.ModuleSymbol = mirror.staticModule(DATABRICKS_SQL_FUNCTIONS_MODULE)
 
@@ -643,23 +640,23 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         /** RasterAPI dependent functions */
         def st_metadata(raster: Column, path: Column): Column =
             ColumnAdapter(
-              ST_MetaData(raster.expr, path.expr, rasterAPI.name)
+              ST_MetaData(raster.expr, path.expr)
             )
         def st_metadata(raster: Column): Column =
             ColumnAdapter(
-              ST_MetaData(raster.expr, lit("").expr, rasterAPI.name)
+              ST_MetaData(raster.expr, lit("").expr)
             )
         def st_subdatasets(raster: Column): Column =
             ColumnAdapter(
-              ST_Subdatasets(raster.expr, rasterAPI.name)
+              ST_Subdatasets(raster.expr)
             )
         def st_bandmetadata(raster: Column, band: Column, path: Column): Column =
             ColumnAdapter(
-              ST_BandMetaData(raster.expr, band.expr, path.expr, rasterAPI.name)
+              ST_BandMetaData(raster.expr, band.expr, path.expr)
             )
         def st_bandmetadata(raster: Column, band: Column): Column =
             ColumnAdapter(
-              ST_BandMetaData(raster.expr, band.expr, lit("").expr, rasterAPI.name)
+              ST_BandMetaData(raster.expr, band.expr, lit("").expr)
             )
 
         /** Aggregators */

@@ -1,58 +1,44 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
+import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.expressions.base.{RasterExpression, WithExpressionInfo}
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.util.{ArrayBasedMapBuilder, ArrayData}
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
-import org.gdal.gdal.gdal
 
-case class ST_Subdatasets(inputRaster: Expression, rasterAPIName: String) extends UnaryExpression with NullIntolerant with CodegenFallback {
+case class ST_Subdatasets(inputRaster: Expression)
+    extends RasterExpression[ST_Subdatasets](inputRaster, Literal(""), MapType(keyType = StringType, valueType = StringType))
+      with NullIntolerant
+      with CodegenFallback {
 
-    val rasterAPI: RasterAPI = RasterAPI(rasterAPIName)
-
-    override def child: Expression = inputRaster
-
-    override def dataType: DataType = MapType(keyType = StringType, valueType = StringType)
-
-    override protected def nullSafeEval(rasterRow: Any): Any = {
-        val raster = rasterAPI.raster(rasterRow)
-
-        val metaData = raster.subdatasets
-        val result = buildMap(metaData)
-
-        raster.cleanUp()
-        result
+    override def rasterTransform(raster: MosaicRaster): Any = {
+        val subdatasets = raster.subdatasets
+        buildMap(subdatasets)
     }
-
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputRaster = newChild)
 
 }
 
-object ST_Subdatasets {
+object ST_Subdatasets extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_MetaData].getCanonicalName,
-          db.orNull,
-          "st_metadata",
-          """
-            |    _FUNC_(expr1) - Extracts subdataset paths and descriptions from a raster dataset.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        {"NETCDF:"ct5km_baa-max-7d_v3.1_20220101.nc":bleaching_alert_area":"[1x3600x7200] N/A (8-bit unsigned integer)",
-            |        "NETCDF:"ct5km_baa-max-7d_v3.1_20220101.nc":mask":"[1x3600x7200] mask (8-bit unsigned integer)"}
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_subdatasets"
+
+    override def usage: String = "_FUNC_(expr1) - Extracts subdataset paths and descriptions from a raster dataset."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a);
+          |        {"NETCDF:"ct5km_baa-max-7d_v3.1_20220101.nc":bleaching_alert_area":"[1x3600x7200] N/A (8-bit unsigned integer)",
+          |        "NETCDF:"ct5km_baa-max-7d_v3.1_20220101.nc":mask":"[1x3600x7200] mask (8-bit unsigned integer)"}
+          |  """.stripMargin
+
+    override def builder: FunctionBuilder =
+        (children: Seq[Expression]) => {
+            if (children.length != 1) {
+                throw new IllegalArgumentException(s"$name function requires 1 argument")
+            }
+            ST_Subdatasets(children(0))
+        }
 
 }
