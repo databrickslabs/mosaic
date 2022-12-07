@@ -76,8 +76,10 @@ object MosaicGDAL extends Logging {
 
         val usrGDALPath = Paths.get("/usr/lib/jni/")
         val libgdalSOPath = Paths.get("/usr/lib/libgdal.so")
+        val libgdalSO30Path = Paths.get("/usr/lib/libgdal.so.30")
         if (!Files.exists(usrGDALPath)) Files.createDirectories(usrGDALPath)
         if (!Files.exists(libgdalSOPath)) "sudo cp /usr/lib/libgdal.so.30 /usr/lib/libgdal.so".!!
+        if (!Files.exists(libgdalSO30Path)) "sudo cp /usr/lib/libgdal.so /usr/lib/libgdal.so.30".!!
         Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so"), so)
         Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so.30"), so30)
 
