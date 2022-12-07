@@ -39,7 +39,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
         val bandIndex = inputBand.asInstanceOf[Int]
 
         val baseRaster = rasterAPI.raster(inputRaster)
-        val raster = rasterAPI.raster(baseRaster, path)
+        val raster = rasterAPI.raster(inputRaster, path)
 
         val band = raster.getBand(bandIndex)
 

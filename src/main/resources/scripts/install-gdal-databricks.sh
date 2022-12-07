@@ -5,13 +5,15 @@
 # Created: 2022-08-19
 #
 
+sudo rm -r /var/lib/apt/lists/*
 sudo add-apt-repository main
 sudo add-apt-repository universe
 sudo add-apt-repository restricted
 sudo add-apt-repository multiverse
 sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+sudo apt clean && sudo apt update --fix-missing -y
 sudo apt-get update -y
-sudo apt-get install -y gdal-bin=3.4.3+dfsg-1~focal0 libgdal-dev=3.4.3+dfsg-1~focal0 python3-gdal=3.4.3+dfsg-1~focal0
+sudo apt install -y gdal-bin=3.4.3+dfsg-1~focal0 libgdal-dev=3.4.3+dfsg-1~focal0 python3-gdal=3.4.3+dfsg-1~focal0
 
 # fix python file naming in osgeo package
 cd /usr/lib/python3/dist-packages/osgeo \

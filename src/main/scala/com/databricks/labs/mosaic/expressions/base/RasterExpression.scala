@@ -22,12 +22,6 @@ abstract class RasterExpression[T <: Expression: ClassTag](
 
     protected val rasterAPI: RasterAPI = MosaicContext.rasterAPI
 
-    /**
-      * ST_Area expression returns area covered by the
-      * [[org.locationtech.jts.geom.Geometry]] instance extracted from inputGeom
-      * expression.
-      */
-
     override def left: Expression = rasterExpr
 
     override def right: Expression = pathExpr
@@ -41,7 +35,7 @@ abstract class RasterExpression[T <: Expression: ClassTag](
         val path = inputPath.asInstanceOf[UTF8String].toString
 
         val baseRaster = rasterAPI.raster(inputRaster)
-        val raster = rasterAPI.raster(baseRaster, path)
+        val raster = rasterAPI.raster(inputRaster, path)
 
         val result = rasterTransform(raster)
 
@@ -54,6 +48,6 @@ abstract class RasterExpression[T <: Expression: ClassTag](
     override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 2)
 
     override def withNewChildrenInternal(newFirst: Expression, newSecond: Expression): Expression =
-        makeCopy(Array[AnyRef](newFirst, newSecond))
+        makeCopy(Array(newFirst, newSecond))
 
 }

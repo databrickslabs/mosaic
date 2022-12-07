@@ -7,8 +7,8 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, NullIntol
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
-case class ST_Subdatasets(inputRaster: Expression)
-    extends RasterExpression[ST_Subdatasets](inputRaster, Literal(""), MapType(keyType = StringType, valueType = StringType))
+case class ST_Subdatasets(inputRaster: Expression, path: Expression = Literal(""))
+    extends RasterExpression[ST_Subdatasets](inputRaster, path, MapType(keyType = StringType, valueType = StringType))
       with NullIntolerant
       with CodegenFallback {
 
@@ -19,6 +19,7 @@ case class ST_Subdatasets(inputRaster: Expression)
 
 }
 
+//noinspection ZeroIndexToHead
 object ST_Subdatasets extends WithExpressionInfo {
 
     override def name: String = "st_subdatasets"
@@ -35,10 +36,13 @@ object ST_Subdatasets extends WithExpressionInfo {
 
     override def builder: FunctionBuilder =
         (children: Seq[Expression]) => {
-            if (children.length != 1) {
-                throw new IllegalArgumentException(s"$name function requires 1 argument")
+            if (children.length > 2) {
+                throw new IllegalArgumentException(s"$name function requires 1 or 2 argument")
+            } else if (children.length == 2) {
+                ST_Subdatasets(children(0), children(1))
+            } else {
+                ST_Subdatasets(children(0))
             }
-            ST_Subdatasets(children(0))
         }
 
 }

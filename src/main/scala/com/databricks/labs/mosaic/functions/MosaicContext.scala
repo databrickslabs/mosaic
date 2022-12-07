@@ -30,12 +30,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
     val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
 
     val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
-    val idAsLongDefaultExpr: Expression =
-        indexSystem.defaultDataTypeID match {
-            case LongType   => lit(true).expr
-            case StringType => lit(false).expr
-            case _          => throw new Error("Id can either be long or string.")
-        }
 
     def setCellIdDataType(dataType: String): Unit = if (dataType == "string") {
         indexSystem.setCellIdDataType(StringType)
