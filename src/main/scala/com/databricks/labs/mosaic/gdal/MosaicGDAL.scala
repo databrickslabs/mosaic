@@ -88,11 +88,11 @@ object MosaicGDAL extends Logging {
     }
 
     private def loadSharedObjects(): Unit = {
-        System.load("/usr/lib/libgdal.so.30")
-        System.load("/usr/lib/jni/libgdalalljni.so.30")
-        System.load("/usr/lib/libgdal.so.30.0.3")
-        System.load("/usr/lib/ogdi/libgdal.so")
-        System.load("/usr/lib/libgdal.so")
+        Try(System.load("/usr/lib/libgdal.so.30"))
+        Try(System.load("/usr/lib/jni/libgdalalljni.so.30"))
+        Try(System.load("/usr/lib/libgdal.so.30.0.3"))
+        Try(System.load("/usr/lib/ogdi/libgdal.so"))
+        Try(System.load("/usr/lib/libgdal.so"))
     }
 
 }
