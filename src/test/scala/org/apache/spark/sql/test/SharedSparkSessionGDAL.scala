@@ -18,6 +18,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         val session = new TestSparkSession(conf)
         if (conf.get("spark.mosaic.gdal.native", "false").toBoolean) {
             TestMosaicGDAL.installGDAL(session)
+            MosaicGDAL.prepareEnvironment()
             MosaicGDAL.enableGDAL(session)
         }
         session
