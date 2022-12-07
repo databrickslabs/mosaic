@@ -23,7 +23,7 @@ object MosaicGDAL extends Logging {
                     }
                 }
             } catch {
-                case _: Throwable =>
+                case e: Throwable => logError(e.getMessage)
             } finally {
                 script.close
             }
