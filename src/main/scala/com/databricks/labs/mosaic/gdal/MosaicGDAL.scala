@@ -10,36 +10,33 @@ import scala.language.postfixOps
 import scala.sys.process._
 import scala.util.Try
 
+//noinspection DuplicatedCode
 object MosaicGDAL extends Logging {
 
-    private val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
-
+    //noinspection ScalaWeakerAccess
+    val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
     private val mosaicGDALPath = Files.createTempDirectory("mosaic-gdal")
     private val mosaicGDALAbsolutePath = mosaicGDALPath.toAbsolutePath.toString
+    var isEnabled = false
 
-    if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
+    def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean
 
-    private var isEnabled = false
-
-    private def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean
-
-    private def readResourceFile(name: String): Array[Byte] = {
-        val bis = new BufferedInputStream(getClass.getResourceAsStream(name))
-        try Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray
-        finally bis.close()
-    }
-
-    def prepareEnvironment(scriptPath: String = "/FileStore/geospatial/mosaic/gdal/init_scripts/"): Unit = {
-        copySharedObjects()
-        copyInstallScript(scriptPath)
+    def prepareEnvrionment(spark: SparkSession, path: String): Unit = {
+        if (!wasEnabled(spark) && !isEnabled) {
+            copyInitScript(path)
+            copySharedObjects()
+        }
     }
 
     def enableGDAL(spark: SparkSession): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             isEnabled = true
+            installGDAL(spark)
+            copySharedObjects()
             loadSharedObjects()
             gdal.AllRegister()
             spark.conf.set(GDAL_ENABLED, "true")
+            spark.sparkContext.addSparkListener(new GDALListener)
         }
     }
 
@@ -64,22 +61,17 @@ object MosaicGDAL extends Logging {
         }
     }
 
-    private def copyInstallScript(path: String = "/FileStore/geospatial/mosaic/gdal/init_scripts/"): Unit = {
-        val scriptBytes = readResourceFile("/scripts/install-gdal-databricks.sh")
-        Files.write(Paths.get(s"$mosaicGDALAbsolutePath/mosaic-gdal.sh"), scriptBytes)
-        s"sudo cp $mosaicGDALAbsolutePath/mosaic-gdal.sh $path/mosaic-gdal.sh".!!
-    }
-
     private def copySharedObjects(): Unit = {
-        val so = readResourceFile("/gdal/ubuntu/libgdalalljni.so")
-        val so30 = readResourceFile("/gdal/ubuntu/libgdalalljni.so.30")
+        val so = readResourceBytes("/gdal/ubuntu/libgdalalljni.so")
+        val so30 = readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30")
 
         val usrGDALPath = Paths.get("/usr/lib/jni/")
         val libgdalSOPath = Paths.get("/usr/lib/libgdal.so")
-        val libgdalSO30Path = Paths.get("/usr/lib/libgdal.so.30")
+        if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
         if (!Files.exists(usrGDALPath)) Files.createDirectories(usrGDALPath)
-        if (!Files.exists(libgdalSOPath)) "sudo cp /usr/lib/libgdal.so.30 /usr/lib/libgdal.so".!!
-        if (!Files.exists(libgdalSO30Path)) "sudo cp /usr/lib/libgdal.so /usr/lib/libgdal.so.30".!!
+        if (!Files.exists(libgdalSOPath)) {
+            "sudo cp /usr/lib/libgdal.so.30 /usr/lib/libgdal.so".!!
+        }
         Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so"), so)
         Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so.30"), so30)
 
@@ -87,12 +79,27 @@ object MosaicGDAL extends Logging {
         s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so.30 /usr/lib/jni/libgdalalljni.so.30".!!
     }
 
+    private def copyInitScript(path: String): Unit = {
+        val destPath = Paths.get(path)
+        val script = readResourceBytes("/scripts/install-gdal-databricks.sh")
+        if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
+        if (!Files.exists(destPath)) Files.createDirectories(destPath)
+        Files.write(Paths.get(s"$mosaicGDALAbsolutePath/mosaic-gdal-init.sh"), script)
+        s"sudo cp $mosaicGDALAbsolutePath/mosaic-gdal-init.sh $path/mosaic-gdal-init.sh".!!
+    }
+
     private def loadSharedObjects(): Unit = {
-        Try(System.load("/usr/lib/libgdal.so.30"))
-        Try(System.load("/usr/lib/jni/libgdalalljni.so.30"))
-        Try(System.load("/usr/lib/libgdal.so.30.0.3"))
-        Try(System.load("/usr/lib/ogdi/libgdal.so"))
-        Try(System.load("/usr/lib/libgdal.so"))
+        System.load("/usr/lib/libgdal.so.30")
+        System.load("/usr/lib/jni/libgdalalljni.so.30")
+        System.load("/usr/lib/libgdal.so.30.0.3")
+        System.load("/usr/lib/ogdi/libgdal.so")
+        System.load("/usr/lib/libgdal.so")
+    }
+
+    private def readResourceBytes(name: String): Array[Byte] = {
+        val bis = new BufferedInputStream(getClass.getResourceAsStream(name))
+        try Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray
+        finally bis.close()
     }
 
 }
