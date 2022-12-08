@@ -2,33 +2,38 @@ package com.databricks.labs.mosaic.gdal
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.SparkException
 import org.gdal.gdal.gdal
 
-import java.io.{BufferedInputStream, IOException}
+import java.io.BufferedInputStream
 import java.nio.file.{Files, Paths}
-import scala.io.{BufferedSource, Source}
 import scala.language.postfixOps
 import scala.sys.process._
 import scala.util.Try
 
+//noinspection DuplicatedCode
 object MosaicGDAL extends Logging {
 
+    //noinspection ScalaWeakerAccess
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
+    private val mosaicGDALPath = Files.createTempDirectory("mosaic-gdal")
+    private val mosaicGDALAbsolutePath = mosaicGDALPath.toAbsolutePath.toString
+    var isEnabled = false
 
-    private var isEnabled = false
+    def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean
 
-    private def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean
+    def prepareEnvrionment(spark: SparkSession, path: String): Unit = {
+        if (!wasEnabled(spark) && !isEnabled) {
+            copyInitScript(path)
+            copySharedObjects()
+        }
+    }
 
     def enableGDAL(spark: SparkSession): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             isEnabled = true
-            installGDAL(spark)
-            copySharedObjects()
             loadSharedObjects()
             gdal.AllRegister()
             spark.conf.set(GDAL_ENABLED, "true")
-            spark.sparkContext.addSparkListener(new GDALListener)
         }
     }
 
@@ -53,18 +58,10 @@ object MosaicGDAL extends Logging {
         }
     }
 
-    def copySharedObjects(): Unit = {
-        def readSOBytes(name: String): Array[Byte] = {
-            val bis = new BufferedInputStream(getClass.getResourceAsStream(name))
-            try Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray
-            finally bis.close()
-        }
+    private def copySharedObjects(): Unit = {
+        val so = readResourceBytes("/gdal/ubuntu/libgdalalljni.so")
+        val so30 = readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30")
 
-        val so = readSOBytes("/gdal/ubuntu/libgdalalljni.so")
-        val so30 = readSOBytes("/gdal/ubuntu/libgdalalljni.so.30")
-
-        val mosaicGDALPath = Files.createTempDirectory("mosaic-gdal")
-        val mosaicGDALAbsolutePath = mosaicGDALPath.toAbsolutePath.toString
         val usrGDALPath = Paths.get("/usr/lib/jni/")
         val libgdalSOPath = Paths.get("/usr/lib/libgdal.so")
         if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
@@ -79,7 +76,16 @@ object MosaicGDAL extends Logging {
         s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so.30 /usr/lib/jni/libgdalalljni.so.30".!!
     }
 
-    def loadSharedObjects(): Unit = {
+    private def copyInitScript(path: String): Unit = {
+        val destPath = Paths.get(path)
+        val script = readResourceBytes("/scripts/install-gdal-databricks.sh")
+        if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
+        if (!Files.exists(destPath)) Files.createDirectories(destPath)
+        Files.write(Paths.get(s"$mosaicGDALAbsolutePath/mosaic-gdal-init.sh"), script)
+        s"sudo cp $mosaicGDALAbsolutePath/mosaic-gdal-init.sh $path/mosaic-gdal-init.sh".!!
+    }
+
+    private def loadSharedObjects(): Unit = {
         System.load("/usr/lib/libgdal.so.30")
         System.load("/usr/lib/jni/libgdalalljni.so.30")
         System.load("/usr/lib/libgdal.so.30.0.3")
@@ -87,38 +93,10 @@ object MosaicGDAL extends Logging {
         System.load("/usr/lib/libgdal.so")
     }
 
-    def installGDAL(spark: SparkSession): Unit = installGDAL(Some(spark))
-
-    def installGDAL(spark: Option[SparkSession]): Unit = {
-        val sc = spark.map(_.sparkContext)
-        val numExecutors = sc.map(_.getExecutorMemoryStatus.size - 1)
-        val script = getScript
-        for (cmd <- script.getLines.toList) {
-            try {
-                if (!cmd.startsWith("#") || cmd.nonEmpty) cmd.!!
-                sc.map { sparkContext =>
-                    if (!sparkContext.isLocal) {
-                        sparkContext.parallelize(1 to numExecutors.get).pipe(cmd).collect
-                    }
-                }
-            } catch {
-                case e: IOException           => logError(e.getMessage)
-                case e: IllegalStateException => logError(e.getMessage)
-                case e: SparkException        => logError(e.getMessage)
-                case e: Throwable             => logError(e.getMessage)
-            } finally {
-                script.close
-            }
-        }
-    }
-
-    def getScript: BufferedSource = {
-        val scriptPath = System.getProperty("os.name").toLowerCase() match {
-            case o: String if o.contains("nux") => "/scripts/install-gdal-databricks.sh"
-            case _ => throw new UnsupportedOperationException("This method only supports Ubuntu Linux with `apt`.")
-        }
-        val script = Source.fromInputStream(getClass.getResourceAsStream(scriptPath))
-        script
+    private def readResourceBytes(name: String): Array[Byte] = {
+        val bis = new BufferedInputStream(getClass.getResourceAsStream(name))
+        try Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray
+        finally bis.close()
     }
 
 }
