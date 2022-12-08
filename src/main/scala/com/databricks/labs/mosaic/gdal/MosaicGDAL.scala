@@ -65,7 +65,7 @@ object MosaicGDAL extends Logging {
     }
 
     private def copyInstallScript(path: String = "/FileStore/geospatial/mosaic/gdal/init_scripts/"): Unit = {
-        val scriptBytes = readResourceFile("/script/install-gdal-databricks.sh")
+        val scriptBytes = readResourceFile("/scripts/install-gdal-databricks.sh")
         Files.write(Paths.get(s"$mosaicGDALAbsolutePath/mosaic-gdal.sh"), scriptBytes)
         s"sudo cp $mosaicGDALAbsolutePath/mosaic-gdal.sh $path/mosaic-gdal.sh".!!
     }
