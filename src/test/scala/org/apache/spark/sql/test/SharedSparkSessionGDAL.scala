@@ -1,9 +1,12 @@
 package org.apache.spark.sql.test
 
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
+import com.databricks.labs.mosaic.gdal.MosaicGDAL.mosaicGDALPath
 import com.databricks.labs.mosaic.test.{MosaicGDAL => TestMosaicGDAL}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
+
+import java.nio.file.Files
 
 trait SharedSparkSessionGDAL extends SharedSparkSession {
 
@@ -18,7 +21,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         val session = new TestSparkSession(conf)
         if (conf.get("spark.mosaic.gdal.native", "false").toBoolean) {
             TestMosaicGDAL.installGDAL(session)
-            MosaicGDAL.prepareEnvironment()
+            val mosaicGDALPath = Files.createTempDirectory("mosaic-gdal")
+            if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
+            MosaicGDAL.prepareEnvironment(scriptPath = mosaicGDALPath.toAbsolutePath.toString)
             MosaicGDAL.enableGDAL(session)
         }
         session
