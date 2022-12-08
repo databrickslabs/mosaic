@@ -31,12 +31,9 @@ object MosaicGDAL extends Logging {
     def enableGDAL(spark: SparkSession): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             isEnabled = true
-            installGDAL(spark)
-            copySharedObjects()
             loadSharedObjects()
             gdal.AllRegister()
             spark.conf.set(GDAL_ENABLED, "true")
-            spark.sparkContext.addSparkListener(new GDALListener)
         }
     }
 
