@@ -59,6 +59,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         (testBand.pixelValueScale, testBand.pixelValueOffset) shouldBe (0d, 0d)
 
         val testValues = testBand.values(5000, 1000, 100, 10)
+        noException should be thrownBy testBand.values
         testValues.length shouldBe 10
         testValues.head.length shouldBe 100
 

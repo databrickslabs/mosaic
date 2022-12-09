@@ -27,4 +27,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         session
     }
 
+    override def afterAll(): Unit = {
+        super.afterAll()
+        MosaicGDAL.disableGDAL()
+    }
+
 }

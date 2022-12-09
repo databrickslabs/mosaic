@@ -4,15 +4,14 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
-import org.apache.spark.sql.{QueryTest, SparkSession}
-import org.apache.spark.sql.functions.{element_at, lit, map_keys}
-import org.scalatest.flatspec.AnyFlatSpec
+import org.apache.spark.sql.QueryTest
 import org.scalatest.matchers.should.Matchers._
 
 trait ST_MetadataBehaviors extends QueryTest {
 
     def metadataBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register()
         val sc = spark
         import mc.functions._
         import sc.implicits._
@@ -22,6 +21,14 @@ trait ST_MetadataBehaviors extends QueryTest {
             .select(st_metadata($"content").alias("metadata"))
 
         val result = rasterDfWithMetadata.as[Map[String, String]].collect()
+
+        mocks
+            .getGeotiffBinaryDf(spark)
+            .createOrReplaceTempView("source")
+
+        noException should be thrownBy spark.sql("""
+                                                   |select st_metadata(content) from source
+                                                   |""".stripMargin)
 
         result.head.getOrElse("SHORTNAME", "") shouldBe "MCD43A4"
         result.head.getOrElse("ASSOCIATEDINSTRUMENTSHORTNAME", "") shouldBe "MODIS"

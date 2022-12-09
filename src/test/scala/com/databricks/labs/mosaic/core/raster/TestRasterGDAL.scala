@@ -34,6 +34,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
         testRaster.getRaster.GetProjection()
+        noException should be thrownBy testRaster.asInstanceOf[MosaicRasterGDAL].spatialRef
+        noException should be thrownBy testRaster.geoTransform(1, 1)
         testRaster.cleanUp()
     }
 

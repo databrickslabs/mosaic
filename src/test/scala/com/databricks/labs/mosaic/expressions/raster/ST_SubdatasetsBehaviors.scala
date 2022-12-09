@@ -11,6 +11,7 @@ trait ST_SubdatasetsBehaviors extends QueryTest {
 
     def subdatasetsBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register()
         val sc = spark
         import mc.functions._
         import sc.implicits._
@@ -23,6 +24,15 @@ trait ST_SubdatasetsBehaviors extends QueryTest {
             )
 
         val result = rasterDfWithSubdatasets.as[Map[String, String]].collect()
+
+        mocks
+            .getGeotiffBinaryDf(spark)
+            .createOrReplaceTempView("source")
+
+        noException should be thrownBy spark.sql(
+            """
+              |select st_subdatasets(content) from source
+              |""".stripMargin)
 
         result.head.keys.toList.length shouldBe 2
         result.head.values.toList should contain allElementsOf List(
