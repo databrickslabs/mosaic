@@ -10,7 +10,7 @@ import org.locationtech.proj4j.CRSFactory
 import java.util
 import scala.util.hashing.MurmurHash3
 
-class MosaicRasterGDAL(raster: Dataset, path: String) extends MosaicRaster(path) {
+case class MosaicRasterGDAL(raster: Dataset, path: String) extends MosaicRaster(path) {
 
     val crsFactory: CRSFactory = new CRSFactory
 

@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.core
 
-import com.databricks.labs.mosaic.core.types.raster._
 import org.apache.spark.sql.types._
 
 /**
@@ -8,6 +7,7 @@ import org.apache.spark.sql.types._
   * for type inference over geometry columns.
   */
 package object types {
+
     val HexType: DataType = new HexType()
     val JSONType: DataType = new JSONType()
     // Note InternalGeometryType depends on InternalCoordType
@@ -16,8 +16,5 @@ package object types {
     val BoundaryType: ArrayType = ArrayType(ArrayType(InternalCoordType))
     val HolesType: ArrayType = ArrayType(ArrayType(ArrayType(InternalCoordType)))
     val InternalGeometryType: DataType = new InternalGeometryType()
-    val RasterMetadataType = new RasterMetadataType()
-    val RasterExtentType = new RasterExtentType()
-    val RasterBandType = new RasterBandMetadataType()
 
 }

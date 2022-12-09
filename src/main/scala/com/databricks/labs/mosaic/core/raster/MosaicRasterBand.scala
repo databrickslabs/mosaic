@@ -1,10 +1,5 @@
 package com.databricks.labs.mosaic.core.raster
 
-import org.apache.spark.sql.types.DataType
-
-import scala.reflect.ClassTag
-import scala.reflect.runtime.universe.TypeTag
-
 trait MosaicRasterBand extends Serializable {
 
     def index: Int

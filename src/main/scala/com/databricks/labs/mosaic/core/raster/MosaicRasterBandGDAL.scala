@@ -6,7 +6,7 @@ import scala.util.{Failure, Success, Try}
 import org.gdal.gdal.Band
 import org.gdal.gdalconst.gdalconstConstants
 
-class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
+case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
 
     override def index: Int = id
 
