@@ -3,8 +3,11 @@ package com.databricks.labs.mosaic.core.raster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.test.mocks
 import com.databricks.labs.mosaic.GDAL
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
+import com.databricks.labs.mosaic.sql.extensions.MosaicGDAL
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
+import org.apache.spark.sql.SparkSessionExtensions
 import org.scalatest.matchers.should.Matchers._
 
 import scala.sys.process._
@@ -70,12 +73,14 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         superRaster.cleanUp()
     }
 
-    test("Raster API") {
+    test("Auxiliary logic") {
         RasterAPI.apply("GDAL") shouldBe GDAL
         RasterAPI.getReader("GDAL") shouldBe MosaicRasterGDAL
         GDAL.name shouldBe "GDAL"
         noException should be thrownBy GDAL.raster(Array.empty[Byte])
         an[Exception] should be thrownBy GDAL.raster(InternalRow.empty)
+        val extension = new MosaicGDAL()
+        noException should be thrownBy extension.apply(new SparkSessionExtensions)
     }
 
 }

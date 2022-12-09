@@ -22,7 +22,7 @@ import scala.util.{Success, Try}
 object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
     // An instance of H3Core to be used for IndexSystem implementation.
-    @transient val h3: H3Core = H3Core.newInstance()
+    @transient private val h3: H3Core = H3Core.newInstance()
 
     /**
       * H3 resolution can only be an Int value between 0 and 15.
@@ -178,6 +178,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       *   Distance of k disk to be generated around the input index.
       * @return
       *   A collection of index IDs forming a k disk.
+      *
       */
     override def kLoop(index: Long, n: Int): Seq[Long] = {
         // HexRing crashes in case of pentagons.

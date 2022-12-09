@@ -36,6 +36,15 @@ trait ST_BandMetadataBehaviors extends QueryTest {
                                                    |select st_bandmetadata(content, 1, bleachingSubdataset) from source
                                                    |""".stripMargin)
 
+        noException should be thrownBy mocks
+            .getNetCDFBinaryDf(spark)
+            .withColumn("subdatasets", st_subdatasets($"content"))
+            .withColumn("bleachingSubdataset", element_at(map_keys($"subdatasets"), 1))
+            .select(
+                st_bandmetadata($"content", lit(1))
+                    .alias("metadata")
+            )
+
         val result = rasterDfWithBandMetadata.as[Map[String, String]].collect()
 
         result.head.getOrElse("bleaching_alert_area_long_name", "") shouldBe "bleaching alert area 7-day maximum composite"

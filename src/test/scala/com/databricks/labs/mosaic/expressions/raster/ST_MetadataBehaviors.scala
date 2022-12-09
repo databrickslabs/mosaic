@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
 import org.apache.spark.sql.QueryTest
+import org.apache.spark.sql.functions.lit
 import org.scalatest.matchers.should.Matchers._
 
 trait ST_MetadataBehaviors extends QueryTest {
@@ -18,7 +19,11 @@ trait ST_MetadataBehaviors extends QueryTest {
 
         val rasterDfWithMetadata = mocks
             .getGeotiffBinaryDf(spark)
-            .select(st_metadata($"content").alias("metadata"))
+            .select(
+                st_metadata($"content").alias("metadata"),
+                st_metadata($"content", lit("")).alias("metadata_2"),
+            )
+            .select("metadata")
 
         val result = rasterDfWithMetadata.as[Map[String, String]].collect()
 

@@ -30,6 +30,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
     override def afterAll(): Unit = {
         super.afterAll()
         MosaicGDAL.disableGDAL()
+        MosaicGDAL.destroyDrivers()
     }
 
 }
