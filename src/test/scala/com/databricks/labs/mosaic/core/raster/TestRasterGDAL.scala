@@ -1,10 +1,13 @@
 package com.databricks.labs.mosaic.core.raster
 
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.test.mocks
+import com.databricks.labs.mosaic.GDAL
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.should.Matchers._
-import scala.sys.process._
 
+import scala.sys.process._
 import scala.util.Try
 
 class TestRasterGDAL extends SharedSparkSessionGDAL {
@@ -65,6 +68,14 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         testRaster.cleanUp()
         superRaster.cleanUp()
+    }
+
+    test("Raster API") {
+        RasterAPI.apply("GDAL") shouldBe GDAL
+        RasterAPI.getReader("GDAL") shouldBe MosaicRasterGDAL
+        GDAL.name shouldBe "GDAL"
+        noException should be thrownBy GDAL.raster(Array.empty[Byte])
+        an[Exception] should be thrownBy GDAL.raster(InternalRow.empty)
     }
 
 }
