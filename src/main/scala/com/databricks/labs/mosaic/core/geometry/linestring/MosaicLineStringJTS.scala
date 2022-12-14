@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry.linestring
 
 import com.databricks.labs.mosaic.core.geometry._
+import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
@@ -48,6 +49,10 @@ object MosaicLineStringJTS extends GeometryReader {
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicLineStringJTS = {
         val gf = new GeometryFactory()
+        if (geomSeq.isEmpty) {
+            // For empty sequence return an empty geometry with default Spatial Reference
+            return MosaicLineStringJTS(gf.createLineString())
+        }
         val spatialReference = geomSeq.head.getSpatialReference
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case POINT                                                =>

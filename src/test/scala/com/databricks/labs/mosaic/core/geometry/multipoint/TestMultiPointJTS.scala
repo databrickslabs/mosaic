@@ -62,6 +62,15 @@ class TestMultiPointJTS extends AnyFlatSpec {
         results should contain only true
     }
 
+    "MosaicMultiPointJTS" should "not fail for empty Seq" in {
+        val expected = MosaicMultiPointJTS.fromWKT(
+            "MULTIPOINT EMPTY"
+        )
+        val actual = MosaicMultiPointJTS.fromSeq(Seq[MosaicMultiPointJTS]())
+        expected.equals(actual) shouldBe true
+    }
+
+
     "MosaicMultiPointJTS" should "return a Seq of MosaicPointJTS object with the correct SRID when calling asSeq" in {
         val srid = 32632
         val multiPoint = MosaicMultiPointJTS
