@@ -53,6 +53,14 @@ class TestMultiLineStringESRI extends AnyFlatSpec {
         multiLineStringReference.equals(multiLineStringTest) shouldBe true
     }
 
+    "MosaicMultiLineStringESRI" should "not fail for empty Seq" in {
+        val expected = MosaicMultiLineStringESRI.fromWKT(
+            "MULTILINESTRING EMPTY"
+        )
+        val actual = MosaicMultiLineStringESRI.fromSeq(Seq())
+        expected.equals(actual) shouldBe true
+    }
+
     "MosaicMultiLineStringESRI" should "return a Seq of MosaicLineStringESRI object when calling asSeq" in {
         val multiLineString = MosaicMultiLineStringESRI
             .fromWKT("MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))")
