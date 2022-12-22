@@ -41,8 +41,8 @@ trait ST_BandMetadataBehaviors extends QueryTest {
             .withColumn("subdatasets", st_subdatasets($"content"))
             .withColumn("bleachingSubdataset", element_at(map_keys($"subdatasets"), 1))
             .select(
-                st_bandmetadata($"content", lit(1))
-                    .alias("metadata")
+              st_bandmetadata($"content", lit(1))
+                  .alias("metadata")
             )
 
         val result = rasterDfWithBandMetadata.as[Map[String, String]].collect()
@@ -51,6 +51,10 @@ trait ST_BandMetadataBehaviors extends QueryTest {
         result.head.getOrElse("bleaching_alert_area_valid_max", "") shouldBe "4 "
         result.head.getOrElse("bleaching_alert_area_valid_min", "") shouldBe "0 "
         result.head.getOrElse("bleaching_alert_area_units", "") shouldBe "stress_level"
+
+        an[Exception] should be thrownBy spark.sql("""
+                                                     |select st_bandmetadata(content, 1, bleachingSubdataset, 1) from source
+                                                     |""".stripMargin)
 
     }
 

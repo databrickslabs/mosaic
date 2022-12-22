@@ -25,6 +25,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         val testValues = testBand.values(1000, 1000, 100, 50)
         testValues.length shouldBe 50
         testValues.head.length shouldBe 100
+        testBand.values(0, 0, 0, 0).head.length shouldBe 0
 
         testRaster.cleanUp()
     }

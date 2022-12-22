@@ -58,6 +58,13 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQLDefault")
         spark = withConf(conf)
         it should behave like sqlRegister(MosaicContext.build(H3IndexSystem, ESRI, GDAL), spark)
+
+        conf = new SparkConf(loadDefaults = false)
+            .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicGDAL")
+            .set("spark.mosaic.gdal.native", "true")
+        spark = withConf(conf)
+        it should behave like mosaicGDAL(MosaicContext.build(H3IndexSystem, ESRI, GDAL), spark)
+
     }
 
 }

@@ -23,7 +23,8 @@ class MosaicGDAL extends (SparkSessionExtensions => Unit) with Logging {
       */
     override def apply(ext: SparkSessionExtensions): Unit = {
         ext.injectCheckRule(spark => {
-            if (spark.conf.get("spark.mosaic.gdal.native", "false").toBoolean) {
+            val enableGDAL = spark.conf.get("spark.mosaic.gdal.native", "false").toBoolean
+            if (enableGDAL) {
                 MosaicGDAL.enableGDAL(spark)
                 logInfo(s"GDAL was installed successfully.")
             }

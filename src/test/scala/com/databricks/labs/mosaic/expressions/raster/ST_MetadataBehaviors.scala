@@ -20,8 +20,8 @@ trait ST_MetadataBehaviors extends QueryTest {
         val rasterDfWithMetadata = mocks
             .getGeotiffBinaryDf(spark)
             .select(
-                st_metadata($"content").alias("metadata"),
-                st_metadata($"content", lit("")).alias("metadata_2"),
+              st_metadata($"content").alias("metadata"),
+              st_metadata($"content", lit("")).alias("metadata_2")
             )
             .select("metadata")
 
@@ -33,6 +33,10 @@ trait ST_MetadataBehaviors extends QueryTest {
 
         noException should be thrownBy spark.sql("""
                                                    |select st_metadata(content) from source
+                                                   |""".stripMargin)
+
+        noException should be thrownBy spark.sql("""
+                                                   |select st_metadata(content, "") from source
                                                    |""".stripMargin)
 
         result.head.getOrElse("SHORTNAME", "") shouldBe "MCD43A4"

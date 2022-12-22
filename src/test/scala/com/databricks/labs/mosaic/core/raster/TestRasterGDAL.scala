@@ -42,6 +42,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.getRaster.GetProjection()
         noException should be thrownBy testRaster.asInstanceOf[MosaicRasterGDAL].spatialRef
         noException should be thrownBy testRaster.geoTransform(1, 1)
+        an[Exception] should be thrownBy testRaster.getBand(-1)
+        an[Exception] should be thrownBy testRaster.getBand(Int.MaxValue)
         testRaster.cleanUp()
     }
 
