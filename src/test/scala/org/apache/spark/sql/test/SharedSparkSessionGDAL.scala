@@ -21,16 +21,10 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         if (conf.get("spark.mosaic.gdal.native", "false").toBoolean) {
             TestMosaicGDAL.installGDAL(session)
             val tempPath = Files.createTempDirectory("mosaic-gdal")
-            MosaicGDAL.prepareEnvrionment(session, tempPath.toAbsolutePath.toString)
+            MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString)
             MosaicGDAL.enableGDAL(session)
         }
         session
-    }
-
-    override def afterAll(): Unit = {
-        super.afterAll()
-        MosaicGDAL.disableGDAL()
-        MosaicGDAL.destroyDrivers()
     }
 
 }

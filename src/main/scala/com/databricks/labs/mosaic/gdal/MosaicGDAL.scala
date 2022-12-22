@@ -21,7 +21,7 @@ object MosaicGDAL extends Logging {
 
     def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean
 
-    def prepareEnvrionment(spark: SparkSession, path: String): Unit = {
+    def prepareEnvironment(spark: SparkSession, path: String): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             copyInitScript(path)
             copySharedObjects()
