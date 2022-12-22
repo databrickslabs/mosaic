@@ -37,30 +37,6 @@ object MosaicGDAL extends Logging {
         }
     }
 
-    def destroyDrivers(): Unit = {
-        gdal.GDALDestroyDriverManager()
-        // Clear the drivers.
-        val n = gdal.GetDriverCount()
-        for (i <- 0 until n) {
-            val driver = gdal.GetDriver(i)
-            if (driver != null) {
-                driver.Deregister()
-                driver.delete()
-            }
-        }
-    }
-
-    def disableGDAL(): Unit = {
-        gdal.Rmdir("/vsimem/")
-        Try {
-            val spark = SparkSession.builder().getOrCreate()
-            if (wasEnabled(spark) && isEnabled) {
-                destroyDrivers()
-                isEnabled = false
-            }
-        }
-    }
-
     private def copySharedObjects(): Unit = {
         val so = readResourceBytes("/gdal/ubuntu/libgdalalljni.so")
         val so30 = readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30")

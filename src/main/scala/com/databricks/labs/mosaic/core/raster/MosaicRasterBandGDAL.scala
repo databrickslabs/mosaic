@@ -55,18 +55,16 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
 
     override def pixelValueScale: Double = {
         val scale = Array.fill[java.lang.Double](1)(0)
-        Try(band.GetScale(scale)) match {
-            case Success(_) => scale.head
-            case Failure(_) => Double.NaN
-        }
+        Try(band.GetScale(scale))
+            .map(_ => scale.head.doubleValue())
+            .getOrElse(Double.NaN)
     }
 
     override def pixelValueOffset: Double = {
         val offset = Array.fill[java.lang.Double](1)(0)
-        Try(band.GetOffset(offset)) match {
-            case Success(_) => offset.head
-            case Failure(_) => Double.NaN
-        }
+        Try(band.GetOffset(offset))
+            .map(_ => offset.head.doubleValue())
+            .getOrElse(Double.NaN)
     }
 
 }
