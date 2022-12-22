@@ -1,10 +1,10 @@
 package com.databricks.labs.mosaic.core.raster
 
-import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
-import scala.util.{Failure, Success, Try}
-
 import org.gdal.gdal.Band
 import org.gdal.gdalconst.gdalconstConstants
+
+import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
+import scala.util._
 
 case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
 
@@ -30,10 +30,9 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
 
     def computeMinMax: Seq[Double] = {
         val minMaxVals = Array.fill[Double](2)(0)
-        Try(band.ComputeRasterMinMax(minMaxVals, 0)) match {
-            case Success(_) => minMaxVals.toSeq
-            case Failure(_) => Seq(Double.NaN, Double.NaN)
-        }
+        Try(band.ComputeRasterMinMax(minMaxVals, 0))
+            .map(_ => minMaxVals.toSeq)
+            .getOrElse(Seq(Double.NaN, Double.NaN))
     }
 
     override def noDataValue: Double = {
