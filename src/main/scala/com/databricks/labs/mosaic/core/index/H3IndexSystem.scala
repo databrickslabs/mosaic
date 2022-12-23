@@ -178,7 +178,6 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       *   Distance of k disk to be generated around the input index.
       * @return
       *   A collection of index IDs forming a k disk.
-      *
       */
     override def kLoop(index: Long, n: Int): Seq[Long] = {
         // HexRing crashes in case of pentagons.
