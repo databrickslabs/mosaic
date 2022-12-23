@@ -1,25 +1,37 @@
 package com.databricks.labs.mosaic.expressions.base
 
-import com.databricks.labs.mosaic.expressions.geometry.ST_Area
 import com.databricks.labs.mosaic.expressions.raster.ST_BandMetaData
+import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.functions.lit
-import org.scalatest.funsuite.AnyFunSuite
+import org.apache.spark.sql.test.SharedSparkSession
 import org.scalatest.matchers.should.Matchers.{be, noException}
 
-class BaseAPIsTest extends AnyFunSuite {
+class BaseAPIsTest extends MosaicSpatialQueryTest with SharedSparkSession {
 
-    test("WithExpression Auxiliary tests") {
-        noException should be thrownBy ST_BandMetaData.name
-        noException should be thrownBy ST_BandMetaData.database
-        noException should be thrownBy ST_BandMetaData.usage
-        noException should be thrownBy ST_BandMetaData.example
-        noException should be thrownBy ST_BandMetaData.group
-        noException should be thrownBy ST_BandMetaData.builder
-        noException should be thrownBy ST_BandMetaData.getExpressionInfo[ST_BandMetaData](None)
+    object DummyExpression extends WithExpressionInfo {
+
+        override def name: String = "dummy"
+        override def builder: FunctionBuilder = (children: Seq[Expression]) => lit(0).expr
+
     }
 
-    test("GenericExpressionFactory Auxiliary tests") {
-        noException should be thrownBy GenericExpressionFactory.getBaseBuilder[ST_BandMetaData](1)
+    test("WithExpression Auxiliary tests") {
+        noException should be thrownBy DummyExpression.name
+        noException should be thrownBy DummyExpression.database
+        noException should be thrownBy DummyExpression.usage
+        noException should be thrownBy DummyExpression.example
+        noException should be thrownBy DummyExpression.group
+        noException should be thrownBy DummyExpression.builder
+    }
+
+    testAllNoCodegen("GenericExpressionFactory Auxiliary tests") { (mosaicContext: MosaicContext) =>
+        noException should be thrownBy {
+            val builder = GenericExpressionFactory.getBaseBuilder[ST_BandMetaData](3)
+            builder(Seq(lit(0).expr, lit(0).expr, lit(0).expr))
+        }
     }
 
 }
