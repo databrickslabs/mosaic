@@ -419,10 +419,10 @@ in our documentation
 <div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%sh
 
 <span class="c1"># Create init script directory for Mosaic</span>
-mkdir -p /dbfs/FileStore/mosaic/scripts
+mkdir<span class="w"> </span>-p<span class="w"> </span>/dbfs/FileStore/mosaic/scripts
 
 <span class="c1"># Create init script</span>
-cat &gt; /dbfs/FileStore/mosaic/scripts/mosaic-init.sh <span class="s">&lt;&lt;'EOF'</span>
+cat<span class="w"> </span>&gt;<span class="w"> </span>/dbfs/FileStore/mosaic/scripts/mosaic-init.sh<span class="w"> </span><span class="s">&lt;&lt;'EOF'</span>
 <span class="s">#!/bin/bash</span>
 <span class="s">#</span>
 <span class="s"># File: mosaic-init.sh</span>
@@ -439,11 +439,11 @@ cat &gt; /dbfs/FileStore/mosaic/scripts/mosaic-init.sh <span class="s">&lt;&lt;'
 <li><p>Add the following spark configuration values for your cluster following the instructions <a class="reference external" href="https://docs.databricks.com/clusters/configure.html#spark-configuration">here</a>.</p>
 <blockquote>
 <div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># H3 or BNG</span>
-spark.databricks.labs.mosaic.index.system H3
+spark.databricks.labs.mosaic.index.system<span class="w"> </span>H3
 <span class="c1"># JTS or ESRI</span>
-spark.databricks.labs.mosaic.geometry.api JTS
+spark.databricks.labs.mosaic.geometry.api<span class="w"> </span>JTS
 <span class="c1"># MosaicSQL or MosaicSQLDefault, MosaicSQLDefault corresponds to (H3, ESRI)</span>
-spark.sql.extensions com.databricks.labs.mosaic.sql.extensions.MosaicSQL
+spark.sql.extensions<span class="w"> </span>com.databricks.labs.mosaic.sql.extensions.MosaicSQL
 </pre></div>
 </div>
 </div></blockquote>

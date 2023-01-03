@@ -435,7 +435,7 @@ in our documentation
 <p>Python users can install the library directly from <a class="reference external" href="https://pypi.org/project/databricks-mosaic/">PyPI</a>
 using the instructions <a class="reference external" href="https://docs.databricks.com/libraries/cluster-libraries.html">here</a>
 or from within a Databricks notebook using the <code class="code docutils literal notranslate"><span class="pre">%pip</span></code> magic command, e.g.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%pip install databricks-mosaic
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%pip<span class="w"> </span>install<span class="w"> </span>databricks-mosaic
 </pre></div>
 </div>
 
@@ -469,13 +469,13 @@ or via a middleware layer such as Geoserver, perhaps) then you can configure
 </div><div aria-labelledby="tab-0-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nn">functions</span><span class="p">.</span><span class="nc">MosaicContext</span>
 <span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">H3</span>
 <span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">ESRI</span>
-<span class="o">&gt;&gt;&gt;</span><span class="w"></span>
-<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">mosaicContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MosaicContext</span><span class="p">.</span><span class="n">build</span><span class="p">(</span><span class="nc">H3</span><span class="p">,</span><span class="w"> </span><span class="nc">ESRI</span><span class="p">)</span><span class="w"></span>
+<span class="o">&gt;&gt;&gt;</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">mosaicContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MosaicContext</span><span class="p">.</span><span class="n">build</span><span class="p">(</span><span class="nc">H3</span><span class="p">,</span><span class="w"> </span><span class="nc">ESRI</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="k">import</span><span class="w"> </span><span class="nn">mosaicContext</span><span class="p">.</span><span class="nn">functions</span><span class="p">.</span><span class="n">_</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-0-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="nf">library</span><span class="p">(</span><span class="n">sparkrMosaic</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="nf">enableMosaic</span><span class="p">()</span>
+</div><div aria-labelledby="tab-0-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="nf">library</span><span class="p">(</span><span class="n">sparkrMosaic</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="nf">enableMosaic</span><span class="p">()</span>
 </pre></div>
 </div>
 </div></div>
@@ -487,8 +487,8 @@ register the Mosaic SQL functions in your SparkSession from a Scala notebook cel
 <span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">H3</span>
 <span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">ESRI</span>
 
-<span class="kd">val</span><span class="w"> </span><span class="n">mosaicContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MosaicContext</span><span class="p">.</span><span class="n">build</span><span class="p">(</span><span class="nc">H3</span><span class="p">,</span><span class="w"> </span><span class="nc">ESRI</span><span class="p">)</span><span class="w"></span>
-<span class="n">mosaicContext</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span><span class="w"></span>
+<span class="kd">val</span><span class="w"> </span><span class="n">mosaicContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MosaicContext</span><span class="p">.</span><span class="n">build</span><span class="p">(</span><span class="nc">H3</span><span class="p">,</span><span class="w"> </span><span class="nc">ESRI</span><span class="p">)</span>
+<span class="n">mosaicContext</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
 </pre></div>
 </div>
 
