@@ -47,6 +47,14 @@ class TestLineStringJTS extends AnyFlatSpec {
         lineStringReference.equals(lineStringTest) shouldBe true
     }
 
+    "MosaicLineStringJTS" should "not fail for empty Seq" in {
+        val expected = MosaicLineStringJTS.fromWKT(
+            "LINESTRING EMPTY"
+        )
+        val actual = MosaicLineStringJTS.fromSeq(Seq[MosaicLineStringJTS]())
+        expected.equals(actual) shouldBe true
+    }
+
     "MosaicLineStringJTS" should "return a Seq of MosaicPointJTS object when calling asSeq" in {
         val lineString = MosaicLineStringJTS.fromWKT("LINESTRING (1 1, 2 2, 3 3)").asInstanceOf[MosaicLineStringJTS]
         val pointsSeqReference = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")
