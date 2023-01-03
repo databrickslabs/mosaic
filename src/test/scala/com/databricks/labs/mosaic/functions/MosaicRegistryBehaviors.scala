@@ -12,13 +12,13 @@ trait MosaicRegistryBehaviors extends SharedSparkSession {
         val mosaicRegistry = MosaicRegistry(registry)
 
         mosaicRegistry.registerExpression[RST_MetaData]()
-        mosaicRegistry.registerExpression[RST_MetaData]("st_metadata_2")
-        mosaicRegistry.registerExpression[RST_MetaData]("st_metadata_3", RST_MetaData.builder)
+        mosaicRegistry.registerExpression[RST_MetaData]("rst_metadata_2")
+        mosaicRegistry.registerExpression[RST_MetaData]("rst_metadata_3", RST_MetaData.builder)
         mosaicRegistry.registerExpression[RST_MetaData](RST_MetaData.builder)
 
-        spark.sessionState.functionRegistry.functionExists(FunctionIdentifier("st_metadata")) shouldBe true
-        spark.sessionState.functionRegistry.functionExists(FunctionIdentifier("st_metadata_2")) shouldBe true
-        spark.sessionState.functionRegistry.functionExists(FunctionIdentifier("st_metadata_3")) shouldBe true
+        spark.sessionState.functionRegistry.functionExists(FunctionIdentifier("rst_metadata")) shouldBe true
+        spark.sessionState.functionRegistry.functionExists(FunctionIdentifier("rst_metadata_2")) shouldBe true
+        spark.sessionState.functionRegistry.functionExists(FunctionIdentifier("rst_metadata_3")) shouldBe true
 
     }
 }
