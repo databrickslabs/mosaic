@@ -34,7 +34,7 @@ def setup_gdal(
         sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
     )
     mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
-    mosaicGDALObject.prepareEnvironment(spark, init_script_path, shared_objects_path)
+    mosaicGDALObject.prepareEnvironment(spark._jsparkSession, init_script_path, shared_objects_path)
 
 
 
@@ -56,4 +56,4 @@ def enable_gdal(spark: SparkSession) -> None:
         sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
     )
     mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
-    mosaicGDALObject.enableGDAL(spark)
+    mosaicGDALObject.enableGDAL(spark._jsparkSession)
