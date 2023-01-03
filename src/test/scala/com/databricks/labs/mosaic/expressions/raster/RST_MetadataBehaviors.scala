@@ -8,7 +8,7 @@ import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.functions.lit
 import org.scalatest.matchers.should.Matchers._
 
-trait ST_MetadataBehaviors extends QueryTest {
+trait RST_MetadataBehaviors extends QueryTest {
 
     def metadataBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
@@ -20,8 +20,8 @@ trait ST_MetadataBehaviors extends QueryTest {
         val rasterDfWithMetadata = mocks
             .getGeotiffBinaryDf(spark)
             .select(
-              st_metadata($"content").alias("metadata"),
-              st_metadata($"content", lit("")).alias("metadata_2")
+              rst_metadata($"content").alias("metadata"),
+              rst_metadata($"content", lit("")).alias("metadata_2")
             )
             .select("metadata")
 
@@ -32,11 +32,11 @@ trait ST_MetadataBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select st_metadata(content) from source
+                                                   |select rst_metadata(content) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy spark.sql("""
-                                                   |select st_metadata(content, "") from source
+                                                   |select rst_metadata(content, "") from source
                                                    |""".stripMargin)
 
         result.head.getOrElse("SHORTNAME", "") shouldBe "MCD43A4"

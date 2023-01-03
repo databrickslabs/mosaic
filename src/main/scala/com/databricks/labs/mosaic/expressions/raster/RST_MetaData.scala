@@ -8,8 +8,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types._
 
-case class ST_MetaData(inputRaster: Expression, path: Expression)
-    extends RasterExpression[ST_MetaData](inputRaster, path, MapType(StringType, StringType))
+case class RST_MetaData(inputRaster: Expression, path: Expression)
+    extends RasterExpression[RST_MetaData](inputRaster, path, MapType(StringType, StringType))
       with NullIntolerant
       with CodegenFallback {
 
@@ -19,9 +19,9 @@ case class ST_MetaData(inputRaster: Expression, path: Expression)
     }
 }
 
-object ST_MetaData extends WithExpressionInfo {
+object RST_MetaData extends WithExpressionInfo {
 
-    override def name: String = "st_metadata"
+    override def name: String = "rst_metadata"
 
     override def usage: String = "_FUNC_(expr1) - Extracts metadata from a raster dataset."
 
@@ -35,8 +35,8 @@ object ST_MetaData extends WithExpressionInfo {
     override def builder: FunctionBuilder =
         (exprs: Seq[Expression]) =>
             exprs match {
-                case e if e.length == 1 => ST_MetaData(exprs(0), lit("").expr)
-                case e if e.length == 2 => ST_MetaData(exprs(0), exprs(1))
+                case e if e.length == 1 => RST_MetaData(exprs(0), lit("").expr)
+                case e if e.length == 2 => RST_MetaData(exprs(0), exprs(1))
             }
 
 }

@@ -8,12 +8,11 @@ import java.io.BufferedInputStream
 import java.nio.file.{Files, Paths}
 import scala.language.postfixOps
 import scala.sys.process._
-import scala.util.Try
 
 //noinspection DuplicatedCode
 object MosaicGDAL extends Logging {
 
-    //noinspection ScalaWeakerAccess
+    // noinspection ScalaWeakerAccess
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
     private val mosaicGDALPath = Files.createTempDirectory("mosaic-gdal")
     private val mosaicGDALAbsolutePath = mosaicGDALPath.toAbsolutePath.toString
@@ -21,10 +20,10 @@ object MosaicGDAL extends Logging {
 
     def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean
 
-    def prepareEnvironment(spark: SparkSession, path: String): Unit = {
+    def prepareEnvironment(spark: SparkSession, initScriptPath: String, sharedObjectsPath: String): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
-            copyInitScript(path)
-            copySharedObjects()
+            copyInitScript(initScriptPath)
+            copySharedObjects(sharedObjectsPath)
         }
     }
 
@@ -37,7 +36,7 @@ object MosaicGDAL extends Logging {
         }
     }
 
-    private def copySharedObjects(): Unit = {
+    private def copySharedObjects(path: String): Unit = {
         val so = readResourceBytes("/gdal/ubuntu/libgdalalljni.so")
         val so30 = readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30")
 
@@ -51,8 +50,8 @@ object MosaicGDAL extends Logging {
         Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so"), so)
         Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so.30"), so30)
 
-        s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so /usr/lib/jni/libgdalalljni.so".!!
-        s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so.30 /usr/lib/jni/libgdalalljni.so.30".!!
+        s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so $path/libgdalalljni.so".!!
+        s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so.30 $path/libgdalalljni.so.30".!!
     }
 
     private def copyInitScript(path: String): Unit = {

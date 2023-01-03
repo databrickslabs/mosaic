@@ -7,7 +7,7 @@ import com.databricks.labs.mosaic.test.mocks
 import org.apache.spark.sql.QueryTest
 import org.scalatest.matchers.should.Matchers._
 
-trait ST_SubdatasetsBehaviors extends QueryTest {
+trait RST_SubdatasetsBehaviors extends QueryTest {
 
     def subdatasetsBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
@@ -19,7 +19,7 @@ trait ST_SubdatasetsBehaviors extends QueryTest {
         val rasterDfWithSubdatasets = mocks
             .getNetCDFBinaryDf(spark)
             .select(
-              st_subdatasets($"content")
+              rst_subdatasets($"content")
                   .alias("subdatasets")
             )
 
@@ -30,15 +30,15 @@ trait ST_SubdatasetsBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select st_subdatasets(content) from source
+                                                   |select rst_subdatasets(content) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy spark.sql("""
-                                                   |select st_subdatasets(content, "") from source
+                                                   |select rst_subdatasets(content, "") from source
                                                    |""".stripMargin)
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select st_subdatasets(content, "", 1) from source
+                                                     |select rst_subdatasets(content, "", 1) from source
                                                      |""".stripMargin)
 
         result.head.keys.toList.length shouldBe 2

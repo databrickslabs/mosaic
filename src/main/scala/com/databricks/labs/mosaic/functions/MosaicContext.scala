@@ -364,19 +364,19 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 
         /** RasterAPI dependent functions */
         registry.registerFunction(
-          FunctionIdentifier("st_metadata", database),
-          ST_MetaData.getExpressionInfo(database),
-          ST_MetaData.builder
+          FunctionIdentifier("rst_metadata", database),
+          RST_MetaData.getExpressionInfo(database),
+          RST_MetaData.builder
         )
         registry.registerFunction(
-          FunctionIdentifier("st_bandmetadata", database),
-          ST_BandMetaData.getExpressionInfo(database),
-          ST_BandMetaData.builder
+          FunctionIdentifier("rst_bandmetadata", database),
+          RST_BandMetaData.getExpressionInfo(database),
+          RST_BandMetaData.builder
         )
         registry.registerFunction(
-          FunctionIdentifier("st_subdatasets", database),
-          ST_Subdatasets.getExpressionInfo(database),
-          ST_Subdatasets.builder
+          FunctionIdentifier("rst_subdatasets", database),
+          RST_Subdatasets.getExpressionInfo(database),
+          RST_Subdatasets.builder
         )
 
         /** Aggregators */
@@ -632,25 +632,25 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, geometryAPI.name))
 
         /** RasterAPI dependent functions */
-        def st_metadata(raster: Column, path: Column): Column =
+        def rst_metadata(raster: Column, path: Column): Column =
             ColumnAdapter(
-              ST_MetaData(raster.expr, path.expr)
+              RST_MetaData(raster.expr, path.expr)
             )
-        def st_metadata(raster: Column): Column =
+        def rst_metadata(raster: Column): Column =
             ColumnAdapter(
-              ST_MetaData(raster.expr, lit("").expr)
+              RST_MetaData(raster.expr, lit("").expr)
             )
-        def st_subdatasets(raster: Column): Column =
+        def rst_subdatasets(raster: Column): Column =
             ColumnAdapter(
-              ST_Subdatasets(raster.expr)
+              RST_Subdatasets(raster.expr)
             )
-        def st_bandmetadata(raster: Column, band: Column, path: Column): Column =
+        def rst_bandmetadata(raster: Column, band: Column, path: Column): Column =
             ColumnAdapter(
-              ST_BandMetaData(raster.expr, band.expr, path.expr)
+              RST_BandMetaData(raster.expr, band.expr, path.expr)
             )
-        def st_bandmetadata(raster: Column, band: Column): Column =
+        def rst_bandmetadata(raster: Column, band: Column): Column =
             ColumnAdapter(
-              ST_BandMetaData(raster.expr, band.expr, lit("").expr)
+              RST_BandMetaData(raster.expr, band.expr, lit("").expr)
             )
 
         /** Aggregators */

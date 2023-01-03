@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.base
 
-import com.databricks.labs.mosaic.expressions.raster.ST_BandMetaData
+import com.databricks.labs.mosaic.expressions.raster.RST_BandMetaData
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -29,7 +29,7 @@ class BaseAPIsTest extends MosaicSpatialQueryTest with SharedSparkSession {
 
     testAllNoCodegen("GenericExpressionFactory Auxiliary tests") { (mosaicContext: MosaicContext) =>
         noException should be thrownBy {
-            val builder = GenericExpressionFactory.getBaseBuilder[ST_BandMetaData](3)
+            val builder = GenericExpressionFactory.getBaseBuilder[RST_BandMetaData](3)
             builder(Seq(lit(0).expr, lit(0).expr, lit(0).expr))
         }
     }

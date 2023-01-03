@@ -7,8 +7,8 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, NullIntol
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
-case class ST_Subdatasets(inputRaster: Expression, path: Expression = Literal(""))
-    extends RasterExpression[ST_Subdatasets](inputRaster, path, MapType(keyType = StringType, valueType = StringType))
+case class RST_Subdatasets(inputRaster: Expression, path: Expression = Literal(""))
+    extends RasterExpression[RST_Subdatasets](inputRaster, path, MapType(keyType = StringType, valueType = StringType))
       with NullIntolerant
       with CodegenFallback {
 
@@ -20,9 +20,9 @@ case class ST_Subdatasets(inputRaster: Expression, path: Expression = Literal(""
 }
 
 //noinspection ZeroIndexToHead
-object ST_Subdatasets extends WithExpressionInfo {
+object RST_Subdatasets extends WithExpressionInfo {
 
-    override def name: String = "st_subdatasets"
+    override def name: String = "rst_subdatasets"
 
     override def usage: String = "_FUNC_(expr1) - Extracts subdataset paths and descriptions from a raster dataset."
 
@@ -39,9 +39,9 @@ object ST_Subdatasets extends WithExpressionInfo {
             if (children.length > 2) {
                 throw new IllegalArgumentException(s"$name function requires 1 or 2 argument")
             } else if (children.length == 2) {
-                ST_Subdatasets(children(0), children(1))
+                RST_Subdatasets(children(0), children(1))
             } else {
-                ST_Subdatasets(children(0))
+                RST_Subdatasets(children(0))
             }
         }
 

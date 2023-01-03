@@ -9,7 +9,7 @@ import org.apache.spark.sql.test.SharedSparkSessionGDAL
 
 import scala.util.Try
 
-class ST_BandMetadataTest extends QueryTest with SharedSparkSessionGDAL with ST_BandMetadataBehaviors {
+class RST_BandMetadataTest extends QueryTest with SharedSparkSessionGDAL with RST_BandMetadataBehaviors {
 
     //Hotfix for SharedSparkSession afterAll cleanup.
     override def afterAll(): Unit = Try(super.afterAll())

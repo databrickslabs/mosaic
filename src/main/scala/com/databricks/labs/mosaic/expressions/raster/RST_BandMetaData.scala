@@ -7,8 +7,8 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
-case class ST_BandMetaData(inputRaster: Expression, band: Expression, path: Expression)
-    extends RasterBandExpression[ST_BandMetaData](inputRaster, band, path, MapType(StringType, StringType))
+case class RST_BandMetaData(inputRaster: Expression, band: Expression, path: Expression)
+    extends RasterBandExpression[RST_BandMetaData](inputRaster, band, path, MapType(StringType, StringType))
       with NullIntolerant
       with CodegenFallback {
 
@@ -18,9 +18,9 @@ case class ST_BandMetaData(inputRaster: Expression, band: Expression, path: Expr
     }
 }
 
-object ST_BandMetaData extends WithExpressionInfo {
+object RST_BandMetaData extends WithExpressionInfo {
 
-    override def name: String = "st_bandmetadata"
+    override def name: String = "rst_bandmetadata"
 
     override def usage: String = "_FUNC_(expr1, expr2, expr3) - Extracts metadata from a raster band."
 
@@ -36,7 +36,7 @@ object ST_BandMetaData extends WithExpressionInfo {
             if (children.length != 3) {
                 throw new IllegalArgumentException(s"$name function requires 3 arguments")
             }
-            ST_BandMetaData(children(0), children(1), children(2))
+            RST_BandMetaData(children(0), children(1), children(2))
         }
 
 }
