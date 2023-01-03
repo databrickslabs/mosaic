@@ -41,12 +41,8 @@ object MosaicGDAL extends Logging {
         val so30 = readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30")
 
         val usrGDALPath = Paths.get("/usr/lib/jni/")
-        val libgdalSOPath = Paths.get("/usr/lib/libgdal.so")
         if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
         if (!Files.exists(usrGDALPath)) Files.createDirectories(usrGDALPath)
-        if (!Files.exists(libgdalSOPath)) {
-            "sudo cp /usr/lib/libgdal.so.30 /usr/lib/libgdal.so".!!
-        }
         Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so"), so)
         Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so.30"), so30)
 
@@ -65,10 +61,13 @@ object MosaicGDAL extends Logging {
 
     private def loadSharedObjects(): Unit = {
         System.load("/usr/lib/libgdal.so.30")
-        System.load("/usr/lib/jni/libgdalalljni.so.30")
-        System.load("/usr/lib/libgdal.so.30.0.3")
-        System.load("/usr/lib/ogdi/libgdal.so")
+        if (!Files.exists(Paths.get("/usr/lib/libgdal.so"))) {
+            "sudo cp /usr/lib/libgdal.so.30 /usr/lib/libgdal.so".!!
+        }
         System.load("/usr/lib/libgdal.so")
+        System.load("/usr/lib/libgdal.so.30.0.3")
+        System.load("/usr/lib/jni/libgdalalljni.so.30")
+        System.load("/usr/lib/ogdi/libgdal.so")
     }
 
     private def readResourceBytes(name: String): Array[Byte] = {
