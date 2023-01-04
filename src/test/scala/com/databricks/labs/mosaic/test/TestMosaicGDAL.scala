@@ -1,11 +1,12 @@
 package com.databricks.labs.mosaic.test
 
 import com.databricks.labs.mosaic.gdal.MosaicGDAL._
+import com.twitter.chill.Base64.InputStream
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.SparkException
 import org.apache.spark.internal.Logging
 
-import java.io.IOException
+import java.io.{ByteArrayInputStream, IOException}
 import scala.io.{BufferedSource, Source}
 import scala.sys.process._
 
@@ -39,12 +40,15 @@ object TestMosaicGDAL extends Logging {
     }
 
     def getScript: BufferedSource = {
-        val scriptPath = System.getProperty("os.name").toLowerCase() match {
-            case o: String if o.contains("nux") => "/scripts/install-gdal-databricks.sh"
-            case _ => throw new UnsupportedOperationException("This method only supports Ubuntu Linux with `apt`.")
+        System.getProperty("os.name").toLowerCase() match {
+            case o: String if o.contains("nux") =>
+                val script = Source.fromInputStream(getClass.getResourceAsStream("/scripts/install-gdal-databricks.sh"))
+                script
+            case _ =>
+                logInfo("This method only supports Ubuntu Linux with `apt`.")
+                Source.fromInputStream(getClass.getResourceAsStream(""))
         }
-        val script = Source.fromInputStream(getClass.getResourceAsStream(scriptPath))
-        script
+
     }
 
 }

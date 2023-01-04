@@ -27,7 +27,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         val geometryAPI = mosaicContext.getGeometryAPI
         spark.sparkContext.setLogLevel("FATAL")
         MosaicContext.reset()
-        noException should be thrownBy MosaicContext.context
+        an[Error] should be thrownBy MosaicContext.context
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         MosaicContext.indexSystem shouldEqual indexSystem
         MosaicContext.geometryAPI shouldEqual geometryAPI

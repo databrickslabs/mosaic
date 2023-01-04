@@ -16,6 +16,8 @@ import scala.util.Try
 class TestRasterGDAL extends SharedSparkSessionGDAL {
 
     test("Verify that GDAL is enabled.") {
+        assume(System.getProperty("os.name") == "Linux")
+
         val checkCmd = "gdalinfo --version"
         val resultDriver = Try(checkCmd.!!).getOrElse("")
         resultDriver should not be ""
@@ -32,6 +34,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
     }
 
     test("Read raster metadata from GeoTIFF file.") {
+        assume(System.getProperty("os.name") == "Linux")
+
         val testRaster = MosaicRasterGDAL.fromBytes(mocks.geotiffBytes)
         testRaster.xSize shouldBe 2400
         testRaster.ySize shouldBe 2400
@@ -48,6 +52,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
     }
 
     test("Read raster metadata from a GRIdded Binary file.") {
+        assume(System.getProperty("os.name") == "Linux")
+
         val testRaster = MosaicRasterGDAL.fromBytes(mocks.gribBytes)
         testRaster.xSize shouldBe 14
         testRaster.ySize shouldBe 14
@@ -59,6 +65,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
     }
 
     test("Read raster metadata from a NetCDF file.") {
+        assume(System.getProperty("os.name") == "Linux")
+
         val superRaster = MosaicRasterGDAL.fromBytes(mocks.netcdfBytes)
         val subdatasetPath = superRaster.subdatasets.filterKeys(_.contains("bleaching_alert_area")).head._1
 
@@ -76,6 +84,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
     }
 
     test("Auxiliary logic") {
+        assume(System.getProperty("os.name") == "Linux")
+
         RasterAPI.apply("GDAL") shouldBe GDAL
         RasterAPI.getReader("GDAL") shouldBe MosaicRasterGDAL
         GDAL.name shouldBe "GDAL"

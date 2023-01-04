@@ -1,11 +1,11 @@
 package com.databricks.labs.mosaic.sql.extensions
 
+import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkSuite
-import com.databricks.labs.mosaic.{MOSAIC_GDAL_NATIVE, MOSAIC_GEOMETRY_API, MOSAIC_INDEX_SYSTEM, MOSAIC_RASTER_API}
 import org.apache.spark.SparkConf
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
@@ -60,10 +60,15 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
         spark = withConf(conf)
         it should behave like sqlRegister(MosaicContext.build(H3IndexSystem, ESRI, GDAL), spark)
 
-        conf = new SparkConf(loadDefaults = false)
+    }
+
+    "Mosaic" should "register GDAL extension for all index systems and geometry APIs in Linux" in {
+        assume(System.getProperty("os.name") == "Linux")
+
+        val conf = new SparkConf(loadDefaults = false)
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicGDAL")
             .set(MOSAIC_GDAL_NATIVE, "true")
-        spark = withConf(conf)
+        val spark = withConf(conf)
         it should behave like mosaicGDAL(MosaicContext.build(H3IndexSystem, ESRI, GDAL), spark)
 
     }

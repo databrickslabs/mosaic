@@ -46,7 +46,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
         result
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 3)
+    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 3, rasterAPI.name)
 
     override def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
         makeCopy(Array[AnyRef](newFirst, newSecond, newThird))

@@ -21,16 +21,16 @@ case class MosaicRegistry(registry: FunctionRegistry, database: Option[String] =
         universe.runtimeMirror(getClass.getClassLoader).reflectModule(universe.typeOf[T].typeSymbol.companion.asModule).instance
     }
 
-    def registerExpression[T <: Expression: universe.TypeTag: ClassTag](args: Any*): Unit = registerExpression[T](None, None, args)
+    def registerExpression[T <: Expression: universe.TypeTag: ClassTag](args: Any*): Unit = registerExpression[T](None, None, args: _*)
 
     def registerExpression[T <: Expression: universe.TypeTag: ClassTag](alias: String, args: Any*): Unit =
-        registerExpression[T](alias = Some(alias), None, args)
+        registerExpression[T](alias = Some(alias), None, args: _*)
 
     def registerExpression[T <: Expression: universe.TypeTag: ClassTag](builder: FunctionBuilder, args: Any*): Unit =
-        registerExpression[T](None, builder = Some(builder), args)
+        registerExpression[T](None, builder = Some(builder), args: _*)
 
     def registerExpression[T <: Expression: universe.TypeTag: ClassTag](alias: String, builder: FunctionBuilder, args: Any*): Unit =
-        registerExpression[T](alias = Some(alias), builder = Some(builder), args)
+        registerExpression[T](alias = Some(alias), builder = Some(builder), args: _*)
 
     private def registerExpression[T <: Expression: universe.TypeTag: ClassTag](
                                                                                    alias: Option[String],
@@ -46,7 +46,7 @@ case class MosaicRegistry(registry: FunctionRegistry, database: Option[String] =
                     companion.getExpressionInfo[T]()
                 )
                 .asInstanceOf[ExpressionInfo]
-            val builderVal = builder.getOrElse(companion.builder(args))
+            val builderVal = builder.getOrElse(companion.builder(args: _*))
             val nameVal = alias.getOrElse(companion.name)
 
             registry.registerFunction(

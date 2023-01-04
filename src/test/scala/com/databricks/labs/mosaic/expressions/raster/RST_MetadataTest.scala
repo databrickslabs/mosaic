@@ -11,22 +11,22 @@ import scala.util.Try
 
 class RST_MetadataTest extends QueryTest with SharedSparkSessionGDAL with RST_MetadataBehaviors {
 
-    //Hotfix for SharedSparkSession afterAll cleanup.
-    override def afterAll(): Unit = Try(super.afterAll())
-
     private val noCodegen =
         withSQLConf(
-            SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
-            SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString,
+          SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
+          SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
         ) _
 
+    // Hotfix for SharedSparkSession afterAll cleanup.
+    override def afterAll(): Unit = Try(super.afterAll())
 
     // These tests are not index system nor geometry API specific.
     // Only testing one pairing is sufficient.
-    if (System.getProperty("os.name") == "Linux") {
-        test("Testing ST_MetaData with manual GDAL registration (H3, JTS).") { noCodegen { metadataBehavior(H3IndexSystem, JTS) } }
-    } else {
-        logWarning("Skipping ST_MetaData test on non-Linux OS")
+    test("Testing ST_MetaData with manual GDAL registration (H3, JTS).") {
+        noCodegen {
+            assume(System.getProperty("os.name") == "Linux")
+            metadataBehavior(H3IndexSystem, JTS)
+        }
     }
 
 }

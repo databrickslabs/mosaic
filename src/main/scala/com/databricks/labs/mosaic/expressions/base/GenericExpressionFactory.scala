@@ -4,6 +4,7 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 
 import scala.reflect.ClassTag
+import scala.util.Try
 
 object GenericExpressionFactory {
 
@@ -13,20 +14,36 @@ object GenericExpressionFactory {
         nChildren: Int,
         additionalArgs: Any*
     ): Expression = {
-        val newInstance = construct[T](newArgs.take(nChildren).map(_.asInstanceOf[Expression]), additionalArgs)
+        val newInstance = construct[T](newArgs.take(nChildren).map(_.asInstanceOf[Expression]), additionalArgs: _*)
         newInstance.copyTagsFrom(toCopy)
         newInstance
     }
 
-    def construct[T <: Expression: ClassTag](args: Array[_ <: Expression], additionalArgs: AnyRef*): Expression = {
+    def construct[T <: Expression: ClassTag](args: Array[_ <: Expression], additionalArgs: Any*): Expression = {
         val clazz = implicitly[ClassTag[T]].runtimeClass
-        val argsClasses = Array.fill(args.length)(classOf[Expression])
-        val res = clazz.getDeclaredConstructor(argsClasses: _*)
-        val newInstance = res.newInstance(args ++ additionalArgs : _*).asInstanceOf[Expression]
-        newInstance
+        val allArgs = args ++ additionalArgs.toSeq
+        val constructors = clazz.getConstructors
+
+        constructors
+            .map(constructor =>
+                Try {
+                    val argClasses = constructor.getParameterTypes
+                    val castedArgs = allArgs
+                        .take(argClasses.length)
+                        .zip(argClasses)
+                        .map { case (arg, tpe) => tpe.cast(arg) }
+                        .toSeq
+                        .asInstanceOf[Seq[AnyRef]]
+                    constructor.newInstance(castedArgs: _*)
+                }
+            )
+            .filter(_.isSuccess)
+            .head
+            .get
+            .asInstanceOf[Expression]
     }
 
     def getBaseBuilder[T <: Expression: ClassTag](nChildren: Int, additionalArgs: Any*): FunctionBuilder =
-        (children: Seq[Expression]) => GenericExpressionFactory.construct[T](children.take(nChildren).toArray, additionalArgs)
+        (children: Seq[Expression]) => GenericExpressionFactory.construct[T](children.take(nChildren).toArray, additionalArgs: _*)
 
 }

@@ -29,7 +29,7 @@ class BaseAPIsTest extends MosaicSpatialQueryTest with SharedSparkSession {
 
     testAllNoCodegen("GenericExpressionFactory Auxiliary tests") { (mosaicContext: MosaicContext) =>
         noException should be thrownBy {
-            val builder = GenericExpressionFactory.getBaseBuilder[RST_BandMetaData](3)
+            val builder = GenericExpressionFactory.getBaseBuilder[RST_BandMetaData](3, "GDAL")
             builder(Seq(lit(0).expr, lit(0).expr, lit(0).expr))
         }
     }

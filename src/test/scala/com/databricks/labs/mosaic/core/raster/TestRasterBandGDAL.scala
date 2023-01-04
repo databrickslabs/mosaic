@@ -7,8 +7,9 @@ import org.scalatest.matchers.should.Matchers._
 class TestRasterBandGDAL extends SharedSparkSessionGDAL {
 
     test("Read band metadata and pixel data from GeoTIFF file.") {
-        val testRaster = MosaicRasterGDAL.fromBytes(mocks.geotiffBytes)
+        assume(System.getProperty("os.name") == "Linux")
 
+        val testRaster = MosaicRasterGDAL.fromBytes(mocks.geotiffBytes)
         val testBand = testRaster.getBand(1)
         testBand.asInstanceOf[MosaicRasterBandGDAL].band
         testBand.index shouldBe 1
@@ -31,8 +32,9 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
     }
 
     test("Read band metadata and pixel data from a GRIdded Binary file.") {
-        val testRaster = MosaicRasterGDAL.fromBytes(mocks.gribBytes)
+        assume(System.getProperty("os.name") == "Linux")
 
+        val testRaster = MosaicRasterGDAL.fromBytes(mocks.gribBytes)
         val testBand = testRaster.getBand(1)
         testBand.description shouldBe "1[-] HYBL=\"Hybrid level\""
         testBand.dataType shouldBe 7
@@ -48,6 +50,8 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
     }
 
     test("Read band metadata and pixel data from a NetCDF file.") {
+        assume(System.getProperty("os.name") == "Linux")
+
         val superRaster = MosaicRasterGDAL.fromBytes(mocks.netcdfBytes)
         val subdatasetPath = superRaster.subdatasets.filterKeys(_.contains("bleaching_alert_area")).head._1
         val testRaster = MosaicRasterGDAL.fromBytes(mocks.netcdfBytes, subdatasetPath)

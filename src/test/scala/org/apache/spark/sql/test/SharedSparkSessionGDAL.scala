@@ -7,6 +7,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 import java.nio.file.Files
+import scala.util.Try
 
 trait SharedSparkSessionGDAL extends SharedSparkSession {
 
@@ -20,10 +21,12 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         SparkSession.cleanupAnyExistingSession()
         val session = new TestSparkSession(conf)
         if (conf.get(MOSAIC_GDAL_NATIVE, "false").toBoolean) {
-            TestMosaicGDAL.installGDAL(session)
-            val tempPath = Files.createTempDirectory("mosaic-gdal")
-            MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString, "/usr/lib/jni")
-            MosaicGDAL.enableGDAL(session)
+            Try {
+                TestMosaicGDAL.installGDAL(session)
+                val tempPath = Files.createTempDirectory("mosaic-gdal")
+                MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString, "/usr/lib/jni")
+                MosaicGDAL.enableGDAL(session)
+            }
         }
         session
     }
