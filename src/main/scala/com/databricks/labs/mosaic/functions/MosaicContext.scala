@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.functions
 import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.types.ChipType
 import com.databricks.labs.mosaic.expressions.constructors._
@@ -367,17 +367,17 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         registry.registerFunction(
           FunctionIdentifier("rst_metadata", database),
           RST_MetaData.getExpressionInfo(database),
-          RST_MetaData.builder
+          RST_MetaData.builder(rasterAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("rst_bandmetadata", database),
           RST_BandMetaData.getExpressionInfo(database),
-          RST_BandMetaData.builder
+          RST_BandMetaData.builder(rasterAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("rst_subdatasets", database),
           RST_Subdatasets.getExpressionInfo(database),
-          RST_Subdatasets.builder
+          RST_Subdatasets.builder(rasterAPI.name)
         )
 
         /** Aggregators */
@@ -639,23 +639,23 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         /** RasterAPI dependent functions */
         def rst_metadata(raster: Column, path: Column): Column =
             ColumnAdapter(
-              RST_MetaData(raster.expr, path.expr)
+              RST_MetaData(raster.expr, path.expr, rasterAPI.name)
             )
         def rst_metadata(raster: Column): Column =
             ColumnAdapter(
-              RST_MetaData(raster.expr, lit("").expr)
+              RST_MetaData(raster.expr, Literal(""), rasterAPI.name)
             )
         def rst_subdatasets(raster: Column): Column =
             ColumnAdapter(
-              RST_Subdatasets(raster.expr)
+              RST_Subdatasets(raster.expr, Literal(""), rasterAPI.name)
             )
         def rst_bandmetadata(raster: Column, band: Column, path: Column): Column =
             ColumnAdapter(
-              RST_BandMetaData(raster.expr, band.expr, path.expr)
+              RST_BandMetaData(raster.expr, band.expr, path.expr, rasterAPI.name)
             )
         def rst_bandmetadata(raster: Column, band: Column): Column =
             ColumnAdapter(
-              RST_BandMetaData(raster.expr, band.expr, lit("").expr)
+              RST_BandMetaData(raster.expr, band.expr, Literal(""), rasterAPI.name)
             )
 
         /** Aggregators */
@@ -868,12 +868,6 @@ object MosaicContext {
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI = GDAL): MosaicContext = {
         instance = Some(new MosaicContext(indexSystem, geometryAPI, rasterAPI))
         instance.get.setCellIdDataType(indexSystem.getCellIdDataType.typeName)
-
-        val spark = SparkSession.builder().getOrCreate()
-        spark.conf.set(MOSAIC_INDEX_SYSTEM, indexSystem.name)
-        spark.conf.set(MOSAIC_GEOMETRY_API, geometryAPI.name)
-        spark.conf.set(MOSAIC_RASTER_API, rasterAPI.name)
-
         context()
     }
 
@@ -886,14 +880,7 @@ object MosaicContext {
     def context(): MosaicContext =
         instance match {
             case Some(context) => context
-            case None          =>
-                val spark = SparkSession.builder().getOrCreate()
-                val indexSystem = IndexSystemID.getIndexSystem(
-                  IndexSystemID.apply(spark.conf.get(MOSAIC_INDEX_SYSTEM))
-                )
-                val geometryAPI = GeometryAPI(spark.conf.get(MOSAIC_GEOMETRY_API))
-                val rasterAPI = RasterAPI(spark.conf.get(MOSAIC_RASTER_API))
-                build(indexSystem, geometryAPI, rasterAPI)
+            case None          => throw new Error("MosaicContext was not built.")
         }
 
     def reset(): Unit = instance = None

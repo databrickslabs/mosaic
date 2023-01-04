@@ -17,7 +17,7 @@ trait WithExpressionInfo {
 
     def group: String = "misc_funcs"
 
-    def builder: FunctionBuilder
+    def builder(args: Any*): FunctionBuilder
 
     final def getExpressionInfo[T <: Expression: ClassTag](database: Option[String] = None): ExpressionInfo = {
         val clazz = implicitly[ClassTag[T]].runtimeClass

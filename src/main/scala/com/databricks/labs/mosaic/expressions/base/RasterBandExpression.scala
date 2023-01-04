@@ -1,9 +1,7 @@
 package com.databricks.labs.mosaic.expressions.base
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
-import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.types.DataType
 import org.apache.spark.unsafe.types.UTF8String
@@ -14,14 +12,11 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
     bandExpr: Expression,
     pathExpr: Expression,
-    outputType: DataType
+    outputType: DataType,
+    rasterAPI: RasterAPI
 ) extends TernaryExpression
       with NullIntolerant
       with Serializable {
-
-    protected val geometryAPI: GeometryAPI = MosaicContext.geometryAPI
-
-    protected val rasterAPI: RasterAPI = MosaicContext.rasterAPI
 
     override def first: Expression = rasterExpr
 

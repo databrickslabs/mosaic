@@ -14,7 +14,7 @@ class BaseAPIsTest extends MosaicSpatialQueryTest with SharedSparkSession {
     object DummyExpression extends WithExpressionInfo {
 
         override def name: String = "dummy"
-        override def builder: FunctionBuilder = (children: Seq[Expression]) => lit(0).expr
+        override def builder(args: Any*): FunctionBuilder = (children: Seq[Expression]) => lit(0).expr
 
     }
 
@@ -24,7 +24,7 @@ class BaseAPIsTest extends MosaicSpatialQueryTest with SharedSparkSession {
         noException should be thrownBy DummyExpression.usage
         noException should be thrownBy DummyExpression.example
         noException should be thrownBy DummyExpression.group
-        noException should be thrownBy DummyExpression.builder
+        noException should be thrownBy DummyExpression.builder()
     }
 
     testAllNoCodegen("GenericExpressionFactory Auxiliary tests") { (mosaicContext: MosaicContext) =>

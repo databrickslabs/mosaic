@@ -13,8 +13,8 @@ trait MosaicRegistryBehaviors extends SharedSparkSession {
 
         mosaicRegistry.registerExpression[RST_MetaData]()
         mosaicRegistry.registerExpression[RST_MetaData]("rst_metadata_2")
-        mosaicRegistry.registerExpression[RST_MetaData]("rst_metadata_3", RST_MetaData.builder)
-        mosaicRegistry.registerExpression[RST_MetaData](RST_MetaData.builder)
+        mosaicRegistry.registerExpression[RST_MetaData]("rst_metadata_3", RST_MetaData.builder("GDAL"))
+        mosaicRegistry.registerExpression[RST_MetaData](RST_MetaData.builder("GDAL"))
 
         spark.sessionState.functionRegistry.functionExists(FunctionIdentifier("rst_metadata")) shouldBe true
         spark.sessionState.functionRegistry.functionExists(FunctionIdentifier("rst_metadata_2")) shouldBe true
