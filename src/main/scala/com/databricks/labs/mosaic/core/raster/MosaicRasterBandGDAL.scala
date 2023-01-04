@@ -12,7 +12,10 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
 
     override def description: String = coerceNull(Try(band.GetDescription))
 
-    override def metadata: Map[String, String] = band.GetMetadata_Dict.asScala.toMap.asInstanceOf[Map[String, String]]
+    override def metadata: Map[String, String] =
+        Option(band.GetMetadata_Dict)
+            .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
+            .getOrElse(Map.empty[String, String])
 
     override def units: String = coerceNull(Try(band.GetUnitType))
 

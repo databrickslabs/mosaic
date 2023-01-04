@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.sql.extensions
 
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
+import com.databricks.labs.mosaic.MOSAIC_GDAL_NATIVE
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSessionExtensions
 
@@ -23,7 +24,7 @@ class MosaicGDAL extends (SparkSessionExtensions => Unit) with Logging {
       */
     override def apply(ext: SparkSessionExtensions): Unit = {
         ext.injectCheckRule(spark => {
-            val enableGDAL = spark.conf.get("spark.mosaic.gdal.native", "false").toBoolean
+            val enableGDAL = spark.conf.get(MOSAIC_GDAL_NATIVE, "false").toBoolean
             if (enableGDAL) {
                 MosaicGDAL.enableGDAL(spark)
                 logInfo(s"GDAL was installed successfully.")

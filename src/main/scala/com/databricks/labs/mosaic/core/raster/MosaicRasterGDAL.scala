@@ -1,29 +1,34 @@
 package com.databricks.labs.mosaic.core.raster
 
-import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
-import scala.util.Try
-import org.gdal.gdal.{Dataset, gdal}
+import org.gdal.gdal.{gdal, Dataset}
 import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
 import org.gdal.osr.SpatialReference
 import org.locationtech.proj4j.CRSFactory
 
 import java.util
+import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
+import scala.util.Try
 import scala.util.hashing.MurmurHash3
 
 case class MosaicRasterGDAL(raster: Dataset, path: String) extends MosaicRaster(path) {
 
     val crsFactory: CRSFactory = new CRSFactory
 
-    override def metadata: Map[String, String] = raster.GetMetadata_Dict.asScala.toMap.asInstanceOf[Map[String, String]]
+    override def metadata: Map[String, String] =
+        Option(raster.GetMetadata_Dict)
+            .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
+            .getOrElse(Map.empty[String, String])
 
     override def subdatasets: Map[String, String] =
-        raster
-            .GetMetadata_List("SUBDATASETS")
-            .toArray
-            .map(_.toString)
-            .grouped(2)
-            .map({ case Array(p, d) => (p.split("=").last, d.split("=").last) })
-            .toMap
+        Option(raster.GetMetadata_List("SUBDATASETS"))
+            .map(
+              _.toArray
+                  .map(_.toString)
+                  .grouped(2)
+                  .map({ case Array(p, d) => (p.split("=").last, d.split("=").last) })
+                  .toMap
+            )
+            .getOrElse(Map.empty[String, String])
 
     override def SRID: Int = {
         Try(crsFactory.readEpsgFromParameters(proj4String))
@@ -38,7 +43,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String) extends MosaicRaster(
 
     override def getBand(bandId: Int): MosaicRasterBand = {
         if (bandId > 0 && numBands >= bandId) {
-            new MosaicRasterBandGDAL(raster.GetRasterBand(bandId), bandId)
+            MosaicRasterBandGDAL(raster.GetRasterBand(bandId), bandId)
         } else {
             throw new ArrayIndexOutOfBoundsException()
         }
@@ -76,6 +81,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String) extends MosaicRaster(
         raster.delete()
         gdal.Unlink(path)
     }
+
 }
 
 object MosaicRasterGDAL extends RasterReader {
@@ -85,7 +91,7 @@ object MosaicRasterGDAL extends RasterReader {
         // to ensure that the hash is unique.
         val hashCode = util.Arrays.hashCode(bytes)
         val murmur = MurmurHash3.arrayHash(bytes)
-        val virtualPath = s"/vsimem/$hashCode/$murmur"
+        val virtualPath = s"/vsimem/$hashCode/$murmur".replace("-", "_")
         fromBytes(bytes, virtualPath)
     }
 
@@ -95,6 +101,6 @@ object MosaicRasterGDAL extends RasterReader {
         MosaicRasterGDAL(dataset, path)
     }
 
-    def apply(dataset: Dataset, path: String) = new MosaicRasterGDAL(dataset, path)
+    def apply(dataset: Dataset, path: String): MosaicRasterGDAL = new MosaicRasterGDAL(dataset, path)
 
 }

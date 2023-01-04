@@ -8,8 +8,8 @@ __all__ = [
 
 def setup_gdal(
         spark: SparkSession,
-        init_script_path: str = "/dbfs/FileStore/mosaic/gdal/",
-        shared_objects_path: str = "/dbfs/FileStore/mosaic/gdal/") -> None:
+        init_script_path: str = "/dbfs/FileStore/geospatial/mosaic/gdal/",
+        shared_objects_path: str = "/dbfs/FileStore/geospatial/mosaic/gdal/") -> None:
     """
     Prepare GDAL init script and shared objects required for GDAL to run on spark.
     This function will generate the init script that will install GDAL on each worker node.

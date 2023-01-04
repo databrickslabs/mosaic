@@ -15,4 +15,9 @@ package object mosaic {
     val DATABRICKS_SQL_FUNCTIONS_MODULE = "com.databricks.sql.functions"
     val SPARK_DATABRICKS_GEO_H3_ENABLED = "spark.databricks.geo.h3.enabled"
 
+    val MOSAIC_INDEX_SYSTEM = "spark.databricks.labs.mosaic.index.system"
+    val MOSAIC_GEOMETRY_API = "spark.databricks.labs.mosaic.geometry.api"
+    val MOSAIC_RASTER_API = "spark.databricks.labs.mosaic.raster.api"
+    val MOSAIC_GDAL_NATIVE = "spark.databricks.labs.mosaic.gdal.native"
+
 }
