@@ -1,32 +1,21 @@
 package com.databricks.labs.mosaic.functions
 
-import com.databricks.labs.mosaic.{H3, SPARK_DATABRICKS_GEO_H3_ENABLED}
-
-import scala.sys.process._
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.{H3, _}
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.auxiliary.BadIndexSystem
-import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.adapters.Column
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
-import com.databricks.labs.mosaic.{H3, SPARK_DATABRICKS_GEO_H3_ENABLED}
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.catalog.CatalogDatabase
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, Literal}
-import org.apache.spark.sql.functions.{array, col, lit}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{LongType, StringType}
 import org.scalamock.scalatest.MockFactory
-import org.apache.spark.sql.types.LongType
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.must.Matchers.{be, noException, not}
-import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper, include}
+import org.scalatest.matchers.must.Matchers.{be, noException}
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
 import java.net.URI
-import scala.util.Try
-
 
 trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
 
@@ -207,19 +196,19 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
 
         // Register mock product functions
         registry.registerFunction(
-            FunctionIdentifier("h3_longlatash3", None),
-            new ExpressionInfo("product", "h3_longlatash3"),
-            (exprs: Seq[Expression]) => Column(exprs.head).expr
+          FunctionIdentifier("h3_longlatash3", None),
+          new ExpressionInfo("product", "h3_longlatash3"),
+          (exprs: Seq[Expression]) => Column(exprs.head).expr
         )
         registry.registerFunction(
-            FunctionIdentifier("h3_polyfillash3", None),
-            new ExpressionInfo("product", "h3_polyfillash3"),
-            functionBuilder
+          FunctionIdentifier("h3_polyfillash3", None),
+          new ExpressionInfo("product", "h3_polyfillash3"),
+          functionBuilder
         )
         registry.registerFunction(
-            FunctionIdentifier("h3_boundaryaswkb", None),
-            new ExpressionInfo("product", "h3_boundaryaswkb"),
-            functionBuilder
+          FunctionIdentifier("h3_boundaryaswkb", None),
+          new ExpressionInfo("product", "h3_boundaryaswkb"),
+          functionBuilder
         )
 
         mc.register(spark)
@@ -261,7 +250,7 @@ object MosaicContextBehaviors extends MockFactory {
         val ix = stub[IndexSystem]
         ix.getCellIdDataType _ when () returns LongType
         ix.name _ when () returns H3.name
-        MosaicContext.build(H3IndexSystem, stub[GeometryAPI])
+        MosaicContext.build(H3IndexSystem, JTS)
     }
 
 }
