@@ -17,6 +17,8 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
+    rasterAPI.enable()
+
     override def left: Expression = rasterExpr
 
     override def right: Expression = pathExpr

@@ -645,6 +645,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(
               RST_MetaData(raster.expr, Literal(""), rasterAPI.name)
             )
+        def rst_subdatasets(raster: Column, path: Column): Column =
+            ColumnAdapter(
+              RST_Subdatasets(raster.expr, path.expr, rasterAPI.name)
+            )
         def rst_subdatasets(raster: Column): Column =
             ColumnAdapter(
               RST_Subdatasets(raster.expr, Literal(""), rasterAPI.name)

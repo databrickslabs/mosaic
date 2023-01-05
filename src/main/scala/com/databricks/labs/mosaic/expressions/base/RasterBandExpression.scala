@@ -18,6 +18,8 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
+    rasterAPI.enable()
+
     override def first: Expression = rasterExpr
 
     override def second: Expression = bandExpr
