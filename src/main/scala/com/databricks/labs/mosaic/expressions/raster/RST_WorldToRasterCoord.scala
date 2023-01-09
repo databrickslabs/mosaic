@@ -21,8 +21,8 @@ case class RST_WorldToRasterCoord(
 
     /** Returns the world coordinate of the raster. */
     override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
-        val xGeo = arg1.asInstanceOf[Int]
-        val yGeo = arg2.asInstanceOf[Int]
+        val xGeo = arg1.asInstanceOf[Double]
+        val yGeo = arg2.asInstanceOf[Double]
         val gt = raster.getRaster.GetGeoTransform()
 
         val (x, y) = rasterAPI.fromWorldCoord(gt, xGeo, yGeo)

@@ -60,6 +60,9 @@ case class MosaicRegistry(registry: FunctionRegistry, database: Option[String] =
               expressionInfoVal,
               builderVal
             )
+        } match {
+            case scala.util.Success(_) => ()
+            case scala.util.Failure(e) => throw new Exception(s"Failed to register expression: ${e.getMessage}")
         }
     }
 

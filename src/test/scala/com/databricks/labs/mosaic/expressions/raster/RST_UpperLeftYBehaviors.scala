@@ -39,7 +39,7 @@ trait RST_UpperLeftYBehaviors extends QueryTest {
         result should be > 0
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_upperlefty(path, 1, 1) from source
+                                                     |select rst_upperlefty() from source
                                                      |""".stripMargin)
 
     }

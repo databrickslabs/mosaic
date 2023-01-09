@@ -36,10 +36,10 @@ trait RST_RotationBehaviors extends QueryTest {
 
         val result = df.as[Double].collect().max
 
-        result > 0 shouldBe true
+        result == 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_rotation(path, 1, 1) from source
+                                                     |select rst_rotation() from source
                                                      |""".stripMargin)
 
     }

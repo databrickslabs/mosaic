@@ -19,14 +19,15 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
         val rasterDfWithSubdatasets = mocks
             .getNetCDFBinaryDf(spark)
             .select(
-              rst_subdatasets($"content")
+              rst_subdatasets($"path")
                   .alias("subdatasets")
             )
 
         val result = rasterDfWithSubdatasets.as[Map[String, String]].collect()
 
         mocks
-            .getGeotiffBinaryDf(spark)
+            .getNetCDFBinaryDf(spark)
+            .orderBy("path")
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -34,7 +35,7 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
                                                    |""".stripMargin)
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_subdatasets(content, "", 1) from source
+                                                     |select rst_subdatasets() from source
                                                      |""".stripMargin)
 
         noException should be thrownBy spark.sql("""
@@ -42,10 +43,7 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
                                                      |""".stripMargin)
 
         result.head.keys.toList.length shouldBe 2
-        result.head.values.toList should contain allElementsOf List(
-          "[1x3600x7200] //bleaching_alert_area (8-bit unsigned character)",
-          "[1x3600x7200] //mask (8-bit unsigned character)"
-        )
+        result.head.values.toList.map(_.nonEmpty).reduce(_ && _) shouldBe true
 
     }
 

@@ -376,6 +376,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_BandMetaData](expressionConfig)
         mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
         mosaicRegistry.registerExpression[RST_IsEmpty](expressionConfig)
+        mosaicRegistry.registerExpression[RST_MemSize](expressionConfig)
         mosaicRegistry.registerExpression[RST_MetaData](expressionConfig)
         mosaicRegistry.registerExpression[RST_NumBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_PixelWidth](expressionConfig)

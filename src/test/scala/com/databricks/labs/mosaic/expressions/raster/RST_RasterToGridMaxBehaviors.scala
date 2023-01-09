@@ -18,15 +18,15 @@ trait RST_RasterToGridMaxBehaviors extends QueryTest {
         import sc.implicits._
 
         val df = mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_rastertogridmax($"path"))
             .select("result")
             .select(explode($"result").as("result"))
             .select(explode($"result").as("result"))
-            .select($"result".getItem("value").as("result"))
+            .select($"result".getItem("measure").as("result"))
 
         mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -34,7 +34,7 @@ trait RST_RasterToGridMaxBehaviors extends QueryTest {
                                                    |""".stripMargin)
 
         noException should be thrownBy mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_rastertogridmax("/dummy/path"))
             .select("result")
 
@@ -43,7 +43,7 @@ trait RST_RasterToGridMaxBehaviors extends QueryTest {
         result > 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_rastertogridmax(path, 1, 1) from source
+                                                     |select rst_rastertogridmax() from source
                                                      |""".stripMargin)
 
     }

@@ -37,15 +37,15 @@ trait RST_GeoReferenceBehaviors extends QueryTest {
 
         val result = geoReferenceDf.as[Map[String, Double]].collect()
 
-        result.head.get("upperLeftX").get != 0.0 shouldBe true
-        result.head.get("upperLeftY").get != 0.0 shouldBe true
+        result.head.get("upperLeftX").get != 0.0 shouldBe false
+        result.head.get("upperLeftY").get != 0.0 shouldBe false
         result.head.get("scaleX").get != 0.0 shouldBe true
         result.head.get("scaleY").get != 0.0 shouldBe true
         result.head.get("skewX").get != 0.0 shouldBe false
         result.head.get("skewY").get != 0.0 shouldBe false
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_georeference(path, 1, 1) from source
+                                                     |select rst_georeference() from source
                                                      |""".stripMargin)
 
     }

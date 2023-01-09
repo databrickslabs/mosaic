@@ -17,12 +17,12 @@ trait RST_SRIDBehaviors extends QueryTest {
         import sc.implicits._
 
         val df = mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_srid($"path"))
             .select("result")
 
         mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -30,7 +30,7 @@ trait RST_SRIDBehaviors extends QueryTest {
                                                    |""".stripMargin)
 
         noException should be thrownBy mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_srid("/dummy/path"))
             .select("result")
 
@@ -39,7 +39,7 @@ trait RST_SRIDBehaviors extends QueryTest {
         result > 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_srid(path, 1, 1) from source
+                                                     |select rst_srid() from source
                                                      |""".stripMargin)
 
     }

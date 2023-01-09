@@ -17,12 +17,12 @@ trait RST_NumBandsBehaviors extends QueryTest {
         import sc.implicits._
 
         val df = mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_numbands($"path"))
             .select("result")
 
         mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -30,16 +30,16 @@ trait RST_NumBandsBehaviors extends QueryTest {
                                                    |""".stripMargin)
 
         noException should be thrownBy mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_numbands("/dummy/path"))
             .select("result")
 
-        val result = df.as[Int].collect()
+        val result = df.as[Int].collect().max
 
-        result.head should be > 0
+        result > 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_numbands(path, 1, 1) from source
+                                                     |select rst_numbands() from source
                                                      |""".stripMargin)
 
     }

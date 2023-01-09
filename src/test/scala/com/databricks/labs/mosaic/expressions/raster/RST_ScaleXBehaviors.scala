@@ -39,7 +39,7 @@ trait RST_ScaleXBehaviors extends QueryTest {
         result > 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_scalex(path, 1, 1) from source
+                                                     |select rst_scalex() from source
                                                      |""".stripMargin)
 
     }

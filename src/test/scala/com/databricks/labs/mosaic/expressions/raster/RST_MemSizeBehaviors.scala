@@ -39,7 +39,7 @@ trait RST_MemSizeBehaviors extends QueryTest {
         result.head should be > 0L
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_memsize(path, 1, 1) from source
+                                                     |select rst_memsize() from source
                                                      |""".stripMargin)
 
     }

@@ -12,7 +12,7 @@ import org.apache.spark.sql.types.IntegerType
 case class RST_RasterToGridCount(
     path: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends RasterToGridExpression[RST_RasterToGridCount, Double](
+) extends RasterToGridExpression[RST_RasterToGridCount, Int](
       path,
       IntegerType,
       expressionConfig
@@ -21,7 +21,7 @@ case class RST_RasterToGridCount(
       with CodegenFallback {
 
     /** Returns the number of cells in the raster. */
-    override def valuesCombiner(values: Seq[Double]): Double = values.length
+    override def valuesCombiner(values: Seq[Double]): Int = values.length
 
 }
 

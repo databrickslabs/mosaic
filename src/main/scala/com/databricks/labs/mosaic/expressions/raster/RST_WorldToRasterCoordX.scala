@@ -7,6 +7,7 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.types.IntegerType
 
 /** Returns the x coordinate of the raster. */
 case class RST_WorldToRasterCoordX(
@@ -14,13 +15,13 @@ case class RST_WorldToRasterCoordX(
     x: Expression,
     y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_WorldToRasterCoordX](path, x, y, PixelCoordsType, expressionConfig)
+) extends Raster2ArgExpression[RST_WorldToRasterCoordX](path, x, y, IntegerType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /** Returns the x coordinate of the raster. */
     override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
-        val xGeo = arg1.asInstanceOf[Int]
+        val xGeo = arg1.asInstanceOf[Double]
         val gt = raster.getRaster.GetGeoTransform()
         rasterAPI.fromWorldCoord(gt, xGeo, 0)._1
     }

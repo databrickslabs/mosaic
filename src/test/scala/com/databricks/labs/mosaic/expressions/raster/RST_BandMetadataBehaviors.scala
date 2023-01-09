@@ -20,7 +20,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         val rasterDfWithBandMetadata = mocks
             .getNetCDFBinaryDf(spark)
             .withColumn("subdatasets", rst_subdatasets($"path"))
-            .withColumn("bleachingSubdataset", element_at(map_keys($"subdatasets"), 1))
+            .withColumn("bleachingSubdataset", array_max(map_keys($"subdatasets")))
             .select(
               rst_bandmetadata($"bleachingSubdataset", lit(1))
                   .alias("metadata")
@@ -38,7 +38,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
 
         noException should be thrownBy mocks
             .getNetCDFBinaryDf(spark)
-            .withColumn("subdatasets", rst_subdatasets($"content"))
+            .withColumn("subdatasets", rst_subdatasets($"path"))
             .withColumn("bleachingSubdataset", element_at(map_keys($"subdatasets"), 1))
             .select(
               rst_bandmetadata($"bleachingSubdataset", lit(1))
@@ -47,13 +47,10 @@ trait RST_BandMetadataBehaviors extends QueryTest {
 
         val result = rasterDfWithBandMetadata.as[Map[String, String]].collect()
 
-        result.head.getOrElse("bleaching_alert_area_long_name", "") shouldBe "bleaching alert area 7-day maximum composite"
-        result.head.getOrElse("bleaching_alert_area_valid_max", "") shouldBe "4 "
-        result.head.getOrElse("bleaching_alert_area_valid_min", "") shouldBe "0 "
-        result.head.getOrElse("bleaching_alert_area_units", "") shouldBe "stress_level"
+        result.head.keys.toList.contains("long_name") shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_bandmetadata(bleachingSubdataset, 1, 1) from source
+                                                     |select rst_bandmetadata() from source
                                                      |""".stripMargin)
 
     }

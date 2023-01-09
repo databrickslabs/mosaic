@@ -2,7 +2,7 @@ package org.apache.spark.sql.test
 
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.TestMosaicGDAL
-import com.databricks.labs.mosaic.MOSAIC_GDAL_NATIVE
+import com.databricks.labs.mosaic.{MOSAIC_GDAL_NATIVE, MOSAIC_RASTER_CHECKPOINT}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
@@ -18,6 +18,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     override def createSparkSession: TestSparkSession = {
         val conf = sparkConf
+        conf.set(MOSAIC_RASTER_CHECKPOINT, Files.createTempDirectory("mosaic").toString)
         SparkSession.cleanupAnyExistingSession()
         val session = new TestSparkSession(conf)
         if (conf.get(MOSAIC_GDAL_NATIVE, "false").toBoolean) {

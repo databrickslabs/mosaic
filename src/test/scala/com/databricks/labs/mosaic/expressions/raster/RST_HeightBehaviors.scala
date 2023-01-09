@@ -39,7 +39,7 @@ trait RST_HeightBehaviors extends QueryTest {
         result.head should be > 0
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_height(path, 1, 1) from source
+                                                     |select rst_height() from source
                                                      |""".stripMargin)
 
     }

@@ -10,6 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 import org.gdal.osr.SpatialReference
 
+import scala.util.Try
+
 /** Returns the SRID of the raster. */
 case class RST_SRID(path: Expression, expressionConfig: MosaicExpressionConfig)
     extends RasterExpression[RST_SRID](path, IntegerType, expressionConfig)
@@ -20,8 +22,8 @@ case class RST_SRID(path: Expression, expressionConfig: MosaicExpressionConfig)
     override def rasterTransform(raster: MosaicRaster): Any = {
         // Reference: https://gis.stackexchange.com/questions/267321/extracting-epsg-from-a-raster-using-gdal-bindings-in-python
         val proj = new SpatialReference(raster.getRaster.GetProjection())
-        proj.AutoIdentifyEPSG()
-        proj.GetAttrValue("AUTHORITY", 1).toInt
+        Try(proj.AutoIdentifyEPSG())
+        Try(proj.GetAttrValue("AUTHORITY", 1).toInt).getOrElse(0)
     }
 
 }

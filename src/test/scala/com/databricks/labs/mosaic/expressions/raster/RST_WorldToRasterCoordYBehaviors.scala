@@ -36,12 +36,12 @@ trait RST_WorldToRasterCoordYBehaviors extends QueryTest {
             .withColumn("result", rst_worldtorastercoordy($"path", lit(0), lit(0)))
             .select("result")
 
-        val result = df.as[String].collect().head.length
+        val result = df.as[Double].collect().head
 
-        result should be > 0
+        result == 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_worldtorastercoordy(path, 1, 1, 2) from source
+                                                     |select rst_worldtorastercoordy() from source
                                                      |""".stripMargin)
 
     }

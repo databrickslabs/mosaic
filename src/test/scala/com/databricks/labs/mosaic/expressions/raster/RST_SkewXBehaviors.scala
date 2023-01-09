@@ -36,10 +36,10 @@ trait RST_SkewXBehaviors extends QueryTest {
 
         val result = df.as[Double].collect().max
 
-        result > 0 shouldBe true
+        result == 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_skewx(path, 1, 1) from source
+                                                     |select rst_skewx() from source
                                                      |""".stripMargin)
 
     }

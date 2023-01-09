@@ -41,7 +41,7 @@ trait RST_WorldToRasterCoordXBehaviors extends QueryTest {
         result should be > 0
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_worldtorastercoordx(path, 1, 1, 2) from source
+                                                     |select rst_worldtorastercoordx() from source
                                                      |""".stripMargin)
 
     }

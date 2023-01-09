@@ -20,7 +20,7 @@ trait RST_WorldToRasterCoordBehaviors extends QueryTest {
         val df = mocks
             .getNetCDFBinaryDf(spark)
             .withColumn("result", rst_worldtorastercoord($"path", 0, 0))
-            .select("result")
+            .select($"result".getItem("x").as("x"), $"result".getItem("y").as("y"))
 
         mocks
             .getNetCDFBinaryDf(spark)
@@ -36,12 +36,10 @@ trait RST_WorldToRasterCoordBehaviors extends QueryTest {
             .withColumn("result", rst_worldtorastercoord($"path", lit(0), lit(0)))
             .select("result")
 
-        val result = df.as[String].collect().head.length
-
-        result should be > 0
+        noException should be thrownBy df.as[(Int, Int)].collect().head
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_worldtorastercoord(path, 1, 1, 2) from source
+                                                     |select rst_worldtorastercoord() from source
                                                      |""".stripMargin)
 
     }

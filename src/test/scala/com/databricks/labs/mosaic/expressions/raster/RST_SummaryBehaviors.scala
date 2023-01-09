@@ -39,7 +39,7 @@ trait RST_SummaryBehaviors extends QueryTest {
         result should be > 0
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_summary(path, 1, 1) from source
+                                                     |select rst_summary() from source
                                                      |""".stripMargin)
 
     }

@@ -24,7 +24,7 @@ case class RST_Height(path: Expression, expressionConfig: MosaicExpressionConfig
 /** Expression info required for the expression registration for spark SQL. */
 object RST_Height extends WithExpressionInfo {
 
-    override def name: String = "rst_width"
+    override def name: String = "rst_height"
 
     override def usage: String = "_FUNC_(expr1) - Returns height of the raster."
 

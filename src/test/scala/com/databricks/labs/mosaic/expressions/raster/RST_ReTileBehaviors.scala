@@ -18,12 +18,12 @@ trait RST_ReTileBehaviors extends QueryTest {
         import sc.implicits._
 
         val df = mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_retile($"path", lit(100), lit(100)))
             .select("result")
 
         mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -31,7 +31,7 @@ trait RST_ReTileBehaviors extends QueryTest {
                                                    |""".stripMargin)
 
         noException should be thrownBy mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_retile($"path", 100, 100))
             .withColumn("result", rst_retile("/dummy/path", 100, 100))
             .select("result")
@@ -41,7 +41,7 @@ trait RST_ReTileBehaviors extends QueryTest {
         result should be > 0
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_retile(path, 1, 1, 20) from source
+                                                     |select rst_retile() from source
                                                      |""".stripMargin)
 
     }

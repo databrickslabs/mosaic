@@ -18,15 +18,15 @@ trait RST_RasterToGridCountBehaviors extends QueryTest {
         import sc.implicits._
 
         val df = mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_rastertogridcount($"path"))
             .select("result")
             .select(explode($"result").as("result"))
             .select(explode($"result").as("result"))
-            .select($"result".getItem("value").as("result"))
+            .select($"result".getItem("measure").as("result"))
 
         mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -34,7 +34,7 @@ trait RST_RasterToGridCountBehaviors extends QueryTest {
                                                    |""".stripMargin)
 
         noException should be thrownBy mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_rastertogridcount("/dummy/path"))
             .select("result")
 
@@ -43,7 +43,7 @@ trait RST_RasterToGridCountBehaviors extends QueryTest {
         result should be > 0
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_rastertogridcount(path, 1, 1) from source
+                                                     |select rst_rastertogridcount() from source
                                                      |""".stripMargin)
 
     }

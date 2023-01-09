@@ -8,6 +8,7 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.gdal.GDALInfo
 import org.gdal.gdal.InfoOptions
 
@@ -27,7 +28,7 @@ case class RST_Summary(path: Expression, expressionConfig: MosaicExpressionConfi
         vector.add("-json")
         val infoOptions = new InfoOptions(vector)
         val gdalInfo = GDALInfo(raster.getRaster, infoOptions)
-        gdalInfo
+        UTF8String.fromString(gdalInfo)
     }
 
 }
@@ -35,7 +36,7 @@ case class RST_Summary(path: Expression, expressionConfig: MosaicExpressionConfi
 /** Expression info required for the expression registration for spark SQL. */
 object RST_Summary extends WithExpressionInfo {
 
-    override def name: String = "rst_subdatasets"
+    override def name: String = "rst_summary"
 
     override def usage: String = "_FUNC_(expr1) - Generates GDAL summary for the raster."
 

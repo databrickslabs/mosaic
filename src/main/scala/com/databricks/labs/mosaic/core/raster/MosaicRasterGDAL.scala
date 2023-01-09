@@ -12,6 +12,7 @@ import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util.Try
 
 /** GDAL implementation of the MosaicRaster trait. */
+//noinspection DuplicatedCode
 case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extends MosaicRaster(path, memSize) {
 
     import com.databricks.labs.mosaic.core.raster.MosaicRasterGDAL.toWorldCoord
@@ -82,8 +83,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
     def spatialRef: SpatialReference = raster.GetSpatialRef()
 
     override def cleanUp(): Unit = {
-        raster.delete()
-        gdal.Unlink(path)
+        /** Nothing to clean up = NOOP */
     }
 
     override def transformBands[T](f: MosaicRasterBand => T): Seq[T] = for (i <- 1 to numBands) yield f(getBand(i))
@@ -110,7 +110,8 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
       *   A path to the written raster.
       */
     override def saveCheckpoint(id: Long, extent: (Int, Int, Int, Int), mask: Seq[Boolean], checkpointPath: String): String = {
-        val outPath = s"/vsimem/raster_$id"
+        val outPath = s"../../tmp/raster_${id.toString.replace("-", "1")}.tiff"
+        Files.createDirectories(Paths.get(outPath).getParent)
         val (xmin, ymin, xmax, ymax) = extent
         val xSize = xmax - xmin
         val ySize = ymax - ymin
@@ -138,6 +139,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
 
 }
 
+//noinspection ZeroIndexToHead
 object MosaicRasterGDAL extends RasterReader {
 
     def apply(dataset: Dataset, path: String, memSize: Long): MosaicRasterGDAL = new MosaicRasterGDAL(dataset, path, memSize)
@@ -155,8 +157,8 @@ object MosaicRasterGDAL extends RasterReader {
       *   A MosaicRaster object.
       */
     override def readRaster(inPath: String): MosaicRaster = {
-        val path = inPath.replace("dbfs:/", "/dbfs/")
-        val dataset = gdal.Open(path)
+        val path = inPath.replace("dbfs:/", "/dbfs/").replace("file:/", "/")
+        val dataset = gdal.Open(path, GA_ReadOnly)
         val size = new File(path).length()
         MosaicRasterGDAL(dataset, path, size)
     }

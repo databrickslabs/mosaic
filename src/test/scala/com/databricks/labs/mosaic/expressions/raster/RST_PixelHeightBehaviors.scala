@@ -39,7 +39,7 @@ trait RST_PixelHeightBehaviors extends QueryTest {
         result.head > 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_pixelheight(path, 1, 1) from source
+                                                     |select rst_pixelheight() from source
                                                      |""".stripMargin)
 
     }

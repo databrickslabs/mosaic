@@ -18,15 +18,15 @@ trait RST_RasterToGridMinBehaviors extends QueryTest {
         import sc.implicits._
 
         val df = mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_rastertogridmin($"path"))
             .select("result")
             .select(explode($"result").as("result"))
             .select(explode($"result").as("result"))
-            .select($"result".getItem("value").as("result"))
+            .select($"result".getItem("measure").as("result"))
 
         mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -34,7 +34,7 @@ trait RST_RasterToGridMinBehaviors extends QueryTest {
                                                    |""".stripMargin)
 
         noException should be thrownBy mocks
-            .getNetCDFBinaryDf(spark)
+            .getGeotiffBinaryDf(spark)
             .withColumn("result", rst_rastertogridmin("/dummy/path"))
             .select("result")
 
@@ -43,7 +43,7 @@ trait RST_RasterToGridMinBehaviors extends QueryTest {
         result > 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_rastertogridmin(path, 1, 1) from source
+                                                     |select rst_rastertogridmin() from source
                                                      |""".stripMargin)
 
     }
