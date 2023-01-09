@@ -22,7 +22,7 @@ class RST_BandMetadataTest extends QueryTest with SharedSparkSessionGDAL with RS
 
     // These tests are not index system nor geometry API specific.
     // Only testing one pairing is sufficient.
-    test("Testing ST_BandMetadataTest with manual GDAL registration (H3, JTS).") {
+    test("Testing RST_BandMetadata with manual GDAL registration (H3, JTS).") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
             bandMetadataBehavior(H3IndexSystem, JTS)

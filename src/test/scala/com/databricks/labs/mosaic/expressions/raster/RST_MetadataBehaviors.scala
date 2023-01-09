@@ -5,7 +5,6 @@ import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.functions.lit
 import org.scalatest.matchers.should.Matchers._
 
 trait RST_MetadataBehaviors extends QueryTest {
@@ -20,8 +19,7 @@ trait RST_MetadataBehaviors extends QueryTest {
         val rasterDfWithMetadata = mocks
             .getGeotiffBinaryDf(spark)
             .select(
-              rst_metadata($"content").alias("metadata"),
-              rst_metadata($"content", lit("")).alias("metadata_2")
+              rst_metadata($"path").alias("metadata")
             )
             .select("metadata")
 
@@ -32,11 +30,7 @@ trait RST_MetadataBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_metadata(content) from source
-                                                   |""".stripMargin)
-
-        noException should be thrownBy spark.sql("""
-                                                   |select rst_metadata(content, "") from source
+                                                   |select rst_metadata(path) from source
                                                    |""".stripMargin)
 
         result.head.getOrElse("SHORTNAME", "") shouldBe "MCD43A4"

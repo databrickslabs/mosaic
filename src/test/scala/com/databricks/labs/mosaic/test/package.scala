@@ -338,6 +338,11 @@ package object test {
             Files.readAllBytes(Paths.get(inFile.getPath))
         }
 
+        def filePath(resourcePath: String): String = {
+            val inFile = getClass.getResource(resourcePath)
+            Paths.get(inFile.getPath).toAbsolutePath.toString
+        }
+
         // noinspection ScalaCustomHdfsFormat
         def getBinaryDf(spark: SparkSession, resourcePath: String, pathGlobFilter: String): DataFrame =
             spark.read.format("binaryFile").option("pathGlobFilter", pathGlobFilter).load(resourcePath)

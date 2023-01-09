@@ -19,21 +19,21 @@ trait RST_BandMetadataBehaviors extends QueryTest {
 
         val rasterDfWithBandMetadata = mocks
             .getNetCDFBinaryDf(spark)
-            .withColumn("subdatasets", rst_subdatasets($"content"))
+            .withColumn("subdatasets", rst_subdatasets($"path"))
             .withColumn("bleachingSubdataset", element_at(map_keys($"subdatasets"), 1))
             .select(
-              rst_bandmetadata($"content", lit(1), $"bleachingSubdataset")
+              rst_bandmetadata($"bleachingSubdataset", lit(1))
                   .alias("metadata")
             )
 
         mocks
             .getNetCDFBinaryDf(spark)
-            .withColumn("subdatasets", rst_subdatasets($"content"))
+            .withColumn("subdatasets", rst_subdatasets($"path"))
             .withColumn("bleachingSubdataset", element_at(map_keys($"subdatasets"), 1))
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_bandmetadata(content, 1, bleachingSubdataset) from source
+                                                   |select rst_bandmetadata(bleachingSubdataset, 1) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy mocks
@@ -41,7 +41,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
             .withColumn("subdatasets", rst_subdatasets($"content"))
             .withColumn("bleachingSubdataset", element_at(map_keys($"subdatasets"), 1))
             .select(
-              rst_bandmetadata($"content", lit(1))
+              rst_bandmetadata($"bleachingSubdataset", lit(1))
                   .alias("metadata")
             )
 
@@ -53,7 +53,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         result.head.getOrElse("bleaching_alert_area_units", "") shouldBe "stress_level"
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_bandmetadata(content, 1, bleachingSubdataset, 1) from source
+                                                     |select rst_bandmetadata(bleachingSubdataset, 1, 1) from source
                                                      |""".stripMargin)
 
     }

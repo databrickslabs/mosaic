@@ -25,11 +25,19 @@ import scala.reflect.runtime.universe
 //noinspection DuplicatedCode
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI) extends Serializable with Logging {
 
+    // Make spark aware of the mosaic setup
+    private val spark = SparkSession.builder().getOrCreate()
+    spark.conf.set(MOSAIC_INDEX_SYSTEM, indexSystem.name)
+    spark.conf.set(MOSAIC_GEOMETRY_API, geometryAPI.name)
+    spark.conf.set(MOSAIC_RASTER_API, rasterAPI.name)
+
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 
     val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
 
     val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
+
+    val expressionConfig: MosaicExpressionConfig = MosaicExpressionConfig(spark)
 
     def setCellIdDataType(dataType: String): Unit =
         if (dataType == "string") {
@@ -87,6 +95,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         database: Option[String] = None
     ): Unit = {
         val registry = spark.sessionState.functionRegistry
+        val mosaicRegistry = MosaicRegistry(registry, database)
 
         /** IndexSystem and GeometryAPI Agnostic methods */
         registry.registerFunction(
@@ -364,21 +373,37 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         )
 
         /** RasterAPI dependent functions */
-        registry.registerFunction(
-          FunctionIdentifier("rst_metadata", database),
-          RST_MetaData.getExpressionInfo(database),
-          RST_MetaData.builder(rasterAPI.name)
-        )
-        registry.registerFunction(
-          FunctionIdentifier("rst_bandmetadata", database),
-          RST_BandMetaData.getExpressionInfo(database),
-          RST_BandMetaData.builder(rasterAPI.name)
-        )
-        registry.registerFunction(
-          FunctionIdentifier("rst_subdatasets", database),
-          RST_Subdatasets.getExpressionInfo(database),
-          RST_Subdatasets.builder(rasterAPI.name)
-        )
+        mosaicRegistry.registerExpression[RST_BandMetaData](expressionConfig)
+        mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
+        mosaicRegistry.registerExpression[RST_IsEmpty](expressionConfig)
+        mosaicRegistry.registerExpression[RST_MetaData](expressionConfig)
+        mosaicRegistry.registerExpression[RST_NumBands](expressionConfig)
+        mosaicRegistry.registerExpression[RST_PixelWidth](expressionConfig)
+        mosaicRegistry.registerExpression[RST_PixelHeight](expressionConfig)
+        mosaicRegistry.registerExpression[RST_RasterToGridAvg](expressionConfig)
+        mosaicRegistry.registerExpression[RST_RasterToGridMax](expressionConfig)
+        mosaicRegistry.registerExpression[RST_RasterToGridMin](expressionConfig)
+        mosaicRegistry.registerExpression[RST_RasterToGridMedian](expressionConfig)
+        mosaicRegistry.registerExpression[RST_RasterToGridCount](expressionConfig)
+        mosaicRegistry.registerExpression[RST_RasterToWorldCoord](expressionConfig)
+        mosaicRegistry.registerExpression[RST_RasterToWorldCoordX](expressionConfig)
+        mosaicRegistry.registerExpression[RST_RasterToWorldCoordY](expressionConfig)
+        mosaicRegistry.registerExpression[RST_ReTile](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Rotation](expressionConfig)
+        mosaicRegistry.registerExpression[RST_ScaleX](expressionConfig)
+        mosaicRegistry.registerExpression[RST_ScaleY](expressionConfig)
+        mosaicRegistry.registerExpression[RST_SkewX](expressionConfig)
+        mosaicRegistry.registerExpression[RST_SkewY](expressionConfig)
+        mosaicRegistry.registerExpression[RST_SRID](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Subdatasets](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
+        mosaicRegistry.registerExpression[RST_UpperLeftX](expressionConfig)
+        mosaicRegistry.registerExpression[RST_UpperLeftY](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Width](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Height](expressionConfig)
+        mosaicRegistry.registerExpression[RST_WorldToRasterCoord](expressionConfig)
+        mosaicRegistry.registerExpression[RST_WorldToRasterCoordX](expressionConfig)
+        mosaicRegistry.registerExpression[RST_WorldToRasterCoordY](expressionConfig)
 
         /** Aggregators */
         registry.registerFunction(
@@ -637,30 +662,69 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, geometryAPI.name))
 
         /** RasterAPI dependent functions */
-        def rst_metadata(raster: Column, path: Column): Column =
-            ColumnAdapter(
-              RST_MetaData(raster.expr, path.expr, rasterAPI.name)
-            )
-        def rst_metadata(raster: Column): Column =
-            ColumnAdapter(
-              RST_MetaData(raster.expr, Literal(""), rasterAPI.name)
-            )
-        def rst_subdatasets(raster: Column, path: Column): Column =
-            ColumnAdapter(
-              RST_Subdatasets(raster.expr, path.expr, rasterAPI.name)
-            )
-        def rst_subdatasets(raster: Column): Column =
-            ColumnAdapter(
-              RST_Subdatasets(raster.expr, Literal(""), rasterAPI.name)
-            )
-        def rst_bandmetadata(raster: Column, band: Column, path: Column): Column =
-            ColumnAdapter(
-              RST_BandMetaData(raster.expr, band.expr, path.expr, rasterAPI.name)
-            )
-        def rst_bandmetadata(raster: Column, band: Column): Column =
-            ColumnAdapter(
-              RST_BandMetaData(raster.expr, band.expr, Literal(""), rasterAPI.name)
-            )
+        def rst_bandmetadata(raster: Column, band: Column): Column = ColumnAdapter(RST_BandMetaData(raster.expr, band.expr, expressionConfig))
+        def rst_bandmetadata(raster: Column, band: Int): Column = ColumnAdapter(RST_BandMetaData(raster.expr, lit(band).expr, expressionConfig))
+        def rst_bandmetadata(raster: String, band: Int): Column = ColumnAdapter(RST_BandMetaData(lit(raster).expr, lit(band).expr, expressionConfig))
+        def rst_georeference(raster: Column): Column = ColumnAdapter(RST_GeoReference(raster.expr, expressionConfig))
+        def rst_georeference(raster: String): Column = ColumnAdapter(RST_GeoReference(lit(raster).expr, expressionConfig))
+        def rst_height(raster: Column): Column = ColumnAdapter(RST_Height(raster.expr, expressionConfig))
+        def rst_height(raster: String): Column = ColumnAdapter(RST_Height(lit(raster).expr, expressionConfig))
+        def rst_isempty(raster: Column): Column = ColumnAdapter(RST_IsEmpty(raster.expr, expressionConfig))
+        def rst_isempty(raster: String): Column = ColumnAdapter(RST_IsEmpty(lit(raster).expr, expressionConfig))
+        def rst_memsize(raster: Column): Column = ColumnAdapter(RST_MemSize(raster.expr, expressionConfig))
+        def rst_memsize(raster: String): Column = ColumnAdapter(RST_MemSize(lit(raster).expr, expressionConfig))
+        def rst_metadata(raster: Column): Column = ColumnAdapter(RST_MetaData(raster.expr, expressionConfig))
+        def rst_metadata(raster: String): Column = ColumnAdapter(RST_MetaData(lit(raster).expr, expressionConfig))
+        def rst_numbands(raster: Column): Column = ColumnAdapter(RST_NumBands(raster.expr, expressionConfig))
+        def rst_numbands(raster: String): Column = ColumnAdapter(RST_NumBands(lit(raster).expr, expressionConfig))
+        def rst_pixelheight(raster: Column): Column = ColumnAdapter(RST_PixelHeight(raster.expr, expressionConfig))
+        def rst_pixelheight(raster: String): Column = ColumnAdapter(RST_PixelHeight(lit(raster).expr, expressionConfig))
+        def rst_pixelwidth(raster: Column): Column = ColumnAdapter(RST_PixelWidth(raster.expr, expressionConfig))
+        def rst_pixelwidth(raster: String): Column = ColumnAdapter(RST_PixelWidth(lit(raster).expr, expressionConfig))
+        def rst_rastertogridavg(raster: Column): Column = ColumnAdapter(RST_RasterToGridAvg(raster.expr, expressionConfig))
+        def rst_rastertogridavg(raster: String): Column = ColumnAdapter(RST_RasterToGridAvg(lit(raster).expr, expressionConfig))
+        def rst_rastertogridcount(raster: Column): Column = ColumnAdapter(RST_RasterToGridCount(raster.expr, expressionConfig))
+        def rst_rastertogridcount(raster: String): Column = ColumnAdapter(RST_RasterToGridCount(lit(raster).expr, expressionConfig))
+        def rst_rastertogridmax(raster: Column): Column = ColumnAdapter(RST_RasterToGridMax(raster.expr, expressionConfig))
+        def rst_rastertogridmax(raster: String): Column = ColumnAdapter(RST_RasterToGridMax(lit(raster).expr, expressionConfig))
+        def rst_rastertogridmedian(raster: Column): Column = ColumnAdapter(RST_RasterToGridMedian(raster.expr, expressionConfig))
+        def rst_rastertogridmedian(raster: String): Column = ColumnAdapter(RST_RasterToGridMedian(lit(raster).expr, expressionConfig))
+        def rst_rastertogridmin(raster: Column): Column = ColumnAdapter(RST_RasterToGridMin(raster.expr, expressionConfig))
+        def rst_rastertogridmin(raster: String): Column = ColumnAdapter(RST_RasterToGridMin(lit(raster).expr, expressionConfig))
+        def rst_retile(raster: Column, tileWidth: Column, tileHeight: Column): Column = ColumnAdapter(RST_ReTile(raster.expr, tileWidth.expr, tileHeight.expr, expressionConfig))
+        def rst_retile(raster: Column, tileWidth: Int, tileHeight: Int): Column = ColumnAdapter(RST_ReTile(raster.expr, lit(tileWidth).expr, lit(tileHeight).expr, expressionConfig))
+        def rst_retile(raster: String, tileWidth: Int, tileHeight: Int): Column = ColumnAdapter(RST_ReTile(lit(raster).expr, lit(tileWidth).expr, lit(tileHeight).expr, expressionConfig))
+        def rst_rotation(raster: Column): Column = ColumnAdapter(RST_Rotation(raster.expr, expressionConfig))
+        def rst_rotation(raster: String): Column = ColumnAdapter(RST_Rotation(lit(raster).expr, expressionConfig))
+        def rst_scalex(raster: Column): Column = ColumnAdapter(RST_ScaleX(raster.expr, expressionConfig))
+        def rst_scalex(raster: String): Column = ColumnAdapter(RST_ScaleX(lit(raster).expr, expressionConfig))
+        def rst_scaley(raster: Column): Column = ColumnAdapter(RST_ScaleY(raster.expr, expressionConfig))
+        def rst_scaley(raster: String): Column = ColumnAdapter(RST_ScaleY(lit(raster).expr, expressionConfig))
+        def rst_skewx(raster: Column): Column = ColumnAdapter(RST_SkewX(raster.expr, expressionConfig))
+        def rst_skewx(raster: String): Column = ColumnAdapter(RST_SkewX(lit(raster).expr, expressionConfig))
+        def rst_skewy(raster: Column): Column = ColumnAdapter(RST_SkewY(raster.expr, expressionConfig))
+        def rst_skewy(raster: String): Column = ColumnAdapter(RST_SkewY(lit(raster).expr, expressionConfig))
+        def rst_srid(raster: Column): Column = ColumnAdapter(RST_SRID(raster.expr, expressionConfig))
+        def rst_srid(raster: String): Column = ColumnAdapter(RST_SRID(lit(raster).expr, expressionConfig))
+        def rst_subdatasets(raster: Column): Column = ColumnAdapter(RST_Subdatasets(raster.expr, expressionConfig))
+        def rst_subdatasets(raster: String): Column = ColumnAdapter(RST_Subdatasets(lit(raster).expr, expressionConfig))
+        def rst_summary(raster: Column): Column = ColumnAdapter(RST_Summary(raster.expr, expressionConfig))
+        def rst_summary(raster: String): Column = ColumnAdapter(RST_Summary(lit(raster).expr, expressionConfig))
+        def rst_upperleftx(raster: Column): Column = ColumnAdapter(RST_UpperLeftX(raster.expr, expressionConfig))
+        def rst_upperleftx(raster: String): Column = ColumnAdapter(RST_UpperLeftX(lit(raster).expr, expressionConfig))
+        def rst_upperlefty(raster: Column): Column = ColumnAdapter(RST_UpperLeftY(raster.expr, expressionConfig))
+        def rst_upperlefty(raster: String): Column = ColumnAdapter(RST_UpperLeftY(lit(raster).expr, expressionConfig))
+        def rst_width(raster: Column): Column = ColumnAdapter(RST_Width(raster.expr, expressionConfig))
+        def rst_width(raster: String): Column = ColumnAdapter(RST_Width(lit(raster).expr, expressionConfig))
+        def rst_worldtorastercoord(raster: Column, x: Column, y: Column): Column = ColumnAdapter(RST_WorldToRasterCoord(raster.expr, x.expr, y.expr, expressionConfig))
+        def rst_worldtorastercoord(raster: Column, x: Double, y: Double): Column = ColumnAdapter(RST_WorldToRasterCoord(raster.expr, lit(x).expr, lit(y).expr, expressionConfig))
+        def rst_worldtorastercoord(raster: String, x: Double, y: Double): Column = ColumnAdapter(RST_WorldToRasterCoord(lit(raster).expr, lit(x).expr, lit(y).expr, expressionConfig))
+        def rst_worldtorastercoordx(raster: Column, x: Column, y: Column): Column = ColumnAdapter(RST_WorldToRasterCoordX(raster.expr, x.expr, y.expr, expressionConfig))
+        def rst_worldtorastercoordx(raster: Column, x: Double, y: Double): Column = ColumnAdapter(RST_WorldToRasterCoordX(raster.expr, lit(x).expr, lit(y).expr, expressionConfig))
+        def rst_worldtorastercoordx(raster: String, x: Double, y: Double): Column = ColumnAdapter(RST_WorldToRasterCoordX(lit(raster).expr, lit(x).expr, lit(y).expr, expressionConfig))
+        def rst_worldtorastercoordy(raster: Column, x: Column, y: Column): Column = ColumnAdapter(RST_WorldToRasterCoordY(raster.expr, x.expr, y.expr, expressionConfig))
+        def rst_worldtorastercoordy(raster: Column, x: Double, y: Double): Column = ColumnAdapter(RST_WorldToRasterCoordY(raster.expr, lit(x).expr, lit(y).expr, expressionConfig))
+        def rst_worldtorastercoordy(raster: String, x: Double, y: Double): Column = ColumnAdapter(RST_WorldToRasterCoordY(lit(raster).expr, lit(x).expr, lit(y).expr, expressionConfig))
 
         /** Aggregators */
         def st_intersects_aggregate(leftIndex: Column, rightIndex: Column): Column =

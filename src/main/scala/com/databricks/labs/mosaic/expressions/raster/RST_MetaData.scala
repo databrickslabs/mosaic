@@ -1,25 +1,28 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
-import com.databricks.labs.mosaic.expressions.base.{RasterExpression, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types._
 
-case class RST_MetaData(inputRaster: Expression, path: Expression, rasterAPI: String)
-    extends RasterExpression[RST_MetaData](inputRaster, path, MapType(StringType, StringType), RasterAPI(rasterAPI))
+/** Returns the metadata of the raster. */
+case class RST_MetaData(path: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_MetaData](path, MapType(StringType, StringType), expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
+    /** Returns the metadata of the raster. */
     override def rasterTransform(raster: MosaicRaster): Any = {
         val metaData = raster.metadata
-        buildMap(metaData)
+        buildMapString(metaData)
     }
 }
 
+/** Expression info required for the expression registration for spark SQL. */
 object RST_MetaData extends WithExpressionInfo {
 
     override def name: String = "rst_metadata"
@@ -33,13 +36,8 @@ object RST_MetaData extends WithExpressionInfo {
           |        {"NC_GLOBAL#acknowledgement":"NOAA Coral Reef Watch Program","NC_GLOBAL#cdm_data_type":"Grid"}
           |  """.stripMargin
 
-    override def builder(args: Any*): FunctionBuilder = {
-        val rasterAPI = args.headOption.getOrElse("GDAL").toString
-        (exprs: Seq[Expression]) =>
-            exprs match {
-                case e if e.length == 1 => RST_MetaData(exprs(0), lit("").expr, rasterAPI)
-                case e if e.length == 2 => RST_MetaData(exprs(0), exprs(1), rasterAPI)
-            }
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_MetaData](1, expressionConfig)
     }
 
 }

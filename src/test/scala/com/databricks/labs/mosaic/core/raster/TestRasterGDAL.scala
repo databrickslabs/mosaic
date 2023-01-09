@@ -1,11 +1,9 @@
 package com.databricks.labs.mosaic.core.raster
 
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
-import com.databricks.labs.mosaic.test.mocks
 import com.databricks.labs.mosaic.GDAL
-import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.sql.extensions.MosaicGDAL
-import org.apache.spark.sql.catalyst.InternalRow
+import com.databricks.labs.mosaic.test.mocks.filePath
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.apache.spark.sql.SparkSessionExtensions
 import org.scalatest.matchers.should.Matchers._
@@ -26,9 +24,10 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         val sc = spark.sparkContext
         val numExecutors = sc.getExecutorMemoryStatus.size - 1
         val resultExecutors = Try(
-            sc.parallelize(1 to numExecutors)
-                .pipe(checkCmd).collect).getOrElse(Array[String]()
-        )
+          sc.parallelize(1 to numExecutors)
+              .pipe(checkCmd)
+              .collect
+        ).getOrElse(Array[String]())
         resultExecutors.length should not be 0
         resultExecutors.foreach(s => s should include("GDAL"))
     }
@@ -36,7 +35,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
     test("Read raster metadata from GeoTIFF file.") {
         assume(System.getProperty("os.name") == "Linux")
 
-        val testRaster = MosaicRasterGDAL.fromBytes(mocks.geotiffBytes)
+        val testRaster = MosaicRasterGDAL.readRaster(filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"))
         testRaster.xSize shouldBe 2400
         testRaster.ySize shouldBe 2400
         testRaster.numBands shouldBe 1
@@ -45,7 +44,6 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
         testRaster.getRaster.GetProjection()
         noException should be thrownBy testRaster.asInstanceOf[MosaicRasterGDAL].spatialRef
-        noException should be thrownBy testRaster.geoTransform(1, 1)
         an[Exception] should be thrownBy testRaster.getBand(-1)
         an[Exception] should be thrownBy testRaster.getBand(Int.MaxValue)
         testRaster.cleanUp()
@@ -54,7 +52,9 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
     test("Read raster metadata from a GRIdded Binary file.") {
         assume(System.getProperty("os.name") == "Linux")
 
-        val testRaster = MosaicRasterGDAL.fromBytes(mocks.gribBytes)
+        val testRaster = MosaicRasterGDAL.readRaster(
+          filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grib")
+        )
         testRaster.xSize shouldBe 14
         testRaster.ySize shouldBe 14
         testRaster.numBands shouldBe 14
@@ -67,10 +67,10 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
     test("Read raster metadata from a NetCDF file.") {
         assume(System.getProperty("os.name") == "Linux")
 
-        val superRaster = MosaicRasterGDAL.fromBytes(mocks.netcdfBytes)
+        val superRaster = MosaicRasterGDAL.readRaster(filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"))
         val subdatasetPath = superRaster.subdatasets.filterKeys(_.contains("bleaching_alert_area")).head._1
 
-        val testRaster = MosaicRasterGDAL.fromBytes(mocks.netcdfBytes, subdatasetPath)
+        val testRaster = MosaicRasterGDAL.readRaster(subdatasetPath)
 
         testRaster.xSize shouldBe 7200
         testRaster.ySize shouldBe 3600
@@ -89,8 +89,6 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         RasterAPI.apply("GDAL") shouldBe GDAL
         RasterAPI.getReader("GDAL") shouldBe MosaicRasterGDAL
         GDAL.name shouldBe "GDAL"
-        noException should be thrownBy GDAL.raster(Array.empty[Byte])
-        an[Exception] should be thrownBy GDAL.raster(InternalRow.empty)
         val extension = new MosaicGDAL()
         noException should be thrownBy extension.apply(new SparkSessionExtensions)
     }

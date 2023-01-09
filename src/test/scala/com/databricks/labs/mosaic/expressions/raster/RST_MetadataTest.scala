@@ -22,7 +22,7 @@ class RST_MetadataTest extends QueryTest with SharedSparkSessionGDAL with RST_Me
 
     // These tests are not index system nor geometry API specific.
     // Only testing one pairing is sufficient.
-    test("Testing ST_MetaData with manual GDAL registration (H3, JTS).") {
+    test("Testing RST_MetaData with manual GDAL registration (H3, JTS).") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
             metadataBehavior(H3IndexSystem, JTS)

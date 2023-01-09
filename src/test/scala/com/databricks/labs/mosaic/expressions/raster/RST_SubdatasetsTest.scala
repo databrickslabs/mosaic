@@ -22,7 +22,7 @@ class RST_SubdatasetsTest extends QueryTest with SharedSparkSessionGDAL with RST
 
     // These tests are not index system nor geometry API specific.
     // Only testing one pairing is sufficient.
-    test("Testing ST_Subdatasets with manual GDAL registration (H3, JTS).") {
+    test("Testing RST_Subdatasets with manual GDAL registration (H3, JTS).") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
             subdatasetsBehavior(H3IndexSystem, JTS)

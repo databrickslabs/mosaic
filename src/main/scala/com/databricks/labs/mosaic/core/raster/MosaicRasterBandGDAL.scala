@@ -6,12 +6,19 @@ import org.gdal.gdalconst.gdalconstConstants
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util._
 
+/** GDAL implementation of the MosaicRasterBand trait. */
 case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
 
     override def index: Int = id
 
     override def description: String = coerceNull(Try(band.GetDescription))
 
+    /**
+      * Get the band's metadata as a Map.
+      *
+      * @return
+      *   A Map of the band's metadata.
+      */
     override def metadata: Map[String, String] =
         Option(band.GetMetadata_Dict)
             .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
@@ -19,6 +26,13 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
 
     override def units: String = coerceNull(Try(band.GetUnitType))
 
+    /**
+      * Utility method to coerce a null value to an empty string.
+      * @param tryVal
+      *   The Try value to coerce.
+      * @return
+      *   The value of the Try or an empty string.
+      */
     def coerceNull(tryVal: Try[String]): String = tryVal.filter(_ != null).getOrElse("")
 
     override def dataType: Int = Try(band.getDataType).getOrElse(0)
@@ -44,6 +58,21 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
         noDataVal.head
     }
 
+    /**
+      * Get the band's pixels as a 2D array. GDAL reads a 1D array of pixels, so
+      * we need to reshape it to a 2D array.
+      *
+      * @param xOffset
+      *   The x offset to start reading from.
+      * @param yOffset
+      *   The y offset to start reading from.
+      * @param xSize
+      *   The number of pixels to read in the x direction.
+      * @param ySize
+      *   The number of pixels to read in the y direction.
+      * @return
+      *   A 2D array of pixels from the band.
+      */
     override def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Array[Double]] = {
         val flatArray = Array.ofDim[Double](xSize * ySize)
         (xSize, ySize) match {
@@ -68,6 +97,40 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
         Try(band.GetOffset(offset))
             .map(_ => offset.head.doubleValue())
             .getOrElse(0.0)
+    }
+
+    /**
+      * Reads band pixels and band mask pixels into a 2D array of doubles. If
+      * the mask pixels is set to 0.0 skip the pixel and use default value.
+      * @param f
+      *   the function to apply to each pixel.
+      * @param default
+      *   the default value to use if the pixel is noData.
+      * @tparam T
+      *   the return type of the function.
+      * @return
+      *   an array of the results of applying f to each pixel.
+      */
+    override def transformValues[T](f: (Int, Int, Double) => T, default: T = null): Seq[Seq[T]] = {
+        val maskBand = band.GetMaskBand()
+        val bandValues = Array.ofDim[Double](band.GetXSize() * band.GetYSize())
+        val maskValues = Array.ofDim[Byte](band.GetXSize() * band.GetYSize())
+
+        band.ReadRaster(0, 0, band.GetXSize(), band.GetYSize(), bandValues)
+        maskBand.ReadRaster(0, 0, band.GetXSize(), band.GetYSize(), maskValues)
+        band.FlushCache()
+        maskBand.FlushCache()
+
+        for (y <- 0 until band.GetYSize()) yield {
+            for (x <- 0 until band.GetXSize()) yield {
+                val index = y * band.GetXSize() + x
+                if (maskValues(index) == 0.0) {
+                    default
+                } else {
+                    f(x, y, bandValues(index))
+                }
+            }
+        }
     }
 
 }

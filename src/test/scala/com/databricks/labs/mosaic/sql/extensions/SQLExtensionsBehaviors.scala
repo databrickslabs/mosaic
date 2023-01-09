@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.sql.extensions
 
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.getHexRowsDf
 import org.apache.spark.sql.SparkSession
 import org.scalatest.flatspec.AnyFlatSpec
@@ -21,6 +20,8 @@ trait SQLExtensionsBehaviors { this: AnyFlatSpec =>
     }
 
     def mosaicGDAL(mosaicContext: => MosaicContext, spark: => SparkSession): Unit = {
+        import com.databricks.labs.mosaic.gdal.MosaicGDAL
+
         spark.sql("show functions") // triggers the gdal enable inject rule
         MosaicGDAL.isEnabled shouldBe true
     }

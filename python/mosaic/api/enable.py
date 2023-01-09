@@ -10,7 +10,7 @@ from mosaic.core.mosaic_context import MosaicContext
 from mosaic.utils.notebook_utils import NotebookUtils
 
 
-def enable_mosaic(spark: SparkSession, dbutils=None, install_gdal=False) -> None:
+def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     """
     Enable Mosaic functions.
 
@@ -24,8 +24,6 @@ def enable_mosaic(spark: SparkSession, dbutils=None, install_gdal=False) -> None
     dbutils : dbruntime.dbutils.DBUtils
             The dbutils object used for `display` and `displayHTML` functions.
             Optional, only applicable to Databricks users.
-    install_gdal : Boolean
-            Install Geospatial Data Abstraction Library onto cluster nodes?
 
     Returns
     -------
@@ -55,9 +53,6 @@ def enable_mosaic(spark: SparkSession, dbutils=None, install_gdal=False) -> None
     config.mosaic_context._context.register(
         spark._jsparkSession, optionModule.apply(None)
     )
-
-    if install_gdal:
-        config.mosaic_context.enable_gdal(spark)
 
     # Not yet added to the pyspark API
     with warnings.catch_warnings():

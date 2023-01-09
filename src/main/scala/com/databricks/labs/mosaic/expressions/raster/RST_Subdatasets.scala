@@ -1,31 +1,29 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
-import com.databricks.labs.mosaic.expressions.base.{RasterExpression, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
-case class RST_Subdatasets(inputRaster: Expression, path: Expression, rasterAPI: String)
-    extends RasterExpression[RST_Subdatasets](
-      inputRaster,
-      path,
-      MapType(keyType = StringType, valueType = StringType),
-      RasterAPI(rasterAPI)
-    )
+/** Returns the subdatasets of the raster. */
+case class RST_Subdatasets(path: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_Subdatasets](path, MapType(StringType, StringType), expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
+    /** Returns the subdatasets of the raster. */
     override def rasterTransform(raster: MosaicRaster): Any = {
         val subdatasets = raster.subdatasets
-        buildMap(subdatasets)
+        buildMapString(subdatasets)
     }
 
 }
 
-//noinspection ZeroIndexToHead
+/** Expression info required for the expression registration for spark SQL. */
 object RST_Subdatasets extends WithExpressionInfo {
 
     override def name: String = "rst_subdatasets"
@@ -40,17 +38,8 @@ object RST_Subdatasets extends WithExpressionInfo {
           |        "NETCDF:"ct5km_baa-max-7d_v3.1_20220101.nc":mask":"[1x3600x7200] mask (8-bit unsigned integer)"}
           |  """.stripMargin
 
-    override def builder(args: Any*): FunctionBuilder = {
-        val rasterAPI = args.headOption.getOrElse("GDAL").toString
-        (children: Seq[Expression]) => {
-            if (children.length > 2) {
-                throw new IllegalArgumentException(s"$name function requires 1 or 2 argument")
-            } else if (children.length == 2) {
-                RST_Subdatasets(children(0), children(1), rasterAPI)
-            } else {
-                RST_Subdatasets(children(0), Literal(""), rasterAPI)
-            }
-        }
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Subdatasets](1, expressionConfig)
     }
 
 }

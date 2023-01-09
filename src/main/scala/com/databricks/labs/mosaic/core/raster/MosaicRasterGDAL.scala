@@ -1,16 +1,20 @@
 package com.databricks.labs.mosaic.core.raster
 
 import org.gdal.gdal.{gdal, Dataset}
-import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
+import org.gdal.gdalconst.gdalconstConstants._
 import org.gdal.osr.SpatialReference
 import org.locationtech.proj4j.CRSFactory
 
-import java.util
+import java.io.File
+import java.nio.file.{Files, Paths}
+import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util.Try
-import scala.util.hashing.MurmurHash3
 
-case class MosaicRasterGDAL(raster: Dataset, path: String) extends MosaicRaster(path) {
+/** GDAL implementation of the MosaicRaster trait. */
+case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extends MosaicRaster(path, memSize) {
+
+    import com.databricks.labs.mosaic.core.raster.MosaicRasterGDAL.toWorldCoord
 
     val crsFactory: CRSFactory = new CRSFactory
 
@@ -53,10 +57,10 @@ case class MosaicRasterGDAL(raster: Dataset, path: String) extends MosaicRaster(
 
     // noinspection ZeroIndexToHead
     override def extent: Seq[Double] = {
-        val minx = geoTransformArray(0)
-        val maxy = geoTransformArray(3)
-        val maxx = minx + geoTransformArray(1) * xSize
-        val miny = maxy + geoTransformArray(5) * ySize
+        val minx = getGeoTransform(0)
+        val maxy = getGeoTransform(3)
+        val maxx = minx + getGeoTransform(1) * xSize
+        val miny = maxy + getGeoTransform(5) * ySize
         Seq(minx, miny, maxx, maxy)
     }
 
@@ -64,16 +68,16 @@ case class MosaicRasterGDAL(raster: Dataset, path: String) extends MosaicRaster(
 
     override def ySize: Int = raster.GetRasterYSize
 
-    def geoTransformArray: Seq[Double] = raster.GetGeoTransform()
+    def getGeoTransform: Array[Double] = raster.GetGeoTransform()
+
+    def getGeoTransform(extent: (Int, Int, Int, Int)): Array[Double] = {
+        val gt = getGeoTransform
+        val (xmin, _, _, ymax) = extent
+        val (xUpperLeft, yUpperLeft) = toWorldCoord(gt, xmin, ymax)
+        Array(xUpperLeft, gt(1), gt(2), yUpperLeft, gt(4), gt(5))
+    }
 
     override def getRaster: Dataset = this.raster
-
-    // noinspection ZeroIndexToHead
-    override def geoTransform(pixel: Int, line: Int): Seq[Double] = {
-        val Xp = geoTransformArray(0) + pixel * geoTransformArray(1) + line * geoTransformArray(2)
-        val Yp = geoTransformArray(3) + pixel * geoTransformArray(4) + line * geoTransformArray(5)
-        Array(Xp, Yp)
-    }
 
     def spatialRef: SpatialReference = raster.GetSpatialRef()
 
@@ -82,25 +86,144 @@ case class MosaicRasterGDAL(raster: Dataset, path: String) extends MosaicRaster(
         gdal.Unlink(path)
     }
 
+    override def transformBands[T](f: MosaicRasterBand => T): Seq[T] = for (i <- 1 to numBands) yield f(getBand(i))
+
+    /**
+      * Write the raster to a file. GDAL cannot write directly to dbfs. Raster
+      * is written to a local file first. "../../tmp/_" is used for the
+      * temporary file. The file is then copied to the checkpoint directory. The
+      * local copy is then deleted. Temporary files are written as GeoTiffs.
+      * Files with subdatasets are not supported. They should be flattened
+      * first.
+      *
+      * @param id
+      *   the id of the raster.
+      * @param extent
+      *   the extent to clip the raster to. This is used for writing out partial
+      *   rasters.
+      * @param mask
+      *   the mask to be applied to each band. The same mask is applied to all
+      *   bands.
+      * @param checkpointPath
+      *   the path to the checkpoint directory.
+      * @return
+      *   A path to the written raster.
+      */
+    override def saveCheckpoint(id: Long, extent: (Int, Int, Int, Int), mask: Seq[Boolean], checkpointPath: String): String = {
+        val outPath = s"/vsimem/raster_$id"
+        val (xmin, ymin, xmax, ymax) = extent
+        val xSize = xmax - xmin
+        val ySize = ymax - ymin
+        val outputDs = gdal.GetDriverByName("GTiff").Create(outPath, xSize, ySize, numBands, GDT_Float64)
+        for (i <- 1 until numBands) {
+            val band = getRaster.GetRasterBand(i)
+            val data = Array.ofDim[Double](xSize * ySize)
+            band.ReadRaster(xmin, ymin, xSize, ySize, data)
+            val outBand = outputDs.GetRasterBand(i)
+            val noDataValue = Array.ofDim[java.lang.Double](1)
+            band.GetNoDataValue(noDataValue)
+            outBand.SetNoDataValue(noDataValue(0))
+            val maskedData = data.zip(mask).map { case (v, m) => if (m) v else noDataValue(0).doubleValue() }
+            outBand.WriteRaster(0, 0, xSize, ySize, maskedData)
+            val maskBand = outBand.GetMaskBand()
+            maskBand.WriteRaster(0, 0, xSize, ySize, mask.map(if (_) 255 else 0).toArray)
+        }
+        outputDs.SetGeoTransform(getGeoTransform(extent))
+        outputDs.FlushCache()
+
+        val destinationPath = Paths.get(checkpointPath, s"raster_$id.tif")
+        Files.copy(Paths.get(outPath), destinationPath, REPLACE_EXISTING)
+        destinationPath.toAbsolutePath.toString.replace("dbfs:/", "/dbfs/")
+    }
+
 }
 
 object MosaicRasterGDAL extends RasterReader {
 
-    override def fromBytes(bytes: Array[Byte]): MosaicRaster = {
-        // We use both the hash code and murmur hash
-        // to ensure that the hash is unique.
-        val hashCode = util.Arrays.hashCode(bytes)
-        val murmur = MurmurHash3.arrayHash(bytes)
-        val virtualPath = s"/vsimem/$hashCode/$murmur".replace("-", "_")
-        fromBytes(bytes, virtualPath)
+    def apply(dataset: Dataset, path: String, memSize: Long): MosaicRasterGDAL = new MosaicRasterGDAL(dataset, path, memSize)
+
+    /**
+      * Reads a raster from a file system path. Reads a subdataset if the path
+      * is to a subdataset.
+      *
+      * @example
+      *   Raster: path = "file:///path/to/file.tif" Subdataset: path =
+      *   "file:///path/to/file.tif:subdataset"
+      * @param inPath
+      *   The path to the raster file.
+      * @return
+      *   A MosaicRaster object.
+      */
+    override def readRaster(inPath: String): MosaicRaster = {
+        val path = inPath.replace("dbfs:/", "/dbfs/")
+        val dataset = gdal.Open(path)
+        val size = new File(path).length()
+        MosaicRasterGDAL(dataset, path, size)
     }
 
-    def fromBytes(bytes: Array[Byte], path: String): MosaicRaster = {
-        gdal.FileFromMemBuffer(path, bytes)
-        val dataset = gdal.Open(path, GA_ReadOnly)
-        MosaicRasterGDAL(dataset, path)
+    /**
+      * Reads a raster band from a file system path. Reads a subdataset band if
+      * the path is to a subdataset.
+      *
+      * @example
+      *   Raster: path = "file:///path/to/file.tif" Subdataset: path =
+      *   "file:///path/to/file.tif:subdataset"
+      * @param path
+      *   The path to the raster file.
+      * @param bandIndex
+      *   The band index to read.
+      * @return
+      *   A MosaicRaster object.
+      */
+    override def readBand(path: String, bandIndex: Int): MosaicRasterBand = {
+        val raster = readRaster(path)
+        raster.getBand(bandIndex)
     }
 
-    def apply(dataset: Dataset, path: String): MosaicRasterGDAL = new MosaicRasterGDAL(dataset, path)
+    /**
+      * Take a geo transform matrix and x and y coordinates of a pixel and
+      * returns the x and y coors in the projection of the raster. As per GDAL
+      * documentation, the origin is the top left corner of the top left pixel
+      * @see
+      *   https://gdal.org/tutorials/raster_api_tut.html
+      *
+      * @param geoTransform
+      *   The geo transform matrix of the raster.
+      *
+      * @param x
+      *   The x coordinate of the pixel.
+      * @param y
+      *   The y coordinate of the pixel.
+      * @return
+      *   A tuple of doubles with the x and y coordinates in the projection of
+      *   the raster.
+      */
+    override def toWorldCoord(geoTransform: Seq[Double], x: Int, y: Int): (Double, Double) = {
+        val Xp = geoTransform(0) + x * geoTransform(1) + y * geoTransform(2)
+        val Yp = geoTransform(3) + x * geoTransform(4) + y * geoTransform(5)
+        (Xp, Yp)
+    }
+
+    /**
+      * Take a geo transform matrix and x and y coordinates of a point and
+      * returns the x and y coordinates of the raster pixel.
+      * @see
+      *   // Reference:
+      *   https://gis.stackexchange.com/questions/221292/retrieve-pixel-value-with-geographic-coordinate-as-input-with-gdal
+      *
+      * @param geoTransform
+      *   The geo transform matrix of the raster.
+      * @param xGeo
+      *   The x coordinate of the point.
+      * @param yGeo
+      *   The y coordinate of the point.
+      * @return
+      *   A tuple of integers with the x and y coordinates of the raster pixel.
+      */
+    override def fromWorldCoord(geoTransform: Seq[Double], xGeo: Double, yGeo: Double): (Int, Int) = {
+        val x = ((xGeo - geoTransform(0)) / geoTransform(1)).toInt
+        val y = ((yGeo - geoTransform(3)) / geoTransform(5)).toInt
+        (x, y)
+    }
 
 }

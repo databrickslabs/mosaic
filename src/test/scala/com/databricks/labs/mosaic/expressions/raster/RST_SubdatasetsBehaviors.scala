@@ -30,15 +30,15 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_subdatasets(content) from source
-                                                   |""".stripMargin)
-
-        noException should be thrownBy spark.sql("""
-                                                   |select rst_subdatasets(content, "") from source
+                                                   |select rst_subdatasets(path) from source
                                                    |""".stripMargin)
 
         an[Exception] should be thrownBy spark.sql("""
                                                      |select rst_subdatasets(content, "", 1) from source
+                                                     |""".stripMargin)
+
+        noException should be thrownBy spark.sql("""
+                                                     |select rst_subdatasets("dummy/path") from source
                                                      |""".stripMargin)
 
         result.head.keys.toList.length shouldBe 2

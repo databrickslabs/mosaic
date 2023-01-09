@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.functions
 
 import com.databricks.labs.mosaic.{H3, _}
 import com.databricks.labs.mosaic.core.index._
-import com.databricks.labs.mosaic.functions.auxiliary.BadIndexSystem
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.FunctionIdentifier
@@ -35,7 +34,6 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
             case BNGIndexSystem => mc.getIndexSystem.getCellIdDataType shouldEqual StringType
             case H3IndexSystem  => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
         }
-        an[Error] should be thrownBy MosaicContext.build(BadIndexSystem, geometryAPI)
     }
 
     def sqlRegistration(mosaicContext: MosaicContext): Unit = {
