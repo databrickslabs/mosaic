@@ -132,7 +132,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
         outputDs.SetGeoTransform(getGeoTransform(extent))
         outputDs.FlushCache()
 
-        val destinationPath = Paths.get(checkpointPath, s"raster_$id.tif")
+        val destinationPath = Paths.get(checkpointPath.replace("dbfs:/", "/dbfs/"), s"raster_$id.tif")
         Files.copy(Paths.get(outPath), destinationPath, REPLACE_EXISTING)
         destinationPath.toAbsolutePath.toString.replace("dbfs:/", "/dbfs/")
     }

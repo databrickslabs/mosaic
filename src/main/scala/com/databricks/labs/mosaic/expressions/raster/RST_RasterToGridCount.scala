@@ -11,9 +11,11 @@ import org.apache.spark.sql.types.IntegerType
 /** Returns the number of cells in the raster. */
 case class RST_RasterToGridCount(
     path: Expression,
+    resolution: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterToGridExpression[RST_RasterToGridCount, Int](
       path,
+      resolution,
       IntegerType,
       expressionConfig
     )

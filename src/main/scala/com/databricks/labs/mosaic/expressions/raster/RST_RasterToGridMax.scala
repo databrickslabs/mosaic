@@ -11,9 +11,11 @@ import org.apache.spark.sql.types.DoubleType
 /** Returns the maximum value of the raster in the grid cell. */
 case class RST_RasterToGridMax(
     path: Expression,
+    resolution: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterToGridExpression[RST_RasterToGridMax, Double](
       path,
+      resolution,
       DoubleType,
       expressionConfig
     )

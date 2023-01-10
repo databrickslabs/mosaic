@@ -19,7 +19,7 @@ trait RST_RasterToGridMedianBehaviors extends QueryTest {
 
         val df = mocks
             .getGeotiffBinaryDf(spark)
-            .withColumn("result", rst_rastertogridmedian($"path"))
+            .withColumn("result", rst_rastertogridmedian($"path", lit(3)))
             .select("result")
             .select(explode($"result").as("result"))
             .select(explode($"result").as("result"))
@@ -30,12 +30,12 @@ trait RST_RasterToGridMedianBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_rastertogridmedian(path) from source
+                                                   |select rst_rastertogridmedian(path, 3) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy mocks
             .getGeotiffBinaryDf(spark)
-            .withColumn("result", rst_rastertogridmedian("/dummy/path"))
+            .withColumn("result", rst_rastertogridmedian("/dummy/path", lit(3)))
             .select("result")
 
         val result = df.as[Double].collect().max
