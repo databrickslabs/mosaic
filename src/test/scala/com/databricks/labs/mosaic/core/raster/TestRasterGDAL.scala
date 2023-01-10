@@ -75,9 +75,9 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.xSize shouldBe 7200
         testRaster.ySize shouldBe 3600
         testRaster.numBands shouldBe 1
-        testRaster.proj4String shouldBe "" // gdal cannot correctly interpret NetCDF CRS
+        testRaster.proj4String shouldBe "+proj=longlat +a=6378137 +rf=298.2572 +no_defs"
         testRaster.SRID shouldBe 0
-        testRaster.extent shouldBe Seq(0d, 3600d, 7200d, 0d) // gdal returns bad extent for NetCDF
+        testRaster.extent shouldBe Seq(-180.00000610436345, -89.99999847369712, 180.00000610436345, 89.99999847369712)
 
         testRaster.cleanUp()
         superRaster.cleanUp()
