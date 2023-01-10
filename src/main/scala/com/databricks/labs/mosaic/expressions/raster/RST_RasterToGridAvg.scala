@@ -11,9 +11,11 @@ import org.apache.spark.sql.types.DoubleType
 /** Returns the average value of the raster within the grid cell. */
 case class RST_RasterToGridAvg(
     path: Expression,
+    resolution: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterToGridExpression[RST_RasterToGridAvg, Double](
       path,
+      resolution,
       DoubleType,
       expressionConfig
     )

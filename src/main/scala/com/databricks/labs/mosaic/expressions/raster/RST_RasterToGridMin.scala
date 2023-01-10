@@ -11,9 +11,11 @@ import org.apache.spark.sql.types.DoubleType
 /** Returns the minimum value of the raster in the grid cell. */
 case class RST_RasterToGridMin(
     path: Expression,
+    resolution: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterToGridExpression[RST_RasterToGridMin, Double](
       path,
+      resolution,
       DoubleType,
       expressionConfig
     )

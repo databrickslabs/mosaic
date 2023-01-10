@@ -30,9 +30,10 @@ import scala.reflect.ClassTag
   */
 abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     pathExpr: Expression,
+    resolution: Expression,
     measureType: DataType,
     expressionConfig: MosaicExpressionConfig
-) extends RasterExpression[T](pathExpr, RasterToGridType(expressionConfig.getCellIdType, measureType), expressionConfig)
+) extends Raster1ArgExpression[T](pathExpr, resolution, RasterToGridType(expressionConfig.getCellIdType, measureType), expressionConfig)
       with NullIntolerant
       with Serializable {
 
@@ -49,10 +50,11 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       * @return
       *   Sequence of (cellId, measure) of each band of the raster.
       */
-    override def rasterTransform(raster: MosaicRaster): Any = {
+    override def rasterTransform(raster: MosaicRaster, arg1: Any): Any = {
         val gt = raster.getRaster.GetGeoTransform()
+        val resolution = arg1.asInstanceOf[Int]
         val bandTransform = (band: MosaicRasterBand) => {
-            val results = band.transformValues[(Long, Double)](pixelTransformer(gt), (0L, -1.0))
+            val results = band.transformValues[(Long, Double)](pixelTransformer(gt, resolution), (0L, -1.0))
             results
                 .map(row => row.filter(_._1 != 0L))
                 .filterNot(_.isEmpty)
@@ -75,10 +77,10 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       */
     def valuesCombiner(values: Seq[Double]): P
 
-    private def pixelTransformer(gt: Seq[Double])(x: Int, y: Int, value: Double): (Long, Double) = {
+    private def pixelTransformer(gt: Seq[Double], resolution: Int)(x: Int, y: Int, value: Double): (Long, Double) = {
         val xGeo = gt(0) + x * gt(1) + y * gt(2)
         val yGeo = gt(3) + x * gt(4) + y * gt(5)
-        val cellID = indexSystem.pointToIndex(xGeo, yGeo, 4)
+        val cellID = indexSystem.pointToIndex(xGeo, yGeo, resolution)
         (cellID, value)
     }
 
