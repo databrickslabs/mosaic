@@ -47,7 +47,7 @@ object RST_RasterToGridAvg extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridAvg](1, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridAvg](2, expressionConfig)
     }
 
 }

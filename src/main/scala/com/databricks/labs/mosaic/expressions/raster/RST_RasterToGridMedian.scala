@@ -49,7 +49,7 @@ object RST_RasterToGridMedian extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridMedian](1, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridMedian](2, expressionConfig)
     }
 
 }

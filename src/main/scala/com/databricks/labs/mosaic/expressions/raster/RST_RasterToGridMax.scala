@@ -47,7 +47,7 @@ object RST_RasterToGridMax extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridMax](1, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridMax](2, expressionConfig)
     }
 
 }

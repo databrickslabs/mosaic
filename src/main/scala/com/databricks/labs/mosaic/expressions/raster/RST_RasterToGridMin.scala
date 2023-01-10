@@ -47,7 +47,7 @@ object RST_RasterToGridMin extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridMin](1, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridMin](2, expressionConfig)
     }
 
 }
