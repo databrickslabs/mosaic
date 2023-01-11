@@ -116,7 +116,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
         val xSize = xmax - xmin
         val ySize = ymax - ymin
         val outputDs = gdal.GetDriverByName("GTiff").Create(outPath, xSize, ySize, numBands, GDT_Float64)
-        for (i <- 1 until numBands) {
+        for (i <- 1 to numBands) {
             val band = getBand(i)
             val data = band.values(xmin, ymin, xSize, ySize)
             val maskData = band.maskValues(xmin, ymin, xSize, ySize)

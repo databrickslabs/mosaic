@@ -15,9 +15,8 @@ case class RST_RasterToWorldCoord(
     path: Expression,
     x: Expression,
     y: Expression,
-    outputType: DataType,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_RasterToWorldCoord](path, x, y, outputType, expressionConfig)
+) extends Raster2ArgExpression[RST_RasterToWorldCoord](path, x, y, StringType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -31,7 +30,7 @@ case class RST_RasterToWorldCoord(
 
         val geometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
         val point = geometryAPI.fromCoords(Seq(xGeo, yGeo))
-        geometryAPI.serialize(point, outputType)
+        geometryAPI.serialize(point, StringType)
     }
 
 }

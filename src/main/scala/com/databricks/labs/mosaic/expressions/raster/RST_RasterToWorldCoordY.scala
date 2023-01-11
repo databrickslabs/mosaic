@@ -11,7 +11,6 @@ import org.apache.spark.sql.types._
 
 /** Returns the world coordinates of the raster (x,y) pixel. */
 case class RST_RasterToWorldCoordY(
-    inputRaster: Expression,
     path: Expression,
     x: Expression,
     y: Expression,

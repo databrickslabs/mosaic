@@ -55,9 +55,6 @@ abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
     /** Cleans up the raster driver and references. */
     def cleanUp(): Unit
 
-    /** @return Returns the path to the raster file. */
-    def getPath: String = path
-
     /** @return Returns the amount of memory occupied by the file in bytes. */
     def getMemSize: Long = memSize
 

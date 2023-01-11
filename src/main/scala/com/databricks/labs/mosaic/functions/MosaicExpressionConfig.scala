@@ -16,7 +16,7 @@ import org.apache.spark.sql.types.DataType
   */
 case class MosaicExpressionConfig(configs: Map[String, String]) {
 
-    def upodateSparkConf(): Unit = {
+    def updateSparkConf(): Unit = {
         val spark = SparkSession.builder().getOrCreate()
         val sparkConf = spark.sparkContext.getConf
         configs.foreach { case (k, v) => sparkConf.set(k, v) }

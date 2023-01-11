@@ -10,6 +10,9 @@ package object raster {
     /** Datatype representing pixels in a raster. */
     val PixelCoordsType: DataType = StructType(Seq(StructField("x", IntegerType), StructField("y", IntegerType)))
 
+    /** Datatype representing pixels in a raster. */
+    val WorldCoordsType: DataType = StructType(Seq(StructField("x", DoubleType), StructField("y", DoubleType)))
+
     /**
       * Datatype representing a raster projected to a grid.
       * @param cellIDType
