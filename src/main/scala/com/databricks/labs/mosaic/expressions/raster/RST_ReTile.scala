@@ -20,7 +20,7 @@ case class RST_ReTile(
       with CodegenFallback {
 
     /** Returns a set of new rasters with the specified tile size (tileWidth x tileHeight). */
-    override def rasterGenerator(raster: MosaicRaster): Seq[(Long, MosaicRaster, (Int, Int, Int, Int), Seq[Boolean])] = {
+    override def rasterGenerator(raster: MosaicRaster): Seq[(Long, MosaicRaster, (Int, Int, Int, Int))] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
 
@@ -35,9 +35,8 @@ case class RST_ReTile(
             val yMin = y * tileHeightValue
             val xMax = Math.min(xMin + tileWidthValue, xSize)
             val yMax = Math.min(yMin + tileHeightValue, ySize)
-            val dummyMask = Seq.fill((xMax - xMin) * (yMax - yMin))(true)
             val id = Murmur3.hash64(s"${raster.toString}$xMin$yMin$xMax$yMax".getBytes)
-            (id, raster, (xMin, yMin, xMax, yMax), dummyMask)
+            (id, raster, (xMin, yMin, xMax, yMax))
         }
 
         tiles

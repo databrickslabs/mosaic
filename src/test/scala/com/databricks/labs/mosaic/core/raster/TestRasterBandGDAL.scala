@@ -24,9 +24,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         testBand.pixelValueToUnitValue(100) shouldBe 100e-4
 
         val testValues = testBand.values(1000, 1000, 100, 50)
-        testValues.length shouldBe 50
-        testValues.head.length shouldBe 100
-        testBand.values(0, 0, 0, 0).head.length shouldBe 0
+        testValues.length shouldBe 5000
 
         testRaster.cleanUp()
     }
@@ -44,8 +42,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         (testBand.pixelValueScale, testBand.pixelValueOffset) shouldBe (0d, 0d)
 
         val testValues = testBand.values(1, 1, 4, 5)
-        testValues.length shouldBe 5
-        testValues.head.length shouldBe 4
+        testValues.length shouldBe 20
 
         testRaster.cleanUp()
     }
@@ -64,8 +61,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
 
         val testValues = testBand.values(5000, 1000, 100, 10)
         noException should be thrownBy testBand.values
-        testValues.length shouldBe 10
-        testValues.head.length shouldBe 100
+        testValues.length shouldBe 1000
 
         testRaster.cleanUp()
         superRaster.cleanUp()

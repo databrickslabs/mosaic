@@ -59,8 +59,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
     }
 
     /**
-      * Get the band's pixels as a 2D array. GDAL reads a 1D array of pixels, so
-      * we need to reshape it to a 2D array.
+      * Get the band's pixels as a 1D array.
       *
       * @param xOffset
       *   The x offset to start reading from.
@@ -73,13 +72,38 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
       * @return
       *   A 2D array of pixels from the band.
       */
-    override def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Array[Double]] = {
+    override def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
         val flatArray = Array.ofDim[Double](xSize * ySize)
         (xSize, ySize) match {
-            case (0, 0) => Array(flatArray)
+            case (0, 0) => Array.empty[Double]
             case _      =>
                 band.ReadRaster(xOffset, yOffset, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float64, flatArray, 0, 0)
-                flatArray.grouped(xSize).toArray
+                flatArray
+        }
+    }
+
+    /**
+     * Get the band's pixels as a 1D array.
+     *
+     * @param xOffset
+     *   The x offset to start reading from.
+     * @param yOffset
+     *   The y offset to start reading from.
+     * @param xSize
+     *   The number of pixels to read in the x direction.
+     * @param ySize
+     *   The number of pixels to read in the y direction.
+     * @return
+     *   A 2D array of pixels from the band.
+     */
+    override def maskValues(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
+        val flatArray = Array.ofDim[Double](xSize * ySize)
+        val maskBand = band.GetMaskBand
+        (xSize, ySize) match {
+            case (0, 0) => Array.empty[Double]
+            case _      =>
+                maskBand.ReadRaster(xOffset, yOffset, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float64, flatArray, 0, 0)
+                flatArray
         }
     }
 

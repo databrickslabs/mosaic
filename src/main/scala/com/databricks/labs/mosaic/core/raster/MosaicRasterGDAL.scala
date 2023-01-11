@@ -109,7 +109,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
       * @return
       *   A path to the written raster.
       */
-    override def saveCheckpoint(id: Long, extent: (Int, Int, Int, Int), mask: Seq[Boolean], checkpointPath: String): String = {
+    override def saveCheckpoint(id: Long, extent: (Int, Int, Int, Int), checkpointPath: String): String = {
         val outPath = s"../../tmp/raster_${id.toString.replace("-", "1")}.tiff"
         Files.createDirectories(Paths.get(outPath).getParent)
         val (xmin, ymin, xmax, ymax) = extent
@@ -117,17 +117,19 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
         val ySize = ymax - ymin
         val outputDs = gdal.GetDriverByName("GTiff").Create(outPath, xSize, ySize, numBands, GDT_Float64)
         for (i <- 1 until numBands) {
-            val band = getRaster.GetRasterBand(i)
-            val data = Array.ofDim[Double](xSize * ySize)
-            band.ReadRaster(xmin, ymin, xSize, ySize, data)
+            val band = getBand(i)
+            val data = band.values(xmin, ymin, xSize, ySize)
+            val maskData = band.maskValues(xmin, ymin, xSize, ySize)
+            val noDataValue = getBand(i).noDataValue
+
             val outBand = outputDs.GetRasterBand(i)
-            val noDataValue = Array.ofDim[java.lang.Double](1)
-            band.GetNoDataValue(noDataValue)
-            outBand.SetNoDataValue(noDataValue(0))
-            val maskedData = data.zip(mask).map { case (v, m) => if (m) v else noDataValue(0).doubleValue() }
-            outBand.WriteRaster(0, 0, xSize, ySize, maskedData)
             val maskBand = outBand.GetMaskBand()
-            maskBand.WriteRaster(0, 0, xSize, ySize, mask.map(if (_) 255 else 0).toArray)
+
+            outBand.SetNoDataValue(noDataValue)
+            outBand.WriteRaster(0, 0, xSize, ySize, data)
+            maskBand.WriteRaster(0, 0, xSize, ySize, maskData)
+            outBand.FlushCache()
+            maskBand.FlushCache()
         }
         outputDs.SetGeoTransform(getGeoTransform(extent))
         outputDs.FlushCache()

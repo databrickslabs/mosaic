@@ -16,7 +16,7 @@ import org.gdal.gdal.Dataset
 abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
 
     /** The path to the raster file. */
-    def saveCheckpoint(id: Long, extent: (Int, Int, Int, Int), mask: Seq[Boolean], checkpointPath: String): String
+    def saveCheckpoint(id: Long, extent: (Int, Int, Int, Int), checkpointPath: String): String
 
     /** @return Returns the metadata of the raster file. */
     def metadata: Map[String, String]

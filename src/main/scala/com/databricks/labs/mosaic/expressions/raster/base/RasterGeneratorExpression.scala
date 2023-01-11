@@ -61,7 +61,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       *   Sequence of subrasters = (id, reference to the input raster, extent of
       *   the output raster, unified mask for all bands).
       */
-    def rasterGenerator(raster: MosaicRaster): Seq[(Long, MosaicRaster, (Int, Int, Int, Int), Seq[Boolean])]
+    def rasterGenerator(raster: MosaicRaster): Seq[(Long, MosaicRaster, (Int, Int, Int, Int))]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val inPath = inPathExpr.eval(input).asInstanceOf[UTF8String].toString
@@ -70,8 +70,8 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
         val raster = rasterAPI.raster(inPath)
         val result = rasterGenerator(raster)
 
-        for ((id, rasterTile, extent, mask) <- result) yield {
-            val outPath = rasterAPI.saveCheckpoint(rasterTile, id, extent, mask, checkpointPath)
+        for ((id, rasterTile, extent) <- result) yield {
+            val outPath = rasterAPI.saveCheckpoint(rasterTile, id, extent, checkpointPath)
             InternalRow.fromSeq(Seq(UTF8String.fromString(outPath)))
         }
 

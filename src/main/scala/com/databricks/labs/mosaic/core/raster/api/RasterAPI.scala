@@ -86,8 +86,6 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       *   The id of the raster tile.
       * @param extent
       *   The extent to trim the raster to.
-      * @param mask
-      *   The mask to apply to the raster.
       * @param checkpointPath
       *   The path to write the raster to.
       *
@@ -98,10 +96,9 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
         rasterTile: MosaicRaster,
         id: Long,
         extent: (Int, Int, Int, Int),
-        mask: Seq[Boolean],
         checkpointPath: String
     ): String = {
-        rasterTile.saveCheckpoint(id, extent, mask, checkpointPath)
+        rasterTile.saveCheckpoint(id, extent, checkpointPath)
     }
 
 }

@@ -65,9 +65,15 @@ trait MosaicRasterBand extends Serializable {
 
     /**
       * @return
-      *   Returns the pixels of the raster as a 2D array.
+      *   Returns the pixels of the raster as a 1D array.
       */
-    def values: Array[Array[Double]] = values(0, 0, xSize, ySize)
+    def values: Array[Double] = values(0, 0, xSize, ySize)
+
+    /**
+     * @return
+     *   Returns the pixels of the raster as a 1D array.
+     */
+    def maskValues: Array[Double] = maskValues(0, 0, xSize, ySize)
 
     /**
       * @param xOffset
@@ -84,10 +90,30 @@ trait MosaicRasterBand extends Serializable {
       * @param ySize
       *   The y size of the raster to be read.
       * @return
-      *   Returns the pixels of the raster as a 2D array with offset and size
+      *   Returns the pixels of the raster as a 1D array with offset and size
       *   applied.
       */
-    def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Array[Double]]
+    def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double]
+
+    /**
+     * @param xOffset
+     *   The x offset of the raster. The x offset is the number of pixels to
+     *   skip from the left. 0 <= xOffset < xSize
+     *
+     * @param yOffset
+     *   The y offset of the raster. The y offset is the number of pixels to
+     *   skip from the top. 0 <= yOffset < ySize
+     *
+     * @param xSize
+     *   The x size of the raster to be read.
+     *
+     * @param ySize
+     *   The y size of the raster to be read.
+     * @return
+     *   Returns the mask pixels of the raster as a 1D array with offset and size
+     *   applied.
+     */
+    def maskValues(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double]
 
     /**
       * Apply f to all pixels in the raster. Overridden in subclasses to define
