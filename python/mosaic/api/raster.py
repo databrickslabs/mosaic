@@ -429,7 +429,7 @@ def rst_retile(raster: ColumnOrName, tileWidth: ColumnOrName, tileHeight: Column
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_rastertoworldcoordy",
+        "rst_retile",
         pyspark_to_java_column(raster),
         pyspark_to_java_column(tileWidth),
         pyspark_to_java_column(tileHeight)
@@ -453,7 +453,7 @@ def rst_rotation(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_rastertoworldcoordy",
+        "rst_rotation",
         pyspark_to_java_column(raster)
     )
 
