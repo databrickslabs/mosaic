@@ -36,9 +36,9 @@ trait RST_RasterToWorldCoordBehaviors extends QueryTest {
             .withColumn("result", rst_rastertoworldcoord("/dummy/path", lit(2), lit(2)))
             .select("result")
 
-        val result = df.as[Double].collect().max
+        val result = df.as[String].collect().max
 
-        result > 0 shouldBe true
+        result.nonEmpty shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
                                                      |select rst_rastertoworldcoord() from source
