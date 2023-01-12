@@ -55,12 +55,18 @@ def enable_gdal(spark: SparkSession) -> None:
     -------
 
     """
-    sc = spark.sparkContext
-    mosaicContextClass = getattr(
-        sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
-    )
-    mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
-    mosaicGDALObject.enableGDAL(spark._jsparkSession)
-    print("GDAL enabled.\n")
-    result = subprocess.run(['gdalinfo', '--version'], stdout=subprocess.PIPE)
-    print(result.stdout.decode() + "\n")
+    try:
+        sc = spark.sparkContext
+        mosaicContextClass = getattr(
+            sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
+        )
+        mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
+        mosaicGDALObject.enableGDAL(spark._jsparkSession)
+        print("GDAL enabled.\n")
+        result = subprocess.run(['gdalinfo', '--version'], stdout=subprocess.PIPE)
+        print(result.stdout.decode() + "\n")
+    except Exception as e:
+        print("GDAL not enabled. Mosaic with GDAL requires that GDAL be installed on the cluster.\n")
+        print("Please run setup_gdal() to generate the init script for install GDAL install.\n")
+        print("After the init script is generated, please restart the cluster with the init script to complete the setup.\n")
+        print("Error: " + str(e))
