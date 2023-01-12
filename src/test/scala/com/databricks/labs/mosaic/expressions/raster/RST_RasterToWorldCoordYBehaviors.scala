@@ -32,8 +32,8 @@ trait RST_RasterToWorldCoordYBehaviors extends QueryTest {
 
         noException should be thrownBy mocks
             .getNetCDFBinaryDf(spark)
-            .withColumn("result", rst_rastertoworldcoord(lit("/dummy/path"), 2, 2))
-            .withColumn("result", rst_rastertoworldcoord("/dummy/path", lit(2), lit(2)))
+            .withColumn("result", rst_rastertoworldcoordy(lit("/dummy/path"), 2, 2))
+            .withColumn("result", rst_rastertoworldcoordy("/dummy/path", lit(2), lit(2)))
             .select("result")
 
         val result = df.as[Double].collect().max
