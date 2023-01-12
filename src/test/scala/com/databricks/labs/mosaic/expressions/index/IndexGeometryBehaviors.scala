@@ -21,11 +21,11 @@ trait IndexGeometryBehaviors extends MosaicSpatialQueryTest {
         val indexSystemName = mc.getIndexSystem.name
         val geometryAPIName = mc.getGeometryAPI.name
 
-        val gridCellLong = MosaicContext.indexSystem() match {
+        val gridCellLong = MosaicContext.indexSystem match {
             case BNGIndexSystem => lit(1050138790L).expr
             case H3IndexSystem  => lit(623060282076758015L).expr
         }
-        val gridCellStr = MosaicContext.indexSystem() match {
+        val gridCellStr = MosaicContext.indexSystem match {
             case BNGIndexSystem => lit("TQ388791").expr
             case H3IndexSystem  => lit("8a58e0682d6ffff").expr
         }
@@ -55,7 +55,7 @@ trait IndexGeometryBehaviors extends MosaicSpatialQueryTest {
         longIDGeom.makeCopy(Array(longIDGeom.left, longIDGeom.right)) shouldEqual longIDGeom
 
         // legacy API def tests
-        MosaicContext.indexSystem() match {
+        MosaicContext.indexSystem match {
             case BNGIndexSystem => noException should be thrownBy mc.functions.index_geometry(lit(1050138790L))
             case H3IndexSystem  => noException should be thrownBy mc.functions.index_geometry(lit(623060282076758015L))
         }

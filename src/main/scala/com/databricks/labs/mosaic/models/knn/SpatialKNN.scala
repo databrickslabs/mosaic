@@ -95,9 +95,9 @@ class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
     }
 
     /**
-      * Early stopping condition. Stop when the number of matches doesnt change
+      * Early stopping condition. Stop when the number of matches doesn't change
       * for [[getEarlyStopIterations]] iterations or when the number of
-      * candidates left to match doesnt change for [[getEarlyStopIterations]]
+      * candidates left to match doesn't change for [[getEarlyStopIterations]]
       * iterations.
       * @param preDf
       *   Dataset containing the previous candidates left to match.
@@ -111,8 +111,8 @@ class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
         val postCount = postDf.count()
         val newMatchesCount = matchesCheckpoint
             .load()
-            .where("candidates_miid is not null")
-            .groupBy("landmarks_miid", "candidates_miid")
+            .where(col(getCandidatesRowID).isNotNull)
+            .groupBy(getLandmarksRowID, getCandidatesRowID)
             .count()
             .count()
         val shouldStop = (preCount == postCount) && (matchCount == newMatchesCount) && (newMatchesCount > 0)
@@ -224,7 +224,7 @@ class SpatialKNN(override val uid: String, var candidatesDf: Dataset[_])
         matches = matchesCheckpoint
             .load()
             // Drop null matches (needed during iterations for proper hex ring neighbour calculation).
-            .where(col("candidates_miid").isNotNull)
+            .where(col(getCandidatesRowID).isNotNull)
             .withColumn("neighbour_number", row_number().over(hexRingNeighboursTf.window))
             .where(col("neighbour_number") <= getKNeighbours)
             // Apply distance threshold

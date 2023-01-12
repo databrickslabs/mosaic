@@ -7,7 +7,9 @@ import org.apache.spark.sql._
 
 trait SparkSuite extends TestSuite with BeforeAndAfterAll {
 
-    var conf: SparkConf = new SparkConf(false)
+    var sparkConf: SparkConf =
+        new SparkConf(false)
+            .set("spark.executor.extraLibraryPath", "/usr/local/lib/gdal")
     @transient private var _sc: SparkContext = _
     @transient private var _spark: SparkSession = _
 
@@ -39,7 +41,7 @@ trait SparkSuite extends TestSuite with BeforeAndAfterAll {
     }
 
     private def startSpark(): Unit = {
-        _sc = new SparkContext("local[4]", "test", conf)
+        _sc = new SparkContext("local[4]", "test", sparkConf)
         _sc.setLogLevel("FATAL")
         _spark = SparkSession.builder.config(sc.getConf).getOrCreate()
     }
@@ -67,7 +69,7 @@ trait SparkSuite extends TestSuite with BeforeAndAfterAll {
 
     def withConf(newConf: SparkConf): SparkSession = {
         stopSpark()
-        conf = newConf
+        sparkConf = newConf
         startSpark()
         _spark
     }
