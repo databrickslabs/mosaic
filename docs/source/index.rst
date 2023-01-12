@@ -25,11 +25,11 @@
 
 .. image:: https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml/badge.svg
    :target: https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml
-   :alt: Tempo sphinx docs
+   :alt: Mosaic sphinx docs
 
 .. image:: https://img.shields.io/lgtm/grade/python/g/databrickslabs/mosaic.svg?logo=lgtm&logoWidth=18
    :target: https://lgtm.com/projects/g/databrickslabs/mosaic/context:python
-   :alt: Lanuage grade: Python
+   :alt: Language grade: Python
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/psf/black
