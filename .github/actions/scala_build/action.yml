@@ -15,11 +15,11 @@ runs:
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
-          run: mvn -q clean install
+          run: sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash
-          run: mvn -q clean install -DskipTests
+          run: sudo mvn -q clean install -DskipTests
         - name: Publish test coverage
           uses: codecov/codecov-action@v1
         - name: Copy Scala artifacts to GH Actions run
