@@ -73,7 +73,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
         val result = rasterGenerator(raster)
 
         for ((id, extent) <- result) yield {
-            val outPath = raster.saveCheckpoint(id, extent, checkpointPath)
+            val outPath = raster.saveCheckpoint(uuid, id, extent, checkpointPath)
             InternalRow.fromSeq(Seq(UTF8String.fromString(outPath)))
         }
 
