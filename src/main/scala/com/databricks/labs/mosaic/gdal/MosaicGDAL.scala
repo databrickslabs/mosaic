@@ -29,10 +29,8 @@ object MosaicGDAL extends Logging {
             } match {
                 case scala.util.Success(_)         =>
                     logInfo("GDAL environment prepared successfully.")
-                    isEnabled = true
                 case scala.util.Failure(exception) =>
                     logError("GDAL environment preparation failed.", exception)
-                    isEnabled = false
                     throw exception
             }
         }
