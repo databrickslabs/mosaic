@@ -26,7 +26,5 @@ jobs:
         uses: ./.github/actions/scala_build
       - name: build python
         uses: ./.github/actions/python_build
-      - name: build r
-        uses: ./.github/actions/r_build
       - name: upload artefacts
         uses: ./.github/actions/upload_artefacts

@@ -52,6 +52,14 @@ class TestLineStringESRI extends AnyFlatSpec {
         lineStringReference.equals(lineStringTest) shouldBe true
     }
 
+    "MosaicLineStringESRI" should "not fail for empty Seq" in {
+        val expected = MosaicLineStringESRI.fromWKT(
+            "LINESTRING EMPTY"
+        )
+        val actual = MosaicLineStringESRI.fromSeq(Seq())
+        expected.equals(actual) shouldBe true
+    }
+
     "MosaicLineStringESRI" should "return a Seq of MosaicPointESRI object when calling asSeq" in {
         val lineString = MosaicLineStringESRI.fromWKT("LINESTRING (1 1, 2 2, 3 3)").asInstanceOf[MosaicLineStringESRI]
         val pointsSeqReference = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")

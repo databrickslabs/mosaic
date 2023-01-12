@@ -104,6 +104,10 @@ object MosaicPointESRI extends GeometryReader {
     }
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POINT): MosaicPointESRI = {
+        if (geomSeq.isEmpty) {
+            // For empty sequence return an empty geometry with default Spatial Reference
+            return MosaicPointESRI(new OGCPoint(new Point(), MosaicGeometryESRI.defaultSpatialReference))
+        }
         val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case POINT                         =>
