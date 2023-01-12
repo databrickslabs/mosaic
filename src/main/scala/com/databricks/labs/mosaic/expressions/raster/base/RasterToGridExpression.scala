@@ -56,11 +56,13 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
         val bandTransform = (band: MosaicRasterBand) => {
             val results = band.transformValues[(Long, Double)](pixelTransformer(gt, resolution), (0L, -1.0))
             results
+                // Filter out default cells. We don't want to return them since they are masked in original raster.
+                // We use 0L as a dummy cell ID for default cells.
                 .map(row => row.filter(_._1 != 0L))
                 .filterNot(_.isEmpty)
                 .flatten
-                .groupBy(_._1)
-                .mapValues(values => valuesCombiner(values.map(_._2)))
+                .groupBy(_._1) // Group by cell ID.
+                .mapValues(values => valuesCombiner(values.map(_._2))) // Apply combiner that is overridden in subclasses.
         }
         val transformed = raster.transformBands(bandTransform)
 

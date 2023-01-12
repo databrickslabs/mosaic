@@ -82,9 +82,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
 
     def spatialRef: SpatialReference = raster.GetSpatialRef()
 
-    override def cleanUp(): Unit = {
-        /** Nothing to clean up = NOOP */
-    }
+    override def cleanUp(): Unit = {/** Nothing to clean up = NOOP */}
 
     override def transformBands[T](f: MosaicRasterBand => T): Seq[T] = for (i <- 1 to numBands) yield f(getBand(i))
 
@@ -96,21 +94,22 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
       * Files with subdatasets are not supported. They should be flattened
       * first.
       *
-      * @param id
-      *   the id of the raster.
+      * @param stageId
+      *   the UUI of the computation stage generating the raster. Used to avoid
+      *   writing collisions.
+      * @param rasterId
+      *   the UUID of the raster. Used to avoid writing collisions.
       * @param extent
       *   the extent to clip the raster to. This is used for writing out partial
       *   rasters.
-      * @param mask
-      *   the mask to be applied to each band. The same mask is applied to all
-      *   bands.
       * @param checkpointPath
       *   the path to the checkpoint directory.
       * @return
       *   A path to the written raster.
       */
-    override def saveCheckpoint(id: Long, extent: (Int, Int, Int, Int), checkpointPath: String): String = {
-        val outPath = s"../../tmp/raster_${id.toString.replace("-", "1")}.tiff"
+    override def saveCheckpoint(stageId: String, rasterId: Long, extent: (Int, Int, Int, Int), checkpointPath: String): String = {
+        val tmpDir = Files.createTempDirectory(s"mosaic_$stageId").toFile.getAbsolutePath
+        val outPath = s"$tmpDir/raster_${rasterId.toString.replace("-", "_")}.tif"
         Files.createDirectories(Paths.get(outPath).getParent)
         val (xmin, ymin, xmax, ymax) = extent
         val xSize = xmax - xmin
@@ -120,7 +119,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
             val band = getBand(i)
             val data = band.values(xmin, ymin, xSize, ySize)
             val maskData = band.maskValues(xmin, ymin, xSize, ySize)
-            val noDataValue = getBand(i).noDataValue
+            val noDataValue = band.noDataValue
 
             val outBand = outputDs.GetRasterBand(i)
             val maskBand = outBand.GetMaskBand()
@@ -134,8 +133,10 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
         outputDs.SetGeoTransform(getGeoTransform(extent))
         outputDs.FlushCache()
 
-        val destinationPath = Paths.get(checkpointPath.replace("dbfs:/", "/dbfs/"), s"raster_$id.tif")
+        val destinationPath = Paths.get(checkpointPath.replace("dbfs:/", "/dbfs/"), s"raster_$rasterId.tif")
+        Files.createDirectories(destinationPath)
         Files.copy(Paths.get(outPath), destinationPath, REPLACE_EXISTING)
+        Files.delete(Paths.get(outPath))
         destinationPath.toAbsolutePath.toString.replace("dbfs:/", "/dbfs/")
     }
 

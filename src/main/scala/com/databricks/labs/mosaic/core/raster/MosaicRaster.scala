@@ -15,8 +15,24 @@ import org.gdal.gdal.Dataset
   */
 abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
 
-    /** The path to the raster file. */
-    def saveCheckpoint(id: Long, extent: (Int, Int, Int, Int), checkpointPath: String): String
+    /**
+      * Writes out the current raster to the given checkpoint path. The raster
+      * is written out as a GeoTiff. Only single subdataset is supported. Apply
+      * mask to all bands. Trim down the raster to the provided extent.
+      * @param stageId
+      *   the UUI of the computation stage generating the raster. Used to avoid
+      *   writing collisions.
+      * @param rasterId
+      *   the UUID of the raster. Used to avoid writing collisions.
+      * @param extent
+      *   The extent to trim the raster to.
+      * @param checkpointPath
+      *   The path to write the raster to.
+      *
+      * @return
+      *   Returns the path to the written raster.
+      */
+    def saveCheckpoint(stageId: String, rasterId: Long, extent: (Int, Int, Int, Int), checkpointPath: String): String
 
     /** @return Returns the metadata of the raster file. */
     def metadata: Map[String, String]

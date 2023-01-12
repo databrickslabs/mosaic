@@ -1,5 +1,6 @@
 from pyspark.sql import SparkSession
 from typing import Any
+import subprocess
 
 __all__ = [
     "setup_gdal",
@@ -35,7 +36,10 @@ def setup_gdal(
     )
     mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
     mosaicGDALObject.prepareEnvironment(spark._jsparkSession, init_script_path, shared_objects_path)
-
+    println("GDAL setup complete.")
+    println(f"Shared objects (*.so) stored in: {shared_objects_path}.")
+    println(f"Init script stored in: {init_script_path}.")
+    println("Please restart the cluster with the generated init script to complete the setup.")
 
 
 def enable_gdal(spark: SparkSession) -> None:
@@ -57,3 +61,6 @@ def enable_gdal(spark: SparkSession) -> None:
     )
     mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
     mosaicGDALObject.enableGDAL(spark._jsparkSession)
+    println("GDAL enabled.")
+    result = subprocess.run(['gdalinfo', '--version'], stdout=subprocess.PIPE)
+    println(result.stdout.decode())

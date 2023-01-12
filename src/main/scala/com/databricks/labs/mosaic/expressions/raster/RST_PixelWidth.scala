@@ -20,6 +20,7 @@ case class RST_PixelWidth(path: Expression, expressionConfig: MosaicExpressionCo
         val scaleX = raster.getRaster.GetGeoTransform()(1)
         val skewY = raster.getRaster.GetGeoTransform()(4)
         // when there is no skew width is scaleX, but we cant assume 0-only skew
+        // skew is not to be confused with rotation
         math.sqrt(scaleX * scaleX + skewY * skewY)
     }
 

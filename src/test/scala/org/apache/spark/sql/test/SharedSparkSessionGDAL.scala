@@ -18,7 +18,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     override def createSparkSession: TestSparkSession = {
         val conf = sparkConf
-        conf.set(MOSAIC_RASTER_CHECKPOINT, Files.createTempDirectory("mosaic").toString)
+        conf.set(MOSAIC_RASTER_CHECKPOINT, Files.createTempDirectory("mosaic").toFile.getAbsolutePath)
         SparkSession.cleanupAnyExistingSession()
         val session = new TestSparkSession(conf)
         if (conf.get(MOSAIC_GDAL_NATIVE, "false").toBoolean) {

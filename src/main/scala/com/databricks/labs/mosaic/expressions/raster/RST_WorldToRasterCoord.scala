@@ -19,7 +19,10 @@ case class RST_WorldToRasterCoord(
       with NullIntolerant
       with CodegenFallback {
 
-    /** Returns the world coordinate of the raster. */
+    /**
+      * Returns the x and y of the raster by applying GeoTransform as a tuple of
+      * Integers. This will ensure projection of the raster is respected.
+      */
     override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
         val xGeo = arg1.asInstanceOf[Double]
         val yGeo = arg2.asInstanceOf[Double]

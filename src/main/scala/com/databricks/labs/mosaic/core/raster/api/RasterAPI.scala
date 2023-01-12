@@ -76,31 +76,6 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
         (xPixel, yPixel)
     }
 
-    /**
-      * Writes out the current raster to the given checkpoint path. The raster
-      * is written out as a GeoTiff. Only single subdataset is supported. Apply
-      * mask to all bands. Trim down the raster to the provided extent.
-      * @param rasterTile
-      *   The raster tile to write out.
-      * @param id
-      *   The id of the raster tile.
-      * @param extent
-      *   The extent to trim the raster to.
-      * @param checkpointPath
-      *   The path to write the raster to.
-      *
-      * @return
-      *   Returns the path to the written raster.
-      */
-    def saveCheckpoint(
-        rasterTile: MosaicRaster,
-        id: Long,
-        extent: (Int, Int, Int, Int),
-        checkpointPath: String
-    ): String = {
-        rasterTile.saveCheckpoint(id, extent, checkpointPath)
-    }
-
 }
 
 /**
@@ -144,7 +119,10 @@ object RasterAPI extends Serializable {
           * registered on the worker nodes. This method registers all the
           * drivers on the worker nodes.
           */
-        override def enable(): Unit = if (gdal.GetDriverCount() == 0) gdal.AllRegister()
+        override def enable(): Unit = {
+            gdal.UseExceptions()
+            if (gdal.GetDriverCount() == 0) gdal.AllRegister()
+        }
 
     }
 

@@ -33,6 +33,8 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
+    val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
+
     /**
       * The raster API to be used. Enable the raster so that subclasses dont
       * need to worry about this.
@@ -61,7 +63,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       *   Sequence of subrasters = (id, reference to the input raster, extent of
       *   the output raster, unified mask for all bands).
       */
-    def rasterGenerator(raster: MosaicRaster): Seq[(Long, MosaicRaster, (Int, Int, Int, Int))]
+    def rasterGenerator(raster: MosaicRaster): Seq[(Long, (Int, Int, Int, Int))]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val inPath = inPathExpr.eval(input).asInstanceOf[UTF8String].toString
@@ -70,8 +72,8 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
         val raster = rasterAPI.raster(inPath)
         val result = rasterGenerator(raster)
 
-        for ((id, rasterTile, extent) <- result) yield {
-            val outPath = rasterAPI.saveCheckpoint(rasterTile, id, extent, checkpointPath)
+        for ((id, extent) <- result) yield {
+            val outPath = raster.saveCheckpoint(id, extent, checkpointPath)
             InternalRow.fromSeq(Seq(UTF8String.fromString(outPath)))
         }
 

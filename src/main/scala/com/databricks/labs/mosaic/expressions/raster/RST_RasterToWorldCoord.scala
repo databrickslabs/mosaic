@@ -20,7 +20,11 @@ case class RST_RasterToWorldCoord(
       with NullIntolerant
       with CodegenFallback {
 
-    /** Returns the world coordinates of the raster (x,y) pixel. */
+    /**
+      * Returns the world coordinates of the raster (x,y) pixel by applying
+      * GeoTransform. This ensures the projection of the raster is respected.
+      * The output is a WKT point.
+      */
     override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
         val x = arg1.asInstanceOf[Int]
         val y = arg2.asInstanceOf[Int]
