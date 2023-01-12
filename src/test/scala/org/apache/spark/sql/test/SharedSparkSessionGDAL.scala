@@ -14,6 +14,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
     override def sparkConf: SparkConf = {
         super.sparkConf
             .set(MOSAIC_GDAL_NATIVE, "true")
+            //required from delta 2.2.0
+            .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+            .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
     }
 
     override def createSparkSession: TestSparkSession = {

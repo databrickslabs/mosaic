@@ -12,6 +12,8 @@ trait GridRingNeighboursBehaviors extends MosaicSpatialQueryTest {
 
     def leftTransform(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+        spark.conf.set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
         val sc = spark
         import sc.implicits._
 

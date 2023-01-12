@@ -17,6 +17,8 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register()
         val sc = spark
+        spark.conf.set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+        spark.conf.set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
         import sc.implicits._
 
         val (resolution, distanceThreshold) = mc.getIndexSystem match {
