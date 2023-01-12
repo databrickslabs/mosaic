@@ -9,7 +9,7 @@ import org.apache.spark.sql.types.{DataType, DoubleType}
 case class ST_Area(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
 
     /**
-      * ST_Area expression returns are covered by the
+      * ST_Area expression returns area covered by the
       * [[org.locationtech.jts.geom.Geometry]] instance extracted from inputGeom
       * expression.
       */

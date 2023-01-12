@@ -75,7 +75,14 @@ object MosaicMultiPolygonJTS extends GeometryReader {
     }
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = MULTIPOLYGON): MosaicMultiPolygonJTS = {
+
         val gf = new GeometryFactory()
+
+        if (geomSeq.isEmpty) {
+            // For empty sequence return an empty geometry with default Spatial Reference
+            return MosaicMultiPolygonJTS(gf.createMultiPolygon())
+        }
+
         val spatialReference = geomSeq.head.getSpatialReference
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case POLYGON                       =>

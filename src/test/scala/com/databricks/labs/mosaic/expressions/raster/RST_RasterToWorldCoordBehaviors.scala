@@ -1,0 +1,49 @@
+package com.databricks.labs.mosaic.expressions.raster
+
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.test.mocks
+import org.apache.spark.sql.QueryTest
+import org.apache.spark.sql.functions.lit
+import org.scalatest.matchers.should.Matchers._
+
+trait RST_RasterToWorldCoordBehaviors extends QueryTest {
+
+    def rasterToWorldCoordBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register()
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+
+        val df = mocks
+            .getNetCDFBinaryDf(spark)
+            .withColumn("result", rst_rastertoworldcoord($"path", lit(2), lit(2)))
+            .select("result")
+
+        mocks
+            .getNetCDFBinaryDf(spark)
+            .createOrReplaceTempView("source")
+
+        noException should be thrownBy spark.sql("""
+                                                   |select rst_rastertoworldcoord(path, 2, 2) from source
+                                                   |""".stripMargin)
+
+        noException should be thrownBy mocks
+            .getNetCDFBinaryDf(spark)
+            .withColumn("result", rst_rastertoworldcoord(lit("/dummy/path"), 2, 2))
+            .withColumn("result", rst_rastertoworldcoord("/dummy/path", lit(2), lit(2)))
+            .select("result")
+
+        val result = df.as[String].collect().max
+
+        result.nonEmpty shouldBe true
+
+        an[Exception] should be thrownBy spark.sql("""
+                                                     |select rst_rastertoworldcoord() from source
+                                                     |""".stripMargin)
+
+    }
+
+}

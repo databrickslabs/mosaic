@@ -7,8 +7,7 @@ import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointE
 import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POINT, POLYGON}
 import com.esri.core.geometry.ogc._
-import com.esri.core.geometry.SpatialReference
-
+import com.esri.core.geometry.{Polygon, SpatialReference}
 import org.apache.spark.sql.catalyst.InternalRow
 
 class MosaicPolygonESRI(polygon: OGCPolygon) extends MosaicGeometryESRI(polygon) with MosaicPolygon {
@@ -77,6 +76,10 @@ object MosaicPolygonESRI extends GeometryReader {
     }
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POLYGON): MosaicPolygonESRI = {
+        if (geomSeq.isEmpty) {
+            // For empty sequence return an empty geometry with default Spatial Reference
+            return MosaicPolygonESRI(new OGCPolygon(new Polygon(), MosaicGeometryESRI.defaultSpatialReference))
+        }
         val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case POINT                         =>
