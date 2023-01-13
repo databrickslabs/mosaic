@@ -8,6 +8,7 @@ import java.io.BufferedInputStream
 import java.nio.file.{Files, Paths}
 import scala.language.postfixOps
 import scala.sys.process._
+import scala.util.Try
 
 //noinspection DuplicatedCode
 object MosaicGDAL extends Logging {
@@ -22,17 +23,36 @@ object MosaicGDAL extends Logging {
 
     def prepareEnvironment(spark: SparkSession, initScriptPath: String, sharedObjectsPath: String): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
-            copyInitScript(initScriptPath)
-            copySharedObjects(sharedObjectsPath)
+            Try {
+                copyInitScript(initScriptPath)
+                copySharedObjects(sharedObjectsPath)
+            } match {
+                case scala.util.Success(_)         =>
+                    logInfo("GDAL environment prepared successfully.")
+                case scala.util.Failure(exception) =>
+                    logError("GDAL environment preparation failed.", exception)
+                    throw exception
+            }
         }
     }
 
     def enableGDAL(spark: SparkSession): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
-            isEnabled = true
-            loadSharedObjects()
-            gdal.AllRegister()
-            spark.conf.set(GDAL_ENABLED, "true")
+            Try {
+                isEnabled = true
+                loadSharedObjects()
+                gdal.AllRegister()
+                spark.conf.set(GDAL_ENABLED, "true")
+            } match {
+                case scala.util.Success(_)         => logInfo("GDAL environment enabled successfully.")
+                case scala.util.Failure(exception) =>
+                    logError("GDAL not enabled. Mosaic with GDAL requires that GDAL be installed on the cluster.")
+                    logError("Please run setup_gdal() to generate the init script for install GDAL install.")
+                    logError("After the init script is generated, please restart the cluster with the init script to complete the setup.")
+                    logError(s"Error: ${exception.getMessage}")
+                    isEnabled = false
+                    throw exception
+            }
         }
     }
 
