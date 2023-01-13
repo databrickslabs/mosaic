@@ -6,12 +6,12 @@
 #
 
 sudo rm -r /var/lib/apt/lists/*
-sudo add-apt-repository main
-sudo add-apt-repository universe
-sudo add-apt-repository restricted
-sudo add-apt-repository multiverse
-sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
-sudo apt clean && sudo apt update --fix-missing -y
+sudo add-apt-repository -o Acquire::Retries=3 main
+sudo add-apt-repository -o Acquire::Retries=3 universe
+sudo add-apt-repository -o Acquire::Retries=3 restricted
+sudo add-apt-repository -o Acquire::Retries=3 multiverse
+sudo add-apt-repository -o Acquire::Retries=3 ppa:ubuntugis/ubuntugis-unstable
+sudo apt clean && sudo apt -o Acquire::Retries=3 update --fix-missing -y
 sudo apt-get -o Acquire::Retries=3 update -y
 sudo apt-get -o Acquire::Retries=3 install -y gdal-bin=3.4.3+dfsg-1~focal0 libgdal-dev=3.4.3+dfsg-1~focal0 python3-gdal=3.4.3+dfsg-1~focal0
 
