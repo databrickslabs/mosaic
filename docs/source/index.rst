@@ -7,15 +7,42 @@
    :width: 50%
    :alt: mosaic
    :align: left
+|
+.. image:: https://badge.fury.io/py/databricks-mosaic.svg
+   :target: https://badge.fury.io/py/databricks-mosaic
+   :alt: PyPI Version
 
-Mosaic is an extension to the `Apache Spark <https://spark.apache.org/>`__ framework that allows easy and fast processing of very large geospatial datasets.
+.. image:: https://img.shields.io/pypi/dm/databricks-mosaic?style=plastic
+   :alt: PyPI Monthly Downloads
+
+.. image:: https://codecov.io/gh/databrickslabs/mosaic/branch/main/graph/badge.svg?token=aEzZ8ITxdg
+   :target: https://codecov.io/gh/databrickslabs/mosaic
+   :alt: Codecov
+
+.. image:: https://github.com/databrickslabs/mosaic/actions/workflows/build_main.yml/badge.svg
+   :target: https://github.com/databrickslabs/mosaic/actions?query=workflow%3A%22build+main%22
+   :alt: build
+
+.. image:: https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml/badge.svg
+   :target: https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml
+   :alt: Mosaic sphinx docs
+
+.. image:: https://img.shields.io/lgtm/grade/python/g/databrickslabs/mosaic.svg?logo=lgtm&logoWidth=18
+   :target: https://lgtm.com/projects/g/databrickslabs/mosaic/context:python
+   :alt: Language grade: Python
+
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+   :alt: Code style: black
+
+Mosaic is an extension to the `Apache Spark <https://spark.apache.org/>`_ framework that allows easy and fast processing of very large geospatial datasets.
 
 Mosaic provides:
    - easy conversion between common spatial data encodings (WKT, WKB and GeoJSON);
    - constructors to easily generate new geometries from Spark native data types;
    - many of the OGC SQL standard `ST_` functions implemented as Spark Expressions for transforming, aggregating and joining spatial datasets;
    - high performance through implementation of Spark code generation within the core Mosaic functions;
-   - optimisations for performing point-in-polygon joins using an approach we co-developed with Ordnance Survey (`blog post <https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html>`__); and 
+   - optimisations for performing point-in-polygon joins using an approach we co-developed with Ordnance Survey (`blog post <https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html>`_); and 
    - the choice of a Scala, SQL and Python API.
 
 
