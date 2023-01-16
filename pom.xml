@@ -124,7 +124,7 @@
         <dependency>
             <groupId>org.gdal</groupId>
             <artifactId>gdal</artifactId>
-            <version>3.4.0</version>
+            <version>3.6.0</version>
         </dependency>
 
     </dependencies>
