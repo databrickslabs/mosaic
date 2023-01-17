@@ -1,3 +1,6 @@
+## v0.3.7
+- Fixed pip release publish script
+
 ## v0.3.6
 - Added GDAL and 32 rst_* raster functions:
   - RST_BandMetaData
