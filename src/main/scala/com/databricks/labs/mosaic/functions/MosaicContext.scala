@@ -521,7 +521,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     def shouldUseDatabricksH3(): Boolean = {
         val spark = SparkSession.builder().getOrCreate()
         val isDatabricksH3Enabled = spark.conf.get(SPARK_DATABRICKS_GEO_H3_ENABLED, "false") == "true"
-        indexSystem == H3.name && isDatabricksH3Enabled
+        indexSystem.name == H3.name && isDatabricksH3Enabled
     }
 
     // scalastyle:off object.name
