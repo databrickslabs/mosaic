@@ -13,14 +13,13 @@ case class GeometryKLoop(
     geom: Expression,
     resolution: Expression,
     k: Expression,
-    indexSystemName: String,
+    indexSystem: IndexSystem,
     geometryAPIName: String
 ) extends TernaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
 
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     // noinspection DuplicatedCode
@@ -76,7 +75,7 @@ case class GeometryKLoop(
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = GeometryKLoop(asArray(0), asArray(1), asArray(2), indexSystemName, geometryAPIName)
+        val res = GeometryKLoop(asArray(0), asArray(1), asArray(2), indexSystem, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }

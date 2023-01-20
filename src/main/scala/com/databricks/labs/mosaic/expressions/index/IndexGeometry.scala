@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.IndexSystemID
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions._
@@ -18,7 +18,7 @@ import org.apache.spark.unsafe.types.UTF8String
   """,
   since = "1.0"
 )
-case class IndexGeometry(indexID: Expression, format: Expression, indexSystemName: String, geometryAPIName: String)
+case class IndexGeometry(indexID: Expression, format: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends BinaryExpression
       with NullIntolerant
       with CodegenFallback {
@@ -63,7 +63,6 @@ case class IndexGeometry(indexID: Expression, format: Expression, indexSystemNam
       *   provided ID
       */
     override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         val geometryAPI = GeometryAPI(geometryAPIName)
         val formatName = input2.asInstanceOf[UTF8String].toString
         val indexGeometry = indexID.dataType match {
@@ -78,7 +77,7 @@ case class IndexGeometry(indexID: Expression, format: Expression, indexSystemNam
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val arg1 = newArgs.head.asInstanceOf[Expression]
         val arg2 = newArgs(1).asInstanceOf[Expression]
-        val res = IndexGeometry(arg1, arg2, indexSystemName, geometryAPIName)
+        val res = IndexGeometry(arg1, arg2, indexSystem, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }

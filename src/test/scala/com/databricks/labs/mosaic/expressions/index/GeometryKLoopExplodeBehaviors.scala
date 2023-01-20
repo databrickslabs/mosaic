@@ -60,7 +60,7 @@ trait GeometryKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(wkt).expr,
           lit(resolution).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -75,7 +75,7 @@ trait GeometryKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(10).expr,
           lit(resolution).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

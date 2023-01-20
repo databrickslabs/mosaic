@@ -8,12 +8,11 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 
-case class CellKLoopExplode(cellId: Expression, k: Expression, indexSystemName: String, geometryAPIName: String)
+case class CellKLoopExplode(cellId: Expression, k: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends CollectionGenerator
       with Serializable
       with CodegenFallback {
 
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     override def position: Boolean = false

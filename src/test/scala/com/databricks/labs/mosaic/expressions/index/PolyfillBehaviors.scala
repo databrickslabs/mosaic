@@ -181,7 +181,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
         val polyfillExpr = Polyfill(
           lit(wkt).expr,
           resExpr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -193,7 +193,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
         val badExpr = Polyfill(
           lit(10).expr,
           lit(true).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

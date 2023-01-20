@@ -13,14 +13,13 @@ case class ST_IntersectionAggregate(
     leftChip: Expression,
     rightChip: Expression,
     geometryAPIName: String,
-    indexSystemName: String,
+    indexSystem: IndexSystem,
     mutableAggBufferOffset: Int,
     inputAggBufferOffset: Int
 ) extends TypedImperativeAggregate[Array[Byte]]
       with BinaryLike[Expression] {
 
     val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID.apply(indexSystemName))
     override lazy val deterministic: Boolean = true
     override val left: Expression = leftChip
     override val right: Expression = rightChip

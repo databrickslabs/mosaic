@@ -57,7 +57,7 @@ trait CellKRingExplodeBehaviors extends MosaicSpatialQueryTest {
         val cellKRingExplodeExpr = CellKRingExplode(
           lit(wkt).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
         val withNull = cellKRingExplodeExpr.copy(cellId = lit(null).expr)
@@ -70,7 +70,7 @@ trait CellKRingExplodeBehaviors extends MosaicSpatialQueryTest {
         val badExpr = CellKRingExplode(
           lit(10).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

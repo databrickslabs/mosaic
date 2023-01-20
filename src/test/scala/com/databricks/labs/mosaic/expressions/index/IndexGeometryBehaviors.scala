@@ -18,7 +18,7 @@ trait IndexGeometryBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val indexSystemName = mc.getIndexSystem.name
+        val indexSystem = mc.getIndexSystem
         val geometryAPIName = mc.getGeometryAPI.name
 
         val gridCellLong = MosaicContext.indexSystem() match {
@@ -30,22 +30,22 @@ trait IndexGeometryBehaviors extends MosaicSpatialQueryTest {
             case H3IndexSystem  => lit("8a58e0682d6ffff").expr
         }
 
-        IndexGeometry(gridCellStr, lit("WKT").expr, indexSystemName, geometryAPIName).dataType shouldEqual StringType
-        IndexGeometry(gridCellStr, lit("WKB").expr, indexSystemName, geometryAPIName).dataType shouldEqual BinaryType
-        IndexGeometry(gridCellStr, lit("GEOJSON").expr, indexSystemName, geometryAPIName).dataType shouldEqual StringType
-        IndexGeometry(gridCellStr, lit("COORDS").expr, indexSystemName, geometryAPIName).dataType shouldEqual InternalGeometryType
-        an[Error] should be thrownBy IndexGeometry(gridCellStr, lit("BAD FORMAT").expr, indexSystemName, geometryAPIName).dataType
+        IndexGeometry(gridCellStr, lit("WKT").expr, indexSystem, geometryAPIName).dataType shouldEqual StringType
+        IndexGeometry(gridCellStr, lit("WKB").expr, indexSystem, geometryAPIName).dataType shouldEqual BinaryType
+        IndexGeometry(gridCellStr, lit("GEOJSON").expr, indexSystem, geometryAPIName).dataType shouldEqual StringType
+        IndexGeometry(gridCellStr, lit("COORDS").expr, indexSystem, geometryAPIName).dataType shouldEqual InternalGeometryType
+        an[Error] should be thrownBy IndexGeometry(gridCellStr, lit("BAD FORMAT").expr, indexSystem, geometryAPIName).dataType
 
-        IndexGeometry(gridCellLong, lit("WKT").expr, indexSystemName, geometryAPIName).dataType shouldEqual StringType
-        IndexGeometry(gridCellLong, lit("WKB").expr, indexSystemName, geometryAPIName).dataType shouldEqual BinaryType
-        IndexGeometry(gridCellLong, lit("GEOJSON").expr, indexSystemName, geometryAPIName).dataType shouldEqual StringType
-        IndexGeometry(gridCellLong, lit("COORDS").expr, indexSystemName, geometryAPIName).dataType shouldEqual InternalGeometryType
-        an[Error] should be thrownBy IndexGeometry(gridCellLong, lit("BAD FORMAT").expr, indexSystemName, geometryAPIName).dataType
+        IndexGeometry(gridCellLong, lit("WKT").expr, indexSystem, geometryAPIName).dataType shouldEqual StringType
+        IndexGeometry(gridCellLong, lit("WKB").expr, indexSystem, geometryAPIName).dataType shouldEqual BinaryType
+        IndexGeometry(gridCellLong, lit("GEOJSON").expr, indexSystem, geometryAPIName).dataType shouldEqual StringType
+        IndexGeometry(gridCellLong, lit("COORDS").expr, indexSystem, geometryAPIName).dataType shouldEqual InternalGeometryType
+        an[Error] should be thrownBy IndexGeometry(gridCellLong, lit("BAD FORMAT").expr, indexSystem, geometryAPIName).dataType
 
-        val longIDGeom = IndexGeometry(gridCellLong, lit("WKT").expr, indexSystemName, geometryAPIName)
-        val intIDGeom = IndexGeometry(Column(gridCellLong).cast(IntegerType).expr, lit("WKT").expr, indexSystemName, geometryAPIName)
-        val strIDGeom = IndexGeometry(gridCellStr, lit("WKT").expr, indexSystemName, geometryAPIName)
-        val badIDGeom = IndexGeometry(lit(true).expr, lit("WKT").expr, indexSystemName, geometryAPIName)
+        val longIDGeom = IndexGeometry(gridCellLong, lit("WKT").expr, indexSystem, geometryAPIName)
+        val intIDGeom = IndexGeometry(Column(gridCellLong).cast(IntegerType).expr, lit("WKT").expr, indexSystem, geometryAPIName)
+        val strIDGeom = IndexGeometry(gridCellStr, lit("WKT").expr, indexSystem, geometryAPIName)
+        val badIDGeom = IndexGeometry(lit(true).expr, lit("WKT").expr, indexSystem, geometryAPIName)
 
         longIDGeom.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess
         intIDGeom.checkInputDataTypes() shouldEqual TypeCheckResult.TypeCheckSuccess

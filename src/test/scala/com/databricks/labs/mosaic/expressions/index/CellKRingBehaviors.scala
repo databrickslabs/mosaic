@@ -54,7 +54,7 @@ trait CellKRingBehaviors extends MosaicSpatialQueryTest {
         val cellKRingExpr = CellKRing(
           lit(wkt).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -66,7 +66,7 @@ trait CellKRingBehaviors extends MosaicSpatialQueryTest {
         val badExpr = CellKRing(
           lit(10).expr,
           lit(true).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

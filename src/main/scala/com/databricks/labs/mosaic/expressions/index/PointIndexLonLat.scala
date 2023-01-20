@@ -5,13 +5,11 @@ import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
-case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expression, indexSystemName: String)
+case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expression, indexSystem: IndexSystem)
     extends TernaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
-
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
 
     override def inputTypes: Seq[DataType] =
         (lon.dataType, lat.dataType, resolution.dataType) match {
@@ -54,7 +52,7 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = PointIndexLonLat(asArray(0), asArray(1), asArray(2), indexSystemName)
+        val res = PointIndexLonLat(asArray(0), asArray(1), asArray(2), indexSystem)
         res.copyTagsFrom(this)
         res
     }

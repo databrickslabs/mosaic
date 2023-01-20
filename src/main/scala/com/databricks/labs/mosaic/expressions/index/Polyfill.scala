@@ -17,13 +17,12 @@ import org.apache.spark.sql.types._
   """,
   since = "1.0"
 )
-case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
+case class Polyfill(geom: Expression, resolution: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends BinaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
 
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     // noinspection DuplicatedCode
@@ -71,7 +70,7 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = Polyfill(asArray(0), asArray(1), indexSystemName, geometryAPIName)
+        val res = Polyfill(asArray(0), asArray(1), indexSystem, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
