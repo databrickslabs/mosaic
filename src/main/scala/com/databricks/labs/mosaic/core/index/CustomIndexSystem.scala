@@ -119,6 +119,9 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
      */
     override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = {
         require(geometryAPI.isDefined, "GeometryAPI cannot be None.")
+        if (geometry.isEmpty) {
+            return Seq[Long]()
+        }
         val envelope = geometry.envelope
         val minX = envelope.minMaxCoord("X", "MIN")
         val maxX = envelope.minMaxCoord("X", "MAX")
@@ -238,9 +241,9 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
         require(resolution < conf.maxResolution,
             throw new IllegalStateException(s"Resolution exceeds maximum resolution of ${conf.maxResolution}."))
         require(x >= conf.boundXMin && x < conf.boundXMax,
-            throw new IllegalStateException(s"X coordinate out of bounds ${conf.boundXMin}-${conf.boundXMax}"))
+            throw new IllegalStateException(s"X coordinate (${x}) out of bounds ${conf.boundXMin}-${conf.boundXMax}"))
         require(y >= conf.boundYMin && y < conf.boundYMax,
-            throw new IllegalStateException(s"Y coordinate out of bounds ${conf.boundYMin}-${conf.boundYMax}"))
+            throw new IllegalStateException(s"Y coordinate (${y}) out of bounds ${conf.boundYMin}-${conf.boundYMax}"))
 
         val (_, _, cellPos) = getCellPositionFromCoordinates(x, y, resolution)
         getCellId(cellPos, resolution)
