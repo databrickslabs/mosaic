@@ -17,13 +17,11 @@ case class MosaicExplode(
     geom: Expression,
     resolution: Expression,
     keepCoreGeom: Expression,
-    indexSystemName: String,
+    indexSystem: IndexSystem,
     geometryAPIName: String
 ) extends CollectionGenerator
       with Serializable
       with CodegenFallback {
-
-    lazy val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
 
     lazy val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 

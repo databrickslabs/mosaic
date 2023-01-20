@@ -331,7 +331,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(wkt).expr,
           resExpr,
           lit(false).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -343,7 +343,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(10).expr,
           resExpr,
           lit(false).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

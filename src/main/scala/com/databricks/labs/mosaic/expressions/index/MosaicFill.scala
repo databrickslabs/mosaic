@@ -24,14 +24,13 @@ case class MosaicFill(
     geom: Expression,
     resolution: Expression,
     keepCoreGeom: Expression,
-    indexSystemName: String,
+    indexSystem: IndexSystem,
     geometryAPIName: String
 ) extends TernaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
 
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     // noinspection DuplicatedCode
@@ -94,7 +93,7 @@ case class MosaicFill(
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = MosaicFill(asArray(0), asArray(1), asArray(2), indexSystemName, geometryAPIName)
+        val res = MosaicFill(asArray(0), asArray(1), asArray(2), indexSystem, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }

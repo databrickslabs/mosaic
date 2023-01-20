@@ -382,22 +382,22 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           MosaicExplode.registryExpressionInfo(database),
           (exprs: Seq[Expression]) =>
               exprs match {
-                  case e if e.length == 2 => MosaicExplode(e(0), e(1), lit(true).expr, indexSystem.name, geometryAPI.name)
-                  case e                  => MosaicExplode(e(0), e(1), e(2), indexSystem.name, geometryAPI.name)
+                  case e if e.length == 2 => MosaicExplode(e(0), e(1), lit(true).expr, indexSystem, geometryAPI.name)
+                  case e                  => MosaicExplode(e(0), e(1), e(2), indexSystem, geometryAPI.name)
               }
         )
         registry.registerFunction(
           FunctionIdentifier("grid_tessellateaslong", database),
           MosaicFill.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => MosaicFill(exprs(0), exprs(1), lit(true).expr, indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => MosaicFill(exprs(0), exprs(1), lit(true).expr, indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_tessellate", database),
           MosaicFill.registryExpressionInfo(database),
           (exprs: Seq[Expression]) =>
               exprs match {
-                  case e if e.length == 2 => MosaicFill(e(0), e(1), lit(true).expr, indexSystem.name, geometryAPI.name)
-                  case e                  => MosaicFill(e(0), e(1), e(2), indexSystem.name, geometryAPI.name)
+                  case e if e.length == 2 => MosaicFill(e(0), e(1), lit(true).expr, indexSystem, geometryAPI.name)
+                  case e                  => MosaicFill(e(0), e(1), e(2), indexSystem, geometryAPI.name)
               }
         )
 
@@ -635,7 +635,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             grid_tessellateexplode(geom, lit(resolution), keepCoreGeometries)
         def grid_tessellateexplode(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
             ColumnAdapter(
-                MosaicExplode(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name)
+                MosaicExplode(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem, geometryAPI.name)
             )
         def grid_tessellate(geom: Column, resolution: Column): Column =
             grid_tessellate(geom, resolution, lit(true))
@@ -647,7 +647,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             grid_tessellate(geom, lit(resolution), lit(keepCoreGeometries))
         def grid_tessellate(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
             ColumnAdapter(
-              MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name)
+              MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem, geometryAPI.name)
             )
         def grid_pointascellid(point: Column, resolution: Column): Column =
             ColumnAdapter(PointIndexGeom(point.expr, resolution.expr, indexSystem.name, geometryAPI.name))

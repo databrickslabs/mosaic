@@ -256,7 +256,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
           lit(wkt).expr,
           resExpr,
           lit(false).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -275,7 +275,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
           lit(10).expr,
           resExpr,
           lit(false).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
