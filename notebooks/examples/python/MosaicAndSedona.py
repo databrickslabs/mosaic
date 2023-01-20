@@ -12,7 +12,7 @@
 # MAGIC 
 # MAGIC ### Install sedona
 # MAGIC 
-# MAGIC To install Sedona, follow the [official Sedona instructions](https://sedona.apache.org/setup/databricks/).
+# MAGIC To install Sedona, follow the [official Sedona instructions](https://sedona.apache.org/1.3.1-incubating/setup/databricks/).
 
 # COMMAND ----------
 
