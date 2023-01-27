@@ -17,7 +17,7 @@ __pycache__/
 *$py.class
 
 # C extensions
-*.so
+#*.so
 
 # Distribution / packaging
 .Python
@@ -156,3 +156,4 @@ spark-warehouse
 # MacOS
 .DS_Store
 .Rproj.user
+docker/.m2/

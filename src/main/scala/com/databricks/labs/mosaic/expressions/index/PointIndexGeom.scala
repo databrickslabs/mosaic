@@ -1,11 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-import com.databricks.labs.mosaic.core.index.{H3IndexSystem, IndexSystemID}
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
-import com.databricks.labs.mosaic.sql.MosaicSQLExceptions
-
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
@@ -15,11 +11,14 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemN
       with NullIntolerant
       with CodegenFallback {
 
+    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+    val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
+
     /** Expression output DataType. */
-    override def dataType: DataType = LongType
+    override def dataType: DataType = indexSystem.getCellIdDataType
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "point_index_geom"
+    override def prettyName: String = "grid_pointascellid"
 
     /**
       * Computes the index corresponding to the provided POINT geometry.
@@ -32,20 +31,16 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemN
       *   Index id in Long.
       */
     override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         val resolution: Int = indexSystem.getResolution(input2)
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val rowGeom = geometryAPI.geometry(input1, geom.dataType)
-        val geomType = GeometryTypeEnum.fromString(rowGeom.getGeometryType)
-        geomType match {
-            case GeometryTypeEnum.POINT =>
-                val point = rowGeom.asInstanceOf[MosaicPoint]
-                indexSystem.pointToIndex(point.getX, point.getY, resolution)
-            case _ => throw MosaicSQLExceptions.IncorrectGeometryTypeSupplied(toString, geomType, GeometryTypeEnum.POINT)
-        }
+
+        // If another geometry type is provided, it will be converted to a centroid point.
+        val point = geometryAPI.geometry(input1, geom.dataType).getCentroid
+        val cellID = indexSystem.pointToIndex(point.getX, point.getY, resolution)
+
+        indexSystem.serializeCellId(cellID)
     }
 
-    override def toString: String = s"point_index_geom($geom, $resolution)"
+    override def toString: String = s"grid_pointascellid($geom, $resolution)"
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
@@ -58,8 +53,7 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemN
 
     override def right: Expression = resolution
 
-    override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression): Expression =
-        copy(geom = newFirst, resolution = newSecond)
+    override protected def withNewChildrenInternal(newLeft: Expression, newThird: Expression): Expression = copy(newLeft, newThird)
 
 }
 
@@ -70,7 +64,7 @@ object PointIndexGeom {
         new ExpressionInfo(
           classOf[PointIndexGeom].getCanonicalName,
           db.orNull,
-          "point_index_geom",
+          "grid_pointascellid",
           """
             |    _FUNC_(geom, resolution) - Returns the index of a point geometry at resolution.
             """.stripMargin,

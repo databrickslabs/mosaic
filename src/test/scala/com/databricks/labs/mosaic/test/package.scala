@@ -1,10 +1,13 @@
 package com.databricks.labs.mosaic
 
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{IntegerType, StringType}
+import org.apache.spark.sql.types._
+
+import java.nio.file.{Files, Paths}
 
 package object test {
 
@@ -158,6 +161,10 @@ package object test {
                 case id :: wkt :: _ => List(id, JTS.geometry(wkt, "WKT").mapXY((x, y) => (math.abs(x) * 1000, math.abs(y) * 1000)).toWKT)
                 case _              => throw new Error("Unexpected test data format!")
             }
+        val geotiffBytes: Array[Byte] = fileBytes("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
+        val gribBytes: Array[Byte] =
+            fileBytes("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grib")
+        val netcdfBytes: Array[Byte] = fileBytes("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
 
         def polyDf(sparkSession: SparkSession, mosaicContext: MosaicContext): DataFrame = {
             val mc = mosaicContext
@@ -235,8 +242,8 @@ package object test {
             val indexSystem = mc.getIndexSystem
             val spark = SparkSession.builder().getOrCreate()
             val rows = indexSystem match {
-                case H3IndexSystem  => hex_rows_epsg4326.map { x => Row(x: _*) }
                 case BNGIndexSystem => hex_rows_epsg27700.map { x => Row(x: _*) }
+                case _              => hex_rows_epsg4326.map { x => Row(x: _*) }
             }
             val rdd = spark.sparkContext.makeRDD(rows)
             val schema = StructType(
@@ -256,6 +263,7 @@ package object test {
             val rows = indexSystem match {
                 case H3IndexSystem  => wkt_rows_epsg4326.map { x => Row(x: _*) }
                 case BNGIndexSystem => wkt_rows_epsg27700.map { x => Row(x: _*) }
+                case _              => wkt_rows_epsg4326.map { x => Row(x: _*) }
             }
             val rdd = spark.sparkContext.makeRDD(rows)
             val schema = StructType(
@@ -302,7 +310,6 @@ package object test {
             )
             val df = spark.createDataFrame(rdd, schema)
             indexSystem match {
-                case H3IndexSystem  => df
                 case BNGIndexSystem => df
                         .withColumn("greenwich", st_point(lit(0.0098), lit(51.4934)))
                         .withColumn(
@@ -322,8 +329,63 @@ package object test {
                           st_asgeojson(st_transform(col("geojson"), lit(27700)))
                         )
                         .drop("greenwich")
+                case _              => df
             }
         }
 
+        def fileBytes(resourcePath: String): Array[Byte] = {
+            val inFile = getClass.getResource(resourcePath)
+            Files.readAllBytes(Paths.get(inFile.getPath))
+        }
+
+        def filePath(resourcePath: String): String = {
+            val inFile = getClass.getResource(resourcePath)
+            Paths.get(inFile.getPath).toAbsolutePath.toString
+        }
+
+        // noinspection ScalaCustomHdfsFormat
+        def getBinaryDf(spark: SparkSession, resourcePath: String, pathGlobFilter: String): DataFrame =
+            spark.read.format("binaryFile").option("pathGlobFilter", pathGlobFilter).load(resourcePath)
+
+        def getGeotiffBinaryDf(spark: SparkSession): DataFrame = getBinaryDf(spark, "src/test/resources/modis/", "*.TIF")
+
+        def getGribBinaryDf(spark: SparkSession): DataFrame = getBinaryDf(spark, "src/test/resources/binary/grib-cams", "*.grib")
+
+        def getNetCDFBinaryDf(spark: SparkSession): DataFrame = getBinaryDf(spark, "src/test/resources/binary/netcdf-coral", "*.nc")
+
     }
+
+    // noinspection NotImplementedCode, ScalaStyle
+    object MockIndexSystem extends IndexSystem(LongType) {
+
+        override def name: String = "MOCK"
+
+        override def getIndexSystemID: IndexSystemID = ???
+
+        override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = ???
+
+        override def format(id: Long): String = ???
+
+        override def getResolutionStr(resolution: Int): String = ???
+
+        override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = ???
+
+        override def kLoop(index: Long, n: Int): Seq[Long] = ???
+
+        override def kRing(index: Long, n: Int): Seq[Long] = ???
+
+        override def getResolution(res: Any): Int = ???
+
+        override def resolutions: Set[Int] = ???
+
+        override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = ???
+
+        override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = ???
+
+        override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = ???
+
+        override def parse(id: String): Long = ???
+
+    }
+
 }

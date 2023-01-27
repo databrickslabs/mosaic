@@ -89,8 +89,8 @@ help(neighbourhoods_mdf.get_optimal_resolution)
 
 # COMMAND ----------
 
-from mosaic import point_index_lonlat
-indexed_trips = trips.withColumn("ix", point_index_lonlat(lon="pickup_longitude", lat="pickup_latitude", resolution=lit(resolution)))
+from mosaic import grid_longlatascellid
+indexed_trips = trips.withColumn("ix", grid_longlatascellid(lon="pickup_longitude", lat="pickup_latitude", resolution=lit(resolution)))
 indexed_trips.show()
 
 # COMMAND ----------

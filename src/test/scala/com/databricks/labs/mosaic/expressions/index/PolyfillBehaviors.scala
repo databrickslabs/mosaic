@@ -1,20 +1,49 @@
 package com.databricks.labs.mosaic.expressions.index
 
+import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
-import org.scalatest.flatspec.AnyFlatSpec
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions.{col, lit}
+import org.apache.spark.sql.types._
 import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.functions.col
+//noinspection ScalaDeprecation
+trait PolyfillBehaviors extends MosaicSpatialQueryTest {
 
-trait PolyfillBehaviors {
-    this: AnyFlatSpec =>
-
-    def wktPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def polyfillOnComputedColumns(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
+
+        val boroughs: DataFrame = getBoroughs(mc)
+
+        val mosaics = boroughs
+            .select(
+              grid_polyfill(convert_to(col("wkt"), "wkb"), resolution)
+            )
+            .collect()
+
+        boroughs.collect().length shouldEqual mosaics.length
+    }
+
+    def wktPolyfill(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = mosaicContext
+        import mc.functions._
+        mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
@@ -37,17 +66,22 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def wkbPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def wkbPolyfill(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
-            .select(
-              polyfill(convert_to(col("wkt"), "wkb"), resolution)
-            )
+            .select(convert_to(col("wkt"), "wkb").as("wkb"))
+            .select(polyfill(col("wkb"), resolution))
             .collect()
 
         boroughs.collect().length shouldEqual mosaics.length
@@ -63,17 +97,22 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def hexPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def hexPolyfill(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
-            .select(
-              polyfill(convert_to(col("wkt"), "hex"), resolution)
-            )
+            .select(convert_to(col("wkt"), "hex").as("hex"))
+            .select(polyfill(col("hex"), resolution))
             .collect()
 
         boroughs.collect().length shouldEqual mosaics.length
@@ -89,17 +128,22 @@ trait PolyfillBehaviors {
         boroughs.collect().length shouldEqual mosaics2.length
     }
 
-    def coordsPolyfill(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def coordsPolyfill(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         import mc.functions._
-        mosaicContext.register(spark)
+        mc.register(spark)
+
+        val resolution = mc.getIndexSystem match {
+            case H3IndexSystem  => 11
+            case BNGIndexSystem => 4
+        }
 
         val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
-            .select(
-              polyfill(convert_to(col("wkt"), "coords"), resolution)
-            )
+            .select(convert_to(col("wkt"), "coords").as("coords"))
+            .select(polyfill(col("coords"), resolution))
             .collect()
 
         boroughs.collect().length shouldEqual mosaics.length
@@ -113,6 +157,53 @@ trait PolyfillBehaviors {
             .collect()
 
         boroughs.collect().length shouldEqual mosaics2.length
+    }
+
+    def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
+        val funcs = mosaicContext.functions
+        noException should be thrownBy funcs.grid_polyfill(col("wkt"), 3)
+        noException should be thrownBy funcs.grid_polyfill(col("wkt"), lit(3))
+    }
+
+    def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val sc = spark
+        import sc.implicits._
+        val mc = mosaicContext
+        mc.register(spark)
+
+        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
+        val resExpr = mc.getIndexSystem match {
+            case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
+            case BNGIndexSystem => lit("100m").expr
+        }
+
+        val polyfillExpr = Polyfill(
+          lit(wkt).expr,
+          resExpr,
+          mc.getIndexSystem.name,
+          mc.getGeometryAPI.name
+        )
+
+        mc.getIndexSystem match {
+            case H3IndexSystem  => polyfillExpr.dataType shouldEqual ArrayType(LongType)
+            case BNGIndexSystem => polyfillExpr.dataType shouldEqual ArrayType(StringType)
+        }
+
+        val badExpr = Polyfill(
+          lit(10).expr,
+          lit(true).expr,
+          mc.getIndexSystem.name,
+          mc.getGeometryAPI.name
+        )
+
+        an[Error] should be thrownBy badExpr.inputTypes
+
+        // legacy API def tests
+        noException should be thrownBy mc.functions.polyfill(lit(""), lit(5))
+        noException should be thrownBy mc.functions.polyfill(lit(""), 5)
+
+        noException should be thrownBy polyfillExpr.makeCopy(polyfillExpr.children.toArray)
     }
 
 }

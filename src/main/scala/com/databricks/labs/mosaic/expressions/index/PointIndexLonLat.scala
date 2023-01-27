@@ -1,8 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.index.IndexSystemID
-
-import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
@@ -12,15 +11,24 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
       with NullIntolerant
       with CodegenFallback {
 
-    override def inputTypes: Seq[DataType] = Seq(DoubleType, DoubleType, IntegerType)
+    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+
+    override def inputTypes: Seq[DataType] =
+        (lon.dataType, lat.dataType, resolution.dataType) match {
+            case (DoubleType, DoubleType, IntegerType) => Seq(DoubleType, DoubleType, IntegerType, BooleanType)
+            case (DoubleType, DoubleType, StringType)  => Seq(DoubleType, DoubleType, StringType, BooleanType)
+            case _                                     => throw new Error(
+                  s"Not supported data type: (${lon.dataType}, ${lat.dataType}, ${resolution.dataType})."
+                )
+        }
 
     /** Expression output DataType. */
-    override def dataType: DataType = LongType
+    override def dataType: DataType = indexSystem.getCellIdDataType
 
-    override def toString: String = s"point_index_lonlat($lon, $lat, $resolution)"
+    override def toString: String = s"grid_longlatascellid($lon, $lat, $resolution)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "point_index_lonlat"
+    override def prettyName: String = "grid_longlatascellid"
 
     /**
       * Computes the index corresponding to the provided lat and long
@@ -36,12 +44,12 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
       *   Index id in Long.
       */
     override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
         val resolution: Int = indexSystem.getResolution(input3)
         val lon: Double = input1.asInstanceOf[Double]
         val lat: Double = input2.asInstanceOf[Double]
 
-        indexSystem.pointToIndex(lon, lat, resolution)
+        val cellID = indexSystem.pointToIndex(lon, lat, resolution)
+        indexSystem.serializeCellId(cellID)
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
@@ -57,8 +65,11 @@ case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expres
 
     override def third: Expression = resolution
 
-    override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
-        copy(lon = newFirst, lat = newSecond, resolution = newThird)
+    override protected def withNewChildrenInternal(
+        newFirst: Expression,
+        newSecond: Expression,
+        newThird: Expression
+    ): Expression = copy(newFirst, newSecond, newThird)
 
 }
 
@@ -69,7 +80,7 @@ object PointIndexLonLat {
         new ExpressionInfo(
           classOf[PointIndexLonLat].getCanonicalName,
           db.orNull,
-          "point_index_lonlat",
+          "grid_longlatascellid",
           """
             |    _FUNC_(lon, lat, resolution) - Returns the index of a point(lon, lat) at resolution.
             """.stripMargin,

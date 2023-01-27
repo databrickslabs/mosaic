@@ -8,8 +8,6 @@ import org.apache.spark.sql.types._
   */
 package object types {
 
-    val ChipType: DataType = new ChipType()
-    val MosaicType: DataType = new MosaicType()
     val HexType: DataType = new HexType()
     val JSONType: DataType = new JSONType()
     // Note InternalGeometryType depends on InternalCoordType
@@ -18,6 +16,5 @@ package object types {
     val BoundaryType: ArrayType = ArrayType(ArrayType(InternalCoordType))
     val HolesType: ArrayType = ArrayType(ArrayType(ArrayType(InternalCoordType)))
     val InternalGeometryType: DataType = new InternalGeometryType()
-    val KryoType: DataType = new KryoType()
 
 }

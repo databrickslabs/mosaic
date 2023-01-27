@@ -23,11 +23,11 @@ st_intersects_aggregate
 
     >>> left_df = (
           spark.createDataFrame([{'geom': 'POLYGON ((0 0, 0 3, 3 3, 3 0))'}])
-          .select(mosaic_explode(col("geom"), lit(1)).alias("left_index"))
+          .select(grid_tessellateexplode(col("geom"), lit(1)).alias("left_index"))
         )
     >>> right_df = (
           spark.createDataFrame([{'geom': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
-          .select(mosaic_explode(col("geom"), lit(1)).alias("right_index"))
+          .select(grid_tessellateexplode(col("geom"), lit(1)).alias("right_index"))
         )
     >>> (
           left_df
@@ -44,9 +44,9 @@ st_intersects_aggregate
    .. code-tab:: scala
 
     >>> val leftDf = List("POLYGON ((0 0, 0 3, 3 3, 3 0))").toDF("geom")
-            .select(mosaic_explode($"geom", lit(1)).alias("left_index"))
+            .select(grid_tessellateexplode($"geom", lit(1)).alias("left_index"))
     >>> val rightDf = List("POLYGON ((2 2, 2 4, 4 4, 4 2))").toDF("geom")
-            .select(mosaic_explode($"geom", lit(1)).alias("right_index"))
+            .select(grid_tessellateexplode($"geom", lit(1)).alias("right_index"))
     >>> leftDf
             .join(rightDf, $"left_index.index_id" === $"right_index.index_id")
             .groupBy()
@@ -60,8 +60,8 @@ st_intersects_aggregate
 
    .. code-tab:: sql
 
-    >>> WITH l AS (SELECT mosaic_explode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
-        r AS (SELECT mosaic_explode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
+    >>> WITH l AS (SELECT grid_tessellateexplode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
+        r AS (SELECT grid_tessellateexplode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
         SELECT st_intersects_aggregate(l.left_index, r.right_index)
         FROM l INNER JOIN r on l.left_index.index_id = r.right_index.index_id
     +------------------------------------------------+
@@ -74,11 +74,11 @@ st_intersects_aggregate
 
     >>> df.l <- select(
           createDataFrame(data.frame(geom = "POLYGON ((0 0, 0 3, 3 3, 3 0))")),
-          alias(mosaic_explode(column("geom"), lit(1L)), "left_index")
+          alias(grid_tessellateexplode(column("geom"), lit(1L)), "left_index")
         )
     >>> df.r <- select(
           createDataFrame(data.frame(geom = "POLYGON ((2 2, 2 4, 4 4, 4 2))")),
-          alias(mosaic_explode(column("geom"), lit(1L)), "right_index")
+          alias(grid_tessellateexplode(column("geom"), lit(1L)), "right_index")
         )
     >>> showDF(
           select(
@@ -113,11 +113,11 @@ st_intersection_aggregate
 
     >>> left_df = (
           spark.createDataFrame([{'geom': 'POLYGON ((0 0, 0 3, 3 3, 3 0))'}])
-          .select(mosaic_explode(col("geom"), lit(1)).alias("left_index"))
+          .select(grid_tessellateexplode(col("geom"), lit(1)).alias("left_index"))
         )
     >>> right_df = (
           spark.createDataFrame([{'geom': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
-          .select(mosaic_explode(col("geom"), lit(1)).alias("right_index"))
+          .select(grid_tessellateexplode(col("geom"), lit(1)).alias("right_index"))
         )
     >>> (
           left_df
@@ -134,9 +134,9 @@ st_intersection_aggregate
    .. code-tab:: scala
 
     >>> val leftDf = List("POLYGON ((0 0, 0 3, 3 3, 3 0))").toDF("geom")
-            .select(mosaic_explode($"geom", lit(1)).alias("left_index"))
+            .select(grid_tessellateexplode($"geom", lit(1)).alias("left_index"))
     >>> val rightDf = List("POLYGON ((2 2, 2 4, 4 4, 4 2))").toDF("geom")
-            .select(mosaic_explode($"geom", lit(1)).alias("right_index"))
+            .select(grid_tessellateexplode($"geom", lit(1)).alias("right_index"))
     >>> leftDf
             .join(rightDf, $"left_index.index_id" === $"right_index.index_id")
             .groupBy()
@@ -150,8 +150,8 @@ st_intersection_aggregate
 
    .. code-tab:: sql
 
-    >>> WITH l AS (SELECT mosaic_explode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
-        r AS (SELECT mosaic_explode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
+    >>> WITH l AS (SELECT grid_tessellateexplode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
+        r AS (SELECT grid_tessellateexplode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
         SELECT st_astext(st_intersection_aggregate(l.left_index, r.right_index))
         FROM l INNER JOIN r on l.left_index.index_id = r.right_index.index_id
     +--------------------------------------------------------------+
@@ -164,11 +164,11 @@ st_intersection_aggregate
 
     >>> df.l <- select(
           createDataFrame(data.frame(geom = "POLYGON ((0 0, 0 3, 3 3, 3 0))")),
-          alias(mosaic_explode(column("geom"), lit(1L)), "left_index")
+          alias(grid_tessellateexplode(column("geom"), lit(1L)), "left_index")
         )
     >>> df.r <- select(
           createDataFrame(data.frame(geom = "POLYGON ((2 2, 2 4, 4 4, 4 2))")),
-          alias(mosaic_explode(column("geom"), lit(1L)), "right_index")
+          alias(grid_tessellateexplode(column("geom"), lit(1L)), "right_index")
         )
     >>> showDF(
           select(
@@ -181,3 +181,58 @@ st_intersection_aggregate
     +--------------------------------------------------------------+
     |POLYGON ((2 2, 3 2, 3 3, 2 3, 2 2))                           |
     +--------------------------------------------------------------+
+
+st_union_agg
+************
+
+.. function:: st_union_agg(geom)
+
+    Computes the union of the input geometries.
+
+    :param geom: Geometry
+    :type geom: Column
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+
+    >>> df = spark.createDataFrame([{'geom': 'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'}, {'geom': 'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'}])
+    >>> df.select(st_astext(st_union_agg(col('geom')))).show()
+    +-------------------------------------------------------------------------+
+    | st_union_agg(geom)                                                      |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").toDF("geom")
+    >>> df.select(st_astext(st_union_agg(col('geom')))).show()
+    +-------------------------------------------------------------------------+
+    | st_union_agg(geom)                                                      |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> WITH geoms ('geom') AS (VALUES ('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'), ('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'))
+        SELECT st_astext(st_union_agg(geoms));
+    +-------------------------------------------------------------------------+
+    | st_union_agg(geom)                                                      |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df.geom <- select(createDataFrame(data.frame(geom = c('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'), ('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'))))
+    >>> showDF(select(st_astext(st_union_agg(column("geom")))), truncate=F)
+    +-------------------------------------------------------------------------+
+    | st_union_agg(geom)                                                      |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+

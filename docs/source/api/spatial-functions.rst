@@ -122,7 +122,7 @@ st_area
 st_buffer
 *********
 
-.. function:: st_buffer(col)
+.. function:: st_buffer(col, radius)
 
     Buffer the input geometry by radius `radius` and return a new, buffered geometry.
 
@@ -173,6 +173,70 @@ st_buffer
     +--------------------+
     |POLYGON ((29.1055...|
     +--------------------+
+
+st_bufferloop
+*************
+
+.. function:: st_bufferloop(col, innerRadius, outerRadius)
+
+    Returns a difference between st_buffer(col, outerRadius) and st_buffer(col, innerRadius).
+    The resulting geometry is a loop with a width of outerRadius - innerRadius.
+
+    :param col: Geometry
+    :type col: Column
+    :param innerRadius: Radius of the resulting geometry hole.
+    :type innerRadius: Column (DoubleType)
+    :param outerRadius: Radius of the resulting geometry.
+    :type outerRadius: Column (DoubleType)
+    :rtype: Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_bufferloop('wkt', lit(2.), lit(2.1)).show()
+    +-------------------------+
+    | st_buffer(wkt, 2.0, 2.1)|
+    +-------------------------+
+    |     POLYGON ((29.1055...|
+    +-------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_bufferloop('wkt', lit(2.), lit(2.1))).show()
+    +-------------------------+
+    | st_buffer(wkt, 2.0, 2.1)|
+    +-------------------------+
+    |     POLYGON ((29.1055...|
+    +-------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_bufferloop("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d, 2.1d)
+    +-------------------------+
+    | st_buffer(wkt, 2.0, 2.1)|
+    +-------------------------+
+    |     POLYGON ((29.1055...|
+    +-------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_bufferloop('wkt', lit(2.), lit(2.1))))
+    +-------------------------+
+    | st_buffer(wkt, 2.0, 2.1)|
+    +-------------------------+
+    |     POLYGON ((29.1055...|
+    +-------------------------+
+
+
+.. figure:: ../images/st_bufferloop/geom.png
+   :figclass: doc-figure
+
+   Fig 1. ST_BufferLoop(geom, 0.02, 0.04)
 
 st_centroid2D
 *************
@@ -291,6 +355,62 @@ st_convexhull
     +---------------------------------------------+
     |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
     +---------------------------------------------+
+
+
+st_difference
+*************
+
+.. function:: st_difference(left_geom, right_geom)
+
+    Returns the point set difference of the left and right geometry.
+
+    :param left_geom: Geometry
+    :type left_geom: Column
+    :param right_geom: Geometry
+    :type right_geom: Column
+    :rtype Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'left': 'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))', 'right': 'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'}])
+    >>> df.select(st_difference(col('left'), col('right'))).show()
+    +-----------------------------------------------------------+
+    | st_difference(left, right)                                |
+    +-----------------------------------------------------------+
+    |POLYGON ((10 10, 20 10, 20 15, 15 15, 15 20, 10 20, 10 10))|
+    +-----------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")).toDF("left", "right")
+    >>> df.select(st_difference(col('left'), col('right'))).show()
+    +-----------------------------------------------------------+
+    | st_difference(left, right)                                |
+    +-----------------------------------------------------------+
+    |POLYGON ((10 10, 20 10, 20 15, 15 15, 15 20, 10 20, 10 10))|
+    +-----------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_difference("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")
+    +-----------------------------------------------------------+
+    | st_difference(left, right)                                |
+    +-----------------------------------------------------------+
+    |POLYGON ((10 10, 20 10, 20 15, 15 15, 15 20, 10 20, 10 10))|
+    +-----------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(p1 = "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", p2 = "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))"))
+    >>> showDF(select(df, st_difference(column("p1"), column("p2"))), truncate=F)
+    +-----------------------------------------------------------+
+    | st_difference(left, right)                                |
+    +-----------------------------------------------------------+
+    |POLYGON ((10 10, 20 10, 20 15, 15 15, 15 20, 10 20, 10 10))|
+    +-----------------------------------------------------------+
 
 
 st_distance
@@ -414,6 +534,61 @@ st_dump
     |POINT (20 20)|
     |POINT (30 10)|
     +-------------+
+
+
+st_envelope
+***********
+
+.. function:: st_envelope(col)
+
+    Returns the minimum bounding box of the input geometry, as a geometry.
+    This bounding box is defined by the rectangular polygon with corner points `(x_min, y_min)`, `(x_max, y_min)`, `(x_min, y_max)`, `(x_max, y_max)`.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((10 10, 20 10, 15 20, 10 10))'}])
+    >>> df.select(st_envelope('wkt')).show()
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> df = List(("POLYGON ((10 10, 20 10, 15 20, 10 10))")).toDF("wkt")
+    >>> df.select(st_envelope('wkt')).show()
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_envelope("POLYGON ((10 10, 20 10, 15 20, 10 10))")
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((10 10, 20 10, 15 20, 10 10))")
+    >>> showDF(select(df, st_envelope(column("wkt"))), truncate=F)
+    +-----------------------------------------------+
+    | st_envelope(wkt)                              |
+    +-----------------------------------------------+
+    | POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10)) |
+    +-----------------------------------------------+
 
 
 st_geometrytype
@@ -1209,6 +1384,172 @@ st_translate
     |MULTIPOINT ((20 35), (50 25), (30 15), (40 5))|
     +----------------------------------------------+
 
+st_simplify
+***********
+
+.. function:: st_simplify(geom, tol)
+
+    Returns the simplified geometry.
+
+    :param geom: Geometry
+    :type geom: Column
+    :param tol: Tolerance
+    :type tol: Column
+    :rtype: Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'LINESTRING (0 1, 1 2, 2 1, 3 0)'}])
+    >>> df.select(st_simplify('wkt', 1.0)).show()
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+   .. code-tab:: scala
+
+    >>> df = List(("LINESTRING (0 1, 1 2, 2 1, 3 0)")).toDF("wkt")
+    >>> df.select(st_simplify('wkt', 1.0)).show()
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_simplify("LINESTRING (0 1, 1 2, 2 1, 3 0)", 1.0)
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "LINESTRING (0 1, 1 2, 2 1, 3 0)")
+    >>> showDF(select(df, st_simplify(column("wkt"), 1.0)), truncate=F)
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+.. note::
+    The specified tolerance will be ignored by the ESRI geometry API.
+
+st_union
+********
+
+.. function:: st_union(left_geom, right_geom)
+
+    Returns the point set union of the input geometries.
+
+    :param left_geom: Geometry
+    :type left_geom: Column
+    :param right_geom: Geometry
+    :type right_geom: Column
+    :rtype: Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'left': 'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))', 'right': 'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'}])
+    >>> df.select(st_union(col('left'), col('right'))).show()
+    +-------------------------------------------------------------------------+
+    | st_union(left, right)                                                   |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")).toDF("left", "right")
+    >>> df.select(st_union(col('left'), col('right'))).show()
+    +-------------------------------------------------------------------------+
+    | st_union(left, right)                                                   |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_union("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")
+    +-------------------------------------------------------------------------+
+    | st_union(left, right)                                                   |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(p1 = "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", p2 = "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))"))
+    >>> showDF(select(df, st_union(column("p1"), column("p2"))), truncate=F)
+    +-------------------------------------------------------------------------+
+    | st_union(left, right)                                                   |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+st_unaryunion
+*************
+
+.. function:: st_unaryunion(col)
+
+    Returns a geometry that represents the point set union of the given geometry
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))'}])
+    >>> df.select(st_unaryunion('wkt')).show()
+    +-------------------------------------------------------------------------+
+    | st_unaryunion(wkt, 2.0)                                                 |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")).toDF("wkt")
+    >>> df.select(st_unaryunion(col("wkt"))).show()
+    +-------------------------------------------------------------------------+
+    | st_unaryunion(wkt, 2.0)                                                 |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_unaryunion("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
+    +-------------------------------------------------------------------------+
+    | st_unaryunion(wkt, 2.0)                                                 |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
+    >>> showDF(select(df, st_unaryunion(column("wkt"))), truncate=F)
+    +-------------------------------------------------------------------------+
+    | st_unaryunion(wkt, 2.0)                                                 |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
 st_xmax
 *******
 
@@ -1447,5 +1788,4 @@ st_zmin
     :param col: Geometry
     :type col: Column
     :rtype: Column: DoubleType
-
 

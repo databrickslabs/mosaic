@@ -67,6 +67,8 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def simplify(tolerance: Double): MosaicGeometry = MosaicGeometryESRI(geom.makeSimple())
 
+    override def envelope: MosaicGeometry = MosaicGeometryESRI(geom.envelope())
+
     override def intersection(other: MosaicGeometry): MosaicGeometry = {
         val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
         MosaicGeometryESRI(intersection(otherGeom))
@@ -83,6 +85,12 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def intersects(other: MosaicGeometry): Boolean = {
         val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
         this.geom.intersects(otherGeom)
+    }
+
+    override def difference(other: MosaicGeometry): MosaicGeometry = {
+        val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
+        val difference = this.getGeom.difference(otherGeom)
+        MosaicGeometryESRI(difference)
     }
 
     override def union(other: MosaicGeometry): MosaicGeometry = {
@@ -119,6 +127,11 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def equals(other: java.lang.Object): Boolean = false
 
+    override def equalsTopo(other: MosaicGeometry): Boolean = {
+        val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
+        this.getGeom.Equals(otherGeom)
+    }
+
     override def hashCode: Int = geom.hashCode()
 
     override def boundary: MosaicGeometry = MosaicGeometryESRI(geom.boundary())
@@ -126,6 +139,12 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def distance(geom2: MosaicGeometry): Double = this.getGeom.distance(geom2.asInstanceOf[MosaicGeometryESRI].getGeom)
 
     override def convexHull: MosaicGeometryESRI = MosaicGeometryESRI(geom.convexHull())
+
+    override def unaryUnion: MosaicGeometry = {
+        // ESRI geometry does not directly implement unary union.
+        // Here the (binary) union is used, because the union of the geometry with itself is equivalent to the unary union.
+        MosaicGeometryESRI(geom.union(geom))
+    }
 
     override def toWKT: String = geom.asText()
 

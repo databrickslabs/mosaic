@@ -30,7 +30,7 @@ case class ST_Area(
 ) extends MosaicUnaryExpression[ST_Area](inputGeom, DoubleType, Some(indexSystemName), Some(geometryAPIName)) {
 
     /**
-      * ST_Area expression returns are covered by the
+      * ST_Area expression returns area covered by the
       * [[org.locationtech.jts.geom.Geometry]] instance extracted from inputGeom
       * expression.
       */

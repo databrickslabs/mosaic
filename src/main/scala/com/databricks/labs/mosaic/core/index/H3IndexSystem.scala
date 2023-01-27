@@ -1,13 +1,17 @@
 package com.databricks.labs.mosaic.core.index
 
-import scala.collection.JavaConverters._
-
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
-import com.databricks.labs.mosaic.core.types.model.MosaicChip
 import com.uber.h3core.H3Core
+import com.uber.h3core.util.GeoCoord
+import org.apache.spark.sql.types.LongType
+import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
+
+import scala.collection.JavaConverters._
+import scala.util.{Success, Try}
 
 /**
   * Implements the [[IndexSystem]] via [[H3Core]] java bindings.
@@ -15,10 +19,10 @@ import org.locationtech.jts.geom.Geometry
   * @see
   *   [[https://github.com/uber/h3-java]]
   */
-object H3IndexSystem extends IndexSystem with Serializable {
+object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
     // An instance of H3Core to be used for IndexSystem implementation.
-    @transient val h3: H3Core = H3Core.newInstance()
+    @transient private val h3: H3Core = H3Core.newInstance()
 
     /**
       * H3 resolution can only be an Int value between 0 and 15.
@@ -31,7 +35,16 @@ object H3IndexSystem extends IndexSystem with Serializable {
       *   Int value representing the resolution.
       */
     override def getResolution(res: Any): Int = {
-        val resolution: Int = res.asInstanceOf[Int]
+        val resolution = (
+          Try(res.asInstanceOf[Int]),
+          Try(res.asInstanceOf[String]),
+          Try(res.asInstanceOf[UTF8String].toString)
+        ) match {
+            case (Success(i), _, _) => i
+            case (_, Success(s), _) => s.toInt
+            case (_, _, Success(s)) => s.toInt
+            case _                  => throw new IllegalArgumentException("Resolution must be an Int or String.")
+        }
         if (resolution < 0 | resolution > 15) {
             throw new IllegalStateException(s"H3 resolution has to be between 0 and 15; found $resolution")
         }
@@ -60,15 +73,8 @@ object H3IndexSystem extends IndexSystem with Serializable {
         val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
         val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
         val boundary = indexGeom.getShellPoints.head // first shell is always in head
-
-        // Hexagons have only 3 diameters.
-        // Computing them manually and selecting the maximum.
-        // noinspection ZeroIndexToHead
-        Seq(
-          boundary(0).distance(boundary(3)),
-          boundary(1).distance(boundary(4)),
-          boundary(2).distance(boundary(5))
-        ).max / 2
+        val indexGeomCentroid = indexGeom.getCentroid
+        boundary.map(_.distance(indexGeomCentroid)).max
     }
 
     /**
@@ -85,7 +91,10 @@ object H3IndexSystem extends IndexSystem with Serializable {
     override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
-        geometryAPI.geometry(extended.map(geometryAPI.fromGeoCoord), POLYGON)
+        geometryAPI.geometry(
+          extended.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
+          POLYGON
+        )
     }
 
     /**
@@ -105,8 +114,8 @@ object H3IndexSystem extends IndexSystem with Serializable {
             val shellPoints = geometry.getShellPoints
             val holePoints = geometry.getHolePoints
             (for (i <- 0 until geometry.getNumGeometries) yield {
-                val boundary = shellPoints(i).map(_.geoCoord).asJava
-                val holes = holePoints(i).map(_.map(_.geoCoord).asJava).asJava
+                val boundary = shellPoints(i).map(_.geoCoord).map(p => new GeoCoord(p.lat, p.lng)).asJava
+                val holes = holePoints(i).map(_.map(_.geoCoord).map(p => new GeoCoord(p.lat, p.lng)).asJava).asJava
 
                 val indices = h3.polyfill(boundary, holes, resolution)
                 indices.asScala.map(_.toLong)
@@ -163,8 +172,14 @@ object H3IndexSystem extends IndexSystem with Serializable {
       * @return
       *   A collection of index IDs forming a k disk.
       */
-    override def kDisk(index: Long, n: Int): Seq[Long] = {
-        h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).toSeq.map(_.toLong)
+    override def kLoop(index: Long, n: Int): Seq[Long] = {
+        // HexRing crashes in case of pentagons.
+        // Ensure a KRing fallback in said case.
+        Try(
+          h3.hexRing(index, n).asScala.map(_.toLong)
+        ).getOrElse(
+          h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).toSeq.map(_.toLong)
+        )
     }
 
     /**
@@ -177,5 +192,34 @@ object H3IndexSystem extends IndexSystem with Serializable {
       *   A set of supported resolutions.
       */
     override def resolutions: Set[Int] = (0 to 15).toSet
+
+    /**
+      * Get the geometry corresponding to the index with the input id.
+      *
+      * @param index
+      *   Id of the index whose geometry should be returned.
+      * @return
+      *   An instance of [[MosaicGeometry]] corresponding to index.
+      */
+    override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = {
+        val boundary = h3.h3ToGeoBoundary(index).asScala
+        val extended = boundary ++ List(boundary.head)
+        geometryAPI.geometry(
+          extended.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
+          POLYGON
+        )
+    }
+
+    override def format(id: Long): String = {
+        val geo = h3.h3ToGeo(id)
+        h3.geoToH3Address(geo.lat, geo.lng, h3.h3GetResolution(id))
+    }
+
+    override def getResolutionStr(resolution: Int): String = resolution.toString
+
+    override def parse(id: String): Long = {
+        val geo = h3.h3ToGeo(id)
+        h3.geoToH3(geo.lat, geo.lng, h3.h3GetResolution(id))
+    }
 
 }

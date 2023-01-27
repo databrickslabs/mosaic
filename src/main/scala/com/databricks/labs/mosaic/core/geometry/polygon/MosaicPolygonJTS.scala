@@ -66,6 +66,10 @@ object MosaicPolygonJTS extends GeometryReader {
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POLYGON): MosaicPolygonJTS = {
         val gf = new GeometryFactory()
+        if (geomSeq.isEmpty) {
+            // For empty sequence return an empty geometry with default Spatial Reference
+            return MosaicPolygonJTS(gf.createPolygon())
+        }
         val spatialReference = geomSeq.head.getSpatialReference
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case POINT                         =>

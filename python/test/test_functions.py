@@ -39,6 +39,7 @@ class TestFunctions(MosaicTestCase):
             df.withColumn("st_area", api.st_area("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
             .withColumn("st_buffer", api.st_buffer("wkt", lit(1.1)))
+            .withColumn("st_buffer", api.st_bufferloop("wkt", lit(1.1), lit(1.2)))
             .withColumn("st_perimeter", api.st_perimeter("wkt"))
             .withColumn("st_convexhull", api.st_convexhull("wkt"))
             .withColumn("st_dump", api.st_dump("wkt"))
@@ -56,6 +57,11 @@ class TestFunctions(MosaicTestCase):
             )
             .withColumn("st_intersects", api.st_intersects("wkt", "wkt"))
             .withColumn("st_intersection", api.st_intersection("wkt", "wkt"))
+            .withColumn("st_envelope", api.st_envelope("wkt"))
+            .withColumn("st_simplify", api.st_simplify("wkt", lit(0.001)))
+            .withColumn("st_difference", api.st_difference("wkt", "wkt"))
+            .withColumn("st_union", api.st_union("wkt", "wkt"))
+            .withColumn("st_unaryunion", api.st_unaryunion("wkt"))
             .withColumn("st_geometrytype", api.st_geometrytype("wkt"))
             .withColumn("st_xmin", api.st_xmin("wkt"))
             .withColumn("st_xmax", api.st_xmax("wkt"))
@@ -64,6 +70,34 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_zmin", api.st_zmin("wkt"))
             .withColumn("st_zmax", api.st_zmax("wkt"))
             .withColumn("flatten_polygons", api.flatten_polygons("wkt"))
+
+            # SRID functions
+            .withColumn(
+                "geom_with_srid", api.st_setsrid(api.st_geomfromwkt("wkt"), lit(4326))
+            )
+            .withColumn("srid_check", api.st_srid("geom_with_srid"))
+            .withColumn(
+                "transformed_geom", api.st_transform("geom_with_srid", lit(3857))
+            )
+
+            # Grid functions
+            .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1)))
+            .withColumn("grid_pointascellid", api.grid_pointascellid("point_wkt", lit(1)))
+            .withColumn("grid_boundaryaswkb", api.grid_boundaryaswkb(lit(1)))
+            .withColumn("grid_polyfill", api.grid_polyfill("wkt", lit(1)))
+            .withColumn("grid_tessellateexplode", api.grid_tessellateexplode("wkt", lit(1)))
+            .withColumn(
+                "grid_tessellateexplode_no_core_chips",
+                api.grid_tessellateexplode("wkt", lit(1), lit(False)),
+            )
+            .withColumn(
+                "grid_tessellateexplode_no_core_chips_bool",
+                api.grid_tessellateexplode("wkt", lit(1), False),
+            )
+            .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
+
+
+            # Deprecated
             .withColumn(
                 "point_index_lonlat", api.point_index_lonlat(lit(1), lit(1), lit(1))
             )
@@ -87,13 +121,7 @@ class TestFunctions(MosaicTestCase):
                 "mosaicfill_no_core_chips_bool",
                 api.mosaicfill("wkt", lit(1), lit(False)),
             )
-            .withColumn(
-                "geom_with_srid", api.st_setsrid(api.st_geomfromwkt("wkt"), lit(4326))
-            )
-            .withColumn("srid_check", api.st_srid("geom_with_srid"))
-            .withColumn(
-                "transformed_geom", api.st_transform("geom_with_srid", lit(3857))
-            )
+
         )
 
         self.assertEqual(result.count(), 1)
@@ -170,3 +198,29 @@ class TestFunctions(MosaicTestCase):
                 "comparison_intersection"
             ]
         )
+
+    def test_union_agg(self):
+        df = self.generate_input_polygon_collection()
+        result = df.groupBy().agg(api.st_union_agg(col("geometry")))
+        self.assertEqual(result.count(), 1)
+
+    def test_grid_kring_kloop(self):
+        df = self.spark.createDataFrame(
+            [
+                # 2x1 rectangle starting at (0 0)
+                ["POLYGON ((0 0, 0 2, 1 2, 1 0, 0 0))", "POINT (1 1)"]
+            ],
+            ["wkt", "point_wkt"],
+        )
+        result = (df
+            .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1)))
+            .withColumn("grid_cellkring", api.grid_cellkring("grid_longlatascellid", lit(1)))
+            .withColumn("grid_cellkloop", api.grid_cellkloop("grid_longlatascellid", lit(1)))
+            .withColumn("grid_cellkringexplode", api.grid_cellkringexplode("grid_longlatascellid", lit(1)))
+            .withColumn("grid_cellkloopexplode", api.grid_cellkloopexplode("grid_longlatascellid", lit(1)))
+            .withColumn("grid_geometrykring", api.grid_geometrykring("wkt", lit(4), lit(1)))
+            .withColumn("grid_geometrykloop", api.grid_geometrykloop("wkt", lit(4), lit(1)))
+            .withColumn("grid_geometrykringexplode", api.grid_geometrykringexplode("wkt", lit(4), lit(1)))
+            .withColumn("grid_geometrykloopexplode", api.grid_geometrykloopexplode("wkt", lit(4), lit(1)))
+        )
+        self.assertEqual(result.count() > 1, True)

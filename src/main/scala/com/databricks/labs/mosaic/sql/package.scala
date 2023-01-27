@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic
 
 import com.databricks.labs.mosaic.core.types._
-
 import org.apache.spark.sql.types._
 
 package object sql {
@@ -15,8 +14,7 @@ package object sql {
               BinaryType -> "WKB",
               HexType -> "HEX",
               InternalGeometryType -> "COORDS",
-              JSONType -> "GEOJSON",
-              KryoType -> "KRYO"
+              JSONType -> "GEOJSON"
             )
 
         object ColMetaTags {

@@ -1,17 +1,9 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.IndexSystemID
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
-
-import org.apache.spark.sql.catalyst.expressions.{
-    BinaryExpression,
-    ExpectsInputTypes,
-    Expression,
-    ExpressionDescription,
-    ExpressionInfo,
-    NullIntolerant
-}
+import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
@@ -31,29 +23,32 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
       with NullIntolerant
       with CodegenFallback {
 
-    // noinspection DuplicatedCode
-    override def inputTypes: Seq[DataType] =
-        (left.dataType, right.dataType) match {
-            case (BinaryType, IntegerType)           => Seq(BinaryType, IntegerType)
-            case (StringType, IntegerType)           => Seq(StringType, IntegerType)
-            case (HexType, IntegerType)              => Seq(HexType, IntegerType)
-            case (InternalGeometryType, IntegerType) => Seq(InternalGeometryType, IntegerType)
-            case _ => throw new Error(s"Not supported data type: (${left.dataType}, ${right.dataType}).")
-        }
+    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+    val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
-    override def right: Expression = resolution
+    // noinspection DuplicatedCode
+    override def inputTypes: Seq[DataType] = {
+        if (
+          !Seq(BinaryType, StringType, HexType, InternalGeometryType).contains(geom.dataType) ||
+          !Seq(IntegerType, StringType).contains(resolution.dataType)
+        ) {
+            throw new Error(s"Not supported data type: (${geom.dataType}, ${resolution.dataType}.")
+        } else {
+            Seq(geom.dataType, resolution.dataType)
+        }
+    }
 
     /** Expression output DataType. */
-    override def dataType: DataType = ArrayType(LongType)
+    override def dataType: DataType = ArrayType(indexSystem.getCellIdDataType)
 
-    override def toString: String = s"polyfill($geom, $resolution)"
+    override def toString: String = s"grid_polyfill($geom, $resolution)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "polyfill"
+    override def prettyName: String = "grid_polyfill"
 
     /**
-      * Generates a set of indices corresponding to polyfill call over the
-      * input geometry.
+      * Generates a set of indices corresponding to polyfill call over the input
+      * geometry.
       *
       * @param input1
       *   Any instance containing the geometry.
@@ -64,26 +59,28 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystemName: S
       */
     // noinspection DuplicatedCode
     override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val indexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
-        val resolution: Int = indexSystem.getResolution(input2)
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geometry = geometryAPI.geometry(input1, left.dataType)
-        val indices = indexSystem.polyfill(geometry, resolution, Some(geometryAPI))
+        val resolutionVal: Int = indexSystem.getResolution(input2)
 
-        val serialized = ArrayData.toArrayData(indices.toArray)
+        val geometry = geometryAPI.geometry(input1, geom.dataType)
+        val indices = indexSystem.polyfill(geometry, resolutionVal, Some(geometryAPI))
+
+        val formatted = indices.map(indexSystem.formatCellId)
+        val serialized = ArrayData.toArrayData(formatted.toArray)
         serialized
     }
 
-    override def left: Expression = geom
-
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
+        val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
         val res = Polyfill(asArray(0), asArray(1), indexSystemName, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }
 
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
+    override def left: Expression = geom
+
+    override def right: Expression = resolution
+
+    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Polyfill =
         copy(geom = newLeft, resolution = newRight)
 
 }
@@ -95,7 +92,7 @@ object Polyfill {
         new ExpressionInfo(
           classOf[Polyfill].getCanonicalName,
           db.orNull,
-          "polyfill",
+          "grid_polyfill",
           """
             |    _FUNC_(geometry, resolution) - Returns the 1 set representation of geometry at resolution.
             """.stripMargin,

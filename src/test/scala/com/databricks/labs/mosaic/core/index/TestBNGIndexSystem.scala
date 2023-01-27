@@ -1,11 +1,13 @@
 package com.databricks.labs.mosaic.core.index
 
+import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
-class TestBNGIndexSystem extends AnyFlatSpec {
+class TestBNGIndexSystem extends AnyFunSuite {
 
-    "Point to Index" should "generate index ID for positive resolutions." in {
+    test("Point to Index should generate index ID for positive resolutions.") {
         val indexRes1 = BNGIndexSystem.pointToIndex(538825, 179111, 1)
         val indexRes2 = BNGIndexSystem.pointToIndex(538825, 179111, 2)
         val indexRes3 = BNGIndexSystem.pointToIndex(538825, 179111, 3)
@@ -36,7 +38,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
 
     }
 
-    "Point to Index" should "generate index ID for negative resolutions." in {
+    test("Point to Index should generate index ID for negative resolutions.") {
         val indexResN1 = BNGIndexSystem.pointToIndex(538825, 179111, -1)
         val indexResN2 = BNGIndexSystem.pointToIndex(538825, 179111, -2)
         val indexResN3 = BNGIndexSystem.pointToIndex(538825, 179111, -3)
@@ -44,7 +46,7 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         val indexResN5 = BNGIndexSystem.pointToIndex(538825, 179111, -5)
         val indexResN6 = BNGIndexSystem.pointToIndex(538825, 179111, -6)
 
-        indexResN1 shouldBe 1054
+        indexResN1 shouldBe 1050
         indexResN2 shouldBe 105012
         indexResN3 shouldBe 10501373
         indexResN4 shouldBe 1050138794L
@@ -58,21 +60,41 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         BNGIndexSystem.format(indexResN5) shouldBe "TQ388791SW"
         BNGIndexSystem.format(indexResN6) shouldBe "TQ38827911SE"
 
-        BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(1054)) shouldBe -1
+        BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(1050)) shouldBe -1
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(105012)) shouldBe -2
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(10501373)) shouldBe -3
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(1050138794L)) shouldBe -4
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(105013887911L)) shouldBe -5
         BNGIndexSystem.getResolution(BNGIndexSystem.indexDigits(10501388279114L)) shouldBe -6
 
+        an[IllegalStateException] should be thrownBy BNGIndexSystem.pointToIndex(Double.NaN, 100.0, 5)
+        an[IllegalStateException] should be thrownBy BNGIndexSystem.pointToIndex(100.0, Double.NaN, 5)
+
     }
 
-    "KDisk" should "generate index IDs for negative resolutions." in {
+    test("Parse and Format should generate consistent results.") {
+        BNGIndexSystem.parse("T") shouldBe 1050
+        BNGIndexSystem.format(1050) shouldBe "T"
+
+        BNGIndexSystem.parse("TQ") shouldBe 105010
+        BNGIndexSystem.format(105010) shouldBe "TQ"
+
+        BNGIndexSystem.parse("TQNW") shouldBe 105012
+        BNGIndexSystem.format(105012) shouldBe "TQNW"
+
+        BNGIndexSystem.parse("TQ38827911") shouldBe 10501388279110L
+        BNGIndexSystem.format(10501388279110L) shouldBe "TQ38827911"
+
+        BNGIndexSystem.parse("TQ38827911SE") shouldBe 10501388279114L
+        BNGIndexSystem.format(10501388279114L) shouldBe "TQ38827911SE"
+    }
+
+    test("KDisk should generate index IDs for negative resolutions.") {
         val index = 1050138794L // "TQ3879SE" res -4
 
-        val kDisk1 = BNGIndexSystem.kDisk(index, 1).map(BNGIndexSystem.format)
-        val kDisk2 = BNGIndexSystem.kDisk(index, 2).map(BNGIndexSystem.format)
-        val kDisk3 = BNGIndexSystem.kDisk(index, 3).map(BNGIndexSystem.format)
+        val kDisk1 = BNGIndexSystem.kLoop(index, 1).map(BNGIndexSystem.format)
+        val kDisk2 = BNGIndexSystem.kLoop(index, 2).map(BNGIndexSystem.format)
+        val kDisk3 = BNGIndexSystem.kLoop(index, 3).map(BNGIndexSystem.format)
         kDisk1 should contain theSameElementsAs Seq(
           Seq("TQ3878NW", "TQ3878NE"), // bottom
           Seq("TQ3978NW", "TQ3979SW"), // right
@@ -93,11 +115,11 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         ).flatten
     }
 
-    "KDisk" should "generate index IDs for positive resolutions." in {
+    test("KDisk should generate index IDs for positive resolutions.") {
         val index = 1050138790
-        val kDisk1 = BNGIndexSystem.kDisk(index, 1).map(BNGIndexSystem.format)
-        val kDisk2 = BNGIndexSystem.kDisk(index, 2).map(BNGIndexSystem.format)
-        val kDisk3 = BNGIndexSystem.kDisk(index, 3).map(BNGIndexSystem.format)
+        val kDisk1 = BNGIndexSystem.kLoop(index, 1).map(BNGIndexSystem.format)
+        val kDisk2 = BNGIndexSystem.kLoop(index, 2).map(BNGIndexSystem.format)
+        val kDisk3 = BNGIndexSystem.kLoop(index, 3).map(BNGIndexSystem.format)
         kDisk1 should contain theSameElementsAs Seq(
             Seq("TQ3778", "TQ3779"), // bottom
             Seq("TQ3780", "TQ3878"), // right
@@ -118,17 +140,35 @@ class TestBNGIndexSystem extends AnyFlatSpec {
         ).flatten
     }
 
-    "KRing" should "generate index IDs for positive resolutions." in {
+    test("KRing should generate index IDs for positive resolutions.") {
         val index = 1050138790
         val kRing1 = BNGIndexSystem.kRing(index, 1).map(BNGIndexSystem.format)
         val kRing2 = BNGIndexSystem.kRing(index, 2).map(BNGIndexSystem.format)
         val kRing3 = BNGIndexSystem.kRing(index, 3).map(BNGIndexSystem.format)
-        val kDisk1 = BNGIndexSystem.kDisk(index, 1).map(BNGIndexSystem.format)
-        val kDisk2 = BNGIndexSystem.kDisk(index, 2).map(BNGIndexSystem.format)
-        val kDisk3 = BNGIndexSystem.kDisk(index, 3).map(BNGIndexSystem.format)
+        val kDisk1 = BNGIndexSystem.kLoop(index, 1).map(BNGIndexSystem.format)
+        val kDisk2 = BNGIndexSystem.kLoop(index, 2).map(BNGIndexSystem.format)
+        val kDisk3 = BNGIndexSystem.kLoop(index, 3).map(BNGIndexSystem.format)
         kRing1 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1)
         kRing2 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2)
         kRing3 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2).union(kDisk3)
+    }
+
+    test("IsValid should return correct validity") {
+        val cellId = BNGIndexSystem.pointToIndex(-50000.0, 50.0, 3)
+        val cellId2 = BNGIndexSystem.pointToIndex(50.0, 500000000.0, 4)
+        BNGIndexSystem.isValid(cellId) shouldBe false
+        BNGIndexSystem.isValid(cellId2) shouldBe false
+    }
+
+    test("Auxiliary methods should not throw exceptions") {
+        noException should be thrownBy BNGIndexSystem.getResolution(5)
+        noException should be thrownBy BNGIndexSystem.getResolution("100m")
+        noException should be thrownBy BNGIndexSystem.getResolution(UTF8String.fromString("100m"))
+        an[IllegalStateException] should be thrownBy BNGIndexSystem.getResolution(true)
+        BNGIndexSystem.getResolutionStr(4) shouldEqual "100m"
+        BNGIndexSystem.getResolutionStr(-4) shouldEqual "500m"
+        BNGIndexSystem.getResolutionStr(7) shouldEqual ""
+        an[Exception] should be thrownBy BNGIndexSystem.polyfill(null, 0, None)
     }
 
 }

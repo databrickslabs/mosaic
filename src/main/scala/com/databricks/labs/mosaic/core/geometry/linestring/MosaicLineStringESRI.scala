@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointE
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POINT}
 import com.esri.core.geometry.ogc.{OGCGeometry, OGCLineString}
-import com.esri.core.geometry.SpatialReference
+import com.esri.core.geometry.{MultiPath, Polyline, SpatialReference}
 import org.apache.spark.sql.catalyst.InternalRow
 
 class MosaicLineStringESRI(lineString: OGCLineString) extends MosaicGeometryESRI(lineString) with MosaicLineString {
@@ -54,6 +54,10 @@ object MosaicLineStringESRI extends GeometryReader {
     }
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicLineStringESRI = {
+        if (geomSeq.isEmpty) {
+            // For empty sequence return an empty geometry with default Spatial Reference
+            return MosaicLineStringESRI(new OGCLineString(new Polyline(), 0, MosaicGeometryESRI.defaultSpatialReference))
+        }
         val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case POINT                                                =>

@@ -21,7 +21,9 @@ import java.util.Locale
   """,
   since = "1.0"
 )
-case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
+case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPIName: String,
+                     functionName: Option[String] = None)
+    extends UnaryExpression with NullIntolerant {
 
     /**
       * Ensure that the expression is called only for compatible pairing of
@@ -61,7 +63,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
     override def toString: String = s"convert_to($inGeometry, $outDataType)"
 
     /** Overridden to ensure [[Expression.sql]] is properly formatted. */
-    override def prettyName: String = "convert_to"
+    override def prettyName: String = functionName.getOrElse("convert_to")
 
     /**
       * Depending on the input data type and output data type keyword a specific
@@ -88,7 +90,8 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
         val res = ConvertTo(
           newArgs(0).asInstanceOf[Expression],
           outDataType,
-          geometryAPIName
+          geometryAPIName,
+          functionName
         )
         res.copyTagsFrom(this)
         res
@@ -104,6 +107,11 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
           outDataType.toUpperCase(Locale.ROOT),
           geometryAPI
         )
+    }
+
+    override def sql: String ={
+        val childrenSQL = children.map(_.sql).mkString(", ")
+        s"$prettyName($childrenSQL)"
     }
 
     override def child: Expression = inGeometry

@@ -15,18 +15,6 @@ object MosaicSQLExceptions {
               "Try increasing the sampleFraction using the setSampleFraction method."
         )
 
-    def IncorrectGeometryTypeSupplied(simpleString: String, supplied: GeometryTypeEnum.Value, expected: GeometryTypeEnum.Value): Exception =
-        new Exception(
-          s"Could not execute $simpleString. Wrong geometry type supplied to function." +
-              s"Expected $expected, received $supplied."
-        )
-
-    def NoIndexResolutionSet: Exception =
-        new Exception(
-          "No index resolutions set on this MosaicFrame. Use getOptimalResolution to determine what this value should be" +
-              "and setIndexResolution to update this value"
-        )
-
     def BadIndexResolution(resolutions: Set[Int]): Exception =
         new Exception(
           s"Resolution supplied to setIndexResolution must be in the set of values: $resolutions."

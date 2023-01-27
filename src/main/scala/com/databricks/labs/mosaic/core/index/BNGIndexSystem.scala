@@ -1,13 +1,14 @@
 package com.databricks.labs.mosaic.core.index
 
-import scala.annotation.tailrec
-import scala.util.{Success, Try}
-
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
-import com.databricks.labs.mosaic.core.types.model.MosaicChip
+import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
+
+import scala.annotation.tailrec
+import scala.util.{Success, Try}
 
 /**
   * Implements the [[IndexSystem]] via BNG (British National Grid) java
@@ -24,7 +25,7 @@ import org.locationtech.jts.geom.Geometry
   * @see
   *   [[https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid]]
   */
-object BNGIndexSystem extends IndexSystem with Serializable {
+object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
 
     /**
       * Quadrant encodings. The order is determined in a way that preserves
@@ -90,7 +91,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
           Seq("NL", "NM", "NN", "NO", "NP", "OL", "OM"),
           Seq("NF", "NG", "NH", "NJ", "NK", "OF", "OG"),
           Seq("NA", "NB", "NC", "ND", "NE", "OA", "OB"),
-          Seq("HV", "HW", "HX", "HY", "SZ", "TV", "TW"),
+          Seq("HV", "HW", "HX", "HY", "SZ", "JV", "JW"),
           Seq("HQ", "HR", "HS", "HT", "HU", "JQ", "JR"),
           Seq("HL", "HM", "HN", "HO", "HP", "JL", "JM")
         )
@@ -100,7 +101,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       * index id. The string representations follows letter prefix followed by
       * easting bin, followed by nothings bin and finally (for quad tree
       * resolutions) followed by quadrant suffix.
-      * @param index
+      * @param id
       *   Integer id to be formatted.
       * @return
       *   A string representation of the index id -
@@ -108,8 +109,8 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       *   SW is the prefix, 123 is eastings bin, 987 is northings bin and NW is
       *   suffix.
       */
-    def format(index: Long): String = {
-        val digits = indexDigits(index)
+    override def format(id: Long): String = {
+        val digits = indexDigits(id)
         if (digits.length < 6) {
             val prefix = letterMap(digits.slice(3, 5).mkString.toInt)(digits.slice(1, 3).mkString.toInt)(0).toString
             prefix
@@ -127,9 +128,9 @@ object BNGIndexSystem extends IndexSystem with Serializable {
 
     /**
       * Returns a half diagonal of the index geometry. Since this is a planar
-      * index system, there is no need to account for skew, both diagonals
-      * have the same length. It is sufficient to do square root of 2 times
-      * the length of the edge to determine the diagonal.
+      * index system, there is no need to account for skew, both diagonals have
+      * the same length. It is sufficient to do square root of 2 times the
+      * length of the edge to determine the diagonal.
       *
       * @param geometry
       *   An instance of [[MosaicGeometry]] for which we are computing the
@@ -146,10 +147,26 @@ object BNGIndexSystem extends IndexSystem with Serializable {
     }
 
     /**
+      * Returns edge size for a given index resolution.
+      * @param resolution
+      *   Resolution at which we need to compute the edge size.
+      * @return
+      *   Edge size for the given resolution.
+      */
+    def getEdgeSize(resolution: Int): Int = {
+        val resolutionStr = getResolutionStr(resolution)
+        getEdgeSize(resolutionStr)
+    }
+
+    def getEdgeSize(resolution: String): Int = {
+        sizeMap(resolution)
+    }
+
+    /**
       * Polyfill logic is based on the centroid point of the individual index
-      * geometry. Blind spots do occur near the boundary of the geometry.
-      * The decision to use centroid based logic is made to align with what
-      * is done in H3 and unify the logic between index systems.
+      * geometry. Blind spots do occur near the boundary of the geometry. The
+      * decision to use centroid based logic is made to align with what is done
+      * in H3 and unify the logic between index systems.
       *
       * @param geometry
       *   Input geometry to be represented.
@@ -165,7 +182,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
             val visits = queue.map(index => (index, geometry.contains(indexToGeometry(index, geometryAPI.get).getCentroid)))
             val matches = visits.filter(_._2)
             val newVisited = visited ++ visits.map(_._1)
-            val newQueue = matches.flatMap(c => kDisk(c._1, 1).filterNot(newVisited.contains))
+            val newQueue = matches.flatMap(c => kLoop(c._1, 1).filterNot(newVisited.contains))
             val newResult = result ++ matches.map(_._1)
             if (newQueue.isEmpty) {
                 newResult
@@ -177,127 +194,11 @@ object BNGIndexSystem extends IndexSystem with Serializable {
         if (geometry.isEmpty) Seq.empty[Long]
         else {
             val shells = geometry.getShells
-            val startPoints = shells.flatMap(_.asSeq)
+            val holes = geometry.getHoles
+            val startPoints = shells.flatMap(_.asSeq) ++ holes.flatMap(_.flatMap(_.asSeq)) ++ Seq(geometry.getCentroid)
             val startIndices = startPoints.map(p => pointToIndex(p.getX, p.getY, resolution))
             visit(startIndices.toSet, Set.empty[Long], Set.empty[Long]).toSeq
         }
-    }
-
-    /**
-      * Constructs a geometry representing the index tile corresponding to
-      * provided index id.
-      *
-      * @param index
-      *   Id of the index whose geometry should be returned.
-      * @return
-      *   An instance of [[Geometry]] corresponding to index.
-      */
-    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
-        val digits = indexDigits(index)
-        val resolution = getResolution(digits)
-        val edgeSize = getEdgeSize(resolution)
-        val x = getX(digits, edgeSize)
-        val y = getY(digits, edgeSize)
-        val p1 = geometryAPI.fromCoords(Seq(x, y))
-        val p2 = geometryAPI.fromCoords(Seq(x + edgeSize, y))
-        val p3 = geometryAPI.fromCoords(Seq(x + edgeSize, y + edgeSize))
-        val p4 = geometryAPI.fromCoords(Seq(x, y + edgeSize))
-        geometryAPI.geometry(Seq(p1, p2, p3, p4, p1), POLYGON)
-    }
-
-    /**
-      * Returns index as a sequence of digits.
-      * @param index
-      *   Index to be split into digits.
-      * @return
-      *   Index digits.
-      */
-    def indexDigits(index: Long): Seq[Int] = {
-        index.toString.map(_.asDigit)
-    }
-
-    /**
-      * Returns edge size for a given index resolution.
-      * @param resolution
-      *   Resolution at which we need to compute the edge size.
-      * @return
-      *   Edge size for the given resolution.
-      */
-    def getEdgeSize(resolution: Int): Int = {
-        if (resolution == -1) {
-            500000 // 500km resolution
-        } else {
-            val multiplier =
-                if (resolution < 0) { 5 }
-                else { 1 }
-            val edgeSize = multiplier * math.pow(10, 6 - math.abs(resolution))
-            require(edgeSize < 500000, "Invalid edge size. Index format not supported.")
-            edgeSize.toInt
-        }
-    }
-
-    /**
-      * Computes the resolution based on the index digits.
-      * @param digits
-      *   Index digits.
-      * @return
-      *   Resolution that results in this length of digits.
-      */
-    def getResolution(digits: Seq[Int]): Int = {
-        if (digits.length < 6) {
-            -1 // 500km resolution
-        } else {
-            val quadrant = digits.last
-            val n = digits.length
-            val k = (n - 6) / 2
-            if (quadrant > 0) {
-                -(k + 2)
-            } else {
-                k + 1
-            }
-        }
-    }
-
-    /**
-      * Y coordinate based on the digits of the index and the edge size. Y
-      * coordinate is rounded to the edge size precision. Y coordinate
-      * corresponds to northings coordinate.
-      * @param digits
-      *   Index digits.
-      * @param edgeSize
-      *   Index edge size.
-      * @return
-      *   Y coordinate.
-      */
-    def getY(digits: Seq[Int], edgeSize: Int): Int = {
-        val n = digits.length
-        val k = (n - 6) / 2
-        val yDigits = digits.slice(3, 5) ++ digits.slice(5 + k, 5 + 2 * k)
-        val quadrant = digits.last
-        val edgeSizeAdj = if (quadrant > 0) 2 * edgeSize else edgeSize
-        val yOffset = if (quadrant == 2 || quadrant == 3) edgeSize else 0
-        yDigits.mkString.toInt * edgeSizeAdj + yOffset
-    }
-
-    /**
-      * X coordinate based on the digits of the index and the edge size. X
-      * coordinate is rounded to the edge size precision. X coordinate
-      * corresponds to eastings coordinate.
-      * @param digits
-      *   Index digits.
-      * @param edgeSize
-      *   Index edge size.
-      * @return
-      *   X coordinate.
-      */
-    def getX(digits: Seq[Int], edgeSize: Int): Int = {
-        val n = digits.length
-        val k = (n - 6) / 2
-        val xDigits = digits.slice(1, 3) ++ digits.slice(5, 5 + k)
-        val quadrant = digits.last
-        val edgeSizeAdj = if (quadrant > 0) 2 * edgeSize else edgeSize
-        val xOffset = if (quadrant == 3 || quadrant == 4) edgeSize else 0
-        xDigits.mkString.toInt * edgeSizeAdj + xOffset
     }
 
     /**
@@ -321,9 +222,9 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       */
     override def kRing(index: Long, n: Int): Seq[Long] = {
         if (n == 1) {
-            Seq(index) ++ kDisk(index, 1)
+            Seq(index) ++ kLoop(index, 1)
         } else {
-            Seq(index) ++ (1 to n).flatMap(kDisk(index, _))
+            Seq(index) ++ (1 to n).flatMap(kLoop(index, _))
         }
     }
 
@@ -337,7 +238,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       * @return
       *   A collection of index IDs forming a k disk.
       */
-    override def kDisk(index: Long, k: Int): Seq[Long] = {
+    override def kLoop(index: Long, k: Int): Seq[Long] = {
         val digits = indexDigits(index)
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution)
@@ -381,31 +282,19 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       *   Index ID in this index system.
       */
     override def pointToIndex(eastings: Double, northings: Double, resolution: Int): Long = {
+        require(!eastings.isNaN && !northings.isNaN, throw new IllegalStateException("NaN coordinates are not supported."))
         val eastingsInt = eastings.toInt
         val northingsInt = northings.toInt
         val eLetter: Int = math.floor(eastingsInt / 100000).toInt
         val nLetter: Int = math.floor(northingsInt / 100000).toInt
 
-        val offset: Int = if (resolution < -1) 1 else 0
         val divisor: Double = if (resolution < 0) math.pow(10, 6 - math.abs(resolution) + 1) else math.pow(10, 6 - resolution)
         val quadrant: Int = getQuadrant(resolution, eastingsInt, northingsInt, divisor)
-        val nPositions: Int = math.abs(resolution) - offset
+        val nPositions: Int = if (resolution >= -1) math.abs(resolution) else math.abs(resolution) - 1
 
         val eBin: Int = math.floor((eastingsInt % 100000) / divisor).toInt
         val nBin: Int = math.floor((northingsInt % 100000) / divisor).toInt
-
-        val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#...#)(#...#)(#)
-        val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#...#)(#...#)(#)
-        val nLetterShift = math.pow(10, 1 + 2 * nPositions - 2) // (##)(#...#)(#...#)(#)
-        val eShift = math.pow(10, nPositions) // (#...#)(#...#)(#)
-        val nShift = 10
-        val id =
-            if (resolution == -1) {
-                (idPlaceholder + eLetter * eLetterShift) / 100 + quadrant
-            } else {
-                idPlaceholder + eLetter * eLetterShift + nLetter * nLetterShift + eBin * eShift + nBin * nShift + quadrant
-            }
-        id.toLong
+        encode(eLetter, nLetter, eBin, nBin, quadrant, nPositions, resolution)
     }
 
     /**
@@ -426,7 +315,7 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       */
     def getQuadrant(resolution: Int, eastings: Double, northings: Double, divisor: Double): Int = {
         val quadrant: Int = {
-            if (resolution < 0) {
+            if (resolution < -1) {
                 val eQ = eastings / divisor
                 val nQ = northings / divisor
                 val eDecimal = eQ - math.floor(eQ)
@@ -458,9 +347,14 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       *   Int value representing the resolution.
       */
     override def getResolution(res: Any): Int = {
-        (Try(res.asInstanceOf[Int]), Try(res.asInstanceOf[String])) match {
-            case (Success(value), _) if resolutions.contains(value)   => value
-            case (_, Success(value)) if resolutionMap.contains(value) => resolutionMap(value)
+        (
+          Try(res.asInstanceOf[Int]),
+          Try(res.asInstanceOf[String]),
+          Try(res.asInstanceOf[UTF8String].toString)
+        ) match {
+            case (Success(value), _, _) if resolutions.contains(value)   => value
+            case (_, _, Success(value)) if resolutionMap.contains(value) => resolutionMap(value)
+            case (_, Success(value), _) if resolutionMap.contains(value) => resolutionMap(value)
             case _ => throw new IllegalStateException(s"BNG resolution not supported; found $res")
         }
     }
@@ -476,5 +370,167 @@ object BNGIndexSystem extends IndexSystem with Serializable {
       *   A set of supported resolutions.
       */
     override def resolutions: Set[Int] = Set(1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6)
+
+    /**
+      * Get the geometry corresponding to the index with the input id.
+      *
+      * @param index
+      *   Id of the index whose geometry should be returned.
+      * @return
+      *   An instance of [[MosaicGeometry]] corresponding to index.
+      */
+    override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = {
+        val indexId = parse(index)
+        indexToGeometry(indexId, geometryAPI)
+    }
+
+    /**
+      * Provides a long representation from a string representation of a BNG
+      * index id. The string representations follows letter prefix followed by
+      * easting bin, followed by nothings bin and finally (for quad tree
+      * resolutions) followed by quadrant suffix.
+      * @param index
+      *   String id to be parsed.
+      * @return
+      *   A long representation of the index id -
+      *   "1(eastings_letter_encoding)(northings_letter_encoding)(eastings_bin)(northings_bin)(quadrants)".
+      */
+    def parse(index: String): Long = {
+        val prefix = if (index.length >= 2) index.take(2) else s"${index}V"
+        val letterRow = letterMap.find(_.contains(prefix)).get
+        val eLetter: Int = letterRow.indexOf(prefix)
+        val nLetter: Int = letterMap.indexOf(letterRow)
+
+        if (index.length == 1) {
+            encode(eLetter, 0, 0, 0, 0, 1, -1)
+        } else {
+            val suffix = index.slice(index.length - 2, index.length)
+            val quadrant: Int = if (quadrants.contains(suffix)) quadrants.indexOf(suffix) else 0
+            val binDigits = if (quadrant > 0) index.drop(2).dropRight(2) else index.drop(2)
+            if (binDigits.isEmpty) {
+                encode(eLetter, nLetter, 0, 0, quadrant, 1, -2)
+            } else {
+                val eBin: Int = binDigits.dropRight(binDigits.length / 2).toInt
+                val nBin: Int = binDigits.drop(binDigits.length / 2).toInt
+                val nPositions: Int = binDigits.length / 2 + 1
+                val resolution = if (quadrant == 0) nPositions + 1 else -nPositions
+                encode(eLetter, nLetter, eBin, nBin, quadrant, nPositions, resolution)
+            }
+        }
+    }
+
+    private def encode(eLetter: Int, nLetter: Int, eBin: Int, nBin: Int, quadrant: Int, nPositions: Int, resolution: Int): Long = {
+        val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#...#)(#...#)(#)
+        val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#...#)(#...#)(#)
+        val nLetterShift = math.pow(10, 1 + 2 * nPositions - 2) // (##)(#...#)(#...#)(#)
+        val eShift = math.pow(10, nPositions) // (#...#)(#...#)(#)
+        val nShift = 10
+        val id =
+            if (resolution == -1) {
+                (idPlaceholder + eLetter * eLetterShift) / 100 + quadrant
+            } else {
+                idPlaceholder + eLetter * eLetterShift + nLetter * nLetterShift + eBin * eShift + nBin * nShift + quadrant
+            }
+        id.toLong
+    }
+
+    /**
+      * Constructs a geometry representing the index tile corresponding to
+      * provided index id.
+      *
+      * @param index
+      *   Id of the index whose geometry should be returned.
+      * @return
+      *   An instance of [[Geometry]] corresponding to index.
+      */
+    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
+        val digits = indexDigits(index)
+        val resolution = getResolution(digits)
+        val edgeSize = getEdgeSize(resolution)
+        val x = getX(digits, edgeSize)
+        val y = getY(digits, edgeSize)
+        val p1 = geometryAPI.fromCoords(Seq(x, y))
+        val p2 = geometryAPI.fromCoords(Seq(x + edgeSize, y))
+        val p3 = geometryAPI.fromCoords(Seq(x + edgeSize, y + edgeSize))
+        val p4 = geometryAPI.fromCoords(Seq(x, y + edgeSize))
+        geometryAPI.geometry(Seq(p1, p2, p3, p4, p1), POLYGON)
+    }
+
+    /**
+      * Returns index as a sequence of digits.
+      * @param index
+      *   Index to be split into digits.
+      * @return
+      *   Index digits.
+      */
+    def indexDigits(index: Long): Seq[Int] = {
+        index.toString.map(_.asDigit)
+    }
+
+    /**
+      * Computes the resolution based on the index digits.
+      * @param digits
+      *   Index digits.
+      * @return
+      *   Resolution that results in this length of digits.
+      */
+    def getResolution(digits: Seq[Int]): Int = {
+        if (digits.length < 6) {
+            -1 // 500km resolution
+        } else {
+            val quadrant = digits.last
+            val n = digits.length
+            val k = (n - 6) / 2
+            if (quadrant > 0) {
+                -(k + 2)
+            } else {
+                k + 1
+            }
+        }
+    }
+
+    /**
+      * X coordinate based on the digits of the index and the edge size. X
+      * coordinate is rounded to the edge size precision. X coordinate
+      * corresponds to eastings coordinate.
+      * @param digits
+      *   Index digits.
+      * @param edgeSize
+      *   Index edge size.
+      * @return
+      *   X coordinate.
+      */
+    def getX(digits: Seq[Int], edgeSize: Int): Int = {
+        val n = digits.length
+        val k = (n - 6) / 2
+        val xDigits = digits.slice(1, 3) ++ digits.slice(5, 5 + k)
+        val quadrant = digits.last
+        val edgeSizeAdj = if (quadrant > 0) 2 * edgeSize else edgeSize
+        val xOffset = if (quadrant == 3 || quadrant == 4) edgeSize else 0
+        xDigits.mkString.toInt * edgeSizeAdj + xOffset
+    }
+
+    /**
+      * Y coordinate based on the digits of the index and the edge size. Y
+      * coordinate is rounded to the edge size precision. Y coordinate
+      * corresponds to northings coordinate.
+      * @param digits
+      *   Index digits.
+      * @param edgeSize
+      *   Index edge size.
+      * @return
+      *   Y coordinate.
+      */
+    def getY(digits: Seq[Int], edgeSize: Int): Int = {
+        val n = digits.length
+        val k = (n - 6) / 2
+        val yDigits = digits.slice(3, 5) ++ digits.slice(5 + k, 5 + 2 * k)
+        val quadrant = digits.last
+        val edgeSizeAdj = if (quadrant > 0) 2 * edgeSize else edgeSize
+        val yOffset = if (quadrant == 2 || quadrant == 3) edgeSize else 0
+        yDigits.mkString.toInt * edgeSizeAdj + yOffset
+    }
+
+    override def getResolutionStr(resolution: Int): String = resolutionMap.find(_._2 == resolution).map(_._1).getOrElse("")
 
 }
