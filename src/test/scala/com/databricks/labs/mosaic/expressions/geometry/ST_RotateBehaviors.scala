@@ -43,7 +43,7 @@ trait ST_RotateBehaviors extends QueryTest {
         mc.register(spark)
 
         val results = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_rotate($"wkt", lit(1.1)))
 
         val queryExecution = results.queryExecution

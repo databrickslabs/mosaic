@@ -23,7 +23,7 @@ trait ST_BufferBehaviors extends QueryTest {
         mc.register(spark)
 
         val referenceGeoms = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select("wkt")
             .as[String]
@@ -32,7 +32,7 @@ trait ST_BufferBehaviors extends QueryTest {
 
         val expected = referenceGeoms.map(_.buffer(1).getLength)
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select(st_length(st_buffer($"wkt", lit(1))))
             .as[Double]
@@ -40,7 +40,7 @@ trait ST_BufferBehaviors extends QueryTest {
 
         result.zip(expected).foreach { case (l, r) => math.abs(l - r) should be < 1e-8 }
 
-        mocks.getWKTRowsDf(mc).createOrReplaceTempView("source")
+        mocks.getWKTRowsDf().createOrReplaceTempView("source")
 
         val sqlResult = spark
             .sql("select id, st_length(st_buffer(wkt, 1)) from source")
@@ -61,7 +61,7 @@ trait ST_BufferBehaviors extends QueryTest {
         mc.register(spark)
 
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_length(st_buffer($"wkt", lit(1))))
 
         val queryExecution = result.queryExecution
@@ -88,7 +88,7 @@ trait ST_BufferBehaviors extends QueryTest {
         import mc.functions._
 
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
 
         val stBuffer = ST_Buffer(df.col("wkt").expr, lit(1).expr, geometryAPI.name)
 

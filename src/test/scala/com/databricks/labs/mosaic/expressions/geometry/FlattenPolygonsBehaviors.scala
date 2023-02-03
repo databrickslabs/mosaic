@@ -21,7 +21,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val df = getWKTRowsDf(mc).withColumn("wkb", convert_to(col("wkt"), "wkb"))
+        val df = getWKTRowsDf().withColumn("wkb", convert_to(col("wkt"), "wkb"))
 
         val flattened = df
             .withColumn(
@@ -71,7 +71,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
 
         val flattened = df
             .withColumn(
@@ -121,7 +121,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
             .withColumn("coords", convert_to(col("wkt"), "coords"))
 
         val flattened = df
@@ -182,7 +182,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
             .withColumn("hex", convert_to(col("wkt"), "hex"))
 
         val flattened = df
@@ -243,7 +243,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
             .withColumn("hex", struct(lit(1), convert_to(col("wkt"), "hex")))
 
         an[AnalysisException] should be thrownBy {
@@ -261,7 +261,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
             .withColumn("hex", convert_to(col("wkt"), "hex"))
             .withColumn("wkb", convert_to(col("wkt"), "wkb"))
             .withColumn("coords", convert_to(col("wkt"), "coords"))

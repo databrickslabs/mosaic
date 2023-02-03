@@ -26,7 +26,7 @@ trait ST_DistanceBehaviors extends QueryTest {
         mc.register(spark)
 
         val referenceGeoms = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select("wkt")
             .as[String]

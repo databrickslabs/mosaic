@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.core.geometry.api
 
 import com.databricks.labs.mosaic.codegen.format.{MosaicGeometryIOCodeGenESRI, MosaicGeometryIOCodeGenJTS}
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI._
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPointESRI, MosaicPointJTS}
 import com.databricks.labs.mosaic.core.types.model.Coordinates
 import org.scalatest.funsuite.AnyFunSuite
@@ -17,7 +16,6 @@ class GeometryAPITest extends AnyFunSuite with GeometryAPIBehaviors {
         noException should be thrownBy GeometryAPI("anyother")
         GeometryAPI.apply("JTS") shouldEqual JTS
         GeometryAPI.apply("ESRI") shouldEqual ESRI
-        GeometryAPI.apply("anyother") shouldEqual IllegalAPI
     }
 
     test("JTS Geometry API") {

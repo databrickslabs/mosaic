@@ -17,11 +17,11 @@ trait ConvertToBehaviors extends QueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val wkts = getWKTRowsDf(mc).select("wkt")
-        val wkbs = getWKTRowsDf(mc).select(st_aswkb(col("wkt")).alias("wkb"))
+        val wkts = getWKTRowsDf().select("wkt")
+        val wkbs = getWKTRowsDf().select(st_aswkb(col("wkt")).alias("wkb"))
         val hexes = getHexRowsDf(mc).select("hex")
         val geojsons = getGeoJSONDf(mc).select("geojson")
-        val coords = getWKTRowsDf(mc).select(st_geomfromwkt(col("wkt")).alias("coords"))
+        val coords = getWKTRowsDf().select(st_geomfromwkt(col("wkt")).alias("coords"))
 
         val wkbExpr = wkbs.col("wkb").expr
         wkbExpr.checkInputDataTypes() shouldEqual TypeCheckSuccess
@@ -62,7 +62,7 @@ trait ConvertToBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
-        val wkts = getWKTRowsDf(mc).select("wkt").withColumn("new_wkt", st_astext(col("wkt"))).where("new_wkt == wkt")
+        val wkts = getWKTRowsDf().select("wkt").withColumn("new_wkt", st_astext(col("wkt"))).where("new_wkt == wkt")
         wkts.count() should be > 0L
     }
 
@@ -70,7 +70,7 @@ trait ConvertToBehaviors extends QueryTest {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
-        val wkts = getWKTRowsDf(mc).select("wkt")
+        val wkts = getWKTRowsDf().select("wkt")
         val expr = ConvertTo(wkts.col("wkt").expr, "WKT", geometryAPI.name)
         expr.makeCopy(expr.children.toArray) shouldEqual expr
     }

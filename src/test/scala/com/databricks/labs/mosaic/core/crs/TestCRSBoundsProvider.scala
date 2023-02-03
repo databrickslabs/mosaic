@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.crs
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
+import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 

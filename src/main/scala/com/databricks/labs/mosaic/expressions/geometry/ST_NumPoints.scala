@@ -1,62 +1,52 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
+import org.apache.spark.sql.types._
 
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.types.{DataType, IntegerType}
+case class ST_NumPoints(
+    inputGeom: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVectorExpression[ST_NumPoints](inputGeom, returnsGeometry = false, expressionConfig) {
 
-case class ST_NumPoints(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant with CodegenFallback {
-
-    /**
-      * ST_NumPoints expression returns the number of points for a given
-      * geometry. expression.
-      */
-
-    override def child: Expression = inputGeom
-
-    /** Output Data Type */
     override def dataType: DataType = IntegerType
 
-    override def nullSafeEval(input1: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-        geom.numPoints
-    }
+    override def geometryTransform(geometry: MosaicGeometry): Any = geometry.numPoints
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = ST_NumPoints(asArray(0), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
-    }
+    override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        val mosaicGeometry = mosaicGeometryRef(geometryRef)
 
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputGeom = newChild)
+        val code = s"""
+                      |int $resultRef = $mosaicGeometry.numPoints();
+                      |""".stripMargin
+
+        (code, resultRef)
+    }
 
 }
 
-object ST_NumPoints {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_NumPoints extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_NumPoints].getCanonicalName,
-          db.orNull,
-          "st_numpoints",
-          """
-            |    _FUNC_(expr1) - Returns the number of points of the geometry.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        15
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_numpoints"
+
+    override def usage: String = "_FUNC_(expr1) - Returns number of points of a geometry."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a);
+          |        12
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_NumPoints](1, expressionConfig)
+    }
 
 }

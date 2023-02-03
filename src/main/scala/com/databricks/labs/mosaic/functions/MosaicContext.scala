@@ -19,6 +19,7 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{LongType, StringType}
+import com.databricks.labs.mosaic.expressions.geometry.ST_MinMaxXYZ._
 
 import scala.reflect.runtime.universe
 
@@ -135,61 +136,27 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
           FlattenPolygons.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => FlattenPolygons(exprs(0), geometryAPI.name)
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_xmax", database),
-          ST_MinMaxXYZ.registryExpressionInfo(database, "st_xmax"),
-          (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "X", "MAX")
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_xmin", database),
-          ST_MinMaxXYZ.registryExpressionInfo(database, "st_xmin"),
-          (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "X", "MIN")
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_ymax", database),
-          ST_MinMaxXYZ.registryExpressionInfo(database, "st_ymax"),
-          (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "Y", "MAX")
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_ymin", database),
-          ST_MinMaxXYZ.registryExpressionInfo(database, "st_ymin"),
-          (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "Y", "MIN")
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_zmax", database),
-          ST_MinMaxXYZ.registryExpressionInfo(database, "st_zmax"),
-          (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "Z", "MAX")
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_zmin", database),
-          ST_MinMaxXYZ.registryExpressionInfo(database, "st_zmin"),
-          (exprs: Seq[Expression]) => ST_MinMaxXYZ(exprs(0), geometryAPI.name, "Z", "MIN")
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_isvalid", database),
-          ST_IsValid.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_IsValid(exprs(0), geometryAPI.name)
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_geometrytype", database),
-          ST_GeometryType.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_GeometryType(exprs(0), geometryAPI.name)
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_area", database),
-          ST_Area.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_Area(exprs(0), geometryAPI.name)
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_centroid2D", database),
-          ST_Centroid.registryExpressionInfo(database, "st_centroid2D"),
-          (exprs: Seq[Expression]) => ST_Centroid(exprs(0), geometryAPI.name)
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_centroid3D", database),
-          ST_Centroid.registryExpressionInfo(database, "st_centroid3D"),
-          (exprs: Seq[Expression]) => ST_Centroid(exprs(0), geometryAPI.name, 3)
-        )
+
+
+        mosaicRegistry.registerExpression[ST_Area](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Centroid](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Envelope](expressionConfig)
+        mosaicRegistry.registerExpression[ST_GeometryType](expressionConfig)
+        mosaicRegistry.registerExpression[ST_IsValid](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Length](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Length]("st_perimeter", expressionConfig)
+        mosaicRegistry.registerExpression[ST_XMin](expressionConfig)
+        mosaicRegistry.registerExpression[ST_XMax](expressionConfig)
+        mosaicRegistry.registerExpression[ST_YMin](expressionConfig)
+        mosaicRegistry.registerExpression[ST_YMax](expressionConfig)
+        mosaicRegistry.registerExpression[ST_ZMin](expressionConfig)
+        mosaicRegistry.registerExpression[ST_ZMax](expressionConfig)
+        mosaicRegistry.registerExpression[ST_NumPoints](expressionConfig)
+        mosaicRegistry.registerExpression[ST_SRID](expressionConfig)
+        mosaicRegistry.registerExpression[ST_UnaryUnion](expressionConfig)
+        mosaicRegistry.registerExpression[ST_X](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Y](expressionConfig)
+
         registry.registerFunction(
           FunctionIdentifier("st_geomfromwkt", database),
           ConvertTo.registryExpressionInfo(database, "st_geomfromwkt"),
@@ -255,16 +222,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
           ConvertTo.registryExpressionInfo(database, "st_asgeojson"),
           (exprs: Seq[Expression]) => ConvertTo(exprs(0), "geojson", geometryAPI.name, Some("st_asgeojson"))
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_length", database),
-          ST_Length.registryExpressionInfo(database, "st_length"),
-          (exprs: Seq[Expression]) => ST_Length(exprs(0), geometryAPI.name)
-        )
-        registry.registerFunction(
-          FunctionIdentifier("st_perimeter", database),
-          ST_Length.registryExpressionInfo(database, "st_perimeter"),
-          (exprs: Seq[Expression]) => ST_Length(exprs(0), geometryAPI.name)
-        )
+
+
         registry.registerFunction(
           FunctionIdentifier("st_distance", database),
           ST_Distance.registryExpressionInfo(database),
@@ -305,21 +264,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
           ST_Union.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_Union(exprs(0), exprs(1), geometryAPI.name)
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_unaryunion", database),
-          ST_UnaryUnion.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_UnaryUnion(exprs(0), geometryAPI.name)
-        )
+
         registry.registerFunction(
           FunctionIdentifier("st_simplify", database),
           ST_Simplify.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_Simplify(exprs(0), ColumnAdapter(exprs(1)).cast("double").expr, geometryAPI.name)
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_envelope", database),
-          ST_Envelope.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_Envelope(exprs(0), geometryAPI.name)
-        )
+
         registry.registerFunction(
           FunctionIdentifier("st_buffer", database),
           ST_Buffer.registryExpressionInfo(database),
@@ -336,11 +287,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
                 geometryAPI.name
               )
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_numpoints", database),
-          ST_NumPoints.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_NumPoints(exprs(0), geometryAPI.name)
-        )
+
         registry.registerFunction(
           FunctionIdentifier("st_intersects", database),
           ST_Intersects.registryExpressionInfo(database),
@@ -351,11 +298,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
           ST_Intersection.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_Intersection(exprs(0), exprs(1), geometryAPI.name)
         )
-        registry.registerFunction(
-          FunctionIdentifier("st_srid", database),
-          ST_SRID.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_SRID(exprs(0), geometryAPI.name)
-        )
+
         registry.registerFunction(
           FunctionIdentifier("st_setsrid", database),
           ST_SetSRID.registryExpressionInfo(database),
@@ -589,7 +532,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 
         /** Spatial functions */
         def flatten_polygons(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
-        def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr, geometryAPI.name))
+        def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr, expressionConfig))
         def st_buffer(geom: Column, radius: Column): Column =
             ColumnAdapter(ST_Buffer(geom.expr, radius.cast("double").expr, geometryAPI.name))
         def st_buffer(geom: Column, radius: Double): Column =
@@ -598,21 +541,20 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(ST_BufferLoop(geom.expr, r1.cast("double").expr, r2.cast("double").expr, geometryAPI.name))
         def st_bufferloop(geom: Column, r1: Double, r2: Double): Column =
             ColumnAdapter(ST_BufferLoop(geom.expr, lit(r1).cast("double").expr, lit(r2).cast("double").expr, geometryAPI.name))
-        def st_centroid2D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, geometryAPI.name))
-        def st_centroid3D(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, geometryAPI.name, 3))
+        def st_centroid(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, expressionConfig))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, geometryAPI.name))
         def st_difference(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Difference(geom1.expr, geom2.expr, geometryAPI.name))
         def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, geometryAPI.name))
         def st_dump(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
-        def st_envelope(geom: Column): Column = ColumnAdapter(ST_Envelope(geom.expr, geometryAPI.name))
-        def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr, geometryAPI.name))
+        def st_envelope(geom: Column): Column = ColumnAdapter(ST_Envelope(geom.expr, expressionConfig))
+        def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr, expressionConfig))
         def st_hasvalidcoordinates(geom: Column, crsCode: Column, which: Column): Column =
             ColumnAdapter(ST_HasValidCoordinates(geom.expr, crsCode.expr, which.expr, geometryAPI.name))
         def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, geometryAPI.name))
-        def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr, geometryAPI.name))
-        def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
-        def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, geometryAPI.name))
-        def st_perimeter(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, geometryAPI.name))
+        def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr, expressionConfig))
+        def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, expressionConfig))
+        def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, expressionConfig))
+        def st_perimeter(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, expressionConfig))
         def st_rotate(geom1: Column, td: Column): Column = ColumnAdapter(ST_Rotate(geom1.expr, td.expr, geometryAPI.name))
         def st_scale(geom1: Column, xd: Column, yd: Column): Column =
             ColumnAdapter(ST_Scale(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
@@ -621,18 +563,20 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(ST_Simplify(geom.expr, tolerance.cast("double").expr, geometryAPI.name))
         def st_simplify(geom: Column, tolerance: Double): Column =
             ColumnAdapter(ST_Simplify(geom.expr, lit(tolerance).cast("double").expr, geometryAPI.name))
-        def st_srid(geom: Column): Column = ColumnAdapter(ST_SRID(geom.expr, geometryAPI.name))
+        def st_srid(geom: Column): Column = ColumnAdapter(ST_SRID(geom.expr, expressionConfig))
         def st_transform(geom: Column, srid: Column): Column = ColumnAdapter(ST_Transform(geom.expr, srid.expr, geometryAPI.name))
         def st_translate(geom1: Column, xd: Column, yd: Column): Column =
             ColumnAdapter(ST_Translate(geom1.expr, xd.expr, yd.expr, geometryAPI.name))
-        def st_xmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "X", "MAX"))
-        def st_xmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "X", "MIN"))
-        def st_ymax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Y", "MAX"))
-        def st_ymin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Y", "MIN"))
-        def st_zmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Z", "MAX"))
-        def st_zmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, geometryAPI.name, "Z", "MIN"))
+        def st_x(geom: Column): Column = ColumnAdapter(ST_X(geom.expr, expressionConfig))
+        def st_y(geom: Column): Column = ColumnAdapter(ST_Y(geom.expr, expressionConfig))
+        def st_xmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "X", "MAX"))
+        def st_xmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "X", "MIN"))
+        def st_ymax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "Y", "MAX"))
+        def st_ymin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "Y", "MIN"))
+        def st_zmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "Z", "MAX"))
+        def st_zmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "Z", "MIN"))
         def st_union(leftGeom: Column, rightGeom: Column): Column = ColumnAdapter(ST_Union(leftGeom.expr, rightGeom.expr, geometryAPI.name))
-        def st_unaryunion(geom: Column): Column = ColumnAdapter(ST_UnaryUnion(geom.expr, geometryAPI.name))
+        def st_unaryunion(geom: Column): Column = ColumnAdapter(ST_UnaryUnion(geom.expr, expressionConfig))
 
         /** Undocumented helper */
         def convert_to(inGeom: Column, outDataType: String): Column =

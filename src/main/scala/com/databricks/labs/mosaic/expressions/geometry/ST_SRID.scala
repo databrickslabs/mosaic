@@ -1,72 +1,53 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types._
 
-case class ST_SRID(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant with RequiresCRS {
+case class ST_SRID(
+    inputGeom: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVectorExpression[ST_SRID](inputGeom, returnsGeometry = false, expressionConfig)
+      with RequiresCRS {
 
-    def dataType: DataType = IntegerType
+    override def dataType: DataType = IntegerType
 
-    def child: Expression = inputGeom
+    override def geometryTransform(geometry: MosaicGeometry): Any = geometry.getSpatialReference
 
-    override def nullSafeEval(input1: Any): Any = {
-        checkEncoding(inputGeom.dataType)
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-        geom.getSpatialReference
+    override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        val mosaicGeometry = mosaicGeometryRef(geometryRef)
+
+        val code = s"""
+                      |int $resultRef = $mosaicGeometry.getSpatialReference();
+                      |""".stripMargin
+
+        (code, resultRef)
     }
-
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = ST_SRID(asArray(0), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
-    }
-
-    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
-        nullSafeCodeGen(
-          ctx,
-          ev,
-          leftEval => {
-              checkEncoding(inputGeom.dataType)
-              val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-              val geometrySRIDStatement = geometryAPI.geometrySRIDCode(geomInRef)
-              geometryAPI.codeGenTryWrap(s"""
-                                            |$inCode
-                                            |${ev.value} = $geometrySRIDStatement;
-                                            |""".stripMargin)
-          }
-        )
-
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputGeom = newChild)
 
 }
 
-object ST_SRID {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_SRID extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_SRID].getCanonicalName,
-          db.orNull,
-          "st_srid",
-          """
-            |    _FUNC_(expr1) - Returns the Spatial Reference Identifier for a given geometry.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        27700
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_srid"
+
+    override def usage: String = "_FUNC_(expr1) - Returns spatial reference ID of the geometry."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a);
+          |        27700
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_SRID](1, expressionConfig)
+    }
+
 }

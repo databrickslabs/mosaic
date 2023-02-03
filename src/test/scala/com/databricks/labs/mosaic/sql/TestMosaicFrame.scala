@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.sql
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
+import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext

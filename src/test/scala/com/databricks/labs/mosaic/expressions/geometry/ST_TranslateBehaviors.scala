@@ -43,7 +43,7 @@ trait ST_TranslateBehaviors extends QueryTest {
         mc.register(spark)
 
         val results = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_translate($"wkt", lit(1.1), lit(1.1)))
 
         val queryExecution = results.queryExecution

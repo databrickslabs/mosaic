@@ -2,8 +2,9 @@ package com.databricks.labs.mosaic.core.geometry
 
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-
 import org.locationtech.proj4j.{CoordinateTransformFactory, CRSFactory, ProjCoordinate}
+
+import java.util.Locale
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
 
@@ -81,17 +82,17 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def minMaxCoord(dimension: String, func: String): Double = {
         val coordArray = this.getShellPoints.map(shell => {
-            val unitArray = dimension match {
+            val unitArray = dimension.toUpperCase(Locale.ROOT) match {
                 case "X" => shell.map(_.getX)
                 case "Y" => shell.map(_.getY)
                 case "Z" => shell.map(_.getZ)
             }
-            func match {
+            func.toUpperCase(Locale.ROOT) match {
                 case "MIN" => unitArray.min
                 case "MAX" => unitArray.max
             }
         })
-        func match {
+        func.toUpperCase(Locale.ROOT) match {
             case "MIN" => coordArray.min
             case "MAX" => coordArray.max
         }

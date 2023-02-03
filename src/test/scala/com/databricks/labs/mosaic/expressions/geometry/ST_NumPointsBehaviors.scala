@@ -45,7 +45,7 @@ trait ST_NumPointsBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stNumPoints = ST_NumPoints(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, geometryAPI.name)
+        val stNumPoints = ST_NumPoints(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, mc.expressionConfig)
 
         stNumPoints.child shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
         stNumPoints.dataType shouldEqual IntegerType

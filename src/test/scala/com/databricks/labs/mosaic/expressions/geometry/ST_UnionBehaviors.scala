@@ -83,7 +83,7 @@ trait ST_UnionBehaviors extends QueryTest {
         import sc.implicits._
         mc.register(spark)
 
-        val result = mocks.getWKTRowsDf(mc).select(st_union($"wkt", $"wkt"))
+        val result = mocks.getWKTRowsDf().select(st_union($"wkt", $"wkt"))
 
         // Check if code generation was planned
         val queryExecution = result.queryExecution

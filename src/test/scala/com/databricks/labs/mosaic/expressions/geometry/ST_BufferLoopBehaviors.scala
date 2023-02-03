@@ -17,13 +17,13 @@ trait ST_BufferLoopBehaviors extends MosaicSpatialQueryTest {
         import sc.implicits._
 
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select("wkt")
             .withColumn("wkt", st_bufferloop($"wkt", lit(0.1), lit(0.2)))
 
         val expected = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .withColumn("wkt1", st_buffer($"wkt", lit(0.1)))
             .withColumn("wkt2", st_buffer($"wkt", lit(0.2)))
@@ -41,7 +41,7 @@ trait ST_BufferLoopBehaviors extends MosaicSpatialQueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val result = mocks.getWKTRowsDf(mc).select(st_bufferloop($"wkt", 0.1, 0.2))
+        val result = mocks.getWKTRowsDf().select(st_bufferloop($"wkt", 0.1, 0.2))
 
         val plan = result.queryExecution.executedPlan
         val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
@@ -51,7 +51,7 @@ trait ST_BufferLoopBehaviors extends MosaicSpatialQueryTest {
         val (_, code) = codeGenStage.doCodeGen()
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stEnvelope = ST_Envelope(lit(1).expr, "illegalAPI")
+        val stEnvelope = ST_Envelope(lit(1).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stEnvelope.genCode(ctx)
     }

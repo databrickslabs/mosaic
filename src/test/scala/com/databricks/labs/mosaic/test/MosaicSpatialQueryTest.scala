@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.test
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
+import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.{DataFrame, SparkSession}

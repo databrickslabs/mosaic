@@ -42,7 +42,7 @@ trait ST_ScaleBehaviors extends QueryTest {
         mc.register(spark)
 
         val results = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_scale($"wkt", lit(1.1), lit(1.1)))
 
         val queryExecution = results.queryExecution

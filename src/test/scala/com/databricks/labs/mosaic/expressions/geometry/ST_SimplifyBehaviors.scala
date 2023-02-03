@@ -23,7 +23,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
         mc.register(spark)
 
         val referenceGeoms = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select("wkt")
             .as[String]
@@ -33,7 +33,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
 
         // test st_simplify(Column, Double)
         val result1 = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select(st_length(st_simplify($"wkt", 1.0)))
             .as[Double]
@@ -42,7 +42,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
 
         // test st_simplify(Column, Column)
         val result2 = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select(st_length(st_simplify($"wkt", lit(1.0))))
             .as[Double]
@@ -59,7 +59,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
         mc.register(spark)
 
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_length(st_simplify($"wkt", 1.0)))
 
         val queryExecution = result.queryExecution
@@ -85,7 +85,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
         mc.register(spark)
         import mc.functions._
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
 
         val stSimplify = ST_Simplify(df.col("wkt").expr, lit(1).expr, geometryAPI.name)
 

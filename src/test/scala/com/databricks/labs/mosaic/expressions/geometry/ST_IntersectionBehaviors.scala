@@ -185,7 +185,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
         mc.register(spark)
 
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_intersection($"wkt", $"wkt"))
             .as[String]
 

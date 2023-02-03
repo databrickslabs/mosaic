@@ -25,7 +25,7 @@ trait ST_SetSRIDBehaviors extends QueryTest {
 
         // Internal format
         val sourceDf = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .withColumn("internal", convert_to($"wkt", "COORDS"))
 
         val result = sourceDf

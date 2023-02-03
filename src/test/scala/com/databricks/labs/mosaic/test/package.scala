@@ -255,10 +255,7 @@ package object test {
             spark.createDataFrame(rdd, schema)
         }
 
-        def getWKTRowsDf(mosaicContext: MosaicContext): DataFrame = {
-            val mc = mosaicContext
-
-            val indexSystem = mc.getIndexSystem
+        def getWKTRowsDf(indexSystem: IndexSystem = H3IndexSystem): DataFrame = {
             val spark = SparkSession.builder().getOrCreate()
             val rows = indexSystem match {
                 case H3IndexSystem  => wkt_rows_epsg4326.map { x => Row(x: _*) }

@@ -107,14 +107,14 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
 
         val meanIndexAreaDf = analyzerMosaicFrame
             .transform(sampleStrategy.transformer)
-            .withColumn("centroid", st_centroid2D(analyzerMosaicFrame.getGeometryColumn))
+            .withColumn("centroid", st_centroid(analyzerMosaicFrame.getGeometryColumn))
             .select(
               mean(
                 st_area(
                   grid_boundaryaswkb(
                     grid_longlatascellid(
-                      col("centroid").getItem("x"),
-                      col("centroid").getItem("y"),
+                      st_x(col("centroid")),
+                      st_y(col("centroid")),
                       lit(resolution)
                     )
                   )

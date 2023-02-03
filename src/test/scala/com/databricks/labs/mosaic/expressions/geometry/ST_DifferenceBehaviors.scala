@@ -37,7 +37,7 @@ trait ST_DifferenceBehaviors extends MosaicSpatialQueryTest {
         import sc.implicits._
         import mc.functions._
 
-        val result = mocks.getWKTRowsDf(mc).select(st_difference($"wkt", $"wkt"))
+        val result = mocks.getWKTRowsDf().select(st_difference($"wkt", $"wkt"))
 
         // Check if code generation was planned
         val queryExecution = result.queryExecution
