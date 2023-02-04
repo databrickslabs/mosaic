@@ -7,7 +7,7 @@
    :width: 50%
    :alt: mosaic
    :align: left
-|
+
 .. image:: https://badge.fury.io/py/databricks-mosaic.svg
    :target: https://badge.fury.io/py/databricks-mosaic
    :alt: PyPI Version
