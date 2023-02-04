@@ -259,6 +259,13 @@
       <a href="api/spatial-aggregations.html" class="md-nav__link">Spatial aggregation functions</a>
       
     
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="api/raster-functions.html" class="md-nav__link">Raster functions</a>
+      
+    
     </li></ul>
     
     </li>
@@ -271,6 +278,13 @@
     
     
       <a href="usage/installation.html" class="md-nav__link">Installation guide</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="usage/install-gdal.html" class="md-nav__link">GDAL Installation guide</a>
       
     
     </li>
@@ -360,6 +374,7 @@
  | <a href="#G"><strong>G</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  
 </div>
@@ -412,6 +427,64 @@
 </li>
         <li><a href="api/spatial-indexing.html#polyfill">polyfill()</a>
 </li>
+        <li><a href="api/raster-functions.html#rst_bandmetadata">rst_bandmetadata()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_height">rst_height()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_isempty">rst_isempty()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_memsize">rst_memsize()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_metadata">rst_metadata()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_numbands">rst_numbands()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_pixelheight">rst_pixelheight()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_pixelwidth">rst_pixelwidth()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_rastertogridavg">rst_rastertogridavg()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_rastertogridcount">rst_rastertogridcount()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_rastertogridmax">rst_rastertogridmax()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_rastertogridmedian">rst_rastertogridmedian()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_rastertogridmin">rst_rastertogridmin()</a>
+</li>
+        <li><a href="api/raster-functions.html#id0">rst_rastertoworldcoord()</a>, <a href="api/raster-functions.html#rst_rastertoworldcoord">[1]</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_rastertoworldcoordy">rst_rastertoworldcoordy()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_retile">rst_retile()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_rotation">rst_rotation()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_scalex">rst_scalex()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_scaley">rst_scaley()</a>
+</li>
+        <li><a href="api/raster-functions.html#id1">rst_skewx()</a>, <a href="api/raster-functions.html#rst_skewx">[1]</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_srid">rst_srid()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_subdatasets">rst_subdatasets()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_summary">rst_summary()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_upperleftx">rst_upperleftx()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_upperlefty">rst_upperlefty()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_width">rst_width()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_worldtorastercoord">rst_worldtorastercoord()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_worldtorastercoordx">rst_worldtorastercoordx()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_worldtorastercoordy">rst_worldtorastercoordy()</a>
+</li>
         <li><a href="api/spatial-functions.html#st_area">st_area()</a>
 </li>
         <li><a href="api/geometry-accessors.html#st_asbinary">st_asbinary()</a>
@@ -451,6 +524,8 @@
         <li><a href="api/geometry-constructors.html#st_geomfromwkb">st_geomfromwkb()</a>
 </li>
         <li><a href="api/geometry-constructors.html#st_geomfromwkt">st_geomfromwkt()</a>
+</li>
+        <li><a href="api/raster-functions.html#st_georeference">st_georeference()</a>
 </li>
         <li><a href="api/spatial-functions.html#st_hasvalidcoordinates">st_hasvalidcoordinates()</a>
 </li>
@@ -689,6 +764,217 @@
   </ul></td>
 </tr></table>
 
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    rst_bandmetadata()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_bandmetadata">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_height()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_height">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_isempty()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_isempty">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_memsize()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_memsize">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_metadata()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_metadata">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_numbands()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_numbands">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_pixelheight()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_pixelheight">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_pixelwidth()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_pixelwidth">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_rastertogridavg()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_rastertogridavg">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_rastertogridcount()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_rastertogridcount">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_rastertogridmax()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_rastertogridmax">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_rastertogridmedian()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_rastertogridmedian">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_rastertogridmin()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_rastertogridmin">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_rastertoworldcoord()
+
+      <ul>
+        <li><a href="api/raster-functions.html#id0">built-in function</a>, <a href="api/raster-functions.html#rst_rastertoworldcoord">[1]</a>
+</li>
+      </ul></li>
+      <li>
+    rst_rastertoworldcoordy()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_rastertoworldcoordy">built-in function</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    rst_retile()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_retile">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_rotation()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_rotation">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_scalex()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_scalex">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_scaley()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_scaley">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_skewx()
+
+      <ul>
+        <li><a href="api/raster-functions.html#id1">built-in function</a>, <a href="api/raster-functions.html#rst_skewx">[1]</a>
+</li>
+      </ul></li>
+      <li>
+    rst_srid()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_srid">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_subdatasets()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_subdatasets">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_summary()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_summary">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_upperleftx()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_upperleftx">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_upperlefty()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_upperlefty">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_width()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_width">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_worldtorastercoord()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_worldtorastercoord">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_worldtorastercoordx()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_worldtorastercoordx">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_worldtorastercoordy()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_worldtorastercoordy">built-in function</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -830,6 +1116,13 @@
 
       <ul>
         <li><a href="api/geometry-constructors.html#st_geomfromwkt">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    st_georeference()
+
+      <ul>
+        <li><a href="api/raster-functions.html#st_georeference">built-in function</a>
 </li>
       </ul></li>
       <li>
