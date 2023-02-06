@@ -61,6 +61,7 @@ trait CellKRingBehaviors extends MosaicSpatialQueryTest {
         mc.getIndexSystem match {
             case H3IndexSystem  => cellKRingExpr.dataType shouldEqual ArrayType(LongType)
             case BNGIndexSystem => cellKRingExpr.dataType shouldEqual ArrayType(StringType)
+            case _  => cellKRingExpr.dataType shouldEqual ArrayType(LongType)
         }
 
         val badExpr = CellKRing(

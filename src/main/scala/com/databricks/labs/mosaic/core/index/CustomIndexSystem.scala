@@ -25,24 +25,50 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
      *
      * @param index
      * Index ID to be used as a center of k ring.
-     * @param n
+     * @param k
      * Number of k rings to be generated around the input index.
      * @return
      * A collection of index IDs forming a k ring.
      */
-    override def kRing(index: Long, n: Int): Seq[Long] = ???
+    override def kRing(index: Long, k: Int): Seq[Long] = {
+        assert(k >= 0, "k must be at least 0")
+
+        val res =  getCellResolution(index)
+
+        val cellPosition = getCellPosition(index: Long)
+        val posX = getCellPositionX(cellPosition, res)
+        val posY = getCellPositionY(cellPosition, res)
+
+        val fromX = math.max(posX - k, 0)
+        val toX = math.min(posX + k, totalCellsX(res))
+
+        val fromY = math.max(posY - k, 0)
+        val toY = math.min(posY + k, totalCellsY(res))
+
+        (fromX to toX)
+          // Get all cells that overlap with the bounding box
+          .flatMap(x => (fromY to toY).map(y => (x, y)))
+
+          // Map them to cell centers and cell ID
+          .map(pos => getCellPositionFromPositions(pos._1, pos._2, res))
+    }
 
     /**
      * Get the k loop (hollow ring) of indices around the provided index id.
      *
      * @param index
      * Index ID to be used as a center of k loop.
-     * @param n
+     * @param k
      * Distance of k loop to be generated around the input index.
      * @return
      * A collection of index IDs forming a k loop.
      */
-    override def kLoop(index: Long, n: Int): Seq[Long] = ???
+    override def kLoop(index: Long, k: Int): Seq[Long] = {
+        assert(k >= 1, "k must be at least 1")
+        val ring = kRing(index, k)
+        val innerRing = kRing(index, k-1)
+        ring.diff(innerRing)
+    }
 
     /**
      * Returns the set of supported resolutions for the given index system.
@@ -263,8 +289,13 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
         val cellPosX = ((x - conf.boundXMin) / conf.spanX * cellsX).toLong
         val cellPosY = ((y - conf.boundYMin) / conf.spanY * cellsY).toLong
 
+        (cellPosX, cellPosY, getCellPositionFromPositions(cellPosX, cellPosY, resolution))
+    }
+
+    private def getCellPositionFromPositions(cellPosX: Long, cellPosY: Long, resolution: Int) = {
+        val cellsX = totalCellsX(resolution)
         val cellPos = cellPosY * cellsX + cellPosX
-        (cellPosX, cellPosY, cellPos)
+        cellPos
     }
 
     def totalCellsX(resolution: Int): Long = {

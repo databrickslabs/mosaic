@@ -64,6 +64,7 @@ trait GeometryKLoopBehaviors extends MosaicSpatialQueryTest {
         mc.getIndexSystem match {
             case H3IndexSystem  => geometryKLoopExpr.dataType shouldEqual ArrayType(LongType)
             case BNGIndexSystem => geometryKLoopExpr.dataType shouldEqual ArrayType(StringType)
+            case _  => geometryKLoopExpr.dataType shouldEqual ArrayType(LongType)
         }
 
         val badExpr = GeometryKLoop(

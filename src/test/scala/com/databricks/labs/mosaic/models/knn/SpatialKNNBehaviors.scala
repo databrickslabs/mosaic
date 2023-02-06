@@ -22,6 +22,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
         val (resolution, distanceThreshold) = mc.getIndexSystem match {
             case H3IndexSystem  => (3, 100.0)
             case BNGIndexSystem => (-3, 10000.0)
+            case _ => (3, 100.0)
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -110,6 +111,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
         val (resolution, distanceThreshold) = mc.getIndexSystem match {
             case H3IndexSystem  => (3, 100.0)
             case BNGIndexSystem => (-3, 10000.0)
+            case _ => (3, 100.0)
         }
 
         val boroughs: DataFrame = getBoroughs(mc)

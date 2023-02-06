@@ -64,6 +64,7 @@ trait GeometryKRingBehaviors extends MosaicSpatialQueryTest {
         mc.getIndexSystem match {
             case H3IndexSystem  => geometryKRingExpr.dataType shouldEqual ArrayType(LongType)
             case BNGIndexSystem => geometryKRingExpr.dataType shouldEqual ArrayType(StringType)
+            case _  => geometryKRingExpr.dataType shouldEqual ArrayType(LongType)
         }
 
         val badExpr = GeometryKRing(
