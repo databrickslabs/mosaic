@@ -55,6 +55,7 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => "5"
             case BNGIndexSystem => "100m"
+            case _ => "5"
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -106,7 +107,7 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
                     .makeCopy(Array(st_point(lit(10001.0), lit(10000.0)).expr, lit(5).expr, lit(true).expr))
                     .asInstanceOf[PointIndexGeom]
                     .left shouldEqual st_point(lit(10001.0), lit(10000.0)).expr
-            case H3IndexSystem  =>
+            case _ =>
                 val lonLatIndex = PointIndexLonLat(lit(10.0).expr, lit(10.0).expr, lit(10).expr, indexSystem)
                 val pointIndex = PointIndexGeom(st_point(lit(10.0), lit(10.0)).expr, lit(10).expr, indexSystem, geometryAPI.name)
                 lonLatIndex.inputTypes should contain theSameElementsAs Seq(DoubleType, DoubleType, IntegerType, BooleanType)
