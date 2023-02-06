@@ -121,6 +121,52 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
     }
 
+    test("polyfill single cell with negative coordinates") {
+        val conf = GridConf(-100, 100, -100, 100, 2, 2)
+
+        val grid = new CustomIndexSystem(conf)
+        val resolution = 3
+        val resolutionMask = resolution.toLong << 56
+
+        // At resolution = 3, the cell splits are at: -100, -75, -50, -25, 0, 25, 50, 75, 100
+
+        grid.getCellWidth(resolution) shouldBe 25.0
+        grid.getCellHeight(resolution) shouldBe 25.0
+
+        grid.getCellPositionFromCoordinates(1.0, 1.0, resolution) shouldBe (4, 4, 36)
+
+        val geom = JTS.geometry("POLYGON ((0 0, 25 0, 25 25, 0 25, 0 0))", "WKT")
+        grid.polyfill(geom, resolution, Some(JTS)).toSet shouldBe Set(36 | resolutionMask)
+
+        // Geometry which cell center does not fall into does not get selected
+        val geomSmall = JTS.geometry("POLYGON ((0 0, 5 0, 5 5, 0 5, 0 0))", "WKT")
+        grid.polyfill(geomSmall, resolution, Some(JTS)).toSet shouldBe Set()
+
+        // Small geometry for which the cell center falls within should be detected
+        val geomCentered = JTS.geometry("POLYGON ((12 12, 13 12, 13 13, 12 13, 12 12))", "WKT")
+        grid.polyfill(geomCentered, resolution, Some(JTS)).toSet shouldBe Set(36 | resolutionMask)
+
+    }
+
+    test("polyfill single cell with world coordinates") {
+        val conf = GridConf(-180, 180, -180, 180, 2, 2)
+
+        val grid = new CustomIndexSystem(conf)
+        val resolution = 3
+        val resolutionMask = resolution.toLong << 56
+
+        // At resolution = 3, the cell splits are at: -180, -135, -90, -45, 0, 45, 90, 135, 180
+
+        grid.getCellWidth(resolution) shouldBe 45.0
+        grid.getCellHeight(resolution) shouldBe 45.0
+
+        grid.getCellPositionFromCoordinates(1.0, 1.0, resolution) shouldBe (4, 4, 36)
+
+        val geom = JTS.geometry("POLYGON ((-95 18, -50 18, -50 64, -95 64, -95 18))", "WKT")
+        grid.polyfill(geom, resolution, Some(JTS)).toSet shouldBe Set(34 | resolutionMask)
+
+    }
+
     test("polyfill multi cell") {
         val conf = GridConf(0, 100, 0, 100, 2, 2)
 

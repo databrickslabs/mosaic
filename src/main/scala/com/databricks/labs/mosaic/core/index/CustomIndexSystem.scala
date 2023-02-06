@@ -169,7 +169,7 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
 
         val result = cellCenters
           // Select only cells which center falls within the geometry
-          .filter(cell => geometry.contains(geometryAPI.get.fromGeoCoord(Coordinates(cell._1, cell._2))))
+          .filter(cell => geometry.contains(geometryAPI.get.fromGeoCoord(Coordinates(cell._2, cell._1))))
 
           // Extract cellIDs only
           .map(cell => pointToIndex(cell._1, cell._2, resolution))
@@ -208,11 +208,11 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
     }
 
     def getCellWidth(resolution: Int): Double = {
-        conf.spanX / (resolution * conf.cellSubdivisionX)
+        conf.spanX / math.pow(conf.cellSubdivisionX, resolution)
     }
 
     def getCellHeight(resolution: Int): Double = {
-        conf.spanY / (resolution * conf.cellSubdivisionY)
+        conf.spanY / math.pow(conf.cellSubdivisionY, resolution)
     }
 
     /**
@@ -287,7 +287,7 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
         res
     }
 
-    private def getCellPositionFromCoordinates(x: Double, y: Double, resolution: Int) = {
+    def getCellPositionFromCoordinates(x: Double, y: Double, resolution: Int): (Long, Long, Long) = {
         val cellsX = totalCellsX(resolution)
         val cellsY = totalCellsY(resolution)
 
