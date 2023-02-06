@@ -157,7 +157,7 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
         val (firstCellPosX, firstCellPosY, _) = getCellPositionFromCoordinates(minX, minY, resolution)
         val (lastCellPosX, lastCellPosY, _) = getCellPositionFromCoordinates(maxX, maxY, resolution)
 
-        (firstCellPosX to lastCellPosX)
+        val cellCenters = (firstCellPosX to lastCellPosX)
           // Get all cells that overlap with the bounding box
           .flatMap(x => (firstCellPosY to lastCellPosY).map(y => (x, y)))
 
@@ -167,23 +167,28 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
             getCellCenterY(pos._2, resolution)
           ))
 
+        val result = cellCenters
           // Select only cells which center falls within the geometry
           .filter(cell => geometry.contains(geometryAPI.get.fromGeoCoord(Coordinates(cell._1, cell._2))))
 
           // Extract cellIDs only
           .map(cell => pointToIndex(cell._1, cell._2, resolution))
+
+        result
     }
 
     private def getCellCenterX(cellPositionX: Long, resolution: Int) = {
         val cellWidth = getCellWidth(resolution)
 
-        cellPositionX * cellWidth + (cellWidth / 2)
+        val centerOffset = cellPositionX * cellWidth + (cellWidth / 2)
+        centerOffset + conf.boundXMin
     }
 
     private def getCellCenterY(cellPositionY: Long, resolution: Int) = {
         val cellHeight = getCellHeight(resolution)
 
-        cellPositionY * cellHeight + (cellHeight / 2)
+        val centerOffset = cellPositionY * cellHeight + (cellHeight / 2)
+        centerOffset + conf.boundYMin
     }
 
     def getCellResolution(cellId: Long): Int = {
