@@ -42,7 +42,9 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
             .setApproximate(false)
             .setKNeighbours(5)
             .setLandmarksFeatureCol("wkt")
+            .setLandmarksRowID("landmark_id")
             .setCandidatesFeatureCol("wkt")
+            .setCandidatesRowID("candidate_id")
             .setMaxIterations(10)
             .setEarlyStopIterations(3)
             // note this is CRS specific
@@ -54,7 +56,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
             .transform(boroughs)
             .withColumn("left_hash", hash(col("wkt")))
             .withColumn("right_hash", hash(col("right_wkt")))
-            .select("wkt_wkt_distance", "iteration", "landmarks_miid", "candidates_miid", "neighbour_number")
+            .select("wkt_wkt_distance", "iteration", "landmark_id", "candidate_id", "neighbour_number")
             .collect()
 
         matches.map(r => r.getDouble(0)).max should be <= distanceThreshold // wkt_wkt_distance
@@ -105,7 +107,9 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
             .setApproximate(true)
             .setKNeighbours(5)
             .setLandmarksFeatureCol("wkt")
+            .setLandmarksRowID("landmark_id")
             .setCandidatesFeatureCol("wkt")
+            .setCandidatesRowID("candidate_id")
             .setMaxIterations(10)
             .setEarlyStopIterations(3)
             // note this is CRS specific
@@ -117,7 +121,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
             .transform(boroughs)
             .withColumn("left_hash", hash(col("wkt")))
             .withColumn("right_hash", hash(col("right_wkt")))
-            .select("wkt_wkt_distance", "iteration", "landmarks_miid", "candidates_miid", "neighbour_number")
+            .select("wkt_wkt_distance", "iteration", "landmark_id", "candidate_id", "neighbour_number")
             .collect()
 
         matches.map(r => r.getDouble(0)).max should be <= distanceThreshold // wkt_wkt_distance

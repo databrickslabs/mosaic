@@ -50,6 +50,14 @@ class TestMultiPointESRI extends AnyFlatSpec {
         multiPointReference.equals(multiPointTest) shouldBe true
     }
 
+    "MosaicMultiPointESRI" should "not fail for empty Seq" in {
+        val expected = MosaicMultiPointESRI.fromWKT(
+            "MULTIPOINT EMPTY"
+        )
+        val actual = MosaicMultiPointESRI.fromSeq(Seq())
+        expected.equals(actual) shouldBe true
+    }
+
     "MosaicMultiPointESRI" should "return a Seq of MosaicPointESRI object when calling asSeq" in {
         val multiPoint = MosaicMultiPointESRI.fromWKT("MULTIPOINT (1 1, 2 2, 3 3)").asInstanceOf[MosaicMultiPointESRI]
         val pointsSeqReference = Seq("POINT (1 1)", "POINT (2 2)", "POINT (3 3)")

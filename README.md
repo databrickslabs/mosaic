@@ -6,7 +6,7 @@ An extension to the [Apache Spark](https://spark.apache.org/) framework that all
 [![PyPI version](https://badge.fury.io/py/databricks-mosaic.svg)](https://badge.fury.io/py/databricks-mosaic)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/databricks-mosaic?style=plastic)
 [![codecov](https://codecov.io/gh/databrickslabs/mosaic/branch/main/graph/badge.svg?token=aEzZ8ITxdg)](https://codecov.io/gh/databrickslabs/mosaic)
-[![build](https://github.com/databrickslabs/mosaic/actions/workflows/build.yml/badge.svg)](https://github.com/databrickslabs/mosaic/actions/workflows/build.yml)
+[![build](https://github.com/databrickslabs/mosaic/actions/workflows/build_main.yml/badge.svg)](https://github.com/databrickslabs/mosaic/actions?query=workflow%3A%22build+main%22)
 [![docs](https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml/badge.svg)](https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/databrickslabs/mosaic.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/databrickslabs/mosaic/context:python)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)

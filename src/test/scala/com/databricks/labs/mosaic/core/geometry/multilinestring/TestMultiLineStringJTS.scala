@@ -51,6 +51,14 @@ class TestMultiLineStringJTS extends AnyFlatSpec {
         multiLineStringReference.equals(multiLineStringTest) shouldBe true
     }
 
+    "MosaicMultiLineStringJTS" should "not fail for empty Seq" in {
+        val expected = MosaicMultiLineStringJTS.fromWKT(
+            "MULTILINESTRING EMPTY"
+        )
+        val actual = MosaicMultiLineStringJTS.fromSeq(Seq[MosaicMultiLineStringJTS]())
+        expected.equals(actual) shouldBe true
+    }
+
     "MosaicMultiLineStringJTS" should "return a Seq of MosaicLineStringJTS object when calling asSeq" in {
         val multiLineString = MosaicMultiLineStringJTS
             .fromWKT("MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))")

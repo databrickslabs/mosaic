@@ -19,12 +19,14 @@ enableMosaic <- function(
     sc
     ,geometryAPI="ESRI"
     ,indexSystem="H3"
+    ,rasterAPI="GDAL"
 ){
   
   geometry_api <- sparklyr::invoke_static(sc, class="com.databricks.labs.mosaic.core.geometry.api.GeometryAPI", method="apply", geometryAPI)
   index_system_id <- sparklyr::invoke_static(sc, class="com.databricks.labs.mosaic.core.index.IndexSystemID", method="apply", indexSystem)
+  raster_api <- sparklyr::invoke_static(sc, class="com.databricks.labs.mosaic.core.raster.api.RasterAPI", method="apply", rasterAPI)
   indexing_system <- sparklyr::invoke_static(sc, class="com.databricks.labs.mosaic.core.index.IndexSystemID", method="getIndexSystem", index_system_id)
-  mosaic_context <- sparklyr::invoke_new(sc, class="com.databricks.labs.mosaic.functions.MosaicContext", indexing_system, geometry_api)
+  mosaic_context <- sparklyr::invoke_new(sc, class="com.databricks.labs.mosaic.functions.MosaicContext", indexing_system, geometry_api, raster_api)
   functions <<- sparklyr::invoke(mosaic_context, "functions")
   sparklyr::invoke(mosaic_context, "register")
   

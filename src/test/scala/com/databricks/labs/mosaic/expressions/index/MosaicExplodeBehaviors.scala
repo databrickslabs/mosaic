@@ -366,8 +366,8 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
             .isFailure shouldEqual true
 
         // Line decompose error should be thrown
-        val geom = MosaicContext.geometryAPI().geometry("POINT (1 1)", "WKT")
-        an[Error] should be thrownBy Mosaic.lineFill(geom, 5, MosaicContext.indexSystem(), MosaicContext.geometryAPI())
+        val geom = MosaicContext.geometryAPI.geometry("POINT (1 1)", "WKT")
+        an[Error] should be thrownBy Mosaic.lineFill(geom, 5, MosaicContext.indexSystem, MosaicContext.geometryAPI)
 
         // Default getters
         noException should be thrownBy mosaicExplodeExpr.geom

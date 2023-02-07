@@ -1,3 +1,54 @@
+## v0.3.7
+- Fixed pip release publish script
+
+## v0.3.6
+- Added GDAL and 32 rst_* raster functions:
+  - RST_BandMetaData
+  - RST_GeoReference
+  - RST_IsEmpty
+  - RST_MemSize
+  - RST_MetaData
+  - RST_NumBands
+  - RST_PixelWidth
+  - RST_PixelHeight
+  - RST_RasterToGridAvg
+  - RST_RasterToGridMax
+  - RST_RasterToGridMin
+  - RST_RasterToGridMedian
+  - RST_RasterToGridCount
+  - RST_RasterToWorldCoord
+  - RST_RasterToWorldCoordX
+  - RST_RasterToWorldCoordY
+  - RST_ReTile
+  - RST_Rotation
+  - RST_ScaleX
+  - RST_ScaleY
+  - RST_SkewX
+  - RST_SkewY
+  - RST_SRID
+  - RST_Subdatasets
+  - RST_Summary
+  - RST_UpperLeftX
+  - RST_UpperLeftY
+  - RST_Width
+  - RST_Height
+  - RST_WorldToRasterCoord
+  - RST_WorldToRasterCoordX
+  - RST_WorldToRasterCoordY
+- Fixed geometry creation from empty Seq
+- Fixed landmarks_miid and candidates_miid column names parameter in KNN
+- Improved docs
+
+## v0.3.5
+- Implemented KNN (K Nearest Neighbours) transformer
+- Implemented grid cell functions `grid_cellkring`, `grid_cellkloop`, `grid_cellkringexplode`, and `grid_cellkloopexplode`
+- Implemented geometry grid functions `grid_geometrykring`, `grid_geometrykloop`, `grid_geometrykringexplode`, and `grid_geometrykloopexplode`
+- Implemented `st_envelope`, `st_difference`, and `st_bufferloop` geometry functions
+- Fixed the function names for `convert_to` functions
+- Fixed corner case of duplicate H3 indexes in grid tessellation
+- Fixed corner case of possible missing H3 indexes crossing the icosahedron edges
+- Improved documentation
+
 ## v0.3.4
 - Implemented `st_simplify`
 - Improved docs for R language bindings

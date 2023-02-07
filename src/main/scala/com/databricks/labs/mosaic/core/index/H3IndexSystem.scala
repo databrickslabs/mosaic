@@ -22,7 +22,7 @@ import scala.util.{Success, Try}
 object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
     // An instance of H3Core to be used for IndexSystem implementation.
-    @transient val h3: H3Core = H3Core.newInstance()
+    @transient private val h3: H3Core = H3Core.newInstance()
 
     /**
       * H3 resolution can only be an Int value between 0 and 15.
@@ -73,15 +73,8 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
         val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
         val boundary = indexGeom.getShellPoints.head // first shell is always in head
-
-        // Hexagons have only 3 diameters.
-        // Computing them manually and selecting the maximum.
-        // noinspection ZeroIndexToHead
-        Seq(
-          boundary(0).distance(boundary(3)),
-          boundary(1).distance(boundary(4)),
-          boundary(2).distance(boundary(5))
-        ).max / 2
+        val indexGeomCentroid = indexGeom.getCentroid
+        boundary.map(_.distance(indexGeomCentroid)).max
     }
 
     /**

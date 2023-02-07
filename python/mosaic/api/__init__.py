@@ -4,3 +4,5 @@ from .constructors import *
 from .enable import enable_mosaic
 from .functions import *
 from .predicates import *
+from .gdal import *
+from .raster import *

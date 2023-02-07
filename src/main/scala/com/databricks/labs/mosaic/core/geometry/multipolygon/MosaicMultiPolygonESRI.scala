@@ -100,6 +100,12 @@ object MosaicMultiPolygonESRI extends GeometryReader {
     def apply(multiPolygon: OGCGeometry): MosaicMultiPolygonESRI = new MosaicMultiPolygonESRI(multiPolygon.asInstanceOf[OGCMultiPolygon])
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = MULTIPOLYGON): MosaicMultiPolygonESRI = {
+
+        if (geomSeq.isEmpty) {
+            // For empty sequence return an empty geometry with default Spatial Reference
+            return MosaicMultiPolygonESRI(new OGCMultiPolygon(MosaicGeometryESRI.defaultSpatialReference))
+        }
+
         val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case POLYGON                       =>

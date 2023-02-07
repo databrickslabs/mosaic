@@ -82,6 +82,10 @@ object MosaicPointJTS extends GeometryReader {
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POINT): MosaicPointJTS = {
         val gf = new GeometryFactory()
+        if (geomSeq.isEmpty) {
+            // For empty sequence return an empty geometry with default Spatial Reference
+            return MosaicPointJTS(gf.createPoint())
+        }
         val spatialReference = geomSeq.head.getSpatialReference
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case POINT                         =>
