@@ -24,10 +24,12 @@ trait IndexGeometryBehaviors extends MosaicSpatialQueryTest {
         val gridCellLong = MosaicContext.indexSystem() match {
             case BNGIndexSystem => lit(1050138790L).expr
             case H3IndexSystem  => lit(623060282076758015L).expr
+            case _  => lit(0L).expr
         }
         val gridCellStr = MosaicContext.indexSystem() match {
             case BNGIndexSystem => lit("TQ388791").expr
             case H3IndexSystem  => lit("8a58e0682d6ffff").expr
+            case _ => lit("0").expr
         }
 
         IndexGeometry(gridCellStr, lit("WKT").expr, indexSystem, geometryAPIName).dataType shouldEqual StringType
@@ -58,6 +60,7 @@ trait IndexGeometryBehaviors extends MosaicSpatialQueryTest {
         MosaicContext.indexSystem() match {
             case BNGIndexSystem => noException should be thrownBy mc.functions.index_geometry(lit(1050138790L))
             case H3IndexSystem  => noException should be thrownBy mc.functions.index_geometry(lit(623060282076758015L))
+            case _  => noException should be thrownBy mc.functions.index_geometry(lit(0L))
         }
     }
 

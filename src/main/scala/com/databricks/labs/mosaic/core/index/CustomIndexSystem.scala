@@ -233,8 +233,8 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
         val edgeSizeX = getCellWidth(resolution)
         val edgeSizeY = getCellHeight(resolution)
 
-        val x = cellX * edgeSizeX
-        val y = cellY * edgeSizeY
+        val x = cellX * edgeSizeX + conf.boundXMin
+        val y = cellY * edgeSizeY + conf.boundYMin
 
         val p1 = geometryAPI.fromCoords(Seq(x, y))
         val p2 = geometryAPI.fromCoords(Seq(x + edgeSizeX, y))
