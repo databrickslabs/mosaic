@@ -14,6 +14,9 @@ class SparkTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.library_location = f"{mosaic.__path__[0]}/lib/mosaic-{version('databricks-mosaic')}-jar-with-dependencies.jar"
+        if not os.path.exists(cls.library_location):
+            cls.library_location = f"{mosaic.__path__[0]}/lib/mosaic-{version('databricks-mosaic')}-SNAPSHOT-jar-with-dependencies.jar"
+
         cls.spark = (
             SparkSession.builder.master("local[2]")
             .config("spark.jars", cls.library_location)
