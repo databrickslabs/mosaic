@@ -126,7 +126,7 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
      * when performing polyfill.
      */
     override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = {
-        math.sqrt(getCellWidth(resolution) * getCellHeight(resolution)) / 2
+        math.sqrt(math.pow(getCellWidth(resolution), 2) + math.pow(getCellHeight(resolution), 2)) / 2
     }
 
     /**
