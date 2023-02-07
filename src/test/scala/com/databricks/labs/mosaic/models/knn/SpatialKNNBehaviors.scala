@@ -40,10 +40,10 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
         val knn = SpatialKNN(boroughs)
             .setUseTableCheckpoint(false)
             .setApproximate(false)
-            .setKNeighbours(20)
+            .setKNeighbours(5)
             .setLandmarksFeatureCol("wkt")
             .setCandidatesFeatureCol("wkt")
-            .setMaxIterations(100)
+            .setMaxIterations(10)
             .setEarlyStopIterations(3)
             // note this is CRS specific
             .setDistanceThreshold(distanceThreshold)
@@ -58,10 +58,10 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
             .collect()
 
         matches.map(r => r.getDouble(0)).max should be <= distanceThreshold // wkt_wkt_distance
-        matches.map(r => r.getInt(1)).max should be <= 100 // iteration
+        matches.map(r => r.getInt(1)).max should be <= 10 // iteration
         matches.map(r => r.getLong(2)).distinct.length should be(boroughs.count()) // landmarks_miid
         matches.map(r => r.getLong(3)).distinct.length should be(boroughs.count()) // candidates_miid
-        matches.map(r => r.getInt(4)).max should be  <= 20 // neighbour_number
+        matches.map(r => r.getInt(4)).max should be  <= 5 // neighbour_number
 
         noException should be thrownBy knn.getParams
         noException should be thrownBy knn.getMetrics
@@ -103,10 +103,10 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
         val knn = SpatialKNN(boroughs)
             .setUseTableCheckpoint(false)
             .setApproximate(true)
-            .setKNeighbours(20)
+            .setKNeighbours(5)
             .setLandmarksFeatureCol("wkt")
             .setCandidatesFeatureCol("wkt")
-            .setMaxIterations(100)
+            .setMaxIterations(10)
             .setEarlyStopIterations(3)
             // note this is CRS specific
             .setDistanceThreshold(distanceThreshold)
@@ -121,10 +121,10 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
             .collect()
 
         matches.map(r => r.getDouble(0)).max should be <= distanceThreshold // wkt_wkt_distance
-        matches.map(r => r.getInt(1)).max should be <= 100 // iteration
+        matches.map(r => r.getInt(1)).max should be <= 10 // iteration
         matches.map(r => r.getLong(2)).distinct.length should be(boroughs.count()) // landmarks_miid
         matches.map(r => r.getLong(3)).distinct.length should be(boroughs.count()) // candidates_miid
-        matches.map(r => r.getInt(4)).max should be  <= 20 // neighbour_number
+        matches.map(r => r.getInt(4)).max should be  <= 5 // neighbour_number
 
         noException should be thrownBy knn.getParams
         noException should be thrownBy knn.getMetrics
