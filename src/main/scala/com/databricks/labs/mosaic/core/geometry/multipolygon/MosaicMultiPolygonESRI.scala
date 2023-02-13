@@ -55,6 +55,7 @@ object MosaicMultiPolygonESRI extends GeometryReader {
 
     override def fromInternal(row: InternalRow): MosaicGeometry = {
         val internalGeom = InternalGeometry(row)
+        // TODO: Create multiple polygons, each with its own holes. Now all holes are appended at the end
         val polygon = createPolygon(internalGeom.boundaries, internalGeom.holes)
         val spatialReference =
             if (internalGeom.srid != 0) {

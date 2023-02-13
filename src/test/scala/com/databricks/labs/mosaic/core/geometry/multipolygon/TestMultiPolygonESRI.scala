@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry.multipolygon
 
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometryESRI
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonESRI
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-
 import org.apache.spark.sql.catalyst.InternalRow
 
 class TestMultiPolygonESRI extends AnyFlatSpec {
@@ -19,6 +19,40 @@ class TestMultiPolygonESRI extends AnyFlatSpec {
         val polygon = MosaicPolygonESRI.fromWKT("POLYGON ((0 1,3 0,4 3,0 4,0 1))")
         multiPolygon.getShells.head.equals(polygon.getShells.head) shouldBe true
         multiPolygon.flatten.head.equals(polygon) shouldBe true
+    }
+
+    "MosaicMultiPolygonESRI" should "return seq(this) for flatten calls with holes." in {
+        val multiPolygon = MosaicMultiPolygonESRI.fromWKT(
+            "MULTIPOLYGON(((0 0,10 0,10 10,0 10,0 0), (1 1,9 1,9 9,1 9,1 1)), ((20 20,30 20,30 30,20 30,20 20), (21 21,29 21,29 29,21 29,21 21)))"
+        )
+        val polygon1 = MosaicPolygonESRI.fromWKT("POLYGON((0 0,10 0,10 10,0 10,0 0), (1 1,9 1,9 9,1 9,1 1))")
+        val polygon2 = MosaicPolygonESRI.fromWKT("POLYGON((20 20,30 20,30 30,20 30,20 20), (21 21,29 21,29 29,21 29,21 21))")
+
+        multiPolygon.flatten.head.equals(polygon1) shouldBe true
+        multiPolygon.flatten.last.equals(polygon2) shouldBe true
+    }
+
+    "MosaicMultiPolygonESRI" should "return seq(this) for flatten calls with holes for internal geometries" in {
+        val internalGeom = MosaicMultiPolygonESRI.fromWKT(
+            "MULTIPOLYGON(((0 0,10 0,10 10,0 10,0 0), (1 1,9 1,9 9,1 9,1 1)), ((20 20,30 20,30 30,20 30,20 20), (21 21,29 21,29 29,21 29,21 21)))"
+        ).toInternal
+
+        val geom = MosaicMultiPolygonESRI.fromInternal(internalGeom.serialize.asInstanceOf[InternalRow])
+
+        val polygon1 = MosaicPolygonESRI.fromWKT("POLYGON((0 0,10 0,10 10,0 10,0 0), (1 1,9 1,9 9,1 9,1 1))")
+        val polygon2 = MosaicPolygonESRI.fromWKT("POLYGON((20 20,30 20,30 30,20 30,20 20), (21 21,29 21,29 29,21 29,21 21))")
+
+        geom.flatten.head.equals(polygon1) shouldBe true
+        geom.flatten.last.equals(polygon2) shouldBe true
+    }
+
+    "MosaicMultiPolygonESRI" should "flatten cells with holes." in {
+        val json = "{\"type\": \"MultiPolygon\", \"coordinates\": [[[[5, 5], [0, 0], [10, 0], [5, 5]]], [[[100, 200], [100, 100], [200, 100], [200, 200], [100, 200]], [[175, 125], [125, 125], [125, 175], [175, 175], [175, 125]]], [[[25, 25], [20, 20], [30, 20], [25, 25]]]]}"
+        val geom = MosaicGeometryESRI.fromJSON(json)
+
+        val expected1 = MosaicGeometryESRI.fromWKT("POLYGON ((100 200, 100 100, 200 100, 200 200, 100 200), (175 125, 125 125, 125 175, 175 175, 175 125))")
+
+        geom.flatten(1).equals(expected1) shouldBe true
     }
 
     "MosaicMultiPolygonESRI" should "return number of points." in {
