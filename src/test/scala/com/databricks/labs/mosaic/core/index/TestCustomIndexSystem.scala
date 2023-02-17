@@ -168,7 +168,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
     }
 
     test("polyfill multi cell") {
-        val conf = GridConf(0, 100, 0, 100, 2, 360, 360)
+        val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
         val grid = new CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
