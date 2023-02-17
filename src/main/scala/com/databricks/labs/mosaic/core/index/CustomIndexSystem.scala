@@ -30,6 +30,7 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
      * @return
      * A collection of index IDs forming a k ring.
      */
+
     override def kRing(index: Long, k: Int): Seq[Long] = {
         assert(k >= 0, "k must be at least 0")
 
@@ -208,11 +209,11 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
     }
 
     def getCellWidth(resolution: Int): Double = {
-        conf.spanX / math.pow(conf.cellSubdivisionX, resolution)
+        conf.rootCellSizeX / math.pow(conf.cellSplits, resolution)
     }
 
     def getCellHeight(resolution: Int): Double = {
-        conf.spanY / math.pow(conf.cellSubdivisionY, resolution)
+        conf.rootCellSizeX / math.pow(conf.cellSplits, resolution)
     }
 
     /**
@@ -304,10 +305,10 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
     }
 
     def totalCellsX(resolution: Int): Long = {
-        Math.pow(conf.cellSubdivisionX, resolution).toLong
+        conf.rootCellCountX * Math.pow(conf.cellSplits, resolution).toLong
     }
 
     def totalCellsY(resolution: Int): Long = {
-        Math.pow(conf.cellSubdivisionY, resolution).toLong
+        conf.rootCellCountY * Math.pow(conf.cellSplits, resolution).toLong
     }
 }

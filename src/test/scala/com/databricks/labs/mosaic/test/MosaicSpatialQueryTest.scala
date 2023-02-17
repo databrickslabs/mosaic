@@ -22,7 +22,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
     private val indexSystems = Seq(
       H3IndexSystem,
       BNGIndexSystem,
-      new CustomIndexSystem(GridConf(-180, 180, -180, 180, 2, 2))
+      new CustomIndexSystem(GridConf(-180, 180, -180, 180, 2, 360, 360))
     )
 
     def checkGeometryTopo(

@@ -6,8 +6,9 @@ case class GridConf(
                      boundXMax: Long,
                      boundYMin: Long,
                      boundYMax: Long,
-                     cellSubdivisionX: Int,
-                     cellSubdivisionY: Int
+                     cellSplits: Int,
+                     rootCellSizeX: Int,
+                     rootCellSizeY: Int
                    ) {
   val spanX = boundXMax - boundXMin
   val spanY = boundYMax - boundYMin
@@ -15,7 +16,7 @@ case class GridConf(
   val resBits = 8 // We keep 8 Most Significant Bits for resolution
   val idBits = 56 // The rest can be used for the cell ID
 
-  val subCellsCount = cellSubdivisionX * cellSubdivisionY
+  val subCellsCount = cellSplits * cellSplits
 
   // We need a distinct value for each cell, plus one bit for the parent cell (all-zeroes for LSBs)
   // We compute it with log2(subCellsCount)
@@ -23,6 +24,9 @@ case class GridConf(
 
   // A cell ID has to fit the reserved number of bits
   val maxResolution = Math.min(20, Math.floor(idBits / bitsPerResolution).toInt)
+
+  val rootCellCountX = Math.ceil(spanX / rootCellSizeX).toInt
+  val rootCellCountY = Math.ceil(spanY / rootCellSizeY).toInt
 
 //  val totalCellsX = Math.pow(cellSubdivisionX, maxResolution).toLong
 //  val totalCellsY = Math.pow(cellSubdivisionY, maxResolution).toLong

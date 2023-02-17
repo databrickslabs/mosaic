@@ -7,7 +7,7 @@ class GridConfTest extends AnyFunSuite {
 
     test("Grid conf computed values should be correct") {
 
-        val conf = GridConf(0, 100, 0, 100, 2, 2)
+        val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
         conf.spanX shouldBe 100
         conf.spanY shouldBe 100
@@ -23,7 +23,7 @@ class GridConfTest extends AnyFunSuite {
 
     test("Grid conf computed values should be correct for non centered grid") {
 
-        val conf = GridConf(-10, 100, -1, 101, 10, 10)
+        val conf = GridConf(-10, 100, -1, 101, 10, 110, 102)
 
         conf.spanX shouldBe 110
         conf.spanY shouldBe 102

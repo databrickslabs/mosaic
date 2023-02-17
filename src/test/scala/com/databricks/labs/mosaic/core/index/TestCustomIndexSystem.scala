@@ -8,7 +8,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
     test("Point to Index should generate index ID for resolution 0") {
 
-        val conf = GridConf(0, 100, 0, 100, 2, 2)
+        val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
         val grid = new CustomIndexSystem(conf)
         val resolutionMask = 0x00.toLong
@@ -18,7 +18,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
     test("Point to Index should generate index ID for resolution 1") {
 
-        val conf = GridConf(0, 100, 0, 100, 2, 2)
+        val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
         val grid = new CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
@@ -46,7 +46,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
     test("Point to Index should generate index ID for resolution 2") {
 
-        val conf = GridConf(0, 100, 0, 100, 2, 2)
+        val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
         val grid = new CustomIndexSystem(conf)
         val resolutionMask = 0x02.toLong << 56
@@ -59,7 +59,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
     test("Point to Index should generate index ID for resolution 1 on origin-offset grid") {
 
-        val conf = GridConf(-100, 100, -10, 100, 2, 2)
+        val conf = GridConf(-100, 100, -10, 100, 2, 200, 110)
 
         val grid = new CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
@@ -83,7 +83,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
     test("Index to geometry") {
 
-        val conf = GridConf(0, 100, 0, 100, 2, 2)
+        val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
         val grid = new CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
@@ -103,7 +103,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
     }
 
     test("polyfill single cell") {
-        val conf = GridConf(0, 100, 0, 100, 2, 2)
+        val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
         val grid = new CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
@@ -122,7 +122,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
     }
 
     test("polyfill single cell with negative coordinates") {
-        val conf = GridConf(-100, 100, -100, 100, 2, 2)
+        val conf = GridConf(-100, 100, -100, 100, 2, 200, 200)
 
         val grid = new CustomIndexSystem(conf)
         val resolution = 3
@@ -149,7 +149,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
     }
 
     test("polyfill single cell with world coordinates") {
-        val conf = GridConf(-180, 180, -180, 180, 2, 2)
+        val conf = GridConf(-180, 180, -180, 180, 2, 360, 360)
 
         val grid = new CustomIndexSystem(conf)
         val resolution = 3
@@ -168,7 +168,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
     }
 
     test("polyfill multi cell") {
-        val conf = GridConf(0, 100, 0, 100, 2, 2)
+        val conf = GridConf(0, 100, 0, 100, 2, 360, 360)
 
         val grid = new CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
