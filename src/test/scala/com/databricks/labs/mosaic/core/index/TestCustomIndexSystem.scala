@@ -81,6 +81,20 @@ class TestCustomIndexSystem extends AnyFunSuite {
     }
 
 
+    test("Point to Index should generate index ID for resolution 1 on 10x10 root cell size") {
+
+        val conf = GridConf(0, 100, 0, 100, 2, 10, 10)
+
+        val grid = new CustomIndexSystem(conf)
+        val resolutionMask = 0x01.toLong << 56
+
+        grid.pointToIndex(0, 2, 1) shouldBe 0 | resolutionMask
+        grid.pointToIndex(6, 0, 1) shouldBe 1 | resolutionMask
+        grid.pointToIndex(0, 6, 1) shouldBe 20 | resolutionMask
+
+    }
+
+
     test("Index to geometry") {
 
         val conf = GridConf(0, 100, 0, 100, 2, 100, 100)

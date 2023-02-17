@@ -361,8 +361,6 @@ package object test {
 
         override def name: String = "MOCK"
 
-        override def getIndexSystemID: IndexSystemID = ???
-
         override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = ???
 
         override def format(id: Long): String = ???

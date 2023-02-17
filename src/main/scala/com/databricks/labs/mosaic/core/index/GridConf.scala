@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.core.index
 
-
 case class GridConf(
                      boundXMin: Long,
                      boundXMax: Long,
@@ -28,8 +27,4 @@ case class GridConf(
   val rootCellCountX = Math.ceil(spanX / rootCellSizeX).toInt
   val rootCellCountY = Math.ceil(spanY / rootCellSizeY).toInt
 
-//  val totalCellsX = Math.pow(cellSubdivisionX, maxResolution).toLong
-//  val totalCellsY = Math.pow(cellSubdivisionY, maxResolution).toLong
-//
-//  val totalCells = totalCellsX * totalCellsY
 }

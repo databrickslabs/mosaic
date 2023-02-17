@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -38,7 +38,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       with Serializable {
 
     /** The index system to be used. */
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(expressionConfig.getIndexSystem))
+    val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
 
     /**
       * It projects the pixels to the grid and groups by the results so that the

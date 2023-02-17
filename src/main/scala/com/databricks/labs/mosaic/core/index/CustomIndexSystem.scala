@@ -14,6 +14,8 @@ import scala.util.{Success, Try}
   */
 class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Serializable {
 
+    val name = f"CUSTOM(${conf.boundXMin}, ${conf.boundXMax}, ${conf.boundYMin}, ${conf.boundYMax}, ${conf.cellSplits}, ${conf.rootCellSizeX}, ${conf.rootCellSizeY})"
+
     override def getResolutionStr(resolution: Int): String = resolution.toString
 
     override def format(id: Long): String = id.toString
@@ -80,15 +82,6 @@ class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Seria
      * A set of supported resolutions.
      */
     override def resolutions: Set[Int] = (0 to conf.maxResolution).toSet
-
-    /**
-     * Returns the index system ID instance that uniquely identifies an index
-     * system. This instance is used to select appropriate Mosaic expressions.
-     *
-     * @return
-     * An instance of [[IndexSystemID]]
-     */
-    override def getIndexSystemID: IndexSystemID = CustomGrid
 
     /**
      * Returns the resolution value based on the nullSafeEval method inputs of

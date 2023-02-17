@@ -14,10 +14,6 @@ class GridConfTest extends AnyFunSuite {
         conf.bitsPerResolution shouldBe 2
         conf.maxResolution shouldBe 20
 
-//        conf.totalCellsX shouldBe Math.pow(2, 21).toLong
-//        conf.totalCellsY shouldBe Math.pow(2, 21).toLong
-//
-//        conf.totalCells shouldBe Math.pow(4L, 21).toLong
     }
 
 
@@ -29,11 +25,6 @@ class GridConfTest extends AnyFunSuite {
         conf.spanY shouldBe 102
         conf.bitsPerResolution shouldBe 7
         conf.maxResolution shouldBe 8
-
-//        conf.totalCellsX shouldBe Math.pow(10, 7).toLong
-//        conf.totalCellsY shouldBe Math.pow(10, 7).toLong
-//
-//        conf.totalCells shouldBe Math.pow(100, 7).toLong
 
     }
 
