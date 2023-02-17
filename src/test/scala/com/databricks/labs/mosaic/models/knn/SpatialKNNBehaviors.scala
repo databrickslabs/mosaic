@@ -25,7 +25,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
             case _ => (3, 100.0)
         }
 
-        if (mc.getIndexSystem.name == "CustomGrid") {
+        if (mc.getIndexSystem.name.startsWith("CUSTOM")) {
             // Skip the KNN tests for custom grid
             // TODO: Fix this
             return
@@ -90,7 +90,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
             case _ => (3, 100.0)
         }
 
-        if (mc.getIndexSystem.name == "CustomGrid") {
+        if (mc.getIndexSystem.name.startsWith("CUSTOM")) {
             // Skip the KNN tests for custom grid
             // TODO: Fix this
             return
