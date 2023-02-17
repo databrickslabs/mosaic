@@ -5,7 +5,8 @@ Spatial grid indexing
 Spatial grid indexing is the process of mapping a geometry (or a point) to one or more cells (or cell ID)
 from the selected spatial grid.
 
-The grid system can be specified by using the spark configuration `spark.databricks.labs.mosaic.index.system`.
+The grid system can be specified by using the spark configuration `spark.databricks.labs.mosaic.index.system`
+before enabling Mosaic.
 
 The valid values are
 * `H3` - Good all-rounder for any location on earth
@@ -15,14 +16,17 @@ The valid values are
     * `splits` defines how many splits are applied to each cell for an increase in resolution step (usually 2 or 10)
     * `rootCellSizeX`,`rootCellSizeY` define the size of the cells on resolution 0
 
+Example
+
 .. tabs::
    .. code-tab:: py
 
-    >>> spark.conf.set("spark.databricks.labs.mosaic.index.system", "H3") # Default
-    >>> # spark.conf.set("spark.databricks.labs.mosaic.index.system", "BNG")
-    >>> # spark.conf.set("spark.databricks.labs.mosaic.index.system", "CUSTOM(-180,180,-180,180,2,30,30)")
-    >>> import mosaic as mos
-    >>> mos.enable_mosaic(spark, dbutils)
+    spark.conf.set("spark.databricks.labs.mosaic.index.system", "H3") # Default
+    # spark.conf.set("spark.databricks.labs.mosaic.index.system", "BNG")
+    # spark.conf.set("spark.databricks.labs.mosaic.index.system", "CUSTOM(-180,180,-180,180,2,30,30)")
+
+    import mosaic as mos
+    mos.enable_mosaic(spark, dbutils)
 
 
 grid_longlatascellid
