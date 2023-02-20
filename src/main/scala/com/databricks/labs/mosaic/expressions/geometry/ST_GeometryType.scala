@@ -32,12 +32,11 @@ case class ST_GeometryType(
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
         val geometryType = ctx.freshName("geometryType")
-        val mosaicGeometry = mosaicGeometryRef(geometryRef)
         val locale = "java.util.Locale.ROOT"
         val javaStringClass = CodeGenerator.javaType(StringType)
 
         val code = s"""
-                      |String $geometryType = $mosaicGeometry.getGeometryType().toUpperCase($locale);
+                      |String $geometryType = $geometryRef.getGeometryType().toUpperCase($locale);
                       |$javaStringClass $resultRef = $javaStringClass.fromString($geometryType);
                       |""".stripMargin
 

@@ -58,7 +58,7 @@ trait ST_RotateBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stRotate = ST_Rotate(lit(1).expr, lit(1.1).expr, "JTS")
+        val stRotate = ST_Rotate(lit(1).expr, lit(1.1).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stRotate.genCode(ctx)
     }
@@ -68,7 +68,7 @@ trait ST_RotateBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stRotate = ST_Rotate(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, lit(1.1).expr, geometryAPI.name)
+        val stRotate = ST_Rotate(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, lit(1.1).expr, mc.expressionConfig)
 
         stRotate.left shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
         stRotate.right shouldEqual lit(1.1).expr

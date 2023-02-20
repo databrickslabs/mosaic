@@ -9,6 +9,13 @@ import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
 
+/**
+  * Returns the envelope for a given geometry.
+  * @param inputGeom
+  *   The input geometry.
+  * @param expressionConfig
+  *   Additional arguments for the expression (expressionConfigs).
+  */
 case class ST_Envelope(
     inputGeom: Expression,
     expressionConfig: MosaicExpressionConfig
@@ -20,14 +27,7 @@ case class ST_Envelope(
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val mosaicGeometry = mosaicGeometryRef(geometryRef)
-        val mosaicGeometryClass = geometryAPI.mosaicGeometryClass
-        val geometryClass = geometryAPI.geometryClass
-
-        val code = s"""
-                      |$geometryClass $resultRef = (($mosaicGeometryClass) $mosaicGeometry.envelope()).getGeom();
-                      |""".stripMargin
-
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.envelope();"""
         (code, resultRef)
     }
 

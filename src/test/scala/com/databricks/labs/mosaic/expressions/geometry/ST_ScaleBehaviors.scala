@@ -57,7 +57,7 @@ trait ST_ScaleBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stScale = ST_Scale(lit(1).expr, lit(1.1).expr, lit(1.2).expr, "JTS")
+        val stScale = ST_Scale(lit(1).expr, lit(1.1).expr, lit(1.2).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stScale.genCode(ctx)
     }
@@ -67,7 +67,7 @@ trait ST_ScaleBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stScale = ST_Scale(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, lit(1.1).expr, lit(1.2).expr, "illegalAPI")
+        val stScale = ST_Scale(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, lit(1.1).expr, lit(1.2).expr, mc.expressionConfig)
 
         stScale.first shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
         stScale.second shouldEqual lit(1.1).expr

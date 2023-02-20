@@ -43,7 +43,7 @@ trait ST_BufferBehaviors extends QueryTest {
         mocks.getWKTRowsDf().createOrReplaceTempView("source")
 
         val sqlResult = spark
-            .sql("select id, st_length(st_buffer(wkt, 1)) from source")
+            .sql("select id, st_length(st_buffer(wkt, 1.0)) from source")
             .orderBy("id")
             .drop("id")
             .as[Double]
@@ -76,7 +76,7 @@ trait ST_BufferBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stBuffer = ST_Buffer(lit(1).expr, lit(1).expr, "JTS")
+        val stBuffer = ST_Buffer(lit(1).expr, lit(1).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stBuffer.genCode(ctx)
     }
@@ -90,7 +90,7 @@ trait ST_BufferBehaviors extends QueryTest {
 
         val df = getWKTRowsDf()
 
-        val stBuffer = ST_Buffer(df.col("wkt").expr, lit(1).expr, geometryAPI.name)
+        val stBuffer = ST_Buffer(df.col("wkt").expr, lit(1).expr, mc.expressionConfig)
 
         stBuffer.left shouldEqual df.col("wkt").expr
         stBuffer.right shouldEqual lit(1).expr

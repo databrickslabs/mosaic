@@ -20,12 +20,7 @@ case class ST_Length(
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val geometryLengthStatement = geometryAPI.geometryLengthCode
-
-        val code = s"""
-                      |double $resultRef = $geometryRef.$geometryLengthStatement;
-                      |""".stripMargin
-
+        val code = s"""double $resultRef = $geometryRef.getLength();"""
         (code, resultRef)
     }
 

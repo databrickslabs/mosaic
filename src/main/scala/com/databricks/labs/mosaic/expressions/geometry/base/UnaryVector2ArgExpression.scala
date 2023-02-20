@@ -6,18 +6,25 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 
 import scala.reflect.ClassTag
 
 /**
-  * Base class for all unary geometry expressions. It provides the boilerplate
-  * for creating a function builder for a given expression. It minimises amount
-  * of code needed to create a new expression.
+  * Base class for all unary geometry expressions that require 2 additional
+  * argument. It provides the boilerplate for creating a function builder for a
+  * given expression. It minimises amount of code needed to create a new
+  * expression. The term unary refers to number of input geometries. By
+  * convention the number of arguments will be handled via number in the class
+  * name.
   *
   * @param geometryExpr
   *   The expression for the geometry.
+  * @param arg1Expr
+  *   The expression for the first argument.
+  * @param arg2Expr
+  *   The expression for the second argument.
   * @param returnsGeometry
   *   Whether the expression returns a geometry or not.
   * @param expressionConfig
@@ -25,16 +32,22 @@ import scala.reflect.ClassTag
   * @tparam T
   *   The type of the extending class.
   */
-abstract class UnaryVectorExpression[T <: Expression: ClassTag](
+abstract class UnaryVector2ArgExpression[T <: Expression: ClassTag](
     geometryExpr: Expression,
+    arg1Expr: Expression,
+    arg2Expr: Expression,
     returnsGeometry: Boolean,
     expressionConfig: MosaicExpressionConfig
-) extends UnaryExpression
+) extends TernaryExpression
       with VectorExpression
       with NullIntolerant
       with Serializable {
 
-    override def child: Expression = geometryExpr
+    override def first: Expression = geometryExpr
+
+    override def second: Expression = arg1Expr
+
+    override def third: Expression = arg2Expr
 
     override def indexSystem: IndexSystem = getIndexSystem(expressionConfig)
 
@@ -46,23 +59,30 @@ abstract class UnaryVectorExpression[T <: Expression: ClassTag](
       * expression. It abstracts spark serialization from the caller.
       * @param geometry
       *   The geometry.
+      * @param arg1
+      *   The first argument.
+      * @param arg2
+      *   The second argument.
       * @return
       *   A result of the expression.
       */
-    def geometryTransform(geometry: MosaicGeometry): Any
+    def geometryTransform(geometry: MosaicGeometry, arg1: Any, arg2: Any): Any
 
     /**
       * Evaluation of the expression. It evaluates the geometry and deserialises
       * the geometry.
       * @param geometryRow
       *   The row containing the geometry.
-      *
+      * @param arg1
+      *   The first argument.
+      * @param arg2
+      *   The second argument.
       * @return
       *   The result of the expression.
       */
-    override def nullSafeEval(geometryRow: Any): Any = {
+    override def nullSafeEval(geometryRow: Any, arg1: Any, arg2: Any): Any = {
         val geometry = geometryAPI.geometry(geometryRow, geometryExpr.dataType)
-        val result = geometryTransform(geometry)
+        val result = geometryTransform(geometry, arg1, arg2)
         serialise(result, returnsGeometry, geometryExpr.dataType)
     }
 
@@ -72,18 +92,24 @@ abstract class UnaryVectorExpression[T <: Expression: ClassTag](
       * and deserialization from the caller codegen.
       * @param mosaicGeometryRef
       *   The reference to mosaic geometry.
+      * @param arg1Ref
+      *   The first argument reference.
+      * @param arg2Ref
+      *   The second argument reference.
       * @param ctx
       *   The codegen context.
       * @return
       *   A tuple containing the code and the reference to the result.
       */
-    def geometryCodeGen(mosaicGeometryRef: String, ctx: CodegenContext): (String, String)
+    def geometryCodeGen(mosaicGeometryRef: String, arg1Ref: String, arg2Ref: String, ctx: CodegenContext): (String, String)
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 1, expressionConfig)
+    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 3, expressionConfig)
 
-    override def withNewChildInternal(
-        newFirst: Expression
-    ): Expression = makeCopy(Array(newFirst))
+    override def withNewChildrenInternal(
+        newFirst: Expression,
+        newSecond: Expression,
+        newThird: Expression
+    ): Expression = makeCopy(Array(newFirst, newSecond, newThird))
 
     /**
       * The actual codegen implementation. It abstracts spark serialization and
@@ -100,10 +126,10 @@ abstract class UnaryVectorExpression[T <: Expression: ClassTag](
         nullSafeCodeGen(
           ctx,
           ev,
-          eval => {
-              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, eval, geometryExpr.dataType, geometryAPI)
+          (geomEval, arg1Eval, arg2Eval) => {
+              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, geomEval, geometryExpr.dataType, geometryAPI)
               val mosaicGeomRef = mosaicGeometryRef(geomInRef)
-              val (expressionCode, resultRef) = geometryCodeGen(mosaicGeomRef, ctx)
+              val (expressionCode, resultRef) = geometryCodeGen(mosaicGeomRef, arg1Eval, arg2Eval, ctx)
               val (serialiseCode, serialisedRef) = serialiseCodegen(resultRef, returnsGeometry, geometryExpr.dataType, ctx)
               geometryAPI.codeGenTryWrap(s"""
                                             |$inCode

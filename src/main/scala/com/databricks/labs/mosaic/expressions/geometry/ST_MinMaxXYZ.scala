@@ -18,23 +18,19 @@ case class ST_MinMaxXYZ(
 
     override def dataType: DataType = DoubleType
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = ST_MinMaxXYZ(
-        newArgs(0).asInstanceOf[Expression],
-        expressionConfig,
-        dimension,
-        func
-    )
+    override def makeCopy(newArgs: Array[AnyRef]): Expression =
+        ST_MinMaxXYZ(
+          newArgs(0).asInstanceOf[Expression],
+          expressionConfig,
+          dimension,
+          func
+        )
 
     override def geometryTransform(geometry: MosaicGeometry): Any = geometry.minMaxCoord(dimension, func)
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val mosaicGeometryClass = geometryAPI.mosaicGeometryClass
-
-        val code = s"""
-                      |double $resultRef = $mosaicGeometryClass.apply($geometryRef).minMaxCoord("$dimension", "$func");
-                      |""".stripMargin
-
+        val code = s"""double $resultRef = $geometryRef.minMaxCoord("$dimension", "$func");"""
         (code, resultRef)
     }
 

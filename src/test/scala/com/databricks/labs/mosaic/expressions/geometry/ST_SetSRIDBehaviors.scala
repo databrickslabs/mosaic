@@ -5,11 +5,9 @@ import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
 import org.apache.spark.sql._
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
-import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions._
 import org.scalatest.matchers.must.Matchers.contain
-import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper, noException}
+import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper, noException}
 
 trait ST_SetSRIDBehaviors extends QueryTest {
 
@@ -69,7 +67,7 @@ trait ST_SetSRIDBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stSetSRID = ST_SetSRID(lit("POINT (1 1)").expr, lit(4326).expr, "illegalAPI")
+        val stSetSRID = ST_SetSRID(lit("POINT (1 1)").expr, lit(4326).expr, mc.expressionConfig)
 
         stSetSRID.left shouldEqual lit("POINT (1 1)").expr
         stSetSRID.right shouldEqual lit(4326).expr

@@ -1,8 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry
 
+import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-import org.locationtech.proj4j.{CoordinateTransformFactory, CRSFactory, ProjCoordinate}
+import org.locationtech.proj4j._
 
 import java.util.Locale
 
@@ -123,5 +124,18 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def getSpatialReference: Int
 
     def setSpatialReference(srid: Int): Unit
+
+    def hasValidCoords(crsBoundsProvider: CRSBoundsProvider, crsCode: String, which: String): Boolean = {
+        val crsCodeIn = crsCode.split(":")
+        val crsBounds = which.toLowerCase(Locale.ROOT) match {
+            case "bounds"             => crsBoundsProvider.bounds(crsCodeIn(0), crsCodeIn(1).toInt)
+            case "reprojected_bounds" => crsBoundsProvider.reprojectedBounds(crsCodeIn(0), crsCodeIn(1).toInt)
+            case _                    => throw new Error("Only boundary and reprojected_boundary supported for which argument.")
+        }
+        (Seq(getShellPoints) ++ getHolePoints).flatten.flatten.forall(point =>
+            crsBounds.lowerLeft.getX <= point.getX && point.getX <= crsBounds.upperRight.getX &&
+            crsBounds.lowerLeft.getY <= point.getY && point.getY <= crsBounds.upperRight.getY
+        )
+    }
 
 }

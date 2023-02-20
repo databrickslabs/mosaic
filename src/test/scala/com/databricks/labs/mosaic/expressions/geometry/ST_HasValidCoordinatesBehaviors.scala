@@ -1,11 +1,15 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.types._
 import org.apache.spark.SparkException
+import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
+import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
@@ -98,12 +102,39 @@ trait ST_HasValidCoordinatesBehaviors extends MosaicSpatialQueryTest {
         sourceDf
     }
 
+    def expressionCodegen(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = mosaicContext
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mc.register(spark)
+
+        val result = mocks
+            .getWKTRowsDf()
+            .select(st_hasvalidcoordinates($"wkt", lit("EPSG:4326"), lit("bounds")))
+            .as[String]
+
+        val queryExecution = result.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        wholeStageCodegenExec.isDefined shouldBe true
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
+        noException should be thrownBy CodeGenerator.compile(code)
+    }
+
+
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         mc.register(spark)
 
-        val stHasValidCoords = ST_HasValidCoordinates(lit("POINT (1 1)").expr, lit("EPSG:4326").expr, lit("bounds").expr, mc.getGeometryAPI.name)
+        val stHasValidCoords = ST_HasValidCoordinates(lit("POINT (1 1)").expr, lit("EPSG:4326").expr, lit("bounds").expr, mc.expressionConfig)
 
         stHasValidCoords.first shouldEqual lit("POINT (1 1)").expr
         stHasValidCoords.second shouldEqual lit("EPSG:4326").expr

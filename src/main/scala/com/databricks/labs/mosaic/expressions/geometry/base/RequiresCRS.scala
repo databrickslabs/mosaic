@@ -1,9 +1,8 @@
-package com.databricks.labs.mosaic.expressions.geometry
+package com.databricks.labs.mosaic.expressions.geometry.base
 
-import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
+import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.sql.MosaicSQLExceptions
-
-import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
+import org.apache.spark.sql.types._
 
 trait RequiresCRS {
 

@@ -64,7 +64,7 @@ trait ST_BufferLoopBehaviors extends MosaicSpatialQueryTest {
 
         val input = "POLYGON (10 10, 20 10, 15 20, 10 10)"
 
-        val stBufferLoop =  ST_BufferLoop(lit(input).expr, lit(0.1).expr, lit(0.2).expr, "illegalAPI")
+        val stBufferLoop =  ST_BufferLoop(lit(input).expr, lit(0.1).expr, lit(0.2).expr, mc.expressionConfig)
         stBufferLoop.first shouldEqual lit(input).expr
         stBufferLoop.second shouldEqual lit(0.1).expr
         stBufferLoop.third shouldEqual lit(0.2).expr

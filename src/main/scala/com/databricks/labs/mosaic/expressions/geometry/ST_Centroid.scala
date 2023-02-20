@@ -28,11 +28,7 @@ case class ST_Centroid(
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val geometryClass = geometryAPI.geometryClass
-        val centroidCode = geometryAPI.centroidCode
-        val code = s"""
-                      |$geometryClass $resultRef = $geometryRef.$centroidCode;
-                      |""".stripMargin
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.getCentroid();"""
         (code, resultRef)
     }
 

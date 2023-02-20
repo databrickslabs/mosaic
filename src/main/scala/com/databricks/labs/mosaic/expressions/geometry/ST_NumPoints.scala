@@ -20,12 +20,7 @@ case class ST_NumPoints(
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val mosaicGeometry = mosaicGeometryRef(geometryRef)
-
-        val code = s"""
-                      |int $resultRef = $mosaicGeometry.numPoints();
-                      |""".stripMargin
-
+        val code = s"""int $resultRef = $geometryRef.numPoints();"""
         (code, resultRef)
     }
 

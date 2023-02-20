@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
 import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.{col, lit}
 import org.scalatest.matchers.must.Matchers.noException
@@ -74,7 +74,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stSimplify = ST_Simplify(lit(1).expr, lit(1).expr, "JTS")
+        val stSimplify = ST_Simplify(lit(1).expr, lit(1).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stSimplify.genCode(ctx)
     }
@@ -87,7 +87,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
 
         val df = getWKTRowsDf()
 
-        val stSimplify = ST_Simplify(df.col("wkt").expr, lit(1).expr, geometryAPI.name)
+        val stSimplify = ST_Simplify(df.col("wkt").expr, lit(1).expr, mc.expressionConfig)
 
         stSimplify.left shouldEqual df.col("wkt").expr
         stSimplify.right shouldEqual lit(1).expr

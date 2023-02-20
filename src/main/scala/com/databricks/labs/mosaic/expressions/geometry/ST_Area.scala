@@ -28,12 +28,7 @@ case class ST_Area(
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val mosaicGeometry = mosaicGeometryRef(geometryRef)
-
-        val code = s"""
-                      |double $resultRef = $mosaicGeometry.getArea();
-                      |""".stripMargin
-
+        val code = s"""double $resultRef = $geometryRef.getArea();"""
         (code, resultRef)
     }
 

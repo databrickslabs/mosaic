@@ -32,16 +32,7 @@ case class ST_X(
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val centroid = ctx.freshName("centroid")
-        val pointClass = geometryAPI.pointClassName
-        val centroidCode = geometryAPI.centroidCode
-        val xCode = geometryAPI.xCode
-
-        val code = s"""
-                      |$pointClass $centroid = (($pointClass) $geometryRef.$centroidCode);
-                      |double $resultRef = $centroid.$xCode;
-                      |""".stripMargin
-
+        val code = s"""double $resultRef = $geometryRef.getCentroid().getX();"""
         (code, resultRef)
     }
 

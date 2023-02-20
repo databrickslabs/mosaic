@@ -5,10 +5,10 @@ import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
 import org.apache.spark.sql.{QueryTest, Row}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.lit
-import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper}
 
@@ -97,7 +97,7 @@ trait ST_UnionBehaviors extends QueryTest {
         noException should be thrownBy CodeGenerator.compile(code)
 
         // Check if invalid code fails code generation
-        val stUnion = ST_Union(lit(1).expr, lit(1).expr, "JTS")
+        val stUnion = ST_Union(lit(1).expr, lit(1).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stUnion.genCode(ctx)
     }
@@ -110,7 +110,7 @@ trait ST_UnionBehaviors extends QueryTest {
         val stUnion = ST_Union(
           lit("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").expr,
           lit("POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))").expr,
-          "illegalAPI"
+          mc.expressionConfig
         )
 
         stUnion.left shouldEqual lit("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").expr

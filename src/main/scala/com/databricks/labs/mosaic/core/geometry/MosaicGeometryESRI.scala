@@ -29,7 +29,7 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
         }
 
     // noinspection DuplicatedCode
-    override def translate(xd: Double, yd: Double): MosaicGeometry = {
+    override def translate(xd: Double, yd: Double): MosaicGeometryESRI = {
         val tr = new Transformation2D
         tr.setShift(xd, yd)
         val esriGeom = geom.getEsriGeometry
@@ -37,10 +37,10 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
         MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, geom.getEsriSpatialReference))
     }
 
-    override def reduceFromMulti: MosaicGeometry = MosaicGeometryESRI(geom.reduceFromMulti())
+    override def reduceFromMulti: MosaicGeometryESRI = MosaicGeometryESRI(geom.reduceFromMulti())
 
     // noinspection DuplicatedCode
-    override def scale(xd: Double, yd: Double): MosaicGeometry = {
+    override def scale(xd: Double, yd: Double): MosaicGeometryESRI = {
         val tr = new Transformation2D
         tr.setScale(xd, yd)
         val esriGeom = geom.getEsriGeometry
@@ -49,7 +49,7 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     }
 
     // noinspection DuplicatedCode
-    override def rotate(td: Double): MosaicGeometry = {
+    override def rotate(td: Double): MosaicGeometryESRI = {
         val tr = new Transformation2D
         tr.setRotate(td)
         val esriGeom = geom.getEsriGeometry
@@ -59,17 +59,17 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def getAPI: String = "OGC"
 
-    override def getCentroid: MosaicPoint = MosaicPointESRI(geom.centroid())
+    override def getCentroid: MosaicPointESRI = MosaicPointESRI(geom.centroid())
 
     override def isEmpty: Boolean = geom.isEmpty
 
-    override def buffer(distance: Double): MosaicGeometry = MosaicGeometryESRI(geom.buffer(distance))
+    override def buffer(distance: Double): MosaicGeometryESRI = MosaicGeometryESRI(geom.buffer(distance))
 
-    override def simplify(tolerance: Double): MosaicGeometry = MosaicGeometryESRI(geom.makeSimple())
+    override def simplify(tolerance: Double): MosaicGeometryESRI = MosaicGeometryESRI(geom.makeSimple())
 
-    override def envelope: MosaicGeometry = MosaicGeometryESRI(geom.envelope())
+    override def envelope: MosaicGeometryESRI = MosaicGeometryESRI(geom.envelope())
 
-    override def intersection(other: MosaicGeometry): MosaicGeometry = {
+    override def intersection(other: MosaicGeometry): MosaicGeometryESRI = {
         val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
         MosaicGeometryESRI(intersection(otherGeom))
     }
@@ -87,13 +87,13 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
         this.geom.intersects(otherGeom)
     }
 
-    override def difference(other: MosaicGeometry): MosaicGeometry = {
+    override def difference(other: MosaicGeometry): MosaicGeometryESRI = {
         val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
         val difference = this.getGeom.difference(otherGeom)
         MosaicGeometryESRI(difference)
     }
 
-    override def union(other: MosaicGeometry): MosaicGeometry = {
+    override def union(other: MosaicGeometry): MosaicGeometryESRI = {
         val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
         MosaicGeometryESRI(this.getGeom.union(otherGeom))
     }
@@ -134,13 +134,13 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def hashCode: Int = geom.hashCode()
 
-    override def boundary: MosaicGeometry = MosaicGeometryESRI(geom.boundary())
+    override def boundary: MosaicGeometryESRI = MosaicGeometryESRI(geom.boundary())
 
     override def distance(geom2: MosaicGeometry): Double = this.getGeom.distance(geom2.asInstanceOf[MosaicGeometryESRI].getGeom)
 
     override def convexHull: MosaicGeometryESRI = MosaicGeometryESRI(geom.convexHull())
 
-    override def unaryUnion: MosaicGeometry = {
+    override def unaryUnion: MosaicGeometryESRI = {
         // ESRI geometry does not directly implement unary union.
         // Here the (binary) union is used, because the union of the geometry with itself is equivalent to the unary union.
         MosaicGeometryESRI(geom.union(geom))

@@ -1,85 +1,95 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.{BooleanType, DataType}
 import org.apache.spark.unsafe.types.UTF8String
 
 import java.util.Locale
 
+/**
+  * SQL Expression for returning true if all vertices of the geometry are within
+  * CRS bounds.
+  * @param inputGeom
+  *   The input geometry expression.
+  * @param crsCode
+  *   The input crs code expression.
+  * @param which
+  *   The input which expression, either bounds or reprojected_bounds .
+  * @param expressionConfig
+  *   Mosaic execution context, e.g. the geometry API, index system, etc.
+  *   Additional arguments for the expression (expressionConfigs).
+  */
 case class ST_HasValidCoordinates(
     inputGeom: Expression,
     crsCode: Expression,
     which: Expression,
-    geometryAPIName: String
-) extends TernaryExpression
-      with CodegenFallback
-      with NullIntolerant {
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVector2ArgExpression[ST_HasValidCoordinates](
+      inputGeom,
+      crsCode,
+      which,
+      returnsGeometry = false,
+      expressionConfig
+    ) {
 
     @transient
-    val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(GeometryAPI(geometryAPIName))
-
-    override def first: Expression = inputGeom
-
-    override def second: Expression = crsCode
-
-    override def third: Expression = which
+    val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
 
     override def dataType: DataType = BooleanType
 
-    override def nullSafeEval(input1: Any, input2: Any, input3: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geomIn = geometryAPI.geometry(input1, inputGeom.dataType)
-        val crsCodeIn = input2.asInstanceOf[UTF8String].toString.split(":")
-        val whichIn = input3.asInstanceOf[UTF8String].toString
-        val crsBounds = whichIn.toLowerCase(Locale.ROOT) match {
-            case "bounds"             => crsBoundsProvider.bounds(crsCodeIn(0), crsCodeIn(1).toInt)
-            case "reprojected_bounds" => crsBoundsProvider.reprojectedBounds(crsCodeIn(0), crsCodeIn(1).toInt)
-            case _ => throw new Error("Only boundary and reprojected_boundary supported for which argument.")
-        }
-        (Seq(geomIn.getShellPoints) ++ geomIn.getHolePoints).flatten.flatten.forall(point =>
-            crsBounds.lowerLeft.getX <= point.getX && point.getX <= crsBounds.upperRight.getX &&
-            crsBounds.lowerLeft.getY <= point.getY && point.getY <= crsBounds.upperRight.getY
+    override def geometryTransform(geometry: MosaicGeometry, arg1: Any, arg2: Any): Any = {
+        val crsCode = arg1.asInstanceOf[UTF8String].toString
+        val which = arg2.asInstanceOf[UTF8String].toString.toLowerCase(Locale.ROOT)
+        geometry.hasValidCoords(crsBoundsProvider, crsCode, which)
+    }
+
+    override def geometryCodeGen(geometryRef: String, arg1Ref: String, arg2Ref: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        val crsBoundsProviderRef = ctx.freshName("crsBoundsProvider")
+        val geometryAPIRef = ctx.freshName("geometryAPI")
+
+        ctx.addImmutableStateIfNotExists(
+          CRSBoundsProviderClass,
+          crsBoundsProviderRef
         )
-    }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = ST_HasValidCoordinates(asArray(0), asArray(1), asArray(2), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
-    }
+        ctx.addPartitionInitializationStatement(
+          s"""
+             |final $geometryAPIClass $geometryAPIRef = $geometryAPIClass.apply("${geometryAPI.name}");
+             |$crsBoundsProviderRef = $CRSBoundsProviderClass.apply($geometryAPIRef);
+             |""".stripMargin
+        )
 
-    override def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
-        copy(newFirst, newSecond, newThird)
+        val code = s"""boolean $resultRef = $geometryRef.hasValidCoords($crsBoundsProviderRef, $arg1Ref.toString(), $arg2Ref.toString());"""
+
+        (code, resultRef)
+
+    }
 
 }
 
-object ST_HasValidCoordinates {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_HasValidCoordinates extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_HasValidCoordinates].getCanonicalName,
-          db.orNull,
-          "ST_HasValidCoordinates",
-          """
-            |    _FUNC_(expr1, expr2, expr3) - Checks if all points in geometry have
-            |    valid coordinates with respect to provided crs code and
-            |    the type of bounds.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(geom, 'EPSG:4326', 'bounds');
-            |        true
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_hasvalidcoordinates"
+
+    override def usage: String =
+        "_FUNC_(expr1, expr2, expr3) - Checks if all points in geometry have valid coordinates with respect to provided crs code and the type of bounds."
+
+    override def example: String = """
+        > SELECT _FUNC_(geom, 'EPSG:4326', 'bounds');
+        true
+    """
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_HasValidCoordinates](3, expressionConfig)
+    }
+
 }

@@ -20,14 +20,7 @@ case class ST_UnaryUnion(
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val mosaicGeometry = mosaicGeometryRef(geometryRef)
-        val mosaicGeometryClass = geometryAPI.mosaicGeometryClass
-        val geometryClass = geometryAPI.geometryClass
-
-        val code = s"""
-                      |$geometryClass $resultRef = (($mosaicGeometryClass) $mosaicGeometry.unaryUnion()).getGeom();
-                      |""".stripMargin
-
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.unaryUnion();"""
         (code, resultRef)
     }
 
