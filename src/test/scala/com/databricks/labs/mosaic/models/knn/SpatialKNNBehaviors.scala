@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.models.knn
 
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, CustomIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
@@ -22,13 +22,8 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
         val (resolution, distanceThreshold) = mc.getIndexSystem match {
             case H3IndexSystem  => (3, 100.0)
             case BNGIndexSystem => (-3, 10000.0)
+            case CustomIndexSystem(_) => (1, 10000.0)
             case _ => (3, 100.0)
-        }
-
-        if (mc.getIndexSystem.name.startsWith("CUSTOM")) {
-            // Skip the KNN tests for custom grid
-            // TODO: Fix this
-            return
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
