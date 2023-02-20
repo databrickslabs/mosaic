@@ -71,10 +71,15 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
 
         boroughs.withColumn("centroid", st_centroid(col("wkt"))).createOrReplaceTempView("boroughs")
 
+        val resolution2 = mc.getIndexSystem match {
+            case H3IndexSystem  => "5"
+            case BNGIndexSystem => "'100m'"
+        }
+
         val mosaics2 = spark
             .sql(s"""
-                    |select point_index_geom(centroid, $resolution),
-                    |point_index_lonlat(st_x(centroid), st_y(centroid), $resolution)
+                    |select point_index_geom(centroid, $resolution2),
+                    |point_index_lonlat(st_x(centroid), st_y(centroid), $resolution2)
                     |from boroughs
                     |""".stripMargin)
             .collect()

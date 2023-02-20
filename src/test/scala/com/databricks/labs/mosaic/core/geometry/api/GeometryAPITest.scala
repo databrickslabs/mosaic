@@ -13,7 +13,7 @@ class GeometryAPITest extends AnyFunSuite with GeometryAPIBehaviors {
     test("Construct available Geometry APIs") {
         noException should be thrownBy GeometryAPI("JTS")
         noException should be thrownBy GeometryAPI("ESRI")
-        noException should be thrownBy GeometryAPI("anyother")
+        an[Error] should be thrownBy GeometryAPI("anyother")
         GeometryAPI.apply("JTS") shouldEqual JTS
         GeometryAPI.apply("ESRI") shouldEqual ESRI
     }
@@ -37,13 +37,7 @@ class GeometryAPITest extends AnyFunSuite with GeometryAPIBehaviors {
     }
 
     test("IllegalAPI Geometry API tests") {
-        val illegalAPI = GeometryAPI.apply("anyother")
-        illegalAPI.name.toUpperCase(Locale.ROOT) shouldEqual "ILLEGAL"
-        an[Error] should be thrownBy illegalAPI.fromCoords(Seq(0.1, 0.2))
-        an[Error] should be thrownBy illegalAPI.fromGeoCoord(Coordinates(0.2, 0.1))
-        an[Error] should be thrownBy illegalAPI.ioCodeGen
-        an[Error] should be thrownBy illegalAPI.codeGenTryWrap("1==1;")
-        GeometryAPI
+        an[Error] should be thrownBy GeometryAPI.apply("anyother")
     }
 
     test("Geometry API serialize and deserialize") {

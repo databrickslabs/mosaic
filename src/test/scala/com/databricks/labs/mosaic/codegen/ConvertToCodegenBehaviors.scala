@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.execution.WholeStageCodegenExec
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{col, lit}
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
@@ -799,6 +799,7 @@ trait ConvertToCodegenBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy CodeGenerator.compile(code)
 
         val left = hexDf
+            .withColumn("coords", st_setsrid($"coords", lit(4326)))
             .collect()
             .map(_.toSeq.head)
 
@@ -806,6 +807,7 @@ trait ConvertToCodegenBehaviors extends MosaicSpatialQueryTest {
             .orderBy("id")
             .where(!st_geometrytype($"wkt").isin("MultiLineString", "MultiPolygon"))
             .withColumn("coords", convert_to($"wkt", "coords"))
+            .withColumn("coords", st_setsrid($"coords", lit(4326)))
             .select("coords")
             .collect()
             .map(_.toSeq.head)

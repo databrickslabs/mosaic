@@ -15,16 +15,6 @@ abstract class GeometryAPI(
     reader: GeometryReader
 ) extends Serializable {
 
-    def envelopeCode: String
-
-    def yCode: String
-
-    def xCode: String
-
-    def centroidCode: String
-
-    def pointClassName: String
-
     def name: String
 
     def geometry(input: Any, typeName: String): MosaicGeometry = {
@@ -108,14 +98,6 @@ abstract class GeometryAPI(
     def geometryClass: String = throw new Error("Unimplemented")
 
     def mosaicGeometryClass: String = throw new Error("Unimplemented")
-
-    def geometryTypeCode: String = throw new Error("Unimplemented")
-
-    def geometryIsValidCode: String = throw new Error("Unimplemented")
-
-    def geometryLengthCode: String = throw new Error("Unimplemented")
-
-    def geometrySRIDCode(geomInRef: String): String = throw new Error("Unimplemented")
 
 }
 
