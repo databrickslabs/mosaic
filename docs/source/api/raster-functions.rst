@@ -85,10 +85,10 @@ rst_bandmetadata
     |"valid_min": "0", "units": "stress_level", "valid_max": "4", "scale_factor": "1"}   |
     +------------------------------------------------------------------------------------+
 
-st_georeference
+rst_georeference
 ***************
 
-.. function:: st_georeference(raster)
+.. function:: rst_georeference(raster)
 
     Returns GeoTransform of the raster as a GT array of doubles.
     GT(0) x-coordinate of the upper-left corner of the upper-left pixel.
