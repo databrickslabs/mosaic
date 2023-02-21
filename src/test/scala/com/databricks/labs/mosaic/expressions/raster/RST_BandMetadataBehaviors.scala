@@ -17,6 +17,9 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
+        noException should be thrownBy mc.getRasterAPI
+        noException should be thrownBy MosaicContext.geometryAPI
+
         val rasterDfWithBandMetadata = mocks
             .getNetCDFBinaryDf(spark)
             .withColumn("subdatasets", rst_subdatasets($"path"))
@@ -52,6 +55,10 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         an[Exception] should be thrownBy spark.sql("""
                                                      |select rst_bandmetadata() from source
                                                      |""".stripMargin)
+
+        noException should be thrownBy rst_bandmetadata($"bleachingSubdataset", lit(1))
+        noException should be thrownBy rst_bandmetadata($"bleachingSubdataset", 1)
+        noException should be thrownBy rst_bandmetadata("bleachingSubdataset", 1)
 
     }
 

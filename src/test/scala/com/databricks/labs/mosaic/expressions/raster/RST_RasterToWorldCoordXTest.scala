@@ -9,7 +9,7 @@ import org.apache.spark.sql.test.SharedSparkSessionGDAL
 
 import scala.util.Try
 
-class RST_RasterToWorldCoordXTest extends QueryTest with SharedSparkSessionGDAL with RST_RasterToGridMinBehaviors {
+class RST_RasterToWorldCoordXTest extends QueryTest with SharedSparkSessionGDAL with RST_RasterToWorldCoordXBehaviors {
 
     private val noCodegen =
         withSQLConf(
@@ -25,7 +25,7 @@ class RST_RasterToWorldCoordXTest extends QueryTest with SharedSparkSessionGDAL 
     test("Testing RST_RasterToGridMin with manual GDAL registration (H3, JTS).") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
-            rasterToGridMinBehavior(H3IndexSystem, JTS)
+            rasterToWorldCoordX(H3IndexSystem, JTS)
         }
     }
 

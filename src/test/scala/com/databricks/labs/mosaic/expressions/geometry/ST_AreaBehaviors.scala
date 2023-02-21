@@ -40,6 +40,8 @@ trait ST_AreaBehaviors extends MosaicSpatialQueryTest {
         val sqlResult = spark.sql("select st_area(wkt) from source")
 
         checkAnswer(sqlResult, expected)
+
+        noException should be thrownBy df.select(try_sql(st_area($"wkt"))).limit(1).collect()
     }
 
     def areaCodegen(mosaicContext: MosaicContext): Unit = {
