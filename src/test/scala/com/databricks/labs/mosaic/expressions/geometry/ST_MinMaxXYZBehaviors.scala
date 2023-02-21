@@ -180,12 +180,14 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy CodeGenerator.compile(code)
     }
 
-    def makeCopy(mosaicContext: MosaicContext): Unit = {
+    def auxiliary(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         val df = getWKTRowsDf().orderBy("id")
         val expr = ST_MinMaxXYZ(df.col("wkt").expr, mc.expressionConfig, "X", "MAX")
         noException should be thrownBy expr.makeCopy(Array(df.col("wkt").expr))
+        noException should be thrownBy mc.functions.st_zmax(col("wkt"))
+        noException should be thrownBy mc.functions.st_zmin(col("wkt"))
     }
 
 }
