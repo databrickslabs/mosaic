@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
@@ -39,7 +38,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val expected =  List(40.0, 2.0, 110.0, 45.0, -75.78033, 40.0, 40.0, 40.0).map(Row(_))
+        val expected = List(40.0, 2.0, 110.0, 45.0, -75.78033, 40.0, 40.0, 40.0).map(Row(_))
 
         val df = getWKTRowsDf().orderBy("id")
         val results = df.select(st_xmax(col("wkt")))

@@ -17,6 +17,6 @@ class ST_MinMaxXYZTest extends MosaicSpatialQueryTest with SharedSparkSession wi
     testAllGeometriesNoCodegen("Testing stYMax NO_CODEGEN") { yMaxBehavior }
     testAllGeometriesCodegen("Testing stYMax CODEGEN compilation") { yMaxCodegen }
     testAllGeometriesCodegen("Testing stYMax CODEGEN") { yMaxBehavior }
-    testAllGeometriesNoCodegen("Testing auxiliary methods") { makeCopy }
+    testAllGeometriesNoCodegen("Testing auxiliary methods") { auxiliary }
 
 }
