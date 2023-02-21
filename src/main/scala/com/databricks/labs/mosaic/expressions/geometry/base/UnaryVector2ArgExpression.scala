@@ -3,7 +3,6 @@ package com.databricks.labs.mosaic.expressions.geometry.base
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, TernaryExpression}
@@ -48,8 +47,6 @@ abstract class UnaryVector2ArgExpression[T <: Expression: ClassTag](
     override def second: Expression = arg1Expr
 
     override def third: Expression = arg2Expr
-
-    override def indexSystem: IndexSystem = getIndexSystem(expressionConfig)
 
     override def geometryAPI: GeometryAPI = getGeometryAPI(expressionConfig)
 

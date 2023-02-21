@@ -21,7 +21,6 @@ trait VectorExpression {
     def getGeometryAPI(expressionConfig: MosaicExpressionConfig): GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
 
     def geometryAPI: GeometryAPI
-    def indexSystem: IndexSystem
 
     def mosaicGeomClass: String = geometryAPI.mosaicGeometryClass
     def geomClass: String = geometryAPI.geometryClass
@@ -69,10 +68,13 @@ trait VectorExpression {
         if (returnsGeometry) {
             val baseGeometryRef = ctx.freshName("baseGeometry")
             val (code, outputRef) = ConvertToCodeGen.writeGeometryCode(ctx, baseGeometryRef, dataType, geometryAPI)
-            (s"""
-                |$geomClass $baseGeometryRef = $resultRef.getGeom();
-                |$code
-                |""".stripMargin, outputRef)
+            (
+              s"""
+                 |$geomClass $baseGeometryRef = $resultRef.getGeom();
+                 |$code
+                 |""".stripMargin,
+              outputRef
+            )
         } else {
             ("", resultRef) // noop code
         }
