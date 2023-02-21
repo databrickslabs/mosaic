@@ -87,17 +87,17 @@ abstract class GeometryAPI(
         }
     }
 
-    def fromGeoCoord(point: Coordinates): MosaicPoint = throw new Error("Unimplemented")
+    def fromGeoCoord(point: Coordinates): MosaicPoint
 
-    def fromCoords(coords: Seq[Double]): MosaicPoint = throw new Error("Unimplemented")
+    def fromCoords(coords: Seq[Double]): MosaicPoint
 
-    def ioCodeGen: GeometryIOCodeGen = throw new Error("Unimplemented")
+    def ioCodeGen: GeometryIOCodeGen
 
-    def codeGenTryWrap(code: String): String = throw new Error("Unimplemented")
+    def codeGenTryWrap(code: String): String
 
-    def geometryClass: String = throw new Error("Unimplemented")
+    def geometryClass: String
 
-    def mosaicGeometryClass: String = throw new Error("Unimplemented")
+    def mosaicGeometryClass: String
 
 }
 
