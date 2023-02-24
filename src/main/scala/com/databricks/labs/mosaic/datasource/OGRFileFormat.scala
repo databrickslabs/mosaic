@@ -7,7 +7,7 @@ import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.util.GenericArrayData
+import org.apache.spark.sql.catalyst.util.{DateTimeUtils, GenericArrayData}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.ogr.{ogr, Feature}
@@ -127,31 +127,13 @@ object OGRFileFormat {
       * Extracts the value of a date field from a feature.
       *
       * @param feature
-      *   OGR feature.
+      * OGR feature.
       * @param id
-      *   field index.
+      * field index.
       * @return
       */
     // noinspection ScalaDeprecation
-    def getDate(feature: Feature, id: Int): java.sql.Date = {
-        var year: Array[Int] = Array.fill[Int](1)(0)
-        var month: Array[Int] = Array.fill[Int](1)(0)
-        var day: Array[Int] = Array.fill[Int](1)(0)
-        feature.GetFieldAsDateTime(id, year, month, day, null, null, null, null)
-        new java.sql.Date(year(0), month(0), day(0))
-    }
-
-    /**
-      * Extracts the value of a date-time field from a feature.
-      *
-      * @param feature
-      *   OGR feature.
-      * @param id
-      *   field index.
-      * @return
-      */
-    // noinspection ScalaDeprecation
-    def getDateTime(feature: Feature, id: Int): java.sql.Timestamp = {
+    def getDate(feature: Feature, id: Int): Int = {
         var year: Array[Int] = Array.fill[Int](1)(0)
         var month: Array[Int] = Array.fill[Int](1)(0)
         var day: Array[Int] = Array.fill[Int](1)(0)
@@ -160,7 +142,31 @@ object OGRFileFormat {
         var second: Array[Float] = Array.fill[Float](1)(0)
         var tz: Array[Int] = Array.fill[Int](1)(0)
         feature.GetFieldAsDateTime(id, year, month, day, hour, minute, second, tz)
-        new java.sql.Timestamp(year(0), month(0), day(0), hour(0), minute(0), second(0).toInt, tz(0))
+        val date = new java.sql.Date(year(0), month(0), day(0))
+        DateTimeUtils.fromJavaDate(date)
+    }
+
+    /**
+      * Extracts the value of a date-time field from a feature.
+      *
+      * @param feature
+      * OGR feature.
+      * @param id
+      * field index.
+      * @return
+      */
+    // noinspection ScalaDeprecation
+    def getDateTime(feature: Feature, id: Int): Long = {
+        var year: Array[Int] = Array.fill[Int](1)(0)
+        var month: Array[Int] = Array.fill[Int](1)(0)
+        var day: Array[Int] = Array.fill[Int](1)(0)
+        var hour: Array[Int] = Array.fill[Int](1)(0)
+        var minute: Array[Int] = Array.fill[Int](1)(0)
+        var second: Array[Float] = Array.fill[Float](1)(0)
+        var tz: Array[Int] = Array.fill[Int](1)(0)
+        feature.GetFieldAsDateTime(id, year, month, day, hour, minute, second, tz)
+        val datetime = new java.sql.Timestamp(year(0), month(0), day(0), hour(0), minute(0), second(0).toInt, tz(0))
+        DateTimeUtils.fromJavaTimestamp(datetime)
     }
 
     /**
