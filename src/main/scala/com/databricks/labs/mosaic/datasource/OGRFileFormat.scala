@@ -7,6 +7,7 @@ import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.analysis.TypeCoercion
 import org.apache.spark.sql.catalyst.util.{DateTimeUtils, GenericArrayData}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -97,8 +98,24 @@ object OGRFileFormat {
             case _                => StringType
         }
 
+    def inferType(feature: Feature, j: Int): DataType = {
+        val coercables = Seq(
+          (Try(feature.GetFieldAsInteger(j)).toOption, IntegerType),
+          (Try(feature.GetFieldAsString(j)).toOption, StringType),
+          (Try(feature.GetFieldAsDouble(j)).toOption, DoubleType),
+          (Try(getDate(feature, j)).toOption, DateType),
+          (Try(getDateTime(feature, j)).toOption, TimestampType),
+          (Try(feature.GetFieldAsBinary(j)).toOption, BinaryType),
+          (Try(feature.GetFieldAsIntegerList(j)).toOption, ArrayType(IntegerType)),
+          (Try(feature.GetFieldAsDoubleList(j)).toOption, ArrayType(DoubleType)),
+          (Try(feature.GetFieldAsStringList(j)).toOption, ArrayType(StringType)),
+          (Try(feature.GetFieldAsInteger64(j)).toOption, LongType)
+        ).filter(_._1.isDefined).map(_._2)
+        coercables.foldLeft(StringType.asInstanceOf[DataType])((a, b) => TypeCoercion.findTightestCommonType(a, b).get)
+    }
+
     def tryParse(value: String): DataType = {
-        Seq(
+        val coerceables = Seq(
           (Try(value.toInt).toOption, IntegerType),
           (Try(value.toDouble).toOption, DoubleType),
           (Try(value.toBoolean).toOption, BooleanType),
@@ -108,7 +125,10 @@ object OGRFileFormat {
           (Try(value.toByte).toOption, ByteType),
           (Try(DateTimeUtils.stringToDate(UTF8String.fromString(value))).toOption, DateType),
           (Try(DateTimeUtils.stringToTimestampWithoutTimeZone(UTF8String.fromString(value))).toOption, TimestampType)
-        ).find(_._1.isDefined).map(_._2).getOrElse(StringType)
+        ).filter(_._1.isDefined).map(_._2)
+
+        if (coerceables.isEmpty) StringType
+        else coerceables.foldLeft(StringType.asInstanceOf[DataType])((a, b) => TypeCoercion.findTightestCommonType(a, b).get)
     }
 
     /**
@@ -217,11 +237,9 @@ object OGRFileFormat {
             .map(j => {
                 val field = feature.GetFieldDefnRef(j)
                 val name = field.GetNameRef
-                val typeName = field.GetFieldTypeName(j)
                 val fieldName = if (name.isEmpty) f"field_$j" else name
-                val dataType = StructField(fieldName, getType(typeName))
-                val tryDataType = StructField(fieldName, tryParse(feature.GetFieldAsString(j)))
-                coerceTypes(dataType, tryDataType)
+                val dataType = inferType(feature, j)
+                StructField(fieldName, inferType(feature, j))
             }) ++ (0 until feature.GetGeomFieldCount())
             .map(j => {
                 val field = feature.GetGeomFieldDefnRef(j)
@@ -295,7 +313,10 @@ object OGRFileFormat {
         val layerSchema = (1 until n).foldLeft(headSchemaFields) { (schema, _) =>
             val feature = layer.GetNextFeature()
             val featureSchema = getFeatureSchema(feature)
-            schema.zip(featureSchema.fields).map { case (s, f) => coerceTypes(s, f) }
+            schema.zip(featureSchema.fields).map { case (s, f) =>
+                val coercedType = TypeCoercion.findTightestCommonType(s.dataType, f.dataType).get
+                StructField(s.name, coercedType, s.nullable || f.nullable)
+            }
         }
 
         Some(StructType(layerSchema))
