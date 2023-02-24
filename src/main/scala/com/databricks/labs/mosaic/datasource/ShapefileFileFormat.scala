@@ -34,7 +34,7 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister {
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] = {
         val layerN = options.getOrElse("layerNumber", "0").toInt
-        buildReaderImpl(driverName, layerN)
+        buildReaderImpl(driverName, layerN, dataSchema)
     }
 
 }

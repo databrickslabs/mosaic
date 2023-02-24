@@ -55,7 +55,7 @@ class OGRFileFormat extends FileFormat with DataSourceRegister {
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val driverName = options.getOrElse("driverName", "")
 
-        buildReaderImpl(driverName, layerN)
+        buildReaderImpl(driverName, layerN, dataSchema)
     }
 
     override def prepareWrite(
@@ -120,10 +120,8 @@ object OGRFileFormat {
       *   field index.
       * @return
       */
-    def getValue(feature: Feature, j: Int): Any = {
+    def getValue(feature: Feature, j: Int, dataType: DataType): Any = {
         val field = feature.GetFieldDefnRef(j)
-        val typeName = field.GetFieldTypeName(j)
-        val dataType = getType(typeName)
         dataType match {
             case IntegerType               => feature.GetFieldAsInteger(j)
             case StringType                => feature.GetFieldAsString(j)
@@ -237,6 +235,7 @@ object OGRFileFormat {
         val first = ordered.head
         val second = ordered.last
         (first.dataType, second.dataType) match {
+            case (BinaryType, _)                      => first
             case (DoubleType, FloatType)              => StructField(s.name, DoubleType, s.nullable)
             case (DoubleType, IntegerType)            => StructField(s.name, DoubleType, s.nullable)
             case (DoubleType, LongType)               => StructField(s.name, DoubleType, s.nullable)
@@ -287,9 +286,10 @@ object OGRFileFormat {
         val layer = dataset.GetLayer(layerN)
         val headFeature = layer.GetNextFeature()
         val headSchemaFields = getFeatureSchema(headFeature).fields
+        val n = math.min(100, layer.GetFeatureCount()).toInt
 
         // start from 1 since 1 feature was read already
-        val layerSchema = (1 until layer.GetFeatureCount()).foldLeft(headSchemaFields) { (schema, _) =>
+        val layerSchema = (1 until n).foldLeft(headSchemaFields) { (schema, _) =>
             val feature = layer.GetNextFeature()
             val featureSchema = getFeatureSchema(feature)
             schema.zip(featureSchema.fields).map { case (s, f) => coerceTypes(s, f) }
@@ -301,7 +301,8 @@ object OGRFileFormat {
 
     def buildReaderImpl(
         driverName: String,
-        layerN: Int
+        layerN: Int,
+        schema: StructType
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
             val path = file.filePath.replace("file:", "")
@@ -314,12 +315,13 @@ object OGRFileFormat {
 
             val metadata = dataset.GetMetadata_Dict().toMap
             val layer = dataset.GetLayerByIndex(layerN)
+            val types = schema.fields.map(_.dataType)
 
             var feature = layer.GetNextFeature()
             (0 until layer.GetFeatureCount().toInt)
                 .foldLeft(Seq.empty[InternalRow])((acc, _) => {
                     val fields = (0 until feature.GetFieldCount())
-                        .map(j => getValue(feature, j))
+                        .map(j => getValue(feature, j, types(j)))
                     val geoms = (0 until feature.GetGeomFieldCount())
                         .map(feature.GetGeomFieldRef(_).ExportToWkb())
                     val values = fields ++ geoms ++ Seq(metadata)
