@@ -211,7 +211,7 @@ object OGRFileFormat {
             }
 
         val layer = dataset.GetLayer(layerN)
-        val headFeature = layer.GetFeature(0)
+        val headFeature = layer.GetNextFeature()
 
         val layerSchema = (0 until headFeature.GetFieldCount())
             .map(j => {
@@ -247,16 +247,17 @@ object OGRFileFormat {
             val metadata = dataset.GetMetadata_Dict().toMap
             val layer = dataset.GetLayerByIndex(layerN)
 
+            var feature = layer.GetNextFeature()
             (0 until layer.GetFeatureCount().toInt)
-                .map(i => {
-                    val feature = layer.GetFeature(i)
+                .foldLeft(Seq.empty[InternalRow])((acc, _) => {
                     val fields = (0 until feature.GetFieldCount())
                         .map(j => getValue(feature, j))
                     val geoms = (0 until feature.GetGeomFieldCount())
                         .map(feature.GetGeomFieldRef(_).ExportToWkb())
                     val values = fields ++ geoms ++ Seq(metadata)
                     val row = createRow(values)
-                    row
+                    feature = layer.GetNextFeature()
+                    acc ++ Seq(row)
                 })
                 .iterator
         }
