@@ -20,8 +20,7 @@ import scala.collection.convert.ImplicitConversions.`dictionary AsScalaMap`
   * "layerNumber". The data source driver name is specified by the option
   * "driverName".
   */
-abstract class OGRFileFormat extends FileFormat
-      with DataSourceRegister {
+class OGRFileFormat extends FileFormat with DataSourceRegister {
 
     import com.databricks.labs.mosaic.datasource.OGRFileFormat._
 
@@ -177,10 +176,10 @@ object OGRFileFormat {
         InternalRow.fromSeq(
           values.map {
               case null           => null
+              case b: Array[Byte] => b
               case v: Array[_]    => new GenericArrayData(v)
               case m: Map[_, _]   => raster.buildMapString(m.map { case (k, v) => (k.toString, v.toString) })
               case s: String      => UTF8String.fromString(s)
-              case b: Array[Byte] => b
               case v              => v
           }
         )

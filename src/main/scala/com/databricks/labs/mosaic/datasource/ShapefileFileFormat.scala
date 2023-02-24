@@ -7,9 +7,9 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.execution.datasources.PartitionedFile
-import org.apache.spark.sql.sources.Filter
+import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 
-class ShapefileFileFormat extends OGRFileFormat {
+class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister {
 
     override def shortName(): String = "shapefile"
 
