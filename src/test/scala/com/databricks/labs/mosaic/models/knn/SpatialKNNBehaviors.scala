@@ -22,7 +22,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
         val (resolution, distanceThreshold) = mc.getIndexSystem match {
             case H3IndexSystem  => (3, 100.0)
             case BNGIndexSystem => (-3, 10000.0)
-            case CustomIndexSystem(_) => (1, 10000.0)
+            case CustomIndexSystem(_) => (3, 10000.0)
             case _ => (3, 100.0)
         }
 
