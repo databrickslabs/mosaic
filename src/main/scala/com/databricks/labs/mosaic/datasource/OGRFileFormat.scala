@@ -7,12 +7,13 @@ import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.util.GenericArrayData
+import org.apache.spark.sql.catalyst.util.{DateTimeUtils, GenericArrayData}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.ogr.{ogr, Feature}
 
 import scala.collection.convert.ImplicitConversions.`dictionary AsScalaMap`
+import scala.util.Try
 
 /**
   * A base Spark SQL data source for reading OGR data sources. It reads from a
@@ -94,6 +95,20 @@ object OGRFileFormat {
             case "Integer64"      => LongType
             case _                => StringType
         }
+
+    def tryParse(value: String): DataType = {
+        Seq(
+          (Try(value.toInt).toOption, IntegerType),
+          (Try(value.toDouble).toOption, DoubleType),
+          (Try(value.toBoolean).toOption, BooleanType),
+          (Try(value.toLong).toOption, LongType),
+          (Try(value.toFloat).toOption, FloatType),
+          (Try(value.toShort).toOption, ShortType),
+          (Try(value.toByte).toOption, ByteType),
+          (Try(DateTimeUtils.stringToDate(UTF8String.fromString(value))).toOption, DateType),
+          (Try(DateTimeUtils.stringToTimestampWithoutTimeZone(UTF8String.fromString(value))).toOption, TimestampType)
+        ).find(_._1.isDefined).map(_._2).getOrElse(StringType)
+    }
 
     /**
       * Extracts the value of a field from a feature. The type of the value is
@@ -186,7 +201,60 @@ object OGRFileFormat {
     }
 
     /**
+      * Creates a Spark SQL schema from a OGR feature.
+      *
+      * @param feature
+      *   OGR feature.
+      * @return
+      *   Spark SQL schema.
+      */
+    def getFeatureSchema(feature: Feature): StructType = {
+        val fields = (0 until feature.GetFieldCount())
+            .map(j => {
+                val field = feature.GetFieldDefnRef(j)
+                val name = field.GetNameRef
+                val typeName = field.GetFieldTypeName(j)
+                val dataType = StructField(f"field_${j}_$name", getType(typeName))
+                val tryDataType = StructField(f"field_${j}_$name", tryParse(feature.GetFieldAsString(j)))
+                coerceTypes(dataType, tryDataType)
+            }) ++ (0 until feature.GetGeomFieldCount())
+            .map(j => {
+                val field = feature.GetGeomFieldDefnRef(j)
+                val name = field.GetNameRef
+                StructField(f"geom_${j}_$name", BinaryType, nullable = true)
+            })
+        StructType(fields)
+    }
+
+    def coerceTypes(s: StructField, f: StructField): StructField = {
+        val ordered = Seq(s, f).sortBy(_.dataType.prettyJson)
+        val first = ordered.head
+        val second = ordered.last
+        (first.dataType, second.dataType) match {
+            case (DoubleType, FloatType)              => StructField(s.name, DoubleType, s.nullable)
+            case (DoubleType, IntegerType)            => StructField(s.name, DoubleType, s.nullable)
+            case (DoubleType, LongType)               => StructField(s.name, DoubleType, s.nullable)
+            case (FloatType, IntegerType)             => StructField(s.name, FloatType, s.nullable)
+            case (FloatType, LongType)                => StructField(s.name, FloatType, s.nullable)
+            case (IntegerType, LongType)              => StructField(s.name, LongType, s.nullable)
+            case (DateType, IntegerType)              => StructField(s.name, DateType, s.nullable)
+            case (DateType, LongType)                 => StructField(s.name, TimestampType, s.nullable)
+            case (DateType, TimestampType)            => StructField(s.name, TimestampType, s.nullable)
+            case (TimestampType, LongType)            => StructField(s.name, TimestampType, s.nullable)
+            case (TimestampType, IntegerType)         => StructField(s.name, TimestampType, s.nullable)
+            case (ArrayType(t1, _), ArrayType(t2, _)) => StructField(
+                  s.name,
+                  ArrayType(coerceTypes(StructField("", t1), StructField("", t2)).dataType, containsNull = true),
+                  s.nullable
+                )
+            case (_, StringType)                      => StructField(s.name, StringType, s.nullable)
+            case _                                    => StructField(s.name, StringType, s.nullable)
+        }
+    }
+
+    /**
       * Infer the schema of a OGR file.
+      *
       * @param driverName
       *   the name of the OGR driver
       * @param layerN
@@ -212,20 +280,14 @@ object OGRFileFormat {
 
         val layer = dataset.GetLayer(layerN)
         val headFeature = layer.GetNextFeature()
+        val headSchemaFields = getFeatureSchema(headFeature).fields
 
-        val layerSchema = (0 until headFeature.GetFieldCount())
-            .map(j => {
-                val field = headFeature.GetFieldDefnRef(j)
-                val name = field.GetNameRef
-                val typeName = field.GetFieldTypeName(j)
-                val dataType = getType(typeName)
-                StructField(f"field_${j}_$name", dataType, nullable = true)
-            }) ++ (0 until headFeature.GetGeomFieldCount())
-            .map(j => {
-                val field = headFeature.GetGeomFieldDefnRef(j)
-                val name = field.GetNameRef
-                StructField(f"geom_${j}_$name", BinaryType, nullable = true)
-            })
+        // start from 1 since 1 feature was read already
+        val layerSchema = (1 until layer.GetFeatureCount()).foldLeft(headSchemaFields) { (schema, _) =>
+            val feature = layer.GetNextFeature()
+            val featureSchema = getFeatureSchema(feature)
+            schema.zip(featureSchema.fields).map { case (s, f) => coerceTypes(s, f) }
+        }
 
         Some(StructType(layerSchema))
 
