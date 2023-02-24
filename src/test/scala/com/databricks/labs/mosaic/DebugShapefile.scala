@@ -34,4 +34,11 @@ class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
         df.show()
     }
 
+    test("geodb reading") {
+        val rasters = "/binary/geodb"
+        val path = getClass.getResource(rasters).getPath
+        val df = spark.read.format("ogr").load(path)
+        df.show()
+    }
+
 }
