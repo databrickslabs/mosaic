@@ -39,6 +39,8 @@ class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
         val path = getClass.getResource(rasters).getPath
         val df = spark.read.format("ogr").load(path)
         df.show()
+        df.printSchema()
+        println(df.count())
     }
 
 }
