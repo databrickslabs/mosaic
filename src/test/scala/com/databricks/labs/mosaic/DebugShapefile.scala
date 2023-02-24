@@ -14,4 +14,11 @@ class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
         dataset.GetLayer(0).GetFeature(0).GetFieldAsString("name")
     }
 
+    test("shapefile testing") {
+        val shapefile = "/binary/shapefile/map.shp"
+        val filePath = getClass.getResource(shapefile).getPath
+        val df = spark.read.format("shapefile").load(filePath)
+        df.show()
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.datasource
 
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL.raster
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.mapreduce.Job
@@ -7,7 +8,10 @@ import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
+import org.apache.spark.sql.catalyst.util.GenericArrayData
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.ogr.{ogr, Feature}
 
 import scala.collection.convert.ImplicitConversions.`dictionary AsScalaMap`
@@ -24,7 +28,7 @@ class ShapefileFileFormat extends FileFormat with DataSourceRegister {
 
         val layerN = options.getOrElse("layerN", "0").toInt
 
-        val path = files.head.getPath
+        val path = files.head.getPath.toString.replace("file:", "")
         val dataset = ogr.GetDriverByName("ESRI Shapefile").Open(path.toString, 0)
 
         val layer = dataset.GetLayer(layerN)
@@ -36,12 +40,12 @@ class ShapefileFileFormat extends FileFormat with DataSourceRegister {
                 val name = field.GetNameRef
                 val typeName = field.GetFieldTypeName(j)
                 val dataType = getType(typeName)
-                StructField(f"layer_${j}_$name", dataType, nullable = true)
+                StructField(f"field_${j}_$name", dataType, nullable = true)
             }) ++ (0 until headFeature.GetGeomFieldCount())
             .map(j => {
                 val field = headFeature.GetGeomFieldDefnRef(j)
                 val name = field.GetNameRef
-                StructField(f"layer_${j}_$name", BinaryType, nullable = true)
+                StructField(f"geom_${j}_$name", StringType, nullable = true)
             })
 
         Some(StructType(layerSchema))
@@ -67,21 +71,22 @@ class ShapefileFileFormat extends FileFormat with DataSourceRegister {
         val layerN = options.getOrElse("layerN", "0").toInt
 
         file: PartitionedFile => {
-            val path = file.filePath
+            val path = file.filePath.replace("file:", "")
             val dataset = ogr.GetDriverByName("ESRI Shapefile").Open(path, 0)
 
             val metadata = dataset.GetMetadata_Dict().toMap
             val layer = dataset.GetLayerByIndex(layerN)
 
-            (0 until layer.GetFeatureCount())
+            (0 until layer.GetFeatureCount().toInt)
                 .map(i => {
                     val feature = layer.GetFeature(i)
                     val fields = (0 until feature.GetFieldCount())
                         .map(j => getValue(feature, j))
                     val geoms = (0 until feature.GetGeomFieldCount())
-                        .map(feature.GetGeomFieldRef(_).ExportToWkb())
+                        .map(feature.GetGeomFieldRef(_).ExportToWkt())
                     val values = fields ++ geoms ++ Seq(metadata)
-                    InternalRow.fromSeq(values)
+                    val row = createRow(values)
+                    row
                 })
                 .iterator
         }
@@ -157,6 +162,19 @@ object ShapefileFileFormat {
         var tz: Array[Int] = Array.fill[Int](1)(0)
         feature.GetFieldAsDateTime(id, year, month, day, hour, minute, second, tz)
         new java.sql.Timestamp(year(0), month(0), day(0), hour(0), minute(0), second(0).toInt, tz(0))
+    }
+
+    def createRow(values: Seq[Any]): InternalRow = {
+        import com.databricks.labs.mosaic.expressions.raster
+        InternalRow.fromSeq(
+            values.map {
+                case null => null
+                case v: Array[_] => new GenericArrayData(v)
+                case m: Map[_, _] => raster.buildMapString(m.map{case (k, v) => (k.toString, v.toString)})
+                case s: String => UTF8String.fromString(s)
+                case v => v
+            }
+        )
     }
 
 }
