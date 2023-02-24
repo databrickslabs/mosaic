@@ -16,7 +16,7 @@ import org.apache.spark.unsafe.types.UTF8String
   * A base Spark SQL data source for reading GDAL raster data sources. It reads
   * metadata of the raster and exposes the direct paths for the raster files.
   */
-abstract class GDALFileFormat extends FileFormat with DataSourceRegister {
+class GDALFileFormat extends FileFormat with DataSourceRegister {
 
     import GDALFileFormat._
 
@@ -102,10 +102,10 @@ object GDALFileFormat {
         InternalRow.fromSeq(
           values.map {
               case null           => null
+              case b: Array[Byte] => b
               case v: Array[_]    => new GenericArrayData(v)
               case m: Map[_, _]   => raster.buildMapString(m.map { case (k, v) => (k.toString, v.toString) })
               case s: String      => UTF8String.fromString(s)
-              case b: Array[Byte] => b
               case v              => v
           }
         )
@@ -121,8 +121,8 @@ object GDALFileFormat {
               StructField("ySize", IntegerType, nullable = false),
               StructField("xSize", IntegerType, nullable = false),
               StructField("bandCount", IntegerType, nullable = false),
-              StructField("metadata", StringType, nullable = false),
-              StructField("subdatasets", StringType, nullable = false),
+              StructField("metadata", MapType(StringType, StringType), nullable = false),
+              StructField("subdatasets", MapType(StringType, StringType), nullable = false),
               StructField("srid", IntegerType, nullable = false),
               StructField("proj4Str", StringType, nullable = false)
             )
