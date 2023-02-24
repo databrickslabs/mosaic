@@ -98,23 +98,24 @@ object OGRFileFormat {
             case _                => StringType
         }
 
+    /**
+      * Infers the type of a field from a feature. The type is inferred from the
+      * value of the field. If the field type is String, the inferred type is
+      * returned. Otherwise, the inferred type is coerced to the reported type.
+      * If the reported type is not String, the inferred type is coerced to the
+      * reported type.
+      * @param feature
+      *   the feature
+      * @param j
+      *   the field index
+      * @return
+      *   the inferred type
+      */
     def inferType(feature: Feature, j: Int): DataType = {
-        val coercables = Seq(
-          (Try(feature.GetFieldAsInteger(j)).toOption, IntegerType),
-          (Try(feature.GetFieldAsString(j)).toOption, StringType),
-          (Try(feature.GetFieldAsDouble(j)).toOption, DoubleType),
-          (Try(getDate(feature, j)).toOption, DateType),
-          (Try(getDateTime(feature, j)).toOption, TimestampType),
-          (Try(feature.GetFieldAsBinary(j)).toOption, BinaryType),
-          (Try(feature.GetFieldAsIntegerList(j)).toOption, ArrayType(IntegerType)),
-          (Try(feature.GetFieldAsDoubleList(j)).toOption, ArrayType(DoubleType)),
-          (Try(feature.GetFieldAsStringList(j)).toOption, ArrayType(StringType)),
-          (Try(feature.GetFieldAsInteger64(j)).toOption, LongType)
-        ).filter(_._1.isDefined).map(_._2)
-        coercables.foldLeft(StringType.asInstanceOf[DataType])((a, b) => TypeCoercion.findTightestCommonType(a, b).get)
-    }
+        val field = feature.GetFieldDefnRef(j)
+        val reportedType = getType(field.GetFieldTypeName(field.GetFieldType))
+        val value = feature.GetFieldAsString(j)
 
-    def tryParse(value: String): DataType = {
         val coerceables = Seq(
           (Try(value.toInt).toOption, IntegerType),
           (Try(value.toDouble).toOption, DoubleType),
@@ -127,8 +128,21 @@ object OGRFileFormat {
           (Try(DateTimeUtils.stringToTimestampWithoutTimeZone(UTF8String.fromString(value))).toOption, TimestampType)
         ).filter(_._1.isDefined).map(_._2)
 
-        if (coerceables.isEmpty) StringType
-        else coerceables.foldLeft(StringType.asInstanceOf[DataType])((a, b) => TypeCoercion.findTightestCommonType(a, b).get)
+        val inferredType =
+            if (coerceables.isEmpty) StringType
+            else if (coerceables.contains(LongType)) LongType
+            else if (coerceables.contains(DoubleType)) DoubleType
+            else if (coerceables.contains(FloatType)) FloatType
+            else if (coerceables.contains(IntegerType)) IntegerType
+            else if (coerceables.contains(ShortType)) ShortType
+            else if (coerceables.contains(ByteType)) ByteType
+            else if (coerceables.contains(BooleanType)) BooleanType
+            else if (coerceables.contains(DateType)) DateType
+            else if (coerceables.contains(TimestampType)) TimestampType
+            else StringType
+
+        if (reportedType == StringType && inferredType != StringType) inferredType
+        else TypeCoercion.findTightestCommonType(reportedType, inferredType).getOrElse(StringType)
     }
 
     /**
@@ -238,7 +252,6 @@ object OGRFileFormat {
                 val field = feature.GetFieldDefnRef(j)
                 val name = field.GetNameRef
                 val fieldName = if (name.isEmpty) f"field_$j" else name
-                val dataType = inferType(feature, j)
                 StructField(fieldName, inferType(feature, j))
             }) ++ (0 until feature.GetGeomFieldCount())
             .map(j => {
@@ -248,33 +261,6 @@ object OGRFileFormat {
                 StructField(geomName, BinaryType, nullable = true)
             })
         StructType(fields)
-    }
-
-    def coerceTypes(s: StructField, f: StructField): StructField = {
-        val ordered = Seq(s, f).sortBy(_.dataType.prettyJson)
-        val first = ordered.head
-        val second = ordered.last
-        (first.dataType, second.dataType) match {
-            case (BinaryType, _)                      => first
-            case (DoubleType, FloatType)              => StructField(s.name, DoubleType, s.nullable)
-            case (DoubleType, IntegerType)            => StructField(s.name, DoubleType, s.nullable)
-            case (DoubleType, LongType)               => StructField(s.name, DoubleType, s.nullable)
-            case (FloatType, IntegerType)             => StructField(s.name, FloatType, s.nullable)
-            case (FloatType, LongType)                => StructField(s.name, FloatType, s.nullable)
-            case (IntegerType, LongType)              => StructField(s.name, LongType, s.nullable)
-            case (DateType, IntegerType)              => StructField(s.name, DateType, s.nullable)
-            case (DateType, LongType)                 => StructField(s.name, TimestampType, s.nullable)
-            case (DateType, TimestampType)            => StructField(s.name, TimestampType, s.nullable)
-            case (TimestampType, LongType)            => StructField(s.name, TimestampType, s.nullable)
-            case (TimestampType, IntegerType)         => StructField(s.name, TimestampType, s.nullable)
-            case (ArrayType(t1, _), ArrayType(t2, _)) => StructField(
-                  s.name,
-                  ArrayType(coerceTypes(StructField("", t1), StructField("", t2)).dataType, containsNull = true),
-                  s.nullable
-                )
-            case (_, StringType)                      => StructField(s.name, StringType, s.nullable)
-            case _                                    => StructField(s.name, StringType, s.nullable)
-        }
     }
 
     /**
@@ -314,8 +300,14 @@ object OGRFileFormat {
             val feature = layer.GetNextFeature()
             val featureSchema = getFeatureSchema(feature)
             schema.zip(featureSchema.fields).map { case (s, f) =>
-                val coercedType = TypeCoercion.findTightestCommonType(s.dataType, f.dataType).get
-                StructField(s.name, coercedType, s.nullable || f.nullable)
+                (s, f) match {
+                    case (StructField(name, StringType, _, _), StructField(_, dataType, _, _)) =>
+                        StructField(name, dataType, nullable = true)
+                    case (StructField(name, dataType, _, _), StructField(_, StringType, _, _)) =>
+                        StructField(name, dataType, nullable = true)
+                    case (StructField(name, dataType, _, _), StructField(_, dataType2, _, _))  =>
+                        StructField(name, TypeCoercion.findTightestCommonType(dataType2, dataType).getOrElse(StringType), nullable = true)
+                }
             }
         }
 
