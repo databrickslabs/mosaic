@@ -163,20 +163,21 @@ class TestCustomIndexSystem extends AnyFunSuite {
     }
 
     test("polyfill single cell with world coordinates") {
-        val conf = GridConf(-180, 180, -180, 180, 2, 360, 360)
+        val conf = GridConf(-180, 180, -90, 90, 2, 360, 180)
 
         val grid = new CustomIndexSystem(conf)
         val resolution = 3
         val resolutionMask = resolution.toLong << 56
 
         // At resolution = 3, the cell splits are at: -180, -135, -90, -45, 0, 45, 90, 135, 180
+        //                                            -90, -67.5, -45, -22.5, 0, 22.5, 45, 67.5, 90
 
         grid.getCellWidth(resolution) shouldBe 45.0
-        grid.getCellHeight(resolution) shouldBe 45.0
+        grid.getCellHeight(resolution) shouldBe 22.5
 
         grid.getCellPositionFromCoordinates(1.0, 1.0, resolution) shouldBe (4, 4, 36)
 
-        val geom = JTS.geometry("POLYGON ((-95 18, -50 18, -50 64, -95 64, -95 18))", "WKT")
+        val geom = JTS.geometry("POLYGON ((-95 9, -50 9, -50 32, -95 32, -95 9))", "WKT")
         grid.polyfill(geom, resolution, Some(JTS)).toSet shouldBe Set(34 | resolutionMask)
 
     }

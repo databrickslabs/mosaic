@@ -194,7 +194,7 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
     }
 
     def getCellHeight(resolution: Int): Double = {
-        conf.rootCellSizeX / math.pow(conf.cellSplits, resolution)
+        conf.rootCellSizeY / math.pow(conf.cellSplits, resolution)
     }
 
     /**

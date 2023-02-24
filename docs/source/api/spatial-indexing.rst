@@ -23,7 +23,7 @@ Example
 
     spark.conf.set("spark.databricks.labs.mosaic.index.system", "H3") # Default
     # spark.conf.set("spark.databricks.labs.mosaic.index.system", "BNG")
-    # spark.conf.set("spark.databricks.labs.mosaic.index.system", "CUSTOM(-180,180,-180,180,2,30,30)")
+    # spark.conf.set("spark.databricks.labs.mosaic.index.system", "CUSTOM(-180,180,-90,90,2,30,30)")
 
     import mosaic as mos
     mos.enable_mosaic(spark, dbutils)
