@@ -21,7 +21,8 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister {
         files: Seq[FileStatus]
     ): Option[StructType] = {
         val layerN = options.getOrElse("layerNumber", "0").toInt
-        inferSchemaImpl(driverName, layerN, files)
+        val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
+        inferSchemaImpl(driverName, layerN, inferenceLimit, files)
     }
 
     override def buildReader(

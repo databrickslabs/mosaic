@@ -33,8 +33,9 @@ class OGRFileFormat extends FileFormat with DataSourceRegister {
         files: Seq[FileStatus]
     ): Option[StructType] = {
         val layerN = options.getOrElse("layerNumber", "0").toInt
+        val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
         val driverName = options.getOrElse("driverName", "")
-        inferSchemaImpl(driverName, layerN, files)
+        inferSchemaImpl(driverName, layerN, inferenceLimit, files)
     }
 
     override def isSplitable(
@@ -121,7 +122,6 @@ object OGRFileFormat {
       * @return
       */
     def getValue(feature: Feature, j: Int, dataType: DataType): Any = {
-        val field = feature.GetFieldDefnRef(j)
         dataType match {
             case IntegerType               => feature.GetFieldAsInteger(j)
             case StringType                => feature.GetFieldAsString(j)
@@ -140,9 +140,9 @@ object OGRFileFormat {
       * Extracts the value of a date field from a feature.
       *
       * @param feature
-      * OGR feature.
+      *   OGR feature.
       * @param id
-      * field index.
+      *   field index.
       * @return
       */
     // noinspection ScalaDeprecation
@@ -163,9 +163,9 @@ object OGRFileFormat {
       * Extracts the value of a date-time field from a feature.
       *
       * @param feature
-      * OGR feature.
+      *   OGR feature.
       * @param id
-      * field index.
+      *   field index.
       * @return
       */
     // noinspection ScalaDeprecation
@@ -218,14 +218,16 @@ object OGRFileFormat {
                 val field = feature.GetFieldDefnRef(j)
                 val name = field.GetNameRef
                 val typeName = field.GetFieldTypeName(j)
-                val dataType = StructField(f"field_${j}_$name", getType(typeName))
-                val tryDataType = StructField(f"field_${j}_$name", tryParse(feature.GetFieldAsString(j)))
+                val fieldName = if (name.isEmpty) f"field_$j" else name
+                val dataType = StructField(fieldName, getType(typeName))
+                val tryDataType = StructField(fieldName, tryParse(feature.GetFieldAsString(j)))
                 coerceTypes(dataType, tryDataType)
             }) ++ (0 until feature.GetGeomFieldCount())
             .map(j => {
                 val field = feature.GetGeomFieldDefnRef(j)
                 val name = field.GetNameRef
-                StructField(f"geom_${j}_$name", BinaryType, nullable = true)
+                val geomName = if (name.isEmpty) f"geom_$j" else name
+                StructField(geomName, BinaryType, nullable = true)
             })
         StructType(fields)
     }
@@ -272,6 +274,7 @@ object OGRFileFormat {
     def inferSchemaImpl(
         driverName: String,
         layerN: Int,
+        inferenceLimit: Int,
         files: Seq[FileStatus]
     ): Option[StructType] = {
 
@@ -286,7 +289,7 @@ object OGRFileFormat {
         val layer = dataset.GetLayer(layerN)
         val headFeature = layer.GetNextFeature()
         val headSchemaFields = getFeatureSchema(headFeature).fields
-        val n = math.min(100, layer.GetFeatureCount()).toInt
+        val n = math.min(inferenceLimit, layer.GetFeatureCount()).toInt
 
         // start from 1 since 1 feature was read already
         val layerSchema = (1 until n).foldLeft(headSchemaFields) { (schema, _) =>
@@ -305,7 +308,7 @@ object OGRFileFormat {
         schema: StructType
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
-            val path = file.filePath.replace("file:", "")
+            val path = file.filePath.replace("dbfs:/", "/dbfs/").replace("file:/", "/")
             val dataset =
                 if (driverName.isEmpty) {
                     ogr.Open(path)
