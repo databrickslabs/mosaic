@@ -1,1 +1,4 @@
 com.databricks.labs.mosaic.datasource.ShapefileFileFormat
+com.databricks.labs.mosaic.datasource.GeoDBFileFormat
+com.databricks.labs.mosaic.datasource.OGRFileFormat
+com.databricks.labs.mosaic.datasource.GDALFileFormat

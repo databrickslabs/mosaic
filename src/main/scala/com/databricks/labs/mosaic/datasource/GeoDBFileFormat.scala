@@ -9,11 +9,11 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.execution.datasources.PartitionedFile
 import org.apache.spark.sql.sources.Filter
 
-class ShapefileFileFormat extends OGRFileFormat {
+class GeoDBFileFormat extends OGRFileFormat {
 
-    override def shortName(): String = "shapefile"
+    override def shortName(): String = "geo_db"
 
-    private val driverName = "ESRI Shapefile"
+    private val driverName = "FileGDB"
 
     override def inferSchema(
         sparkSession: SparkSession,
