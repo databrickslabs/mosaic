@@ -11,6 +11,8 @@ import scala.util.Try
 
 class OGRMultiReadDataFrameReader(sparkSession: SparkSession) extends MosaicDataFrameReader(sparkSession) {
 
+    import sparkSession.implicits._
+
     override def load(path: String): DataFrame = load(Seq(path): _*)
 
     override def load(paths: String*): DataFrame = {
@@ -53,32 +55,38 @@ class OGRMultiReadDataFrameReader(sparkSession: SparkSession) extends MosaicData
                 parition.flatMap(row => {
 
                     val path = row.getString(0).replace("dbfs:/", "/dbfs/")
-                    val readerN = row.getInt(1)
-                    val rowCount = row.getInt(2)
+                    val rowCount = row.getInt(1)
+                    val readerN = row.getInt(2)
                     OGRFileFormat.enableOGRDrivers()
 
                     val ds = OGRFileFormat.getDataSource(driverName, path, vsizip)
                     val layer = OGRFileFormat.getLayer(ds, layerNumber, layerName)
-                    layer.ResetReading()
+                    //layer.ResetReading()
                     val metadata = layer.GetMetadata_Dict().toMap
 
                     val start = readerN * rowCount
                     val end = math.min((readerN + 1) * rowCount, layer.GetFeatureCount())
+                    layer.SetNextByIndex(start)
                     (start.toInt until end.toInt)
-                        .map(i =>
-                            Try {
-                                val feature = layer.GetFeature(i)
+                        .map(_ => {
+
+                                val feature = layer.GetNextFeature()
                                 val fields = OGRFileFormat.getFeatureFields(feature, schema.get)
 
-                                fields ++ Seq(metadata)
-                            }.toOption
-                        )
-                        .filter(_.isDefined)
-                        .map(_.get)
-                })
-            )(new OGRMultiReadDataFrameReader.ArrayAnyEncoder(schema.get))
+                                fields.map(_.toString).toSeq
 
-        df2.toDF(schema.get.fieldNames ++ Seq("metadata"): _*)
+                        }
+                        )
+
+                })
+            )
+
+        df2.toDF("fields_array")
+            .select(
+              schema.get.fields.zipWithIndex.map {
+                  case (f, i) => col("fields_array").getItem(i).cast(f.dataType).alias(f.name)
+              }: _*
+            )
 
     }
 
