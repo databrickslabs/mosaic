@@ -17,17 +17,17 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
 
     /** Fixed definitions. */
     override val inline: Boolean = false
-    val driverName: String = config.getOrElse("driverName", "")
-    val layerNumber: Int = config.getOrElse("layerNumber", "0").toInt
-    val layerName: String = config.getOrElse("layerName", "")
-    val chunkSize: Int = config.getOrElse("chunkSize", "5000").toInt
-    val vsizip: Boolean = config.getOrElse("vsizip", "false").toBoolean
+    val driverName: String = config("driverName")
+    val layerNumber: Int = config("layerNumber").toInt
+    val layerName: String = config("layerName")
+    val chunkSize: Int = config("chunkSize").toInt
+    val vsizip: Boolean = config("vsizip").toBoolean
 
     override def collectionType: DataType = schema
 
     override def position: Boolean = false
 
-    override def elementSchema: StructType = schema//StructType(Seq(StructField("element", schema)))
+    override def elementSchema: StructType = schema
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val path = pathExpr.eval(input).asInstanceOf[UTF8String].toString
@@ -44,7 +44,6 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
             val feature = layer.GetNextFeature()
             val row = OGRFileFormat.getFeatureFields(feature, schema)
             OGRFileFormat.createRow(row)
-            //InternalRow.fromSeq(Seq(row))
         }
     }
 
