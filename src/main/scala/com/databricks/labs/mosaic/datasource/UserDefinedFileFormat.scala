@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.datasource
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.FileStatus
+import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
@@ -19,6 +19,10 @@ class UserDefinedFileFormat extends FileFormat with DataSourceRegister {
         val readerClass = options("readerClass")
         val reader = Class.forName(readerClass).newInstance().asInstanceOf[UserDefinedReader]
         reader.inferSchema(sparkSession, options, files)
+    }
+
+    override def isSplitable(sparkSession: SparkSession, options: Map[String, String], path: Path): Boolean = {
+        true
     }
 
     override def prepareWrite(

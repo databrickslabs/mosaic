@@ -37,6 +37,20 @@ class DatasourceDebug extends QueryTest with SharedSparkSession {
         df.show()
     }
 
+    test("multi read on geo_db") {
+        val raster = "/binary/geo_db/"
+        val filePath = getClass.getResource(raster).getPath
+
+        import com.databricks.labs.mosaic
+
+        val df = mosaic.read.format("multi_read_geo_db")
+            .option("layerNumber", "0")
+            .option("vsizip", "true")
+            .load(filePath)
+
+        df.show()
+    }
+
 }
 
 class TestUDReader extends UserDefinedReader {

@@ -22,7 +22,8 @@ class GeoDBFileFormat extends OGRFileFormat {
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
         val useZipPath = options.getOrElse("vsizip", "false").toBoolean
-        OGRFileFormat.inferSchemaImpl(driverName, layerN, inferenceLimit, useZipPath, files)
+        val headFilePath = files.head.getPath.toString
+        OGRFileFormat.inferSchemaImpl(driverName, layerN, inferenceLimit, useZipPath, headFilePath)
     }
 
     override def buildReader(

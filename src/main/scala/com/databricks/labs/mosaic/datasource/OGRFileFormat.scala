@@ -12,7 +12,7 @@ import org.apache.spark.sql.catalyst.analysis.TypeCoercion
 import org.apache.spark.sql.catalyst.util.{DateTimeUtils, GenericArrayData}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.gdal.ogr.{ogr, Feature}
+import org.gdal.ogr._
 
 import scala.collection.convert.ImplicitConversions.`dictionary AsScalaMap`
 import scala.util.Try
@@ -38,7 +38,8 @@ class OGRFileFormat extends FileFormat with DataSourceRegister {
         val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
         val driverName = options.getOrElse("driverName", "")
         val useZipPath = options.getOrElse("vsizip", "false").toBoolean
-        inferSchemaImpl(driverName, layerN, inferenceLimit, useZipPath, files)
+        val headFilePath = files.head.getPath.toString
+        inferSchemaImpl(driverName, layerN, inferenceLimit, useZipPath, headFilePath)
     }
 
     override def isSplitable(
@@ -72,7 +73,28 @@ class OGRFileFormat extends FileFormat with DataSourceRegister {
 }
 
 //noinspection VarCouldBeVal
-object OGRFileFormat {
+object OGRFileFormat extends Serializable {
+
+    /**
+      * Get the layer from a data source. The method prioritizes the layer name
+      * over the layer number.
+      *
+      * @param ds
+      *   the data source.
+      * @param layerNumber
+      *   the layer number.
+      * @param layerName
+      *   the layer name.
+      * @return
+      *   the layer.
+      */
+    def getLayer(ds: org.gdal.ogr.DataSource, layerNumber: Int, layerName: String): Layer = {
+        if (layerName.isEmpty) {
+            ds.GetLayer(layerNumber)
+        } else {
+            ds.GetLayerByName(layerName)
+        }
+    }
 
     /** Registers all OGR drivers if they havent been registered yet. */
     final def enableOGRDrivers(force: Boolean = false): Unit = {
@@ -278,6 +300,25 @@ object OGRFileFormat {
     }
 
     /**
+      * Get the fields of a feature as an array of values.
+      * @param feature
+      *   OGR feature.
+      * @param featureSchema
+      *   Spark SQL schema.
+      * @return
+      *   Array of values.
+      */
+    def getFeatureFields(feature: Feature, featureSchema: StructType): Array[Any] = {
+        val types = featureSchema.fields.map(_.dataType)
+        val fields = (0 until feature.GetFieldCount())
+            .map(j => getValue(feature, j, types(j)))
+        val geoms = (0 until feature.GetGeomFieldCount())
+            .map(feature.GetGeomFieldRef(_).ExportToWkb())
+        val values = fields ++ geoms
+        values.toArray
+    }
+
+    /**
       * Load the data source from the given path using the specified driver.
       *
       * @param driverName
@@ -308,8 +349,8 @@ object OGRFileFormat {
       *   the name of the OGR driver
       * @param layerN
       *   the layer number for which to infer the schema
-      * @param files
-      *   the files to infer the schema from
+      * @param path
+      *   the path to the file to infer the schema from
       * @return
       *   the inferred schema for the given files and layer
       */
@@ -318,10 +359,9 @@ object OGRFileFormat {
         layerN: Int,
         inferenceLimit: Int,
         useZipPath: Boolean,
-        files: Seq[FileStatus]
+        path: String
     ): Option[StructType] = {
 
-        val path = files.head.getPath.toString
         val dataset = getDataSource(driverName, path, useZipPath)
 
         val layer = dataset.GetLayer(layerN)
@@ -361,20 +401,16 @@ object OGRFileFormat {
             val path = file.filePath
             val dataset = getDataSource(driverName, path, useZipPath)
 
-            val metadata = dataset.GetMetadata_Dict().toMap
             val layer = dataset.GetLayerByIndex(layerN)
             layer.ResetReading()
-            val types = schema.fields.map(_.dataType)
+            val metadata = layer.GetMetadata_Dict().toMap
 
             var feature: Feature = null
             (0 until layer.GetFeatureCount().toInt)
                 .foldLeft(Seq.empty[InternalRow])((acc, _) => {
                     feature = layer.GetNextFeature()
-                    val fields = (0 until feature.GetFieldCount())
-                        .map(j => getValue(feature, j, types(j)))
-                    val geoms = (0 until feature.GetGeomFieldCount())
-                        .map(feature.GetGeomFieldRef(_).ExportToWkb())
-                    val values = fields ++ geoms ++ Seq(metadata)
+                    val fields = getFeatureFields(feature, schema)
+                    val values = fields ++ Seq(metadata)
                     val row = createRow(values)
                     acc ++ Seq(row)
                 })
