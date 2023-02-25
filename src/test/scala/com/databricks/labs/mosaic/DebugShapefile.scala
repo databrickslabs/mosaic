@@ -51,7 +51,7 @@ class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
 
         val df = mosaic.read
             .format("multi_read_ogr")
-            .option("layerNumber", "0")
+            .option("layerName", "Bridges_Feb2019")
             .option("vsizip", "true")
             .load(filePath)
 

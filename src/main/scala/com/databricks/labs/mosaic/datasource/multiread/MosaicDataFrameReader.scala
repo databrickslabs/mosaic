@@ -5,12 +5,17 @@ import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 class MosaicDataFrameReader(sparkSession: SparkSession) {
 
-    protected var extraOptions: CaseInsensitiveMap[String] = CaseInsensitiveMap[String](Map.empty)
+    protected var extraOptions: Map[String, String] = Map.empty[String, String]
 
     protected var format: String = ""
 
     def option(key: String, value: String): MosaicDataFrameReader = {
         extraOptions += (key -> value)
+        this
+    }
+
+    def options(map: Map[String, String]): MosaicDataFrameReader = {
+        extraOptions = map
         this
     }
 
@@ -21,14 +26,16 @@ class MosaicDataFrameReader(sparkSession: SparkSession) {
 
     def load(path: String): DataFrame = {
         format match {
-            case "multi_read_ogr" => new OGRMultiReadDataFrameReader(sparkSession).load(path)
+            case "multi_read_ogr" => new OGRMultiReadDataFrameReader(sparkSession)
+                .options(extraOptions).asInstanceOf[OGRMultiReadDataFrameReader].load(path)
             case _                => throw new Error(s"Unsupported format: $format")
         }
     }
 
     def load(paths: String*): DataFrame = {
         format match {
-            case "multi_read_ogr" => new OGRMultiReadDataFrameReader(sparkSession).load(paths: _*)
+            case "multi_read_ogr" => new OGRMultiReadDataFrameReader(sparkSession)
+                .options(extraOptions).asInstanceOf[OGRMultiReadDataFrameReader].load(paths: _*)
             case _                => throw new Error(s"Unsupported format: $format")
         }
     }
