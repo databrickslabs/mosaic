@@ -5,6 +5,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, CollectionGenerator, Expression, ExpressionInfo}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 
 import scala.collection.TraversableOnce
 
@@ -26,14 +27,14 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
 
     override def position: Boolean = false
 
-    override def elementSchema: StructType = StructType(Seq(StructField("element", schema)))
+    override def elementSchema: StructType = schema//StructType(Seq(StructField("element", schema)))
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        val path = pathExpr.eval(input).asInstanceOf[String]
+        val path = pathExpr.eval(input).asInstanceOf[UTF8String].toString
         val chunkIndex = chunkIndexExpr.eval(input).asInstanceOf[Int]
         OGRFileFormat.enableOGRDrivers()
 
-        val ds = OGRFileFormat.getDataSource(path, driverName, vsizip)
+        val ds = OGRFileFormat.getDataSource(driverName, path, vsizip)
         val layer = OGRFileFormat.getLayer(ds, layerNumber, layerName)
 
         val start = chunkIndex * chunkSize
@@ -42,7 +43,8 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
         for (_ <- start until end) yield {
             val feature = layer.GetNextFeature()
             val row = OGRFileFormat.getFeatureFields(feature, schema)
-            InternalRow.fromSeq(Seq(row))
+            OGRFileFormat.createRow(row)
+            //InternalRow.fromSeq(Seq(row))
         }
     }
 

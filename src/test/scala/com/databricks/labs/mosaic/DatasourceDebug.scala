@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic
 
-import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.datasource.UserDefinedReader
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.hadoop.conf.Configuration
@@ -51,7 +50,10 @@ class DatasourceDebug extends QueryTest with SharedSparkSession {
             .option("vsizip", "true")
             .load(filePath)
 
-        df.show()
+        val mc = MosaicContext.build(H3, JTS)
+        df.withColumn(
+          "wkt", mc.functions.st_astext(col("SHAPE"))
+        ).show()
     }
 
 }
