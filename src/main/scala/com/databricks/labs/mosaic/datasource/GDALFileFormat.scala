@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.datasource
 
 import com.databricks.labs.mosaic.core.raster.MosaicRasterGDAL
+import com.databricks.labs.mosaic.GDAL
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.mapreduce.Job
@@ -135,6 +136,7 @@ object GDALFileFormat {
         driverName: String
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
+            GDAL.enable()
             val path = file.filePath.replace("dbfs:/", "/dbfs/").replace("file:/", "/")
 
             if (file.filePath.split("\\.").last == getFileExtension(driverName)) {

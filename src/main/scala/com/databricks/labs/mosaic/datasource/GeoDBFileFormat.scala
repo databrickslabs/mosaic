@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.datasource
 
-import com.databricks.labs.mosaic.datasource.OGRFileFormat.{buildReaderImpl, inferSchemaImpl}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.spark.sql.types.StructType
@@ -11,9 +10,9 @@ import org.apache.spark.sql.sources.Filter
 
 class GeoDBFileFormat extends OGRFileFormat {
 
-    override def shortName(): String = "geo_db"
-
     private val driverName = "FileGDB"
+
+    override def shortName(): String = "geo_db"
 
     override def inferSchema(
         sparkSession: SparkSession,
@@ -23,7 +22,7 @@ class GeoDBFileFormat extends OGRFileFormat {
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
         val useZipPath = options.getOrElse("vsizip", "false").toBoolean
-        inferSchemaImpl(driverName, layerN, inferenceLimit, useZipPath, files)
+        OGRFileFormat.inferSchemaImpl(driverName, layerN, inferenceLimit, useZipPath, files)
     }
 
     override def buildReader(
@@ -37,7 +36,7 @@ class GeoDBFileFormat extends OGRFileFormat {
     ): PartitionedFile => Iterator[InternalRow] = {
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val useZipPath = options.getOrElse("vsizip", "false").toBoolean
-        buildReaderImpl(driverName, layerN, useZipPath, dataSchema)
+        OGRFileFormat.buildReaderImpl(driverName, layerN, useZipPath, dataSchema)
     }
 
 }

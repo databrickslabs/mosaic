@@ -74,6 +74,14 @@ class OGRFileFormat extends FileFormat with DataSourceRegister {
 //noinspection VarCouldBeVal
 object OGRFileFormat {
 
+    /** Registers all OGR drivers if they havent been registered yet. */
+    final def enableOGRDrivers(force: Boolean = false): Unit = {
+        val drivers = ogr.GetDriverCount
+        if (drivers == 0 || force) {
+            ogr.RegisterAll()
+        }
+    }
+
     /**
       * Converts a OGR type name to Spark SQL data type.
       *
@@ -349,6 +357,7 @@ object OGRFileFormat {
         schema: StructType
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
+            enableOGRDrivers()
             val path = file.filePath
             val dataset = getDataSource(driverName, path, useZipPath)
 
