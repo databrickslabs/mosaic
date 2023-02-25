@@ -286,7 +286,7 @@ object OGRFileFormat {
         files: Seq[FileStatus]
     ): Option[StructType] = {
 
-        val path = files.head.getPath.toString.replace("file:", "")
+        val path = files.head.getPath.toString.replace("dbfs:/", "/dbfs/").replace("file:/", "/")
         val dataset =
             if (driverName.isEmpty) {
                 ogr.Open(path)
