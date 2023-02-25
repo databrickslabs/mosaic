@@ -24,7 +24,8 @@ class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
         val df = spark.read.format("ogr").option("driverName", "ESRI Shapefile").load(filePath)
         df.show()
         val df2 = spark.read.format("shapefile").load(filePath)
-        df2.withColumn("x", mc.functions.st_astext(col("geom_0_"))).show()
+        df2.withColumn("x", mc.functions.st_astext(col("geom_0"))).show()
+        df2.printSchema()
     }
 
     test("raster reading") {
