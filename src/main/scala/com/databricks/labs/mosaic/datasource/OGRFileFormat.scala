@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.datasource
 
+import com.databricks.labs.mosaic.expressions.raster
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.mapreduce.Job
@@ -56,7 +57,6 @@ class OGRFileFormat extends FileFormat with DataSourceRegister {
     ): PartitionedFile => Iterator[InternalRow] = {
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val driverName = options.getOrElse("driverName", "")
-
         buildReaderImpl(driverName, layerN, dataSchema)
     }
 
@@ -116,33 +116,37 @@ object OGRFileFormat {
         val reportedType = getType(field.GetFieldTypeName(field.GetFieldType))
         val value = feature.GetFieldAsString(j)
 
-        val coerceables = Seq(
-          (Try(value.toInt).toOption, IntegerType),
-          (Try(value.toDouble).toOption, DoubleType),
-          (Try(value.toBoolean).toOption, BooleanType),
-          (Try(value.toLong).toOption, LongType),
-          (Try(value.toFloat).toOption, FloatType),
-          (Try(value.toShort).toOption, ShortType),
-          (Try(value.toByte).toOption, ByteType),
-          (Try(DateTimeUtils.stringToDate(UTF8String.fromString(value))).toOption, DateType),
-          (Try(DateTimeUtils.stringToTimestampWithoutTimeZone(UTF8String.fromString(value))).toOption, TimestampType)
-        ).filter(_._1.isDefined).map(_._2)
+        if (value == "") {
+            reportedType
+        } else {
+            val coerceables = Seq(
+                (Try(value.toInt).toOption, IntegerType),
+                (Try(value.toDouble).toOption, DoubleType),
+                (Try(value.toBoolean).toOption, BooleanType),
+                (Try(value.toLong).toOption, LongType),
+                (Try(value.toFloat).toOption, FloatType),
+                (Try(value.toShort).toOption, ShortType),
+                (Try(value.toByte).toOption, ByteType),
+                (Try(DateTimeUtils.stringToDate(UTF8String.fromString(value)).get).toOption, DateType),
+                (Try(DateTimeUtils.stringToTimestampWithoutTimeZone(UTF8String.fromString(value)).get).toOption, TimestampType)
+            ).filter(_._1.isDefined).map(_._2)
 
-        val inferredType =
-            if (coerceables.isEmpty) StringType
-            else if (coerceables.contains(LongType)) LongType
-            else if (coerceables.contains(DoubleType)) DoubleType
-            else if (coerceables.contains(FloatType)) FloatType
-            else if (coerceables.contains(IntegerType)) IntegerType
-            else if (coerceables.contains(ShortType)) ShortType
-            else if (coerceables.contains(ByteType)) ByteType
-            else if (coerceables.contains(BooleanType)) BooleanType
-            else if (coerceables.contains(DateType)) DateType
-            else if (coerceables.contains(TimestampType)) TimestampType
-            else StringType
+            val inferredType =
+                if (coerceables.isEmpty) StringType
+                else if (coerceables.contains(LongType)) LongType
+                else if (coerceables.contains(DoubleType)) DoubleType
+                else if (coerceables.contains(FloatType)) FloatType
+                else if (coerceables.contains(IntegerType)) IntegerType
+                else if (coerceables.contains(ShortType)) ShortType
+                else if (coerceables.contains(ByteType)) ByteType
+                else if (coerceables.contains(BooleanType)) BooleanType
+                else if (coerceables.contains(DateType)) DateType
+                else if (coerceables.contains(TimestampType)) TimestampType
+                else StringType
 
-        if (reportedType == StringType && inferredType != StringType) inferredType
-        else TypeCoercion.findTightestCommonType(reportedType, inferredType).getOrElse(StringType)
+            if (reportedType == StringType && inferredType != StringType) inferredType
+            else TypeCoercion.findTightestCommonType(reportedType, inferredType).getOrElse(StringType)
+        }
     }
 
     /**
@@ -158,6 +162,7 @@ object OGRFileFormat {
     def getValue(feature: Feature, j: Int, dataType: DataType): Any = {
         dataType match {
             case IntegerType               => feature.GetFieldAsInteger(j)
+            case LongType                  => feature.GetFieldAsInteger64(j)
             case StringType                => feature.GetFieldAsString(j)
             case DoubleType                => feature.GetFieldAsDouble(j)
             case DateType                  => getDate(feature, j)
@@ -225,7 +230,6 @@ object OGRFileFormat {
       *   Spark SQL row.
       */
     def createRow(values: Seq[Any]): InternalRow = {
-        import com.databricks.labs.mosaic.expressions.raster
         InternalRow.fromSeq(
           values.map {
               case null           => null
