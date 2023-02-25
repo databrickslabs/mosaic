@@ -8,6 +8,7 @@ import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{StructField, StructType}
+import org.apache.spark.unsafe.types.UTF8String
 
 class TestPathFileFormat extends FileFormat with DataSourceRegister {
 
@@ -25,7 +26,7 @@ class TestPathFileFormat extends FileFormat with DataSourceRegister {
 
     override def buildReader(sparkSession: SparkSession, dataSchema: StructType, partitionSchema: StructType, requiredSchema: StructType, filters: Seq[Filter], options: Map[String, String], hadoopConf: Configuration): PartitionedFile => Iterator[InternalRow] = {
         (file: PartitionedFile) => {
-            Iterator(InternalRow(file.filePath))
+            Iterator(InternalRow(Seq(UTF8String.fromString(file.filePath))))
         }
     }
 
