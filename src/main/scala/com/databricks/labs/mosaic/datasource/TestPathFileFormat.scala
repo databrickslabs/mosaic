@@ -24,9 +24,17 @@ class TestPathFileFormat extends FileFormat with DataSourceRegister {
 
     override def shortName(): String = "test_path"
 
-    override def buildReader(sparkSession: SparkSession, dataSchema: StructType, partitionSchema: StructType, requiredSchema: StructType, filters: Seq[Filter], options: Map[String, String], hadoopConf: Configuration): PartitionedFile => Iterator[InternalRow] = {
+    override def buildReader(
+                                sparkSession: SparkSession,
+                                dataSchema: StructType,
+                                partitionSchema: StructType,
+                                requiredSchema: StructType,
+                                filters: Seq[Filter],
+                                options: Map[String, String],
+                                hadoopConf: Configuration
+                            ): PartitionedFile => Iterator[InternalRow] = {
         (file: PartitionedFile) => {
-            Iterator(InternalRow(Seq(UTF8String.fromString(file.filePath))))
+            Iterator(InternalRow.fromSeq(Seq(UTF8String.fromString(file.filePath))))
         }
     }
 
