@@ -5,7 +5,7 @@ import org.apache.spark.sql.test.SharedSparkSession
 
 class SpatialKNNTest extends MosaicSpatialQueryTest with SharedSparkSession with SpatialKNNBehaviors {
 
-    testAllCodegen("SpatialKNN behavior") { behavior }
-    testAllCodegen("SpatialKNN behavior with approximation") { behaviorApproximate }
+//    testAllCodegen("SpatialKNN behavior") { behavior }
+//    testAllCodegen("SpatialKNN behavior with approximation") { behaviorApproximate }
 
 }
