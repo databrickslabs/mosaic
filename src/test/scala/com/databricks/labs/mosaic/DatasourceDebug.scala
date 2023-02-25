@@ -1,13 +1,11 @@
 package com.databricks.labs.mosaic
 
 import com.databricks.labs.mosaic.datasource.UserDefinedReader
-import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.spark.sql.{QueryTest, SparkSession}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.execution.datasources.PartitionedFile
-import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.test.SharedSparkSession
 import org.apache.spark.sql.types._
@@ -37,23 +35,6 @@ class DatasourceDebug extends QueryTest with SharedSparkSession {
             .load(filePath)
 
         df.show()
-    }
-
-    test("multi read on geo_db") {
-        val raster = "/binary/geodb/"
-        val filePath = getClass.getResource(raster).getPath
-
-        import com.databricks.labs.mosaic
-
-        val df = mosaic.read.format("multi_read_ogr")
-            .option("layerNumber", "0")
-            .option("vsizip", "true")
-            .load(filePath)
-
-        val mc = MosaicContext.build(H3, JTS)
-        df.withColumn(
-          "wkt", mc.functions.st_astext(col("SHAPE"))
-        ).show()
     }
 
 }

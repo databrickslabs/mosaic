@@ -6,7 +6,6 @@ import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.functions.col
 import org.gdal.ogr.ogr
-import org.scalatest.funsuite.AnyFunSuite
 
 class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
 
@@ -42,6 +41,25 @@ class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
         df.show()
         df.printSchema()
         println(df.count())
+    }
+
+    test("multi read on geo_db") {
+        val raster = "/binary/geodb/"
+        val filePath = getClass.getResource(raster).getPath
+
+        import com.databricks.labs.mosaic
+
+        val df = mosaic.read
+            .format("multi_read_ogr")
+            .option("layerNumber", "0")
+            .option("vsizip", "true")
+            .load(filePath)
+
+        val mc = MosaicContext.build(H3, JTS)
+        df.withColumn(
+          "wkt",
+          mc.functions.st_astext(col("SHAPE"))
+        ).show()
     }
 
 }
