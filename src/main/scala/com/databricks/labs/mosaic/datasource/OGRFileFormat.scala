@@ -120,15 +120,15 @@ object OGRFileFormat {
             reportedType
         } else {
             val coerceables = Seq(
-                (Try(value.toInt).toOption, IntegerType),
-                (Try(value.toDouble).toOption, DoubleType),
-                (Try(value.toBoolean).toOption, BooleanType),
-                (Try(value.toLong).toOption, LongType),
-                (Try(value.toFloat).toOption, FloatType),
-                (Try(value.toShort).toOption, ShortType),
-                (Try(value.toByte).toOption, ByteType),
-                (Try(DateTimeUtils.stringToDate(UTF8String.fromString(value)).get).toOption, DateType),
-                (Try(DateTimeUtils.stringToTimestampWithoutTimeZone(UTF8String.fromString(value)).get).toOption, TimestampType)
+              (Try(value.toInt).toOption, IntegerType),
+              (Try(value.toDouble).toOption, DoubleType),
+              (Try(value.toBoolean).toOption, BooleanType),
+              (Try(value.toLong).toOption, LongType),
+              (Try(value.toFloat).toOption, FloatType),
+              (Try(value.toShort).toOption, ShortType),
+              (Try(value.toByte).toOption, ByteType),
+              (Try(DateTimeUtils.stringToDate(UTF8String.fromString(value)).get).toOption, DateType),
+              (Try(DateTimeUtils.stringToTimestampWithoutTimeZone(UTF8String.fromString(value)).get).toOption, TimestampType)
             ).filter(_._1.isDefined).map(_._2)
 
             val inferredType =
@@ -268,6 +268,30 @@ object OGRFileFormat {
     }
 
     /**
+      * Load the data source from the given path using the specified driver.
+      *
+      * @param driverName
+      *   the name of the OGR driver
+      * @param path
+      *   the path to the file
+      * @return
+      *   the data source
+      */
+    def getDataSource(driverName: String, path: String): org.gdal.ogr.DataSource = {
+        val cleanPath = path.replace("file://", "").replace("dbfs:/", "/dbfs/")
+        Option(ogr.Open(cleanPath)).getOrElse(
+          Option(ogr.GetDriverByName(driverName).Open(cleanPath)).getOrElse(
+            Option(ogr.GetDriverByName(driverName).Open(s"/vsizip/$cleanPath"))
+                .orElse(
+                  throw new Exception(s"Could not open $path with driver $driverName")
+                )
+                .get
+          )
+        )
+
+    }
+
+    /**
       * Infer the schema of a OGR file.
       *
       * @param driverName
@@ -286,13 +310,8 @@ object OGRFileFormat {
         files: Seq[FileStatus]
     ): Option[StructType] = {
 
-        val path = files.head.getPath.toString.replace("dbfs:/", "/dbfs/").replace("file:/", "/")
-        val dataset =
-            if (driverName.isEmpty) {
-                ogr.Open(path)
-            } else {
-                ogr.GetDriverByName(driverName).Open(path)
-            }
+        val path = files.head.getPath.toString
+        val dataset = getDataSource(driverName, path)
 
         val layer = dataset.GetLayer(layerN)
         val headFeature = layer.GetNextFeature()
@@ -325,28 +344,23 @@ object OGRFileFormat {
         schema: StructType
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
-            val path = file.filePath.replace("dbfs:/", "/dbfs/").replace("file:/", "/")
-            val dataset =
-                if (driverName.isEmpty) {
-                    ogr.Open(path)
-                } else {
-                    ogr.GetDriverByName(driverName).Open(path)
-                }
+            val path = file.filePath
+            val dataset = getDataSource(driverName, path)
 
             val metadata = dataset.GetMetadata_Dict().toMap
             val layer = dataset.GetLayerByIndex(layerN)
             val types = schema.fields.map(_.dataType)
 
-            var feature = layer.GetNextFeature()
+            var feature: Feature = null
             (0 until layer.GetFeatureCount().toInt)
                 .foldLeft(Seq.empty[InternalRow])((acc, _) => {
+                    feature = layer.GetNextFeature()
                     val fields = (0 until feature.GetFieldCount())
                         .map(j => getValue(feature, j, types(j)))
                     val geoms = (0 until feature.GetGeomFieldCount())
                         .map(feature.GetGeomFieldRef(_).ExportToWkb())
                     val values = fields ++ geoms ++ Seq(metadata)
                     val row = createRow(values)
-                    feature = layer.GetNextFeature()
                     acc ++ Seq(row)
                 })
                 .iterator
