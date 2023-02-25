@@ -1,4 +1,4 @@
-from mosaic_data_frame_reader import MosaicDataFrameReader
+from .mosaic_data_frame_reader import MosaicDataFrameReader
 from pyspark.sql import SparkSession
 
 def read():
