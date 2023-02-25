@@ -37,7 +37,8 @@ class OGRFileFormat extends FileFormat with DataSourceRegister {
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
         val driverName = options.getOrElse("driverName", "")
-        inferSchemaImpl(driverName, layerN, inferenceLimit, files)
+        val useZipPath = options.getOrElse("vsizip", "false").toBoolean
+        inferSchemaImpl(driverName, layerN, inferenceLimit, useZipPath, files)
     }
 
     override def isSplitable(
@@ -57,7 +58,8 @@ class OGRFileFormat extends FileFormat with DataSourceRegister {
     ): PartitionedFile => Iterator[InternalRow] = {
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val driverName = options.getOrElse("driverName", "")
-        buildReaderImpl(driverName, layerN, dataSchema)
+        val useZipPath = options.getOrElse("vsizip", "false").toBoolean
+        buildReaderImpl(driverName, layerN, useZipPath, dataSchema)
     }
 
     override def prepareWrite(
@@ -277,18 +279,18 @@ object OGRFileFormat {
       * @return
       *   the data source
       */
-    def getDataSource(driverName: String, path: String): org.gdal.ogr.DataSource = {
-        val cleanPath = path.replace("file://", "").replace("dbfs:/", "/dbfs/")
-        Option(ogr.Open(cleanPath)).getOrElse(
-          Option(ogr.GetDriverByName(driverName).Open(cleanPath)).getOrElse(
-            Option(ogr.GetDriverByName(driverName).Open(s"/vsizip/$cleanPath"))
-                .orElse(
-                  throw new Exception(s"Could not open $path with driver $driverName")
-                )
-                .get
-          )
-        )
-
+    def getDataSource(driverName: String, path: String, useZipPath: Boolean): org.gdal.ogr.DataSource = {
+        val cleanPath = path.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
+        // 0 is for no update driver
+        if (useZipPath && cleanPath.endsWith(".zip") && driverName.nonEmpty) {
+            ogr.GetDriverByName(driverName).Open(s"/vsizip/$cleanPath", 0)
+        } else if (useZipPath && cleanPath.endsWith(".zip")) {
+            ogr.Open(s"/vsizip/$cleanPath", 0)
+        } else if (driverName.nonEmpty) {
+            ogr.GetDriverByName(driverName).Open(cleanPath, 0)
+        } else {
+            ogr.Open(cleanPath, 0)
+        }
     }
 
     /**
@@ -307,13 +309,15 @@ object OGRFileFormat {
         driverName: String,
         layerN: Int,
         inferenceLimit: Int,
+        useZipPath: Boolean,
         files: Seq[FileStatus]
     ): Option[StructType] = {
 
         val path = files.head.getPath.toString
-        val dataset = getDataSource(driverName, path)
+        val dataset = getDataSource(driverName, path, useZipPath)
 
         val layer = dataset.GetLayer(layerN)
+        layer.ResetReading()
         val headFeature = layer.GetNextFeature()
         val headSchemaFields = getFeatureSchema(headFeature).fields
         val n = math.min(inferenceLimit, layer.GetFeatureCount()).toInt
@@ -341,14 +345,16 @@ object OGRFileFormat {
     def buildReaderImpl(
         driverName: String,
         layerN: Int,
+        useZipPath: Boolean,
         schema: StructType
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
             val path = file.filePath
-            val dataset = getDataSource(driverName, path)
+            val dataset = getDataSource(driverName, path, useZipPath)
 
             val metadata = dataset.GetMetadata_Dict().toMap
             val layer = dataset.GetLayerByIndex(layerN)
+            layer.ResetReading()
             val types = schema.fields.map(_.dataType)
 
             var feature: Feature = null
