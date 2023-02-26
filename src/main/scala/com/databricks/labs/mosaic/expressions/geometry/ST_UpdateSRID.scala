@@ -32,12 +32,12 @@ case class ST_UpdateSRID(
     override def dataType: DataType = inputGeom.dataType
 
     override def geometryTransform(geometry: MosaicGeometry, srcSRID: Any, destSRID: Any): Any = {
-        geometry.transformCRSXY(destSRID.asInstanceOf[Int], destSRID.asInstanceOf[Int])
+        geometry.transformCRSXY(destSRID.asInstanceOf[Int], srcSRID.asInstanceOf[Int])
     }
 
     override def geometryCodeGen(geometryRef: String, srcSRIDRef: String, destSRIDRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val code = s"""$mosaicGeomClass $resultRef = (($mosaicGeomClass) $geometryRef.transformCRSXY($srcSRIDRef, $destSRIDRef));"""
+        val code = s"""$mosaicGeomClass $resultRef = (($mosaicGeomClass) $geometryRef.transformCRSXY($destSRIDRef, $srcSRIDRef));"""
         (code, resultRef)
     }
 
