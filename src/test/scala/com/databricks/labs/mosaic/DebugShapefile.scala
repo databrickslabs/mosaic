@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions.{col, lit}
 import org.gdal.ogr.ogr
 
 class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
@@ -55,10 +55,16 @@ class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
             .load(filePath)
 
         val mc = MosaicContext.build(H3, JTS)
-        df.withColumn(
-          "wkt",
-          mc.functions.st_astext(col("SHAPE"))
-        ).show()
+        df
+            .withColumn(
+              "projected",
+              mc.functions.st_updatesrid(col("SHAPE"), col("SHAPE_SRID"), lit(4326))
+            )
+            .withColumn(
+              "wkt",
+              mc.functions.st_astext(col("projected"))
+            )
+            .show()
     }
 
 }

@@ -171,6 +171,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_Transform](expressionConfig)
         mosaicRegistry.registerExpression[ST_UnaryUnion](expressionConfig)
         mosaicRegistry.registerExpression[ST_Union](expressionConfig)
+        mosaicRegistry.registerExpression[ST_UpdateSRID](expressionConfig)
         mosaicRegistry.registerExpression[ST_X](expressionConfig)
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
 
@@ -502,6 +503,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def st_zmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "Z", "MIN"))
         def st_union(leftGeom: Column, rightGeom: Column): Column = ColumnAdapter(ST_Union(leftGeom.expr, rightGeom.expr, expressionConfig))
         def st_unaryunion(geom: Column): Column = ColumnAdapter(ST_UnaryUnion(geom.expr, expressionConfig))
+        def st_updatesrid(geom: Column, srcSRID: Column, destSRID: Column): Column = ColumnAdapter(ST_UpdateSRID(geom.expr, srcSRID.expr, destSRID.expr, expressionConfig))
+        def st_updatesrid(geom: Column, srcSRID: Int, destSRID: Int): Column = ColumnAdapter(ST_UpdateSRID(geom.expr, lit(srcSRID).expr, lit(destSRID).expr, expressionConfig))
 
         /** Undocumented helper */
         def convert_to(inGeom: Column, outDataType: String): Column =
