@@ -55,16 +55,16 @@ class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
             .load(filePath)
 
         val mc = MosaicContext.build(H3, JTS)
-        df
-            .withColumn(
-              "projected",
-              mc.functions.st_updatesrid(col("SHAPE"), col("SHAPE_SRID"), lit(4326))
-            )
-            .withColumn(
-              "wkt",
-              mc.functions.st_astext(col("projected"))
-            )
-            .show()
+        df.withColumn(
+          "SHAPE_SRID",
+          col("SHAPE").cast("int")
+        ).withColumn(
+          "projected",
+          mc.functions.st_updatesrid(col("SHAPE"), col("SHAPE_SRID"), lit(4326))
+        ).withColumn(
+          "wkt",
+          mc.functions.st_astext(col("projected"))
+        ).show()
     }
 
 }
