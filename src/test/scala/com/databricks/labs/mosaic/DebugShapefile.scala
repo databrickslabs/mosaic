@@ -40,7 +40,6 @@ class DebugShapefile extends QueryTest with SharedSparkSessionGDAL {
         val df = spark.read.format("ogr").load(path)
         df.show()
         df.printSchema()
-        println(df.count())
     }
 
     test("multi read on geo_db") {

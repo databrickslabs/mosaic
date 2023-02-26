@@ -65,7 +65,8 @@ class OGRMultiReadDataFrameReader(sparkSession: SparkSession) extends MosaicData
           "layerName" -> this.extraOptions.getOrElse("layerName", ""),
           "chunkSize" -> this.extraOptions.getOrElse("chunkSize", "5000"),
           "vsizip" -> this.extraOptions.getOrElse("vsizip", "false"),
-          "inferenceLimit" -> this.extraOptions.getOrElse("inferenceLimit", "100")
+          "inferenceLimit" -> this.extraOptions.getOrElse("inferenceLimit", "100"),
+          "asWKB" -> this.extraOptions.getOrElse("asWKB", "false")
         )
     }
 
