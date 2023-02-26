@@ -43,7 +43,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             )
             .select(
               explode(col("grid_measures")).alias("grid_measures"),
-              col("subdataset")
+              col("raster")
             )
             .select(
               col("grid_measures").getItem("cellID").alias("cell_id"),
