@@ -142,7 +142,7 @@ class MosaicKepler(Magics):
 
         centroid = (
             tmp_sdf.select(
-                st_centroid("geom_0").alias("centroid")
+                st_centroid(feature_name).alias("centroid")
             ).select(
                 struct(
                     st_x("centroid").alias("x"),
