@@ -30,8 +30,8 @@ case class ST_UpdateSRID(
     expressionConfig: MosaicExpressionConfig
 ) extends UnaryVector2ArgExpression[ST_UpdateSRID](
       inputGeom,
-      Column(srcSRIDExpr).cast("int").expr,
-      Column(destSRIDExpr).cast("int").expr,
+      srcSRIDExpr,
+      destSRIDExpr,
       returnsGeometry = true,
       expressionConfig
     ) {

@@ -503,7 +503,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def st_zmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "Z", "MIN"))
         def st_union(leftGeom: Column, rightGeom: Column): Column = ColumnAdapter(ST_Union(leftGeom.expr, rightGeom.expr, expressionConfig))
         def st_unaryunion(geom: Column): Column = ColumnAdapter(ST_UnaryUnion(geom.expr, expressionConfig))
-        def st_updatesrid(geom: Column, srcSRID: Column, destSRID: Column): Column = ColumnAdapter(ST_UpdateSRID(geom.expr, srcSRID.expr, destSRID.expr, expressionConfig))
+        def st_updatesrid(geom: Column, srcSRID: Column, destSRID: Column): Column = ColumnAdapter(ST_UpdateSRID(geom.expr, srcSRID.cast("int").expr, destSRID.cast("int").expr, expressionConfig))
         def st_updatesrid(geom: Column, srcSRID: Int, destSRID: Int): Column = ColumnAdapter(ST_UpdateSRID(geom.expr, lit(srcSRID).expr, lit(destSRID).expr, expressionConfig))
 
         /** Undocumented helper */
