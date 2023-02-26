@@ -112,7 +112,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
     private def getConfig: Map[String, String] = {
         Map(
-          "readSubdataset" -> this.extraOptions.getOrElse("retile", "false"),
+          "readSubdataset" -> this.extraOptions.getOrElse("readSubdataset", "false"),
           "subdatasetNumber" -> this.extraOptions.getOrElse("subdatasetNumber", "0"),
           "subdatasetName" -> this.extraOptions.getOrElse("subdatasetName", ""),
           "resolution" -> this.extraOptions.getOrElse("resolution", "0"),
