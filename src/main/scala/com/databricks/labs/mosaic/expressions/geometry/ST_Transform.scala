@@ -1,64 +1,68 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.{RequiresCRS, UnaryVector1ArgExpression}
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types._
 
-case class ST_Transform(inputGeom: Expression, srid: Expression, geometryAPIName: String)
-    extends BinaryExpression
-      with NullIntolerant
-      with CodegenFallback
+/**
+  * SQL expression that returns the input geometry transformed to provided SRID.
+  * @param inputGeom
+  *   Expression containing the geometry.
+  * @param sridExpr
+  *   Expression containing the SRID.
+  * @param expressionConfig
+  *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
+  *   arguments for the expression (expressionConfigs).
+  */
+case class ST_Transform(
+    inputGeom: Expression,
+    sridExpr: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVector1ArgExpression[ST_Transform](
+      inputGeom,
+      sridExpr,
+      returnsGeometry = true,
+      expressionConfig
+    )
       with RequiresCRS {
 
-    override def nullSafeEval(input1: Any, input2: Any): Any = {
-        checkEncoding(inputGeom.dataType)
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-        val transformedGeom = geom.transformCRSXY(input2.asInstanceOf[Int])
-        geometryAPI.serialize(transformedGeom, dataType)
-    }
-
-    /** Output Data Type */
     override def dataType: DataType = inputGeom.dataType
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = ST_Transform(asArray(0), asArray(1), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
+    override def geometryTransform(geometry: MosaicGeometry, arg: Any): Any = {
+        checkEncoding(inputGeom.dataType)
+        geometry.transformCRSXY(arg.asInstanceOf[Int])
     }
 
-    override def left: Expression = inputGeom
-
-    override def right: Expression = srid
-
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
-        copy(inputGeom = newLeft, srid = newRight)
+    override def geometryCodeGen(geometryRef: String, argRef: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        checkEncoding(inputGeom.dataType)
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.transformCRSXY($argRef);"""
+        (code, resultRef)
+    }
 
 }
-object ST_Transform {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_Transform].getCanonicalName,
-          db.orNull,
-          "ST_Transform",
-          """
-            |    _FUNC_(expr1, expr2) - Reproject a geometry to a different spatial reference system.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a, b);
-            |        POINT (1 1)
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+/** Expression info required for the expression registration for spark SQL. */
+object ST_Transform extends WithExpressionInfo {
+
+    override def name: String = "st_transform"
+
+    override def usage: String = "_FUNC_(expr1, expr2) - Returns transformed geometry to SRID."
+
+    override def example: String =
+        """
+          |     Examples:
+          |         > SELECT _FUNC_(a, b);
+          |           POLYGON (...)
+          |""".stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Transform](2, expressionConfig)
+    }
+
 }

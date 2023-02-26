@@ -10,36 +10,41 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.{DataType, DoubleType}
 
 /**
-  * SQL expression that returns area of the input geometry.
+  * SQL expression that returns Y coordinate of the input geometry. If the
+  * geometry is a point, the Y coordinate of the point is returned. If the
+  * geometry is any other type, the Y coordinate of the centroid of the geometry
+  * is returned.
+  *
   * @param inputGeom
   *   Expression containing the geometry.
   * @param expressionConfig
   *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
   *   arguments for the expression (expressionConfigs).
   */
-case class ST_Area(
+case class ST_Y(
     inputGeom: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends UnaryVectorExpression[ST_Area](inputGeom, returnsGeometry = false, expressionConfig) {
+) extends UnaryVectorExpression[ST_Y](inputGeom, returnsGeometry = false, expressionConfig) {
 
     override def dataType: DataType = DoubleType
 
-    override def geometryTransform(geometry: MosaicGeometry): Any = geometry.getArea
+    override def geometryTransform(geometry: MosaicGeometry): Any = geometry.getCentroid.getY
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val code = s"""double $resultRef = $geometryRef.getArea();"""
+        val code = s"""double $resultRef = $geometryRef.getCentroid().getY();"""
         (code, resultRef)
     }
 
 }
 
 /** Expression info required for the expression registration for spark SQL. */
-object ST_Area extends WithExpressionInfo {
+object ST_Y extends WithExpressionInfo {
 
-    override def name: String = "st_area"
+    override def name: String = "st_y"
 
-    override def usage: String = "_FUNC_(expr1) - Returns area of the geometry."
+    override def usage: String =
+        "_FUNC_(expr1) - Returns y coordinate of a point or y coordinate of the centroid if the geometry isnt a point."
 
     override def example: String =
         """
@@ -49,7 +54,7 @@ object ST_Area extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_Area](1, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[ST_Y](1, expressionConfig)
     }
 
 }

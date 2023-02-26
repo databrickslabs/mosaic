@@ -27,8 +27,7 @@ __all__ = [
     "st_translate",
     "st_scale",
     "st_rotate",
-    "st_centroid2D",
-    "st_centroid3D",
+    "st_centroid",
     "st_numpoints",
     "st_isvalid",
     "st_distance",
@@ -408,7 +407,7 @@ def st_rotate(geom: ColumnOrName, td: ColumnOrName) -> Column:
     )
 
 
-def st_centroid2D(geom: ColumnOrName) -> Column:
+def st_centroid(geom: ColumnOrName) -> Column:
     """
     Returns the x and y coordinates representing the centroid of `geom`.
 
@@ -423,26 +422,7 @@ def st_centroid2D(geom: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "st_centroid2D", pyspark_to_java_column(geom)
-    )
-
-
-def st_centroid3D(geom: ColumnOrName) -> Column:
-    """
-    Returns the x, y and z coordinates representing the centroid of the geometry `geom`.
-
-    Parameters
-    ----------
-    geom : Column
-
-    Returns
-    -------
-    Column (StructType[x: DoubleType, y: DoubleType, z: DoubleType])
-        Coordinates of the centroid.
-
-    """
-    return config.mosaic_context.invoke_function(
-        "st_centroid3D", pyspark_to_java_column(geom)
+        "st_centroid", pyspark_to_java_column(geom)
     )
 
 

@@ -1,76 +1,60 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
 
-case class ST_ConvexHull(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
-
-    override def child: Expression = inputGeom
+/**
+  * Returns the convex hull for a given geometry.
+  * @param inputGeom
+  *   The input geometry.
+  * @param expressionConfig
+  *   Additional arguments for the expression (expressionConfigs).
+  */
+case class ST_ConvexHull(
+    inputGeom: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVectorExpression[ST_ConvexHull](
+      inputGeom,
+      returnsGeometry = true,
+      expressionConfig
+    ) {
 
     override def dataType: DataType = inputGeom.dataType
 
-    override def nullSafeEval(inputRow: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geometry = geometryAPI.geometry(inputRow, inputGeom.dataType)
-        val convexHull = geometry.convexHull
-        geometryAPI.serialize(convexHull, inputGeom.dataType)
+    override def geometryTransform(geometry: MosaicGeometry): Any = {
+        geometry.convexHull
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = ST_ConvexHull(asArray.head, geometryAPIName)
-        res.copyTagsFrom(this)
-        res
+    override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
+        val convexHull = ctx.freshName("convexHull")
+        val code = s"""$mosaicGeomClass $convexHull = $geometryRef.convexHull();"""
+        (code, convexHull)
     }
-
-    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
-        nullSafeCodeGen(
-          ctx,
-          ev,
-          leftEval => {
-              val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val convexHull = ctx.freshName("convexHull")
-              val geometryClass = geometryAPI.geometryClass
-              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-              val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, convexHull, inputGeom.dataType, geometryAPI)
-              geometryAPI.codeGenTryWrap(s"""
-                                            |$inCode
-                                            |$geometryClass $convexHull = $geomInRef.convexHull();
-                                            |$outCode
-                                            |${ev.value} = $outGeomRef;
-                                            |""".stripMargin)
-          }
-        )
-
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputGeom = newChild)
 
 }
 
-object ST_ConvexHull {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_ConvexHull extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_ConvexHull].getCanonicalName,
-          db.orNull,
-          "st_convexhull",
-          """
-            |    _FUNC_(expr1) - Returns the convex hull for a given MultiPoint geometry.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        {"POLYGON (( 0 0, 1 0, 1 1, 0 1 ))"}
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_convexhull"
+
+    override def usage: String = "_FUNC_(expr1) - Returns the convex hull for a given geometry."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a);
+          |        {"POLYGON (( 0 0, 1 0, 1 1, 0 1 ))"}
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_ConvexHull](1, expressionConfig)
+    }
 
 }
