@@ -37,7 +37,7 @@ case class ST_UpdateSRID(
 
     override def geometryCodeGen(geometryRef: String, srcSRIDRef: String, destSRIDRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.transformCRSXY($srcSRIDRef, $destSRIDRef);"""
+        val code = s"""$mosaicGeomClass $resultRef = (($mosaicGeomClass) $geometryRef.transformCRSXY($srcSRIDRef, $destSRIDRef));"""
         (code, resultRef)
     }
 
