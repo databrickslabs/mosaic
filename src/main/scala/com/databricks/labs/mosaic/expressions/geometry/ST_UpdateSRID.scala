@@ -1,9 +1,10 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
-import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
@@ -27,7 +28,13 @@ case class ST_UpdateSRID(
     srcSRIDExpr: Expression,
     destSRIDExpr: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends UnaryVector2ArgExpression[ST_UpdateSRID](inputGeom, srcSRIDExpr, destSRIDExpr, returnsGeometry = true, expressionConfig) {
+) extends UnaryVector2ArgExpression[ST_UpdateSRID](
+      inputGeom,
+      Column(srcSRIDExpr).cast("int").expr,
+      Column(destSRIDExpr).cast("int").expr,
+      returnsGeometry = true,
+      expressionConfig
+    ) {
 
     override def dataType: DataType = inputGeom.dataType
 
@@ -57,8 +64,8 @@ object ST_UpdateSRID extends WithExpressionInfo {
           |        POINT(...)
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_UpdateSRID](3, expressionConfig)
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
+        ST_UpdateSRID(exprs(0), Column(exprs(1)).cast("int").expr, Column(exprs(2)).cast("int").expr, expressionConfig)
     }
 
 }

@@ -77,7 +77,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             pathsDf
                 .withColumn(
                   "subdatasets",
-                  rst_subdatasets("path")
+                  rst_subdatasets(col("path"))
                 )
                 .withColumn(
                   "subdataset",
