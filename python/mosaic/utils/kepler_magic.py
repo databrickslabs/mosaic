@@ -5,7 +5,7 @@ import pandas as pd
 from IPython.core.magic import Magics, cell_magic, magics_class
 from keplergl import KeplerGl
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, conv, lower, lit
+from pyspark.sql.functions import col, conv, lower, lit, struct
 
 from mosaic.api.accessors import st_astext, st_aswkt
 from mosaic.api.constructors import st_geomfromwkt, st_geomfromwkb
@@ -142,11 +142,12 @@ class MosaicKepler(Magics):
 
         centroid = (
             tmp_sdf.select(
-                st_centroid(feature_name).alias("centroid")
-            ).withColumn(
-                "x", st_x("centroid")
-            ).withColumn(
-                "y", st_y("centroid")
+                st_centroid("geom_0").alias("centroid")
+            ).select(
+                struct(
+                    st_x("centroid").alias("x"),
+                    st_y("centroid").alias("y")
+                )
             )
             .limit(1)
             .collect()[0][0]
