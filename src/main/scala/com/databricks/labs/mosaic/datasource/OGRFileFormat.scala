@@ -333,12 +333,13 @@ object OGRFileFormat extends Serializable {
             .map(j => getValue(feature, j, types(j)))
         val geoms = (0 until feature.GetGeomFieldCount())
             .map(feature.GetGeomFieldRef)
-            .flatMap(f =>
+            .flatMap(f => {
+                f.FlattenTo2D()
                 Seq(
                   if (asWKB) f.ExportToWkb else f.ExportToWkt,
                   Try(f.GetSpatialReference.GetAuthorityCode(null)).getOrElse("0")
                 )
-            )
+            })
         val values = fields ++ geoms
         values.toArray
     }
