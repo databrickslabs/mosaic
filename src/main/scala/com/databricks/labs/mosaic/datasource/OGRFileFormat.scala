@@ -306,11 +306,14 @@ object OGRFileFormat extends Serializable {
                 val fieldName = if (name.isEmpty) f"field_$j" else name
                 StructField(fieldName, inferType(feature, j))
             }) ++ (0 until feature.GetGeomFieldCount())
-            .map(j => {
+            .flatMap(j => {
                 val field = feature.GetGeomFieldDefnRef(j)
                 val name = field.GetNameRef
                 val geomName = if (name.isEmpty) f"geom_$j" else name
-                StructField(geomName, geomDataType, nullable = true)
+                Seq(
+                    StructField(geomName, geomDataType),
+                    StructField(geomName + "_srid", StringType)
+                )
             })
         StructType(fields)
     }
@@ -330,7 +333,10 @@ object OGRFileFormat extends Serializable {
             .map(j => getValue(feature, j, types(j)))
         val geoms = (0 until feature.GetGeomFieldCount())
             .map(feature.GetGeomFieldRef)
-            .map(f => if (asWKB) f.ExportToWkb() else f.ExportToWkt())
+            .flatMap(f => Seq(
+                if (asWKB) f.ExportToWkb else f.ExportToWkt,
+                f.GetSpatialReference.GetAuthorityCode(null)
+            ))
         val values = fields ++ geoms
         values.toArray
     }
