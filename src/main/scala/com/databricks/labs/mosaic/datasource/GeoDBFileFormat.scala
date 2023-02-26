@@ -19,11 +19,7 @@ class GeoDBFileFormat extends OGRFileFormat {
         options: Map[String, String],
         files: Seq[FileStatus]
     ): Option[StructType] = {
-        val layerN = options.getOrElse("layerNumber", "0").toInt
-        val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
-        val useZipPath = options.getOrElse("vsizip", "false").toBoolean
-        val headFilePath = files.head.getPath.toString
-        OGRFileFormat.inferSchemaImpl(driverName, layerN, inferenceLimit, useZipPath, headFilePath)
+        OGRFileFormat.inferSchemaImpl(driverName, files.head.getPath.toString, options)
     }
 
     override def buildReader(
@@ -35,9 +31,7 @@ class GeoDBFileFormat extends OGRFileFormat {
         options: Map[String, String],
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] = {
-        val layerN = options.getOrElse("layerNumber", "0").toInt
-        val useZipPath = options.getOrElse("vsizip", "false").toBoolean
-        OGRFileFormat.buildReaderImpl(driverName, layerN, useZipPath, dataSchema)
+        OGRFileFormat.buildReaderImpl(driverName, dataSchema, options)
     }
 
 }

@@ -22,6 +22,7 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
     val layerName: String = config("layerName")
     val chunkSize: Int = config("chunkSize").toInt
     val vsizip: Boolean = config("vsizip").toBoolean
+    val asWKB: Boolean = config("asWKB").toBoolean
 
     override def collectionType: DataType = schema
 
@@ -42,7 +43,7 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
         layer.SetNextByIndex(start)
         for (_ <- start until end) yield {
             val feature = layer.GetNextFeature()
-            val row = OGRFileFormat.getFeatureFields(feature, schema)
+            val row = OGRFileFormat.getFeatureFields(feature, schema, asWKB)
             OGRFileFormat.createRow(row)
         }
     }

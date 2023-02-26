@@ -4,23 +4,8 @@ import com.databricks.labs.mosaic.datasource.OGRFileFormat
 import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.StructType
-
-import scala.collection.convert.ImplicitConversions.`dictionary AsScalaMap`
-import scala.reflect.ClassTag
 
 class OGRMultiReadDataFrameReader(sparkSession: SparkSession) extends MosaicDataFrameReader(sparkSession) {
-
-    private def getConfig: Map[String, String] = {
-        Map(
-            "driverName" -> this.extraOptions.get("driverName").getOrElse(""),
-            "layerNumber" -> this.extraOptions.get("layerNumber").getOrElse("0"),
-            "layerName" -> this.extraOptions.get("layerName").getOrElse(""),
-            "chunkSize" -> this.extraOptions.get("chunkSize").getOrElse("5000"),
-            "vsizip" -> this.extraOptions.get("vsizip").getOrElse("false"),
-            "inferenceLimit" -> this.extraOptions.get("inferenceLimit").getOrElse("100")
-        )
-    }
 
     override def load(path: String): DataFrame = load(Seq(path): _*)
 
@@ -39,13 +24,12 @@ class OGRMultiReadDataFrameReader(sparkSession: SparkSession) extends MosaicData
         val layerName = config("layerName")
         val chunkSize = config("chunkSize").toInt
         val vsizip = config("vsizip").toBoolean
-        val inferenceLimit = config("inferenceLimit").toInt
 
         val ds = OGRFileFormat.getDataSource(driverName, headPath, vsizip)
         val layer = OGRFileFormat.getLayer(ds, layerNumber, layerName)
         val partitionCount = 1 + (layer.GetFeatureCount / chunkSize)
 
-        val schema = OGRFileFormat.inferSchemaImpl(driverName, layerNumber, inferenceLimit, vsizip, headPath)
+        val schema = OGRFileFormat.inferSchemaImpl(driverName, headPath, config)
 
         val ogrReadWithOffset = OGRReadeWithOffset(
           col("path").expr,
@@ -69,9 +53,20 @@ class OGRMultiReadDataFrameReader(sparkSession: SparkSession) extends MosaicData
               col("chunkIndex")
             )
             .select(
-                org.apache.spark.sql.adapters.Column(ogrReadWithOffset)
+              org.apache.spark.sql.adapters.Column(ogrReadWithOffset)
             )
 
+    }
+
+    private def getConfig: Map[String, String] = {
+        Map(
+          "driverName" -> this.extraOptions.getOrElse("driverName", ""),
+          "layerNumber" -> this.extraOptions.getOrElse("layerNumber", "0"),
+          "layerName" -> this.extraOptions.getOrElse("layerName", ""),
+          "chunkSize" -> this.extraOptions.getOrElse("chunkSize", "5000"),
+          "vsizip" -> this.extraOptions.getOrElse("vsizip", "false"),
+          "inferenceLimit" -> this.extraOptions.getOrElse("inferenceLimit", "100")
+        )
     }
 
 }

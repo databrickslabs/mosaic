@@ -34,12 +34,9 @@ class OGRFileFormat extends FileFormat with DataSourceRegister {
         options: Map[String, String],
         files: Seq[FileStatus]
     ): Option[StructType] = {
-        val layerN = options.getOrElse("layerNumber", "0").toInt
-        val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
         val driverName = options.getOrElse("driverName", "")
-        val useZipPath = options.getOrElse("vsizip", "false").toBoolean
         val headFilePath = files.head.getPath.toString
-        inferSchemaImpl(driverName, layerN, inferenceLimit, useZipPath, headFilePath)
+        inferSchemaImpl(driverName, headFilePath, options)
     }
 
     override def isSplitable(
@@ -57,10 +54,22 @@ class OGRFileFormat extends FileFormat with DataSourceRegister {
         options: Map[String, String],
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] = {
-        val layerN = options.getOrElse("layerNumber", "0").toInt
         val driverName = options.getOrElse("driverName", "")
-        val useZipPath = options.getOrElse("vsizip", "false").toBoolean
-        buildReaderImpl(driverName, layerN, useZipPath, dataSchema)
+        buildReaderImpl(driverName, dataSchema, options)
+    }
+
+    override def buildReaderWithPartitionValues(
+        sparkSession: SparkSession,
+        dataSchema: StructType,
+        partitionSchema: StructType,
+        requiredSchema: StructType,
+        filters: Seq[Filter],
+        options: Map[String, String],
+        hadoopConf: Configuration
+    ): PartitionedFile => Iterator[InternalRow] = {
+        // No column filter at the moment.
+        // To improve performance, we can filter columns in the OGR layer using requiredSchema.
+        super.buildReaderWithPartitionValues(sparkSession, dataSchema, partitionSchema, dataSchema, filters, options, hadoopConf)
     }
 
     override def prepareWrite(
@@ -207,6 +216,12 @@ object OGRFileFormat extends Serializable {
         }
     }
 
+    def getFieldIndex(feature: Feature, name: String): Option[Int] = {
+        val field = feature.GetFieldDefnRef(name)
+        if (field == null) None
+        else (0 until feature.GetFieldCount).find(i => feature.GetFieldDefnRef(i).GetName == name)
+    }
+
     /**
       * Extracts the value of a date field from a feature.
       *
@@ -282,7 +297,8 @@ object OGRFileFormat extends Serializable {
       * @return
       *   Spark SQL schema.
       */
-    def getFeatureSchema(feature: Feature): StructType = {
+    def getFeatureSchema(feature: Feature, asWKB: Boolean): StructType = {
+        val geomDataType = if (asWKB) BinaryType else StringType
         val fields = (0 until feature.GetFieldCount())
             .map(j => {
                 val field = feature.GetFieldDefnRef(j)
@@ -294,7 +310,7 @@ object OGRFileFormat extends Serializable {
                 val field = feature.GetGeomFieldDefnRef(j)
                 val name = field.GetNameRef
                 val geomName = if (name.isEmpty) f"geom_$j" else name
-                StructField(geomName, BinaryType, nullable = true)
+                StructField(geomName, geomDataType, nullable = true)
             })
         StructType(fields)
     }
@@ -308,12 +324,13 @@ object OGRFileFormat extends Serializable {
       * @return
       *   Array of values.
       */
-    def getFeatureFields(feature: Feature, featureSchema: StructType): Array[Any] = {
+    def getFeatureFields(feature: Feature, featureSchema: StructType, asWKB: Boolean): Array[Any] = {
         val types = featureSchema.fields.map(_.dataType)
         val fields = (0 until feature.GetFieldCount())
             .map(j => getValue(feature, j, types(j)))
         val geoms = (0 until feature.GetGeomFieldCount())
-            .map(feature.GetGeomFieldRef(_).ExportToWkb())
+            .map(feature.GetGeomFieldRef)
+            .map(f => if (asWKB) f.ExportToWkb() else f.ExportToWkt())
         val values = fields ++ geoms
         values.toArray
     }
@@ -347,33 +364,36 @@ object OGRFileFormat extends Serializable {
       *
       * @param driverName
       *   the name of the OGR driver
-      * @param layerN
-      *   the layer number for which to infer the schema
       * @param path
       *   the path to the file to infer the schema from
+      * @param options
+      *   the options to use for the inference
       * @return
       *   the inferred schema for the given files and layer
       */
     def inferSchemaImpl(
         driverName: String,
-        layerN: Int,
-        inferenceLimit: Int,
-        useZipPath: Boolean,
-        path: String
+        path: String,
+        options: Map[String, String]
     ): Option[StructType] = {
+        val layerN = options.getOrElse("layerNumber", "0").toInt
+        val layerName = options.getOrElse("layerName", "")
+        val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
+        val useZipPath = options.getOrElse("vsizip", "false").toBoolean
+        val asWKB = options.getOrElse("asWKB", "false").toBoolean
 
         val dataset = getDataSource(driverName, path, useZipPath)
-
-        val layer = dataset.GetLayer(layerN)
+        val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
+        val layer = dataset.GetLayer(resolvedLayerName)
         layer.ResetReading()
         val headFeature = layer.GetNextFeature()
-        val headSchemaFields = getFeatureSchema(headFeature).fields
+        val headSchemaFields = getFeatureSchema(headFeature, asWKB).fields
         val n = math.min(inferenceLimit, layer.GetFeatureCount()).toInt
 
         // start from 1 since 1 feature was read already
         val layerSchema = (1 until n).foldLeft(headSchemaFields) { (schema, _) =>
             val feature = layer.GetNextFeature()
-            val featureSchema = getFeatureSchema(feature)
+            val featureSchema = getFeatureSchema(feature, asWKB)
             schema.zip(featureSchema.fields).map { case (s, f) =>
                 (s, f) match {
                     case (StructField(name, StringType, _, _), StructField(_, dataType, _, _)) =>
@@ -392,16 +412,19 @@ object OGRFileFormat extends Serializable {
 
     def buildReaderImpl(
         driverName: String,
-        layerN: Int,
-        useZipPath: Boolean,
-        schema: StructType
+        schema: StructType,
+        options: Map[String, String]
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
             enableOGRDrivers()
+            val layerN = options.getOrElse("layerNumber", "0").toInt
+            val layerName = options.getOrElse("layerName", "")
+            val useZipPath = options.getOrElse("vsizip", "false").toBoolean
+            val asWKB = options.getOrElse("asWKB", "false").toBoolean
             val path = file.filePath
             val dataset = getDataSource(driverName, path, useZipPath)
-
-            val layer = dataset.GetLayerByIndex(layerN)
+            val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
+            val layer = dataset.GetLayerByName(resolvedLayerName)
             layer.ResetReading()
             val metadata = layer.GetMetadata_Dict().toMap
 
@@ -409,7 +432,7 @@ object OGRFileFormat extends Serializable {
             (0 until layer.GetFeatureCount().toInt)
                 .foldLeft(Seq.empty[InternalRow])((acc, _) => {
                     feature = layer.GetNextFeature()
-                    val fields = getFeatureFields(feature, schema)
+                    val fields = getFeatureFields(feature, schema, asWKB)
                     val values = fields ++ Seq(metadata)
                     val row = createRow(values)
                     acc ++ Seq(row)
