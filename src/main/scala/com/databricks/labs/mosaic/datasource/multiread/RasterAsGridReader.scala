@@ -28,7 +28,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         val retiledDf = retileRaster(rasterDf, config)
 
-        retiledDf
+        val loadedDf = retiledDf
             .withColumn(
               "grid_measures",
               rasterToGridCombiner(col("raster"), lit(resolution))
@@ -51,6 +51,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             )
             .groupBy("cell_id")
             .agg(avg("measure").alias("measure"))
+
+        kRingResample(loadedDf, config)
 
     }
 
@@ -97,6 +99,25 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         }
     }
 
+    private def kRingResample(rasterDf: DataFrame, config: Map[String, String]) = {
+        val k = config("kRingInterpolate").toInt
+
+        def weighted_sum(measureCol: String, weightCol: String) = {
+            sum(col(measureCol) * col(weightCol)) / sum(col(weightCol))
+        }.alias(measureCol)
+
+        if (k > 0) {
+            rasterDf
+                .withColumn("origin_cell_id", col("cell_id"))
+                .withColumn("cell_id", explode(grid_cellkring(col("origin_cell_id"), k)))
+                .withColumn("weight", lit(k + 1) - expr("h3_distance(origin_cell_id, cell_id)"))
+                .groupBy("cell_id")
+                .agg(weighted_sum("measure", "weight"))
+        } else {
+            rasterDf
+        }
+    }
+
     private def getRasterToGridFunc(combiner: String): (Column, Column) => Column = {
         combiner match {
             case "mean"    => rst_rastertogridavg
@@ -118,7 +139,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
           "resolution" -> this.extraOptions.getOrElse("resolution", "0"),
           "combiner" -> this.extraOptions.getOrElse("combiner", "mean"),
           "retile" -> this.extraOptions.getOrElse("retile", "false"),
-          "tileSize" -> this.extraOptions.getOrElse("tileSize", "256")
+          "tileSize" -> this.extraOptions.getOrElse("tileSize", "256"),
+          "kRingInterpolate" -> this.extraOptions.getOrElse("kRingInterpolate", "0")
         )
     }
 
