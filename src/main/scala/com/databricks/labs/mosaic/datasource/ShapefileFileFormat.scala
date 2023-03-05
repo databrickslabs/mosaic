@@ -37,7 +37,7 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister {
             if (extension == "shp" || extension == "zip") {
                 OGRFileFormat.buildReaderImpl(driverName, dataSchema, options)(file)
             } else {
-                Iterator.empty[InternalRow]
+                Seq.empty[InternalRow].iterator
             }
         }
 
