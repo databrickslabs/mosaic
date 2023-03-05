@@ -101,11 +101,11 @@ indexed_trips.show()
 
 # COMMAND ----------
 
-from mosaic import polyfill
+from mosaic import grid_polyfill
 
 indexed_neighbourhoods = (
   neighbourhoods
-  .select("*", polyfill("geometry", lit(resolution)).alias("ix_set"))
+  .select("*", grid_polyfill("geometry", lit(resolution)).alias("ix_set"))
   .drop("geometry")
 )
 
