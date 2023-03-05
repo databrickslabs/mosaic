@@ -1273,12 +1273,12 @@ only showing top 20 rows
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import polyfill
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import grid_polyfill
 
 neighbourhoods = (
   geoJsonDF
   .repartition(sc.defaultParallelism)
-  .select("*", explode(polyfill("geometry", lit(10))).alias("h3"))
+  .select("*", explode(grid_polyfill("geometry", lit(10))).alias("h3"))
   .drop("geometry")
 )
 

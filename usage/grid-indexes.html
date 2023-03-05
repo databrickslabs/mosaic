@@ -992,11 +992,11 @@ only showing top 20 rows
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import polyfill
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import grid_polyfill
 
 indexed_neighbourhoods = (
   neighbourhoods
-  .select("*", polyfill("geometry", lit(resolution)).alias("ix_set"))
+  .select("*", grid_polyfill("geometry", lit(resolution)).alias("ix_set"))
   .drop("geometry")
 )
 
