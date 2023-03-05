@@ -142,6 +142,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_Buffer](expressionConfig)
         mosaicRegistry.registerExpression[ST_BufferLoop](expressionConfig)
         mosaicRegistry.registerExpression[ST_Centroid](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Centroid]("st_centroid2D", expressionConfig)
         mosaicRegistry.registerExpression[ST_Contains](expressionConfig)
         mosaicRegistry.registerExpression[ST_ConvexHull](expressionConfig)
         mosaicRegistry.registerExpression[ST_Distance](expressionConfig)
@@ -801,7 +802,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def polyfill(geom: Column, resolution: Column): Column = grid_polyfill(geom, resolution)
         @deprecated("Please use 'grid_polyfill' expressions instead.")
         def polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, resolution)
-
+        @deprecated("Please use 'st_centroid' expressions instead.")
+        def st_centroid2D(geom: Column): Column = st_centroid(geom)
     }
 
 }
