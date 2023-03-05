@@ -6,9 +6,11 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.types.ChipType
+import com.databricks.labs.mosaic.datasource.multiread.MosaicDataFrameReader
 import com.databricks.labs.mosaic.expressions.constructors._
 import com.databricks.labs.mosaic.expressions.format._
 import com.databricks.labs.mosaic.expressions.geometry._
+import com.databricks.labs.mosaic.expressions.geometry.ST_MinMaxXYZ._
 import com.databricks.labs.mosaic.expressions.index._
 import com.databricks.labs.mosaic.expressions.raster._
 import com.databricks.labs.mosaic.expressions.util.TrySql
@@ -19,7 +21,6 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{LongType, StringType}
-import com.databricks.labs.mosaic.expressions.geometry.ST_MinMaxXYZ._
 
 import scala.reflect.runtime.universe
 
@@ -33,11 +34,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
     spark.conf.set(MOSAIC_RASTER_API, rasterAPI.name)
 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
-
     val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
-
     val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
-
     val expressionConfig: MosaicExpressionConfig = MosaicExpressionConfig(spark)
 
     def setCellIdDataType(dataType: String): Unit =
@@ -137,7 +135,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
           (exprs: Seq[Expression]) => FlattenPolygons(exprs(0), geometryAPI.name)
         )
 
-
         mosaicRegistry.registerExpression[ST_Area](expressionConfig)
         mosaicRegistry.registerExpression[ST_Buffer](expressionConfig)
         mosaicRegistry.registerExpression[ST_BufferLoop](expressionConfig)
@@ -172,6 +169,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_Transform](expressionConfig)
         mosaicRegistry.registerExpression[ST_UnaryUnion](expressionConfig)
         mosaicRegistry.registerExpression[ST_Union](expressionConfig)
+        mosaicRegistry.registerExpression[ST_UpdateSRID](expressionConfig)
         mosaicRegistry.registerExpression[ST_X](expressionConfig)
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
 
@@ -503,6 +501,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def st_zmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "Z", "MIN"))
         def st_union(leftGeom: Column, rightGeom: Column): Column = ColumnAdapter(ST_Union(leftGeom.expr, rightGeom.expr, expressionConfig))
         def st_unaryunion(geom: Column): Column = ColumnAdapter(ST_UnaryUnion(geom.expr, expressionConfig))
+        def st_updatesrid(geom: Column, srcSRID: Column, destSRID: Column): Column =
+            ColumnAdapter(ST_UpdateSRID(geom.expr, srcSRID.cast("int").expr, destSRID.cast("int").expr, expressionConfig))
+        def st_updatesrid(geom: Column, srcSRID: Int, destSRID: Int): Column =
+            ColumnAdapter(ST_UpdateSRID(geom.expr, lit(srcSRID).expr, lit(destSRID).expr, expressionConfig))
 
         /** Undocumented helper */
         def convert_to(inGeom: Column, outDataType: String): Column =
@@ -804,6 +806,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, resolution)
         @deprecated("Please use 'st_centroid' expressions instead.")
         def st_centroid2D(geom: Column): Column = st_centroid(geom)
+
     }
 
 }
@@ -819,6 +822,8 @@ object MosaicContext {
         instance.get.setCellIdDataType(indexSystem.getCellIdDataType.typeName)
         context()
     }
+
+    def read: MosaicDataFrameReader = new MosaicDataFrameReader(SparkSession.builder().getOrCreate())
 
     def geometryAPI: GeometryAPI = context().getGeometryAPI
 
