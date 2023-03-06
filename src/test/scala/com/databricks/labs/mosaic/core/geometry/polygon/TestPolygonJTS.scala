@@ -48,6 +48,14 @@ class TestPolygonJTS extends AnyFlatSpec {
         polygonReference.equals(polygonTest) shouldBe true
     }
 
+    "MosaicPolygonJTS" should "not fail for empty Seq" in {
+        val expected = MosaicPolygonJTS.fromWKT(
+            "POLYGON EMPTY"
+        )
+        val actual = MosaicPolygonJTS.fromSeq(Seq[MosaicPolygonJTS]())
+        expected.equals(actual) shouldBe true
+    }
+
     "MosaicPolygonJTS" should "be instantiable from a Seq of MosaicLineStringJTS" in {
         val polygonReference = MosaicPolygonJTS.fromWKT("POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30, 35 35, 30 20, 20 30))")
         val linesSeq = Seq("LINESTRING (35 10, 45 45, 15 40, 10 20)", "LINESTRING (20 30, 35 35, 30 20)")

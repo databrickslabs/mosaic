@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.databricks.labs</groupId>
     <artifactId>mosaic</artifactId>
-    <version>0.3.6-SNAPSHOT</version>
+    <version>0.3.7</version>
 
     <properties>
         <minimum.coverage>80</minimum.coverage>
         <skipTests>true</skipTests>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.11</maven.compiler.source>
+        <maven.compiler.target>1.11</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <spec2.version>4.2.0</spec2.version>
     </properties>
@@ -118,8 +118,18 @@
         </dependency>
         <dependency>
             <groupId>org.locationtech.proj4j</groupId>
+            <artifactId>proj4j-epsg</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.locationtech.proj4j</groupId>
             <artifactId>proj4j</artifactId>
-            <version>1.1.5</version>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gdal</groupId>
+            <artifactId>gdal</artifactId>
+            <version>3.4.0</version>
         </dependency>
 
     </dependencies>
@@ -131,7 +141,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.4.2</version>
+                <version>3.5.0</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -277,7 +287,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.2.2</spark.version>
+                <spark.version>3.3.2</spark.version>
             </properties>
         </profile>
     </profiles>

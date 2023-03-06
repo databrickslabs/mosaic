@@ -84,6 +84,10 @@ object MosaicMultiLineStringESRI extends GeometryReader {
         geomSeq: Seq[T],
         geomType: GeometryTypeEnum.Value = MULTILINESTRING
     ): MosaicMultiLineStringESRI = {
+        if (geomSeq.isEmpty) {
+            // For empty sequence return an empty geometry with default Spatial Reference
+            return MosaicMultiLineStringESRI(new OGCMultiLineString(MosaicGeometryESRI.defaultSpatialReference))
+        }
         val spatialReference = SpatialReference.create(geomSeq.head.getSpatialReference)
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case LINESTRING                    =>

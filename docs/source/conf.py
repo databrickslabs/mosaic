@@ -22,7 +22,7 @@ copyright = '2022, Databricks Inc'
 author = 'Stuart Lynn, Milos Colic, Erni Durdevic, Robert Whiffin, Timo Roest'
 
 # The full version, including alpha/beta/rc tags
-release = "v0.3.5"
+release = "v0.3.7"
 
 
 # -- General configuration ---------------------------------------------------
