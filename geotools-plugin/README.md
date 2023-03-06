@@ -31,8 +31,8 @@ Additionally, for data engineering, you may want to install the following useful
 - sedona (PyPI)
 - shapely (PyPI)
 - apache-sedona\[spark\] (PyPI)
-- h3 (PyPI) (provided by Mosaic, JAR by DBR)
-- geospark (PyPI) (provided by DBR)
+- h3 (PyPI) (Optional)
+- geospark (PyPI) (Optional)
 - geopandas (PyPI) (Optional)
 
 For instructions on how to install libraries on your cluster, see the [documentation here](https://docs.databricks.com/libraries/index.html).
