@@ -99,7 +99,9 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
         }
     }
 
-    def transformCRSXY(sridTo: Int, sridFrom: Option[Int] = None): MosaicGeometry = {
+    def transformCRSXY(sridTo: Int): MosaicGeometry = transformCRSXY(sridTo, None)
+
+    def transformCRSXY(sridTo: Int, sridFrom: Option[Int]): MosaicGeometry = {
 
         val crsFactory = new CRSFactory
         val crsFrom = crsFactory.createFromName(f"epsg:${sridFrom.getOrElse(getSpatialReference)}")
