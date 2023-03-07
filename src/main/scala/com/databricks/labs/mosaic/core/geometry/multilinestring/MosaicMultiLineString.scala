@@ -8,12 +8,12 @@ trait MosaicMultiLineString extends MosaicGeometry {
 
     def asSeq: Seq[MosaicLineString]
 
-    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]] = Nil
+    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]]
 
-    override def getShellPoints: Seq[Seq[MosaicPoint]] = getShells.map(_.asSeq)
+    override def getShellPoints: Seq[Seq[MosaicPoint]]
 
-    override def getHoles: Seq[Seq[MosaicLineString]] = Nil
+    override def getHoles: Seq[Seq[MosaicLineString]]
 
-    override def flatten: Seq[MosaicGeometry] = asSeq
+    override def flatten: Seq[MosaicGeometry]
 
 }

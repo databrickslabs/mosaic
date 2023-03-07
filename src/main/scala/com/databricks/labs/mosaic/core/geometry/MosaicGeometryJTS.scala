@@ -152,6 +152,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def setSpatialReference(srid: Int): Unit = geom.setSRID(srid)
 
+    override def transformCRSXY(sridTo: Int): MosaicGeometryJTS = super.transformCRSXY(sridTo, None).asInstanceOf[MosaicGeometryJTS]
+
 }
 
 object MosaicGeometryJTS extends GeometryReader {

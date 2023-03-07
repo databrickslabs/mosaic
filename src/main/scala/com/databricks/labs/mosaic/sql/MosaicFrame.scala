@@ -1,16 +1,15 @@
 package com.databricks.labs.mosaic.sql
 
 import java.util.concurrent.atomic.AtomicLong
-
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.sql.MosaicFrame._
 import com.databricks.labs.mosaic.sql.constants._
 import com.databricks.labs.mosaic.sql.join.PointInPolygonJoin
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql._
 import org.apache.spark.sql.adapters.MosaicDataset
+import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.types._
 
 class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFrame) with Logging {
@@ -75,6 +74,20 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
         import mosaicContext.functions._
         val spark: SparkSession = this.sparkSession
         import spark.implicits._
+
+        val tmp = where(col(geometryColumnName).isNotNull)
+            .limit(1)
+            .select(st_geometrytype(col(geometryColumnName)))
+            .as[String]
+
+        val queryExecution = tmp.queryExecution
+        val plan = queryExecution.executedPlan
+
+        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
+
+        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
+        val (_, code) = codeGenStage.doCodeGen()
+
 
         val geomColGeometryType = where(col(geometryColumnName).isNotNull)
             .limit(1)

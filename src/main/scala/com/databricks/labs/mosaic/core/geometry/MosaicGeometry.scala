@@ -99,7 +99,7 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
         }
     }
 
-    def transformCRSXY(sridTo: Int): MosaicGeometry = transformCRSXY(sridTo, None)
+    def transformCRSXY(sridTo: Int): MosaicGeometry
 
     def transformCRSXY(sridTo: Int, sridFrom: Option[Int]): MosaicGeometry = {
 
