@@ -75,20 +75,6 @@ class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFram
         val spark: SparkSession = this.sparkSession
         import spark.implicits._
 
-        val tmp = where(col(geometryColumnName).isNotNull)
-            .limit(1)
-            .select(st_geometrytype(col(geometryColumnName)))
-            .as[String]
-
-        val queryExecution = tmp.queryExecution
-        val plan = queryExecution.executedPlan
-
-        val wholeStageCodegenExec = plan.find(_.isInstanceOf[WholeStageCodegenExec])
-
-        val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
-        val (_, code) = codeGenStage.doCodeGen()
-
-
         val geomColGeometryType = where(col(geometryColumnName).isNotNull)
             .limit(1)
             .select(st_geometrytype(col(geometryColumnName)))
