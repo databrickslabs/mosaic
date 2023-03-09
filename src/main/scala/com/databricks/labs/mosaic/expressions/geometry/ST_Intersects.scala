@@ -1,64 +1,64 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.BinaryVectorExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.{BooleanType, DataType}
 
-case class ST_Intersects(leftGeom: Expression, rightGeom: Expression, geometryAPIName: String)
-    extends BinaryExpression
-      with NullIntolerant
-      with CodegenFallback {
-
-    override def left: Expression = leftGeom
-
-    override def right: Expression = rightGeom
+/**
+  * Returns true if leftGeom intersects rightGeom.
+  * @param leftGeom
+  *   The left geometry.
+  * @param rightGeom
+  *   The right geometry.
+  * @param expressionConfig
+  *   Additional arguments for the expression (expressionConfigs).
+  */
+case class ST_Intersects(
+    leftGeom: Expression,
+    rightGeom: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends BinaryVectorExpression[ST_Intersects](
+      leftGeom,
+      rightGeom,
+      returnsGeometry = false,
+      expressionConfig
+    ) {
 
     override def dataType: DataType = BooleanType
 
-    // noinspection DuplicatedCode
-    override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geom1 = geometryAPI.geometry(input1, leftGeom.dataType)
-        val geom2 = geometryAPI.geometry(input2, rightGeom.dataType)
-        geom1.intersects(geom2)
+    override def geometryTransform(leftGeometry: MosaicGeometry, rightGeometry: MosaicGeometry): Any = {
+        leftGeometry.intersects(rightGeometry)
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = ST_Intersects(asArray(0), asArray(1), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
+    override def geometryCodeGen(leftGeometryRef: String, rightGeometryRef: String, ctx: CodegenContext): (String, String) = {
+        val intersects = ctx.freshName("intersects")
+        val code = s"""boolean $intersects = $leftGeometryRef.intersects($rightGeometryRef);"""
+        (code, intersects)
     }
-
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
-        copy(leftGeom = newLeft, rightGeom = newRight)
 
 }
 
-object ST_Intersects {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_Intersects extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_Intersects].getCanonicalName,
-          db.orNull,
-          "st_intersects",
-          """
-            |    _FUNC_(expr1, expr2) - Returns the intersects predicate of the two geometries.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a, b);
-            |        POLYGON(...)
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_intersects"
+
+    override def usage: String = "_FUNC_(expr1, expr2) - Returns true if expr1 intersects expr2."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a, b);
+          |        POLYGON(...)
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Intersects](2, expressionConfig)
+    }
 
 }

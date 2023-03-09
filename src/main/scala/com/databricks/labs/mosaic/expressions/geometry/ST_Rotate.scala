@@ -1,82 +1,65 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.codegen.geometry.GeometryTransformationsCodeGen
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector1ArgExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
 
-case class ST_Rotate(inputGeom: Expression, td: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
+/**
+  * SQL expression that returns the input geometry rotated by an angle.
+  * @param inputGeom
+  *   Expression containing the geometry.
+  * @param thetaExpr
+  *   The angle of rotation.
+  * @param expressionConfig
+  *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
+  *   arguments for the expression (expressionConfigs).
+  */
+case class ST_Rotate(
+    inputGeom: Expression,
+    thetaExpr: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVector1ArgExpression[ST_Rotate](
+      inputGeom,
+      thetaExpr,
+      returnsGeometry = true,
+      expressionConfig
+    ) {
 
-    /**
-      * ST_Rotate expression returns are covered by the
-      * [[org.locationtech.jts.geom.Geometry]] instance extracted from inputGeom
-      * expression.
-      */
-
-    // noinspection DuplicatedCode
-    override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geom = geometryAPI.geometry(input1, dataType)
-        val tDist = input2.asInstanceOf[Double]
-        val result = geom.rotate(tDist)
-        geometryAPI.serialize(result, dataType)
-    }
-
-    /** Output Data Type */
     override def dataType: DataType = inputGeom.dataType
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = ST_Rotate(asArray(0), asArray(1), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
+    override def geometryTransform(geometry: MosaicGeometry, arg: Any): Any = {
+        geometry.rotate(arg.asInstanceOf[Double])
     }
 
-    override def left: Expression = inputGeom
-
-    override def right: Expression = td
-
-    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
-        nullSafeCodeGen(
-          ctx,
-          ev,
-          (leftEval, rightEval) => {
-              val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val (code, result) = GeometryTransformationsCodeGen.rotate(ctx, leftEval, rightEval, inputGeom.dataType, geometryAPI)
-              geometryAPI.codeGenTryWrap(s"""
-                                            |$code
-                                            |${ev.value} = $result;
-                                            |""".stripMargin)
-          }
-        )
-
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
-        copy(inputGeom = newLeft, td = newRight)
+    override def geometryCodeGen(geometryRef: String, argRef: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.rotate($argRef);"""
+        (code, resultRef)
+    }
 
 }
 
-object ST_Rotate {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_Rotate extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_Rotate].getCanonicalName,
-          db.orNull,
-          name,
-          """
-            |    _FUNC_(expr1) - Rotates a given geometry by td.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        13.23
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_rotate"
+
+    override def usage: String = "_FUNC_(expr1, expr2) - Returns rotated geometry."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a, b);
+          |        POLYGON (...)
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Rotate](2, expressionConfig)
+    }
+
 }

@@ -1,28 +1,25 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks
-import org.apache.spark.sql._
+import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper, noException}
 
-trait ST_LengthBehaviors extends QueryTest {
+trait ST_LengthBehaviors extends MosaicSpatialQueryTest {
 
-    def lengthBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def lengthBehaviour(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val sc = spark
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         import mc.functions._
         import sc.implicits._
         mc.register(spark)
 
         val expected = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select("wkt")
             .as[String]
@@ -30,7 +27,7 @@ trait ST_LengthBehaviors extends QueryTest {
             .map(wkt => mc.getGeometryAPI.geometry(wkt, "WKT").getLength)
 
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select(st_length($"wkt"))
             .as[Double]
@@ -39,14 +36,14 @@ trait ST_LengthBehaviors extends QueryTest {
         result.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
         val result2 = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_perimeter($"wkt"))
             .as[Double]
             .collect()
 
         result2.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
 
-        mocks.getWKTRowsDf(mc).createOrReplaceTempView("source")
+        mocks.getWKTRowsDf().createOrReplaceTempView("source")
 
         val sqlResult = spark
             .sql("select st_length(wkt) from source")
@@ -63,16 +60,16 @@ trait ST_LengthBehaviors extends QueryTest {
         sqlResult2.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def lengthCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def lengthCodegen(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         val sc = spark
         import mc.functions._
         import sc.implicits._
         mc.register(spark)
 
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_length($"wkt"))
             .as[Double]
 
@@ -88,17 +85,17 @@ trait ST_LengthBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stLength = ST_Length(lit(1).expr, "JTS")
+        val stLength = ST_Length(lit(1).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stLength.genCode(ctx)
     }
 
-    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         mc.register(spark)
 
-        val stLength = ST_Length(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, geometryAPI.name)
+        val stLength = ST_Length(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, mc.expressionConfig)
 
         stLength.child shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
         stLength.dataType shouldEqual DoubleType

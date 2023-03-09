@@ -22,9 +22,8 @@ trait CellKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = 4
 
         val boroughs: DataFrame = getBoroughs(mc)
-            .withColumn("centroid", st_centroid2D(col("wkt")))
-            .withColumn("point", st_point(col("centroid.x"), col("centroid.y")))
-            .withColumn("cell_id", grid_pointascellid(col("point"), resolution))
+            .withColumn("centroid", st_centroid(col("wkt")))
+            .withColumn("cell_id", grid_pointascellid(col("centroid"), resolution))
 
         val mosaics = boroughs
             .select(
@@ -51,7 +50,7 @@ trait CellKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
         val sc = spark
         import sc.implicits._
 
-        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val k = 4
 
         val cellKLoopExplodeExpr = CellKLoopExplode(

@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks
 import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.{col, lit}
 import org.scalatest.matchers.must.Matchers.noException
@@ -23,7 +23,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
         mc.register(spark)
 
         val referenceGeoms = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select("wkt")
             .as[String]
@@ -33,7 +33,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
 
         // test st_simplify(Column, Double)
         val result1 = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select(st_length(st_simplify($"wkt", 1.0)))
             .as[Double]
@@ -42,7 +42,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
 
         // test st_simplify(Column, Column)
         val result2 = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select(st_length(st_simplify($"wkt", lit(1.0))))
             .as[Double]
@@ -59,7 +59,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
         mc.register(spark)
 
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_length(st_simplify($"wkt", 1.0)))
 
         val queryExecution = result.queryExecution
@@ -74,7 +74,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stSimplify = ST_Simplify(lit(1).expr, lit(1).expr, "JTS")
+        val stSimplify = ST_Simplify(lit(1).expr, lit(1).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stSimplify.genCode(ctx)
     }
@@ -85,9 +85,9 @@ trait ST_SimplifyBehaviors extends QueryTest {
         mc.register(spark)
         import mc.functions._
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
 
-        val stSimplify = ST_Simplify(df.col("wkt").expr, lit(1).expr, geometryAPI.name)
+        val stSimplify = ST_Simplify(df.col("wkt").expr, lit(1).expr, mc.expressionConfig)
 
         stSimplify.left shouldEqual df.col("wkt").expr
         stSimplify.right shouldEqual lit(1).expr

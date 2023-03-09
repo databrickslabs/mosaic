@@ -1,9 +1,8 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
@@ -12,17 +11,17 @@ import org.apache.spark.sql.types._
 import org.scalatest.matchers.should.Matchers.{all, an, be, convertToAnyShouldWrapper, noException}
 
 //noinspection AccessorLikeMethodIsUnit
-trait ST_IsValidBehaviors extends QueryTest {
+trait ST_IsValidBehaviors extends MosaicSpatialQueryTest {
 
-    def isValidBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def isValidBehaviour(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val sc = spark
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         import mc.functions._
         import sc.implicits._
         mc.register(spark)
 
-        val validDf = getWKTRowsDf(mc).orderBy("id")
+        val validDf = getWKTRowsDf().orderBy("id")
         val validResults = validDf.select(st_isvalid(col("wkt"))).as[Boolean].collect().toSeq
 
         all(validResults) should be(true)
@@ -80,15 +79,15 @@ trait ST_IsValidBehaviors extends QueryTest {
         all(sqlInvalidResults) should be(false)
     }
 
-    def isValidCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def isValidCodegen(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         val sc = spark
         import mc.functions._
         import sc.implicits._
         mc.register(spark)
 
-        val validDf = getWKTRowsDf(mc).orderBy("id")
+        val validDf = getWKTRowsDf().orderBy("id")
         val results = validDf.select(st_isvalid(col("wkt"))).as[Boolean]
 
         val queryExecution = results.queryExecution
@@ -103,17 +102,17 @@ trait ST_IsValidBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stIsValid = ST_IsValid(lit(1).expr, "JTS")
+        val stIsValid = ST_IsValid(lit(1).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stIsValid.genCode(ctx)
     }
 
-    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         mc.register(spark)
 
-        val stIsValid = ST_IsValid(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, geometryAPI.name)
+        val stIsValid = ST_IsValid(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, mc.expressionConfig)
 
         stIsValid.child shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
         stIsValid.dataType shouldEqual BooleanType
