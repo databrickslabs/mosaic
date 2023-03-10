@@ -7,10 +7,10 @@ trait MosaicMultiPolygon extends MosaicGeometry {
 
     def asSeq: Seq[MosaicGeometry]
 
-    override def flatten: Seq[MosaicGeometry] = asSeq
+    override def flatten: Seq[MosaicGeometry]
 
-    override def getShellPoints: Seq[Seq[MosaicPoint]] = getShells.map(_.asSeq)
+    override def getShellPoints: Seq[Seq[MosaicPoint]]
 
-    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]] = getHoles.map(_.map(_.asSeq))
+    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]]
 
 }

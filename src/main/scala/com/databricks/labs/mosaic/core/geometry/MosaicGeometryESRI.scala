@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.multipoint.MosaicMultiPointESRI
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonESRI
-import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
+import com.databricks.labs.mosaic.core.geometry.point.MosaicPointESRI
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonESRI
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
@@ -72,14 +72,6 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def intersection(other: MosaicGeometry): MosaicGeometryESRI = {
         val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
         MosaicGeometryESRI(intersection(otherGeom))
-    }
-
-    private def intersection(another: OGCGeometry): OGCGeometry = {
-        val op: OperatorIntersection =
-            OperatorFactoryLocal.getInstance.getOperator(Operator.Type.Intersection).asInstanceOf[OperatorIntersection]
-        val cursor: GeometryCursor =
-            op.execute(geom.getEsriGeometryCursor, another.getEsriGeometryCursor, geom.getEsriSpatialReference, null, -1)
-        OGCGeometry.createFromEsriCursor(cursor, geom.getEsriSpatialReference, true)
     }
 
     override def intersects(other: MosaicGeometry): Boolean = {
@@ -161,6 +153,16 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
         geom.setSpatialReference(sr)
     }
 
+    override def transformCRSXY(sridTo: Int): MosaicGeometryESRI = transformCRSXY(sridTo, None).asInstanceOf[MosaicGeometryESRI]
+
+    private def intersection(another: OGCGeometry): OGCGeometry = {
+        val op: OperatorIntersection =
+            OperatorFactoryLocal.getInstance.getOperator(Operator.Type.Intersection).asInstanceOf[OperatorIntersection]
+        val cursor: GeometryCursor =
+            op.execute(geom.getEsriGeometryCursor, another.getEsriGeometryCursor, geom.getEsriSpatialReference, null, -1)
+        OGCGeometry.createFromEsriCursor(cursor, geom.getEsriSpatialReference, true)
+    }
+
 }
 
 object MosaicGeometryESRI extends GeometryReader {
@@ -170,7 +172,7 @@ object MosaicGeometryESRI extends GeometryReader {
     @transient val kryo = new Kryo()
     kryo.register(classOf[Array[Byte]])
 
-    override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryESRI(OGCGeometry.fromText(wkt))
+    override def fromWKT(wkt: String): MosaicGeometryESRI = MosaicGeometryESRI(OGCGeometry.fromText(wkt))
 
     def apply(geom: OGCGeometry): MosaicGeometryESRI =
         GeometryTypeEnum.fromString(geom.geometryType()) match {
@@ -192,20 +194,20 @@ object MosaicGeometryESRI extends GeometryReader {
                     case Some(firstChip) if GeometryTypeEnum.fromString(firstChip.geometryType()).id == MULTIPOLYGON.id =>
                         MosaicMultiPolygonESRI(firstChip)
                     case None                                                                                           =>
-                        val emptyPolygon = MosaicPolygonESRI.fromWKT("POLYGON EMPTY").asInstanceOf[MosaicGeometryESRI]
+                        val emptyPolygon = MosaicPolygonESRI.fromWKT("POLYGON EMPTY")
                         emptyPolygon.setSpatialReference(geom.getEsriSpatialReference.getID)
                         emptyPolygon
                 }
         }
 
-    override def fromHEX(hex: String): MosaicGeometry = {
+    override def fromHEX(hex: String): MosaicGeometryESRI = {
         val bytes = WKBReader.hexToBytes(hex)
         fromWKB(bytes)
     }
 
     override def fromWKB(wkb: Array[Byte]): MosaicGeometryESRI = MosaicGeometryESRI(OGCGeometry.fromBinary(ByteBuffer.wrap(wkb)))
 
-    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryESRI(OGCGeometry.fromGeoJson(geoJson))
+    override def fromJSON(geoJson: String): MosaicGeometryESRI = MosaicGeometryESRI(OGCGeometry.fromGeoJson(geoJson))
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value): MosaicGeometryESRI = {
         reader(geomType.id).fromSeq(geomSeq, geomType).asInstanceOf[MosaicGeometryESRI]
@@ -221,9 +223,9 @@ object MosaicGeometryESRI extends GeometryReader {
             case MULTILINESTRING => MosaicMultiLineStringESRI
         }
 
-    override def fromInternal(row: InternalRow): MosaicGeometry = {
+    override def fromInternal(row: InternalRow): MosaicGeometryESRI = {
         val typeId = row.getInt(0)
-        reader(typeId).fromInternal(row)
+        reader(typeId).fromInternal(row).asInstanceOf[MosaicGeometryESRI]
     }
 
 }
