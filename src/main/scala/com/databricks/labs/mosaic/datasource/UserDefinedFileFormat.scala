@@ -9,7 +9,7 @@ import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.types.StructType
 
-class UserDefinedFileFormat extends FileFormat with DataSourceRegister {
+class UserDefinedFileFormat extends FileFormat with DataSourceRegister with Serializable {
 
     override def inferSchema(
         sparkSession: SparkSession,

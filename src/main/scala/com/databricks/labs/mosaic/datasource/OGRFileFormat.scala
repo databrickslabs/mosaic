@@ -23,7 +23,7 @@ import scala.util.Try
   * "layerNumber". The data source driver name is specified by the option
   * "driverName".
   */
-class OGRFileFormat extends FileFormat with DataSourceRegister {
+class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable {
 
     import com.databricks.labs.mosaic.datasource.OGRFileFormat._
 

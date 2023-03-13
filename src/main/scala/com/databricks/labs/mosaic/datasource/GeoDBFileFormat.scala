@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.execution.datasources.PartitionedFile
 import org.apache.spark.sql.sources.Filter
 
-class GeoDBFileFormat extends OGRFileFormat {
+class GeoDBFileFormat extends OGRFileFormat with Serializable {
 
     private val driverName = "FileGDB"
 

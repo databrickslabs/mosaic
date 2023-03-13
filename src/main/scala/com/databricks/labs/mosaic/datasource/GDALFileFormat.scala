@@ -17,7 +17,7 @@ import org.apache.spark.unsafe.types.UTF8String
   * A base Spark SQL data source for reading GDAL raster data sources. It reads
   * metadata of the raster and exposes the direct paths for the raster files.
   */
-class GDALFileFormat extends FileFormat with DataSourceRegister {
+class GDALFileFormat extends FileFormat with DataSourceRegister with Serializable {
 
     import GDALFileFormat._
 
