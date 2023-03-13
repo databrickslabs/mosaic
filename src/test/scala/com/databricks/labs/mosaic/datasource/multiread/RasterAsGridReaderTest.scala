@@ -19,6 +19,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("fileExtension", "grib")
             .option("tileSize", "10")
             .option("kRingInterpolation", "3")
             .load(filePath)

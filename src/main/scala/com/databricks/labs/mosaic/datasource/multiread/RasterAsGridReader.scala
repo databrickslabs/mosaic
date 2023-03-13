@@ -24,7 +24,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     val vsizipPathColF: Column => Column = (path: Column) =>
         when(
             path.endsWith(".zip"),
-            concat(lit("vsizip/"), path)
+            concat(lit("/vsizip/"), path)
         ).otherwise(path)
 
     override def load(path: String): DataFrame = load(Seq(path): _*)
@@ -136,11 +136,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                   }
                 )
                 .select(
-                  col("subdataset").alias("raster")
+                    vsizipPathColF(col("subdataset")).alias("raster")
                 )
         } else {
             pathsDf.select(
-              vsizipPathColF(col("path")).alias("raster")
+              col("path").alias("raster")
             )
         }
     }
