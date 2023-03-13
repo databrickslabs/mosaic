@@ -10,7 +10,7 @@ import org.apache.spark.sql.sources.Filter
 
 class GeoDBFileFormat extends OGRFileFormat with Serializable {
 
-    private val driverName = "FileGDB"
+    private val driverName = "OpenFileGDB"
 
     override def shortName(): String = "geo_db"
 

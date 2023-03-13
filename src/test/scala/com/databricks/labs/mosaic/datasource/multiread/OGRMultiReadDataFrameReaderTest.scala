@@ -15,22 +15,25 @@ class OGRMultiReadDataFrameReaderTest extends QueryTest with SharedSparkSessionG
 
         noException should be thrownBy MosaicContext.read
             .format("multi_read_ogr")
+            .option("vsizip", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy MosaicContext.read
             .format("multi_read_ogr")
-            .option("driverName", "FileGDB")
+            .option("driverName", "OpenFileGDB")
+            .option("vsizip", "true")
             .option("asWKB", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy MosaicContext.read
             .format("multi_read_ogr")
-            .option("driverName", "FileGDB")
+            .option("driverName", "OpenFileGDB")
+            .option("vsizip", "true")
             .option("asWKB", "true")
             .load(filePath)
-            .select("geometry")
+            .select("SHAPE")
             .take(1)
 
     }
@@ -58,7 +61,7 @@ class OGRMultiReadDataFrameReaderTest extends QueryTest with SharedSparkSessionG
             .option("driverName", "ESRI Shapefile")
             .option("asWKB", "true")
             .load(filePath)
-            .select("geometry")
+            .select("geom_0")
             .take(1)
 
     }

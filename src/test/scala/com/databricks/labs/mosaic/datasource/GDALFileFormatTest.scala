@@ -27,7 +27,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
             .format("gdal")
             .option("driverName", "NetCDF")
             .load(filePath)
-            .select("geometry")
+            .select("proj4Str")
             .take(1)
 
     }
@@ -53,7 +53,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
             .format("gdal")
             .option("driverName", "NetCDF")
             .load(filePath)
-            .select("geometry")
+            .select("proj4Str")
             .take(1)
 
     }
@@ -79,7 +79,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
             .format("gdal")
             .option("driverName", "TIF")
             .load(filePath)
-            .select("geometry")
+            .select("proj4Str")
             .take(1)
 
     }
@@ -92,12 +92,6 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
 
         noException should be thrownBy spark.read
             .format("gdal")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy spark.read
-            .format("gdal")
-            .option("driverName", "Zarr")
             .option("vsizip", "true")
             .load(filePath)
             .take(1)
@@ -107,7 +101,14 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
             .option("driverName", "Zarr")
             .option("vsizip", "true")
             .load(filePath)
-            .select("geometry")
+            .take(1)
+
+        noException should be thrownBy spark.read
+            .format("gdal")
+            .option("driverName", "Zarr")
+            .option("vsizip", "true")
+            .load(filePath)
+            .select("proj4Str")
             .take(1)
 
     }

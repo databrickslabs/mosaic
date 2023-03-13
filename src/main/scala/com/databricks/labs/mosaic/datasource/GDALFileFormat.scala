@@ -86,7 +86,7 @@ object GDALFileFormat extends Serializable {
             case "COG"         => "tif"
             case "GRIB"        => "grib"
             case "Zarr"        => "zarr"
-            case _             => ""
+            case _             => "UNSUPPORTED"
         }
     }
 

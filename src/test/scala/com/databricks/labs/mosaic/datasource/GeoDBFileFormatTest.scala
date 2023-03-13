@@ -14,20 +14,23 @@ class GeoDBFileFormatTest extends QueryTest with SharedSparkSession {
 
         noException should be thrownBy spark.read
             .format("geo_db")
+            .option("vsizip", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("geo_db")
+            .option("vsizip", "true")
             .option("asWKB", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("geo_db")
+            .option("vsizip", "true")
             .option("asWKB", "true")
             .load(filePath)
-            .select("geometry")
+            .select("SHAPE_srid")
             .take(1)
 
     }

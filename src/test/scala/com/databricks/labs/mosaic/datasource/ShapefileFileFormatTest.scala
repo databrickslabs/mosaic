@@ -27,7 +27,7 @@ class ShapefileFileFormatTest extends QueryTest with SharedSparkSession {
             .format("shapefile")
             .option("asWKB", "true")
             .load(filePath)
-            .select("geometry")
+            .select("geom_0")
             .take(1)
 
     }

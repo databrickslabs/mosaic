@@ -14,22 +14,25 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSession {
 
         noException should be thrownBy spark.read
             .format("ogr")
+            .option("vsizip", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("ogr")
-            .option("driverName", "FileGDB")
+            .option("driverName", "OpenFileGDB")
+            .option("vsizip", "true")
             .option("asWKB", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("ogr")
-            .option("driverName", "FileGDB")
+            .option("driverName", "OpenFileGDB")
+            .option("vsizip", "true")
             .option("asWKB", "true")
             .load(filePath)
-            .select("geometry")
+            .select("SHAPE_srid")
             .take(1)
 
     }
@@ -57,7 +60,7 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSession {
             .option("driverName", "ESRI Shapefile")
             .option("asWKB", "true")
             .load(filePath)
-            .select("geometry")
+            .select("geom_0_srid")
             .take(1)
 
     }

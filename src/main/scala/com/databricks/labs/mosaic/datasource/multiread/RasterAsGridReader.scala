@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.datasource.multiread
 
+import com.databricks.labs.mosaic.datasource.GDALFileFormat
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
@@ -34,6 +35,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val resolution = config("resolution").toInt
 
         val pathsDf = sparkSession.read
+            .option("globFilter", GDALFileFormat.getFileExtension(config("driverName")))
             .format("binaryFile")
             .load(paths: _*)
             .select("path")
