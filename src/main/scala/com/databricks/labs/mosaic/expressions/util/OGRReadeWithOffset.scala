@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.util
 
 import com.databricks.labs.mosaic.datasource.{OGRFileFormat, Utils}
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, CollectionGenerator, Expression, ExpressionInfo}
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, CollectionGenerator, Expression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -28,7 +28,7 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
 
     override def position: Boolean = false
 
-    override def elementSchema: StructType = schema
+    override def elementSchema: StructType = collectionType.asInstanceOf[StructType]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val path = pathExpr.eval(input).asInstanceOf[UTF8String].toString
@@ -60,36 +60,5 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
 
     override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
         makeCopy(Array(newLeft, newRight))
-
-}
-
-object OGRReadeWithOffset {
-
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[OGRReadeWithOffset].getCanonicalName,
-          db.orNull,
-          "flatten_polygons",
-          """
-            |    _FUNC_(geometry) - The geometry instance can contain both Polygons and MultiPolygons.
-            |    The flattened representation will only contain Polygons.
-            |    MultiPolygon rows will be exploded into Polygon rows
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        Polygon ((...))
-            |        Polygon ((...))
-            |        ...
-            |        Polygon ((...))
-            |  """.stripMargin,
-          "",
-          "generator_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
 
 }

@@ -5,6 +5,8 @@ import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.must.Matchers.{be, noException}
 
+import java.nio.file.{Files, Paths}
+
 class OGRMultiReadDataFrameReaderTest extends QueryTest with SharedSparkSessionGDAL {
 
     test("Read open geoDB with OGRFileFormat") {
@@ -56,11 +58,12 @@ class OGRMultiReadDataFrameReaderTest extends QueryTest with SharedSparkSessionG
             .load(filePath)
             .take(1)
 
+        val paths = Files.list(Paths.get(filePath)).toArray.map(_.toString)
         noException should be thrownBy MosaicContext.read
             .format("multi_read_ogr")
             .option("driverName", "ESRI Shapefile")
             .option("asWKB", "true")
-            .load(filePath)
+            .load(paths: _*)
             .select("geom_0")
             .take(1)
 

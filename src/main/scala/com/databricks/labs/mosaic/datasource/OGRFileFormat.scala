@@ -123,6 +123,7 @@ object OGRFileFormat extends Serializable {
       */
     def getType(typeName: String): DataType =
         typeName match {
+            case "Boolean"        => BooleanType
             case "Integer"        => IntegerType
             case "String"         => StringType
             case "Real"           => DoubleType
@@ -172,22 +173,33 @@ object OGRFileFormat extends Serializable {
               (Try(DateTimeUtils.stringToTimestampWithoutTimeZone(UTF8String.fromString(value)).get).toOption, TimestampType)
             ).filter(_._1.isDefined).map(_._2)
 
-            val inferredType =
-                if (coerceables.isEmpty) StringType
-                else if (coerceables.contains(LongType)) LongType
-                else if (coerceables.contains(DoubleType)) DoubleType
-                else if (coerceables.contains(FloatType)) FloatType
-                else if (coerceables.contains(IntegerType)) IntegerType
-                else if (coerceables.contains(ShortType)) ShortType
-                else if (coerceables.contains(ByteType)) ByteType
-                else if (coerceables.contains(BooleanType)) BooleanType
-                else if (coerceables.contains(DateType)) DateType
-                else if (coerceables.contains(TimestampType)) TimestampType
-                else StringType
-
+            val inferredType = coerceTypeList(coerceables)
             if (reportedType == StringType && inferredType != StringType) inferredType
             else TypeCoercion.findTightestCommonType(reportedType, inferredType).getOrElse(StringType)
         }
+    }
+
+    /**
+      * Coerces a list of types to a single type.
+      *
+      * @param coerceables
+      *   the list of types.
+      * @return
+      *   the coerced type.
+      */
+    def coerceTypeList(coerceables: Seq[DataType]): DataType = {
+        if (coerceables.isEmpty) StringType
+        else if (coerceables.contains(LongType)) LongType
+        else if (coerceables.contains(DoubleType)) DoubleType
+        else if (coerceables.contains(FloatType)) FloatType
+        else if (coerceables.contains(IntegerType)) IntegerType
+        else if (coerceables.contains(ShortType)) ShortType
+        else if (coerceables.contains(BinaryType)) BinaryType
+        else if (coerceables.contains(ByteType)) ByteType
+        else if (coerceables.contains(BooleanType)) BooleanType
+        else if (coerceables.contains(DateType)) DateType
+        else if (coerceables.contains(TimestampType)) TimestampType
+        else StringType
     }
 
     /**

@@ -7,8 +7,32 @@ import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.test.{SharedSparkSession, SharedSparkSessionGDAL}
 import org.scalatest.matchers.must.Matchers.{be, noException}
+import org.scalatest.matchers.should.Matchers.an
+
+import java.nio.file.{Files, Path, Paths}
 
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
+
+    test("Read netcdf with Raster As Grid Reader") {
+        assume(System.getProperty("os.name") == "Linux")
+        MosaicContext.build(H3IndexSystem, JTS)
+
+        val grib = "/binary/netcdf-coral/"
+        val filePath = getClass.getResource(grib).getPath
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("retile", "true")
+            .option("tileSize", "10")
+            .option("readSubdataset", "true")
+            .option("subdataset", "1")
+            .option("kRingInterpolation", "3")
+            .load(filePath)
+            .select("measure")
+            .queryExecution
+            .executedPlan
+
+    }
 
     test("Read grib with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
@@ -20,6 +44,8 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
             .option("fileExtension", "grib")
+            .option("combiner", "min")
+            .option("retile", "true")
             .option("tileSize", "10")
             .option("kRingInterpolation", "3")
             .load(filePath)
@@ -37,6 +63,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("combiner", "max")
             .option("tileSize", "10")
             .option("kRingInterpolation", "3")
             .load(filePath)
@@ -54,12 +81,55 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("combiner", "median")
             .option("vsizip", "true")
             .option("tileSize", "10")
-            .option("kRingInterpolation", "3")
+            .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")
             .take(1)
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("combiner", "count")
+            .option("vsizip", "true")
+            .load(filePath)
+            .select("measure")
+            .take(1)
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("combiner", "average")
+            .option("vsizip", "true")
+            .load(filePath)
+            .select("measure")
+            .take(1)
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("combiner", "avg")
+            .option("vsizip", "true")
+            .load(filePath)
+            .select("measure")
+            .take(1)
+
+        val paths = Files.list(Paths.get(filePath)).toArray.map(_.toString)
+
+        an[Error] should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("combiner", "count_+")
+            .option("vsizip", "true")
+            .load(paths: _*)
+            .select("measure")
+            .take(1)
+
+        an[Error] should be thrownBy MosaicContext.read
+            .format("invalid")
+            .load(paths: _*)
+
+        an[Error] should be thrownBy MosaicContext.read
+            .format("invalid")
+            .load(filePath)
 
     }
 
