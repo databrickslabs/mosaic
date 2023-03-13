@@ -185,7 +185,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
         mc.register(spark)
 
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_intersection($"wkt", $"wkt"))
             .as[String]
 
@@ -207,8 +207,11 @@ trait ST_IntersectionBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stIntersection =
-            ST_Intersection(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, lit("POLYGON (1 2, 2 2, 3 3, 4 2, 1 2)").expr, geometryAPI.name)
+        val stIntersection = ST_Intersection(
+          lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr,
+          lit("POLYGON (1 2, 2 2, 3 3, 4 2, 1 2)").expr,
+          mc.expressionConfig
+        )
 
         stIntersection.left shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
         stIntersection.right shouldEqual lit("POLYGON (1 2, 2 2, 3 3, 4 2, 1 2)").expr

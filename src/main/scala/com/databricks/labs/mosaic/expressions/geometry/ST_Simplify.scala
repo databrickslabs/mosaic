@@ -1,92 +1,66 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.MosaicGeometryJTS
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector1ArgExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
-import org.locationtech.jts.geom.Geometry
 
-case class ST_Simplify(inputGeom: Expression, tolerance: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
-
-    override def left: Expression = inputGeom
-
-    override def right: Expression = tolerance
+/**
+  * SQL expression that returns the input geometry simplified respecting the
+  * tolerance.
+  * @param inputGeom
+  *   Expression containing the geometry.
+  * @param toleranceExpr
+  *   The tolerance of the simplification.
+  * @param expressionConfig
+  *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
+  *   arguments for the expression (expressionConfigs).
+  */
+case class ST_Simplify(
+    inputGeom: Expression,
+    toleranceExpr: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVector1ArgExpression[ST_Simplify](
+      inputGeom,
+      toleranceExpr,
+      returnsGeometry = true,
+      expressionConfig
+    ) {
 
     override def dataType: DataType = inputGeom.dataType
 
-    override protected def nullSafeEval(geom: Any, tol: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geometry = geometryAPI.geometry(geom, inputGeom.dataType)
-        val simplify = geometry.simplify(tol.asInstanceOf[Double])
-        geometryAPI.serialize(simplify, inputGeom.dataType)
+    override def geometryTransform(geometry: MosaicGeometry, arg: Any): Any = {
+        geometry.simplify(arg.asInstanceOf[Double])
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = ST_Simplify(asArray(0), asArray(1), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
+    override def geometryCodeGen(geometryRef: String, argRef: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.simplify($argRef);"""
+        (code, resultRef)
     }
-
-    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
-        nullSafeCodeGen(
-          ctx,
-          ev,
-          (leftEval, rightEval) => {
-              val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val simplified = ctx.freshName("simplified")
-              val GeometryClass = geometryAPI.geometryClass
-
-              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-              val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, simplified, inputGeom.dataType, geometryAPI)
-
-              geometryAPI.name match {
-                  case "ESRI" => geometryAPI.codeGenTryWrap(s"""
-                                                               |$inCode
-                                                               |$GeometryClass $simplified = $geomInRef.makeSimple();
-                                                               |$outCode
-                                                               |${ev.value} = $outGeomRef;
-                                                               |""".stripMargin)
-                  case "JTS"  =>
-                      val jtsGeometryClass = classOf[Geometry].getName
-                      val mosaicGeometryJTSClass = classOf[MosaicGeometryJTS].getName
-                      geometryAPI.codeGenTryWrap(s"""
-                                                    |$inCode
-                                                    |$jtsGeometryClass $simplified = (($mosaicGeometryJTSClass)$mosaicGeometryJTSClass.apply($geomInRef).simplify($rightEval)).getGeom();
-                                                    |$outCode
-                                                    |${ev.value} = $outGeomRef;
-                                                    |""".stripMargin)
-
-              }
-          }
-        )
-
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
-        copy(inputGeom = newLeft, tolerance = newRight)
 
 }
 
-object ST_Simplify {
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_Simplify].getCanonicalName,
-          db.orNull,
-          "st_simplify",
-          """
-            |    _FUNC_(expr1) - Returns the simplified input geometry.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        {"POLYGON (( 0 0, 1 0, 1 1, 0 1 ))"}
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+/** Expression info required for the expression registration for spark SQL. */
+object ST_Simplify extends WithExpressionInfo {
+
+    override def name: String = "st_simplify"
+
+    override def usage: String = "_FUNC_(expr1, expr2) - Returns simplified geometry."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a, b);
+          |        POLYGON (...)
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Simplify](2, expressionConfig)
+    }
+
 }

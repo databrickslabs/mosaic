@@ -1,9 +1,11 @@
 package com.databricks.labs.mosaic.core.geometry
 
+import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
+import org.locationtech.proj4j._
 
-import org.locationtech.proj4j.{CoordinateTransformFactory, CRSFactory, ProjCoordinate}
+import java.util.Locale
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
 
@@ -81,23 +83,25 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def minMaxCoord(dimension: String, func: String): Double = {
         val coordArray = this.getShellPoints.map(shell => {
-            val unitArray = dimension match {
+            val unitArray = dimension.toUpperCase(Locale.ROOT) match {
                 case "X" => shell.map(_.getX)
                 case "Y" => shell.map(_.getY)
                 case "Z" => shell.map(_.getZ)
             }
-            func match {
+            func.toUpperCase(Locale.ROOT) match {
                 case "MIN" => unitArray.min
                 case "MAX" => unitArray.max
             }
         })
-        func match {
+        func.toUpperCase(Locale.ROOT) match {
             case "MIN" => coordArray.min
             case "MAX" => coordArray.max
         }
     }
 
-    def transformCRSXY(sridTo: Int, sridFrom: Option[Int] = None): MosaicGeometry = {
+    def transformCRSXY(sridTo: Int): MosaicGeometry
+
+    def transformCRSXY(sridTo: Int, sridFrom: Option[Int]): MosaicGeometry = {
 
         val crsFactory = new CRSFactory
         val crsFrom = crsFactory.createFromName(f"epsg:${sridFrom.getOrElse(getSpatialReference)}")
@@ -122,5 +126,18 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def getSpatialReference: Int
 
     def setSpatialReference(srid: Int): Unit
+
+    def hasValidCoords(crsBoundsProvider: CRSBoundsProvider, crsCode: String, which: String): Boolean = {
+        val crsCodeIn = crsCode.split(":")
+        val crsBounds = which.toLowerCase(Locale.ROOT) match {
+            case "bounds"             => crsBoundsProvider.bounds(crsCodeIn(0), crsCodeIn(1).toInt)
+            case "reprojected_bounds" => crsBoundsProvider.reprojectedBounds(crsCodeIn(0), crsCodeIn(1).toInt)
+            case _                    => throw new Error("Only boundary and reprojected_boundary supported for which argument.")
+        }
+        (Seq(getShellPoints) ++ getHolePoints).flatten.flatten.forall(point =>
+            crsBounds.lowerLeft.getX <= point.getX && point.getX <= crsBounds.upperRight.getX &&
+            crsBounds.lowerLeft.getY <= point.getY && point.getY <= crsBounds.upperRight.getY
+        )
+    }
 
 }

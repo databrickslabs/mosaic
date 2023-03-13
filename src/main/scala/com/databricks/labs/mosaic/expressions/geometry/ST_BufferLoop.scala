@@ -1,88 +1,71 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
 
-case class ST_BufferLoop(inputGeom: Expression, innerRadius: Expression, outerRadius: Expression, geometryAPIName: String)
-    extends TernaryExpression
-      with NullIntolerant {
-
-    override def first: Expression = inputGeom
-
-    override def second: Expression = innerRadius
-
-    override def third: Expression = outerRadius
+/**
+  * SQL expression that returns the buffer loop of the input geometry.
+  * @param inputGeom
+  *   Expression containing the geometry.
+  * @param innerRadius
+  *   Expression containing the inner radius.
+  * @param outerRadius
+  *   Expression containing the outer radius.
+  * @param expressionConfig
+  *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
+  *   arguments for the expression (expressionConfigs).
+  */
+case class ST_BufferLoop(
+    inputGeom: Expression,
+    innerRadius: Expression,
+    outerRadius: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVector2ArgExpression[ST_BufferLoop](
+      inputGeom,
+      innerRadius,
+      outerRadius,
+      returnsGeometry = true,
+      expressionConfig
+    ) {
 
     override def dataType: DataType = inputGeom.dataType
 
-    override def nullSafeEval(geomRow: Any, innerRadiusRow: Any, outerRadiusRow: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geometry = geometryAPI.geometry(geomRow, inputGeom.dataType)
-        val innerRadiusVal = innerRadiusRow.asInstanceOf[Double]
-        val outerRadiusVal = outerRadiusRow.asInstanceOf[Double]
-        val result = geometry.buffer(outerRadiusVal).difference(geometry.buffer(innerRadiusVal))
-        geometryAPI.serialize(result, inputGeom.dataType)
+    override def geometryTransform(geometry: MosaicGeometry, arg1: Any, arg2: Any): Any = {
+        val innerRadius = arg1.asInstanceOf[Double]
+        val outerRadius = arg2.asInstanceOf[Double]
+        geometry.buffer(outerRadius).difference(geometry.buffer(innerRadius))
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = ST_BufferLoop(asArray.head, asArray(1), asArray(2), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
+    override def geometryCodeGen(geometryRef: String, arg1Ref: String, arg2Ref: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.buffer($arg2Ref).difference($geometryRef.buffer($arg1Ref));"""
+        (code, resultRef)
     }
-
-    override def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): Expression =
-        copy(newFirst, newSecond, newThird)
-
-    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
-        nullSafeCodeGen(
-          ctx,
-          ev,
-          (geomEval, r1, r2) => {
-              val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val result = ctx.freshName("result")
-              val polygonClass = geometryAPI.geometryClass
-
-              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, geomEval, inputGeom.dataType, geometryAPI)
-              val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, result, inputGeom.dataType, geometryAPI)
-
-              geometryAPI.codeGenTryWrap(s"""
-                                            |$inCode
-                                            |$polygonClass $result = $geomInRef.buffer($r2).difference($geomInRef.buffer($r1));
-                                            |$outCode
-                                            |${ev.value} = $outGeomRef;
-                                            |""".stripMargin)
-          }
-        )
 
 }
 
-object ST_BufferLoop {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_BufferLoop extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_BufferLoop].getCanonicalName,
-          db.orNull,
-          "st_bufferloop",
-          """
-            |    _FUNC_(expr1) - Returns the buffer loop of the geometry.
-            |    Buffer loop is the difference between the outer buffer and the inner buffer.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a, r1, r2);
-            |        POLYGON(...) / MULTIPOLYGON(...)
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_bufferloop"
+
+    override def usage: String = "_FUNC_(expr1, expr2, expr3) - Returns the buffer loop of the geometry."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a, r1, r2);
+          |        POLYGON(...) / MULTIPOLYGON(...)
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_BufferLoop](3, expressionConfig)
+    }
 
 }

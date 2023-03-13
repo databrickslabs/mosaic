@@ -10,7 +10,7 @@ import org.scalatest.matchers.should.Matchers._
 
 trait RST_RasterToWorldCoordXBehaviors extends QueryTest {
 
-    def scaleXBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def rasterToWorldCoordX(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark
@@ -43,6 +43,10 @@ trait RST_RasterToWorldCoordXBehaviors extends QueryTest {
         an[Exception] should be thrownBy spark.sql("""
                                                      |select rst_rastertoworldcoordx() from source
                                                      |""".stripMargin)
+
+        noException should be thrownBy rst_rastertoworldcoordx(lit("/dummy/path"), 2, 2)
+        noException should be thrownBy rst_rastertoworldcoordx("/dummy/path", lit(2), lit(2))
+        noException should be thrownBy rst_rastertoworldcoordx(lit("/dummy/path"), lit(2), lit(2))
 
     }
 

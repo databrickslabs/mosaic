@@ -20,15 +20,15 @@ trait MosaicPoint extends MosaicGeometry {
 
     def asSeq: Seq[Double]
 
-    override def flatten: Seq[MosaicGeometry] = List(this)
+    override def flatten: Seq[MosaicGeometry]
 
-    override def getShellPoints: Seq[Seq[MosaicPoint]] = Seq(Seq(this))
+    override def getShellPoints: Seq[Seq[MosaicPoint]]
 
-    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]] = Nil
+    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]]
 
     override def getShells: Seq[MosaicLineString] =
         throw MosaicCoreException.InvalidGeometryOperation("getShells should not be called on a Point.")
 
-    override def getHoles: Seq[Seq[MosaicLineString]] = Nil
+    override def getHoles: Seq[Seq[MosaicLineString]]
 
 }

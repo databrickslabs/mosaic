@@ -1,23 +1,19 @@
 package com.databricks.labs.mosaic.core.geometry.api
 
 import com.databricks.labs.mosaic.codegen.format.{MosaicGeometryIOCodeGenESRI, MosaicGeometryIOCodeGenJTS}
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI._
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPointESRI, MosaicPointJTS}
 import com.databricks.labs.mosaic.core.types.model.Coordinates
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
-
-import java.util.Locale
 
 class GeometryAPITest extends AnyFunSuite with GeometryAPIBehaviors {
 
     test("Construct available Geometry APIs") {
         noException should be thrownBy GeometryAPI("JTS")
         noException should be thrownBy GeometryAPI("ESRI")
-        noException should be thrownBy GeometryAPI("anyother")
+        an[Error] should be thrownBy GeometryAPI("anyother")
         GeometryAPI.apply("JTS") shouldEqual JTS
         GeometryAPI.apply("ESRI") shouldEqual ESRI
-        GeometryAPI.apply("anyother") shouldEqual IllegalAPI
     }
 
     test("JTS Geometry API") {
@@ -39,13 +35,7 @@ class GeometryAPITest extends AnyFunSuite with GeometryAPIBehaviors {
     }
 
     test("IllegalAPI Geometry API tests") {
-        val illegalAPI = GeometryAPI.apply("anyother")
-        illegalAPI.name.toUpperCase(Locale.ROOT) shouldEqual "ILLEGAL"
-        an[Error] should be thrownBy illegalAPI.fromCoords(Seq(0.1, 0.2))
-        an[Error] should be thrownBy illegalAPI.fromGeoCoord(Coordinates(0.2, 0.1))
-        an[Error] should be thrownBy illegalAPI.ioCodeGen
-        an[Error] should be thrownBy illegalAPI.codeGenTryWrap("1==1;")
-        GeometryAPI
+        an[Error] should be thrownBy GeometryAPI.apply("anyother")
     }
 
     test("Geometry API serialize and deserialize") {
@@ -60,6 +50,23 @@ class GeometryAPITest extends AnyFunSuite with GeometryAPIBehaviors {
         assertThrows[Error] {
             geometryAPI.serialize(point, "non-existent-format")
         }
+    }
+
+    test("Base signatures") {
+        val jts: GeometryAPI = GeometryAPI.apply("JTS")
+        val esri: GeometryAPI = GeometryAPI.apply("ESRI")
+        noException should be thrownBy jts.fromCoords(Seq(0.1, 0.2))
+        noException should be thrownBy esri.fromCoords(Seq(0.1, 0.2))
+        noException should be thrownBy jts.fromGeoCoord(Coordinates(0.2, 0.1))
+        noException should be thrownBy esri.fromGeoCoord(Coordinates(0.2, 0.1))
+        noException should be thrownBy jts.ioCodeGen
+        noException should be thrownBy esri.ioCodeGen
+        noException should be thrownBy jts.codeGenTryWrap("1==1;")
+        noException should be thrownBy esri.codeGenTryWrap("1==1;")
+        noException should be thrownBy jts.geometryClass
+        noException should be thrownBy esri.geometryClass
+        noException should be thrownBy jts.mosaicGeometryClass
+        noException should be thrownBy esri.mosaicGeometryClass
     }
 
 }

@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.ESRI
+import com.databricks.labs.mosaic.core.geometry.api.ESRI
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import org.scalatest.funsuite.AnyFunSuite
 
