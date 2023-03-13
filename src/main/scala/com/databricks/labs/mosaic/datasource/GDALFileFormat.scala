@@ -9,9 +9,7 @@ import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.util.GenericArrayData
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
 
 /**
   * A base Spark SQL data source for reading GDAL raster data sources. It reads
@@ -28,6 +26,7 @@ class GDALFileFormat extends FileFormat with DataSourceRegister with Serializabl
         options: Map[String, String],
         files: Seq[FileStatus]
     ): Option[StructType] = {
+        GDAL.enable()
         inferSchemaImpl()
     }
 
@@ -59,7 +58,7 @@ class GDALFileFormat extends FileFormat with DataSourceRegister with Serializabl
 
 }
 
-object GDALFileFormat {
+object GDALFileFormat extends Serializable {
 
     /**
       * Returns the supported file extension for the driver name.
@@ -89,28 +88,6 @@ object GDALFileFormat {
             case "Zarr"        => "zarr"
             case _             => ""
         }
-    }
-
-    /**
-      * Creates a Spark SQL row from a sequence of values.
-      *
-      * @param values
-      *   sequence of values.
-      * @return
-      *   Spark SQL row.
-      */
-    def createRow(values: Seq[Any]): InternalRow = {
-        import com.databricks.labs.mosaic.expressions.raster
-        InternalRow.fromSeq(
-          values.map {
-              case null           => null
-              case b: Array[Byte] => b
-              case v: Array[_]    => new GenericArrayData(v)
-              case m: Map[_, _]   => raster.buildMapString(m.map { case (k, v) => (k.toString, v.toString) })
-              case s: String      => UTF8String.fromString(s)
-              case v              => v
-          }
-        )
     }
 
     /** GDAL readers have fixed schema. */
@@ -149,7 +126,7 @@ object GDALFileFormat {
                 val subdatasets = raster.subdatasets
                 val srid = raster.SRID
                 val proj4Str = raster.proj4String
-                val row = createRow(Seq(path, ySize, xSize, bandCount, metadata, subdatasets, srid, proj4Str))
+                val row = Utils.createRow(Seq(path, ySize, xSize, bandCount, metadata, subdatasets, srid, proj4Str))
                 Seq(row).iterator
             } else {
                 Seq.empty[InternalRow].iterator

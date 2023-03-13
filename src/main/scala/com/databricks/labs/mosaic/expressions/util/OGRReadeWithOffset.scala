@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.util
 
-import com.databricks.labs.mosaic.datasource.OGRFileFormat
+import com.databricks.labs.mosaic.datasource.{OGRFileFormat, Utils}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, CollectionGenerator, Expression, ExpressionInfo}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -44,7 +44,7 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
         for (_ <- start until end) yield {
             val feature = layer.GetNextFeature()
             val row = OGRFileFormat.getFeatureFields(feature, schema, asWKB)
-            OGRFileFormat.createRow(row)
+            Utils.createRow(row)
         }
     }
 

@@ -14,12 +14,16 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister with Ser
 
     override def shortName(): String = "shapefile"
 
+    def checkExtension(path: String): Boolean = {
+        path.endsWith(".shp") || path.endsWith(".zip")
+    }
+
     override def inferSchema(
         sparkSession: SparkSession,
         options: Map[String, String],
         files: Seq[FileStatus]
     ): Option[StructType] = {
-        val headFilePath = files.head.getPath.toString
+        val headFilePath = files.map(_.getPath.toString).filter(checkExtension).head
         OGRFileFormat.inferSchemaImpl(driverName, headFilePath, options)
     }
 
@@ -33,8 +37,7 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister with Ser
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] =
         (file: PartitionedFile) => {
-            val extension = file.filePath.split("\\.").last
-            if (extension == "shp" || extension == "zip") {
+            if (checkExtension(file.filePath)) {
                 OGRFileFormat.buildReaderImpl(driverName, dataSchema, options)(file)
             } else {
                 Seq.empty[InternalRow].iterator

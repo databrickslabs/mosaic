@@ -9,6 +9,11 @@ import org.apache.spark.sql.execution.datasources._
 import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.types.StructType
 
+/**
+  * A base Spark SQL data source for reading any file format using User Defined
+  * Code. To be used for file format injection at script level.
+  */
+//noinspection ScalaStyle
 class UserDefinedFileFormat extends FileFormat with DataSourceRegister with Serializable {
 
     override def inferSchema(

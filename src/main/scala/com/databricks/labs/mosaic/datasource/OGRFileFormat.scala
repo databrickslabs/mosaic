@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.datasource
 
-import com.databricks.labs.mosaic.expressions.raster
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.mapreduce.Job
@@ -9,11 +8,12 @@ import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCoercion
-import org.apache.spark.sql.catalyst.util.{DateTimeUtils, GenericArrayData}
+import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.ogr._
 
+import java.sql.Timestamp
 import scala.collection.convert.ImplicitConversions.`dictionary AsScalaMap`
 import scala.util.Try
 
@@ -105,7 +105,7 @@ object OGRFileFormat extends Serializable {
         }
     }
 
-    /** Registers all OGR drivers if they havent been registered yet. */
+    /** Registers all OGR drivers if they haven't been registered yet. */
     final def enableOGRDrivers(force: Boolean = false): Unit = {
         val drivers = ogr.GetDriverCount
         if (drivers == 0 || force) {
@@ -216,10 +216,44 @@ object OGRFileFormat extends Serializable {
         }
     }
 
+    /**
+      * Return the field index of a field name if it exists.
+      *
+      * @param feature
+      *   the OGR feature.
+      * @param name
+      *   the field name.
+      * @return
+      *   the field index.
+      */
     def getFieldIndex(feature: Feature, name: String): Option[Int] = {
         val field = feature.GetFieldDefnRef(name)
         if (field == null) None
         else (0 until feature.GetFieldCount).find(i => feature.GetFieldDefnRef(i).GetName == name)
+    }
+
+    /**
+      * Converts a OGR date to a java.sql.Date.
+      *
+      * @param feature
+      *   the OGR feature.
+      * @param id
+      *   the field index.
+      * @return
+      *   the java.sql.Date.
+      */
+    // noinspection ScalaDeprecation
+    def getJavaSQLTimestamp(feature: Feature, id: Int): Timestamp = {
+        var year: Array[Int] = Array.fill[Int](1)(0)
+        var month: Array[Int] = Array.fill[Int](1)(0)
+        var day: Array[Int] = Array.fill[Int](1)(0)
+        var hour: Array[Int] = Array.fill[Int](1)(0)
+        var minute: Array[Int] = Array.fill[Int](1)(0)
+        var second: Array[Float] = Array.fill[Float](1)(0)
+        var tz: Array[Int] = Array.fill[Int](1)(0)
+        feature.GetFieldAsDateTime(id, year, month, day, hour, minute, second, tz)
+        val datetime = new java.sql.Timestamp(year(0), month(0), day(0), hour(0), minute(0), second(0).toInt, tz(0))
+        datetime
     }
 
     /**
@@ -233,15 +267,8 @@ object OGRFileFormat extends Serializable {
       */
     // noinspection ScalaDeprecation
     def getDate(feature: Feature, id: Int): Int = {
-        var year: Array[Int] = Array.fill[Int](1)(0)
-        var month: Array[Int] = Array.fill[Int](1)(0)
-        var day: Array[Int] = Array.fill[Int](1)(0)
-        var hour: Array[Int] = Array.fill[Int](1)(0)
-        var minute: Array[Int] = Array.fill[Int](1)(0)
-        var second: Array[Float] = Array.fill[Float](1)(0)
-        var tz: Array[Int] = Array.fill[Int](1)(0)
-        feature.GetFieldAsDateTime(id, year, month, day, hour, minute, second, tz)
-        val date = new java.sql.Date(year(0), month(0), day(0))
+        val timestamp = getJavaSQLTimestamp(feature, id)
+        val date = new java.sql.Date(timestamp.getYear, timestamp.getMonth, timestamp.getDay)
         DateTimeUtils.fromJavaDate(date)
     }
 
@@ -254,39 +281,9 @@ object OGRFileFormat extends Serializable {
       *   field index.
       * @return
       */
-    // noinspection ScalaDeprecation
     def getDateTime(feature: Feature, id: Int): Long = {
-        var year: Array[Int] = Array.fill[Int](1)(0)
-        var month: Array[Int] = Array.fill[Int](1)(0)
-        var day: Array[Int] = Array.fill[Int](1)(0)
-        var hour: Array[Int] = Array.fill[Int](1)(0)
-        var minute: Array[Int] = Array.fill[Int](1)(0)
-        var second: Array[Float] = Array.fill[Float](1)(0)
-        var tz: Array[Int] = Array.fill[Int](1)(0)
-        feature.GetFieldAsDateTime(id, year, month, day, hour, minute, second, tz)
-        val datetime = new java.sql.Timestamp(year(0), month(0), day(0), hour(0), minute(0), second(0).toInt, tz(0))
+        val datetime = getJavaSQLTimestamp(feature, id)
         DateTimeUtils.fromJavaTimestamp(datetime)
-    }
-
-    /**
-      * Creates a Spark SQL row from a sequence of values.
-      *
-      * @param values
-      *   sequence of values.
-      * @return
-      *   Spark SQL row.
-      */
-    def createRow(values: Seq[Any]): InternalRow = {
-        InternalRow.fromSeq(
-          values.map {
-              case null           => null
-              case b: Array[Byte] => b
-              case v: Array[_]    => new GenericArrayData(v)
-              case m: Map[_, _]   => raster.buildMapString(m.map { case (k, v) => (k.toString, v.toString) })
-              case s: String      => UTF8String.fromString(s)
-              case v              => v
-          }
-        )
     }
 
     /**
@@ -385,6 +382,8 @@ object OGRFileFormat extends Serializable {
         path: String,
         options: Map[String, String]
     ): Option[StructType] = {
+        OGRFileFormat.enableOGRDrivers()
+
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val layerName = options.getOrElse("layerName", "")
         val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
@@ -437,7 +436,8 @@ object OGRFileFormat extends Serializable {
         options: Map[String, String]
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
-            enableOGRDrivers()
+            OGRFileFormat.enableOGRDrivers()
+
             val layerN = options.getOrElse("layerNumber", "0").toInt
             val layerName = options.getOrElse("layerName", "")
             val useZipPath = options.getOrElse("vsizip", "false").toBoolean
@@ -455,7 +455,7 @@ object OGRFileFormat extends Serializable {
                     feature = layer.GetNextFeature()
                     val fields = getFeatureFields(feature, schema, asWKB)
                     val values = fields ++ Seq(metadata)
-                    val row = createRow(values)
+                    val row = Utils.createRow(values)
                     acc ++ Seq(row)
                 })
                 .iterator
