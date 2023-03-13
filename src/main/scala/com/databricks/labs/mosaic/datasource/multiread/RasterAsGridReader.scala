@@ -20,6 +20,12 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     mc.getRasterAPI.enable()
     import mc.functions._
 
+    val vsizipPathColF: Column => Column = (path: Column) =>
+        when(
+            path.endsWith(".zip"),
+            concat(lit("vsizip/"), path)
+        ).otherwise(path)
+
     override def load(path: String): DataFrame = load(Seq(path): _*)
 
     override def load(paths: String*): DataFrame = {
@@ -31,6 +37,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             .format("binaryFile")
             .load(paths: _*)
             .select("path")
+            .select(
+              vsizipPathColF(col("path")).alias("path")
+            )
 
         val rasterToGridCombiner = getRasterToGridFunc(config("combiner"))
 
@@ -129,7 +138,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 )
         } else {
             pathsDf.select(
-              col("path").alias("raster")
+              vsizipPathColF(col("path")).alias("raster")
             )
         }
     }
@@ -195,6 +204,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     private def getConfig: Map[String, String] = {
         Map(
           "readSubdataset" -> this.extraOptions.getOrElse("readSubdataset", "false"),
+          "vsizip" -> this.extraOptions.getOrElse("vsizip", "false"),
           "subdatasetNumber" -> this.extraOptions.getOrElse("subdatasetNumber", "0"),
           "subdatasetName" -> this.extraOptions.getOrElse("subdatasetName", ""),
           "resolution" -> this.extraOptions.getOrElse("resolution", "0"),

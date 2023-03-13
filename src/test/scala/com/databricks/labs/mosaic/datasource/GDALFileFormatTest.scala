@@ -20,14 +20,12 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
         noException should be thrownBy spark.read
             .format("gdal")
             .option("driverName", "NetCDF")
-            .option("asWKB", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("gdal")
             .option("driverName", "NetCDF")
-            .option("asWKB", "true")
             .load(filePath)
             .select("geometry")
             .take(1)
@@ -48,14 +46,12 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
         noException should be thrownBy spark.read
             .format("gdal")
             .option("driverName", "NetCDF")
-            .option("asWKB", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("gdal")
             .option("driverName", "NetCDF")
-            .option("asWKB", "true")
             .load(filePath)
             .select("geometry")
             .take(1)
@@ -76,14 +72,12 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
         noException should be thrownBy spark.read
             .format("gdal")
             .option("driverName", "TIF")
-            .option("asWKB", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("gdal")
             .option("driverName", "TIF")
-            .option("asWKB", "true")
             .load(filePath)
             .select("geometry")
             .take(1)
@@ -104,14 +98,14 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
         noException should be thrownBy spark.read
             .format("gdal")
             .option("driverName", "Zarr")
-            .option("asWKB", "true")
+            .option("vsizip", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("gdal")
             .option("driverName", "Zarr")
-            .option("asWKB", "true")
+            .option("vsizip", "true")
             .load(filePath)
             .select("geometry")
             .take(1)

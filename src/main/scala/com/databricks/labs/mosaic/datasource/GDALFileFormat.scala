@@ -46,7 +46,7 @@ class GDALFileFormat extends FileFormat with DataSourceRegister with Serializabl
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] = {
         val driverName = options.getOrElse("driverName", "")
-        buildReaderImpl(driverName)
+        buildReaderImpl(driverName, options)
     }
 
     override def prepareWrite(
@@ -111,13 +111,15 @@ object GDALFileFormat extends Serializable {
     }
 
     def buildReaderImpl(
-        driverName: String
+        driverName: String,
+        options: Map[String, String]
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
             GDAL.enable()
-            val path = file.filePath.replace("dbfs:/", "/dbfs/").replace("file:/", "/")
-            val extension = file.filePath.split("\\.").last
-            if (extension == getFileExtension(driverName) || extension == "zip") {
+            val vsizip = options.getOrElse("vsizip", "false").toBoolean
+            val path = Utils.getCleanPath(file.filePath, vsizip)
+
+            if (path.endsWith(getFileExtension(driverName)) || path.endsWith("zip")) {
                 val raster = MosaicRasterGDAL.readRaster(path)
                 val ySize = raster.ySize
                 val xSize = raster.xSize

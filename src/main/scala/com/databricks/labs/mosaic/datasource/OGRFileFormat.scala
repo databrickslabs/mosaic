@@ -352,13 +352,9 @@ object OGRFileFormat extends Serializable {
       *   the data source
       */
     def getDataSource(driverName: String, path: String, useZipPath: Boolean): org.gdal.ogr.DataSource = {
-        val cleanPath = path.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
+        val cleanPath = Utils.getCleanPath(path, useZipPath)
         // 0 is for no update driver
-        if (useZipPath && cleanPath.endsWith(".zip") && driverName.nonEmpty) {
-            ogr.GetDriverByName(driverName).Open(s"/vsizip/$cleanPath", 0)
-        } else if (useZipPath && cleanPath.endsWith(".zip")) {
-            ogr.Open(s"/vsizip/$cleanPath", 0)
-        } else if (driverName.nonEmpty) {
+        if (driverName.nonEmpty) {
             ogr.GetDriverByName(driverName).Open(cleanPath, 0)
         } else {
             ogr.Open(cleanPath, 0)

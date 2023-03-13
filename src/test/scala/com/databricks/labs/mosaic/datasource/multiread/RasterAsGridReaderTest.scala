@@ -104,11 +104,13 @@ class RasterAsGridReaderTest extends QueryTest with SharedSparkSession {
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("vsizip", "true")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("vsizip", "true")
             .option("retile", "true")
             .option("tileSize", "256")
             .load(filePath)
@@ -116,6 +118,7 @@ class RasterAsGridReaderTest extends QueryTest with SharedSparkSession {
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("vsizip", "true")
             .option("kRingInterpolation", "3")
             .load(filePath)
             .select("geometry")
