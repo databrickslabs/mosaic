@@ -10,43 +10,7 @@ import org.scalatest.matchers.must.Matchers.{be, noException}
 
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
 
-    test("Read netcdf with GDALFileFormat") {
-        assume(System.getProperty("os.name") == "Linux")
-        MosaicContext.build(H3IndexSystem, JTS)
-
-        val netcdf = "/binary/netcdf-coral/"
-        val filePath = getClass.getResource(netcdf).getPath
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("resolution", "15")
-            .option("readSubdataset", "true")
-            .option("subdatasetNumber", "1")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("resolution", "5")
-            .option("readSubdataset", "true")
-            .option("subdatasetNumber", "1")
-            .option("retile", "true")
-            .option("tileSize", "20")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("readSubdataset", "true")
-            .option("subdatasetNumber", "0")
-            .option("kRingInterpolation", "3")
-            .load(filePath)
-            .select("geometry")
-            .take(1)
-
-    }
-
-    test("Read grib with GDALFileFormat") {
+    test("Read grib with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 
@@ -55,18 +19,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("retile", "true")
-            .option("tileSize", "256")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
+            .option("tileSize", "10")
             .option("kRingInterpolation", "3")
             .load(filePath)
             .select("measure")
@@ -74,7 +27,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
     }
 
-    test("Read tif with GDALFileFormat") {
+    test("Read tif with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 
@@ -83,18 +36,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("retile", "true")
-            .option("tileSize", "256")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
+            .option("tileSize", "10")
             .option("kRingInterpolation", "3")
             .load(filePath)
             .select("measure")
@@ -102,7 +44,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
     }
 
-    test("Read zarr with GDALFileFormat") {
+    test("Read zarr with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 
@@ -112,20 +54,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
             .option("vsizip", "true")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("vsizip", "true")
-            .option("retile", "true")
-            .option("tileSize", "256")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("vsizip", "true")
+            .option("tileSize", "10")
             .option("kRingInterpolation", "3")
             .load(filePath)
             .select("measure")

@@ -35,7 +35,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val resolution = config("resolution").toInt
 
         val pathsDf = sparkSession.read
-            .option("globFilter", GDALFileFormat.getFileExtension(config("driverName")))
+            .option("pathGlobFilter", config("fileExtension"))
             .format("binaryFile")
             .load(paths: _*)
             .select("path")
@@ -205,6 +205,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       */
     private def getConfig: Map[String, String] = {
         Map(
+          "fileExtension" -> this.extraOptions.getOrElse("fileExtension", "*"),
           "readSubdataset" -> this.extraOptions.getOrElse("readSubdataset", "false"),
           "vsizip" -> this.extraOptions.getOrElse("vsizip", "false"),
           "subdatasetNumber" -> this.extraOptions.getOrElse("subdatasetNumber", "0"),
