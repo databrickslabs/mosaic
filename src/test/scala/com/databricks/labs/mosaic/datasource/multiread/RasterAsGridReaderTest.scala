@@ -4,12 +4,11 @@ import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.JTS
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
-import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.test.{SharedSparkSession, SharedSparkSessionGDAL}
+import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.an
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Paths}
 
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
 
@@ -84,7 +83,6 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("combiner", "median")
             .option("vsizip", "true")
             .option("tileSize", "10")
-            .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")
             .take(1)
@@ -129,6 +127,11 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         an[Error] should be thrownBy MosaicContext.read
             .format("invalid")
+            .load(filePath)
+
+        an[Exception] should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("kRingInterpolate", "3") // Only works on Databricks Photon Cluster.
             .load(filePath)
 
     }
