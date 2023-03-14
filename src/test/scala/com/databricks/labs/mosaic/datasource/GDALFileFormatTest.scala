@@ -131,7 +131,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
             "PDF",
             "PNG",
             "VRT",
-            "XMP",
+            "XPM",
             "COG",
             "GRIB",
             "Zarr"
