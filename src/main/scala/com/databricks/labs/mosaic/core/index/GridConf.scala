@@ -24,7 +24,7 @@ case class GridConf(
   // A cell ID has to fit the reserved number of bits
   val maxResolution = Math.min(20, Math.floor(idBits / bitsPerResolution).toInt)
 
-  val rootCellCountX = Math.ceil(spanX / rootCellSizeX).toInt
-  val rootCellCountY = Math.ceil(spanY / rootCellSizeY).toInt
+  val rootCellCountX = Math.ceil(spanX.toDouble / rootCellSizeX).toInt
+  val rootCellCountY = Math.ceil(spanY.toDouble / rootCellSizeY).toInt
 
 }

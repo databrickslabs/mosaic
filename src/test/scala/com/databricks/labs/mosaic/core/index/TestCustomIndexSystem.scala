@@ -94,6 +94,20 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
     }
 
+    test("Point to Index should generate the correct index ID for grids not multiple of root cells") {
+
+        val conf = GridConf(441000, 900000, 6040000, 6410000, 10, 100000, 100000)
+
+        val grid = new CustomIndexSystem(conf)
+
+        val p1 = grid.pointToIndex(558115, 6338615, 4)
+        val p2 = grid.pointToIndex(558115, 6338625, 4)
+        val p3 = grid.pointToIndex(558125, 6338615, 4)
+
+        p1 should not equal p2
+        p1 should not equal p3
+        p2 should not equal p3
+    }
 
     test("Index to geometry") {
 
