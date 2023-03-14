@@ -22,7 +22,7 @@ trait GridRingNeighboursBehaviors extends MosaicSpatialQueryTest {
         val (resolution, distanceThreshold) = mc.getIndexSystem match {
             case H3IndexSystem  => (7, 0.1)
             case BNGIndexSystem => (2, 50000)
-            case _ => (7, 0.1)
+            case _ => (11, 1)
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
