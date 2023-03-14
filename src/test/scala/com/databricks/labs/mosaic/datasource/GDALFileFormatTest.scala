@@ -1,10 +1,7 @@
 package com.databricks.labs.mosaic.datasource
 
-import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.test.SharedSparkSession
-import org.apache.spark.sql.types._
-import org.gdal.ogr.ogr
 import org.scalatest.matchers.must.Matchers.{be, noException, not}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
@@ -122,28 +119,34 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
         an[Error] should be thrownBy reader.prepareWrite(spark, null, null, null)
 
         for (
-            driver <- Seq(
-                "GTiff",
-                "HDF4",
-                "HDF5",
-                "JP2ECW",
-                "JP2KAK",
-                "JP2MrSID",
-                "JP2OpenJPEG",
-                "NetCDF",
-                "PDF",
-                "PNG",
-                "VRT",
-                "XMP",
-                "COG",
-                "GRIB",
-                "Zarr"
-            )
+          driver <- Seq(
+            "GTiff",
+            "HDF4",
+            "HDF5",
+            "JP2ECW",
+            "JP2KAK",
+            "JP2MrSID",
+            "JP2OpenJPEG",
+            "NetCDF",
+            "PDF",
+            "PNG",
+            "VRT",
+            "XMP",
+            "COG",
+            "GRIB",
+            "Zarr"
+          )
         ) {
-            GDALFileFormat.getFileExtension(driver) should not be ""
+            GDALFileFormat.getFileExtension(driver) should not be "UNSUPPORTED"
         }
 
         GDALFileFormat.getFileExtension("NotADriver") should be("UNSUPPORTED")
+
+        noException should be thrownBy Utils.createRow(Array(null))
+        noException should be thrownBy Utils.createRow(Array(1, 2, 3))
+        noException should be thrownBy Utils.createRow(Array(1.toByte))
+        noException should be thrownBy Utils.createRow(Array("1"))
+        noException should be thrownBy Utils.createRow(Array(Map("key" -> "value")))
 
     }
 
