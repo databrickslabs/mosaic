@@ -32,4 +32,6 @@ object BadIndexSystem extends IndexSystem(BooleanType) {
     override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = throw new UnsupportedOperationException
 
     override def parse(id: String): Long = throw new UnsupportedOperationException
+
+    override def distance(cellId: Long, cellId2: Long): Long = throw new UnsupportedOperationException
 }

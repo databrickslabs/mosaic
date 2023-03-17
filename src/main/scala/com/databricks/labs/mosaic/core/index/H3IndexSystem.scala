@@ -222,4 +222,6 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         h3.geoToH3(geo.lat, geo.lng, h3.h3GetResolution(id))
     }
 
+    override def distance(cellId: Long, cellId2: Long): Long = h3.h3Distance(cellId, cellId2).toLong
+
 }

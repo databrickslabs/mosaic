@@ -419,21 +419,6 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
         }
     }
 
-    private def encode(eLetter: Int, nLetter: Int, eBin: Int, nBin: Int, quadrant: Int, nPositions: Int, resolution: Int): Long = {
-        val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#...#)(#...#)(#)
-        val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#...#)(#...#)(#)
-        val nLetterShift = math.pow(10, 1 + 2 * nPositions - 2) // (##)(#...#)(#...#)(#)
-        val eShift = math.pow(10, nPositions) // (#...#)(#...#)(#)
-        val nShift = 10
-        val id =
-            if (resolution == -1) {
-                (idPlaceholder + eLetter * eLetterShift) / 100 + quadrant
-            } else {
-                idPlaceholder + eLetter * eLetterShift + nLetter * nLetterShift + eBin * eShift + nBin * nShift + quadrant
-            }
-        id.toLong
-    }
-
     /**
       * Constructs a geometry representing the index tile corresponding to
       * provided index id.
@@ -532,5 +517,34 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
     }
 
     override def getResolutionStr(resolution: Int): String = resolutionMap.find(_._2 == resolution).map(_._1).getOrElse("")
+
+    override def distance(cellId: Long, cellId2: Long): Long = {
+        val digits1 = indexDigits(cellId)
+        val digits2 = indexDigits(cellId2)
+        val resolution1 = getResolution(cellId)
+        val resolution2 = getResolution(cellId2)
+        val edgeSize = getEdgeSize(math.min(resolution1, resolution2))
+        val x1 = getX(digits1, edgeSize)
+        val x2 = getX(digits2, edgeSize)
+        val y1 = getY(digits1, edgeSize)
+        val y2 = getY(digits2, edgeSize)
+        // Manhattan distance with edge size precision
+        math.abs((x1 - x2) / edgeSize) + math.abs((y1 - y2) / edgeSize)
+    }
+
+    private def encode(eLetter: Int, nLetter: Int, eBin: Int, nBin: Int, quadrant: Int, nPositions: Int, resolution: Int): Long = {
+        val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#...#)(#...#)(#)
+        val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#...#)(#...#)(#)
+        val nLetterShift = math.pow(10, 1 + 2 * nPositions - 2) // (##)(#...#)(#...#)(#)
+        val eShift = math.pow(10, nPositions) // (#...#)(#...#)(#)
+        val nShift = 10
+        val id =
+            if (resolution == -1) {
+                (idPlaceholder + eLetter * eLetterShift) / 100 + quadrant
+            } else {
+                idPlaceholder + eLetter * eLetterShift + nLetter * nLetterShift + eBin * eShift + nBin * nShift + quadrant
+            }
+        id.toLong
+    }
 
 }

@@ -383,6 +383,7 @@ package object test {
 
         override def parse(id: String): Long = ???
 
+        override def distance(cellId: Long, cellId2: Long): Long = ???
     }
 
 }
