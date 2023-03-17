@@ -222,4 +222,13 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         h3.geoToH3(geo.lat, geo.lng, h3.h3GetResolution(id))
     }
 
+    override def indexToCenter(index: Long): Coordinates = {
+        val geo = h3.h3ToGeo(index)
+        Coordinates(geo.lat, geo.lng)
+    }
+
+    override def indexToBoundary(index: Long): Seq[Coordinates] = {
+        h3.h3ToGeoBoundary(index).asScala.map(p => Coordinates(p.lat, p.lng))
+    }
+
 }

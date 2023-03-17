@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
@@ -382,6 +383,9 @@ package object test {
         override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = ???
 
         override def parse(id: String): Long = ???
+
+        override def indexToCenter(index: Long): Coordinates = ???
+        override def indexToBoundary(index: Long): Seq[Coordinates] = ???
 
     }
 

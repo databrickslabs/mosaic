@@ -356,8 +356,6 @@ grid_boundary
     |          "POLYGON (( ..."|
     +--------------------------+
 
-
-
 grid_tessellate
 ***************
 
@@ -600,6 +598,62 @@ grid_tessellateexplode
 .. raw:: html
 
    </div>
+
+
+grid_cellarea
+*************
+
+.. function:: grid_cellarea(cellid)
+
+    Returns the area of a given cell in km^2.
+
+    :param cellid: Grid cell ID
+    :type cellid: Column: Long
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    >>> df.withColumn(grid_cellarea('grid_cellid').alias("area")).show()
+    +------------------------------------+
+    |         grid_cellid|           area|
+    +--------------------+---------------+
+    |  613177664827555839|     0.78595419|
+    +--------------------+---------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((613177664827555839)).toDF("grid_cellid")
+    >>> df.select(grid_cellarea('grid_cellid').alias("area")).show()
+    +------------------------------------+
+    |         grid_cellid|           area|
+    +--------------------+---------------+
+    |  613177664827555839|     0.78595419|
+    +--------------------+---------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_cellarea(613177664827555839)
+    +------------------------------------+
+    |         grid_cellid|           area|
+    +--------------------+---------------+
+    |  613177664827555839|     0.78595419|
+    +--------------------+---------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    >>> showDF(select(df, grid_cellarea(column("grid_cellid"))))
+    +------------------------------------+
+    |         grid_cellid|           area|
+    +--------------------+---------------+
+    |  613177664827555839|     0.78595419|
+    +--------------------+---------------+
+
+
 
 
 grid_cellkring

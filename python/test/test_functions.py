@@ -49,6 +49,7 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_centroid", api.st_centroid("wkt"))
             .withColumn("st_numpoints", api.st_numpoints("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
+            .withColumn("st_haversine", api.st_haversine(lit(0.0), lit(90.0), lit(0.0), lit(0.0)))
             .withColumn("st_isvalid", api.st_isvalid("wkt"))
             .withColumn(
                 "st_hasvalidcoordinates",
@@ -94,6 +95,7 @@ class TestFunctions(MosaicTestCase):
                 api.grid_tessellateexplode("wkt", lit(1), False),
             )
             .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
+            .withColumn("grid_cellarea", api.grid_cellarea(lit(613177664827555839)))
 
 
             # Deprecated

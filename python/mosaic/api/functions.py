@@ -31,6 +31,7 @@ __all__ = [
     "st_numpoints",
     "st_isvalid",
     "st_distance",
+    "st_haversine",
     "st_intersection",
     "st_difference",
     "st_simplify",
@@ -61,6 +62,7 @@ __all__ = [
     "grid_tessellate",
     "grid_tessellateexplode",
 
+    "grid_cellarea",
     "grid_cellkring",
     "grid_cellkloop",
     "grid_cellkringexplode",
@@ -491,6 +493,30 @@ def st_distance(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
         "st_distance",
         pyspark_to_java_column(geom1),
         pyspark_to_java_column(geom2),
+    )
+
+def st_haversine(lat1: ColumnOrName, lng1: ColumnOrName, lat2: ColumnOrName, lng2: ColumnOrName) -> Column:
+    """
+    Compute the haversine distance in kilometers between two latitude/longitude pairs.
+
+    Parameters
+    ----------
+    lat1 : Column
+    lng1 : Column
+    lat2 : Column
+    lng2 : Column
+
+    Returns
+    -------
+    Column (DoubleType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_haversine",
+        pyspark_to_java_column(lat1),
+        pyspark_to_java_column(lng1),
+        pyspark_to_java_column(lat2),
+        pyspark_to_java_column(lng2),
     )
 
 
@@ -926,6 +952,25 @@ def grid_boundaryaswkb(index_id: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "grid_boundaryaswkb", pyspark_to_java_column(index_id)
+    )
+
+def grid_cellarea(index_id: ColumnOrName) -> Column:
+    """
+    Returns the area of the grid cell in km^2.
+
+    Parameters
+    ----------
+    index_id : Column
+        The grid cell ID
+
+    Returns
+    -------
+    Column
+        The area of the grid cell in km^2
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_cellarea",
+        pyspark_to_java_column(index_id)
     )
 
 
