@@ -57,10 +57,10 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
         val resolution = arg1.asInstanceOf[Int]
         val bandTransform = (band: MosaicRasterBand) => {
             val pixelArea = raster.xSize * raster.ySize
-            val originCellId = pixelTransformer(gt, resolution, asCentroid = false)(0, 0, 0)._1
+            val (originCellId, _) = pixelTransformer(gt, resolution, asCentroid = false)(0, 0, 0)
             val cellArea = indexSystem.indexToGeometry(originCellId, geometryAPI).getArea
-            val asCentroid = pixelArea >= cellArea
-            val results = band.transformValues[(Long, Double)](pixelTransformer(gt, resolution, asCentroid), (0L, -1.0))
+            val asCentroidFlag = pixelArea >= cellArea
+            val results = band.transformValues[(Long, Double)](pixelTransformer(gt, resolution, asCentroidFlag), (0L, -1.0))
             results
                 // Filter out default cells. We don't want to return them since they are masked in original raster.
                 // We use 0L as a dummy cell ID for default cells.
