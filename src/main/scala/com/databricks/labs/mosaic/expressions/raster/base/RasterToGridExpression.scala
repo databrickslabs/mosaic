@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
 import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
@@ -39,6 +40,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
 
     /** The index system to be used. */
     val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(expressionConfig.getIndexSystem))
+    val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
 
     /**
       * It projects the pixels to the grid and groups by the results so that the
@@ -54,7 +56,11 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
         val gt = raster.getRaster.GetGeoTransform()
         val resolution = arg1.asInstanceOf[Int]
         val bandTransform = (band: MosaicRasterBand) => {
-            val results = band.transformValues[(Long, Double)](pixelTransformer(gt, resolution), (0L, -1.0))
+            val pixelArea = raster.xSize * raster.ySize
+            val originCellId = pixelTransformer(gt, resolution, asCentroid = false)(0, 0, 0)._1
+            val cellArea = indexSystem.indexToGeometry(originCellId, geometryAPI).getArea
+            val asCentroid = pixelArea >= cellArea
+            val results = band.transformValues[(Long, Double)](pixelTransformer(gt, resolution, asCentroid), (0L, -1.0))
             results
                 // Filter out default cells. We don't want to return them since they are masked in original raster.
                 // We use 0L as a dummy cell ID for default cells.
@@ -79,9 +85,12 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       */
     def valuesCombiner(values: Seq[Double]): P
 
-    private def pixelTransformer(gt: Seq[Double], resolution: Int)(x: Int, y: Int, value: Double): (Long, Double) = {
-        val xGeo = gt(0) + x * gt(1) + y * gt(2)
-        val yGeo = gt(3) + x * gt(4) + y * gt(5)
+    private def pixelTransformer(gt: Seq[Double], resolution: Int, asCentroid: Boolean)(x: Int, y: Int, value: Double): (Long, Double) = {
+        val offset = if (asCentroid) 0.5 else 0.0
+        val xOffset = offset + x
+        val yOffset = offset + y
+        val xGeo = gt(0) + xOffset * gt(1) + yOffset * gt(2)
+        val yGeo = gt(3) + xOffset * gt(4) + yOffset * gt(5)
         val cellID = indexSystem.pointToIndex(xGeo, yGeo, resolution)
         (cellID, value)
     }
