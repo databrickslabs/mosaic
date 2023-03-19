@@ -22,6 +22,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 4
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -53,6 +54,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 4
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -84,6 +86,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 4
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -115,6 +118,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 4
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -146,6 +150,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 10
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -197,6 +202,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 10
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -221,6 +227,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 10
         }
 
         val geometryAPI = mc.getGeometryAPI
@@ -270,13 +277,14 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr
+            case _ => lit(4).expr
         }
 
         val mosaicfillExpr = MosaicFill(
           lit(wkt).expr,
           resExpr,
           lit(false).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -289,13 +297,15 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
                     Seq(StringType, IntegerType, BooleanType)
             case BNGIndexSystem => mosaicfillExpr.inputTypes should contain theSameElementsAs
                     Seq(StringType, StringType, BooleanType)
+            case _ => mosaicfillExpr.inputTypes should contain theSameElementsAs
+              Seq(StringType, IntegerType, BooleanType)
         }
 
         val badExpr = MosaicFill(
           lit(10).expr,
           resExpr,
           lit(false).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

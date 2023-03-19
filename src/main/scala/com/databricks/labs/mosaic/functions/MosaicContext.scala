@@ -278,7 +278,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         registry.registerFunction(
           FunctionIdentifier("st_intersection_aggregate", database),
           ST_IntersectionAggregate.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_IntersectionAggregate(exprs(0), exprs(1), geometryAPI.name, indexSystem.name, 0, 0)
+          (exprs: Seq[Expression]) => ST_IntersectionAggregate(exprs(0), exprs(1), geometryAPI.name, indexSystem, 0, 0)
         )
         registry.registerFunction(
           FunctionIdentifier("st_intersects_aggregate", database),
@@ -297,22 +297,22 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
           MosaicExplode.registryExpressionInfo(database),
           (exprs: Seq[Expression]) =>
               exprs match {
-                  case e if e.length == 2 => MosaicExplode(e(0), e(1), lit(true).expr, indexSystem.name, geometryAPI.name)
-                  case e                  => MosaicExplode(e(0), e(1), e(2), indexSystem.name, geometryAPI.name)
+                  case e if e.length == 2 => MosaicExplode(e(0), e(1), lit(true).expr, indexSystem, geometryAPI.name)
+                  case e                  => MosaicExplode(e(0), e(1), e(2), indexSystem, geometryAPI.name)
               }
         )
         registry.registerFunction(
           FunctionIdentifier("grid_tessellateaslong", database),
           MosaicFill.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => MosaicFill(exprs(0), exprs(1), lit(true).expr, indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => MosaicFill(exprs(0), exprs(1), lit(true).expr, indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_tessellate", database),
           MosaicFill.registryExpressionInfo(database),
           (exprs: Seq[Expression]) =>
               exprs match {
-                  case e if e.length == 2 => MosaicFill(e(0), e(1), lit(true).expr, indexSystem.name, geometryAPI.name)
-                  case e                  => MosaicFill(e(0), e(1), e(2), indexSystem.name, geometryAPI.name)
+                  case e if e.length == 2 => MosaicFill(e(0), e(1), lit(true).expr, indexSystem, geometryAPI.name)
+                  case e                  => MosaicFill(e(0), e(1), e(2), indexSystem, geometryAPI.name)
               }
         )
 
@@ -323,19 +323,19 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             registry.registerFunction(
               FunctionIdentifier("grid_longlatascellid", database),
               PointIndexLonLat.registryExpressionInfo(database),
-              (exprs: Seq[Expression]) => PointIndexLonLat(exprs(0), exprs(1), exprs(2), indexSystem.name)
+              (exprs: Seq[Expression]) => PointIndexLonLat(exprs(0), exprs(1), exprs(2), indexSystem)
             )
 
             registry.registerFunction(
               FunctionIdentifier("grid_polyfill", database),
               Polyfill.registryExpressionInfo(database),
-              (exprs: Seq[Expression]) => Polyfill(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+              (exprs: Seq[Expression]) => Polyfill(exprs(0), exprs(1), indexSystem, geometryAPI.name)
             )
 
             registry.registerFunction(
               FunctionIdentifier("grid_boundaryaswkb", database),
               IndexGeometry.registryExpressionInfo(database),
-              (exprs: Seq[Expression]) => IndexGeometry(exprs(0), Literal("WKB"), indexSystem.name, geometryAPI.name)
+              (exprs: Seq[Expression]) => IndexGeometry(exprs(0), Literal("WKB"), indexSystem, geometryAPI.name)
             )
 
             registry.registerFunction(
@@ -348,53 +348,53 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         registry.registerFunction(
           FunctionIdentifier("grid_pointascellid", database),
           PointIndexGeom.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => PointIndexGeom(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => PointIndexGeom(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
 
         registry.registerFunction(
           FunctionIdentifier("grid_boundary", database),
           IndexGeometry.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => IndexGeometry(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => IndexGeometry(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_cellkring", database),
           CellKRing.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => CellKRing(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => CellKRing(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_cellkringexplode", database),
           CellKRingExplode.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => CellKRingExplode(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => CellKRingExplode(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_cellkloop", database),
           CellKLoop.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => CellKLoop(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => CellKLoop(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_cellkloopexplode", database),
           CellKLoopExplode.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => CellKLoopExplode(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => CellKLoopExplode(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_geometrykring", database),
           GeometryKRing.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => GeometryKRing(exprs(0), exprs(1), exprs(2), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => GeometryKRing(exprs(0), exprs(1), exprs(2), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_geometrykringexplode", database),
           GeometryKRingExplode.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => GeometryKRingExplode(exprs(0), exprs(1), exprs(2), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => GeometryKRingExplode(exprs(0), exprs(1), exprs(2), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_geometrykloop", database),
           GeometryKLoop.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => GeometryKLoop(exprs(0), exprs(1), exprs(2), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => GeometryKLoop(exprs(0), exprs(1), exprs(2), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_geometrykloopexplode", database),
           GeometryKLoopExplode.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => GeometryKLoopExplode(exprs(0), exprs(1), exprs(2), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => GeometryKLoopExplode(exprs(0), exprs(1), exprs(2), indexSystem, geometryAPI.name)
         )
 
         // DataType keywords are needed at checkInput execution time.
@@ -622,7 +622,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             )
         def st_intersection_aggregate(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(
-              ST_IntersectionAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem.name, 0, 0)
+              ST_IntersectionAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem, 0, 0)
                   .toAggregateExpression(isDistinct = false)
             )
         def st_union_agg(geom: Column): Column =
@@ -640,7 +640,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             grid_tessellateexplode(geom, lit(resolution), keepCoreGeometries)
         def grid_tessellateexplode(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
             ColumnAdapter(
-              MosaicExplode(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name)
+              MosaicExplode(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem, geometryAPI.name)
             )
         def grid_tessellate(geom: Column, resolution: Column): Column = grid_tessellate(geom, resolution, lit(true))
         def grid_tessellate(geom: Column, resolution: Int): Column = grid_tessellate(geom, lit(resolution), lit(true))
@@ -650,19 +650,19 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             grid_tessellate(geom, lit(resolution), lit(keepCoreGeometries))
         def grid_tessellate(geom: Column, resolution: Column, keepCoreGeometries: Column): Column =
             ColumnAdapter(
-              MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem.name, geometryAPI.name)
+              MosaicFill(geom.expr, resolution.expr, keepCoreGeometries.expr, indexSystem, geometryAPI.name)
             )
         def grid_pointascellid(point: Column, resolution: Column): Column =
-            ColumnAdapter(PointIndexGeom(point.expr, resolution.expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(PointIndexGeom(point.expr, resolution.expr, indexSystem, geometryAPI.name))
         def grid_pointascellid(point: Column, resolution: Int): Column =
-            ColumnAdapter(PointIndexGeom(point.expr, lit(resolution).expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(PointIndexGeom(point.expr, lit(resolution).expr, indexSystem, geometryAPI.name))
         def grid_longlatascellid(lon: Column, lat: Column, resolution: Column): Column = {
             if (shouldUseDatabricksH3()) {
                 getProductMethod("h3_longlatascellid")
                     .apply(lon, lat, resolution)
                     .asInstanceOf[Column]
             } else {
-                ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, resolution.expr, indexSystem.name))
+                ColumnAdapter(PointIndexLonLat(lon.expr, lat.expr, resolution.expr, indexSystem))
             }
         }
         def grid_longlatascellid(lon: Column, lat: Column, resolution: Int): Column = grid_longlatascellid(lon, lat, lit(resolution))
@@ -672,7 +672,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
                     .apply(geom, resolution)
                     .asInstanceOf[Column]
             } else {
-                ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem.name, getGeometryAPI.name))
+                ColumnAdapter(Polyfill(geom.expr, resolution.expr, indexSystem, getGeometryAPI.name))
             }
         }
         def grid_polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, lit(resolution))
@@ -682,77 +682,45 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
                     .apply(indexID)
                     .asInstanceOf[Column]
             } else {
-                ColumnAdapter(IndexGeometry(indexID.expr, lit("WKB").expr, indexSystem.name, getGeometryAPI.name))
+                ColumnAdapter(IndexGeometry(indexID.expr, lit("WKB").expr, indexSystem, getGeometryAPI.name))
             }
         }
         def grid_boundary(indexID: Column, format: Column): Column =
-            ColumnAdapter(IndexGeometry(indexID.expr, format.expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(IndexGeometry(indexID.expr, format.expr, indexSystem, geometryAPI.name))
         def grid_boundary(indexID: Column, format: String): Column =
-            ColumnAdapter(IndexGeometry(indexID.expr, lit(format).expr, indexSystem.name, geometryAPI.name))
-        def grid_cellkring(cellId: Column, k: Column): Column =
-            ColumnAdapter(CellKRing(cellId.expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_cellkring(cellId: Column, k: Int): Column =
-            ColumnAdapter(CellKRing(cellId.expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_cellkringexplode(cellId: Column, k: Int): Column =
-            ColumnAdapter(CellKRingExplode(cellId.expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_cellkringexplode(cellId: Column, k: Column): Column =
-            ColumnAdapter(CellKRingExplode(cellId.expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_cellkloop(cellId: Column, k: Column): Column =
-            ColumnAdapter(CellKLoop(cellId.expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_cellkloop(cellId: Column, k: Int): Column =
-            ColumnAdapter(CellKLoop(cellId.expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_cellkloopexplode(cellId: Column, k: Int): Column =
-            ColumnAdapter(CellKLoopExplode(cellId.expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_cellkloopexplode(cellId: Column, k: Column): Column =
-            ColumnAdapter(CellKLoopExplode(cellId.expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykring(geom: Column, resolution: Column, k: Column): Column =
-            ColumnAdapter(GeometryKRing(geom.expr, resolution.expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykring(geom: Column, resolution: Column, k: Int): Column =
-            ColumnAdapter(GeometryKRing(geom.expr, resolution.expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykring(geom: Column, resolution: Int, k: Column): Column =
-            ColumnAdapter(GeometryKRing(geom.expr, lit(resolution).expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykring(geom: Column, resolution: Int, k: Int): Column =
-            ColumnAdapter(GeometryKRing(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykring(geom: Column, resolution: String, k: Column): Column =
-            ColumnAdapter(GeometryKRing(geom.expr, lit(resolution).expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykring(geom: Column, resolution: String, k: Int): Column =
-            ColumnAdapter(GeometryKRing(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykringexplode(geom: Column, resolution: Column, k: Column): Column =
-            ColumnAdapter(GeometryKRingExplode(geom.expr, resolution.expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykringexplode(geom: Column, resolution: Column, k: Int): Column =
-            ColumnAdapter(GeometryKRingExplode(geom.expr, resolution.expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykringexplode(geom: Column, resolution: Int, k: Column): Column =
-            ColumnAdapter(GeometryKRingExplode(geom.expr, lit(resolution).expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykringexplode(geom: Column, resolution: Int, k: Int): Column =
-            ColumnAdapter(GeometryKRingExplode(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykringexplode(geom: Column, resolution: String, k: Column): Column =
-            ColumnAdapter(GeometryKRingExplode(geom.expr, lit(resolution).expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykringexplode(geom: Column, resolution: String, k: Int): Column =
-            ColumnAdapter(GeometryKRingExplode(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloop(geom: Column, resolution: Column, k: Column): Column =
-            ColumnAdapter(GeometryKLoop(geom.expr, resolution.expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloop(geom: Column, resolution: Column, k: Int): Column =
-            ColumnAdapter(GeometryKLoop(geom.expr, resolution.expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloop(geom: Column, resolution: Int, k: Column): Column =
-            ColumnAdapter(GeometryKLoop(geom.expr, lit(resolution).expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloop(geom: Column, resolution: Int, k: Int): Column =
-            ColumnAdapter(GeometryKLoop(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloop(geom: Column, resolution: String, k: Column): Column =
-            ColumnAdapter(GeometryKLoop(geom.expr, lit(resolution).expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloop(geom: Column, resolution: String, k: Int): Column =
-            ColumnAdapter(GeometryKLoop(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloopexplode(geom: Column, resolution: Column, k: Column): Column =
-            ColumnAdapter(GeometryKLoopExplode(geom.expr, resolution.expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloopexplode(geom: Column, resolution: Column, k: Int): Column =
-            ColumnAdapter(GeometryKLoopExplode(geom.expr, resolution.expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloopexplode(geom: Column, resolution: Int, k: Column): Column =
-            ColumnAdapter(GeometryKLoopExplode(geom.expr, lit(resolution).expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloopexplode(geom: Column, resolution: Int, k: Int): Column =
-            ColumnAdapter(GeometryKLoopExplode(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloopexplode(geom: Column, resolution: String, k: Column): Column =
-            ColumnAdapter(GeometryKLoopExplode(geom.expr, lit(resolution).expr, k.expr, indexSystem.name, geometryAPI.name))
-        def grid_geometrykloopexplode(geom: Column, resolution: String, k: Int): Column =
-            ColumnAdapter(GeometryKLoopExplode(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem.name, geometryAPI.name))
+            ColumnAdapter(IndexGeometry(indexID.expr, lit(format).expr, indexSystem, geometryAPI.name))
+        def grid_cellkring(cellId: Column, k: Column): Column = ColumnAdapter(CellKRing(cellId.expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_cellkring(cellId: Column, k: Int): Column = ColumnAdapter(CellKRing(cellId.expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_cellkringexplode(cellId: Column, k: Int): Column = ColumnAdapter(CellKRingExplode(cellId.expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_cellkringexplode(cellId: Column, k: Column): Column = ColumnAdapter(CellKRingExplode(cellId.expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_cellkloop(cellId: Column, k: Column): Column = ColumnAdapter(CellKLoop(cellId.expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_cellkloop(cellId: Column, k: Int): Column = ColumnAdapter(CellKLoop(cellId.expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_cellkloopexplode(cellId: Column, k: Int): Column = ColumnAdapter(CellKLoopExplode(cellId.expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_cellkloopexplode(cellId: Column, k: Column): Column = ColumnAdapter(CellKLoopExplode(cellId.expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykring(geom: Column, resolution: Column, k: Column): Column = ColumnAdapter(GeometryKRing(geom.expr, resolution.expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykring(geom: Column, resolution: Column, k: Int): Column = ColumnAdapter(GeometryKRing(geom.expr, resolution.expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykring(geom: Column, resolution: Int, k: Column): Column = ColumnAdapter(GeometryKRing(geom.expr, lit(resolution).expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykring(geom: Column, resolution: Int, k: Int): Column = ColumnAdapter(GeometryKRing(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykring(geom: Column, resolution: String, k: Column): Column = ColumnAdapter(GeometryKRing(geom.expr, lit(resolution).expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykring(geom: Column, resolution: String, k: Int): Column = ColumnAdapter(GeometryKRing(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykringexplode(geom: Column, resolution: Column, k: Column): Column = ColumnAdapter(GeometryKRingExplode(geom.expr, resolution.expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykringexplode(geom: Column, resolution: Column, k: Int): Column = ColumnAdapter(GeometryKRingExplode(geom.expr, resolution.expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykringexplode(geom: Column, resolution: Int, k: Column): Column = ColumnAdapter(GeometryKRingExplode(geom.expr, lit(resolution).expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykringexplode(geom: Column, resolution: Int, k: Int): Column = ColumnAdapter(GeometryKRingExplode(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykringexplode(geom: Column, resolution: String, k: Column): Column = ColumnAdapter(GeometryKRingExplode(geom.expr, lit(resolution).expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykringexplode(geom: Column, resolution: String, k: Int): Column = ColumnAdapter(GeometryKRingExplode(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloop(geom: Column, resolution: Column, k: Column): Column = ColumnAdapter(GeometryKLoop(geom.expr, resolution.expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloop(geom: Column, resolution: Column, k: Int): Column = ColumnAdapter(GeometryKLoop(geom.expr, resolution.expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloop(geom: Column, resolution: Int, k: Column): Column = ColumnAdapter(GeometryKLoop(geom.expr, lit(resolution).expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloop(geom: Column, resolution: Int, k: Int): Column = ColumnAdapter(GeometryKLoop(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloop(geom: Column, resolution: String, k: Column): Column = ColumnAdapter(GeometryKLoop(geom.expr, lit(resolution).expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloop(geom: Column, resolution: String, k: Int): Column = ColumnAdapter(GeometryKLoop(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloopexplode(geom: Column, resolution: Column, k: Column): Column = ColumnAdapter(GeometryKLoopExplode(geom.expr, resolution.expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloopexplode(geom: Column, resolution: Column, k: Int): Column = ColumnAdapter(GeometryKLoopExplode(geom.expr, resolution.expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloopexplode(geom: Column, resolution: Int, k: Column): Column = ColumnAdapter(GeometryKLoopExplode(geom.expr, lit(resolution).expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloopexplode(geom: Column, resolution: Int, k: Int): Column = ColumnAdapter(GeometryKLoopExplode(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloopexplode(geom: Column, resolution: String, k: Column): Column = ColumnAdapter(GeometryKLoopExplode(geom.expr, lit(resolution).expr, k.expr, indexSystem, geometryAPI.name))
+        def grid_geometrykloopexplode(geom: Column, resolution: String, k: Int): Column = ColumnAdapter(GeometryKLoopExplode(geom.expr, lit(resolution).expr, lit(k).expr, indexSystem, geometryAPI.name))
         def grid_wrapaschip(cellID: Column, isCore: Boolean, getCellGeom: Boolean): Column =
             struct(
               lit(isCore).alias("is_core"),

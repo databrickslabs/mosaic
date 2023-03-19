@@ -280,6 +280,7 @@ package object test {
             val rows = indexSystem match {
                 case H3IndexSystem  => wkt_rows_boroughs_epsg4326.map { x => Row(x: _*) }
                 case BNGIndexSystem => wkt_rows_boroughs_epsg27700.map { x => Row(x: _*) }
+                case _ => wkt_rows_boroughs_epsg4326.map { x => Row(x: _*) }
             }
             val rdd = spark.sparkContext.makeRDD(rows)
             val schema = StructType(
@@ -356,8 +357,6 @@ package object test {
     object MockIndexSystem extends IndexSystem(LongType) {
 
         override def name: String = "MOCK"
-
-        override def getIndexSystemID: IndexSystemID = ???
 
         override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = ???
 

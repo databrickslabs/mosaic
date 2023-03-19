@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.types._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
@@ -17,13 +17,11 @@ case class MosaicExplode(
     geom: Expression,
     resolution: Expression,
     keepCoreGeom: Expression,
-    indexSystemName: String,
+    indexSystem: IndexSystem,
     geometryAPIName: String
 ) extends CollectionGenerator
       with Serializable
       with CodegenFallback {
-
-    lazy val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
 
     lazy val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 

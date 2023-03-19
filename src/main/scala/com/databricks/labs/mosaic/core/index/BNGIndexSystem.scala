@@ -27,6 +27,8 @@ import scala.util.{Success, Try}
   */
 object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
 
+    val name = "BNG"
+
     /**
       * Quadrant encodings. The order is determined in a way that preserves
       * similarity to space filling curves.
@@ -200,15 +202,6 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
             visit(startIndices.toSet, Set.empty[Long], Set.empty[Long]).toSeq
         }
     }
-
-    /**
-      * Returns the index system ID instance that uniquely identifies an index
-      * system. This instance is used to select appropriate Mosaic expressions.
-      *
-      * @return
-      *   An instance of [[IndexSystemID]]
-      */
-    override def getIndexSystemID: IndexSystemID = BNG
 
     /**
       * Get the k ring of indices around the provided index id.

@@ -55,6 +55,7 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => "5"
             case BNGIndexSystem => "100m"
+            case _ => "5"
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -98,8 +99,8 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
 
         indexSystem match {
             case BNGIndexSystem =>
-                val lonLatIndex = PointIndexLonLat(lit(10000.0).expr, lit(10000.0).expr, lit("100m").expr, indexSystem.name)
-                val pointIndex = PointIndexGeom(st_point(lit(10000.0), lit(10000.0)).expr, lit(5).expr, indexSystem.name, geometryAPI.name)
+                val lonLatIndex = PointIndexLonLat(lit(10000.0).expr, lit(10000.0).expr, lit("100m").expr, indexSystem)
+                val pointIndex = PointIndexGeom(st_point(lit(10000.0), lit(10000.0)).expr, lit(5).expr, indexSystem, geometryAPI.name)
                 lonLatIndex.inputTypes should contain theSameElementsAs Seq(DoubleType, DoubleType, StringType, BooleanType)
                 lonLatIndex.dataType shouldEqual StringType
                 lonLatIndex
@@ -111,9 +112,9 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
                     .makeCopy(Array(st_point(lit(10001.0), lit(10000.0)).expr, lit(5).expr, lit(true).expr))
                     .asInstanceOf[PointIndexGeom]
                     .left shouldEqual st_point(lit(10001.0), lit(10000.0)).expr
-            case H3IndexSystem  =>
-                val lonLatIndex = PointIndexLonLat(lit(10.0).expr, lit(10.0).expr, lit(10).expr, indexSystem.name)
-                val pointIndex = PointIndexGeom(st_point(lit(10.0), lit(10.0)).expr, lit(10).expr, indexSystem.name, geometryAPI.name)
+            case _ =>
+                val lonLatIndex = PointIndexLonLat(lit(10.0).expr, lit(10.0).expr, lit(10).expr, indexSystem)
+                val pointIndex = PointIndexGeom(st_point(lit(10.0), lit(10.0)).expr, lit(10).expr, indexSystem, geometryAPI.name)
                 lonLatIndex.inputTypes should contain theSameElementsAs Seq(DoubleType, DoubleType, IntegerType, BooleanType)
                 lonLatIndex.dataType shouldEqual LongType
                 lonLatIndex
@@ -127,8 +128,8 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
                     .left shouldEqual st_point(lit(10001), lit(10000)).expr
         }
 
-        val badExprLonLat = PointIndexLonLat(lit(true).expr, lit(10000.0).expr, lit(5).expr, indexSystem.name)
-        val badExprPoint = PointIndexGeom(lit("POLYGON EMPTY").expr, lit(5).expr, indexSystem.name, geometryAPI.name)
+        val badExprLonLat = PointIndexLonLat(lit(true).expr, lit(10000.0).expr, lit(5).expr, indexSystem)
+        val badExprPoint = PointIndexGeom(lit("POLYGON EMPTY").expr, lit(5).expr, indexSystem, geometryAPI.name)
         an[Error] should be thrownBy badExprLonLat.inputTypes
         an[Exception] should be thrownBy badExprPoint.nullSafeEval(UTF8String.fromString("POLYGON EMPTY"), 5)
 
