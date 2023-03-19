@@ -52,7 +52,7 @@ case class GridDistance(cellId: Expression, cellId2: Expression, indexSystemName
     }
 
     override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
-        copy(cellId = newLeft, cellId2 = newRight)
+        makeCopy(Array[AnyRef](newLeft, newRight))
 
 }
 

@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.catalog.CatalogDatabase
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, Literal}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{LongType, StringType}
+import org.apache.spark.sql.types.{BinaryType, LongType, StringType}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
@@ -34,6 +34,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
             case BNGIndexSystem => mc.getIndexSystem.getCellIdDataType shouldEqual StringType
             case H3IndexSystem  => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
         }
+        an[Error] should be thrownBy mc.setCellIdDataType("binary")
     }
 
     def sqlRegistration(mosaicContext: MosaicContext): Unit = {
