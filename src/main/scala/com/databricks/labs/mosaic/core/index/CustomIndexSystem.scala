@@ -205,7 +205,7 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
       * @return
       *   An instance of [[MosaicGeometry]] corresponding to index.
       */
-    //noinspection DuplicatedCode
+    // noinspection DuplicatedCode
     override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
 
         val cellNumber = getCellPosition(index)
@@ -285,6 +285,20 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
 
     def totalCellsY(resolution: Int): Long = {
         conf.rootCellCountY * Math.pow(conf.cellSplits, resolution).toLong
+    }
+
+    override def distance(cellId: Long, cellId2: Long): Long = {
+        val resolution1 = getResolution(cellId)
+        val resolution2 = getResolution(cellId2)
+        val edgeSizeX = getCellWidth(resolution1)
+        val edgeSizeY = getCellHeight(resolution1)
+        val x1 = getCellCenterX(getCellPositionX(cellId, resolution1), resolution1)
+        val x2 = getCellCenterX(getCellPositionX(cellId2, resolution2), resolution2)
+        val y1 = getCellCenterY(getCellPositionY(cellId, resolution1), resolution1)
+        val y2 = getCellCenterY(getCellPositionY(cellId2, resolution2), resolution2)
+        // Manhattan distance with edge size precision
+        val distance = math.abs((x1 - x2) / edgeSizeX) + math.abs((y1 - y2) / edgeSizeY)
+        distance.toLong
     }
 
     private def getCellCenterX(cellPositionX: Long, resolution: Int) = {

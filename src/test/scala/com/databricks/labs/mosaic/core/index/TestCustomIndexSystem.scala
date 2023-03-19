@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.index
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.JTS
+import com.databricks.labs.mosaic.JTS
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
@@ -10,7 +10,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
         val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
         val resolutionMask = 0x00.toLong
 
         grid.pointToIndex(51, 51, 0) shouldBe 0 | resolutionMask
@@ -20,7 +20,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
         val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
 
         // First quadrant
@@ -48,7 +48,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
         val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
         val resolutionMask = 0x02.toLong << 56
 
         // First quadrant
@@ -61,7 +61,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
         val conf = GridConf(-100, 100, -10, 100, 2, 200, 110)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
 
         // First quadrant
@@ -85,7 +85,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
         val conf = GridConf(0, 100, 0, 100, 2, 10, 10)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
 
         grid.pointToIndex(0, 2, 1) shouldBe 0 | resolutionMask
@@ -98,7 +98,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
         val conf = GridConf(441000, 900000, 6040000, 6410000, 10, 100000, 100000)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
 
         val p1 = grid.pointToIndex(558115, 6338615, 4)
         val p2 = grid.pointToIndex(558115, 6338625, 4)
@@ -113,7 +113,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
         val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
 
         // First quadrant
@@ -133,7 +133,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
     test("polyfill single cell") {
         val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
 
         val geom = JTS.geometry("POLYGON ((0 0, 50 0, 50 50, 0 50, 0 0))", "WKT")
@@ -152,7 +152,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
     test("polyfill single cell with negative coordinates") {
         val conf = GridConf(-100, 100, -100, 100, 2, 200, 200)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
         val resolution = 3
         val resolutionMask = resolution.toLong << 56
 
@@ -179,7 +179,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
     test("polyfill single cell with world coordinates") {
         val conf = GridConf(-180, 180, -90, 90, 2, 360, 180)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
         val resolution = 3
         val resolutionMask = resolution.toLong << 56
 
@@ -199,7 +199,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
     test("polyfill multi cell") {
         val conf = GridConf(0, 100, 0, 100, 2, 100, 100)
 
-        val grid = new CustomIndexSystem(conf)
+        val grid = CustomIndexSystem(conf)
         val resolutionMask = 0x01.toLong << 56
 
         // Small geometry that spans multiple cels should be detected

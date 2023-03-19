@@ -15,7 +15,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
 
     def xMinBehavior(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
 
