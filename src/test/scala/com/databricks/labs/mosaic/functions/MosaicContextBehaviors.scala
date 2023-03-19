@@ -207,6 +207,11 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
           new ExpressionInfo("product", "h3_boundaryaswkb"),
           functionBuilder
         )
+        registry.registerFunction(
+            FunctionIdentifier("h3_distance", None),
+            new ExpressionInfo("product", "h3_distance"),
+            functionBuilder
+        )
 
         mc.register(spark)
 

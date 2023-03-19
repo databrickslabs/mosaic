@@ -30,7 +30,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
                             .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
                             .getOrElse(Map.empty[String, String])
                     )
-                    .reduce(_ ++ _)
+                    .reduceOption(_ ++ _).getOrElse(Map.empty[String, String])
             )
             .getOrElse(Map.empty[String, String])
 
