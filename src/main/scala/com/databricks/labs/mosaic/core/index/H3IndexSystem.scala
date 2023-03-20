@@ -168,6 +168,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     override def kLoop(index: Long, n: Int): Seq[Long] = {
         // HexRing crashes in case of pentagons.
         // Ensure a KRing fallback in said case.
+        require(index >= 0L)
         Try(
           h3.hexRing(index, n).asScala.map(_.toLong)
         ).getOrElse(
@@ -214,5 +215,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         val geo = h3.h3ToGeo(id)
         h3.geoToH3(geo.lat, geo.lng, h3.h3GetResolution(id))
     }
+
+    override def distance(cellId: Long, cellId2: Long): Long = h3.h3Distance(cellId, cellId2).toLong
 
 }

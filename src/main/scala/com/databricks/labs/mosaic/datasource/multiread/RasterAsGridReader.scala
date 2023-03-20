@@ -63,14 +63,16 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
               col("raster")
             )
             .select(
-              explode(col("grid_measures")).alias("grid_measures"),
-              col("raster")
+              col("raster"),
+              col("band_id"),
+              explode(col("grid_measures")).alias("grid_measures")
             )
             .select(
+              col("band_id"),
               col("grid_measures").getItem("cellID").alias("cell_id"),
               col("grid_measures").getItem("measure").alias("measure")
             )
-            .groupBy("cell_id")
+            .groupBy("band_id", "cell_id")
             .agg(avg("measure").alias("measure"))
 
         kRingResample(loadedDf, config)
@@ -170,8 +172,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             rasterDf
                 .withColumn("origin_cell_id", col("cell_id"))
                 .withColumn("cell_id", explode(grid_cellkring(col("origin_cell_id"), k)))
-                .withColumn("weight", lit(k + 1) - expr("h3_distance(origin_cell_id, cell_id)"))
-                .groupBy("cell_id")
+                .withColumn("weight", lit(k + 1) - grid_distance(col("origin_cell_id"), col("cell_id)")))
+                .groupBy("band_id", "cell_id")
                 .agg(weighted_sum("measure", "weight"))
         } else {
             rasterDf

@@ -12,6 +12,8 @@ import org.apache.spark.unsafe.types.UTF8String
   */
 abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
 
+    def distance(cellId: Long, cellId2: Long): Long
+
     def getCellIdDataType: DataType = cellIdType
 
     def setCellIdDataType(dataType: DataType): Unit = {
