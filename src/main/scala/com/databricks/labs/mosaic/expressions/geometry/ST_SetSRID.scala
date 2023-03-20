@@ -1,65 +1,69 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.{RequiresCRS, UnaryVector1ArgExpression}
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types._
 
-case class ST_SetSRID(inputGeom: Expression, srid: Expression, geometryAPIName: String)
-    extends BinaryExpression
-      with NullIntolerant
-      with CodegenFallback
+/**
+  * SQL expression that returns the input geometry buffered by the radius.
+  * @param inputGeom
+  *   Expression containing the geometry.
+  * @param sridExpr
+  *   The SRID to be set for the geometry.
+  * @param expressionConfig
+  *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
+  *   arguments for the expression (expressionConfigs).
+  */
+case class ST_SetSRID(
+    inputGeom: Expression,
+    sridExpr: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVector1ArgExpression[ST_SetSRID](
+      inputGeom,
+      sridExpr,
+      returnsGeometry = true,
+      expressionConfig
+    )
       with RequiresCRS {
 
-    override def nullSafeEval(input1: Any, input2: Any): Any = {
-        checkEncoding(inputGeom.dataType)
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-        geom.setSpatialReference(input2.asInstanceOf[Int])
-        geometryAPI.serialize(geom, dataType)
-    }
-
-    /** Output Data Type */
     override def dataType: DataType = inputGeom.dataType
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = ST_SetSRID(asArray(0), asArray(1), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
+    override def geometryTransform(geometry: MosaicGeometry, arg: Any): Any = {
+        geometry.setSpatialReference(arg.asInstanceOf[Int])
+        geometry
     }
 
-    override def left: Expression = inputGeom
-
-    override def right: Expression = srid
-
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
-        copy(inputGeom = newLeft, srid = newRight)
+    override def geometryCodeGen(geometryRef: String, argRef: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        // Side effect: sets the spatial reference of the geometry
+        // return the same input reference
+        val code = s"""$geometryRef.setSpatialReference($argRef);"""
+        (code, geometryRef)
+    }
 
 }
 
-object ST_SetSRID {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_SetSRID extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_SetSRID].getCanonicalName,
-          db.orNull,
-          "ST_SetSRID",
-          """
-            |    _FUNC_(expr1) - Assigns a spatial reference system to the geometry.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        POINT (1 1)
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_setsrid"
+
+    override def usage: String = "_FUNC_(expr1, expr2) - Returns geometry with SRID set."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a, b);
+          |        POLYGON (...)
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_SetSRID](2, expressionConfig)
+    }
+
 }

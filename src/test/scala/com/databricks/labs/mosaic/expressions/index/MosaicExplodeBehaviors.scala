@@ -152,7 +152,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
             case _ => 3
         }
 
-        val wktRows: DataFrame = getWKTRowsDf(mc).where(col("wkt").contains("LINESTRING"))
+        val wktRows: DataFrame = getWKTRowsDf(mc.getIndexSystem).where(col("wkt").contains("LINESTRING"))
 
         val mosaics = wktRows
             .select(
@@ -328,7 +328,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val sc = spark
         import sc.implicits._
 
-        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr

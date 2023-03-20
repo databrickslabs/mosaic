@@ -1,77 +1,64 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.BinaryVectorExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.{BooleanType, DataType}
 
-case class ST_Contains(leftGeom: Expression, rightGeom: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
-
-    override def left: Expression = leftGeom
-
-    override def right: Expression = rightGeom
+/**
+  * Returns true if leftGeom contains rightGeom.
+  * @param leftGeom
+  *   The left geometry.
+  * @param rightGeom
+  *   The right geometry.
+  * @param expressionConfig
+  *   Additional arguments for the expression (expressionConfigs).
+  */
+case class ST_Contains(
+    leftGeom: Expression,
+    rightGeom: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends BinaryVectorExpression[ST_Contains](
+      leftGeom,
+      rightGeom,
+      returnsGeometry = false,
+      expressionConfig
+    ) {
 
     override def dataType: DataType = BooleanType
 
-    // noinspection DuplicatedCode
-    override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geom1 = geometryAPI.geometry(input1, leftGeom.dataType)
-        val geom2 = geometryAPI.geometry(input2, rightGeom.dataType)
-        geom1.contains(geom2)
+    override def geometryTransform(leftGeometry: MosaicGeometry, rightGeometry: MosaicGeometry): Any = {
+        leftGeometry.contains(rightGeometry)
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = ST_Contains(asArray(0), asArray(1), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
+    override def geometryCodeGen(leftGeometryRef: String, rightGeometryRef: String, ctx: CodegenContext): (String, String) = {
+        val contains = ctx.freshName("contains")
+        val code = s"""boolean $contains = $leftGeometryRef.contains($rightGeometryRef);"""
+        (code, contains)
     }
-
-    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
-        nullSafeCodeGen(
-          ctx,
-          ev,
-          (leftEval, rightEval) => {
-              val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val (leftInCode, leftGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, leftGeom.dataType, geometryAPI)
-              val (rightInCode, rightGeomInRef) = ConvertToCodeGen.readGeometryCode(ctx, rightEval, rightGeom.dataType, geometryAPI)
-              geometryAPI.codeGenTryWrap(s"""
-                                            |$leftInCode
-                                            |$rightInCode
-                                            |${ev.value} = $leftGeomInRef.contains($rightGeomInRef);
-                                            |""".stripMargin)
-          }
-        )
-
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =
-        copy(leftGeom = newLeft, rightGeom = newRight)
 
 }
 
-object ST_Contains {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_Contains extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_Contains].getCanonicalName,
-          db.orNull,
-          "st_contains",
-          """
-            |    _FUNC_(expr1) - Return the contains relationship between left and right.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(A, B);
-            |        true
-            |  """.stripMargin,
-          "",
-          "predicate_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_contains"
+
+    override def usage: String = "_FUNC_(expr1, expr2) - Returns true if expr1 contains expr2."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(A, B);
+          |        true
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Contains](2, expressionConfig)
+    }
 
 }

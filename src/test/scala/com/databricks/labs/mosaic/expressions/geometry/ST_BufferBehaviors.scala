@@ -23,7 +23,7 @@ trait ST_BufferBehaviors extends QueryTest {
         mc.register(spark)
 
         val referenceGeoms = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select("wkt")
             .as[String]
@@ -32,7 +32,7 @@ trait ST_BufferBehaviors extends QueryTest {
 
         val expected = referenceGeoms.map(_.buffer(1).getLength)
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select(st_length(st_buffer($"wkt", lit(1))))
             .as[Double]
@@ -40,10 +40,10 @@ trait ST_BufferBehaviors extends QueryTest {
 
         result.zip(expected).foreach { case (l, r) => math.abs(l - r) should be < 1e-8 }
 
-        mocks.getWKTRowsDf(mc).createOrReplaceTempView("source")
+        mocks.getWKTRowsDf().createOrReplaceTempView("source")
 
         val sqlResult = spark
-            .sql("select id, st_length(st_buffer(wkt, 1)) from source")
+            .sql("select id, st_length(st_buffer(wkt, 1.0)) from source")
             .orderBy("id")
             .drop("id")
             .as[Double]
@@ -61,7 +61,7 @@ trait ST_BufferBehaviors extends QueryTest {
         mc.register(spark)
 
         val result = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_length(st_buffer($"wkt", lit(1))))
 
         val queryExecution = result.queryExecution
@@ -76,7 +76,7 @@ trait ST_BufferBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stBuffer = ST_Buffer(lit(1).expr, lit(1).expr, "JTS")
+        val stBuffer = ST_Buffer(lit(1).expr, lit(1).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stBuffer.genCode(ctx)
     }
@@ -88,9 +88,9 @@ trait ST_BufferBehaviors extends QueryTest {
         import mc.functions._
 
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
 
-        val stBuffer = ST_Buffer(df.col("wkt").expr, lit(1).expr, geometryAPI.name)
+        val stBuffer = ST_Buffer(df.col("wkt").expr, lit(1).expr, mc.expressionConfig)
 
         stBuffer.left shouldEqual df.col("wkt").expr
         stBuffer.right shouldEqual lit(1).expr

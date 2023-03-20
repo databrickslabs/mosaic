@@ -1,8 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry.linestring
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
-import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
+import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.catalyst.InternalRow
@@ -10,28 +9,38 @@ import org.locationtech.jts.geom._
 
 class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(lineString) with MosaicLineString {
 
-    override def getShellPoints: Seq[Seq[MosaicPoint]] = Seq(MosaicLineStringJTS.getPoints(lineString))
+    override def getShellPoints: Seq[Seq[MosaicPointJTS]] = Seq(MosaicLineStringJTS.getPoints(lineString))
 
     override def toInternal: InternalGeometry = {
         val shell = lineString.getCoordinates.map(InternalCoord(_))
         new InternalGeometry(LINESTRING.id, getSpatialReference, Array(shell), Array(Array(Array())))
     }
 
-    override def getBoundary: MosaicGeometry = {
+    override def getBoundary: MosaicGeometryJTS = {
         val geom = lineString.getBoundary
         geom.setSRID(lineString.getSRID)
         MosaicGeometryJTS(geom)
     }
 
-    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicLineStringJTS = {
         MosaicLineStringJTS.fromSeq(asSeq.map(_.mapXY(f).asInstanceOf[MosaicPointJTS]))
     }
+
+    override def asSeq: Seq[MosaicPointJTS] = getShellPoints.head
+
+    override def getHoles: Seq[Seq[MosaicLineStringJTS]] = Nil
+
+    override def getShells: Seq[MosaicLineStringJTS] = Seq(this)
+
+    override def flatten: Seq[MosaicGeometryJTS] = Seq(this)
+
+    override def getHolePoints: Seq[Seq[Seq[MosaicPointJTS]]] = Nil
 
 }
 
 object MosaicLineStringJTS extends GeometryReader {
 
-    def getPoints(lineString: LineString): Seq[MosaicPoint] = {
+    def getPoints(lineString: LineString): Seq[MosaicPointJTS] = {
         for (i <- 0 until lineString.getNumPoints) yield {
             val point = lineString.getPointN(i)
             point.setSRID(lineString.getSRID)
@@ -39,7 +48,7 @@ object MosaicLineStringJTS extends GeometryReader {
         }
     }
 
-    override def fromInternal(row: InternalRow): MosaicGeometry = {
+    override def fromInternal(row: InternalRow): MosaicLineStringJTS = {
         val internalGeom = InternalGeometry(row)
         val gf = new GeometryFactory()
         val lineString = gf.createLineString(internalGeom.boundaries.head.map(_.toCoordinate))
@@ -82,12 +91,12 @@ object MosaicLineStringJTS extends GeometryReader {
         }
     }
 
-    override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
+    override def fromWKB(wkb: Array[Byte]): MosaicGeometryJTS = MosaicGeometryJTS.fromWKB(wkb)
 
-    override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)
+    override def fromWKT(wkt: String): MosaicGeometryJTS = MosaicGeometryJTS.fromWKT(wkt)
 
-    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
+    override def fromJSON(geoJson: String): MosaicGeometryJTS = MosaicGeometryJTS.fromJSON(geoJson)
 
-    override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
+    override def fromHEX(hex: String): MosaicGeometryJTS = MosaicGeometryJTS.fromHEX(hex)
 
 }

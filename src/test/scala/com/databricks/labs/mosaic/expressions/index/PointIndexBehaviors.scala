@@ -24,21 +24,21 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
         val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
-            .withColumn("centroid", st_centroid2D(col("wkt")))
+            .withColumn("centroid", st_centroid(col("wkt")))
             .select(
-              point_index_geom(st_point(col("centroid.x"), col("centroid.y")), resolution),
-              point_index_lonlat(col("centroid.x"), col("centroid.y"), resolution)
+              point_index_geom(col("centroid"), resolution),
+              point_index_lonlat(st_x(col("centroid")), st_y(col("centroid")), resolution)
             )
             .collect()
 
         boroughs.collect().length shouldEqual mosaics.length
 
-        boroughs.withColumn("centroid", st_centroid2D(col("wkt"))).createOrReplaceTempView("boroughs")
+        boroughs.withColumn("centroid", st_centroid(col("wkt"))).createOrReplaceTempView("boroughs")
 
         val mosaics2 = spark
             .sql(s"""
-                    |select point_index_geom(st_point(centroid.x, centroid.y), $resolution),
-                    |point_index_lonlat(centroid.x, centroid.y, $resolution)
+                    |select point_index_geom(centroid, $resolution),
+                    |point_index_lonlat(st_x(centroid), st_y(centroid), $resolution)
                     |from boroughs
                     |""".stripMargin)
             .collect()
@@ -61,21 +61,26 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
         val boroughs: DataFrame = getBoroughs(mc)
 
         val mosaics = boroughs
-            .withColumn("centroid", st_centroid2D(col("wkt")))
+            .withColumn("centroid", st_centroid(col("wkt")))
             .select(
-              grid_pointascellid(st_point(col("centroid.x"), col("centroid.y")), lit(resolution)),
-              grid_longlatascellid(col("centroid.x"), col("centroid.y"), lit(resolution))
+              grid_pointascellid(col("centroid"), lit(resolution)),
+              grid_longlatascellid(st_x(col("centroid")), st_y(col("centroid")), lit(resolution))
             )
             .collect()
 
         boroughs.collect().length shouldEqual mosaics.length
 
-        boroughs.withColumn("centroid", st_centroid2D(col("wkt"))).createOrReplaceTempView("boroughs")
+        boroughs.withColumn("centroid", st_centroid(col("wkt"))).createOrReplaceTempView("boroughs")
+
+        val resolution2 = mc.getIndexSystem match {
+            case H3IndexSystem  => "5"
+            case BNGIndexSystem => "'100m'"
+        }
 
         val mosaics2 = spark
             .sql(s"""
-                    |select grid_pointascellid(st_point(centroid.x, centroid.y), '$resolution'),
-                    |grid_longlatascellid(centroid.x, centroid.y, '$resolution')
+                    |select point_index_geom(centroid, $resolution2),
+                    |point_index_lonlat(st_x(centroid), st_y(centroid), $resolution2)
                     |from boroughs
                     |""".stripMargin)
             .collect()

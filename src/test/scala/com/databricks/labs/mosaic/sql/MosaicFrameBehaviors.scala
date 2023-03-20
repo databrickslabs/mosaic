@@ -2,27 +2,34 @@ package com.databricks.labs.mosaic.sql
 
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
+import com.databricks.labs.mosaic.expressions.geometry.ST_Envelope
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks._
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers._
-import org.apache.spark.sql.SparkSession
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
+import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions._
+import org.scalatest.matchers.must.Matchers.noException
+import org.scalatest.matchers.should.Matchers._
 
-trait MosaicFrameBehaviors { this: AnyFlatSpec =>
+trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
 
-    def testConstructFromPoints(spark: => SparkSession, mosaicContext: => MosaicContext): Unit = {
+    def testConstructFromPoints(mosaicContext: MosaicContext): Unit = {
         val points = pointDf(spark, mosaicContext)
         val mdf = MosaicFrame(points, "geometry")
         mdf.count() shouldBe points.count()
     }
 
-    def testConstructFromPolygons(spark: => SparkSession, mosaicContext: => MosaicContext): Unit = {
+    def testConstructFromPolygons(mosaicContext: MosaicContext): Unit = {
         val mdf = MosaicFrame(polyDf(spark, mosaicContext).limit(10), "geometry")
         mdf.count() shouldBe 10
     }
 
-    def testIndexPoints(spark: => SparkSession, mosaicContext: => MosaicContext, resolution: Int): Unit = {
+    def testIndexPoints(mosaicContext: MosaicContext): Unit = {
+        val resolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => 3
+            case H3IndexSystem  => 8
+        }
         val points = pointDf(spark, mosaicContext)
         val mdf = MosaicFrame(points, "geometry")
             .setIndexResolution(resolution)
@@ -31,7 +38,11 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         mdf.count shouldBe points.count
     }
 
-    def testIndexPolygons(spark: => SparkSession, mosaicContext: => MosaicContext, resolution: Int): Unit = {
+    def testIndexPolygons(mosaicContext: MosaicContext): Unit = {
+        val resolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => 3
+            case H3IndexSystem  => 8
+        }
         val mdf = MosaicFrame(polyDf(spark, mosaicContext).limit(10), "geometry")
             .setIndexResolution(resolution)
             .applyIndex(explodePolyFillIndexes = false)
@@ -39,7 +50,11 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         mdf.count() shouldBe 10
     }
 
-    def testIndexPolygonsExplode(spark: => SparkSession, mosaicContext: => MosaicContext, resolution: Int): Unit = {
+    def testIndexPolygonsExplode(mosaicContext: MosaicContext): Unit = {
+        val resolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => 3
+            case H3IndexSystem  => 8
+        }
         val mdf = MosaicFrame(polyDf(spark, mosaicContext).limit(10).withColumn("id", monotonically_increasing_id()), "geometry")
             .setIndexResolution(resolution)
             .applyIndex()
@@ -47,12 +62,15 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         mdf.groupBy("id").count().count() shouldBe 10
     }
 
-    def testGetOptimalResolution(
-        spark: => SparkSession,
-        mosaicContext: => MosaicContext,
-        resolution: Int,
-        expectedResolution: Int
-    ): Unit = {
+    def testGetOptimalResolution(mosaicContext: MosaicContext): Unit = {
+        val resolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => 2
+            case H3IndexSystem  => 3
+        }
+        val expectedResolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => -4
+            case H3IndexSystem  => 9
+        }
         mosaicContext.register(spark)
 
         val mdf = MosaicFrame(polyDf(spark, mosaicContext), "geometry")
@@ -74,7 +92,7 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
             case BNGIndexSystem =>
                 mdf.analyzer.getOptimalResolutionStr(SampleStrategy(sampleRows = Some(10))) shouldBe "500m"
                 mdf.analyzer.getOptimalResolutionStr shouldBe "500m"
-            case H3IndexSystem =>
+            case H3IndexSystem  =>
                 mdf.analyzer.getOptimalResolutionStr(SampleStrategy(sampleRows = Some(10))) shouldBe expectedResolution.toString
                 mdf.analyzer.getOptimalResolutionStr shouldBe expectedResolution.toString
         }
@@ -83,12 +101,15 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
             MosaicSQLExceptions.NotEnoughGeometriesException.getMessage
     }
 
-    def testMultiplePointIndexResolutions(
-        spark: => SparkSession,
-        mosaicContext: => MosaicContext,
-        minResolution: Int,
-        maxResolution: Int
-    ): Unit = {
+    def testMultiplePointIndexResolutions(mosaicContext: MosaicContext): Unit = {
+        val minResolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => 1
+            case H3IndexSystem  => 1
+        }
+        val maxResolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => 3
+            case H3IndexSystem  => 8
+        }
         val points = pointDf(spark, mosaicContext)
         val mdf = MosaicFrame(points, "geometry")
         val resolutions = (minResolution to maxResolution).toList
@@ -102,12 +123,16 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         noException should be thrownBy indexedMdf.dropAllIndexes
     }
 
-    def testPointInPolyJoin(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def testPointInPolyJoin(mosaicContext: MosaicContext): Unit = {
         val sc = spark
         val mc = mosaicContext
         import mc.functions.st_contains
         import sc.implicits._
 
+        val resolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => 3
+            case H3IndexSystem  => 8
+        }
         val points = pointDf(spark, mosaicContext)
         val pointMdf = MosaicFrame(points, "geometry")
             .setIndexResolution(resolution)
@@ -126,12 +151,16 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         resultMdf.count() shouldBe expectedRowCount
     }
 
-    def testPointInPolyJoinExploded(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def testPointInPolyJoinExploded(mosaicContext: MosaicContext): Unit = {
         val sc = spark
         val mc = mosaicContext
         import mc.functions.st_contains
         import sc.implicits._
 
+        val resolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => 3
+            case H3IndexSystem  => 8
+        }
         val points = pointDf(spark, mosaicContext)
         val pointMdf = MosaicFrame(points, "geometry")
             .setIndexResolution(resolution)
@@ -150,12 +179,16 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         resultMdf.count() shouldBe expectedRowCount
     }
 
-    def testPoorlyConfiguredPointInPolyJoins(mosaicContext: => MosaicContext, spark: => SparkSession, resolution: Int): Unit = {
+    def testPoorlyConfiguredPointInPolyJoins(mosaicContext: MosaicContext): Unit = {
         val sc = spark
         val mc = mosaicContext
         import mc.functions.st_contains
         import sc.implicits._
 
+        val resolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => 3
+            case H3IndexSystem  => 8
+        }
         val points = pointDf(spark, mosaicContext).limit(100)
         val pointMdf_1 = MosaicFrame(points, "geometry")
             .setIndexResolution(resolution - 1)
@@ -177,8 +210,12 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         resultMdf_2.count() shouldBe expectedRowCount
     }
 
-    def testPrettifier(spark: => SparkSession, mosaicContext: => MosaicContext, resolution: Int): Unit = {
+    def testPrettifier(mosaicContext: MosaicContext): Unit = {
 
+        val resolution = mosaicContext.getIndexSystem match {
+            case BNGIndexSystem => 3
+            case H3IndexSystem  => 8
+        }
         val points = pointDf(spark, mosaicContext)
         val pointMdf = MosaicFrame(points, "geometry")
             .setIndexResolution(resolution)
@@ -187,10 +224,11 @@ trait MosaicFrameBehaviors { this: AnyFlatSpec =>
         noException should be thrownBy pointMdf.prettified()
     }
 
-    def testExceptions(spark: => SparkSession, mosaicContext: => MosaicContext, resolution: Int): Unit = {
+    def testExceptions(mosaicContext: MosaicContext): Unit = {
         val points = pointDf(spark, mosaicContext)
         val pointMdf = MosaicFrame(points)
         val polyMdf = MosaicFrame(polyDf(spark, mosaicContext), "geometry")
+        val resolution = 32
 
         the[Exception] thrownBy polyMdf.join(polyMdf) should have message
             MosaicSQLExceptions.MosaicFrameNotIndexed.getMessage

@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.ESRI
 import com.databricks.labs.mosaic.core.index.{CustomIndexSystem, GridConf, H3IndexSystem}
+import com.databricks.labs.mosaic.ESRI
 import org.scalatest.funsuite.AnyFunSuite
 
 class TestMosaic extends AnyFunSuite {

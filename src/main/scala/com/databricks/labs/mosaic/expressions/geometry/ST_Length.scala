@@ -1,70 +1,47 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.{DataType, DoubleType}
 
-case class ST_Length(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
+case class ST_Length(
+    inputGeom: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVectorExpression[ST_Length](inputGeom, returnsGeometry = false, expressionConfig) {
 
-    def dataType: DataType = DoubleType
+    override def dataType: DataType = DoubleType
 
-    def child: Expression = inputGeom
+    override def geometryTransform(geometry: MosaicGeometry): Any = geometry.getLength
 
-    override def nullSafeEval(input1: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-        geom.getLength
+    override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        val code = s"""double $resultRef = $geometryRef.getLength();"""
+        (code, resultRef)
     }
-
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = ST_Length(asArray(0), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
-    }
-
-    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
-        nullSafeCodeGen(
-          ctx,
-          ev,
-          leftEval => {
-              val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-              val geometryLengthStatement = geometryAPI.geometryLengthCode
-              geometryAPI.codeGenTryWrap(s"""
-                                            |$inCode
-                                            |${ev.value} = $geomInRef.$geometryLengthStatement;
-                                            |""".stripMargin)
-          }
-        )
-
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputGeom = newChild)
 
 }
 
-object ST_Length {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_Length extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String], name: String): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_Length].getCanonicalName,
-          db.orNull,
-          name,
-          """
-            |    _FUNC_(expr1) - Returns the length of the given geometry.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        0.245
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_length"
+
+    override def usage: String = "_FUNC_(expr1) - Returns length of the geometry."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a);
+          |        12.3
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Length](1, expressionConfig)
+    }
+
 }

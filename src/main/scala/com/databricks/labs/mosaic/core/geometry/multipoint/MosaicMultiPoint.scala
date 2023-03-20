@@ -9,13 +9,13 @@ trait MosaicMultiPoint extends MosaicGeometry {
 
     def asSeq: Seq[MosaicPoint]
 
-    override def getHoles: Seq[Seq[MosaicLineString]] = Nil
+    override def getHoles: Seq[Seq[MosaicLineString]]
 
-    override def flatten: Seq[MosaicGeometry] = asSeq
+    override def flatten: Seq[MosaicGeometry]
 
-    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]] = Nil
+    override def getHolePoints: Seq[Seq[Seq[MosaicPoint]]]
 
-    override def getShellPoints: Seq[Seq[MosaicPoint]] = Seq(asSeq)
+    override def getShellPoints: Seq[Seq[MosaicPoint]]
 
     override def getShells: Seq[MosaicLineString] =
         throw MosaicCoreException.InvalidGeometryOperation("getShells should not be called on MultiPoints.")

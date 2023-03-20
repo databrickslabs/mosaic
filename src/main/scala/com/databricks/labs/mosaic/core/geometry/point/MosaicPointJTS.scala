@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry.point
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.types.model._
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
+import com.databricks.labs.mosaic.core.types.model.{Coordinates, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
-import com.databricks.labs.mosaic.core.types.model.Coordinates
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
 
@@ -31,19 +31,27 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
         new InternalGeometry(POINT.id, getSpatialReference, Array(shell), Array(Array(Array())))
     }
 
-    override def getBoundary: MosaicGeometry = {
+    override def getBoundary: MosaicGeometryJTS = {
         val geom = point.getBoundary
         geom.setSRID(point.getSRID)
         MosaicGeometryJTS(geom)
     }
 
-    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometryJTS = {
         val (x_, y_) = f(getX, getY)
         MosaicPointJTS(
           new Coordinate(x_, y_),
           point.getSRID
         )
     }
+
+    override def flatten: Seq[MosaicGeometryJTS] = List(this)
+
+    override def getShellPoints: Seq[Seq[MosaicPointJTS]] = Seq(Seq(this))
+
+    override def getHolePoints: Seq[Seq[Seq[MosaicPointJTS]]] = Nil
+
+    override def getHoles: Seq[Seq[MosaicLineStringJTS]] = Nil
 
 }
 
@@ -71,7 +79,7 @@ object MosaicPointJTS extends GeometryReader {
         }
     }
 
-    override def fromInternal(row: InternalRow): MosaicGeometry = {
+    override def fromInternal(row: InternalRow): MosaicGeometryJTS = {
         val gf = new GeometryFactory()
         val internalGeom = InternalGeometry(row)
         val coordinate = internalGeom.boundaries.head.head
@@ -101,12 +109,12 @@ object MosaicPointJTS extends GeometryReader {
 
     def apply(geom: Geometry): MosaicPointJTS = new MosaicPointJTS(geom.asInstanceOf[Point])
 
-    override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryJTS.fromWKB(wkb)
+    override def fromWKB(wkb: Array[Byte]): MosaicGeometryJTS = MosaicGeometryJTS.fromWKB(wkb)
 
-    override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryJTS.fromWKT(wkt)
+    override def fromWKT(wkt: String): MosaicGeometryJTS = MosaicGeometryJTS.fromWKT(wkt)
 
-    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryJTS.fromJSON(geoJson)
+    override def fromJSON(geoJson: String): MosaicGeometryJTS = MosaicGeometryJTS.fromJSON(geoJson)
 
-    override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryJTS.fromHEX(hex)
+    override def fromHEX(hex: String): MosaicGeometryJTS = MosaicGeometryJTS.fromHEX(hex)
 
 }

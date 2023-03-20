@@ -206,8 +206,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
-            .withColumn("centroid", st_centroid2D(col("wkt")))
-            .withColumn("centroid", st_point(col("centroid.x"), col("centroid.y")))
+            .withColumn("centroid", st_centroid(col("wkt")))
 
         val mosaics = boroughs
             .select(
@@ -274,7 +273,7 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         val sc = spark
         import sc.implicits._
 
-        val wkt = mocks.getWKTRowsDf(mosaicContext).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr

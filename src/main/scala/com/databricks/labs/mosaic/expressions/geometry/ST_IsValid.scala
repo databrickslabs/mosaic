@@ -1,33 +1,47 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
-import org.apache.spark.sql.types.{BooleanType, DataType}
+import org.apache.spark.sql.types._
 
 import scala.util.Try
 
-case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends UnaryExpression with NullIntolerant {
-
-    override def child: Expression = inputGeom
+/**
+  * SQL Expression that returns true if the geometry is valid.
+  * @param inputGeom
+  *   Expression that represents the geometry.
+  * @param expressionConfig
+  *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
+  *   arguments for the expression (expressionConfigs).
+  */
+case class ST_IsValid(
+    inputGeom: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVectorExpression[ST_IsValid](inputGeom, returnsGeometry = false, expressionConfig) {
 
     override def dataType: DataType = BooleanType
 
-    override def nullSafeEval(input1: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        // Invalid format should not crash the execution
-        Try {
-            val geom = geometryAPI.geometry(input1, inputGeom.dataType)
-            geom.isValid
-        }.getOrElse(false)
+    override def geometryTransform(geometry: MosaicGeometry): Any = Try(geometry.isValid).getOrElse(false)
+
+    override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        val mosaicGeometry = mosaicGeometryRef(geometryRef)
+
+        val code = s"""
+                      |boolean $resultRef = $mosaicGeometry.isValid();
+                      |""".stripMargin
+
+        (code, resultRef)
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = ST_IsValid(asArray(0), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
+    override def nullSafeEval(geometryRow: Any): Any = {
+        Try { super.nullSafeEval(geometryRow) }.getOrElse(false)
     }
 
     override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
@@ -35,14 +49,14 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
           ctx,
           ev,
           leftEval => {
-              val geometryAPI = GeometryAPI.apply(geometryAPIName)
               val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-              val geometryIsValidStatement = geometryAPI.geometryIsValidCode
+              val (expressionCode, resultRef) = geometryCodeGen(geomInRef, ctx)
               // Invalid format should not crash the execution
               s"""
                  |try {
                  |$inCode
-                 |${ev.value} = $geomInRef.$geometryIsValidStatement;
+                 |$expressionCode
+                 |${ev.value} = $resultRef;
                  |} catch (Exception e) {
                  | ${ev.value} = false;
                  |}
@@ -50,32 +64,24 @@ case class ST_IsValid(inputGeom: Expression, geometryAPIName: String) extends Un
           }
         )
 
-    override protected def withNewChildInternal(newChild: Expression): Expression = copy(inputGeom = newChild)
-
 }
 
-object ST_IsValid {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_IsValid extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_GeometryType].getCanonicalName,
-          db.orNull,
-          "st_isvalid",
-          """
-            |    _FUNC_(expr1) - Returns the validity for a given geometry.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a);
-            |        true
-            |  """.stripMargin,
-          "",
-          "predicate_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_isvalid"
+
+    override def usage: String = "_FUNC_(expr1) - Returns true if geometry is valid."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a);
+          |        true/false
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_IsValid](1, expressionConfig)
+    }
 
 }
