@@ -21,8 +21,9 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         mc.register(spark)
 
         val resolution = mc.getIndexSystem match {
-            case H3IndexSystem  => 3
+            case H3IndexSystem => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -55,6 +56,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val rdd = spark.sparkContext.makeRDD(
@@ -110,6 +112,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val rdd = spark.sparkContext.makeRDD(
@@ -146,6 +149,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 3
+            case _ => 3
         }
 
         val wktRows: DataFrame = getWKTRowsDf(mc.getIndexSystem).where(col("wkt").contains("LINESTRING"))
@@ -212,6 +216,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -244,6 +249,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -276,6 +282,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -325,13 +332,14 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr
+            case _ => lit(3).expr
         }
 
         val mosaicExplodeExpr = MosaicExplode(
           lit(wkt).expr,
           resExpr,
           lit(false).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -343,7 +351,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(10).expr,
           resExpr,
           lit(false).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

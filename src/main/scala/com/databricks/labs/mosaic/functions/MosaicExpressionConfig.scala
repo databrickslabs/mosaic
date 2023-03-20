@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.functions
 
 import com.databricks.labs.mosaic._
-import com.databricks.labs.mosaic.core.index.IndexSystemID
+import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.DataType
 
@@ -30,7 +30,7 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
 
     def getRasterCheckpoint: String = configs.getOrElse(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT)
 
-    def getCellIdType: DataType = IndexSystemID.getIndexSystem(IndexSystemID(getIndexSystem)).cellIdType
+    def getCellIdType: DataType = IndexSystemFactory.getIndexSystem(getIndexSystem).cellIdType
 
     def setGeometryAPI(api: String): MosaicExpressionConfig = {
         MosaicExpressionConfig(configs + (MOSAIC_GEOMETRY_API -> api))

@@ -21,6 +21,8 @@ import scala.util.{Success, Try}
   */
 object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
+    val name = "H3"
+
     // An instance of H3Core to be used for IndexSystem implementation.
     @transient private val h3: H3Core = H3Core.newInstance()
 
@@ -124,15 +126,6 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     }
 
     /**
-      * Returns the index system ID instance that uniquely identifies an index
-      * system. This instance is used to select appropriate Mosaic expressions.
-      *
-      * @return
-      *   An instance of [[IndexSystemID]]
-      */
-    override def getIndexSystemID: IndexSystemID = H3
-
-    /**
       * Get the index ID corresponding to the provided coordinates.
       *
       * @param lon
@@ -175,6 +168,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     override def kLoop(index: Long, n: Int): Seq[Long] = {
         // HexRing crashes in case of pentagons.
         // Ensure a KRing fallback in said case.
+        require(index >= 0L)
         Try(
           h3.hexRing(index, n).asScala.map(_.toLong)
         ).getOrElse(
@@ -230,5 +224,6 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     override def indexToBoundary(index: Long): Seq[Coordinates] = {
         h3.h3ToGeoBoundary(index).asScala.map(p => Coordinates(p.lat, p.lng))
     }
+    override def distance(cellId: Long, cellId2: Long): Long = h3.h3Distance(cellId, cellId2).toLong
 
 }

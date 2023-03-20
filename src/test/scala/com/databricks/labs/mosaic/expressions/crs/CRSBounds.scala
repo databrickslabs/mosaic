@@ -1,4 +1,4 @@
-package com.databricks.labs.mosaic.core.crs
+package com.databricks.labs.mosaic.expressions.crs
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint

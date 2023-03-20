@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.core.geometry
 
-import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import org.locationtech.proj4j._

@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -18,13 +18,12 @@ import org.apache.spark.sql.types._
   """,
   since = "1.0"
 )
-case class CellKLoop(cellId: Expression, k: Expression, indexSystemName: String, geometryAPIName: String)
+case class CellKLoop(cellId: Expression, k: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends BinaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
-
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
+  
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     // noinspection DuplicatedCode
@@ -68,7 +67,7 @@ case class CellKLoop(cellId: Expression, k: Expression, indexSystemName: String,
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = CellKLoop(asArray(0), asArray(1), indexSystemName, geometryAPIName)
+        val res = CellKLoop(asArray(0), asArray(1), indexSystem, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }

@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.catalog.CatalogDatabase
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, Literal}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{LongType, StringType}
+import org.apache.spark.sql.types.{BinaryType, LongType, StringType}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
@@ -33,7 +33,9 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         MosaicContext.indexSystem match {
             case BNGIndexSystem => mc.getIndexSystem.getCellIdDataType shouldEqual StringType
             case H3IndexSystem  => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
+            case _ => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
         }
+        an[Error] should be thrownBy mc.setCellIdDataType("binary")
     }
 
     def sqlRegistration(mosaicContext: MosaicContext): Unit = {
@@ -56,10 +58,12 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         val gridCellLong = indexSystem match {
             case BNGIndexSystem => lit(1050138790).expr
             case H3IndexSystem  => lit(623060282076758015L).expr
+            case _  => lit(0L).expr
         }
         val gridCellStr = indexSystem match {
             case BNGIndexSystem => lit("TQ388791").expr
             case H3IndexSystem  => lit("8a58e0682d6ffff").expr
+            case _  => lit("0").expr
         }
 
         noException should be thrownBy getFunc("as_hex").apply(Seq(pointWkt))
@@ -206,6 +210,11 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
           FunctionIdentifier("h3_boundaryaswkb", None),
           new ExpressionInfo("product", "h3_boundaryaswkb"),
           functionBuilder
+        )
+        registry.registerFunction(
+            FunctionIdentifier("h3_distance", None),
+            new ExpressionInfo("product", "h3_distance"),
+            functionBuilder
         )
 
         mc.register(spark)

@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
