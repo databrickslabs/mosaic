@@ -19,8 +19,9 @@ trait CellAreaBehaviors extends MosaicSpatialQueryTest {
         import sc.implicits._
 
         val (cellId, area) = mc.getIndexSystem match {
-            case H3IndexSystem  => ("871969500ffffff", 4.327624974422719);
-            case BNGIndexSystem => ("TQ388791", 0.01);
+            case H3IndexSystem        => ("871969500ffffff", 4.327624974422719);
+            case BNGIndexSystem       => ("TQ388791", 0.01);
+            case CustomIndexSystem(_) => return;
         }
 
         val result = Seq(cellId).toDF("cellId").select(grid_cellarea($"cellId")).collect()
