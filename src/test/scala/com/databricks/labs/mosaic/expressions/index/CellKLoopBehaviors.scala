@@ -60,7 +60,7 @@ trait CellKLoopBehaviors extends MosaicSpatialQueryTest {
         mc.getIndexSystem match {
             case H3IndexSystem  => cellKLoopExpr.dataType shouldEqual ArrayType(LongType)
             case BNGIndexSystem => cellKLoopExpr.dataType shouldEqual ArrayType(StringType)
-            case _              => cellKLoopExpr.dataType shouldEqual ArrayType(LongType)
+            case _  => cellKLoopExpr.dataType shouldEqual ArrayType(LongType)
         }
 
         val badExpr = CellKLoop(
