@@ -56,11 +56,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
         val gt = raster.getRaster.GetGeoTransform()
         val resolution = arg1.asInstanceOf[Int]
         val bandTransform = (band: MosaicRasterBand) => {
-            val pixelArea = raster.xSize * raster.ySize
-            val (originCellId, _) = pixelTransformer(gt, resolution, asCentroid = false)(0, 0, 0)
-            val cellArea = indexSystem.indexToGeometry(originCellId, geometryAPI).getArea
-            val asCentroidFlag = pixelArea >= cellArea
-            val results = band.transformValues[(Long, Double)](pixelTransformer(gt, resolution, asCentroidFlag), (0L, -1.0))
+            val results = band.transformValues[(Long, Double)](pixelTransformer(gt, resolution), (0L, -1.0))
             results
                 // Filter out default cells. We don't want to return them since they are masked in original raster.
                 // We use 0L as a dummy cell ID for default cells.
@@ -85,8 +81,8 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       */
     def valuesCombiner(values: Seq[Double]): P
 
-    private def pixelTransformer(gt: Seq[Double], resolution: Int, asCentroid: Boolean)(x: Int, y: Int, value: Double): (Long, Double) = {
-        val offset = if (asCentroid) 0.5 else 0.0
+    private def pixelTransformer(gt: Seq[Double], resolution: Int)(x: Int, y: Int, value: Double): (Long, Double) = {
+        val offset = 0.5 // This centers the point to the pixel centroid
         val xOffset = offset + x
         val yOffset = offset + y
         val xGeo = gt(0) + xOffset * gt(1) + yOffset * gt(2)
