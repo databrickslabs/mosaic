@@ -66,7 +66,10 @@ trait IndexGeometryBehaviors extends MosaicSpatialQueryTest {
                 noException should be thrownBy mc.functions.index_geometry(lit(623060282076758015L))
                 noException should be thrownBy mc.functions.grid_boundary(lit(623060282076758015L), lit("WKT"))
                 noException should be thrownBy mc.functions.grid_boundary(lit(623060282076758015L), "WKB")
-            case _  => noException should be thrownBy mc.functions.index_geometry(lit(0L))
+            case _ =>
+                noException should be thrownBy mc.functions.index_geometry(lit(0L))
+                noException should be thrownBy mc.functions.grid_boundary(lit(0L), lit("WKT"))
+                noException should be thrownBy mc.functions.grid_boundary(lit(0L), "WKB")
         }
 
     }
