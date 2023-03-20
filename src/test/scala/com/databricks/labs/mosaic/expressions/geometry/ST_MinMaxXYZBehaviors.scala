@@ -23,7 +23,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
         val expected = (mc.getIndexSystem match {
             case H3IndexSystem  => List(10.0, 0.0, 10.0, 10.0, -75.78033, 10.0, 10.0, 10.0)
             case BNGIndexSystem => List(10000.0, 0.0, 10000.0, 10000.0, 75780.0, 10000.0, 10000.0, 10000.0)
-            case _ => List(0.0)
+            case _              => List(10.0, 0.0, 10.0, 10.0, -75.78033, 10.0, 10.0, 10.0)
         }).map(Row(_))
 
         val df = getWKTRowsDf().orderBy("id")
@@ -46,7 +46,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
         val expected = (mc.getIndexSystem match {
             case H3IndexSystem  => List(40.0, 2.0, 110.0, 45.0, -75.78033, 40.0, 40.0, 40.0)
             case BNGIndexSystem => List(40000.0, 2000.0, 110000.0, 45000.0, 75780.0, 40000.0, 40000.0, 40000.0)
-            case _  => List(0.0)
+            case _              => List(40.0, 2.0, 110.0, 45.0, -75.78033, 40.0, 40.0, 40.0)
         }).map(Row(_))
 
         val df = getWKTRowsDf().orderBy("id")
@@ -70,7 +70,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
         val expected = (mc.getIndexSystem match {
             case H3IndexSystem  => List(10.0, 0.0, 10.0, 5.0, 35.18937, 10.0, 10.0, 10.0)
             case BNGIndexSystem => List(10000.0, 0.0, 10000.0, 5000.0, 35189, 10000.0, 10000.0, 10000.0)
-            case _ =>  List(0.0)
+            case _              => List(10.0, 0.0, 10.0, 5.0, 35.18937, 10.0, 10.0, 10.0)
         }).map(Row(_))
 
         val df = getWKTRowsDf().orderBy("id")
@@ -93,7 +93,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
         val expected = (mc.getIndexSystem match {
             case H3IndexSystem  => List(40.0, 2.0, 110.0, 60.0, 35.18937, 40.0, 40.0, 40.0)
             case BNGIndexSystem => List(40000.0, 2000.0, 110000.0, 60000.0, 35189, 40000.0, 40000.0, 40000.0)
-            case _  => List(0.0)
+            case _              => List(40.0, 2.0, 110.0, 60.0, 35.18937, 40.0, 40.0, 40.0)
         }).map(Row(_))
 
         val df = getWKTRowsDf().orderBy("id")

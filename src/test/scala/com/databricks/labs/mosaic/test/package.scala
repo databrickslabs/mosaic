@@ -195,6 +195,7 @@ package object test {
                           st_transform(col("geometry"), lit(27700))
                         )
                         .drop("greenwich")
+                case _             => df
             }
         }
 
@@ -233,6 +234,7 @@ package object test {
                           st_transform(col("geometry"), lit(27700))
                         )
                         .drop("greenwich")
+                case _              => df
             }
         }
 

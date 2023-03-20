@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.index
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.JTS
+import com.databricks.labs.mosaic.JTS
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
