@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.geometry.base
 
 import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
+import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}

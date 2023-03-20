@@ -1,4 +1,4 @@
-package com.databricks.labs.mosaic.expressions.crs
+package com.databricks.labs.mosaic.core.crs
 
 import java.io.InputStream
 

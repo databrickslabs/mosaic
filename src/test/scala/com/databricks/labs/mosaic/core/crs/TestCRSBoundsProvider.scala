@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.core.crs
 
 import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
-import com.databricks.labs.mosaic.expressions.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.expressions.geometry.base.RequiresCRS
 import org.apache.spark.sql.types.{BinaryType, StringType}
 import org.scalatest.flatspec.AnyFlatSpec
