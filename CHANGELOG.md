@@ -1,3 +1,18 @@
+## v0.3.8
+- Added readers for default GDAL raster drivers (https://gdal.org/drivers/raster/index.html)
+  - TIFF
+  - COG
+  - NetCDF
+  - ... And more 
+- Added readers for default GDAL vector drivers  (https://gdal.org/drivers/vector/index.html)
+  - Shapefiles
+  - Geodatabase (File GDB)
+  - ... And more
+- Added custom grid index system for arbitrary CRS
+- Added Spatial KNN example
+- Refactored and simplified Mosaic expressions definition
+- Documentation updates and improvements
+
 ## v0.3.7
 - Fixed pip release publish script
 
