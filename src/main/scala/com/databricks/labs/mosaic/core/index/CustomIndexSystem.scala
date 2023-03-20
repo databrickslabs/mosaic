@@ -288,8 +288,8 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
     }
 
     override def distance(cellId: Long, cellId2: Long): Long = {
-        val resolution1 = getResolution(cellId)
-        val resolution2 = getResolution(cellId2)
+        val resolution1 = getCellResolution(cellId)
+        val resolution2 = getCellResolution(cellId2)
         val edgeSizeX = getCellWidth(resolution1)
         val edgeSizeY = getCellHeight(resolution1)
         val x1 = getCellCenterX(getCellPositionX(cellId, resolution1), resolution1)

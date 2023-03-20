@@ -341,7 +341,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             registry.registerFunction(
               FunctionIdentifier("grid_distance", database),
               GridDistance.registryExpressionInfo(database),
-              (exprs: Seq[Expression]) => GridDistance(exprs(0), exprs(1), indexSystem.name, geometryAPI.name)
+              (exprs: Seq[Expression]) => GridDistance(exprs(0), exprs(1), indexSystem, geometryAPI.name)
             )
         }
 
@@ -631,7 +631,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         /** IndexSystem Specific */
 
         /** IndexSystem and GeometryAPI Specific methods */
-        def grid_distance(cell1: Column, cell2: Column): Column = ColumnAdapter(GridDistance(cell1.expr, cell2.expr, indexSystem.name, geometryAPI.name))
+        def grid_distance(cell1: Column, cell2: Column): Column = ColumnAdapter(GridDistance(cell1.expr, cell2.expr, indexSystem, geometryAPI.name))
         def grid_tessellateexplode(geom: Column, resolution: Column): Column = grid_tessellateexplode(geom, resolution, lit(true))
         def grid_tessellateexplode(geom: Column, resolution: Int): Column = grid_tessellateexplode(geom, lit(resolution), lit(true))
         def grid_tessellateexplode(geom: Column, resolution: Int, keepCoreGeometries: Boolean): Column =

@@ -39,7 +39,7 @@ trait GridDistanceBehaviors extends MosaicSpatialQueryTest {
               grid_distance(col("cell_id1"), col("cell_id2"))
             )
 
-        cellPairs.where(col("grid_distance") === 0).count() shouldEqual cellPairs.count()
+        cellPairs.where(col("grid_distance") =!= 0).count() shouldEqual cellPairs.count()
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
@@ -55,18 +55,17 @@ trait GridDistanceBehaviors extends MosaicSpatialQueryTest {
         val gridDistanceExpr = GridDistance(
           mc.functions.grid_pointascellid(mc.functions.st_centroid(lit(wkt)), lit(4)).expr,
           mc.functions.grid_pointascellid(mc.functions.st_centroid(lit(wkt)), lit(4)).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
         mc.getIndexSystem match {
-            case H3IndexSystem  => gridDistanceExpr.dataType shouldEqual ArrayType(LongType)
-            case BNGIndexSystem => gridDistanceExpr.dataType shouldEqual ArrayType(StringType)
+            case H3IndexSystem  => gridDistanceExpr.dataType shouldEqual LongType
+            case BNGIndexSystem => gridDistanceExpr.dataType shouldEqual LongType
+            case _              => gridDistanceExpr.dataType shouldEqual LongType
         }
 
-        noException should be thrownBy mc.functions.grid_cellkring(lit(""), lit(k))
-        noException should be thrownBy mc.functions.grid_cellkring(lit(""), k)
-
+        noException should be thrownBy mc.functions.grid_distance(lit(1L), lit(1L))
         noException should be thrownBy gridDistanceExpr.makeCopy(gridDistanceExpr.children.toArray)
     }
 

@@ -514,8 +514,8 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
     override def distance(cellId: Long, cellId2: Long): Long = {
         val digits1 = indexDigits(cellId)
         val digits2 = indexDigits(cellId2)
-        val resolution1 = getResolution(cellId)
-        val resolution2 = getResolution(cellId2)
+        val resolution1 = getResolution(digits1)
+        val resolution2 = getResolution(digits2)
         val edgeSize = getEdgeSize(math.min(resolution1, resolution2))
         val x1 = getX(digits1, edgeSize)
         val x2 = getX(digits2, edgeSize)
