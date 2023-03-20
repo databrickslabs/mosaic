@@ -33,6 +33,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         MosaicContext.indexSystem match {
             case BNGIndexSystem => mc.getIndexSystem.getCellIdDataType shouldEqual StringType
             case H3IndexSystem  => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
+            case _ => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
         }
     }
 
@@ -56,10 +57,12 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         val gridCellLong = indexSystem match {
             case BNGIndexSystem => lit(1050138790).expr
             case H3IndexSystem  => lit(623060282076758015L).expr
+            case _  => lit(0L).expr
         }
         val gridCellStr = indexSystem match {
             case BNGIndexSystem => lit("TQ388791").expr
             case H3IndexSystem  => lit("8a58e0682d6ffff").expr
+            case _  => lit("0").expr
         }
 
         noException should be thrownBy getFunc("as_hex").apply(Seq(pointWkt))

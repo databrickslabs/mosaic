@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
@@ -19,7 +20,11 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val expected = List(10.0, 0.0, 10.0, 10.0, -75.78033, 10.0, 10.0, 10.0).map(Row(_))
+        val expected = (mc.getIndexSystem match {
+            case H3IndexSystem  => List(10.0, 0.0, 10.0, 10.0, -75.78033, 10.0, 10.0, 10.0)
+            case BNGIndexSystem => List(10000.0, 0.0, 10000.0, 10000.0, 75780.0, 10000.0, 10000.0, 10000.0)
+            case _              => List(10.0, 0.0, 10.0, 10.0, -75.78033, 10.0, 10.0, 10.0)
+        }).map(Row(_))
 
         val df = getWKTRowsDf().orderBy("id")
         val results = df.select(st_xmin(col("wkt")))
@@ -38,7 +43,11 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val expected = List(40.0, 2.0, 110.0, 45.0, -75.78033, 40.0, 40.0, 40.0).map(Row(_))
+        val expected = (mc.getIndexSystem match {
+            case H3IndexSystem  => List(40.0, 2.0, 110.0, 45.0, -75.78033, 40.0, 40.0, 40.0)
+            case BNGIndexSystem => List(40000.0, 2000.0, 110000.0, 45000.0, 75780.0, 40000.0, 40000.0, 40000.0)
+            case _              => List(40.0, 2.0, 110.0, 45.0, -75.78033, 40.0, 40.0, 40.0)
+        }).map(Row(_))
 
         val df = getWKTRowsDf().orderBy("id")
         val results = df.select(st_xmax(col("wkt")))
@@ -58,7 +67,11 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val expected = List(10.0, 0.0, 10.0, 5.0, 35.18937, 10.0, 10.0, 10.0).map(Row(_))
+        val expected = (mc.getIndexSystem match {
+            case H3IndexSystem  => List(10.0, 0.0, 10.0, 5.0, 35.18937, 10.0, 10.0, 10.0)
+            case BNGIndexSystem => List(10000.0, 0.0, 10000.0, 5000.0, 35189, 10000.0, 10000.0, 10000.0)
+            case _              => List(10.0, 0.0, 10.0, 5.0, 35.18937, 10.0, 10.0, 10.0)
+        }).map(Row(_))
 
         val df = getWKTRowsDf().orderBy("id")
         val results = df.select(st_ymin(col("wkt")))
@@ -77,7 +90,11 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
         import mc.functions._
         mc.register(spark)
 
-        val expected = List(40.0, 2.0, 110.0, 60.0, 35.18937, 40.0, 40.0, 40.0).map(Row(_))
+        val expected = (mc.getIndexSystem match {
+            case H3IndexSystem  => List(40.0, 2.0, 110.0, 60.0, 35.18937, 40.0, 40.0, 40.0)
+            case BNGIndexSystem => List(40000.0, 2000.0, 110000.0, 60000.0, 35189, 40000.0, 40000.0, 40000.0)
+            case _              => List(40.0, 2.0, 110.0, 60.0, 35.18937, 40.0, 40.0, 40.0)
+        }).map(Row(_))
 
         val df = getWKTRowsDf().orderBy("id")
         val results = df.select(st_ymax(col("wkt")))

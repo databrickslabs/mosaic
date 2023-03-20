@@ -21,6 +21,8 @@ import scala.util.{Success, Try}
   */
 object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
+    val name = "H3"
+
     // An instance of H3Core to be used for IndexSystem implementation.
     @transient private val h3: H3Core = H3Core.newInstance()
 
@@ -122,15 +124,6 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
             }).flatten
         }
     }
-
-    /**
-      * Returns the index system ID instance that uniquely identifies an index
-      * system. This instance is used to select appropriate Mosaic expressions.
-      *
-      * @return
-      *   An instance of [[IndexSystemID]]
-      */
-    override def getIndexSystemID: IndexSystemID = H3
 
     /**
       * Get the index ID corresponding to the provided coordinates.
