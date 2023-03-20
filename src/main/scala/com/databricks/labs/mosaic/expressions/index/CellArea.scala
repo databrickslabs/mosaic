@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import org.apache.spark.sql.catalyst.expressions.{
     ExpectsInputTypes,
     Expression,
@@ -22,13 +22,12 @@ import org.apache.spark.sql.types._
   """,
   since = "1.0"
 )
-case class CellArea(cellId: Expression, indexSystemName: String, geometryAPIName: String)
+case class CellArea(cellId: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends UnaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
 
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     // noinspection DuplicatedCode
@@ -69,7 +68,7 @@ case class CellArea(cellId: Expression, indexSystemName: String, geometryAPIName
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = CellArea(asArray(0), indexSystemName, geometryAPIName)
+        val res = CellArea(asArray(0), indexSystem, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }

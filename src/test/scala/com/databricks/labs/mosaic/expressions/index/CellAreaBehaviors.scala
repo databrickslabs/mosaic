@@ -42,7 +42,7 @@ trait CellAreaBehaviors extends MosaicSpatialQueryTest {
         val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val cellAreaExpr = CellArea(
           lit(wkt).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -50,7 +50,7 @@ trait CellAreaBehaviors extends MosaicSpatialQueryTest {
 
         val badExpr = CellArea(
           lit(true).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

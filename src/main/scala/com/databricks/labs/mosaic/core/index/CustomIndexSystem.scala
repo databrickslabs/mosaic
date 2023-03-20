@@ -328,4 +328,8 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
         cellPos
     }
 
+    override def indexToBoundary(index: Long): Seq[Coordinates] = throw new NotImplementedError
+
+    override def indexToCenter(index: Long): Coordinates = throw new NotImplementedError
+
 }

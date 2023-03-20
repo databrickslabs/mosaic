@@ -371,7 +371,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         registry.registerFunction(
           FunctionIdentifier("grid_cellarea", database),
           CellArea.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => CellArea(exprs(0), indexSystem.name, geometryAPI.name)
+          (exprs: Seq[Expression]) => CellArea(exprs(0), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("grid_cellkloop", database),
@@ -735,7 +735,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(IndexGeometry(indexID.expr, format.expr, indexSystem, geometryAPI.name))
         def grid_boundary(indexID: Column, format: String): Column =
             ColumnAdapter(IndexGeometry(indexID.expr, lit(format).expr, indexSystem, geometryAPI.name))
-        def grid_cellarea(cellId: Column): Column = ColumnAdapter(CellArea(cellId.expr, indexSystem.name, geometryAPI.name))
+        def grid_cellarea(cellId: Column): Column = ColumnAdapter(CellArea(cellId.expr, indexSystem, geometryAPI.name))
         def grid_cellkring(cellId: Column, k: Column): Column = ColumnAdapter(CellKRing(cellId.expr, k.expr, indexSystem, geometryAPI.name))
         def grid_cellkring(cellId: Column, k: Int): Column =
             ColumnAdapter(CellKRing(cellId.expr, lit(k).expr, indexSystem, geometryAPI.name))
