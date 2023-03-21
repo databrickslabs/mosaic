@@ -1,4 +1,4 @@
-## v0.3.8
+## v0.3.9
 - Fixed k-ring interpolation on raster data read
 
 ## v0.3.8
