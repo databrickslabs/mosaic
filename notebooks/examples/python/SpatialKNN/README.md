@@ -65,16 +65,3 @@ Usually when asserting the notion of nearest neighbors we fix that notion to the
 This notebook series was run on Databricks with the [Mosaic](https://github.com/databrickslabs/mosaic/tree/main/python) library installed. For this example it is recommended to install it from [PyPi](https://pypi.org/project/databricks-mosaic/) on your Databricks cluster like [so](https://docs.databricks.com/libraries/cluster-libraries.html). __Make sure you run this on Databricks ML Runtime (initially implemented on 11.3 LTS).__
 
 *notebook original author [@milos-colic](https://github.com/milos-colic) | submitted by [@mjohns-databricks](https://github.com/mjohns-databricks)* 
-
-<!-- CSS -->
-<style>
-    img {
-        width: 600px;
-        -webkit-filter: drop-shadow(5px 5px 5px #666666);
-        filter: drop-shadow(5px 5px 5px #666666);
-        padding-top: 50px;
-        padding-right: 30px;
-        padding-bottom: 50px;
-        padding-left: 80px;
-      }
-</style>
