@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.databricks.labs</groupId>
     <artifactId>mosaic</artifactId>
-    <version>0.3.8</version>
+    <version>0.3.9</version>
 
     <properties>
         <minimum.coverage>80</minimum.coverage>
