@@ -53,23 +53,29 @@ trait CellKLoopBehaviors extends MosaicSpatialQueryTest {
         val cellKLoopExpr = CellKLoop(
           lit(wkt).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
         mc.getIndexSystem match {
             case H3IndexSystem  => cellKLoopExpr.dataType shouldEqual ArrayType(LongType)
             case BNGIndexSystem => cellKLoopExpr.dataType shouldEqual ArrayType(StringType)
+            case _  => cellKLoopExpr.dataType shouldEqual ArrayType(LongType)
         }
 
         val badExpr = CellKLoop(
           lit(10).expr,
           lit(true).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
         an[Error] should be thrownBy badExpr.inputTypes
+        mc.getIndexSystem match {
+            case H3IndexSystem  => an[Exception] should be thrownBy mc.getIndexSystem.kLoop(-1L, -1)
+            case BNGIndexSystem => an[Exception] should be thrownBy mc.getIndexSystem.kLoop(-1L, -1)
+            case _              => an[AssertionError] should be thrownBy mc.getIndexSystem.kLoop(-1L, -1)
+        }
 
         noException should be thrownBy mc.functions.grid_cellkloop(lit(""), lit(k))
         noException should be thrownBy mc.functions.grid_cellkloop(lit(""), k)

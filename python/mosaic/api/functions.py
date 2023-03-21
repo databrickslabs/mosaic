@@ -36,6 +36,7 @@ __all__ = [
     "st_simplify",
     "st_union",
     "st_unaryunion",
+    "st_updatesrid",
     "st_geometrytype",
     "st_xmin",
     "st_xmax",
@@ -621,6 +622,67 @@ def st_unaryunion(geom: ColumnOrName) -> Column:
     )
 
 
+def st_updatesrid(geom: ColumnOrName, srcSRID: ColumnOrName, destSRID: ColumnOrName) -> Column:
+    """
+    Updates the SRID of the input geometry `geom` from `srcSRID` to `destSRID`.
+
+    Parameters
+    ----------
+    geom: Column
+        Geometry to update the SRID
+
+    srcSRID: Column
+        Original SRID
+
+    destSRID: Column
+        New SRID
+
+    Returns
+    -------
+    Column
+        Geometry with updated SRID
+    """
+    return config.mosaic_context.invoke_function(
+        "st_updatesrid", pyspark_to_java_column(geom), pyspark_to_java_column(srcSRID), pyspark_to_java_column(destSRID)
+    )
+
+
+def st_x(geom: ColumnOrName) -> Column:
+    """
+    Returns the x coordinate of the input geometry `geom`.
+
+    Parameters
+    ----------
+    geom : Column
+
+    Returns
+    -------
+    Column (DoubleType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_x", pyspark_to_java_column(geom)
+    )
+
+
+def st_y(geom: ColumnOrName) -> Column:
+    """
+    Returns the y coordinate of the input geometry `geom`.
+
+    Parameters
+    ----------
+    geom : Column
+
+    Returns
+    -------
+    Column (DoubleType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_y", pyspark_to_java_column(geom)
+    )
+
+
 def st_geometrytype(geom: ColumnOrName) -> Column:
     """
     Returns the type of the input geometry `geom` (“POINT”, “LINESTRING”, “POLYGON” etc.).
@@ -744,42 +806,6 @@ def st_zmax(geom: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "st_zmax", pyspark_to_java_column(geom)
-    )
-
-
-def st_x(geom: ColumnOrName) -> Column:
-    """
-    Returns the x coordinate of the input geometry `geom`.
-
-    Parameters
-    ----------
-    geom : Column
-
-    Returns
-    -------
-    Column (DoubleType)
-
-    """
-    return config.mosaic_context.invoke_function(
-        "st_x", pyspark_to_java_column(geom)
-    )
-
-
-def st_y(geom: ColumnOrName) -> Column:
-    """
-    Returns the y coordinate of the input geometry `geom`.
-
-    Parameters
-    ----------
-    geom : Column
-
-    Returns
-    -------
-    Column (DoubleType)
-
-    """
-    return config.mosaic_context.invoke_function(
-        "st_y", pyspark_to_java_column(geom)
     )
 
 

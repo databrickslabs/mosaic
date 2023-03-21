@@ -60,7 +60,7 @@ trait GeometryKRingExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(wkt).expr,
           lit(resolution).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
         val withNull = geomKRingExplodeExpr.copy(geom = lit(null).expr)
@@ -74,7 +74,7 @@ trait GeometryKRingExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(10).expr,
           lit(10).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

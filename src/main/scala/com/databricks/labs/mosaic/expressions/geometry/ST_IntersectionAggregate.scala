@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.expressions.index.IndexGeometry
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
@@ -13,14 +13,13 @@ case class ST_IntersectionAggregate(
     leftChip: Expression,
     rightChip: Expression,
     geometryAPIName: String,
-    indexSystemName: String,
+    indexSystem: IndexSystem,
     mutableAggBufferOffset: Int,
     inputAggBufferOffset: Int
 ) extends TypedImperativeAggregate[Array[Byte]]
       with BinaryLike[Expression] {
 
     val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID.apply(indexSystemName))
     override lazy val deterministic: Boolean = true
     override val left: Expression = leftChip
     override val right: Expression = rightChip

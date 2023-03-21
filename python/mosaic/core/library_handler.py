@@ -9,7 +9,7 @@ class MosaicLibraryHandler:
     spark = None
     sc = None
     _jar_path = None
-    _jar_filename = f"mosaic-{importlib.metadata.version('databricks-mosaic')}-jar-with-dependencies.jar"
+    _jar_filename = None
     _auto_attached_enabled = None
 
     def __init__(self, spark):
@@ -50,8 +50,14 @@ class MosaicLibraryHandler:
                 )
                 self._jar_filename = self._jar_path.split("/")[-1]
             except Py4JJavaError as e:
-                with importlib.resources.path("mosaic.lib", self._jar_filename) as p:
-                    self._jar_path = p.as_posix()
+                self._jar_filename = f"mosaic-{importlib.metadata.version('databricks-mosaic')}-jar-with-dependencies.jar"
+                try:
+                    with importlib.resources.path("mosaic.lib", self._jar_filename) as p:
+                        self._jar_path = p.as_posix()
+                except FileNotFoundError as fnf:
+                    self._jar_filename = f"mosaic-{importlib.metadata.version('databricks-mosaic')}-SNAPSHOT-jar-with-dependencies.jar"
+                    with importlib.resources.path("mosaic.lib", self._jar_filename) as p:
+                        self._jar_path = p.as_posix()
         return self._jar_path
 
     def auto_attach(self):
