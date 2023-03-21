@@ -68,7 +68,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         assume(System.getProperty("os.name") == "Linux")
 
         val superRaster = MosaicRasterGDAL.readRaster(filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"))
-        val subdatasetPath = superRaster.subdatasets.filterKeys(_.contains("bleaching_alert_area")).head._1
+        val subdatasetPath = superRaster.subdatasets("bleaching_alert_area")
 
         val testRaster = MosaicRasterGDAL.readRaster(subdatasetPath)
 

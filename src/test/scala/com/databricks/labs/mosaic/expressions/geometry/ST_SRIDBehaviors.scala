@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks
+import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.execution.WholeStageCodegenExec
@@ -15,12 +15,12 @@ import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper, no
 import scala.collection.JavaConverters._
 
 
-trait ST_SRIDBehaviors extends QueryTest {
+trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
 
-    def SRIDBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def SRIDBehaviour(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val sc = spark
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         import mc.functions._
         import sc.implicits._
         mc.register(spark)
@@ -62,10 +62,10 @@ trait ST_SRIDBehaviors extends QueryTest {
 
     }
 
-    def SRIDCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def SRIDCodegen(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val sc = spark
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         import mc.functions._
         import sc.implicits._
         mc.register(spark)
@@ -106,12 +106,12 @@ trait ST_SRIDBehaviors extends QueryTest {
         noException should be thrownBy CodeGenerator.compile(code)
     }
 
-    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         mc.register(spark)
 
-        val stSRID = ST_SRID(lit("POINT (1 1)").expr, "illegalAPI")
+        val stSRID = ST_SRID(lit("POINT (1 1)").expr, mc.expressionConfig)
 
         stSRID.child shouldEqual lit("POINT (1 1)").expr
         stSRID.dataType shouldEqual IntegerType

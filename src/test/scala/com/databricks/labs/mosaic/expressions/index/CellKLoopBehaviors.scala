@@ -22,9 +22,8 @@ trait CellKLoopBehaviors extends MosaicSpatialQueryTest {
         val resolution = 4
 
         val boroughs: DataFrame = getBoroughs(mc)
-            .withColumn("centroid", st_centroid2D(col("wkt")))
-            .withColumn("point", st_point(col("centroid.x"), col("centroid.y")))
-            .withColumn("cell_id", grid_pointascellid(col("point"), resolution))
+            .withColumn("centroid", st_centroid(col("wkt")))
+            .withColumn("cell_id", grid_pointascellid(col("centroid"), resolution))
 
         val mosaics = boroughs
             .select(
@@ -48,29 +47,35 @@ trait CellKLoopBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val k = 4
 
         val cellKLoopExpr = CellKLoop(
           lit(wkt).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
         mc.getIndexSystem match {
             case H3IndexSystem  => cellKLoopExpr.dataType shouldEqual ArrayType(LongType)
             case BNGIndexSystem => cellKLoopExpr.dataType shouldEqual ArrayType(StringType)
+            case _  => cellKLoopExpr.dataType shouldEqual ArrayType(LongType)
         }
 
         val badExpr = CellKLoop(
           lit(10).expr,
           lit(true).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
         an[Error] should be thrownBy badExpr.inputTypes
+        mc.getIndexSystem match {
+            case H3IndexSystem  => an[Exception] should be thrownBy mc.getIndexSystem.kLoop(-1L, -1)
+            case BNGIndexSystem => an[Exception] should be thrownBy mc.getIndexSystem.kLoop(-1L, -1)
+            case _              => an[AssertionError] should be thrownBy mc.getIndexSystem.kLoop(-1L, -1)
+        }
 
         noException should be thrownBy mc.functions.grid_cellkloop(lit(""), lit(k))
         noException should be thrownBy mc.functions.grid_cellkloop(lit(""), k)

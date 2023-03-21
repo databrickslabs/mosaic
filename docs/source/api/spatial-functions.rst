@@ -1777,6 +1777,49 @@ st_zmax
     :type col: Column
     :rtype: Column: DoubleType
 
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10 20)'}])
+     >>> df.select(st_zmax('wkt')).show()
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: scala
+
+     >>> val df = List(("POINT (30 10 20)")).toDF("wkt")
+     >>> df.select(st_zmax(col("wkt"))).show()
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: sql
+
+     >>> SELECT st_zmax("POINT (30 10 20)")
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: r R
+
+     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10 20)"))
+     >>> showDF(select(df, st_zmax(column("wkt"))), truncate=F)
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+
 
 st_zmin
 *******
@@ -1788,4 +1831,153 @@ st_zmin
     :param col: Geometry
     :type col: Column
     :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10 20)'}])
+     >>> df.select(st_zmin('wkt')).show()
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: scala
+
+     >>> val df = List(("POINT (30 10 20)")).toDF("wkt")
+     >>> df.select(st_zmin(col("wkt"))).show()
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: sql
+
+     >>> SELECT st_zmin("POINT (30 10 20)")
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: r R
+
+     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10 20)"))
+     >>> showDF(select(df, st_zmin(column("wkt"))), truncate=F)
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+
+st_x
+****
+
+.. function:: st_x(col)
+
+    Returns the x coordinate of the input geometry.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+     >>> df.select(st_x('wkt')).show()
+     +-----------------+
+     |st_x(wkt)        |
+     +-----------------+
+     |             30.0|
+     +-----------------+
+
+    .. code-tab:: scala
+
+     >>> val df = List(("POINT (30 10)")).toDF("wkt")
+     >>> df.select(st_x(col("wkt"))).show()
+     +-----------------+
+     |st_x(wkt)        |
+     +-----------------+
+     |             30.0|
+     +-----------------+
+
+    .. code-tab:: sql
+
+     >>> SELECT st_x("POINT (30 10)")
+     +-----------------+
+     |st_x(wkt)        |
+     +-----------------+
+     |             30.0|
+     +-----------------+
+
+    .. code-tab:: r R
+
+     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10)"))
+     >>> showDF(select(df, st_x(column("wkt"))), truncate=F)
+     +-----------------+
+     |st_x(wkt)        |
+     +-----------------+
+     |             30.0|
+     +-----------------+
+
+
+st_y
+****
+.. function:: st_y(col)
+
+    Returns the y coordinate of the input geometry.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+     >>> df.select(st_y('wkt')).show()
+     +-----------------+
+     |st_y(wkt)        |
+     +-----------------+
+     |             10.0|
+     +-----------------+
+
+    .. code-tab:: scala
+
+     >>> val df = List(("POINT (30 10)")).toDF("wkt")
+     >>> df.select(st_y(col("wkt"))).show()
+     +-----------------+
+     |st_y(wkt)        |
+     +-----------------+
+     |             10.0|
+     +-----------------+
+
+    .. code-tab:: sql
+
+     >>> SELECT st_y("POINT (30 10)")
+     +-----------------+
+     |st_y(wkt)        |
+     +-----------------+
+     |             10.0|
+     +-----------------+
+
+    .. code-tab:: r R
+
+     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10)"))
+     >>> showDF(select(df, st_y(column("wkt"))), truncate=F)
+     +-----------------+
+     |st_y(wkt)        |
+     +-----------------+
+     |             10.0|
+     +-----------------+
 

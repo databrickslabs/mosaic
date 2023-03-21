@@ -20,7 +20,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def getNumGeometries: Int = geom.getNumGeometries
 
-    override def reduceFromMulti: MosaicGeometry = {
+    override def reduceFromMulti: MosaicGeometryJTS = {
         val n = geom.getNumGeometries
         if (n == 1) {
             MosaicGeometryJTS(geom.getGeometryN(0))
@@ -84,14 +84,14 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         this.geom.intersects(otherGeom)
     }
 
-    override def difference(other: MosaicGeometry): MosaicGeometry = {
+    override def difference(other: MosaicGeometry): MosaicGeometryJTS = {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
         val difference = this.geom.difference(otherGeom)
         difference.setSRID(geom.getSRID)
         MosaicGeometryJTS(difference)
     }
 
-    override def union(other: MosaicGeometry): MosaicGeometry = {
+    override def union(other: MosaicGeometry): MosaicGeometryJTS = {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
         val union = this.geom.union(otherGeom)
         union.setSRID(geom.getSRID)
@@ -151,6 +151,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
     override def getSpatialReference: Int = geom.getSRID
 
     override def setSpatialReference(srid: Int): Unit = geom.setSRID(srid)
+
+    override def transformCRSXY(sridTo: Int): MosaicGeometryJTS = super.transformCRSXY(sridTo, None).asInstanceOf[MosaicGeometryJTS]
 
 }
 

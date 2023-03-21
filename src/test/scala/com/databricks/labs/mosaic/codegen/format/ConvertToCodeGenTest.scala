@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.codegen.format
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
+import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
 import org.apache.spark.sql.catalyst.expressions.codegen._
 import org.apache.spark.sql.types._

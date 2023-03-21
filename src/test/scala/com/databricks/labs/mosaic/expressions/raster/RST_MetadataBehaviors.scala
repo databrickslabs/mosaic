@@ -39,6 +39,9 @@ trait RST_MetadataBehaviors extends QueryTest {
         result.head.getOrElse("RANGEENDINGDATE", "") shouldBe "2018-07-11"
         result.head.getOrElse("TileID", "") shouldBe "51010007"
 
+        noException should be thrownBy rst_metadata($"path")
+        noException should be thrownBy rst_metadata("path")
+
     }
 
 }

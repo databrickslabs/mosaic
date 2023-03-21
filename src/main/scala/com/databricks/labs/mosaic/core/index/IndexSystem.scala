@@ -12,6 +12,8 @@ import org.apache.spark.unsafe.types.UTF8String
   */
 abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
 
+    def distance(cellId: Long, cellId2: Long): Long
+
     def getCellIdDataType: DataType = cellIdType
 
     def setCellIdDataType(dataType: DataType): Unit = {
@@ -91,16 +93,7 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       * @return
       *   IndexSystem name.
       */
-    def name: String = getIndexSystemID.name
-
-    /**
-      * Returns the index system ID instance that uniquely identifies an index
-      * system. This instance is used to select appropriate Mosaic expressions.
-      *
-      * @return
-      *   An instance of [[IndexSystemID]]
-      */
-    def getIndexSystemID: IndexSystemID
+    def name: String
 
     /**
       * Returns the resolution value based on the nullSafeEval method inputs of
