@@ -25,7 +25,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("tileSize", "10")
             .option("readSubdataset", "true")
             .option("subdataset", "1")
-            .option("kRingInterpolation", "3")
+            .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")
             .queryExecution
@@ -46,7 +46,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("combiner", "min")
             .option("retile", "true")
             .option("tileSize", "10")
-            .option("kRingInterpolation", "3")
+            .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")
             .take(1)
@@ -64,7 +64,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .format("raster_to_grid")
             .option("combiner", "max")
             .option("tileSize", "10")
-            .option("kRingInterpolation", "3")
+            .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")
             .take(1)
@@ -129,9 +129,9 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .format("invalid")
             .load(filePath)
 
-        an[Exception] should be thrownBy MosaicContext.read
+        noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
-            .option("kRingInterpolate", "3") // Only works on Databricks Photon Cluster.
+            .option("kRingInterpolate", "3")
             .load(filePath)
 
     }

@@ -172,7 +172,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             rasterDf
                 .withColumn("origin_cell_id", col("cell_id"))
                 .withColumn("cell_id", explode(grid_cellkring(col("origin_cell_id"), k)))
-                .withColumn("weight", lit(k + 1) - grid_distance(col("origin_cell_id"), col("cell_id)")))
+                .withColumn("weight", lit(k + 1) - grid_distance(col("origin_cell_id"), col("cell_id")))
                 .groupBy("band_id", "cell_id")
                 .agg(weighted_sum("measure", "weight"))
         } else {
