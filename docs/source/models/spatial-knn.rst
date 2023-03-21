@@ -2,8 +2,8 @@
 Spatial K Nearest Neighbours
 ============================
 
-* Runnable notebook based python example available, see [here](https://github.com/databrickslabs/mosaic/tree/main/notebooks/examples/python/SpatialKNN)
-* Also, reference SpatialKNN code-level APIs [Python](https://github.com/databrickslabs/mosaic/blob/main/python/mosaic/models/knn/spatial_knn.py) | [Scala](https://github.com/databrickslabs/mosaic/tree/main/src/main/scala/com/databricks/labs/mosaic/models/knn) for any additions or changes
+* Runnable notebook based python example available, see `here <https://github.com/databrickslabs/mosaic/tree/main/notebooks/examples/python/SpatialKNN>`
+* Also, reference SpatialKNN code-level APIs `Python <https://github.com/databrickslabs/mosaic/blob/main/python/mosaic/models/knn/spatial_knn.py>` |  `Scala <https://github.com/databrickslabs/mosaic/tree/main/src/main/scala/com/databricks/labs/mosaic/models/knn>` for any additions or changes
 
 Intro
 ###################
