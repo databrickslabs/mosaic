@@ -22,15 +22,16 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
 
     def getResolutionStr(resolution: Int): String
 
-    def formatCellId(cellId: Any, dt: DataType): Any = (dt, cellId) match {
-        case (LongType, _: Long)           => cellId
-        case (LongType, cid: String)       => parse(cid)
-        case (LongType, cid: UTF8String)   => parse(cid.toString)
-        case (StringType, cid: Long)       => format(cid)
-        case (StringType, cid: UTF8String) => cid.toString
-        case (StringType, _: String)       => cellId
-        case _                             => throw new Error("Cell ID data type not supported.")
-    }
+    def formatCellId(cellId: Any, dt: DataType): Any =
+        (dt, cellId) match {
+            case (LongType, _: Long)           => cellId
+            case (LongType, cid: String)       => parse(cid)
+            case (LongType, cid: UTF8String)   => parse(cid.toString)
+            case (StringType, cid: Long)       => format(cid)
+            case (StringType, cid: UTF8String) => cid.toString
+            case (StringType, _: String)       => cellId
+            case _                             => throw new Error("Cell ID data type not supported.")
+        }
 
     def formatCellId(cellId: Any): Any = formatCellId(cellId, getCellIdDataType)
 
