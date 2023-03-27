@@ -236,3 +236,111 @@ st_union_agg
     +-------------------------------------------------------------------------+
     |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
     +-------------------------------------------------------------------------+
+
+grid_cell_intersection_agg
+************
+
+.. function:: grid_cell_intersection_agg(chips)
+
+    Computes the chip representing the intersection of the input chips.
+
+    :param chips: Chips
+    :type chips: Column
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+
+    >>> df = df.withColumn("chip", grid_tessellateexplode(...))
+    >>> df.groupBy("chip.index_id").agg(grid_cell_intersection_agg("chip").alias("agg_chip")).limit(1).show()
+    +--------------------------------------------------------+
+    | agg_chip                                               |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = other_df.withColumn("chip", grid_tessellateexplode(...))
+    >>> df.groupBy("chip.index_id").agg(grid_cell_intersection_agg("chip").alias("agg_chip")).limit(1).show()
+    +--------------------------------------------------------+
+    | agg_chip                                               |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> WITH chips AS (SELECT grid_tessellateexplode(wkt) AS "chip" FROM ...)
+        SELECT grid_cell_intersection_agg(chips) AS agg_chip FROM chips GROUP BY chips.index_id;
+    +--------------------------------------------------------+
+    | agg_chip                                               |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> showDF(select(grid_cell_intersection_agg(column("chip"))), truncate=F)
+    +--------------------------------------------------------+
+    | agg_chip                                               |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+grid_cell_union_agg
+************
+
+.. function:: grid_cell_union_agg(chips)
+
+    Computes the chip representing the union of the input chips.
+
+    :param chips: Chips
+    :type chips: Column
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+
+    >>> df = df.withColumn("chip", grid_tessellateexplode(...))
+    >>> df.groupBy("chip.index_id").agg(grid_cell_union_agg("chip").alias("agg_chip")).limit(1).show()
+    +--------------------------------------------------------+
+    | agg_chip                                               |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = other_df.withColumn("chip", grid_tessellateexplode(...))
+    >>> df.groupBy("chip.index_id").agg(grid_cell_union_agg("chip").alias("agg_chip")).limit(1).show()
+    +--------------------------------------------------------+
+    | agg_chip                                               |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> WITH chips AS (SELECT grid_tessellateexplode(wkt) AS "chip" FROM ...)
+        SELECT grid_cell_union_agg(chips) AS agg_chip FROM chips GROUP BY chips.index_id;
+    +--------------------------------------------------------+
+    | agg_chip                                               |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> showDF(select(grid_cell_union_agg(column("chip"))), truncate=F)
+    +--------------------------------------------------------+
+    | agg_chip                                               |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
