@@ -224,6 +224,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     override def indexToBoundary(index: Long): Seq[Coordinates] = {
         h3.h3ToGeoBoundary(index).asScala.map(p => Coordinates(p.lat, p.lng))
     }
-    override def distance(cellId: Long, cellId2: Long): Long = h3.h3Distance(cellId, cellId2).toLong
+
+    override def distance(cellId: Long, cellId2: Long): Long = Try(h3.h3Distance(cellId, cellId2)).map(_.toLong).getOrElse(0)
 
 }
