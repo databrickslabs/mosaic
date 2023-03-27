@@ -2,9 +2,6 @@
 - Fixed k-ring interpolation on raster data read
 
 ## v0.3.8
-- Fixed k-ring interpolation on raster data read
-
-## v0.3.8
 - Added readers for default GDAL raster drivers (https://gdal.org/drivers/raster/index.html)
   - TIFF
   - COG
