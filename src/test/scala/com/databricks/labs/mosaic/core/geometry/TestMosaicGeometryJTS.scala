@@ -19,7 +19,7 @@ class TestMosaicGeometryJTS extends AnyFunSuite {
 
         val intersection = geom.intersection(cellGeom)
 
-        intersection.getNumGeometries should be(3)
+        intersection.getNumGeometries should be(4)
 
     }
 

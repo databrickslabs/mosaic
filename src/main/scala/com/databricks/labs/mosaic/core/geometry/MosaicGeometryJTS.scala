@@ -11,13 +11,11 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.esotericsoftware.kryo.Kryo
 import org.apache.spark.sql.catalyst.InternalRow
-import org.locationtech.jts.geom.{Geometry, GeometryCollection}
+import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.util.AffineTransformation
 import org.locationtech.jts.io._
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
-
-import scala.annotation.tailrec
 
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
@@ -166,9 +164,7 @@ object MosaicGeometryJTS extends GeometryReader {
 
     override def fromWKT(wkt: String): MosaicGeometryJTS = MosaicGeometryJTS(new WKTReader().read(wkt))
 
-    @tailrec
     def apply(geom: Geometry): MosaicGeometryJTS = {
-//        geom.setSRID(4326)
         GeometryTypeEnum.fromString(geom.getGeometryType) match {
             case POINT              => MosaicPointJTS(geom)
             case MULTIPOINT         => MosaicMultiPointJTS(geom)
@@ -177,16 +173,7 @@ object MosaicGeometryJTS extends GeometryReader {
             case LINESTRING         => MosaicLineStringJTS(geom)
             case MULTILINESTRING    => MosaicMultiLineStringJTS(geom)
             case LINEARRING         => MosaicLineStringJTS(geom)
-            // Geometry collection will be coerced to a multipolygon if it contains polygons
-            // or a multilinestring if it contains linestrings or points (or a multipoint if it contains points)
-            // otherwise it will be returned as an empty polygon.
-            case GEOMETRYCOLLECTION =>
-                val geomCollection = geom.asInstanceOf[GeometryCollection]
-                val geometries = for (i <- 0 until geomCollection.getNumGeometries) yield geomCollection.getGeometryN(i)
-                val filtered = coerceGeomCollection(geometries)
-                val union = filtered.reduce((a, b) => a.union(b))
-                union.setSRID(geom.getSRID)
-                MosaicGeometryJTS(union)
+            case GEOMETRYCOLLECTION => MosaicGeometryCollectionJTS(geom)
         }
     }
 
@@ -218,18 +205,5 @@ object MosaicGeometryJTS extends GeometryReader {
             case MULTILINESTRING    => MosaicMultiLineStringJTS
             case GEOMETRYCOLLECTION => MosaicGeometryCollectionJTS
         }
-
-    private def coerceGeomCollection(geometries: Seq[Geometry]): Seq[Geometry] = {
-        val types = geometries.map(_.getGeometryType).map(GeometryTypeEnum.fromString)
-        if (types.contains(MULTIPOLYGON) || types.contains(POLYGON)) {
-            geometries.filter(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.getGeometryType)))
-        } else if (types.contains(MULTILINESTRING) || types.contains(LINESTRING)) {
-            geometries.filter(g => Seq(MULTILINESTRING, LINESTRING).contains(GeometryTypeEnum.fromString(g.getGeometryType)))
-        } else if (types.contains(MULTIPOINT) || types.contains(POINT)) {
-            geometries.filter(g => Seq(MULTIPOINT, POINT).contains(GeometryTypeEnum.fromString(g.getGeometryType)))
-        } else {
-            Seq(MosaicPolygonJTS.fromWKT("POLYGON EMPTY").getGeom)
-        }
-    }
 
 }

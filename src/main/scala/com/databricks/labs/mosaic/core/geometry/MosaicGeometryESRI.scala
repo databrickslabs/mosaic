@@ -16,7 +16,6 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.io.{WKBReader, WKBWriter}
 
 import java.nio.ByteBuffer
-import scala.annotation.tailrec
 
 abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
@@ -176,7 +175,6 @@ object MosaicGeometryESRI extends GeometryReader {
 
     override def fromWKT(wkt: String): MosaicGeometryESRI = MosaicGeometryESRI(OGCGeometry.fromText(wkt))
 
-    @tailrec
     def apply(geom: OGCGeometry): MosaicGeometryESRI =
         GeometryTypeEnum.fromString(geom.geometryType()) match {
             case POINT              => MosaicPointESRI(geom)
@@ -185,16 +183,7 @@ object MosaicGeometryESRI extends GeometryReader {
             case MULTIPOLYGON       => MosaicMultiPolygonESRI(geom)
             case LINESTRING         => MosaicLineStringESRI(geom)
             case MULTILINESTRING    => MosaicMultiLineStringESRI(geom)
-            // Geometry collection will be coerced to a multipolygon if it contains polygons
-            // or a multilinestring if it contains linestrings or points (or a multipoint if it contains points)
-            // otherwise it will be returned as an empty polygon.
-            case GEOMETRYCOLLECTION =>
-                val geomCollection = geom.asInstanceOf[OGCGeometryCollection]
-                val geometries = for (i <- 0 until geomCollection.numGeometries()) yield geomCollection.geometryN(i)
-                val filtered = coerceGeomCollection(geometries)
-                val union = filtered.reduce((a, b) => a.union(b))
-                union.setSpatialReference(geom.getEsriSpatialReference)
-                MosaicGeometryESRI(union)
+            case GEOMETRYCOLLECTION => MosaicGeometryCollectionESRI(geom)
         }
 
     override def fromHEX(hex: String): MosaicGeometryESRI = {
@@ -225,19 +214,6 @@ object MosaicGeometryESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometryESRI = {
         val typeId = row.getInt(0)
         reader(typeId).fromInternal(row).asInstanceOf[MosaicGeometryESRI]
-    }
-
-    private def coerceGeomCollection(geometries: Seq[OGCGeometry]): Seq[OGCGeometry] = {
-        val types = geometries.map(_.geometryType()).map(GeometryTypeEnum.fromString)
-        if (types.contains(MULTIPOLYGON) || types.contains(POLYGON)) {
-            geometries.filter(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.geometryType())))
-        } else if (types.contains(MULTILINESTRING) || types.contains(LINESTRING)) {
-            geometries.filter(g => Seq(MULTILINESTRING, LINESTRING).contains(GeometryTypeEnum.fromString(g.geometryType())))
-        } else if (types.contains(MULTIPOINT) || types.contains(POINT)) {
-            geometries.filter(g => Seq(MULTIPOINT, POINT).contains(GeometryTypeEnum.fromString(g.geometryType())))
-        } else {
-            Seq(MosaicPolygonESRI.fromWKT("POLYGON EMPTY").getGeom)
-        }
     }
 
 }
