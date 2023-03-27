@@ -223,3 +223,24 @@ class TestFunctions(MosaicTestCase):
             .withColumn("grid_geometrykloopexplode", api.grid_geometrykloopexplode("wkt", lit(4), lit(1)))
         )
         self.assertEqual(result.count() > 1, True)
+
+    def test_grid_cell_union_intersection(self):
+        df = self.spark.createDataFrame(
+            [
+                # 2x1 rectangle starting at (0 0)
+                ["POLYGON ((0 0, 0 2, 1 2, 1 0, 0 0))"]
+            ],
+            ["wkt"],
+        )
+        df_chips = df.withColumn("chips", api.grid_tessellateexplode("wkt", lit(1)))
+
+        df_chips = (
+            df_chips
+            .withColumn("intersection", api.grid_cell_intersection("chips", "chips"))
+            .withColumn("union", api.grid_cell_union("chips", "chips"))
+        )
+        intersection = df_chips.groupBy("chips.index_id").agg(api.grid_cell_intersection_agg("chips"))
+        self.assertEqual(intersection.count() > 1, True)
+
+        union = df_chips.groupBy("chips.index_id").agg(api.grid_cell_union_agg("chips"))
+        self.assertEqual(union.count() > 1, True)
