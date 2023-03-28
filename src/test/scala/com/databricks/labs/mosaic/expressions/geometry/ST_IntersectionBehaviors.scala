@@ -228,7 +228,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             case H3IndexSystem  => InternalRow.fromSeq(Seq(true, 622236750694711295L, Array.empty[Byte]))
         }
 
-        val stIntersectionAgg = ST_IntersectionAggregate(null, null, geometryAPI.name, indexSystem.name, 0, 0)
+        val stIntersectionAgg = ST_IntersectionAggregate(null, null, geometryAPI.name, indexSystem, 0, 0)
         noException should be thrownBy stIntersectionAgg.getCellGeom(stringIDRow, ChipType(StringType))
         noException should be thrownBy stIntersectionAgg.getCellGeom(longIDRow, ChipType(LongType))
         an[Error] should be thrownBy stIntersectionAgg.getCellGeom(

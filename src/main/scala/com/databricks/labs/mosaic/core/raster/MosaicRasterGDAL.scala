@@ -8,6 +8,7 @@ import org.locationtech.proj4j.CRSFactory
 import java.io.File
 import java.nio.file.{Files, Paths}
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
+import java.util.Locale
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util.Try
 
@@ -19,21 +20,37 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
 
     val crsFactory: CRSFactory = new CRSFactory
 
-    override def metadata: Map[String, String] =
-        Option(raster.GetMetadata_Dict)
-            .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
-            .getOrElse(Map.empty[String, String])
-
-    override def subdatasets: Map[String, String] =
-        Option(raster.GetMetadata_List("SUBDATASETS"))
-            .map(
-              _.toArray
-                  .map(_.toString)
-                  .grouped(2)
-                  .map({ case Array(p, d) => (p.split("=").last, d.split("=").last) })
-                  .toMap
+    override def metadata: Map[String, String] = {
+        Option(raster.GetMetadataDomainList())
+            .map(_.toArray)
+            .map(domain =>
+                domain
+                    .map(domainName =>
+                        Option(raster.GetMetadata_Dict(domainName.toString))
+                            .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
+                            .getOrElse(Map.empty[String, String])
+                    )
+                    .reduceOption(_ ++ _).getOrElse(Map.empty[String, String])
             )
             .getOrElse(Map.empty[String, String])
+
+    }
+
+    override def subdatasets: Map[String, String] = {
+        val subdatasetsMap = Option(raster.GetMetadata_Dict("SUBDATASETS"))
+            .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
+            .getOrElse(Map.empty[String, String])
+        val keys = subdatasetsMap.keySet
+        keys.flatMap(key =>
+            if (key.toUpperCase(Locale.ROOT).contains("NAME")) {
+                val path = subdatasetsMap(key)
+                Seq(
+                  key -> path.split(":").last,
+                  path.split(":").last -> path
+                )
+            } else Seq(key -> subdatasetsMap(key))
+        ).toMap
+    }
 
     override def SRID: Int = {
         Try(crsFactory.readEpsgFromParameters(proj4String))
@@ -82,7 +99,10 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
 
     def spatialRef: SpatialReference = raster.GetSpatialRef()
 
-    override def cleanUp(): Unit = {/** Nothing to clean up = NOOP */}
+    override def cleanUp(): Unit = {
+
+        /** Nothing to clean up = NOOP */
+    }
 
     override def transformBands[T](f: MosaicRasterBand => T): Seq[T] = for (i <- 1 to numBands) yield f(getBand(i))
 

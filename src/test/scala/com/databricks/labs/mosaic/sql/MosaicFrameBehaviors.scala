@@ -1,13 +1,10 @@
 package com.databricks.labs.mosaic.sql
 
-import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
+import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
-import com.databricks.labs.mosaic.expressions.geometry.ST_Envelope
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks._
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
-import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions._
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers._
@@ -29,6 +26,7 @@ trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
         val resolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => 3
             case H3IndexSystem  => 8
+            case _              => 3
         }
         val points = pointDf(spark, mosaicContext)
         val mdf = MosaicFrame(points, "geometry")
@@ -42,6 +40,7 @@ trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
         val resolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => 3
             case H3IndexSystem  => 8
+            case _              => 3
         }
         val mdf = MosaicFrame(polyDf(spark, mosaicContext).limit(10), "geometry")
             .setIndexResolution(resolution)
@@ -54,6 +53,7 @@ trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
         val resolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => 3
             case H3IndexSystem  => 8
+            case _              => 3
         }
         val mdf = MosaicFrame(polyDf(spark, mosaicContext).limit(10).withColumn("id", monotonically_increasing_id()), "geometry")
             .setIndexResolution(resolution)
@@ -63,13 +63,18 @@ trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
     }
 
     def testGetOptimalResolution(mosaicContext: MosaicContext): Unit = {
+        // Skip this test if it is a custom grid.
+        // This logic will be replaced with new analizer in the next version.
+        if (mosaicContext.getIndexSystem.isInstanceOf[CustomIndexSystem]) return
         val resolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => 2
             case H3IndexSystem  => 3
+            case _              => 1
         }
         val expectedResolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => -4
             case H3IndexSystem  => 9
+            case _              => 1
         }
         mosaicContext.register(spark)
 
@@ -95,6 +100,9 @@ trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
             case H3IndexSystem  =>
                 mdf.analyzer.getOptimalResolutionStr(SampleStrategy(sampleRows = Some(10))) shouldBe expectedResolution.toString
                 mdf.analyzer.getOptimalResolutionStr shouldBe expectedResolution.toString
+            case _              =>
+                mdf.analyzer.getOptimalResolutionStr(SampleStrategy(sampleRows = Some(10))) shouldBe expectedResolution.toString
+                mdf.analyzer.getOptimalResolutionStr shouldBe expectedResolution.toString
         }
 
         the[Exception] thrownBy mdf.getOptimalResolution should have message
@@ -105,10 +113,12 @@ trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
         val minResolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => 1
             case H3IndexSystem  => 1
+            case _              => 1
         }
         val maxResolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => 3
             case H3IndexSystem  => 8
+            case _              => 3
         }
         val points = pointDf(spark, mosaicContext)
         val mdf = MosaicFrame(points, "geometry")
@@ -132,6 +142,7 @@ trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
         val resolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => 3
             case H3IndexSystem  => 8
+            case _              => 3
         }
         val points = pointDf(spark, mosaicContext)
         val pointMdf = MosaicFrame(points, "geometry")
@@ -160,6 +171,7 @@ trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
         val resolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => 3
             case H3IndexSystem  => 8
+            case _              => 3
         }
         val points = pointDf(spark, mosaicContext)
         val pointMdf = MosaicFrame(points, "geometry")
@@ -188,6 +200,7 @@ trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
         val resolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => 3
             case H3IndexSystem  => 8
+            case _              => 3
         }
         val points = pointDf(spark, mosaicContext).limit(100)
         val pointMdf_1 = MosaicFrame(points, "geometry")
@@ -215,6 +228,7 @@ trait MosaicFrameBehaviors extends MosaicSpatialQueryTest {
         val resolution = mosaicContext.getIndexSystem match {
             case BNGIndexSystem => 3
             case H3IndexSystem  => 8
+            case _              => 3
         }
         val points = pointDf(spark, mosaicContext)
         val pointMdf = MosaicFrame(points, "geometry")

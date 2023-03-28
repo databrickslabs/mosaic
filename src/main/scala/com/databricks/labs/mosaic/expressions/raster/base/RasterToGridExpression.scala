@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -38,7 +39,8 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       with Serializable {
 
     /** The index system to be used. */
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(expressionConfig.getIndexSystem))
+    val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+    val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
 
     /**
       * It projects the pixels to the grid and groups by the results so that the
@@ -80,8 +82,11 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     def valuesCombiner(values: Seq[Double]): P
 
     private def pixelTransformer(gt: Seq[Double], resolution: Int)(x: Int, y: Int, value: Double): (Long, Double) = {
-        val xGeo = gt(0) + x * gt(1) + y * gt(2)
-        val yGeo = gt(3) + x * gt(4) + y * gt(5)
+        val offset = 0.5 // This centers the point to the pixel centroid
+        val xOffset = offset + x
+        val yOffset = offset + y
+        val xGeo = gt(0) + xOffset * gt(1) + yOffset * gt(2)
+        val yGeo = gt(3) + xOffset * gt(4) + yOffset * gt(5)
         val cellID = indexSystem.pointToIndex(xGeo, yGeo, resolution)
         (cellID, value)
     }
