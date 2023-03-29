@@ -7,6 +7,7 @@ import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.catalyst.InternalRow
 
+//noinspection ScalaRedundantCast
 class TestMultiPointESRI extends AnyFlatSpec {
 
     "MosaicMultiPointESRI" should "return Nil for holes and hole points calls." in {
@@ -103,7 +104,6 @@ class TestMultiPointESRI extends AnyFlatSpec {
         multiPoint.convexHull.getSpatialReference shouldBe srid
         multiPoint.getCentroid.getSpatialReference shouldBe srid
         multiPoint.intersection(poly).getSpatialReference shouldBe srid
-        multiPoint.reduceFromMulti.getSpatialReference shouldBe srid
         multiPoint.rotate(45).getSpatialReference shouldBe srid
         multiPoint.scale(2d, 2d).getSpatialReference shouldBe srid
         multiPoint.simplify(0.001).getSpatialReference shouldBe srid

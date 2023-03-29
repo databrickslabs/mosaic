@@ -11,24 +11,57 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.esotericsoftware.kryo.Kryo
 import org.apache.spark.sql.catalyst.InternalRow
-import org.locationtech.jts.geom.Geometry
+import org.locationtech.jts.geom.{Geometry, GeometryCollection, GeometryFactory}
 import org.locationtech.jts.geom.util.AffineTransformation
 import org.locationtech.jts.io._
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
 
+import java.util
+
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
-    override def getNumGeometries: Int = geom.getNumGeometries
-
-    override def reduceFromMulti: MosaicGeometryJTS = {
-        val n = geom.getNumGeometries
-        if (n == 1) {
-            MosaicGeometryJTS(geom.getGeometryN(0))
-        } else {
-            this
+    def compactCollection(geometries: Seq[Geometry]): Geometry = {
+        def appendGeometries(geometries: util.ArrayList[Geometry], toAppend: Seq[Geometry]): Unit = {
+            if (toAppend.length == 1 && !toAppend.head.isEmpty) {
+                geometries.add(toAppend.head)
+            } else if (toAppend.length > 1) {
+                val compacted = toAppend.reduce(_ union _)
+                if (!compacted.isEmpty) {
+                    geometries.add(compacted)
+                }
+            }
         }
+
+        val withType = geometries.map(g => GeometryTypeEnum.fromString(g.getGeometryType) -> g).flatMap {
+            case (GEOMETRYCOLLECTION, g) =>
+                val collection = g.asInstanceOf[GeometryCollection]
+                for (i <- 0 until collection.getNumGeometries)
+                    yield GeometryTypeEnum.fromString(collection.getGeometryN(i).getGeometryType) -> collection.getGeometryN(i)
+            case (gType, g)              => Seq(gType -> g)
+        }
+        val points = withType.filter(g => g._1 == POINT || g._1 == MULTIPOINT).map(_._2)
+        val polygons = withType.filter(g => g._1 == POLYGON || g._1 == MULTIPOLYGON).map(_._2)
+        val lines = withType.filter(g => g._1 == LINESTRING || g._1 == MULTILINESTRING).map(_._2)
+        val geomArray = new util.ArrayList[Geometry]()
+
+        appendGeometries(geomArray, points)
+        appendGeometries(geomArray, lines)
+        appendGeometries(geomArray, polygons)
+
+        val gf = new GeometryFactory()
+        val geom = gf.buildGeometry(geomArray)
+        val result =
+            if (geom.getNumGeometries == 1) {
+                geom.getGeometryN(0)
+            } else {
+                geom
+            }
+        result.setSRID(geom.getSRID)
+        result
     }
+
+    override def getNumGeometries: Int = geom.getNumGeometries
 
     override def translate(xd: Double, yd: Double): MosaicGeometryJTS = {
         val transformation = AffineTransformation.translationInstance(xd, yd)
@@ -44,8 +77,6 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         val transformation = AffineTransformation.rotationInstance(td)
         MosaicGeometryJTS(transformation.transform(geom))
     }
-
-    override def getAPI: String = "JTS"
 
     override def getCentroid: MosaicPointJTS = {
         val centroid = geom.getCentroid
@@ -77,7 +108,15 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
         val intersection = this.geom.intersection(otherGeom)
         intersection.setSRID(geom.getSRID)
-        MosaicGeometryJTS(intersection)
+        if (intersection.getNumGeometries > 1) {
+            val geometries = for (i <- 0 until intersection.getNumGeometries) yield intersection.getGeometryN(i)
+            val result = compactCollection(geometries)
+            result.setSRID(geom.getSRID)
+            MosaicGeometryJTS(result)
+        } else {
+            intersection.setSRID(geom.getSRID)
+            MosaicGeometryJTS(intersection)
+        }
     }
 
     override def intersects(other: MosaicGeometry): Boolean = {
@@ -87,16 +126,40 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def difference(other: MosaicGeometry): MosaicGeometryJTS = {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
-        val difference = this.geom.difference(otherGeom)
-        difference.setSRID(geom.getSRID)
-        MosaicGeometryJTS(difference)
+        val leftType = GeometryTypeEnum.fromString(getGeometryType)
+        val rightType = GeometryTypeEnum.fromString(other.getGeometryType)
+        // Difference not supported for GeometryCollection in base APIs for JTS
+        // If either of the geometries is a GeometryCollection, we need to
+        // handle it differently, the logic is in the MosaicGeometryCollectionJTS
+        val difference =
+            if (leftType == GEOMETRYCOLLECTION) {
+                this.asInstanceOf[MosaicGeometryCollectionJTS].difference(other)
+            } else if (rightType == GEOMETRYCOLLECTION) {
+                other.asInstanceOf[MosaicGeometryCollectionJTS].difference(this)
+            } else {
+                MosaicGeometryJTS(this.geom.difference(otherGeom))
+            }
+        difference.setSpatialReference(getSpatialReference)
+        difference
     }
 
     override def union(other: MosaicGeometry): MosaicGeometryJTS = {
         val otherGeom = other.asInstanceOf[MosaicGeometryJTS].getGeom
-        val union = this.geom.union(otherGeom)
-        union.setSRID(geom.getSRID)
-        MosaicGeometryJTS(union)
+        val leftType = GeometryTypeEnum.fromString(getGeometryType)
+        val rightType = GeometryTypeEnum.fromString(other.getGeometryType)
+        // Union not supported for GeometryCollection in base APIs for JTS
+        // If either of the geometries is a GeometryCollection, we need to
+        // handle it differently, the logic is in the MosaicGeometryCollectionJTS
+        val union =
+            if (leftType == GEOMETRYCOLLECTION) {
+                this.asInstanceOf[MosaicGeometryCollectionJTS].union(other)
+            } else if (rightType == GEOMETRYCOLLECTION) {
+                other.asInstanceOf[MosaicGeometryCollectionJTS].union(this)
+            } else {
+                MosaicGeometryJTS(this.geom.union(otherGeom))
+            }
+        union.setSpatialReference(this.getSpatialReference)
+        union
     }
 
     override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)

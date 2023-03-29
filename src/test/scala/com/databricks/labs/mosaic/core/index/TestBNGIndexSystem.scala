@@ -1,7 +1,9 @@
 package com.databricks.labs.mosaic.core.index
 
+import com.databricks.labs.mosaic.core.geometry.{MosaicGeometryESRI, MosaicGeometryJTS}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.unsafe.types.UTF8String
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
@@ -103,9 +105,9 @@ class TestBNGIndexSystem extends AnyFunSuite {
         ).flatten
         kDisk2 should contain theSameElementsAs Seq(
           Seq("TQ3778SE", "TQ3878SW", "TQ3878SE", "TQ3978SW"), // bottom
-            Seq("TQ3978SE", "TQ3978NE", "TQ3979SE", "TQ3979NE"), // right
-            Seq("TQ3980SE", "TQ3980SW", "TQ3880SE", "TQ3880SW"), // top
-            Seq("TQ3780SE", "TQ3779NE", "TQ3779SE", "TQ3778NE"), // left
+          Seq("TQ3978SE", "TQ3978NE", "TQ3979SE", "TQ3979NE"), // right
+          Seq("TQ3980SE", "TQ3980SW", "TQ3880SE", "TQ3880SW"), // top
+          Seq("TQ3780SE", "TQ3779NE", "TQ3779SE", "TQ3778NE") // left
         ).flatten
         kDisk3 should contain theSameElementsAs Seq(
           Seq("TQ3777NW", "TQ3777NE", "TQ3877NW", "TQ3877NE", "TQ3977NW", "TQ3977NE"), // bottom
@@ -121,22 +123,22 @@ class TestBNGIndexSystem extends AnyFunSuite {
         val kDisk2 = BNGIndexSystem.kLoop(index, 2).map(BNGIndexSystem.format)
         val kDisk3 = BNGIndexSystem.kLoop(index, 3).map(BNGIndexSystem.format)
         kDisk1 should contain theSameElementsAs Seq(
-            Seq("TQ3778", "TQ3779"), // bottom
-            Seq("TQ3780", "TQ3878"), // right
-            Seq("TQ3880", "TQ3978"), // top
-            Seq("TQ3979", "TQ3980") // left
+          Seq("TQ3778", "TQ3779"), // bottom
+          Seq("TQ3780", "TQ3878"), // right
+          Seq("TQ3880", "TQ3978"), // top
+          Seq("TQ3979", "TQ3980") // left
         ).flatten
         kDisk2 should contain theSameElementsAs Seq(
-            Seq("TQ3677", "TQ3777", "TQ3877", "TQ3977"), // bottom
-            Seq("TQ4077", "TQ4078", "TQ4079", "TQ4080"), // right
-            Seq("TQ4081", "TQ3981", "TQ3881", "TQ3781"), // top
-            Seq("TQ3681", "TQ3680", "TQ3679", "TQ3678") // left
+          Seq("TQ3677", "TQ3777", "TQ3877", "TQ3977"), // bottom
+          Seq("TQ4077", "TQ4078", "TQ4079", "TQ4080"), // right
+          Seq("TQ4081", "TQ3981", "TQ3881", "TQ3781"), // top
+          Seq("TQ3681", "TQ3680", "TQ3679", "TQ3678") // left
         ).flatten
         kDisk3 should contain theSameElementsAs Seq(
-            Seq("TQ3576", "TQ3676", "TQ3776", "TQ3876", "TQ3976", "TQ4076"), // bottom
-            Seq("TQ4176", "TQ4177", "TQ4178", "TQ4179", "TQ4180", "TQ4181"), // right
-            Seq("TQ4182", "TQ4082", "TQ3982", "TQ3882", "TQ3782", "TQ3682"), // top
-            Seq("TQ3582", "TQ3581", "TQ3580", "TQ3579", "TQ3578", "TQ3577") // left
+          Seq("TQ3576", "TQ3676", "TQ3776", "TQ3876", "TQ3976", "TQ4076"), // bottom
+          Seq("TQ4176", "TQ4177", "TQ4178", "TQ4179", "TQ4180", "TQ4181"), // right
+          Seq("TQ4182", "TQ4082", "TQ3982", "TQ3882", "TQ3782", "TQ3682"), // top
+          Seq("TQ3582", "TQ3581", "TQ3580", "TQ3579", "TQ3578", "TQ3577") // left
         ).flatten
     }
 
@@ -153,11 +155,81 @@ class TestBNGIndexSystem extends AnyFunSuite {
         kRing3 should contain theSameElementsAs Seq(BNGIndexSystem.format(index)).union(kDisk1).union(kDisk2).union(kDisk3)
     }
 
+    test("KRing should generate index IDs for string cell ID") {
+        val index = "TQ3878NW"
+        val kRing1 = BNGIndexSystem.asInstanceOf[IndexSystem].kRing(index, 1)
+        val kRing2 = BNGIndexSystem.asInstanceOf[IndexSystem].kRing(index, 2)
+        val kRing3 = BNGIndexSystem.asInstanceOf[IndexSystem].kRing(index, 3)
+
+        kRing1 should contain theSameElementsAs BNGIndexSystem.kRing(BNGIndexSystem.parse(index), 1).map(BNGIndexSystem.format)
+        kRing2 should contain theSameElementsAs BNGIndexSystem.kRing(BNGIndexSystem.parse(index), 2).map(BNGIndexSystem.format)
+        kRing3 should contain theSameElementsAs BNGIndexSystem.kRing(BNGIndexSystem.parse(index), 3).map(BNGIndexSystem.format)
+    }
+
+    test("KLoop should generate index IDs for string cell ID") {
+        val index = "TQ3878NW"
+        val kLoop1 = BNGIndexSystem.asInstanceOf[IndexSystem].kLoop(index, 1)
+        val kLoop2 = BNGIndexSystem.asInstanceOf[IndexSystem].kLoop(index, 2)
+        val kLoop3 = BNGIndexSystem.asInstanceOf[IndexSystem].kLoop(index, 3)
+
+        kLoop1 should contain theSameElementsAs BNGIndexSystem.kLoop(BNGIndexSystem.parse(index), 1).map(BNGIndexSystem.format)
+        kLoop2 should contain theSameElementsAs BNGIndexSystem.kLoop(BNGIndexSystem.parse(index), 2).map(BNGIndexSystem.format)
+        kLoop3 should contain theSameElementsAs BNGIndexSystem.kLoop(BNGIndexSystem.parse(index), 3).map(BNGIndexSystem.format)
+    }
+
     test("IsValid should return correct validity") {
         val cellId = BNGIndexSystem.pointToIndex(-50000.0, 50.0, 3)
         val cellId2 = BNGIndexSystem.pointToIndex(50.0, 500000000.0, 4)
         BNGIndexSystem.isValid(cellId) shouldBe false
         BNGIndexSystem.isValid(cellId2) shouldBe false
+    }
+
+    test("Test coerce geometries") {
+        val geomsWKTs1 = Seq(
+          "POLYGON ((-0.1 51.5, -0.1 51.6, 0.1 51.6, 0.1 51.5, -0.1 51.5))",
+          "MULTIPOLYGON (((-0.1 51.5, -0.1 51.6, 0.1 51.6, 0.1 51.5, -0.1 51.5)),((-0.1 51.5, -0.1 51.6, 0.1 51.6, 0.1 51.5, -0.1 51.5)))",
+          "LINESTRING (-0.1 51.5, -0.1 51.6, 0.1 51.6, 0.1 51.5, -0.1 51.5)",
+          "POINT (-0.1 51.5)"
+        )
+        val geomsWKTs2 = Seq(
+          "LINESTRING (-0.1 51.5, -0.1 51.6, 0.1 51.6, 0.1 51.5, -0.1 51.5)",
+          "MULTIPOINT (-0.1 51.5, -0.1 51.6, 0.1 51.6, 0.1 51.5, -0.1 51.5)",
+          "LINESTRING (-0.1 51.5, -0.1 51.6, 0.1 51.6, 0.1 51.5, -0.1 51.5)"
+        )
+        val geomsWKTs3 = Seq(
+          "POINT (-0.1 51.5)",
+          "MULTIPOINT (-0.1 51.5, -0.1 51.6, 0.1 51.6, 0.1 51.5, -0.1 51.5)"
+        )
+        val geomsWKTs4 = Seq(
+          "GEOMETRYCOLLECTION (POINT (-0.1 51.5), MULTIPOINT (-0.1 51.5, -0.1 51.6, 0.1 51.6, 0.1 51.5, -0.1 51.5))"
+        )
+
+        BNGIndexSystem
+            .coerceChipGeometry(geomsWKTs1.map(MosaicGeometryJTS.fromWKT))
+            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
+            .forall(Seq(POLYGON, MULTIPOLYGON).contains(_)) shouldBe true
+        BNGIndexSystem
+            .coerceChipGeometry(geomsWKTs1.map(MosaicGeometryESRI.fromWKT))
+            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
+            .forall(Seq(POLYGON, MULTIPOLYGON).contains(_)) shouldBe true
+        BNGIndexSystem
+            .coerceChipGeometry(geomsWKTs2.map(MosaicGeometryJTS.fromWKT))
+            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
+            .forall(Seq(LINESTRING, MULTILINESTRING).contains(_)) shouldBe true
+        BNGIndexSystem
+            .coerceChipGeometry(geomsWKTs2.map(MosaicGeometryESRI.fromWKT))
+            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
+            .forall(Seq(LINESTRING, MULTILINESTRING).contains(_)) shouldBe true
+        BNGIndexSystem
+            .coerceChipGeometry(geomsWKTs3.map(MosaicGeometryJTS.fromWKT))
+            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
+            .forall(Seq(POINT, MULTIPOINT).contains(_)) shouldBe true
+        BNGIndexSystem
+            .coerceChipGeometry(geomsWKTs3.map(MosaicGeometryESRI.fromWKT))
+            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
+            .forall(Seq(POINT, MULTIPOINT).contains(_)) shouldBe true
+        BNGIndexSystem.coerceChipGeometry(geomsWKTs4.map(MosaicGeometryJTS.fromWKT)).isEmpty shouldBe true
+        BNGIndexSystem.coerceChipGeometry(geomsWKTs4.map(MosaicGeometryESRI.fromWKT)).isEmpty shouldBe true
     }
 
     test("Auxiliary methods should not throw exceptions") {

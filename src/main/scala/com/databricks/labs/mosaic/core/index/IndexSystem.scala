@@ -160,7 +160,7 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
         val intersections = for (index <- borderIndices) yield {
             val indexGeom = indexToGeometry(index, geometryAPI)
             val intersect = geometry.intersection(indexGeom)
-            val coerced = coerceChipGeometry(intersect)
+            val coerced = coerceChipGeometry(intersect, index, geometryAPI)
             val isCore = coerced.equals(indexGeom)
 
             val chipGeom = if (!isCore || keepCoreGeom) coerced else null
@@ -222,12 +222,12 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       */
     def pointToIndex(lon: Double, lat: Double, resolution: Int): Long
 
-    def coerceChipGeometry(geom: MosaicGeometry): MosaicGeometry = {
+    def coerceChipGeometry(geom: MosaicGeometry, cell: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
         val geomType = GeometryTypeEnum.fromString(geom.getGeometryType)
         if (geomType == GEOMETRYCOLLECTION) {
-            val geometries = geom.flatten
-            val coerced = coerceChipGeometry(geometries)
-            coerced.reduce(_ union _)
+            // This case can occur if partial geometry is a geometry collection
+            // or if the intersection includes a part of the boundary of the cell
+            geom.difference(indexToGeometry(cell, geometryAPI).getBoundary)
         } else {
             geom
         }

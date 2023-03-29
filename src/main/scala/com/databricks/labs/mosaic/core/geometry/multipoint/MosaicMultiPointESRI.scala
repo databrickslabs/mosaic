@@ -51,12 +51,7 @@ object MosaicMultiPointESRI extends GeometryReader {
         val multiPoint = new MultiPoint()
         val coordsCollection = internalGeom.boundaries.head.map(_.coords)
         val dim = coordsCollection.head.length
-        val spatialReference =
-            if (internalGeom.srid != 0) {
-                SpatialReference.create(internalGeom.srid)
-            } else {
-                MosaicGeometryESRI.defaultSpatialReference
-            }
+        val spatialReference = MosaicGeometryESRI.getSRID(internalGeom.srid)
 
         dim match {
             case 2 => coordsCollection.foreach(coords => multiPoint.add(new Point(coords(0), coords(1))))

@@ -10,6 +10,8 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
 
+import java.util
+
 class MosaicGeometryCollectionJTS(geomCollection: GeometryCollection)
     extends MosaicGeometryJTS(geomCollection)
       with MosaicGeometryCollection {
@@ -40,14 +42,10 @@ class MosaicGeometryCollectionJTS(geomCollection: GeometryCollection)
             }
         val boundaries = flattened.map(_.boundaries.head).toArray
         val holes = flattened.flatMap(_.holes).toArray
-        new InternalGeometry(MULTIPOLYGON.id, getSpatialReference, boundaries, holes)
+        new InternalGeometry(GEOMETRYCOLLECTION.id, getSpatialReference, boundaries, holes)
     }
 
-    override def getBoundary: MosaicGeometryJTS = {
-        val geom = geomCollection.getBoundary
-        geom.setSRID(geomCollection.getSRID)
-        MosaicGeometryJTS(geom)
-    }
+    override def getBoundary: MosaicGeometryJTS = boundary
 
     override def getShells: Seq[MosaicLineStringJTS] = {
         val n = geomCollection.getNumGeometries
@@ -78,9 +76,11 @@ class MosaicGeometryCollectionJTS(geomCollection: GeometryCollection)
     }
 
     override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometryJTS = {
-        MosaicGeometryCollectionJTS.fromSeq(
-          asSeq.map(_.mapXY(f))
-        ).asInstanceOf[MosaicGeometryJTS]
+        MosaicGeometryCollectionJTS
+            .fromSeq(
+              asSeq.map(_.mapXY(f))
+            )
+            .asInstanceOf[MosaicGeometryJTS]
     }
 
     override def asSeq: Seq[MosaicGeometryJTS] =
@@ -96,6 +96,40 @@ class MosaicGeometryCollectionJTS(geomCollection: GeometryCollection)
 
     override def getHolePoints: Seq[Seq[Seq[MosaicPointJTS]]] = getHoles.map(_.map(_.asSeq))
 
+    override def union(other: MosaicGeometry): MosaicGeometryJTS = {
+        val union = this.collectionUnion(other)
+        union.setSRID(this.getSpatialReference)
+        MosaicGeometryJTS(union)
+    }
+
+    override def difference(other: MosaicGeometry): MosaicGeometryJTS = {
+        val leftGeoms = this.flatten.map(_.getGeom)
+        val rightGeoms = other.flatten.map(_.asInstanceOf[MosaicGeometryJTS].getGeom)
+        val differences = leftGeoms.map(geom =>
+            if (rightGeoms.length == 1) geom.difference(rightGeoms.head)
+            else rightGeoms.map(geom.difference)
+                .foldLeft(geom)((a, b) => a.intersection(b))
+        )
+        MosaicGeometryJTS(compactCollection(differences))
+    }
+
+    override def boundary: MosaicGeometryJTS = {
+        val boundary = this.flatten.map(_.boundary.getGeom)
+        MosaicGeometryJTS(compactCollection(boundary))
+    }
+
+    private def collectionUnion(other: MosaicGeometry): Geometry = {
+        val leftGeoms = this.flatten.map(_.getGeom)
+        val rightGeoms = other.flatten.map(_.asInstanceOf[MosaicGeometryJTS].getGeom)
+        compactCollection(leftGeoms ++ rightGeoms)
+    }
+
+    override def distance(geom2: MosaicGeometry): Double = {
+        val leftGeoms = this.flatten.map(_.getGeom)
+        val rightGeoms = geom2.flatten.map(_.asInstanceOf[MosaicGeometryJTS].getGeom)
+        leftGeoms.map(geom => rightGeoms.map(geom.distance).min).min
+    }
+
 }
 
 object MosaicGeometryCollectionJTS extends GeometryReader {
@@ -104,34 +138,43 @@ object MosaicGeometryCollectionJTS extends GeometryReader {
         val gf = new GeometryFactory()
         val internalGeom = InternalGeometry(row)
 
-        gf.createLinearRing(gf.createLineString().getCoordinates)
+        val rings = internalGeom.boundaries.zip(internalGeom.holes)
 
-        val geometries = internalGeom.boundaries.zip(internalGeom.holes).map { case (boundaryRing, holesRings) =>
-            if (boundaryRing.nonEmpty) {
-                // POLYGON by convention, MULTIPOLYGONS are always flattened to POLYGONS in the internal representation
-                MosaicPolygonJTS.fromRings(boundaryRing, holesRings, internalGeom.srid)
-            } else if (boundaryRing.isEmpty & holesRings.length > 1) {
-                // LINESTRING by convention, MULTILINESTRING are always flattened to LINESTRING in the internal representation
+        val multipolygon = rings
+            .filter(_._1.nonEmpty)
+            .map { case (boundaryRing, holesRings) => MosaicPolygonJTS.fromRings(boundaryRing, holesRings, internalGeom.srid) }
+            .reduceOption(_ union _)
+
+        val multilinestring = rings
+            .filter(r => r._1.isEmpty && r._2.nonEmpty && r._2.head.length > 1)
+            .map { case (_, holesRings) =>
                 val linestring = MosaicLineStringJTS.fromSeq(holesRings.head.map(ic => {
                     val point = MosaicPointJTS.apply(ic.coords)
                     point.setSpatialReference(internalGeom.srid)
                     point
                 }))
                 linestring.setSpatialReference(internalGeom.srid)
-                linestring
-            } else if (holesRings.length == 1) {
-                // POINT by convention, MULTIPOINT are always flattened to POINT in the internal representation
+                linestring.asInstanceOf[MosaicGeometryJTS]
+            }
+            .reduceOption(_ union _)
+
+        val multipoint = rings
+            .filter(r => r._1.isEmpty && r._2.nonEmpty && r._2.head.length == 1)
+            .map { case (_, holesRings) =>
                 val point = MosaicPointJTS.apply(holesRings.head.head.coords)
                 point.setSpatialReference(internalGeom.srid)
-                point
-            } else {
-                MosaicGeometryJTS.fromWKT("POINT EMPTY")
+                point.asInstanceOf[MosaicGeometryJTS]
             }
+            .reduceOption(_ union _)
 
-        }
+        val geometries = new util.ArrayList[Geometry]()
+        multipoint.map(g => geometries.add(g.getGeom))
+        multilinestring.map(g => geometries.add(g.getGeom))
+        multipolygon.map(g => geometries.add(g.getGeom))
 
-        geometries.reduce((a, b) => a.union(b))
+        val geometry = gf.buildGeometry(geometries)
 
+        MosaicGeometryCollectionJTS(geometry)
     }
 
     override def fromSeq[T <: MosaicGeometry](

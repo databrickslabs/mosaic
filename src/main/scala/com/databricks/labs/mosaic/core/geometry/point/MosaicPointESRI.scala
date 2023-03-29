@@ -92,12 +92,7 @@ object MosaicPointESRI extends GeometryReader {
         require(internalGeom.typeId == POINT.id)
 
         val coordinate = internalGeom.boundaries.head.head
-        val spatialReference =
-            if (internalGeom.srid != 0) {
-                SpatialReference.create(internalGeom.srid)
-            } else {
-                MosaicGeometryESRI.defaultSpatialReference
-            }
+        val spatialReference = MosaicGeometryESRI.getSRID(internalGeom.srid)
         val point =
             if (coordinate.coords.length == 2) {
                 new OGCPoint(new Point(coordinate.coords(0), coordinate.coords(1)), spatialReference)

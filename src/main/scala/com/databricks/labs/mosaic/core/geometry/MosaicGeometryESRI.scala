@@ -21,12 +21,13 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def getNumGeometries: Int =
         GeometryTypeEnum.fromString(geom.geometryType()) match {
-            case POINT           => 1
-            case MULTIPOINT      => geom.asInstanceOf[OGCMultiPoint].numGeometries()
-            case LINESTRING      => 1
-            case MULTILINESTRING => geom.asInstanceOf[OGCMultiLineString].numGeometries()
-            case POLYGON         => 1
-            case MULTIPOLYGON    => geom.asInstanceOf[OGCMultiPolygon].numGeometries()
+            case POINT              => 1
+            case MULTIPOINT         => geom.asInstanceOf[OGCMultiPoint].numGeometries()
+            case LINESTRING         => 1
+            case MULTILINESTRING    => geom.asInstanceOf[OGCMultiLineString].numGeometries()
+            case POLYGON            => 1
+            case MULTIPOLYGON       => geom.asInstanceOf[OGCMultiPolygon].numGeometries()
+            case GEOMETRYCOLLECTION => geom.asInstanceOf[OGCGeometryCollection].numGeometries()
         }
 
     // noinspection DuplicatedCode
@@ -38,13 +39,11 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
         MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, geom.getEsriSpatialReference))
     }
 
-    override def reduceFromMulti: MosaicGeometryESRI = MosaicGeometryESRI(geom.reduceFromMulti())
-
     // noinspection DuplicatedCode
     override def scale(xd: Double, yd: Double): MosaicGeometryESRI = {
         val tr = new Transformation2D
         tr.setScale(xd, yd)
-        val esriGeom = geom.getEsriGeometry
+        val esriGeom = geom.getEsriGeometry.copy()
         esriGeom.applyTransformation(tr)
         MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, geom.getEsriSpatialReference))
     }
@@ -53,12 +52,10 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def rotate(td: Double): MosaicGeometryESRI = {
         val tr = new Transformation2D
         tr.setRotate(td)
-        val esriGeom = geom.getEsriGeometry
+        val esriGeom = geom.getEsriGeometry.copy()
         esriGeom.applyTransformation(tr)
         MosaicGeometryESRI(OGCGeometry.createFromEsriGeometry(esriGeom, geom.getEsriSpatialReference))
     }
-
-    override def getAPI: String = "OGC"
 
     override def getCentroid: MosaicPointESRI = MosaicPointESRI(geom.centroid())
 
@@ -157,11 +154,8 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def transformCRSXY(sridTo: Int): MosaicGeometryESRI = transformCRSXY(sridTo, None).asInstanceOf[MosaicGeometryESRI]
 
     private def intersection(another: OGCGeometry): OGCGeometry = {
-        val op: OperatorIntersection =
-            OperatorFactoryLocal.getInstance.getOperator(Operator.Type.Intersection).asInstanceOf[OperatorIntersection]
-        val cursor: GeometryCursor =
-            op.execute(geom.getEsriGeometryCursor, another.getEsriGeometryCursor, geom.getEsriSpatialReference, null, -1)
-        OGCGeometry.createFromEsriCursor(cursor, geom.getEsriSpatialReference, true)
+        val intersection = this.getGeom.intersection(another)
+        intersection
     }
 
 }
@@ -169,9 +163,16 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 object MosaicGeometryESRI extends GeometryReader {
 
     val defaultSpatialReference: SpatialReference = SpatialReference.create(defaultSpatialReferenceId)
-
     @transient val kryo = new Kryo()
     kryo.register(classOf[Array[Byte]])
+
+    def getSRID(srid: Int): SpatialReference = {
+        if (srid != 0) {
+            SpatialReference.create(srid)
+        } else {
+            MosaicGeometryESRI.defaultSpatialReference
+        }
+    }
 
     override def fromWKT(wkt: String): MosaicGeometryESRI = MosaicGeometryESRI(OGCGeometry.fromText(wkt))
 
