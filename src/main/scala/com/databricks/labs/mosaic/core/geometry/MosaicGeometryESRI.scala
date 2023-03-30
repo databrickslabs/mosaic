@@ -160,7 +160,9 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
             OperatorFactoryLocal.getInstance.getOperator(Operator.Type.Intersection).asInstanceOf[OperatorIntersection]
         val cursor: GeometryCursor =
             op.execute(geom.getEsriGeometryCursor, another.getEsriGeometryCursor, geom.getEsriSpatialReference, null, -1)
-        OGCGeometry.createFromEsriCursor(cursor, geom.getEsriSpatialReference, true)
+        val result = OGCGeometry.createFromEsriCursor(cursor, geom.getEsriSpatialReference, true)
+        if (result.isEmpty) { this.getGeom.intersection(another) }
+        else { result }
     }
 
 }
