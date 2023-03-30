@@ -24,10 +24,14 @@ print(paste0("The raw data is stored in ", raw_path))
 
 # COMMAND ----------
 
+dbutils.fs.ls('dbfs:/databricks/mosaic/sparkrMosaic_0.3.4.tar.gz')
+
+# COMMAND ----------
+
 
 library(tidyverse)
 library(SparkR)
-sparkr_mosaic_package_path = '/dbfs/Users/robert.whiffin@databricks.com/mosaic/sparkrMosaic_0_1_0_tar.gz'
+sparkr_mosaic_package_path = '/dbfs/databricks/mosaic/sparkrMosaic_0.3.4.tar.gz'
 install.packages(sparkr_mosaic_package_path, repos=NULL)
 library(sparkrMosaic)
 sparkrMosaic::enableMosaic()
