@@ -21,47 +21,14 @@ import java.util
 
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
-    def compactCollection(geometries: Seq[Geometry]): Geometry = {
-        def appendGeometries(geometries: util.ArrayList[Geometry], toAppend: Seq[Geometry]): Unit = {
-            if (toAppend.length == 1 && !toAppend.head.isEmpty) {
-                geometries.add(toAppend.head)
-            } else if (toAppend.length > 1) {
-                val compacted = toAppend.reduce(_ union _)
-                if (!compacted.isEmpty) {
-                    geometries.add(compacted)
-                }
-            }
-        }
-
-        val withType = geometries.map(g => GeometryTypeEnum.fromString(g.getGeometryType) -> g).flatMap {
-            case (GEOMETRYCOLLECTION, g) =>
-                val collection = g.asInstanceOf[GeometryCollection]
-                for (i <- 0 until collection.getNumGeometries)
-                    yield GeometryTypeEnum.fromString(collection.getGeometryN(i).getGeometryType) -> collection.getGeometryN(i)
-            case (gType, g)              => Seq(gType -> g)
-        }
-        val points = withType.filter(g => g._1 == POINT || g._1 == MULTIPOINT).map(_._2)
-        val polygons = withType.filter(g => g._1 == POLYGON || g._1 == MULTIPOLYGON).map(_._2)
-        val lines = withType.filter(g => g._1 == LINESTRING || g._1 == MULTILINESTRING).map(_._2)
-        val geomArray = new util.ArrayList[Geometry]()
-
-        appendGeometries(geomArray, points)
-        appendGeometries(geomArray, lines)
-        appendGeometries(geomArray, polygons)
-
-        val gf = new GeometryFactory()
-        val geom = gf.buildGeometry(geomArray)
-        val result =
-            if (geom.getNumGeometries == 1) {
-                geom.getGeometryN(0)
-            } else {
-                geom
-            }
-        result.setSRID(geom.getSRID)
-        result
-    }
-
     override def getNumGeometries: Int = geom.getNumGeometries
+
+    def compactGeometry: MosaicGeometryJTS = {
+        val geometries = for (i <- 0 until getNumGeometries) yield geom.getGeometryN(i)
+        val result = MosaicGeometryJTS.compactCollection(geometries, getSpatialReference)
+        result.setSRID(geom.getSRID)
+        MosaicGeometryJTS(result)
+    }
 
     override def translate(xd: Double, yd: Double): MosaicGeometryJTS = {
         val transformation = AffineTransformation.translationInstance(xd, yd)
@@ -110,7 +77,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         intersection.setSRID(geom.getSRID)
         if (intersection.getNumGeometries > 1) {
             val geometries = for (i <- 0 until intersection.getNumGeometries) yield intersection.getGeometryN(i)
-            val result = compactCollection(geometries)
+            val result = MosaicGeometryJTS.compactCollection(geometries, getSpatialReference)
             result.setSRID(geom.getSRID)
             MosaicGeometryJTS(result)
         } else {
@@ -226,6 +193,47 @@ object MosaicGeometryJTS extends GeometryReader {
     kryo.register(classOf[MosaicGeometryJTS])
 
     override def fromWKT(wkt: String): MosaicGeometryJTS = MosaicGeometryJTS(new WKTReader().read(wkt))
+
+    //noinspection DuplicatedCode
+    def compactCollection(geometries: Seq[Geometry], srid: Int): Geometry = {
+        def appendGeometries(geometries: util.ArrayList[Geometry], toAppend: Seq[Geometry]): Unit = {
+            if (toAppend.length == 1 && !toAppend.head.isEmpty) {
+                geometries.add(toAppend.head)
+            } else if (toAppend.length > 1) {
+                val compacted = toAppend.reduce(_ union _)
+                if (!compacted.isEmpty) {
+                    geometries.add(compacted)
+                }
+            }
+        }
+
+        val withType = geometries.map(g => GeometryTypeEnum.fromString(g.getGeometryType) -> g).flatMap {
+            case (GEOMETRYCOLLECTION, g) =>
+                val collection = g.asInstanceOf[GeometryCollection]
+                for (i <- 0 until collection.getNumGeometries)
+                    yield GeometryTypeEnum.fromString(collection.getGeometryN(i).getGeometryType) -> collection.getGeometryN(i)
+            case (gType, g)              => Seq(gType -> g)
+        }
+        val points = withType.filter(g => g._1 == POINT || g._1 == MULTIPOINT).map(_._2)
+        val polygons = withType.filter(g => g._1 == POLYGON || g._1 == MULTIPOLYGON).map(_._2)
+        val lines = withType.filter(g => g._1 == LINESTRING || g._1 == MULTILINESTRING).map(_._2)
+        val geomArray = new util.ArrayList[Geometry]()
+
+        appendGeometries(geomArray, points)
+        appendGeometries(geomArray, lines)
+        appendGeometries(geomArray, polygons)
+
+        val gf = new GeometryFactory()
+        val geom = gf.buildGeometry(geomArray)
+        val result =
+            if (geom.getNumGeometries == 1) {
+                geom.getGeometryN(0)
+            } else {
+                geom
+            }
+        result.setSRID(srid)
+        result
+    }
 
     def apply(geom: Geometry): MosaicGeometryJTS = {
         GeometryTypeEnum.fromString(geom.getGeometryType) match {

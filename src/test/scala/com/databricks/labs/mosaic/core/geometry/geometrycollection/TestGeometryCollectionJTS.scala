@@ -6,8 +6,7 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.scalactic.Tolerance.convertNumericToPlusOrMinusWrapper
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers.{be, noException}
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper, noException}
 
 class TestGeometryCollectionJTS extends AnyFunSuite {
 
@@ -69,6 +68,7 @@ class TestGeometryCollectionJTS extends AnyFunSuite {
 
         noException should be thrownBy geometryCollection.buffer(1.0)
         noException should be thrownBy geometryCollection.boundary
+        noException should be thrownBy geometryCollection.getBoundary
         noException should be thrownBy geometryCollection.convexHull
         noException should be thrownBy geometryCollection.getCentroid
         noException should be thrownBy geometryCollection.getArea
@@ -104,6 +104,27 @@ class TestGeometryCollectionJTS extends AnyFunSuite {
         geometryCollection.rotate(45.0).getLength shouldBe geometryCollection.getLength +- 0.0001
         geometryCollection.translate(1.0, 1.0).getLength shouldBe geometryCollection.getLength +- 0.0001
 
+    }
+
+    test("MosaicGeometryCollectionJTS should handle nested collections") {
+        val nestedGeomCollection = MosaicGeometryCollectionJTS.fromWKT(
+          "GEOMETRYCOLLECTION (POINT (5 1), LINESTRING (6 1, 6 2, 6 3), POLYGON ((7 0, 7 1, 8 1, 8 0, 7 0))," +
+              " MULTIPOLYGON (((0 0, 0 1, 1 1, 1 0, 0 0)), ((1 1, 1 2, 2 2, 2 1, 1 1)))," +
+              " MULTILINESTRING ((3 1, 4 2, 5 3), (4 4, 5 5, 6 6))," +
+              " MULTIPOINT (9 1, 9 2, 9 3)," +
+              " GEOMETRYCOLLECTION (POINT (5 1), LINESTRING (6 1, 6 2, 6 3), POLYGON ((7 0, 7 1, 8 1, 8 0, 7 0))," +
+              " MULTIPOLYGON (((0 0, 0 1, 1 1, 1 0, 0 0)), ((1 1, 1 2, 2 2, 2 1, 1 1)))," +
+              " MULTILINESTRING ((3 1, 4 2, 5 3), (4 4, 5 5, 6 6))," +
+              " MULTIPOINT (9 1, 9 2, 9 3))" +
+              ")")
+
+        noException should be thrownBy nestedGeomCollection.getShells
+        noException should be thrownBy nestedGeomCollection.getHoles
+        noException should be thrownBy nestedGeomCollection.getShellPoints
+        noException should be thrownBy nestedGeomCollection.getHolePoints
+        noException should be thrownBy nestedGeomCollection.mapXY((x, y) => (x + 1, y - 1))
+
+        MosaicGeometryCollectionJTS.fromSeq(nestedGeomCollection.flatten).equals(nestedGeomCollection.compactGeometry) shouldBe true
     }
 
 }

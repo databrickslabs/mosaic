@@ -110,18 +110,18 @@ class MosaicGeometryCollectionJTS(geomCollection: GeometryCollection)
             else rightGeoms.map(geom.difference)
                 .foldLeft(geom)((a, b) => a.intersection(b))
         )
-        MosaicGeometryJTS(compactCollection(differences))
+        MosaicGeometryJTS(MosaicGeometryJTS.compactCollection(differences, getSpatialReference))
     }
 
     override def boundary: MosaicGeometryJTS = {
         val boundary = this.flatten.map(_.boundary.getGeom)
-        MosaicGeometryJTS(compactCollection(boundary))
+        MosaicGeometryJTS(MosaicGeometryJTS.compactCollection(boundary, getSpatialReference))
     }
 
     private def collectionUnion(other: MosaicGeometry): Geometry = {
         val leftGeoms = this.flatten.map(_.getGeom)
         val rightGeoms = other.flatten.map(_.asInstanceOf[MosaicGeometryJTS].getGeom)
-        compactCollection(leftGeoms ++ rightGeoms)
+        MosaicGeometryJTS.compactCollection(leftGeoms ++ rightGeoms, getSpatialReference)
     }
 
     override def distance(geom2: MosaicGeometry): Double = {
@@ -183,8 +183,9 @@ object MosaicGeometryCollectionJTS extends GeometryReader {
     ): MosaicGeometry = {
         MosaicGeometryCollectionJTS(
           geomSeq
-              .map(_.asInstanceOf[MosaicGeometryJTS].getGeom)
+              .map(_.asInstanceOf[MosaicGeometryJTS])
               .reduce((a, b) => a.union(b))
+              .getGeom
         ).asInstanceOf[MosaicGeometry]
 
     }

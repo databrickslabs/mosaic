@@ -89,7 +89,7 @@ class MosaicGeometryCollectionESRI(geomCollection: OGCGeometryCollection)
     override def simplify(tolerance: Double): MosaicGeometryESRI = {
         val n = geomCollection.numGeometries()
         val simplified = for (i <- 0 until n) yield MosaicGeometryESRI(geomCollection.geometryN(i)).simplify(tolerance)
-        MosaicGeometryCollectionESRI.fromSeq(simplified).asInstanceOf[MosaicGeometryESRI]
+        MosaicGeometryCollectionESRI.fromSeq(simplified).asInstanceOf[MosaicGeometryESRI].compactGeometry
     }
 
     override def distance(geom2: MosaicGeometry): Double = {
@@ -122,10 +122,12 @@ class MosaicGeometryCollectionESRI(geomCollection: OGCGeometryCollection)
         shells.flatten
     }
 
-    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicMultiPolygonESRI = {
-        MosaicMultiPolygonESRI.fromSeq(
-          asSeq.map(_.asInstanceOf[MosaicPolygonESRI].mapXY(f).asInstanceOf[MosaicPolygonESRI])
-        )
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometryCollectionESRI = {
+        MosaicGeometryCollectionESRI
+            .fromSeq(
+              asSeq.map(_.mapXY(f))
+            )
+            .asInstanceOf[MosaicGeometryCollectionESRI]
     }
 
     override def asSeq: Seq[MosaicGeometryESRI] =
@@ -140,7 +142,7 @@ class MosaicGeometryCollectionESRI(geomCollection: OGCGeometryCollection)
     override def boundary: MosaicGeometryESRI = {
         val n = geomCollection.numGeometries()
         val boundaries = for (i <- 0 until n) yield MosaicGeometryESRI(geomCollection.geometryN(i)).boundary
-        MosaicGeometryCollectionESRI.fromSeq(boundaries).asInstanceOf[MosaicGeometryESRI]
+        MosaicGeometryCollectionESRI.fromSeq(boundaries).asInstanceOf[MosaicGeometryESRI].compactGeometry
     }
 
 }

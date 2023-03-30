@@ -30,6 +30,17 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
             case GEOMETRYCOLLECTION => geom.asInstanceOf[OGCGeometryCollection].numGeometries()
         }
 
+    def compactGeometry: MosaicGeometryESRI = {
+        val geometries = GeometryTypeEnum.fromString(geom.geometryType()) match {
+            case GEOMETRYCOLLECTION =>
+                val casted = geom.asInstanceOf[OGCGeometryCollection]
+                for (i <- 0 until casted.numGeometries()) yield casted.geometryN(i)
+            case _                  => Seq(geom)
+        }
+        val result = MosaicGeometryESRI.compactCollection(geometries, getSpatialReference)
+        MosaicGeometryESRI(result)
+    }
+
     // noinspection DuplicatedCode
     override def translate(xd: Double, yd: Double): MosaicGeometryESRI = {
         val tr = new Transformation2D
@@ -80,12 +91,21 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
     override def difference(other: MosaicGeometry): MosaicGeometryESRI = {
         val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
         val difference = this.getGeom.difference(otherGeom)
-        MosaicGeometryESRI(difference)
+        if (GeometryTypeEnum.fromString(difference.geometryType()) == GEOMETRYCOLLECTION) {
+            MosaicGeometryESRI(difference).compactGeometry
+        } else {
+            MosaicGeometryESRI(difference)
+        }
     }
 
     override def union(other: MosaicGeometry): MosaicGeometryESRI = {
         val otherGeom = other.asInstanceOf[MosaicGeometryESRI].getGeom
-        MosaicGeometryESRI(this.getGeom.union(otherGeom))
+        val union = this.getGeom.union(otherGeom)
+        if (GeometryTypeEnum.fromString(union.geometryType()) == GEOMETRYCOLLECTION) {
+            MosaicGeometryESRI(union).compactGeometry
+        } else {
+            MosaicGeometryESRI(union)
+        }
     }
 
     def getGeom: OGCGeometry = geom
@@ -155,6 +175,9 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     private def intersection(another: OGCGeometry): OGCGeometry = {
         val intersection = this.getGeom.intersection(another)
+        if (GeometryTypeEnum.fromString(intersection.geometryType()) == GEOMETRYCOLLECTION) {
+            MosaicGeometryESRI(intersection).compactGeometry.getGeom
+        }
         intersection
     }
 
@@ -175,6 +198,34 @@ object MosaicGeometryESRI extends GeometryReader {
     }
 
     override def fromWKT(wkt: String): MosaicGeometryESRI = MosaicGeometryESRI(OGCGeometry.fromText(wkt))
+
+    // noinspection DuplicatedCode
+    def compactCollection(geometries: Seq[OGCGeometry], srid: Int): OGCGeometry = {
+        val withType = geometries.map(g => GeometryTypeEnum.fromString(g.geometryType()) -> g).flatMap {
+            case (GEOMETRYCOLLECTION, g) =>
+                val collection = g.asInstanceOf[OGCGeometryCollection]
+                for (i <- 0 until collection.numGeometries())
+                    yield GeometryTypeEnum.fromString(collection.geometryN(i).geometryType()) -> collection.geometryN(i)
+            case (t, g)                  => Seq(t -> g)
+        }
+        val points = withType.filter(g => g._1 == POINT || g._1 == MULTIPOINT).map(_._2)
+        val polygons = withType.filter(g => g._1 == POLYGON || g._1 == MULTIPOLYGON).map(_._2)
+        val lines = withType.filter(g => g._1 == LINESTRING || g._1 == MULTILINESTRING).map(_._2)
+
+        val multiPoint = if (points.length == 1) Seq(points.head) else if (points.length > 1) Seq(points.reduce(_ union _)) else Nil
+        val multiLine = if (lines.length == 1) Seq(lines.head) else if (lines.length > 1) Seq(lines.reduce(_ union _)) else Nil
+        val multiPolygon =
+            if (polygons.length == 1) Seq(polygons.head) else if (polygons.length > 1) Seq(polygons.reduce(_ union _)) else Nil
+
+        val pieces = multiPoint ++ multiLine ++ multiPolygon
+        val result = if (pieces.length == 1) {
+            pieces.head
+        } else {
+            pieces.reduce(_ union _)
+        }
+        result.setSpatialReference(getSRID(srid))
+        result
+    }
 
     def apply(geom: OGCGeometry): MosaicGeometryESRI =
         GeometryTypeEnum.fromString(geom.geometryType()) match {
