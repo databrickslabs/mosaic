@@ -151,9 +151,9 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
         val (firstCellPosX, firstCellPosY, _) = getCellPositionFromCoordinates(minX, minY, resolution)
         val (lastCellPosX, lastCellPosY, _) = getCellPositionFromCoordinates(maxX, maxY, resolution)
 
-        val cellCenters = (firstCellPosX to lastCellPosX)
+        val cellCenters = (firstCellPosX to lastCellPosX + 1)
             // Get all cells that overlap with the bounding box
-            .flatMap(x => (firstCellPosY to lastCellPosY).map(y => (x, y)))
+            .flatMap(x => (firstCellPosY to lastCellPosY + 1).map(y => (x, y)))
 
             // Map them to cell centers and cell ID
             .map(pos =>
@@ -273,8 +273,8 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
         val cellsX = totalCellsX(resolution)
         val cellsY = totalCellsY(resolution)
 
-        val cellPosX = ((x - conf.boundXMin) / conf.spanX * cellsX).toLong
-        val cellPosY = ((y - conf.boundYMin) / conf.spanY * cellsY).toLong
+        val cellPosX = ((x - conf.boundXMin) / getCellWidth(resolution)).toLong
+        val cellPosY = ((y - conf.boundYMin) / getCellHeight(resolution)).toLong
 
         (cellPosX, cellPosY, getCellPositionFromPositions(cellPosX, cellPosY, resolution))
     }
