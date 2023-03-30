@@ -24,4 +24,19 @@ class TestMosaicGeometryJTS extends AnyFunSuite {
 
     }
 
+    test("MosaicGeometryJTS should return correct union for geometry collections.") {
+        val geomCollection = JTS.geometry(
+          "GEOMETRYCOLLECTION (" +
+              " POLYGON ((1 1, 1 3, 2 3, 2 1, 1 1))," +
+              " POLYGON ((4 3, 5 3, 5 4, 4 4, 4 3)))," +
+              " LINESTRING ((0 5, 3 5, 4 6))," +
+              " LINESTRING ((1 4, 2 4))" +
+              ")",
+          "WKT"
+        )
+        val otherGeom = JTS.geometry("POLYGON ((2 1.5, 4.5 1.5, 4.5 6, 2 6, 2 1.5))", "WKT")
+
+        geomCollection.union(otherGeom).equals(otherGeom.union(geomCollection)) shouldBe true
+    }
+
 }
