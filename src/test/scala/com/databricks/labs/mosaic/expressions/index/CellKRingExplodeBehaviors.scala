@@ -22,9 +22,8 @@ trait CellKRingExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = 4
 
         val boroughs: DataFrame = getBoroughs(mc)
-            .withColumn("centroid", st_centroid2D(col("wkt")))
-            .withColumn("point", st_point(col("centroid.x"), col("centroid.y")))
-            .withColumn("cell_id", grid_pointascellid(col("point"), resolution))
+            .withColumn("centroid", st_centroid(col("wkt")))
+            .withColumn("cell_id", grid_pointascellid(col("centroid"), resolution))
 
         val mosaics = boroughs
             .select(
@@ -51,13 +50,13 @@ trait CellKRingExplodeBehaviors extends MosaicSpatialQueryTest {
         val sc = spark
         import sc.implicits._
 
-        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val k = 4
 
         val cellKRingExplodeExpr = CellKRingExplode(
           lit(wkt).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
         val withNull = cellKRingExplodeExpr.copy(cellId = lit(null).expr)
@@ -70,7 +69,7 @@ trait CellKRingExplodeBehaviors extends MosaicSpatialQueryTest {
         val badExpr = CellKRingExplode(
           lit(10).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

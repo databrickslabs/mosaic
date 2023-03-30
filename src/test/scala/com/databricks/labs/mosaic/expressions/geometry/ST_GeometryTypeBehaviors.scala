@@ -1,10 +1,8 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.{getHexRowsDf, getWKTRowsDf}
-import org.apache.spark.sql.QueryTest
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.lit
@@ -14,17 +12,17 @@ import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper
 
 import java.util.Locale
 
-trait ST_GeometryTypeBehaviors extends QueryTest {
+trait ST_GeometryTypeBehaviors extends MosaicSpatialQueryTest {
 
-    def wktTypeBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def wktTypesBehavior(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         val sc = spark
         import mc.functions._
         import sc.implicits._
         mc.register(spark)
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
 
         val results = df
             .select(st_geometrytype($"wkt").alias("result"))
@@ -49,15 +47,15 @@ trait ST_GeometryTypeBehaviors extends QueryTest {
         sqlResults.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def wktTypesCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def wktTypesCodegen(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         val sc = spark
         import mc.functions._
         import sc.implicits._
         mc.register(spark)
 
-        val df = getWKTRowsDf(mc)
+        val df = getWKTRowsDf()
 
         val result = df
             .crossJoin(df.withColumnRenamed("wkt", "other"))
@@ -75,14 +73,14 @@ trait ST_GeometryTypeBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stGeometryType = ST_GeometryType(lit(1).expr, "JTS")
+        val stGeometryType = ST_GeometryType(lit(1).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stGeometryType.genCode(ctx)
     }
 
-    def hexTypesBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def hexTypesBehavior(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         val sc = spark
         import mc.functions._
         import sc.implicits._
@@ -115,9 +113,9 @@ trait ST_GeometryTypeBehaviors extends QueryTest {
         sqlResults.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def hexTypesCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def hexTypesCodegen(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         val sc = spark
         import mc.functions._
         import sc.implicits._
@@ -142,18 +140,14 @@ trait ST_GeometryTypeBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stGeometryType = ST_GeometryType(lit("POINT (1 1)").expr, "illegalAPI")
-        val ctx = new CodegenContext
-        an[Error] should be thrownBy stGeometryType.genCode(ctx)
-
     }
 
-    def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val mc = mosaicContext
         mc.register(spark)
 
-        val stGeometryType = ST_GeometryType(lit("POINT (1 1)").expr, geometryAPI.name)
+        val stGeometryType = ST_GeometryType(lit("POINT (1 1)").expr, mc.expressionConfig)
 
         stGeometryType.child shouldEqual lit("POINT (1 1)").expr
         stGeometryType.dataType shouldEqual StringType

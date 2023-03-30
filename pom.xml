@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.databricks.labs</groupId>
     <artifactId>mosaic</artifactId>
-    <version>0.3.7</version>
+    <version>0.3.9</version>
 
     <properties>
         <minimum.coverage>80</minimum.coverage>
@@ -118,8 +118,13 @@
         </dependency>
         <dependency>
             <groupId>org.locationtech.proj4j</groupId>
+            <artifactId>proj4j-epsg</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.locationtech.proj4j</groupId>
             <artifactId>proj4j</artifactId>
-            <version>1.1.5</version>
+            <version>1.2.2</version>
         </dependency>
         <dependency>
             <groupId>org.gdal</groupId>
@@ -136,7 +141,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.4.2</version>
+                <version>3.5.0</version>
                 <configuration>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
@@ -176,7 +181,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.21.0</version>
+                <version>3.0.0</version>
                 <configuration>
                     <!-- Tests will be run with scalatest-maven-plugin instead -->
                     <skipTests>true</skipTests>
@@ -282,7 +287,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.2.2</spark.version>
+                <spark.version>3.3.2</spark.version>
             </properties>
         </profile>
     </profiles>

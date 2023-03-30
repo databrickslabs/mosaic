@@ -71,7 +71,7 @@ object MosaicGeometryIOCodeGenESRI extends GeometryIOCodeGen {
 
         (
           s"""
-             |$ogcGeom $geometry = (($mosaicGeometryClass)$mosaicGeometryClass.fromInternal($eval)).getGeom();
+             |$ogcGeom $geometry = $mosaicGeometryClass.fromInternal($eval).getGeom();
              |""".stripMargin,
           geometry
         )

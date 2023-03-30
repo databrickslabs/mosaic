@@ -49,7 +49,7 @@ trait GeometryKLoopBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val k = 4
         val resolution = 3
 
@@ -57,20 +57,21 @@ trait GeometryKLoopBehaviors extends MosaicSpatialQueryTest {
           lit(wkt).expr,
           lit(resolution).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
         mc.getIndexSystem match {
             case H3IndexSystem  => geometryKLoopExpr.dataType shouldEqual ArrayType(LongType)
             case BNGIndexSystem => geometryKLoopExpr.dataType shouldEqual ArrayType(StringType)
+            case _  => geometryKLoopExpr.dataType shouldEqual ArrayType(LongType)
         }
 
         val badExpr = GeometryKLoop(
           lit(10).expr,
           lit(resolution).expr,
           lit(true).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

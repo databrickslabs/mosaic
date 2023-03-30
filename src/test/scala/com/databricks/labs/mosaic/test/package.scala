@@ -195,6 +195,7 @@ package object test {
                           st_transform(col("geometry"), lit(27700))
                         )
                         .drop("greenwich")
+                case _             => df
             }
         }
 
@@ -233,6 +234,7 @@ package object test {
                           st_transform(col("geometry"), lit(27700))
                         )
                         .drop("greenwich")
+                case _              => df
             }
         }
 
@@ -255,10 +257,7 @@ package object test {
             spark.createDataFrame(rdd, schema)
         }
 
-        def getWKTRowsDf(mosaicContext: MosaicContext): DataFrame = {
-            val mc = mosaicContext
-
-            val indexSystem = mc.getIndexSystem
+        def getWKTRowsDf(indexSystem: IndexSystem = H3IndexSystem): DataFrame = {
             val spark = SparkSession.builder().getOrCreate()
             val rows = indexSystem match {
                 case H3IndexSystem  => wkt_rows_epsg4326.map { x => Row(x: _*) }
@@ -283,6 +282,7 @@ package object test {
             val rows = indexSystem match {
                 case H3IndexSystem  => wkt_rows_boroughs_epsg4326.map { x => Row(x: _*) }
                 case BNGIndexSystem => wkt_rows_boroughs_epsg27700.map { x => Row(x: _*) }
+                case _ => wkt_rows_boroughs_epsg4326.map { x => Row(x: _*) }
             }
             val rdd = spark.sparkContext.makeRDD(rows)
             val schema = StructType(
@@ -360,8 +360,6 @@ package object test {
 
         override def name: String = "MOCK"
 
-        override def getIndexSystemID: IndexSystemID = ???
-
         override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = ???
 
         override def format(id: Long): String = ???
@@ -386,6 +384,7 @@ package object test {
 
         override def parse(id: String): Long = ???
 
+        override def distance(cellId: Long, cellId2: Long): Long = ???
     }
 
 }

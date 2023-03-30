@@ -1,81 +1,62 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector1ArgExpression
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.adapters.Column
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
 
-case class ST_Buffer(inputGeom: Expression, radius: Expression, geometryAPIName: String) extends BinaryExpression with NullIntolerant {
-
-    override def left: Expression = inputGeom
-
-    override def right: Expression = radius
+/**
+  * SQL expression that returns the input geometry buffered by the radius.
+  * @param inputGeom
+  *   Expression containing the geometry.
+  * @param radiusExpr
+  *   The radius of the buffer.
+  * @param expressionConfig
+  *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
+  *   arguments for the expression (expressionConfigs).
+  */
+case class ST_Buffer(
+    inputGeom: Expression,
+    radiusExpr: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends UnaryVector1ArgExpression[ST_Buffer](inputGeom, radiusExpr, returnsGeometry = true, expressionConfig) {
 
     override def dataType: DataType = inputGeom.dataType
 
-    override def nullSafeEval(geomRow: Any, radiusRow: Any): Any = {
-        val geometryAPI = GeometryAPI(geometryAPIName)
-        val geometry = geometryAPI.geometry(geomRow, inputGeom.dataType)
-        val radiusVal = radiusRow.asInstanceOf[Double]
-        val buffered = geometry.buffer(radiusVal)
-        geometryAPI.serialize(buffered, inputGeom.dataType)
+    override def geometryTransform(geometry: MosaicGeometry, arg: Any): Any = {
+        val radius = arg.asInstanceOf[Double]
+        geometry.buffer(radius)
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = {
-        val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = ST_Buffer(asArray.head, asArray(1), geometryAPIName)
-        res.copyTagsFrom(this)
-        res
+    override def geometryCodeGen(geometryRef: String, argRef: String, ctx: CodegenContext): (String, String) = {
+        val resultRef = ctx.freshName("result")
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.buffer($argRef);"""
+        (code, resultRef)
     }
-
-    override def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression = copy(newLeft, newRight)
-
-    override protected def doGenCode(ctx: CodegenContext, ev: ExprCode): ExprCode =
-        nullSafeCodeGen(
-          ctx,
-          ev,
-          (leftEval, rightEval) => {
-              val geometryAPI = GeometryAPI.apply(geometryAPIName)
-              val buffered = ctx.freshName("buffered")
-              val polygonClass = geometryAPI.geometryClass
-
-              val (inCode, geomInRef) = ConvertToCodeGen.readGeometryCode(ctx, leftEval, inputGeom.dataType, geometryAPI)
-              val (outCode, outGeomRef) = ConvertToCodeGen.writeGeometryCode(ctx, buffered, inputGeom.dataType, geometryAPI)
-
-              geometryAPI.codeGenTryWrap(s"""
-                                            |$inCode
-                                            |$polygonClass $buffered = $geomInRef.buffer($rightEval);
-                                            |$outCode
-                                            |${ev.value} = $outGeomRef;
-                                            |""".stripMargin)
-          }
-        )
 
 }
 
-object ST_Buffer {
+/** Expression info required for the expression registration for spark SQL. */
+object ST_Buffer extends WithExpressionInfo {
 
-    /** Entry to use in the function registry. */
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[ST_Buffer].getCanonicalName,
-          db.orNull,
-          "st_buffer",
-          """
-            |    _FUNC_(expr1, expr2) - Returns expr1 buffered by expr2.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a, b);
-            |        POLYGON((1 1, 2 2, 3 3 ....))
-            |  """.stripMargin,
-          "",
-          "misc_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "st_buffer"
+
+    override def usage: String = "_FUNC_(expr1, expr2) - Returns buffered geometry."
+
+    override def example: String =
+        """
+          |    Examples:
+          |      > SELECT _FUNC_(a, b);
+          |        POLYGON (...)
+          |  """.stripMargin
+
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
+        ST_Buffer(children.head, Column(children(1)).cast("double").expr, expressionConfig)
+    }
 
 }
