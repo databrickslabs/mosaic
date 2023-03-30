@@ -8,13 +8,13 @@ from the selected spatial grid.
 The grid system can be specified by using the spark configuration `spark.databricks.labs.mosaic.index.system`
 before enabling Mosaic.
 
-The valid values are
-* `H3` - Good all-rounder for any location on earth
-* `BNG` - Local grid system Great Britain (EPSG:27700)
-* `CUSTOM(minX,maxX,minY,maxY,splits,rootCellSizeX,rootCellSizeY)` - Can be used with any local or global CRS
-* `minX`,`maxX`,`minY`,`maxY` can be positive or negative integers defining the grid bounds
-* `splits` defines how many splits are applied to each cell for an increase in resolution step (usually 2 or 10)
-* `rootCellSizeX`,`rootCellSizeY` define the size of the cells on resolution 0
+The valid values are:
+    * `H3` - Good all-rounder for any location on earth
+    * `BNG` - Local grid system Great Britain (EPSG:27700)
+    * `CUSTOM(minX,maxX,minY,maxY,splits,rootCellSizeX,rootCellSizeY)` - Can be used with any local or global CRS
+        * `minX`,`maxX`,`minY`,`maxY` can be positive or negative integers defining the grid bounds
+        * `splits` defines how many splits are applied to each cell for an increase in resolution step (usually 2 or 10)
+        * `rootCellSizeX`,`rootCellSizeY` define the size of the cells on resolution 0
 
 Example
 
