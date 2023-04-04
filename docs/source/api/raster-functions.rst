@@ -544,7 +544,7 @@ rst_rastertogridavg
 
     :param raster: A column containing the path to a raster file.
     :type col: Column (StringType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -621,7 +621,7 @@ rst_rastertogridcount
 
     :param raster: A column containing the path to a raster file.
     :type col: Column (StringType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -698,7 +698,7 @@ rst_rastertogridmax
 
     :param raster: A column containing the path to a raster file.
     :type col: Column (StringType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -775,7 +775,7 @@ rst_rastertogridmedian
 
     :param raster: A column containing the path to a raster file.
     :type col: Column (StringType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -852,7 +852,7 @@ rst_rastertogridmin
 
     :param raster: A column containing the path to a raster file.
     :type col: Column (StringType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
