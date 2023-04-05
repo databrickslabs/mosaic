@@ -72,12 +72,7 @@ object MosaicPolygonESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicPolygonESRI = {
         val internalGeom = InternalGeometry(row)
         val polygon = MosaicMultiPolygonESRI.createPolygon(internalGeom.boundaries, internalGeom.holes)
-        val spatialReference =
-            if (internalGeom.srid != 0) {
-                SpatialReference.create(internalGeom.srid)
-            } else {
-                MosaicGeometryESRI.defaultSpatialReference
-            }
+        val spatialReference = MosaicGeometryESRI.getSRID(internalGeom.srid)
         MosaicPolygonESRI(new OGCPolygon(polygon, spatialReference))
     }
 

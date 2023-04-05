@@ -10,6 +10,20 @@
 
 # COMMAND ----------
 
+# MAGIC %md ## Download demo data
+# MAGIC 
+# MAGIC Run this only once
+
+# COMMAND ----------
+
+# MAGIC %run ../../data/DownloadLondonPostcodeZones
+
+# COMMAND ----------
+
+# MAGIC %run ../../data/DownloadUPRNsData
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Setup London Postcode zones
 # MAGIC In order to setup the data please run the notebook available at "../../data/DownloadLondonPostcodeZones". </br>

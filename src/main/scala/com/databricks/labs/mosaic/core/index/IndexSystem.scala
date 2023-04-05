@@ -2,7 +2,8 @@ package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.model.{Coordinates, MosaicChip}
+import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum, MosaicChip}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -159,9 +160,10 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
         val intersections = for (index <- borderIndices) yield {
             val indexGeom = indexToGeometry(index, geometryAPI)
             val intersect = geometry.intersection(indexGeom)
-            val isCore = intersect.equals(indexGeom)
+            val coerced = coerceChipGeometry(intersect, index, geometryAPI)
+            val isCore = coerced.equals(indexGeom)
 
-            val chipGeom = if (!isCore || keepCoreGeom) intersect else null
+            val chipGeom = if (!isCore || keepCoreGeom) coerced else null
 
             MosaicChip(isCore = isCore, Left(index), chipGeom)
         }
@@ -273,5 +275,29 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
     }
 
     def area(index: String): Double = area(parse(index))
+
+    def coerceChipGeometry(geom: MosaicGeometry, cell: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
+        val geomType = GeometryTypeEnum.fromString(geom.getGeometryType)
+        if (geomType == GEOMETRYCOLLECTION) {
+            // This case can occur if partial geometry is a geometry collection
+            // or if the intersection includes a part of the boundary of the cell
+            geom.difference(indexToGeometry(cell, geometryAPI).getBoundary)
+        } else {
+            geom
+        }
+    }
+
+    def coerceChipGeometry(geometries: Seq[MosaicGeometry]): Seq[MosaicGeometry] = {
+        val types = geometries.map(_.getGeometryType).map(GeometryTypeEnum.fromString)
+        if (types.contains(MULTIPOLYGON) || types.contains(POLYGON)) {
+            geometries.filter(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.getGeometryType)))
+        } else if (types.contains(MULTILINESTRING) || types.contains(LINESTRING)) {
+            geometries.filter(g => Seq(MULTILINESTRING, LINESTRING).contains(GeometryTypeEnum.fromString(g.getGeometryType)))
+        } else if (types.contains(MULTIPOINT) || types.contains(POINT)) {
+            geometries.filter(g => Seq(MULTIPOINT, POINT).contains(GeometryTypeEnum.fromString(g.getGeometryType)))
+        } else {
+            Nil
+        }
+    }
 
 }

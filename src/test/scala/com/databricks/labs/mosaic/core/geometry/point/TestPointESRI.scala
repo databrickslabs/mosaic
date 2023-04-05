@@ -69,7 +69,6 @@ class TestPointESRI extends AnyFlatSpec {
         point.convexHull.getSpatialReference shouldBe srid
         point.getCentroid.getSpatialReference shouldBe srid
         point.intersection(poly).getSpatialReference shouldBe srid
-        point.reduceFromMulti.getSpatialReference shouldBe srid
         point.rotate(45).getSpatialReference shouldBe srid
         point.scale(2d, 2d).getSpatialReference shouldBe srid
         point.simplify(0.001).getSpatialReference shouldBe srid

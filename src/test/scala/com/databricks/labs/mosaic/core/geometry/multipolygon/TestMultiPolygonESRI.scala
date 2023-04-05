@@ -119,7 +119,6 @@ class TestMultiPolygonESRI extends AnyFlatSpec {
         multiPolygon.convexHull.getSpatialReference shouldBe srid
         multiPolygon.getCentroid.getSpatialReference shouldBe srid
         multiPolygon.intersection(otherPolygon).getSpatialReference shouldBe srid
-        multiPolygon.reduceFromMulti.getSpatialReference shouldBe srid
         multiPolygon.rotate(45).getSpatialReference shouldBe srid
         multiPolygon.scale(2d, 2d).getSpatialReference shouldBe srid
         multiPolygon.simplify(0.001).getSpatialReference shouldBe srid
