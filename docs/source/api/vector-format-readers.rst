@@ -7,7 +7,33 @@ Intro
 ################
 Mosaic provides spark readers for vector files supported by GDAL OGR drivers.
 Only the drivers that are built by default are supported.
+Here are some common useful file formats:
+    * GeoJSON (also ESRIJSON, TopoJSON)
+      https://gdal.org/drivers/vector/geojson.html
+    * ESRI File Geodatabase (FileGDB) and ESRI File Geodatabase vector (OpenFileGDB)
+      Mosaic implements named reader geo_db (described in this doc)
+      https://gdal.org/drivers/vector/filegdb.html
+    * ESRI Shapefile / DBF (ESRI Shapefile) - Mosaic implements named reader shapefile (described in this doc)
+      https://gdal.org/drivers/vector/shapefile.html
+    * Network Common Data Form (netCDF) - Mosaic implements raster reader also
+      https://gdal.org/drivers/raster/netcdf.html
+    * (Geo)Parquet (Parquet) - Mosaic will be implementing a custom reader soon
+      https://gdal.org/drivers/vector/parquet.html
+    * Spreadsheets (XLSX, XLS, ODS)
+      https://gdal.org/drivers/vector/xls.html
+    * U.S. Census TIGER/Line (TIGER)
+      https://gdal.org/drivers/vector/tiger.html
+    * PostgreSQL Dump (PGDump)
+      https://gdal.org/drivers/vector/pgdump.html
+    * Keyhole Markup Language (KML)
+      https://gdal.org/drivers/vector/kml.html
+    * Geography Markup Language (GML)
+      https://gdal.org/drivers/vector/gml.html
+    * GRASS - option for Linear Referencing Systems (LRS)
+      https://gdal.org/drivers/vector/grass.html
 For more information please refer to gdal documentation: https://gdal.org/drivers/vector/index.html
+
+
 
 Mosaic provides two flavors of the readers:
     * spark.read.format("ogr") for reading 1 file per spark task
