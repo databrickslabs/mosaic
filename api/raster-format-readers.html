@@ -1,0 +1,655 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="lang:clipboard.copy" content="Copy to clipboard">
+  <meta name="lang:clipboard.copied" content="Copied to clipboard">
+  <meta name="lang:search.language" content="en">
+  <meta name="lang:search.pipeline.stopwords" content="True">
+  <meta name="lang:search.pipeline.trimmer" content="True">
+  <meta name="lang:search.result.none" content="No matching documents">
+  <meta name="lang:search.result.one" content="1 matching document">
+  <meta name="lang:search.result.other" content="# matching documents">
+  <meta name="lang:search.tokenizer" content="[\s\-]+">
+
+  
+    <link href="https://fonts.gstatic.com/" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700|Roboto:300,400,400i,700&display=fallback" rel="stylesheet">
+
+    <style>
+      body,
+      input {
+        font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif
+      }
+
+      code,
+      kbd,
+      pre {
+        font-family: "Roboto Mono", "Courier New", Courier, monospace
+      }
+    </style>
+  
+
+  <link rel="stylesheet" href="../_static/stylesheets/application.css"/>
+  <link rel="stylesheet" href="../_static/stylesheets/application-palette.css"/>
+  <link rel="stylesheet" href="../_static/stylesheets/application-fixes.css"/>
+  
+  <link rel="stylesheet" href="../_static/fonts/material-icons.css"/>
+  
+  <meta name="theme-color" content="#3f51b5">
+  <script src="../_static/javascripts/modernizr.js"></script>
+  
+  
+  
+    <title>Raster Format Readers &#8212; Mosaic</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/material.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/tabs.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Geometry constructors" href="geometry-constructors.html" />
+    <link rel="prev" title="Vector Format Readers" href="vector-format-readers.html" />
+  
+   
+
+  </head>
+  <body dir=ltr
+        data-md-color-primary=green data-md-color-accent=green>
+  
+  <svg class="md-svg">
+    <defs data-children-count="0">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+      
+    </defs>
+  </svg>
+  
+  <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer">
+  <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search">
+  <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+  <a href="#api/raster-format-readers" tabindex="1" class="md-skip"> Skip to content </a>
+  <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex navheader">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../index.html" title="Mosaic"
+           class="md-header-nav__button md-logo">
+          
+              <img src="../_static/mosaic_logo.svg" height="26"
+                   alt="Mosaic logo">
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          <span class="md-header-nav__topic">Mosaic v0.3.9</span>
+          <span class="md-header-nav__topic"> Raster Format Readers </span>
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+        
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" action="../search.html" method="get" name="search">
+      <input type="text" class="md-search__input" name="q" placeholder="Search"
+             autocapitalize="off" autocomplete="off" spellcheck="false"
+             data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            <a href="https://github.com/databrickslabs/mosaic/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    Mosaic
+  </div>
+</a>
+          </div>
+        </div>
+      
+      
+  
+  <script src="../_static/javascripts/version_dropdown.js"></script>
+  <script>
+    var json_loc = "../"versions.json"",
+        target_loc = "../../",
+        text = "Versions";
+    $( document ).ready( add_version_dropdown(json_loc, target_loc, text));
+  </script>
+  
+
+    </div>
+  </nav>
+</header>
+
+  
+  <div class="md-container">
+    
+    
+    
+  <nav class="md-tabs" data-md-component="tabs">
+    <div class="md-tabs__inner md-grid">
+      <ul class="md-tabs__list">
+          <li class="md-tabs__item"><a href="../index.html" class="md-tabs__link">Mosaic</a></li>
+          <li class="md-tabs__item"><a href="api.html" class="md-tabs__link">API Documentation</a></li>
+      </ul>
+    </div>
+  </nav>
+    <main class="md-main">
+      <div class="md-main__inner md-grid" data-md-component="container">
+        
+          <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../index.html" title="Mosaic" class="md-nav__button md-logo">
+      
+        <img src="../_static/mosaic_logo.svg" alt=" logo" width="48" height="48">
+      
+    </a>
+    <a href="../index.html"
+       title="Mosaic">Mosaic v0.3.9</a>
+  </label>
+    <div class="md-nav__source">
+      <a href="https://github.com/databrickslabs/mosaic/" title="Go to repository" class="md-source" data-md-source="github">
+
+    <div class="md-source__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    Mosaic
+  </div>
+</a>
+    </div>
+  
+  
+
+  
+  <ul class="md-nav__list">
+    <li class="md-nav__item">
+    
+      <span class="md-nav__link caption"><span class="caption-text">Contents:</span></span>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="api.html" class="md-nav__link">API Documentation</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="vector-format-readers.html" class="md-nav__link">Vector Format Readers</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <label class="md-nav__link md-nav__link--active" for="__toc"> Raster Format Readers </label>
+    
+      <a href="#" class="md-nav__link md-nav__link--active">Raster Format Readers</a>
+      
+        
+<nav class="md-nav md-nav--secondary">
+    <label class="md-nav__title" for="__toc">Contents</label>
+  <ul class="md-nav__list" data-md-scrollfix="">
+        <li class="md-nav__item"><a href="#api-raster-format-readers--page-root" class="md-nav__link">Raster Format Readers</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#intro" class="md-nav__link">Intro</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#spark-read-format-gdal" class="md-nav__link">spark.read.format(“gdal”)</a>
+        </li>
+        <li class="md-nav__item"><a href="#mos-read-format-raster-to-grid" class="md-nav__link">mos.read().format(“raster_to_grid”)</a>
+        </li></ul>
+            </nav>
+        </li></ul>
+            </nav>
+        </li>
+    
+<li class="md-nav__item"><a class="md-nav__extra_link" href="../_sources/api/raster-format-readers.rst.txt">Show Source</a> </li>
+
+  </ul>
+</nav>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="geometry-constructors.html" class="md-nav__link">Geometry constructors</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="geometry-accessors.html" class="md-nav__link">Geometry accessors</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="spatial-functions.html" class="md-nav__link">Spatial functions</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="spatial-indexing.html" class="md-nav__link">Spatial grid indexing</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="spatial-predicates.html" class="md-nav__link">Spatial predicates</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="spatial-aggregations.html" class="md-nav__link">Spatial aggregation functions</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="raster-functions.html" class="md-nav__link">Raster functions</a>
+      
+    
+    </li></ul>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/usage.html" class="md-nav__link">Usage</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/installation.html" class="md-nav__link">Installation guide</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/install-gdal.html" class="md-nav__link">GDAL Installation guide</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/grid-indexes.html" class="md-nav__link">Using grid index systems in Mosaic</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/grid-indexes-bng.html" class="md-nav__link">BNG - British National Grid</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/quickstart.html" class="md-nav__link">Quickstart notebook</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/kepler.html" class="md-nav__link">Kepler visualizations</a>
+      
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../usage/automatic-sql-registration.html" class="md-nav__link">Automatic SQL registration</a>
+      
+    
+    </li></ul>
+    
+    </li>
+    <li class="md-nav__item">
+    
+    
+      <a href="../models/models.html" class="md-nav__link">Models</a>
+      <ul class="md-nav__list"> 
+    <li class="md-nav__item">
+    
+    
+      <a href="../models/spatial-knn.html" class="md-nav__link">Spatial K Nearest Neighbours</a>
+      
+    
+    </li></ul>
+    
+    </li>
+  </ul>
+  
+
+</nav>
+              </div>
+            </div>
+          </div>
+          <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                
+<nav class="md-nav md-nav--secondary">
+    <label class="md-nav__title" for="__toc">Contents</label>
+  <ul class="md-nav__list" data-md-scrollfix="">
+        <li class="md-nav__item"><a href="#api-raster-format-readers--page-root" class="md-nav__link">Raster Format Readers</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#intro" class="md-nav__link">Intro</a><nav class="md-nav">
+              <ul class="md-nav__list">
+        <li class="md-nav__item"><a href="#spark-read-format-gdal" class="md-nav__link">spark.read.format(“gdal”)</a>
+        </li>
+        <li class="md-nav__item"><a href="#mos-read-format-raster-to-grid" class="md-nav__link">mos.read().format(“raster_to_grid”)</a>
+        </li></ul>
+            </nav>
+        </li></ul>
+            </nav>
+        </li>
+    
+<li class="md-nav__item"><a class="md-nav__extra_link" href="../_sources/api/raster-format-readers.rst.txt">Show Source</a> </li>
+
+<li id="searchbox" class="md-nav__item"></li>
+
+  </ul>
+</nav>
+              </div>
+            </div>
+          </div>
+        
+        <div class="md-content">
+          <article class="md-content__inner md-typeset" role="main">
+            
+  
+<h1 id="api-raster-format-readers--page-root">Raster Format Readers<a class="headerlink" href="#api-raster-format-readers--page-root" title="Permalink to this headline">¶</a></h1>
+
+<h2 id="intro">Intro<a class="headerlink" href="#intro" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt>Mosaic provides spark readers for the following raster formats:</dt><dd><ul class="simple">
+<li><p>GTiff (GeoTiff) using .tif file extension - <a class="reference external" href="https://gdal.org/drivers/raster/gtiff.html">https://gdal.org/drivers/raster/gtiff.html</a></p></li>
+<li><p>COG (Cloud Optimized GeoTiff) using .tif file extension - <a class="reference external" href="https://gdal.org/drivers/raster/cog.html">https://gdal.org/drivers/raster/cog.html</a></p></li>
+<li><p>HDF4 using .hdf file extension - <a class="reference external" href="https://gdal.org/drivers/raster/hdf4.html">https://gdal.org/drivers/raster/hdf4.html</a></p></li>
+<li><p>HDF5 using .h5 file extension - <a class="reference external" href="https://gdal.org/drivers/raster/hdf5.html">https://gdal.org/drivers/raster/hdf5.html</a></p></li>
+<li><p>NetCDF using .nc file extension - <a class="reference external" href="https://gdal.org/drivers/raster/netcdf.html">https://gdal.org/drivers/raster/netcdf.html</a></p></li>
+<li><p>JP2ECW using .jp2 file extension - <a class="reference external" href="https://gdal.org/drivers/raster/jp2ecw.html">https://gdal.org/drivers/raster/jp2ecw.html</a></p></li>
+<li><p>JP2KAK using .jp2 file extension - <a class="reference external" href="https://gdal.org/drivers/raster/jp2kak.html">https://gdal.org/drivers/raster/jp2kak.html</a></p></li>
+<li><p>JP2OpenJPEG using .jp2 file extension - <a class="reference external" href="https://gdal.org/drivers/raster/jp2openjpeg.html">https://gdal.org/drivers/raster/jp2openjpeg.html</a></p></li>
+<li><p>PDF using .pdf file extension - <a class="reference external" href="https://gdal.org/drivers/raster/pdf.html">https://gdal.org/drivers/raster/pdf.html</a></p></li>
+<li><p>PNG using .png file extension - <a class="reference external" href="https://gdal.org/drivers/raster/png.html">https://gdal.org/drivers/raster/png.html</a></p></li>
+<li><p>VRT using .vrt file extension - <a class="reference external" href="https://gdal.org/drivers/raster/vrt.html">https://gdal.org/drivers/raster/vrt.html</a></p></li>
+<li><p>XPM using .xpm file extension - <a class="reference external" href="https://gdal.org/drivers/raster/xpm.html">https://gdal.org/drivers/raster/xpm.html</a></p></li>
+<li><p>GRIB using .grb file extension - <a class="reference external" href="https://gdal.org/drivers/raster/grib.html">https://gdal.org/drivers/raster/grib.html</a></p></li>
+<li><p>Zarr using .zarr file extension - <a class="reference external" href="https://gdal.org/drivers/raster/zarr.html">https://gdal.org/drivers/raster/zarr.html</a></p></li>
+</ul>
+</dd>
+</dl>
+<p>Other formats supported by GDAL will be added in future releases.</p>
+<dl class="simple">
+<dt>Mosaic provides two flavors of the readers:</dt><dd><ul class="simple">
+<li><p>spark.read.format(“gdal”) for reading 1 file per spark task</p></li>
+<li><p>mos.read().format(“raster_to_grid”) reader that automatically converts raster to grid.</p></li>
+</ul>
+</dd>
+</dl>
+
+<h3 id="spark-read-format-gdal">spark.read.format(“gdal”)<a class="headerlink" href="#spark-read-format-gdal" title="Permalink to this headline">¶</a></h3>
+<p>A base Spark SQL data source for reading GDAL raster data sources.
+It reads metadata of the raster and exposes the direct paths for the raster files.
+The output of the reader is a DataFrame with the following columns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>path - path to the raster file on dbfs (StringType)</p></li>
+<li><p>ySize - height of the raster in pixels (IntegerType)</p></li>
+<li><p>xSize - width of the raster in pixels (IntegerType)</p></li>
+<li><p>bandCount - number of bands in the raster (IntegerType)</p></li>
+<li><p>metadata - raster metadata (MapType(StringType, StringType))</p></li>
+<li><p>subdatasets - raster subdatasets (MapType(StringType, StringType))</p></li>
+<li><p>srid - raster spatial reference system identifier (IntegerType)</p></li>
+<li><p>proj4Str - raster spatial reference system proj4 string (StringType)</p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="spark.read.format">
+<span class="sig-prename descclassname"><span class="pre">spark.read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">"gdal").load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spark.read.format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a GDAL raster file and returns the result as a DataFrame.
+It uses standard spark.read.format(*).option(*).load(*) pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<a href="#id1"><span class="problematic" id="id2">*</span></a>StringType) – path to the raster file on dbfs</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>DataFrame</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"gdal"</span><span class="p">)</span>\
+<span class="go">    .option("driverName", "TIF")\</span>
+<span class="go">    .load("dbfs:/path/to/raster.tif")</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+</span>
+<span class="go">|                path|ySize|xSize|bandCount|            metadata|         subdatasets|srid|            proj4Str|</span>
+<span class="go">+--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+</span>
+<span class="go">|dbfs:/path/to/ra...|  100|  100|        1|{AREA_OR_POINT=Po...|                null| 4326|+proj=longlat +da...|</span>
+<span class="go">+--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-0-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spark</span><span class="p">.</span><span class="n">read</span><span class="p">.</span><span class="n">format</span><span class="p">(</span><span class="s">"gdal"</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">"driverName"</span><span class="p">,</span><span class="w"> </span><span class="s">"TIF"</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">"dbfs:/path/to/raster.tif"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+</span>
+<span class="o">|</span><span class="w">                </span><span class="n">path</span><span class="o">|</span><span class="n">ySize</span><span class="o">|</span><span class="n">xSize</span><span class="o">|</span><span class="n">bandCount</span><span class="o">|</span><span class="w">            </span><span class="n">metadata</span><span class="o">|</span><span class="w">         </span><span class="n">subdatasets</span><span class="o">|</span><span class="n">srid</span><span class="o">|</span><span class="w">            </span><span class="n">proj4Str</span><span class="o">|</span>
+<span class="o">+--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+</span>
+<span class="o">|</span><span class="n">dbfs</span><span class="p">:</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">ra</span><span class="p">...</span><span class="o">|</span><span class="w">  </span><span class="mi">100</span><span class="o">|</span><span class="w">  </span><span class="mi">100</span><span class="o">|</span><span class="w">        </span><span class="mi">1</span><span class="o">|</span><span class="p">{</span><span class="nc">AREA_OR_POINT</span><span class="o">=</span><span class="nc">Po</span><span class="p">...</span><span class="o">|</span><span class="w">                </span><span class="kc">null</span><span class="o">|</span><span class="w"> </span><span class="mi">4326</span><span class="o">|+</span><span class="n">proj</span><span class="o">=</span><span class="n">longlat</span><span class="w"> </span><span class="o">+</span><span class="n">da</span><span class="p">...</span><span class="o">|</span>
+<span class="o">+--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
+<h3 id="mos-read-format-raster-to-grid">mos.read().format(“raster_to_grid”)<a class="headerlink" href="#mos-read-format-raster-to-grid" title="Permalink to this headline">¶</a></h3>
+<p>Reads a GDAL raster file and converts it to a grid.
+It uses a pattern similar to standard spark.read.format(*).option(*).load(*) pattern.
+The only difference is that it uses mos.read() instead of spark.read().
+The raster pixels are converted to grid cells using specified combiner operation (default is mean).
+If the raster pixels are larger than the grid cells, the cell values can be calculated using interpolation.
+The interpolation method used is Inverse Distance Weighting (IDW) where the distance function is a k_ring
+distance of the grid.
+The reader supports the following options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>fileExtension - file extension of the raster file (StringType) - default is <em>.</em></p></li>
+<li><p>vsizip - if the rasters are zipped files, set this to true (BooleanType)</p></li>
+<li><p>resolution - resolution of the output grid (IntegerType)</p></li>
+<li><p>combiner - combiner operation to use when converting raster to grid (StringType) - default is mean</p></li>
+<li><p>retile - if the rasters are too large they can be re-tiled to smaller tiles (BooleanType)</p></li>
+<li><p>tileSize - size of the re-tiled tiles, tiles are always squares of tileSize x tileSize (IntegerType)</p></li>
+<li><p>readSubdatasets - if the raster has subdatasets set this to true (BooleanType)</p></li>
+<li><p>subdatasetNumber - if the raster has subdatasets, select a specific subdataset by index (IntegerType)</p></li>
+<li><p>subdatasetName - if the raster has subdatasets, select a specific subdataset by name (StringType)</p></li>
+<li><p>kRingInterpolate - if the raster pixels are larger than the grid cells, use k_ring interpolation with n = kRingInterpolate (IntegerType)</p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="mos.read">
+<span class="sig-prename descclassname"><span class="pre">mos.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">).format("raster_to_grid").load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mos.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a GDAL raster file and returns the result as a DataFrame.
+It uses standard mos.read().format(*).option(*).load(*) pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<a href="#id3"><span class="problematic" id="id4">*</span></a>StringType) – path to the raster file on dbfs</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>DataFrame</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-1-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">mos</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"raster_to_grid"</span><span class="p">)</span>\
+<span class="go">    .option("fileExtension", "tif")\</span>
+<span class="go">    .option("resolution", "8")\</span>
+<span class="go">    .option("combiner", "mean")\</span>
+<span class="go">    .option("retile", "true")\</span>
+<span class="go">    .option("tileSize", "1000")\</span>
+<span class="go">    .option("kRingInterpolate", "2")\</span>
+<span class="go">    .load("dbfs:/path/to/raster.tif")</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="go">+--------+--------+------------------+</span>
+<span class="go">|band_id |cell_id |cell_value        |</span>
+<span class="go">+--------+--------+------------------+</span>
+<span class="go">|       1|       1|0.1400000000000000|</span>
+<span class="go">|       1|       2|0.1400000000000000|</span>
+<span class="go">|       1|       3|0.2464000000000000|</span>
+<span class="go">|       1|       4|0.2464000000000000|</span>
+<span class="go">+--------+--------+------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MosaicContext</span><span class="p">.</span><span class="n">read</span><span class="p">.</span><span class="n">format</span><span class="p">(</span><span class="s">"raster_to_grid"</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">"fileExtension"</span><span class="p">,</span><span class="w"> </span><span class="s">"tif"</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">"resolution"</span><span class="p">,</span><span class="w"> </span><span class="s">"8"</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">"combiner"</span><span class="p">,</span><span class="w"> </span><span class="s">"mean"</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">"retile"</span><span class="p">,</span><span class="w"> </span><span class="s">"true"</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">"tileSize"</span><span class="p">,</span><span class="w"> </span><span class="s">"1000"</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">"kRingInterpolate"</span><span class="p">,</span><span class="w"> </span><span class="s">"2"</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">"dbfs:/path/to/raster.tif"</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="n">df</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+--------+--------+------------------+</span>
+<span class="o">|</span><span class="n">band_id</span><span class="w"> </span><span class="o">|</span><span class="n">cell_id</span><span class="w"> </span><span class="o">|</span><span class="n">cell_value</span><span class="w">        </span><span class="o">|</span>
+<span class="o">+--------+--------+------------------+</span>
+<span class="o">|</span><span class="w">       </span><span class="mi">1</span><span class="o">|</span><span class="w">       </span><span class="mi">1</span><span class="o">|</span><span class="mf">0.1400000000000000</span><span class="o">|</span>
+<span class="o">|</span><span class="w">       </span><span class="mi">1</span><span class="o">|</span><span class="w">       </span><span class="mi">2</span><span class="o">|</span><span class="mf">0.1400000000000000</span><span class="o">|</span>
+<span class="o">|</span><span class="w">       </span><span class="mi">1</span><span class="o">|</span><span class="w">       </span><span class="mi">3</span><span class="o">|</span><span class="mf">0.2464000000000000</span><span class="o">|</span>
+<span class="o">|</span><span class="w">       </span><span class="mi">1</span><span class="o">|</span><span class="w">       </span><span class="mi">4</span><span class="o">|</span><span class="mf">0.2464000000000000</span><span class="o">|</span>
+<span class="o">+--------+--------+------------------+</span>
+</pre></div>
+</div>
+</div></div>
+
+
+
+
+
+          </article>
+        </div>
+      </div>
+    </main>
+  </div>
+  <footer class="md-footer">
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+          
+            <a href="vector-format-readers.html" title="Vector Format Readers"
+               class="md-flex md-footer-nav__link md-footer-nav__link--prev"
+               rel="prev">
+              <div class="md-flex__cell md-flex__cell--shrink">
+                <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+              </div>
+              <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+                <span class="md-flex__ellipsis">
+                  <span
+                      class="md-footer-nav__direction"> Previous </span> Vector Format Readers </span>
+              </div>
+            </a>
+          
+          
+            <a href="geometry-constructors.html" title="Geometry constructors"
+               class="md-flex md-footer-nav__link md-footer-nav__link--next"
+               rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
+                class="md-flex__ellipsis"> <span
+                class="md-footer-nav__direction"> Next </span> Geometry constructors </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink"><i
+                class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          
+        </a>
+        
+      </nav>
+    </div>
+    <div class="md-footer-meta md-typeset">
+      <div class="md-footer-meta__inner md-grid">
+        <div class="md-footer-copyright">
+          <div class="md-footer-copyright__highlight">
+              &#169; Copyright 2022, Databricks Inc.
+              
+          </div>
+            Created using
+            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+             and
+            <a href="https://github.com/bashtage/sphinx-material/">Material for
+              Sphinx</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <script src="../_static/javascripts/application.js"></script>
+  <script>app.initialize({version: "1.0.4", url: {base: ".."}})</script>
+  </body>
+</html>
