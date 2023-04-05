@@ -56,18 +56,22 @@ class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with
 
 object MosaicPolygonJTS extends GeometryReader {
 
+    def fromRings(boundaryRing: Array[InternalCoord], holesRings: Array[Array[InternalCoord]], srid: Int): MosaicGeometryJTS = {
+        val gf = new GeometryFactory()
+        val shell = gf.createLinearRing(boundaryRing.map(_.toCoordinate))
+        val holes = holesRings.map(ring => ring.map(_.toCoordinate)).map(gf.createLinearRing)
+        val geometry = gf.createPolygon(shell, holes)
+        geometry.setSRID(srid)
+        MosaicGeometryJTS(geometry)
+    }
+
     def getPoints(linearRing: LinearRing): Seq[MosaicPointJTS] = {
         linearRing.getCoordinates.map(MosaicPointJTS(_, linearRing.getSRID))
     }
 
     override def fromInternal(row: InternalRow): MosaicGeometryJTS = {
-        val gf = new GeometryFactory()
         val internalGeom = InternalGeometry(row)
-        val shell = gf.createLinearRing(internalGeom.boundaries.head.map(_.toCoordinate))
-        val holes = internalGeom.holes.head.map(ring => ring.map(_.toCoordinate)).map(gf.createLinearRing)
-        val geometry = gf.createPolygon(shell, holes)
-        geometry.setSRID(internalGeom.srid)
-        MosaicGeometryJTS(geometry)
+        fromRings(internalGeom.boundaries.head, internalGeom.holes.head, internalGeom.srid)
     }
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POLYGON): MosaicPolygonJTS = {

@@ -53,12 +53,7 @@ object MosaicMultiLineStringESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicMultiLineStringESRI = {
         val internalGeom = InternalGeometry(row)
         val polygon = createPolyline(internalGeom.boundaries)
-        val spatialReference =
-            if (internalGeom.srid != 0) {
-                SpatialReference.create(internalGeom.srid)
-            } else {
-                MosaicGeometryESRI.defaultSpatialReference
-            }
+        val spatialReference = MosaicGeometryESRI.getSRID(internalGeom.srid)
         val ogcMultiLineString = new OGCMultiLineString(polygon, spatialReference)
         MosaicMultiLineStringESRI(ogcMultiLineString)
     }

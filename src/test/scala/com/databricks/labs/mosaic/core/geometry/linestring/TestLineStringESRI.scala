@@ -7,6 +7,7 @@ import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.catalyst.InternalRow
 
+//noinspection ScalaRedundantCast
 class TestLineStringESRI extends AnyFlatSpec {
 
     "MosaicLineStringESRI" should "throw exceptions for function calls when empty construct is used" in {
@@ -105,7 +106,6 @@ class TestLineStringESRI extends AnyFlatSpec {
         lineString.convexHull.getSpatialReference shouldBe srid
         lineString.getCentroid.getSpatialReference shouldBe srid
         lineString.intersection(poly).getSpatialReference shouldBe srid
-        lineString.reduceFromMulti.getSpatialReference shouldBe srid
         lineString.rotate(45).getSpatialReference shouldBe srid
         lineString.scale(2d, 2d).getSpatialReference shouldBe srid
         lineString.simplify(0.001).getSpatialReference shouldBe srid

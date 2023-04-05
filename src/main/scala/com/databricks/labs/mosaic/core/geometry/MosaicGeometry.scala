@@ -15,8 +15,6 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def getHolePoints: Seq[Seq[Seq[MosaicPoint]]]
 
-    def reduceFromMulti: MosaicGeometry
-
     def numPoints: Int
 
     def translate(xd: Double, yd: Double): MosaicGeometry
@@ -36,8 +34,6 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def getGeometryType: String
 
     def getArea: Double
-
-    def getAPI: String
 
     def getCentroid: MosaicPoint
 

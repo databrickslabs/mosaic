@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry.multipolygon
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringESRI}
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
-import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
+import com.databricks.labs.mosaic.core.geometry.point.MosaicPointESRI
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonESRI
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOLYGON, POLYGON}
@@ -63,12 +63,7 @@ object MosaicMultiPolygonESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicMultiPolygonESRI = {
         val internalGeom = InternalGeometry(row)
         val polygon = createPolygon(internalGeom.boundaries, internalGeom.holes)
-        val spatialReference =
-            if (internalGeom.srid != 0) {
-                SpatialReference.create(internalGeom.srid)
-            } else {
-                MosaicGeometryESRI.defaultSpatialReference
-            }
+        val spatialReference = MosaicGeometryESRI.getSRID(internalGeom.srid)
         val ogcMultiLineString = new OGCMultiPolygon(polygon, spatialReference)
         MosaicMultiPolygonESRI(ogcMultiLineString)
     }
