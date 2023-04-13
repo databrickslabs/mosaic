@@ -38,6 +38,13 @@ class TestMultiPolygonESRI extends AnyFlatSpec {
         multiPolygon.equals(MosaicMultiPolygonESRI.fromInternal(multiPolygon.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
     }
 
+    "MosaicMultiPolygonESRI" should "load holes correctly" in {
+         val multiPolygon = MosaicMultiPolygonESRI.fromWKT(
+          "MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)), ((3 4,6 3,5 5,3 4)))"
+        )
+        multiPolygon.equals(MosaicMultiPolygonESRI.fromInternal(multiPolygon.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
+    }
+    
     "MosaicMultiPolygonESRI" should "be instantiable from a Seq of MosaicPolygonESRI" in {
         val multiPolygonReference = MosaicMultiPolygonESRI.fromWKT(
           "MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)))"
