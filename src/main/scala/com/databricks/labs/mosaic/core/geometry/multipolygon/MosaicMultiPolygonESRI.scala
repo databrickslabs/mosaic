@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry.multipolygon
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringESRI}
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
-import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointESRI}
+import com.databricks.labs.mosaic.core.geometry.point.MosaicPointESRI
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonESRI
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOLYGON, POLYGON}
@@ -63,45 +63,31 @@ object MosaicMultiPolygonESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicMultiPolygonESRI = {
         val internalGeom = InternalGeometry(row)
         val polygon = createPolygon(internalGeom.boundaries, internalGeom.holes)
-        val spatialReference =
-            if (internalGeom.srid != 0) {
-                SpatialReference.create(internalGeom.srid)
-            } else {
-                MosaicGeometryESRI.defaultSpatialReference
-            }
+        val spatialReference = MosaicGeometryESRI.getSRID(internalGeom.srid)
         val ogcMultiLineString = new OGCMultiPolygon(polygon, spatialReference)
         MosaicMultiPolygonESRI(ogcMultiLineString)
     }
 
     // noinspection ZeroIndexToHead
     def createPolygon(shellCollection: Array[Array[InternalCoord]], holesCollection: Array[Array[Array[InternalCoord]]]): Polygon = {
-        val boundariesPath = MosaicMultiLineStringESRI.createPolyline(shellCollection, dontClose = true)
-        val holesPathsCollection = holesCollection.map(MosaicMultiLineStringESRI.createPolyline(_, dontClose = true))
-
         val polygon = new Polygon()
+        shellCollection.zip(holesCollection).foreach { case (boundary, holes) =>
+            val boundaryPath = MosaicMultiLineStringESRI.createPolyline(Array(boundary), dontClose = true)
+            val holesPath = MosaicMultiLineStringESRI.createPolyline(holes, dontClose = true)
 
-        for (i <- 0 until boundariesPath.getPathCount) {
-            val tmpPolygon = new Polygon()
-            tmpPolygon.addPath(boundariesPath, i, true)
-            if (tmpPolygon.calculateArea2D() < 0) {
-                polygon.addPath(boundariesPath, i, false)
-            } else {
-                polygon.addPath(boundariesPath, i, true)
+            val tmpBoundary = new Polygon()
+            tmpBoundary.addPath(boundaryPath, 0, true)
+            polygon.addPath(boundaryPath, 0, tmpBoundary.calculateArea2D() >= 0)
+
+            // Holes need to be added to path right after corresponding external boundary, otherwise they'll
+            // be picked up incorrectly by teh OGCPolygon constructor
+            for (j <- 0 until holesPath.getPathCount) {
+                val tmpHole = new Polygon()
+                tmpHole.addPath(holesPath, j, true)
+                polygon.addPath(holesPath, j, tmpHole.calculateArea2D() < 0)
             }
         }
-        holesPathsCollection.foreach(holesPath =>
-            for (i <- 0 until holesPath.getPathCount) {
-                val tmpPolygon = new Polygon()
-                tmpPolygon.addPath(holesPath, i, true)
-                if (tmpPolygon.calculateArea2D() < 0) {
-                    polygon.addPath(holesPath, i, true)
-                } else {
-                    polygon.addPath(holesPath, i, false)
-                }
-            }
-        )
-
-        polygon
+        polygon    
     }
 
     def apply(multiPolygon: OGCGeometry): MosaicMultiPolygonESRI = new MosaicMultiPolygonESRI(multiPolygon.asInstanceOf[OGCMultiPolygon])

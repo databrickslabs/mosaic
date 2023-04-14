@@ -9,8 +9,8 @@ case class GridConf(
                      rootCellSizeX: Int,
                      rootCellSizeY: Int
                    ) {
-  val spanX = boundXMax - boundXMin
-  val spanY = boundYMax - boundYMin
+  private val spanX = boundXMax - boundXMin
+  private val spanY = boundYMax - boundYMin
 
   val resBits = 8 // We keep 8 Most Significant Bits for resolution
   val idBits = 56 // The rest can be used for the cell ID

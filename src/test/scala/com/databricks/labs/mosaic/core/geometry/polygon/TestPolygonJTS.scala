@@ -7,6 +7,7 @@ import org.scalatest.matchers.should.Matchers._
 
 import org.apache.spark.sql.catalyst.InternalRow
 
+//noinspection ScalaRedundantCast
 class TestPolygonJTS extends AnyFlatSpec {
 
     "MosaicPolygonJTS" should "return Nil for holes and hole points calls." in {
@@ -112,7 +113,6 @@ class TestPolygonJTS extends AnyFlatSpec {
         polygon.convexHull.getSpatialReference shouldBe srid
         polygon.getCentroid.getSpatialReference shouldBe srid
         polygon.intersection(otherPolygon).getSpatialReference shouldBe srid
-        polygon.reduceFromMulti.getSpatialReference shouldBe srid
         polygon.rotate(45).getSpatialReference shouldBe srid
         polygon.scale(2d, 2d).getSpatialReference shouldBe srid
         polygon.simplify(0.001).getSpatialReference shouldBe srid

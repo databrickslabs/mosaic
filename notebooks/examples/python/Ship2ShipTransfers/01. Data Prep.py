@@ -89,7 +89,8 @@ display(AIS_df)
 # MAGIC %sh
 # MAGIC # we download data to dbfs:// mountpoint (/dbfs)
 # MAGIC cd /dbfs/tmp/ship2ship/
-# MAGIC wget -np -r -nH -L -q --cut-dirs=7 -O harbours.geojson "https://geo.dot.gov/mapping/rest/services/NTAD/Ports_Major/MapServer/0/query?outFields=*&where=1%3D1&f=geojson"
+# MAGIC # wget -np -r -nH -L -q --cut-dirs=7 -O harbours.geojson "https://geo.dot.gov/mapping/rest/services/NTAD/Ports_Major/MapServer/0/query?outFields=*&where=1%3D1&f=geojson"
+# MAGIC wget -np -r -nH -L -q --cut-dirs=7 -O harbours.geojson "https://geo.dot.gov/mapping/rest/services/NTAD/Strategic_Ports/MapServer/0/query?outFields=*&where=1%3D1&f=geojson"
 
 # COMMAND ----------
 

@@ -16,15 +16,29 @@
 
 -- COMMAND ----------
 
--- MAGIC %scala
+-- MAGIC %python
+-- MAGIC # import pyspark.sql.functions as f
+-- MAGIC # import mosaic as mos
+-- MAGIC # from sedona.register.geo_registrator import SedonaRegistrator
 -- MAGIC 
+-- MAGIC # mos.enable_mosaic(spark, dbutils)       # Enable Mosaic
+-- MAGIC # SedonaRegistrator.registerAll(spark)    # Register Sedona SQL functions
+
+-- COMMAND ----------
+
+-- MAGIC %scala 
 -- MAGIC // Register Sedona in the 'default' database 
 -- MAGIC import org.apache.sedona.sql.utils.SedonaSQLRegistrator
 -- MAGIC SedonaSQLRegistrator.registerAll(spark)
 -- MAGIC 
--- MAGIC // Register Mosaic in a separate 'mosaic' database
+-- MAGIC // Import Mosaic functions
 -- MAGIC import com.databricks.labs.mosaic.functions.MosaicContext
--- MAGIC MosaicContext.context.register(spark, Some("mosaic"))
+-- MAGIC import com.databricks.labs.mosaic.H3
+-- MAGIC import com.databricks.labs.mosaic.ESRI
+-- MAGIC 
+-- MAGIC val mosaicContext = MosaicContext.build(H3, ESRI)
+-- MAGIC import mosaicContext.functions._
+-- MAGIC import org.apache.spark.sql.functions._
 
 -- COMMAND ----------
 

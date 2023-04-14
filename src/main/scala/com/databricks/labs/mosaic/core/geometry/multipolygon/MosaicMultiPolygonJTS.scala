@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, InternalCoord, InternalGeometry}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOLYGON, POLYGON}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
