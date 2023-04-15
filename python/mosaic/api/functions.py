@@ -61,8 +61,9 @@ __all__ = [
     "grid_polyfill",
     "grid_tessellate",
     "grid_tessellateexplode",
-
     "grid_cellarea",
+    "grid_cell_intersection",
+    "grid_cell_union",
     "grid_cellkring",
     "grid_cellkloop",
     "grid_cellkringexplode",
@@ -1131,6 +1132,50 @@ def grid_tessellateexplode(
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
         pyspark_to_java_column(keep_core_geometries),
+    )
+
+def grid_cell_intersection(
+        left_chip: ColumnOrName, right_chip: ColumnOrName
+) -> Column:
+    """
+    Returns the chip representing the intersection of two chips based on the same grid cell.
+
+    Parameters
+    ----------
+    left_chip : Column (ChipType(LongType))
+    right_chip : Column (ChipType(LongType))
+
+    Returns
+    -------
+    Column (ChipType(LongType))
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_cell_intersection",
+        pyspark_to_java_column(left_chip),
+        pyspark_to_java_column(right_chip),
+    )
+
+def grid_cell_union(
+        left_chip: ColumnOrName, right_chip: ColumnOrName
+) -> Column:
+    """
+    Returns the chip representing the union of two chips based on the same grid cell.
+
+    Parameters
+    ----------
+    left_chip : Column (ChipType(LongType))
+    right_chip : Column (ChipType(LongType))
+
+    Returns
+    -------
+    Column (ChipType(LongType))
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_cell_union",
+        pyspark_to_java_column(left_chip),
+        pyspark_to_java_column(right_chip),
     )
 
 

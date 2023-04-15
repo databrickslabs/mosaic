@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.core.types
 import org.apache.spark.sql.types._
 
 /**
-  * Type definition for Chip. Chip is defined as (is_core: boolean, h3: long,
+  * Type definition for Chip. Chip is defined as (is_core: boolean, index_id: long,
   * wkb: binary).
   */
 class ChipType(fields: Array[StructField]) extends StructType(fields) {

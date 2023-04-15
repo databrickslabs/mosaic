@@ -354,6 +354,27 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         )
 
         registry.registerFunction(
+            FunctionIdentifier("grid_cell_intersection", database),
+            CellIntersection.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => CellIntersection(exprs(0), exprs(1), indexSystem, geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("grid_cell_union", database),
+            CellUnion.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => CellUnion(exprs(0), exprs(1), indexSystem, geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("grid_cell_intersection_agg", database),
+            CellIntersectionAgg.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => CellIntersectionAgg(exprs(0), geometryAPI.name, indexSystem)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("grid_cell_union_agg", database),
+            CellUnionAgg.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => CellUnionAgg(exprs(0), geometryAPI.name, indexSystem)
+        )
+
+        registry.registerFunction(
           FunctionIdentifier("grid_boundary", database),
           IndexGeometry.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => IndexGeometry(exprs(0), exprs(1), indexSystem, geometryAPI.name)
@@ -676,6 +697,14 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         /** IndexSystem Specific */
 
         /** IndexSystem and GeometryAPI Specific methods */
+        def grid_cell_intersection(chip1: Column, chip2: Column): Column =
+            ColumnAdapter(CellIntersection(chip1.expr, chip2.expr, indexSystem, geometryAPI.name))
+        def grid_cell_intersection_agg(chip: Column): Column =
+            ColumnAdapter(CellIntersectionAgg(chip.expr, geometryAPI.name, indexSystem).toAggregateExpression(isDistinct = false))
+        def grid_cell_union(chip1: Column, chip2: Column): Column =
+            ColumnAdapter(CellUnion(chip1.expr, chip2.expr, indexSystem, geometryAPI.name))
+        def grid_cell_union_agg(chip: Column): Column =
+            ColumnAdapter(CellUnionAgg(chip.expr, geometryAPI.name, indexSystem).toAggregateExpression(isDistinct = false))
         def grid_distance(cell1: Column, cell2: Column): Column =
             ColumnAdapter(GridDistance(cell1.expr, cell2.expr, indexSystem, geometryAPI.name))
         def grid_tessellateexplode(geom: Column, resolution: Column): Column = grid_tessellateexplode(geom, resolution, lit(true))
