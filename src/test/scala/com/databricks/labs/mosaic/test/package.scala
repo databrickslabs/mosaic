@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
@@ -195,7 +196,7 @@ package object test {
                           st_transform(col("geometry"), lit(27700))
                         )
                         .drop("greenwich")
-                case _             => df
+                case _              => df
             }
         }
 
@@ -282,7 +283,7 @@ package object test {
             val rows = indexSystem match {
                 case H3IndexSystem  => wkt_rows_boroughs_epsg4326.map { x => Row(x: _*) }
                 case BNGIndexSystem => wkt_rows_boroughs_epsg27700.map { x => Row(x: _*) }
-                case _ => wkt_rows_boroughs_epsg4326.map { x => Row(x: _*) }
+                case _              => wkt_rows_boroughs_epsg4326.map { x => Row(x: _*) }
             }
             val rdd = spark.sparkContext.makeRDD(rows)
             val schema = StructType(
@@ -384,7 +385,10 @@ package object test {
 
         override def parse(id: String): Long = ???
 
+        override def indexToCenter(index: Long): Coordinates = ???
+        override def indexToBoundary(index: Long): Seq[Coordinates] = ???
         override def distance(cellId: Long, cellId2: Long): Long = ???
+
     }
 
 }

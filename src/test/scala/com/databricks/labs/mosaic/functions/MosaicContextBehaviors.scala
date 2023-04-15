@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.functions
 
 import com.databricks.labs.mosaic.{H3, _}
 import com.databricks.labs.mosaic.core.index._
-import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import com.databricks.labs.mosaic.test._
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder

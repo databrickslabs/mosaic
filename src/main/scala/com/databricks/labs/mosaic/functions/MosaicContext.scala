@@ -174,6 +174,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_X](expressionConfig)
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
 
+        mosaicRegistry.registerExpression[ST_Haversine](expressionConfig)
+
         registry.registerFunction(
           FunctionIdentifier("st_geomfromwkt", database),
           ConvertTo.registryExpressionInfo(database, "st_geomfromwkt"),
@@ -388,6 +390,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
           (exprs: Seq[Expression]) => CellKRingExplode(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
+          FunctionIdentifier("grid_cellarea", database),
+          CellArea.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => CellArea(exprs(0), indexSystem, geometryAPI.name)
+        )
+        registry.registerFunction(
           FunctionIdentifier("grid_cellkloop", database),
           CellKLoop.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => CellKLoop(exprs(0), exprs(1), indexSystem, geometryAPI.name)
@@ -507,6 +514,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, expressionConfig))
         def st_numpoints(geom: Column): Column = ColumnAdapter(ST_NumPoints(geom.expr, expressionConfig))
         def st_perimeter(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, expressionConfig))
+
+        def st_haversine(lat1: Column, lon1: Column, lat2: Column, lon2: Column): Column =
+            ColumnAdapter(ST_Haversine(lat1.expr, lon1.expr, lat2.expr, lon2.expr))
+
         def st_rotate(geom1: Column, td: Column): Column = ColumnAdapter(ST_Rotate(geom1.expr, td.expr, expressionConfig))
         def st_scale(geom1: Column, xd: Column, yd: Column): Column =
             ColumnAdapter(ST_Scale(geom1.expr, xd.expr, yd.expr, expressionConfig))
@@ -753,6 +764,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(IndexGeometry(indexID.expr, format.expr, indexSystem, geometryAPI.name))
         def grid_boundary(indexID: Column, format: String): Column =
             ColumnAdapter(IndexGeometry(indexID.expr, lit(format).expr, indexSystem, geometryAPI.name))
+        def grid_cellarea(cellId: Column): Column = ColumnAdapter(CellArea(cellId.expr, indexSystem, geometryAPI.name))
         def grid_cellkring(cellId: Column, k: Column): Column = ColumnAdapter(CellKRing(cellId.expr, k.expr, indexSystem, geometryAPI.name))
         def grid_cellkring(cellId: Column, k: Int): Column =
             ColumnAdapter(CellKRing(cellId.expr, lit(k).expr, indexSystem, geometryAPI.name))
