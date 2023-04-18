@@ -826,10 +826,10 @@ object MosaicContext extends Logging {
         if (!isML && !isPhoton) {
             // Print out the warnings both to the log and to the console
             logWarning("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
-            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.5.0+.")
+            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.4.0+.")
             logWarning("Please upgrade to Databricks Runtime ML or Photon-enabled Runtime.")
             println("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
-            println("DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.5.0+.")
+            println("DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.4.0+.")
             println("Please upgrade to Databricks Runtime ML or Photon-enabled Runtime.")
             false
         } else {
