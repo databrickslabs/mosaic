@@ -470,6 +470,67 @@ st_distance
 
 .. note:: Results of this function are always expressed in the original units of the input geometries.
 
+st_haversine
+***********
+
+.. function:: st_haversine(lat1, lng1, lat2, lng2)
+
+    Compute the haversine distance between lat1/lng1 and lat2/lng2.
+
+    :param lat1: DoubleType
+    :type lat1: Column
+    :param lng1: DoubleType
+    :type lng1: Column
+    :param lat2: DoubleType
+    :type lat2: Column
+    :param lng2: DoubleType
+    :type lng2: Column
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'lat1': 0.0, 'lng1': 90.0, 'lat2': 0.0, 'lng2': 0.0}])
+    >>> df.select(st_distance('lat1', 'lng1', 'lat2', 'lng2')).show()
+    +------------------------------------+
+    |st_haversine(lat1, lng1, lat2, lng2)|
+    +------------------------------------+
+    |                   10007.55722101796|
+    +------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((0.0, 90.0, 0.0, 0.0)).toDF("lat1", "lng1", "lat2", "lng2")
+    >>> df.select(st_haversine(col("lat1"), col("lng1"), col("lat2"), col("lng2"))).show()
+    +------------------------------------+
+    |st_haversine(lat1, lng1, lat2, lng2)|
+    +------------------------------------+
+    |                   10007.55722101796|
+    +------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_haversine(0.0, 90.0, 0.0, 0.0)
+    +------------------------------------+
+    |st_haversine(lat1, lng1, lat2, lng2)|
+    +------------------------------------+
+    |                   10007.55722101796|
+    +------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lat1 = c(0.0), lng1 = c(90.0), lat2 = c(0.0), lng2 = c(0.0)))
+    >>> showDF(select(df, st_haversine(column("lat1"), column("lng1"), column("lat2"), column("lng2"))))
+    +------------------------------------+
+    |st_haversine(lat1, lng1, lat2, lng2)|
+    +------------------------------------+
+    |                   10007.55722101796|
+    +------------------------------------+
+
+.. note:: Results of this function are always expressed in km^2, while the input lat/lng pairs are expected to be in degrees.
+
 
 st_dump
 *******

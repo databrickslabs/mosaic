@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, QueryTest, SparkSession}
 import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
 import org.apache.spark.sql.catalyst.plans.PlanTest
 import org.apache.spark.sql.functions.col
@@ -19,11 +19,12 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
 
     private val geometryApis = Seq(ESRI, JTS)
 
-    private val indexSystems = Seq(
-      H3IndexSystem,
-      BNGIndexSystem,
-      new CustomIndexSystem(GridConf(-180, 180, -90, 90, 2, 360, 180))
-    )
+    private val indexSystems =
+        Seq(
+          H3IndexSystem,
+          BNGIndexSystem,
+          new CustomIndexSystem(GridConf(-180, 180, -90, 90, 2, 360, 180))
+        )
 
     def checkGeometryTopo(
         mc: MosaicContext,

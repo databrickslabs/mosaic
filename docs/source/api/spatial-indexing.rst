@@ -380,8 +380,6 @@ grid_boundary
     |          "POLYGON (( ..."|
     +--------------------------+
 
-
-
 grid_tessellate
 ***************
 
@@ -626,6 +624,62 @@ grid_tessellateexplode
    </div>
 
 
+grid_cellarea
+*************
+
+.. function:: grid_cellarea(cellid)
+
+    Returns the area of a given cell in km^2.
+
+    :param cellid: Grid cell ID
+    :type cellid: Column: Long
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    >>> df.withColumn(grid_cellarea('grid_cellid').alias("area")).show()
+    +------------------------------------+
+    |         grid_cellid|           area|
+    +--------------------+---------------+
+    |  613177664827555839|     0.78595419|
+    +--------------------+---------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((613177664827555839)).toDF("grid_cellid")
+    >>> df.select(grid_cellarea('grid_cellid').alias("area")).show()
+    +------------------------------------+
+    |         grid_cellid|           area|
+    +--------------------+---------------+
+    |  613177664827555839|     0.78595419|
+    +--------------------+---------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_cellarea(613177664827555839)
+    +------------------------------------+
+    |         grid_cellid|           area|
+    +--------------------+---------------+
+    |  613177664827555839|     0.78595419|
+    +--------------------+---------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    >>> showDF(select(df, grid_cellarea(column("grid_cellid"))))
+    +------------------------------------+
+    |         grid_cellid|           area|
+    +--------------------+---------------+
+    |  613177664827555839|     0.78595419|
+    +--------------------+---------------+
+
+
+
+
 grid_cellkring
 **************
 
@@ -797,6 +851,116 @@ grid_cellkringexplode
 .. raw:: html
 
    </div>
+
+grid_cell_intersection
+**************
+
+.. function:: grid_cell_intersection(left_chip, right_chip)
+
+    Returns the chip representing the intersection of two chips based on the same grid cell
+
+    :param left_chip: Chip
+    :type left_chip: Column: ChipType(LongType)
+    :param left_chip: Chip
+    :type left_chip: Column: ChipType(LongType)
+    :rtype: Column: ChipType(LongType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{"chip": {"is_core": False, "index_id": 590418571381702655, "wkb": ...}})])
+    >>> df.select(grid_cell_intersection("chip", "chip").alias("intersection")).show()
+    ---------------------------------------------------------+
+    |                                           intersection |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((...)).toDF("chip")
+    >>> df.select(grid_cell_intersection("chip", "chip").alias("intersection")).show()
+    ---------------------------------------------------------+
+    |                                           intersection |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_cell_intersection({"is_core": False, "index_id": 590418571381702655, "wkb": ...})
+    ---------------------------------------------------------+
+    |                                           intersection |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(...))
+    >>> showDF(select(df, grid_cell_intersection(column("chip"))))
+    ---------------------------------------------------------+
+    |                                           intersection |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+grid_cell_union
+**************
+
+.. function:: grid_cell_union(left_chip, right_chip)
+
+    Returns the chip representing the union of two chips based on the same grid cell
+
+    :param left_chip: Chip
+    :type left_chip: Column: ChipType(LongType)
+    :param left_chip: Chip
+    :type left_chip: Column: ChipType(LongType)
+    :rtype: Column: ChipType(LongType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{"chip": {"is_core": False, "index_id": 590418571381702655, "wkb": ...}})])
+    >>> df.select(grid_cell_union("chip", "chip").alias("union")).show()
+    ---------------------------------------------------------+
+    |                                           union        |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((...)).toDF("chip")
+    >>> df.select(grid_cell_union("chip", "chip").alias("union")).show()
+    ---------------------------------------------------------+
+    |                                           union        |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT grid_cell_union({"is_core": False, "index_id": 590418571381702655, "wkb": ...})
+    ---------------------------------------------------------+
+    |                                           union        |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(...))
+    >>> showDF(select(df, grid_cell_union(column("chip"))))
+    ---------------------------------------------------------+
+    |                                           union        |
+    +--------------------------------------------------------+
+    |{is_core: false, index_id: 590418571381702655, wkb: ...}|
+    +--------------------------------------------------------+
 
 
 grid_cellkloop

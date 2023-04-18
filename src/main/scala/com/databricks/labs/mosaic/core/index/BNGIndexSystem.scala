@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -510,6 +511,22 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
     }
 
     override def getResolutionStr(resolution: Int): String = resolutionMap.find(_._2 == resolution).map(_._1).getOrElse("")
+
+    override def area(index: Long): Double = {
+        val digits = indexDigits(index)
+        val resolution = getResolution(digits)
+        val edgeSize = getEdgeSize(resolution).asInstanceOf[Double]
+        val area = math.pow((edgeSize / 1000), 2)
+        area
+    }
+
+    override def indexToCenter(index: Long): Coordinates = {
+        throw new NotImplementedError
+    }
+
+    override def indexToBoundary(index: Long): Seq[Coordinates] = {
+        throw new NotImplementedError
+    }
 
     override def distance(cellId: Long, cellId2: Long): Long = {
         val digits1 = indexDigits(cellId)

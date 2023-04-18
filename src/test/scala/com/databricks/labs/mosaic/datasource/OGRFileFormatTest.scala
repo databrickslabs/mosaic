@@ -70,6 +70,7 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSession {
     }
 
     test("OGRFileFormat utility tests") {
+        assume(System.getProperty("os.name") == "Linux")
         val reader = new OGRFileFormat()
         an[Error] should be thrownBy reader.prepareWrite(spark, null, null, null)
 

@@ -31,6 +31,7 @@ __all__ = [
     "st_numpoints",
     "st_isvalid",
     "st_distance",
+    "st_haversine",
     "st_intersection",
     "st_difference",
     "st_simplify",
@@ -60,7 +61,9 @@ __all__ = [
     "grid_polyfill",
     "grid_tessellate",
     "grid_tessellateexplode",
-
+    "grid_cellarea",
+    "grid_cell_intersection",
+    "grid_cell_union",
     "grid_cellkring",
     "grid_cellkloop",
     "grid_cellkringexplode",
@@ -491,6 +494,30 @@ def st_distance(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
         "st_distance",
         pyspark_to_java_column(geom1),
         pyspark_to_java_column(geom2),
+    )
+
+def st_haversine(lat1: ColumnOrName, lng1: ColumnOrName, lat2: ColumnOrName, lng2: ColumnOrName) -> Column:
+    """
+    Compute the haversine distance in kilometers between two latitude/longitude pairs.
+
+    Parameters
+    ----------
+    lat1 : Column
+    lng1 : Column
+    lat2 : Column
+    lng2 : Column
+
+    Returns
+    -------
+    Column (DoubleType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_haversine",
+        pyspark_to_java_column(lat1),
+        pyspark_to_java_column(lng1),
+        pyspark_to_java_column(lat2),
+        pyspark_to_java_column(lng2),
     )
 
 
@@ -928,6 +955,25 @@ def grid_boundaryaswkb(index_id: ColumnOrName) -> Column:
         "grid_boundaryaswkb", pyspark_to_java_column(index_id)
     )
 
+def grid_cellarea(index_id: ColumnOrName) -> Column:
+    """
+    Returns the area of the grid cell in km^2.
+
+    Parameters
+    ----------
+    index_id : Column
+        The grid cell ID
+
+    Returns
+    -------
+    Column
+        The area of the grid cell in km^2
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_cellarea",
+        pyspark_to_java_column(index_id)
+    )
+
 
 def grid_boundary(index_id: ColumnOrName, format_name: ColumnOrName) -> Column:
     """
@@ -1086,6 +1132,50 @@ def grid_tessellateexplode(
         pyspark_to_java_column(geom),
         pyspark_to_java_column(resolution),
         pyspark_to_java_column(keep_core_geometries),
+    )
+
+def grid_cell_intersection(
+        left_chip: ColumnOrName, right_chip: ColumnOrName
+) -> Column:
+    """
+    Returns the chip representing the intersection of two chips based on the same grid cell.
+
+    Parameters
+    ----------
+    left_chip : Column (ChipType(LongType))
+    right_chip : Column (ChipType(LongType))
+
+    Returns
+    -------
+    Column (ChipType(LongType))
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_cell_intersection",
+        pyspark_to_java_column(left_chip),
+        pyspark_to_java_column(right_chip),
+    )
+
+def grid_cell_union(
+        left_chip: ColumnOrName, right_chip: ColumnOrName
+) -> Column:
+    """
+    Returns the chip representing the union of two chips based on the same grid cell.
+
+    Parameters
+    ----------
+    left_chip : Column (ChipType(LongType))
+    right_chip : Column (ChipType(LongType))
+
+    Returns
+    -------
+    Column (ChipType(LongType))
+
+    """
+    return config.mosaic_context.invoke_function(
+        "grid_cell_union",
+        pyspark_to_java_column(left_chip),
+        pyspark_to_java_column(right_chip),
     )
 
 
