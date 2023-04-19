@@ -32,6 +32,10 @@ object Utils {
     def getCleanPath(path: String, useZipPath: Boolean): String = {
         val cleanPath = path.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
         if (useZipPath && cleanPath.endsWith(".zip")) {
+            // It is really important that the resulting path is /vsizip// and not /vsizip/
+            // /vsizip// is for absolute paths /viszip/ is relative to the current working directory
+            // /vsizip/ wont work on a cluster
+            // see: https://gdal.org/user/virtual_file_systems.html#vsizip-zip-archives
             s"/vsizip/$cleanPath"
         } else {
             cleanPath
