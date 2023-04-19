@@ -122,10 +122,12 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSession {
     }
 
     test("OGRFileFormat should handle NULL geometries: ISSUE 343") {
-        val feature = Feature
+        assume(System.getProperty("os.name") == "Linux")
+        OGRFileFormat.enableOGRDrivers(force = true)
+
         val shapefile = "/binary/shapefile/"
         val filePath = getClass.getResource(shapefile).getPath
-        val ds = ogr.Open(filePath)
+        val ds = ogr.Open(filePath + "map.shp")
 
         val feature1 = ds.GetLayer(0).GetNextFeature()
         val testFeature = feature1
