@@ -84,6 +84,8 @@ class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable
 //noinspection VarCouldBeVal
 object OGRFileFormat extends Serializable {
 
+    val OGREmptyGeometry: Geometry = ogr.CreateGeometryFromWkt("POINT EMPTY")
+
     /**
       * Get the layer from a data source. The method prioritizes the layer name
       * over the layer number.
@@ -343,11 +345,19 @@ object OGRFileFormat extends Serializable {
         val geoms = (0 until feature.GetGeomFieldCount())
             .map(feature.GetGeomFieldRef)
             .flatMap(f => {
-                f.FlattenTo2D()
-                Seq(
-                  if (asWKB) f.ExportToWkb else f.ExportToWkt,
-                  Try(f.GetSpatialReference.GetAuthorityCode(null)).getOrElse("0")
-                )
+                if (Option(f).isDefined) {
+                    f.FlattenTo2D()
+                    Seq(
+                      if (asWKB) f.ExportToWkb else f.ExportToWkt,
+                      Try(f.GetSpatialReference.GetAuthorityCode(null)).getOrElse("0")
+                    )
+                } else {
+                    Seq(
+                      if (asWKB) OGREmptyGeometry.ExportToWkb else OGREmptyGeometry.ExportToWkt,
+                      "0"
+                    )
+                }
+
             })
         val values = fields ++ geoms
         values.toArray

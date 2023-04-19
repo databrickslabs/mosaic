@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.test.SharedSparkSession
 import org.apache.spark.sql.types._
-import org.gdal.ogr.ogr
+import org.gdal.ogr.{ogr, Feature}
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
@@ -119,6 +119,23 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSession {
           Map("driverName" -> "", "layerNumber" -> "1", "chunkSize" -> "200", "vsizip" -> "false", "layerName" -> "", "asWKB" -> "false"),
           null
         ).position should be(false)
+    }
+
+    test("OGRFileFormat should handle NULL geometries: ISSUE 343") {
+        assume(System.getProperty("os.name") == "Linux")
+        OGRFileFormat.enableOGRDrivers(force = true)
+
+        val shapefile = "/binary/shapefile/"
+        val filePath = getClass.getResource(shapefile).getPath
+        val ds = ogr.Open(filePath + "map.shp")
+
+        val feature1 = ds.GetLayer(0).GetNextFeature()
+        val testFeature = feature1
+        testFeature.SetGeomField(0, null)
+        val schema = OGRFileFormat.inferSchemaImpl("", filePath, Map("driverName" -> "ESRI Shapefile", "asWKB" -> "true")).get
+
+        noException should be thrownBy
+            OGRFileFormat.getFeatureFields(testFeature, schema, asWKB = true)
     }
 
 }
