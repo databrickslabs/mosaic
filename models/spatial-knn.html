@@ -534,40 +534,40 @@ The transformer is called SpatialKNN and it is used as follows:</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spark</span><span class="o">.</span><span class="n">sparkContext</span><span class="o">.</span><span class="n">setCheckpointDir</span><span class="p">(</span><span class="s2">"dbfs:/tmp/mosaic/username/checkpoints"</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">building_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"building"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">trip_df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"trip"</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mosaic.models</span> <span class="kn">import</span> <span class="n">SpatialKNN</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span> <span class="o">=</span> <span class="n">SpatialKNN</span><span class="p">()</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setUseTableCheckpoint</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCheckpointTablePrefix</span><span class="p">(</span><span class="s2">"checkpoint_table_knn"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cleanupCheckpoint</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># CRS Specific</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># - e.g. 4326 units are decimal degrees</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setDistanceThreshold</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Grid System Specific</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># - e.g. H3 resolutions 0-15</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setIndexResolution</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setKNeighbours</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setApproximate</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setMaxIterations</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setEarlyStopIterations</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setLandmarksFeatureCol</span><span class="p">(</span><span class="s2">"geom_wkt"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setLandmarksRowID</span><span class="p">(</span><span class="s2">"left_id"</span><span class="p">)</span> <span class="c1"># id will be generated</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCandidatesDf</span><span class="p">(</span><span class="n">trip_df</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">"pickup_point is not null"</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCandidatesFeatureCol</span><span class="p">(</span><span class="s2">"pickup_point"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">setCandidatesRowID</span><span class="p">(</span><span class="s2">"right_id"</span><span class="p">)</span> <span class="c1"># id will be generated</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">neighbours</span> <span class="o">=</span> <span class="n">knn</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">building_df</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">neighbours</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
 <span class="go">+-------+--------+-----------+--------------+--------------------------+---------+----------------+</span>
@@ -668,17 +668,17 @@ transformer after the convergence.</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mosaic.models</span> <span class="kn">import</span> <span class="n">SpatialKNN</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mlflow</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mlflow</span><span class="o">.</span><span class="n">autolog</span><span class="p">(</span><span class="n">disable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">mlflow</span><span class="o">.</span><span class="n">start_run</span><span class="p">():</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">knn</span> <span class="o">=</span> <span class="n">SpatialKNN</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="o">...</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">result_df</span> <span class="o">=</span> <span class="n">knn</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">mlflow</span><span class="o">.</span><span class="n">log_params</span><span class="p">(</span><span class="n">knn</span><span class="o">.</span><span class="n">getParams</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">mlflow</span><span class="o">.</span><span class="n">log_metrics</span><span class="p">(</span><span class="n">knn</span><span class="o">.</span><span class="n">getMetrics</span><span class="p">())</span>
 </pre></div>
@@ -708,13 +708,13 @@ These datasets are not serialised with the model, and neither are the model outp
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-2-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-2-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-2-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-2-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spark</span><span class="o">.</span><span class="n">sparkContext</span><span class="o">.</span><span class="n">setCheckpointDir</span><span class="p">(</span><span class="s2">"dbfs:/tmp/mosaic/username/checkpoints"</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mosaic.models</span> <span class="kn">import</span> <span class="n">SpatialKNN</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span> <span class="o">=</span> <span class="n">SpatialKNN</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">knn</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"dbfs:/tmp/mosaic/username/knn_model"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">loaded_knn</span> <span class="o">=</span> <span class="n">SpatialKNN</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">"dbfs:/tmp/mosaic/username/knn_model"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">loaded_knn</span><span class="o">.</span><span class="n">getParams</span><span class="p">()</span>
