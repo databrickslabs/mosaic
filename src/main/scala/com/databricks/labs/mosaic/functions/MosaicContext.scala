@@ -28,7 +28,10 @@ import scala.reflect.runtime.universe
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI) extends Serializable with Logging {
 
     // Make spark aware of the mosaic setup
+    // Check the DBR type and raise appropriate warnings
     private val spark = SparkSession.builder().getOrCreate()
+    MosaicContext.checkDBR(spark)
+
     spark.conf.set(MOSAIC_INDEX_SYSTEM, indexSystem.name)
     spark.conf.set(MOSAIC_GEOMETRY_API, geometryAPI.name)
     spark.conf.set(MOSAIC_RASTER_API, rasterAPI.name)
@@ -895,7 +898,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 // scalastyle:on object.name
 // scalastyle:on line.size.limit
 
-object MosaicContext {
+object MosaicContext extends Logging {
 
     private var instance: Option[MosaicContext] = None
 
@@ -920,5 +923,24 @@ object MosaicContext {
         }
 
     def reset(): Unit = instance = None
+
+    //noinspection ScalaStyle
+    def checkDBR(spark: SparkSession): Boolean = {
+        val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "")
+        val isML = sparkVersion.contains("-ml-")
+        val isPhoton = spark.conf.get("spark.databricks.photon.enabled", "false").toBoolean
+        if (!isML && !isPhoton) {
+            // Print out the warnings both to the log and to the console
+            logWarning("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
+            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.4.0+.")
+            logWarning("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).")
+            println("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
+            println("DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.4.0+.")
+            println("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).")
+            false
+        } else {
+            true
+        }
+    }
 
 }
