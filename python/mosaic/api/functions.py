@@ -18,6 +18,7 @@ __all__ = [
     "st_convexhull",
     "st_buffer",
     "st_bufferloop",
+    "st_dimension",
     "st_dump",
     "st_envelope",
     "st_srid",
@@ -209,6 +210,25 @@ def st_bufferloop(geom: ColumnOrName, inner_radius: ColumnOrName, outer_radius: 
         pyspark_to_java_column(geom),
         pyspark_to_java_column(inner_radius),
         pyspark_to_java_column(outer_radius)
+    )
+
+
+def st_dimension(geom: ColumnOrName) -> Column:
+    """
+    Compute the dimension of a geometry.
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+
+    Returns
+    -------
+    Column (IntegerType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_dimension", pyspark_to_java_column(geom)
     )
 
 
