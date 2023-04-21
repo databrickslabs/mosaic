@@ -30,6 +30,8 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
             case GEOMETRYCOLLECTION => geom.asInstanceOf[OGCGeometryCollection].numGeometries()
         }
 
+    override def getDimension: Int = geom.dimension
+    
     def compactGeometry: MosaicGeometryESRI = {
         val geometries = GeometryTypeEnum.fromString(geom.geometryType()) match {
             case GEOMETRYCOLLECTION =>

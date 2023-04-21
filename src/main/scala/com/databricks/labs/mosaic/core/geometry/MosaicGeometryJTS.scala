@@ -23,6 +23,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def getNumGeometries: Int = geom.getNumGeometries
 
+    override def getDimension: Int = geom.getDimension
+
     def compactGeometry: MosaicGeometryJTS = {
         val geometries = for (i <- 0 until getNumGeometries) yield geom.getGeometryN(i)
         val result = MosaicGeometryJTS.compactCollection(geometries, getSpatialReference)
