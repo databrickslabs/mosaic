@@ -56,7 +56,7 @@ The output of the reader is a DataFrame with the following columns:
     .. code-tab:: py
 
         >>> df = spark.read.format("gdal")\
-            .option("driverName", "TIF")\
+            .option("driverName", "GTiff")\
             .load("dbfs:/path/to/raster.tif")
         >>> df.show()
         +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
@@ -68,7 +68,7 @@ The output of the reader is a DataFrame with the following columns:
     .. code-tab:: scala
 
         >>> val df = spark.read.format("gdal")
-            .option("driverName", "TIF")
+            .option("driverName", "GTiff")
             .load("dbfs:/path/to/raster.tif")
         >>> df.show()
         +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
@@ -77,6 +77,11 @@ The output of the reader is a DataFrame with the following columns:
         |dbfs:/path/to/ra...|  100|  100|        1|{AREA_OR_POINT=Po...|                null| 4326|+proj=longlat +da...|
         +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
 
+.. warning::
+    Issue 350: https://github.com/databrickslabs/mosaic/issues/350
+    The raster reader 'driverName' option has to match the names provided in the above list.
+    For example, if you want to read a GeoTiff file, you have to use the following option:
+    .option("driverName", "GTiff") instead of .option("driverName", "tif").
 
 
 mos.read().format("raster_to_grid")
@@ -100,7 +105,6 @@ The reader supports the following options:
     * subdatasetName - if the raster has subdatasets, select a specific subdataset by name (StringType)
     * kRingInterpolate - if the raster pixels are larger than the grid cells, use k_ring interpolation with n = kRingInterpolate (IntegerType)
 
-
 .. function:: mos.read().format("raster_to_grid").load(path)
 
     Loads a GDAL raster file and returns the result as a DataFrame.
@@ -116,7 +120,7 @@ The reader supports the following options:
     .. code-tab:: py
 
         >>> df = mos.read().format("raster_to_grid")\
-            .option("fileExtension", "tif")\
+            .option("fileExtension", "*.tif")\
             .option("resolution", "8")\
             .option("combiner", "mean")\
             .option("retile", "true")\
@@ -136,7 +140,7 @@ The reader supports the following options:
     .. code-tab:: scala
 
         >>> val df = MosaicContext.read.format("raster_to_grid")
-            .option("fileExtension", "tif")
+            .option("fileExtension", "*.tif")
             .option("resolution", "8")
             .option("combiner", "mean")
             .option("retile", "true")
@@ -152,3 +156,8 @@ The reader supports the following options:
         |       1|       3|0.2464000000000000|
         |       1|       4|0.2464000000000000|
         +--------+--------+------------------+
+
+.. warning::
+    Issue 350: https://github.com/databrickslabs/mosaic/issues/350
+    The option 'fileExtension' expects a wild card mask. Please use the following format: '*.tif' or equivalent for other formats.
+    If you use 'tif' without the wildcard the reader wont pick up any files and you will have empty table as a result.
