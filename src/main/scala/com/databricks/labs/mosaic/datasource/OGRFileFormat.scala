@@ -92,7 +92,10 @@ class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable
 //noinspection VarCouldBeVal
 object OGRFileFormat extends Serializable {
 
-    val OGREmptyGeometry: Geometry = ogr.CreateGeometryFromWkt("POINT EMPTY")
+    def OGREmptyGeometry: Geometry = {
+        enableOGRDrivers()
+        ogr.CreateGeometryFromWkt("POINT EMPTY")
+    }
 
     /**
       * Get the layer from a data source. The method prioritizes the layer name
