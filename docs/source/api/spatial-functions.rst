@@ -458,7 +458,7 @@ st_dimension
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")))
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
     >>> showDF(select(df, st_dimension(column("wkt"))))
     +-----------------+
     |st_dimension(wkt)|
