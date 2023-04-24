@@ -149,7 +149,7 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSession {
         import mc.functions._
 
         val issue351 = "/binary/issue351/"
-        val filePath = getClass.getResource(issue351).getPath
+        val filePath = this.getClass.getResource(issue351).getPath
 
         val lad_df = spark.read
             .format("ogr")
