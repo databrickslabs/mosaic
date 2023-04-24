@@ -8,7 +8,7 @@ import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCoercion
-import org.apache.spark.sql.catalyst.util.{fileToString, DateTimeUtils}
+import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.ogr._
@@ -23,7 +23,7 @@ import scala.util.Try
   * "layerNumber". The data source driver name is specified by the option
   * "driverName".
   */
-class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable with Logging {
+class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable {
 
     import com.databricks.labs.mosaic.datasource.OGRFileFormat._
 
@@ -56,15 +56,9 @@ class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable
     ): PartitionedFile => Iterator[InternalRow] = {
 
         val driverName = options.getOrElse("driverName", "")
-        val selectSchema = StructType(
-            requiredSchema.map { field =>
-            dataSchema.find(_.name == field.name).getOrElse {
-                throw new Error(s"Field ${field.name} not found in data schema")
-            }
-        })
         // No column filter at the moment.
         // To improve performance, we can filter columns in the OGR layer using requiredSchema.
-        buildReaderImpl(driverName, dataSchema, selectSchema, options)
+        buildReaderImpl(driverName, dataSchema, requiredSchema, options)
     }
 
     override def prepareWrite(
@@ -77,7 +71,7 @@ class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable
 }
 
 //noinspection VarCouldBeVal
-object OGRFileFormat extends Serializable with Logging {
+object OGRFileFormat extends Serializable {
 
     def OGREmptyGeometry: Geometry = {
         enableOGRDrivers()
@@ -439,8 +433,10 @@ object OGRFileFormat extends Serializable with Logging {
       *
       * @param driverName
       *   the name of the OGR driver
-      * @param schema
-      *   the schema of the file
+      * @param dataSchema
+      *   the full schema of the file
+      * @param requiredSchema
+      *   the schema of the file that is required for the query
       * @param options
       *   the options to use for the reader
       * @return
@@ -455,6 +451,12 @@ object OGRFileFormat extends Serializable with Logging {
         {
             OGRFileFormat.enableOGRDrivers()
 
+            val selectSchema = StructType(requiredSchema.map { field =>
+                dataSchema.find(_.name == field.name).getOrElse {
+                    throw new Error(s"Field ${field.name} not found in data schema")
+                }
+            })
+
             val layerN = options.getOrElse("layerNumber", "0").toInt
             val layerName = options.getOrElse("layerName", "")
             val useZipPath = options.getOrElse("vsizip", "false").toBoolean
@@ -466,7 +468,7 @@ object OGRFileFormat extends Serializable with Logging {
             layer.ResetReading()
             val metadata = layer.GetMetadata_Dict().toMap
 
-            val mask = dataSchema.map(_.name).map(requiredSchema.fieldNames.contains(_)).toArray
+            val mask = dataSchema.map(_.name).map(selectSchema.fieldNames.contains(_)).toArray
 
             var feature: Feature = null
             (0 until layer.GetFeatureCount().toInt)
