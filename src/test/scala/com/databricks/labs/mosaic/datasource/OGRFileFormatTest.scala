@@ -1,10 +1,14 @@
 package com.databricks.labs.mosaic.datasource
 
+import com.databricks.labs.mosaic.{H3, JTS}
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
 import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
+import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
+import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.test.SharedSparkSession
 import org.apache.spark.sql.types._
-import org.gdal.ogr.{ogr, Feature}
+import org.gdal.ogr.ogr
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
@@ -136,6 +140,27 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSession {
 
         noException should be thrownBy
             OGRFileFormat.getFeatureFields(testFeature, schema, asWKB = true)
+    }
+
+    test("OGRFileFormat should handle partial schema: ISSUE 351") {
+        assume(System.getProperty("os.name") == "Linux")
+
+        val mc = MosaicContext.build(H3, JTS, GDAL)
+        import mc.functions._
+
+        val issue351 = "/binary/issue351/"
+        val filePath = getClass.getResource(issue351).getPath
+
+        val lad_df = spark.read
+            .format("ogr")
+            .option("driverName", "GeoJSON")
+            .option("asWKB", "false")
+            .load(filePath)
+            .limit(1)
+            .withColumn("geom", st_setsrid(st_geomfromwkt(col("geom_0")), lit(27700)))
+
+        noException should be thrownBy
+            lad_df.select(st_astext(st_transform(col("geom"), lit(4326)))).show(1, truncate = false)
     }
 
 }
