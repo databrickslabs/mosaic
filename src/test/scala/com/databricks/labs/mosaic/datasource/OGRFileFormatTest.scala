@@ -153,8 +153,8 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSession {
 
         val lad_df = spark.read
             .format("ogr")
-            .option("driverName", "GeoJSON")
             .option("asWKB", "false")
+            .option("vsizip", "true")
             .load(filePath)
             .limit(1)
             .withColumn("geom", st_setsrid(st_geomfromwkt(col("geom_0")), lit(27700)))
