@@ -451,12 +451,6 @@ object OGRFileFormat extends Serializable {
         {
             OGRFileFormat.enableOGRDrivers()
 
-            val selectSchema = StructType(requiredSchema.map { field =>
-                dataSchema.find(_.name == field.name).getOrElse {
-                    throw new Error(s"Field ${field.name} not found in data schema")
-                }
-            })
-
             val layerN = options.getOrElse("layerNumber", "0").toInt
             val layerName = options.getOrElse("layerName", "")
             val useZipPath = options.getOrElse("vsizip", "false").toBoolean
@@ -467,8 +461,7 @@ object OGRFileFormat extends Serializable {
             val layer = dataset.GetLayerByName(resolvedLayerName)
             layer.ResetReading()
             val metadata = layer.GetMetadata_Dict().toMap
-
-            val mask = dataSchema.map(_.name).map(selectSchema.fieldNames.contains(_)).toArray
+            val mask = dataSchema.map(_.name).map(requiredSchema.fieldNames.contains(_)).toArray
 
             var feature: Feature = null
             (0 until layer.GetFeatureCount().toInt)
