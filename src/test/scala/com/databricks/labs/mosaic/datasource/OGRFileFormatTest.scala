@@ -6,13 +6,13 @@ import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.functions.{col, lit}
-import org.apache.spark.sql.test.SharedSparkSession
+import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.apache.spark.sql.types._
 import org.gdal.ogr.ogr
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
-class OGRFileFormatTest extends QueryTest with SharedSparkSession {
+class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
     test("Read open geoDB with OGRFileFormat") {
         assume(System.getProperty("os.name") == "Linux")
