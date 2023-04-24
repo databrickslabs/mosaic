@@ -38,7 +38,12 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister with Ser
     ): PartitionedFile => Iterator[InternalRow] =
         (file: PartitionedFile) => {
             if (checkExtension(file.filePath)) {
-                OGRFileFormat.buildReaderImpl(driverName, dataSchema, options)(file)
+                val selectSchema = StructType(requiredSchema.map { field =>
+                    dataSchema.find(_.name == field.name).getOrElse {
+                        throw new Error(s"Field ${field.name} not found in data schema")
+                    }
+                })
+                OGRFileFormat.buildReaderImpl(driverName, dataSchema, selectSchema, options)(file)
             } else {
                 Seq.empty[InternalRow].iterator
             }

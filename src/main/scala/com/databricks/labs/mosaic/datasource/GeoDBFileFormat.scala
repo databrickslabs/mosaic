@@ -31,7 +31,12 @@ class GeoDBFileFormat extends OGRFileFormat with Serializable {
         options: Map[String, String],
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] = {
-        OGRFileFormat.buildReaderImpl(driverName, dataSchema, options)
+        val selectSchema = StructType(requiredSchema.map { field =>
+            dataSchema.find(_.name == field.name).getOrElse {
+                throw new Error(s"Field ${field.name} not found in data schema")
+            }
+        })
+        OGRFileFormat.buildReaderImpl(driverName, dataSchema, selectSchema, options)
     }
 
 }

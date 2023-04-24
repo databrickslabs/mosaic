@@ -64,7 +64,7 @@ class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable
         })
         // No column filter at the moment.
         // To improve performance, we can filter columns in the OGR layer using requiredSchema.
-        buildReaderImpl(driverName, selectSchema, options)
+        buildReaderImpl(driverName, dataSchema, selectSchema, options)
     }
 
     override def prepareWrite(
