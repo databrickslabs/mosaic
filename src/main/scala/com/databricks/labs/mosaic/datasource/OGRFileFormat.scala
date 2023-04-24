@@ -54,22 +54,11 @@ class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable
         options: Map[String, String],
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] = {
-        val driverName = options.getOrElse("driverName", "")
-        buildReaderImpl(driverName, dataSchema, options)
-    }
 
-    override def buildReaderWithPartitionValues(
-        sparkSession: SparkSession,
-        dataSchema: StructType,
-        partitionSchema: StructType,
-        requiredSchema: StructType,
-        filters: Seq[Filter],
-        options: Map[String, String],
-        hadoopConf: Configuration
-    ): PartitionedFile => Iterator[InternalRow] = {
+        val driverName = options.getOrElse("driverName", "")
         // No column filter at the moment.
         // To improve performance, we can filter columns in the OGR layer using requiredSchema.
-        super.buildReaderWithPartitionValues(sparkSession, dataSchema, partitionSchema, dataSchema, filters, options, hadoopConf)
+        buildReaderImpl(driverName, dataSchema, requiredSchema, options)
     }
 
     override def prepareWrite(
@@ -84,7 +73,10 @@ class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable
 //noinspection VarCouldBeVal
 object OGRFileFormat extends Serializable {
 
-    val OGREmptyGeometry: Geometry = ogr.CreateGeometryFromWkt("POINT EMPTY")
+    def OGREmptyGeometry: Geometry = {
+        enableOGRDrivers()
+        ogr.CreateGeometryFromWkt("POINT EMPTY")
+    }
 
     /**
       * Get the layer from a data source. The method prioritizes the layer name
@@ -441,8 +433,10 @@ object OGRFileFormat extends Serializable {
       *
       * @param driverName
       *   the name of the OGR driver
-      * @param schema
-      *   the schema of the file
+      * @param dataSchema
+      *   the full schema of the file
+      * @param requiredSchema
+      *   the schema of the file that is required for the query
       * @param options
       *   the options to use for the reader
       * @return
@@ -450,7 +444,8 @@ object OGRFileFormat extends Serializable {
       */
     def buildReaderImpl(
         driverName: String,
-        schema: StructType,
+        dataSchema: StructType,
+        requiredSchema: StructType,
         options: Map[String, String]
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
@@ -466,12 +461,16 @@ object OGRFileFormat extends Serializable {
             val layer = dataset.GetLayerByName(resolvedLayerName)
             layer.ResetReading()
             val metadata = layer.GetMetadata_Dict().toMap
+            val mask = dataSchema.map(_.name).map(requiredSchema.fieldNames.contains(_)).toArray
 
             var feature: Feature = null
             (0 until layer.GetFeatureCount().toInt)
                 .foldLeft(Seq.empty[InternalRow])((acc, _) => {
                     feature = layer.GetNextFeature()
-                    val fields = getFeatureFields(feature, schema, asWKB)
+                    val fields = getFeatureFields(feature, dataSchema, asWKB)
+                        .zip(mask)
+                        .filter(_._2)
+                        .map(_._1)
                     val values = fields ++ Seq(metadata)
                     val row = Utils.createRow(values)
                     acc ++ Seq(row)

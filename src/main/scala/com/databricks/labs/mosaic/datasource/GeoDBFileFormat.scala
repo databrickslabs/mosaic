@@ -31,7 +31,7 @@ class GeoDBFileFormat extends OGRFileFormat with Serializable {
         options: Map[String, String],
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] = {
-        OGRFileFormat.buildReaderImpl(driverName, dataSchema, options)
+        OGRFileFormat.buildReaderImpl(driverName, dataSchema, requiredSchema, options)
     }
 
 }
