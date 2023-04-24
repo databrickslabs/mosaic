@@ -16,7 +16,6 @@ import com.databricks.labs.mosaic.expressions.raster._
 import com.databricks.labs.mosaic.expressions.util.TrySql
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Column, SparkSession}
-import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
@@ -28,6 +27,10 @@ import scala.reflect.runtime.universe
 //noinspection DuplicatedCode
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI) extends Serializable with Logging {
 
+    // Make spark aware of the mosaic setup
+    // Check the DBR type and raise appropriate warnings
+    private val spark = SparkSession.builder().getOrCreate()
+
     val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
     MosaicContext.checkDBR(spark)
 
@@ -38,9 +41,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
     val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
     val expressionConfig: MosaicExpressionConfig = MosaicExpressionConfig(spark)
-    // Make spark aware of the mosaic setup
-    // Check the DBR type and raise appropriate warnings
-    private val spark = SparkSession.builder().getOrCreate()
+
 
     def setCellIdDataType(dataType: String): Unit =
         if (dataType == "string") {
