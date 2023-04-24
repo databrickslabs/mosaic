@@ -16,6 +16,7 @@ import com.databricks.labs.mosaic.expressions.raster._
 import com.databricks.labs.mosaic.expressions.util.TrySql
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Column, SparkSession}
+import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
@@ -27,9 +28,7 @@ import scala.reflect.runtime.universe
 //noinspection DuplicatedCode
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI) extends Serializable with Logging {
 
-    // Make spark aware of the mosaic setup
-    // Check the DBR type and raise appropriate warnings
-    private val spark = SparkSession.builder().getOrCreate()
+    val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
     MosaicContext.checkDBR(spark)
 
     spark.conf.set(MOSAIC_INDEX_SYSTEM, indexSystem.name)
@@ -37,9 +36,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
     spark.conf.set(MOSAIC_RASTER_API, rasterAPI.name)
 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
-    val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
     val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
     val expressionConfig: MosaicExpressionConfig = MosaicExpressionConfig(spark)
+    // Make spark aware of the mosaic setup
+    // Check the DBR type and raise appropriate warnings
+    private val spark = SparkSession.builder().getOrCreate()
 
     def setCellIdDataType(dataType: String): Unit =
         if (dataType == "string") {
@@ -143,7 +144,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_Buffer](expressionConfig)
         mosaicRegistry.registerExpression[ST_BufferLoop](expressionConfig)
         mosaicRegistry.registerExpression[ST_Centroid](expressionConfig)
-        mosaicRegistry.registerExpression[ST_Centroid]("st_centroid2D", expressionConfig)
         mosaicRegistry.registerExpression[ST_Contains](expressionConfig)
         mosaicRegistry.registerExpression[ST_ConvexHull](expressionConfig)
         mosaicRegistry.registerExpression[ST_Distance](expressionConfig)
@@ -176,8 +176,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_UpdateSRID](expressionConfig)
         mosaicRegistry.registerExpression[ST_X](expressionConfig)
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
-
         mosaicRegistry.registerExpression[ST_Haversine](expressionConfig)
+
+        registry.registerFunction(
+          FunctionIdentifier("st_centroid2D", database),
+          ST_Centroid.legacyInfo(database, "st_centroid2D"),
+          (exprs: Seq[Expression]) => functions.st_centroid2D(ColumnAdapter(exprs(0))).expr
+        )
 
         registry.registerFunction(
           FunctionIdentifier("st_geomfromwkt", database),
@@ -357,24 +362,24 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         )
 
         registry.registerFunction(
-            FunctionIdentifier("grid_cell_intersection", database),
-            CellIntersection.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => CellIntersection(exprs(0), exprs(1), indexSystem, geometryAPI.name)
+          FunctionIdentifier("grid_cell_intersection", database),
+          CellIntersection.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => CellIntersection(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("grid_cell_union", database),
-            CellUnion.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => CellUnion(exprs(0), exprs(1), indexSystem, geometryAPI.name)
+          FunctionIdentifier("grid_cell_union", database),
+          CellUnion.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => CellUnion(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("grid_cell_intersection_agg", database),
-            CellIntersectionAgg.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => CellIntersectionAgg(exprs(0), geometryAPI.name, indexSystem)
+          FunctionIdentifier("grid_cell_intersection_agg", database),
+          CellIntersectionAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => CellIntersectionAgg(exprs(0), geometryAPI.name, indexSystem)
         )
         registry.registerFunction(
-            FunctionIdentifier("grid_cell_union_agg", database),
-            CellUnionAgg.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => CellUnionAgg(exprs(0), geometryAPI.name, indexSystem)
+          FunctionIdentifier("grid_cell_union_agg", database),
+          CellUnionAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => CellUnionAgg(exprs(0), geometryAPI.name, indexSystem)
         )
 
         registry.registerFunction(
@@ -890,7 +895,12 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         @deprecated("Please use 'grid_polyfill' expressions instead.")
         def polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, resolution)
         @deprecated("Please use 'st_centroid' expressions instead.")
-        def st_centroid2D(geom: Column): Column = st_centroid(geom)
+        def st_centroid2D(geom: Column): Column = {
+            struct(
+                ColumnAdapter(ST_X(ST_Centroid(geom.expr, expressionConfig), expressionConfig)),
+                ColumnAdapter(ST_Y(ST_Centroid(geom.expr, expressionConfig), expressionConfig))
+            )
+        }
 
     }
 
@@ -924,7 +934,7 @@ object MosaicContext extends Logging {
 
     def reset(): Unit = instance = None
 
-    //noinspection ScalaStyle
+    // noinspection ScalaStyle
     def checkDBR(spark: SparkSession): Boolean = {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "")
         val isML = sparkVersion.contains("-ml-")
