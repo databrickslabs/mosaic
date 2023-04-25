@@ -238,16 +238,17 @@ st_bufferloop
 
    Fig 1. ST_BufferLoop(geom, 0.02, 0.04)
 
-st_centroid2D
+
+st_centroid
 *************
 
-.. function:: st_centroid2D(col)
+.. function:: st_centroid(col)
 
-    Returns the x and y coordinates representing the centroid of the input geometry.
+    Returns a point geometry representing the centroid of the input geometry.
 
     :param col: Geometry
     :type col: Column
-    :rtype: Column: StructType[x: DoubleType, y: DoubleType]
+    :rtype: Column: Geometry
 
     :example:
 
@@ -255,52 +256,41 @@ st_centroid2D
    .. code-tab:: py
 
     >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_centroid2D('wkt')).show()
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
+    >>> df.select(st_centroid('wkt')).show()
+    +--------------------+
+    |    st_centroid(wkt)|
+    +--------------------+
+    |POINT (25.4545454...|
+    +--------------------+
 
    .. code-tab:: scala
 
     >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_centroid2D(col("wkt"))).show()
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
+    >>> df.select(st_centroid(col("wkt"))).show()
+    +--------------------+
+    |    st_centroid(wkt)|
+    +--------------------+
+    |POINT (25.4545454...|
+    +--------------------+
 
    .. code-tab:: sql
 
-    >>> SELECT st_centroid2D("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
+    >>> SELECT st_centroid("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +--------------------+
+    |    st_centroid(wkt)|
+    +--------------------+
+    |POINT (25.4545454...|
+    +--------------------+
 
    .. code-tab:: r R
 
     >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_centroid2D(column("wkt"))), truncate=F)
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
-
-st_centroid3D
-*************
-
-.. function:: st_centroid3D(col)
-
-    Returns the x, y and z coordinates representing the centroid of the input geometry.
-
-    :param col: Geometry
-    :type col: Column
-    :rtype: Column: StructType[x: DoubleType, y: DoubleType, z: DoubleType]
+    >>> showDF(select(df, st_centroid(column("wkt"))), truncate=F)
+    +--------------------+
+    |    st_centroid(wkt)|
+    +--------------------+
+    |POINT (25.4545454...|
+    +--------------------+
 
 
 st_convexhull
