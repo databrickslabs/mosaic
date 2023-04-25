@@ -242,11 +242,11 @@ def buildings():
 def buildings_indexed():
   return (
     dlt.read("buildings")
-      .withColumn("centroid", mos.st_centroid2D("polygon"))
-      .withColumn("centroid_index_res_5", mos.grid_longlatascellid("centroid.x", "centroid.y", f.lit(5)))
-      .withColumn("centroid_index_res_6", mos.grid_longlatascellid("centroid.x", "centroid.y", f.lit(6)))
-      .withColumn("centroid_index_res_7", mos.grid_longlatascellid("centroid.x", "centroid.y", f.lit(7)))
-      .withColumn("centroid_index_res_8", mos.grid_longlatascellid("centroid.x", "centroid.y", f.lit(8)))
+      .withColumn("centroid", mos.st_centroid("polygon"))
+      .withColumn("centroid_index_res_5", mos.grid_pointascellid("centroid", f.lit(5)))
+      .withColumn("centroid_index_res_6", mos.grid_pointascellid("centroid", f.lit(6)))
+      .withColumn("centroid_index_res_7", mos.grid_pointascellid("centroid", f.lit(7)))
+      .withColumn("centroid_index_res_8", mos.grid_pointascellid("centroid", f.lit(8)))
   )
 
 # COMMAND ----------
