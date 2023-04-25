@@ -37,6 +37,14 @@
 
 Mosaic is an extension to the `Apache Spark <https://spark.apache.org/>`_ framework that allows easy and fast processing of very large geospatial datasets.
 
+.. warning::
+    From version 0.4.x, Mosaic will require either
+     * Databricks Runtime 11.2+ with Photon enabled
+     * Databricks Runtime for ML 11.2+
+
+    Other Databricks Runtime versions will not be supported any more.
+
+
 Mosaic provides:
    - easy conversion between common spatial data encodings (WKT, WKB and GeoJSON);
    - constructors to easily generate new geometries from Spark native data types;
