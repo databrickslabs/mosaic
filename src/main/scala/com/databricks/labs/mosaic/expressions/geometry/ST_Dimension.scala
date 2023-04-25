@@ -28,7 +28,7 @@ case class ST_Dimension(
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val code = s"""double $resultRef = $geometryRef.getDimension();"""
+        val code = s"""int $resultRef = $geometryRef.getDimension();"""
         (code, resultRef)
     }
 
