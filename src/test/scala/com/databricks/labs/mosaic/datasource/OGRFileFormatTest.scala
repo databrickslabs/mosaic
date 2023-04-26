@@ -1,14 +1,18 @@
 package com.databricks.labs.mosaic.datasource
 
+import com.databricks.labs.mosaic.{H3, JTS}
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
 import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
+import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.test.SharedSparkSession
+import org.apache.spark.sql.functions.{col, lit}
+import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.apache.spark.sql.types._
 import org.gdal.ogr.ogr
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
-class OGRFileFormatTest extends QueryTest with SharedSparkSession {
+class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
     test("Read open geoDB with OGRFileFormat") {
         assume(System.getProperty("os.name") == "Linux")
@@ -119,6 +123,44 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSession {
           Map("driverName" -> "", "layerNumber" -> "1", "chunkSize" -> "200", "vsizip" -> "false", "layerName" -> "", "asWKB" -> "false"),
           null
         ).position should be(false)
+    }
+
+    test("OGRFileFormat should handle NULL geometries: ISSUE 343") {
+        assume(System.getProperty("os.name") == "Linux")
+        OGRFileFormat.enableOGRDrivers(force = true)
+
+        val shapefile = "/binary/shapefile/"
+        val filePath = getClass.getResource(shapefile).getPath
+        val ds = ogr.Open(filePath + "map.shp")
+
+        val feature1 = ds.GetLayer(0).GetNextFeature()
+        val testFeature = feature1
+        testFeature.SetGeomField(0, null)
+        val schema = OGRFileFormat.inferSchemaImpl("", filePath, Map("driverName" -> "ESRI Shapefile", "asWKB" -> "true")).get
+
+        noException should be thrownBy
+            OGRFileFormat.getFeatureFields(testFeature, schema, asWKB = true)
+    }
+
+    test("OGRFileFormat should handle partial schema: ISSUE 351") {
+        assume(System.getProperty("os.name") == "Linux")
+
+        val mc = MosaicContext.build(H3, JTS, GDAL)
+        import mc.functions._
+
+        val issue351 = "/binary/issue351/"
+        val filePath = this.getClass.getResource(issue351).getPath
+
+        val lad_df = spark.read
+            .format("ogr")
+            .option("asWKB", "false")
+            .option("vsizip", "true")
+            .load(filePath)
+            .limit(1)
+            .withColumn("geom", st_setsrid(st_geomfromwkt(col("geom_0")), lit(27700)))
+
+        noException should be thrownBy
+            lad_df.select(st_astext(st_transform(col("geom"), lit(4326)))).show(1, truncate = false)
     }
 
 }

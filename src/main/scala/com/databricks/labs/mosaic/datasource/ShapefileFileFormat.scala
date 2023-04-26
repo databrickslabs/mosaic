@@ -38,7 +38,7 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister with Ser
     ): PartitionedFile => Iterator[InternalRow] =
         (file: PartitionedFile) => {
             if (checkExtension(file.filePath)) {
-                OGRFileFormat.buildReaderImpl(driverName, dataSchema, options)(file)
+                OGRFileFormat.buildReaderImpl(driverName, dataSchema, requiredSchema, options)(file)
             } else {
                 Seq.empty[InternalRow].iterator
             }

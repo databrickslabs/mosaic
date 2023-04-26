@@ -28,15 +28,20 @@ import scala.reflect.runtime.universe
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI) extends Serializable with Logging {
 
     // Make spark aware of the mosaic setup
+    // Check the DBR type and raise appropriate warnings
     private val spark = SparkSession.builder().getOrCreate()
+
+    val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
+    MosaicContext.checkDBR(spark)
+
     spark.conf.set(MOSAIC_INDEX_SYSTEM, indexSystem.name)
     spark.conf.set(MOSAIC_GEOMETRY_API, geometryAPI.name)
     spark.conf.set(MOSAIC_RASTER_API, rasterAPI.name)
 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
-    val crsBoundsProvider: CRSBoundsProvider = CRSBoundsProvider(geometryAPI)
     val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
     val expressionConfig: MosaicExpressionConfig = MosaicExpressionConfig(spark)
+
 
     def setCellIdDataType(dataType: String): Unit =
         if (dataType == "string") {
@@ -140,7 +145,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_Buffer](expressionConfig)
         mosaicRegistry.registerExpression[ST_BufferLoop](expressionConfig)
         mosaicRegistry.registerExpression[ST_Centroid](expressionConfig)
-        mosaicRegistry.registerExpression[ST_Centroid]("st_centroid2D", expressionConfig)
         mosaicRegistry.registerExpression[ST_Contains](expressionConfig)
         mosaicRegistry.registerExpression[ST_ConvexHull](expressionConfig)
         mosaicRegistry.registerExpression[ST_Distance](expressionConfig)
@@ -173,8 +177,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_UpdateSRID](expressionConfig)
         mosaicRegistry.registerExpression[ST_X](expressionConfig)
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
-
         mosaicRegistry.registerExpression[ST_Haversine](expressionConfig)
+
+        registry.registerFunction(
+          FunctionIdentifier("st_centroid2D", database),
+          ST_Centroid.legacyInfo(database, "st_centroid2D"),
+          (exprs: Seq[Expression]) => functions.st_centroid2D(ColumnAdapter(exprs(0))).expr
+        )
 
         registry.registerFunction(
           FunctionIdentifier("st_geomfromwkt", database),
@@ -354,24 +363,24 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         )
 
         registry.registerFunction(
-            FunctionIdentifier("grid_cell_intersection", database),
-            CellIntersection.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => CellIntersection(exprs(0), exprs(1), indexSystem, geometryAPI.name)
+          FunctionIdentifier("grid_cell_intersection", database),
+          CellIntersection.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => CellIntersection(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("grid_cell_union", database),
-            CellUnion.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => CellUnion(exprs(0), exprs(1), indexSystem, geometryAPI.name)
+          FunctionIdentifier("grid_cell_union", database),
+          CellUnion.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => CellUnion(exprs(0), exprs(1), indexSystem, geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("grid_cell_intersection_agg", database),
-            CellIntersectionAgg.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => CellIntersectionAgg(exprs(0), geometryAPI.name, indexSystem)
+          FunctionIdentifier("grid_cell_intersection_agg", database),
+          CellIntersectionAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => CellIntersectionAgg(exprs(0), geometryAPI.name, indexSystem)
         )
         registry.registerFunction(
-            FunctionIdentifier("grid_cell_union_agg", database),
-            CellUnionAgg.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => CellUnionAgg(exprs(0), geometryAPI.name, indexSystem)
+          FunctionIdentifier("grid_cell_union_agg", database),
+          CellUnionAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => CellUnionAgg(exprs(0), geometryAPI.name, indexSystem)
         )
 
         registry.registerFunction(
@@ -887,7 +896,12 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         @deprecated("Please use 'grid_polyfill' expressions instead.")
         def polyfill(geom: Column, resolution: Int): Column = grid_polyfill(geom, resolution)
         @deprecated("Please use 'st_centroid' expressions instead.")
-        def st_centroid2D(geom: Column): Column = st_centroid(geom)
+        def st_centroid2D(geom: Column): Column = {
+            struct(
+                ColumnAdapter(ST_X(ST_Centroid(geom.expr, expressionConfig), expressionConfig)),
+                ColumnAdapter(ST_Y(ST_Centroid(geom.expr, expressionConfig), expressionConfig))
+            )
+        }
 
     }
 
@@ -895,7 +909,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 // scalastyle:on object.name
 // scalastyle:on line.size.limit
 
-object MosaicContext {
+object MosaicContext extends Logging {
 
     private var instance: Option[MosaicContext] = None
 
@@ -920,5 +934,24 @@ object MosaicContext {
         }
 
     def reset(): Unit = instance = None
+
+    // noinspection ScalaStyle
+    def checkDBR(spark: SparkSession): Boolean = {
+        val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "")
+        val isML = sparkVersion.contains("-ml-")
+        val isPhoton = spark.conf.get("spark.databricks.photon.enabled", "false").toBoolean
+        if (!isML && !isPhoton) {
+            // Print out the warnings both to the log and to the console
+            logWarning("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
+            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.4.0+.")
+            logWarning("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).")
+            println("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
+            println("DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.4.0+.")
+            println("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).")
+            false
+        } else {
+            true
+        }
+    }
 
 }
