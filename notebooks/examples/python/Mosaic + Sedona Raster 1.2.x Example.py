@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md # Mosaic + Apache Sedona Raster 1.2.x Example
-# MAGIC 
+# MAGIC
 # MAGIC * Assumes DBR 10.4 which is Spark 3.2.1
 
 # COMMAND ----------
@@ -52,11 +52,13 @@
 # COMMAND ----------
 
 # MAGIC %md _For DBR, install python bindings_
-# MAGIC 
+# MAGIC
 # MAGIC > Instead of `%pip install apache-sedona==1.2.0` using WHL built from Sedona master (1.2.1)
 
 # COMMAND ----------
 
+# MAGIC %md 
+# MAGIC
 # MAGIC %pip install /dbfs/FileStore/jars/sedona/1.2.1-incubating/apache_sedona-1.2.1-py3-none-any.whl
 
 # COMMAND ----------
@@ -128,9 +130,9 @@ display(dbutils.fs.ls(DATA_DIR))
 
 # MAGIC %md
 # MAGIC # Geotiff Loader 
-# MAGIC 
+# MAGIC
 # MAGIC > __Note: if using 1.2.0 JAR (Maven) the spec uses `wkt` instead of `geometry` as name of column (1.2.1 JAR from Master uses `geometry`)__
-# MAGIC 
+# MAGIC
 # MAGIC 1. Loader takes as input a path to directory which contains geotiff files or a parth to particular geotiff file
 # MAGIC 2. Loader will read geotiff image in a struct named image which contains multiple fields as shown in the schema below which can be extracted using spark SQL
 
@@ -378,7 +380,7 @@ display(df_logOver.limit(1))
 
 # MAGIC %md
 # MAGIC ## Visualising Geotiff Images
-# MAGIC 
+# MAGIC
 # MAGIC 1. Normalize the bands in range [0-255] if values are greater than 255
 # MAGIC 2. Process image using RS_Base64() which converts in into a base64 string
 # MAGIC 3. Embedd results of RS_Base64() in RS_HTML() to embedd into IPython notebook
@@ -611,7 +613,7 @@ df_t1 = (
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC > Get the normalized difference index between the extracted bands
 
 # COMMAND ----------
@@ -650,9 +652,9 @@ display(df_append)
 # COMMAND ----------
 
 # MAGIC %md _Could write GeoTiff DataFrame as GeoTiff image similar as before_
-# MAGIC 
+# MAGIC
 # MAGIC Example
-# MAGIC 
+# MAGIC
 # MAGIC ```
 # MAGIC (
 # MAGIC df_append.coalesce(1)
@@ -673,7 +675,7 @@ display(df_append)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC > Sample UDF calculates sum of all the values in a band which are greater than 1000.0
 
 # COMMAND ----------
