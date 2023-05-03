@@ -84,7 +84,7 @@
         <dependency>
             <groupId>io.delta</groupId>
             <artifactId>delta-core_${scala.compat.version}</artifactId>
-            <version>2.1.0</version>
+            <version>2.3.0</version>
             <scope>provided</scope>
         </dependency>
         <!--geo dependencies-->
@@ -93,7 +93,7 @@
             <artifactId>h3</artifactId>
             <!--H3 fixed at 3.7.0 until Photon updates the version-->
             <!--suppress MavenPackageUpdate-->
-            <version>3.7.0</version>
+            <version>3.7.3</version>
         </dependency>
         <dependency>
             <groupId>org.locationtech.jts</groupId>

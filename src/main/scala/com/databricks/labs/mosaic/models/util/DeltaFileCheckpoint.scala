@@ -33,7 +33,7 @@ case class DeltaFileCheckpoint(parentPath: String, name: String) extends DeltaCh
       */
     override def append(dataset: Dataset[_]): Unit = {
         makeDirectory(parentPath)
-        dataset.write.mode(SaveMode.Append).format("delta").save(uniqueName)
+        dataset.write.mode(SaveMode.Append).save(uniqueName)
     }
 
     /**
@@ -43,7 +43,10 @@ case class DeltaFileCheckpoint(parentPath: String, name: String) extends DeltaCh
       */
     override def overwrite(dataset: Dataset[_]): Unit = {
         makeDirectory(parentPath)
-        dataset.write.mode(SaveMode.Overwrite).format("delta").save(uniqueName)
+        dataset.write.mode(SaveMode.Overwrite).save(s"tmp_$uniqueName")
+        val tmpDs = SparkSession.builder().getOrCreate().read.load(s"tmp_$uniqueName")
+        tmpDs.write.mode(SaveMode.Overwrite).save(uniqueName)
+        deleteRecursively(Paths.get(s"tmp_$uniqueName"))
     }
 
     /**
@@ -54,7 +57,7 @@ case class DeltaFileCheckpoint(parentPath: String, name: String) extends DeltaCh
       */
     override def load(): Dataset[_] = {
         val spark = SparkSession.builder().getOrCreate()
-        spark.read.format("delta").load(uniqueName)
+        spark.read.load(uniqueName)
     }
 
     /**
