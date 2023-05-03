@@ -27,5 +27,5 @@ cd /usr/lib/python3/dist-packages/osgeo \
 # add pre-build JNI shared object to the path
 # please run MosaicGDAL.copySharedObjects("/dbfs/FileStore/geospatial/mosaic/gdal/") before enabling this init script
 mkdir -p /usr/lib/jni
-cp /dbfs/FileStore/geospatial/mosaic/gdal/libgdalalljni.so /usr/lib/jni
-cp /dbfs/FileStore/geospatial/mosaic/gdal/libgdalalljni.so.30 /usr/lib/jni
+cp "${MOSAIC_GDAL_JNI_DIR}/libgdalalljni.so" /usr/lib/jni
+cp "${MOSAIC_GDAL_JNI_DIR}/libgdalalljni.so.30" /usr/lib/jni
