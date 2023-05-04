@@ -80,7 +80,7 @@ object MosaicGDAL extends Logging {
         val w = new PrintWriter(new File(s"$mosaicGDALAbsolutePath/mosaic-gdal-init.sh"))
         val scriptLines = readResourceLines("/scripts/install-gdal-databricks.sh")
         scriptLines
-          .map { x => if (x.contains("proxy")) s"# $x" else x }
+          .map { x => if (x.contains("__DEFAULT_JNI_PATH__")) x.replace("__DEFAULT_JNI_PATH__", path) else x }
           .foreach(x => w.println(x))
         w.close()
 
