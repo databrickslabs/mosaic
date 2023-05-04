@@ -5,6 +5,8 @@
 # Created: 2022-08-19
 #
 
+MOSAIC_GDAL_JNI_DIR="${MOSAIC_GDAL_JNI_DIR:-__DEFAULT_JNI_PATH__}"
+
 sudo rm -r /var/lib/apt/lists/*
 sudo add-apt-repository main
 sudo add-apt-repository universe

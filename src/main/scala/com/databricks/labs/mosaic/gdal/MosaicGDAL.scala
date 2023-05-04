@@ -4,8 +4,9 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
 
-import java.io.BufferedInputStream
+import java.io.{BufferedInputStream, File, PrintWriter}
 import java.nio.file.{Files, Paths}
+import scala.io.Source
 import scala.language.postfixOps
 import scala.sys.process._
 import scala.util.Try
@@ -70,12 +71,19 @@ object MosaicGDAL extends Logging {
         s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so.30 $path/libgdalalljni.so.30".!!
     }
 
+    //noinspection ScalaStyle
     private def copyInitScript(path: String): Unit = {
         val destPath = Paths.get(path)
-        val script = readResourceBytes("/scripts/install-gdal-databricks.sh")
         if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
         if (!Files.exists(destPath)) Files.createDirectories(destPath)
-        Files.write(Paths.get(s"$mosaicGDALAbsolutePath/mosaic-gdal-init.sh"), script)
+
+        val w = new PrintWriter(new File(s"$mosaicGDALAbsolutePath/mosaic-gdal-init.sh"))
+        val scriptLines = readResourceLines("/scripts/install-gdal-databricks.sh")
+        scriptLines
+          .map { x => if (x.contains("proxy")) s"# $x" else x }
+          .foreach(x => w.println(x))
+        w.close()
+
         s"sudo cp $mosaicGDALAbsolutePath/mosaic-gdal-init.sh $path/mosaic-gdal-init.sh".!!
     }
 
@@ -94,6 +102,13 @@ object MosaicGDAL extends Logging {
         val bis = new BufferedInputStream(getClass.getResourceAsStream(name))
         try Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray
         finally bis.close()
+    }
+
+    private def readResourceLines(name: String): Array[String] = {
+        val source = Source.fromFile(getClass.getResource(name).getPath)
+        val lines = source.getLines.toArray
+        source.close()
+        lines
     }
 
 }
