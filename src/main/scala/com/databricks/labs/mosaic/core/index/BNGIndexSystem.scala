@@ -256,11 +256,13 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       */
     def isValid(index: Long): Boolean = {
         val digits = indexDigits(index)
+        val xLetterIndex = digits.slice(3, 5).mkString.toInt
+        val yLetterIndex = digits.slice(1, 3).mkString.toInt
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution)
         val x = getX(digits, edgeSize)
         val y = getY(digits, edgeSize)
-        x >= 0 && x <= 700000 && y >= 0 && y <= 1300000
+        x >= 0 && x <= 700000 && y >= 0 && y <= 1300000 && xLetterIndex < letterMap.length && yLetterIndex < letterMap.head.length
     }
 
     /**
