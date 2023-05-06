@@ -168,8 +168,11 @@ object Mosaic {
                 if (!lineSegment.isEmpty) {
                     val chip = MosaicChip(isCore = false, Left(current), lineSegment)
                     val kRing = indexSystem.kRing(current, 1)
-                    val toQueue = kRing.filterNot(newTraversed.contains)
-                    (toQueue, accumulator._2 ++ Seq(chip))
+                    
+                    // Ignore already processed chips and those which are already in the
+                    // queue to be processed
+                    val toQueue = kRing.filterNot((newTraversed ++ accumulator._1).contains)
+                    (accumulator._1 ++ toQueue, accumulator._2 ++ Seq(chip))
                 } else if (newTraversed.size == 1) {
                     // The line segment intersection was empty, but we only intersected the first point
                     // with a single cell.
