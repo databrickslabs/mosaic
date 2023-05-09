@@ -12,7 +12,7 @@ Databricks Runtime 10.0 or higher (11.2 with photon or later is recommended).
      * Databricks Runtime 11.2+ with Photon enabled
      * Databricks Runtime for ML 11.2+
 
-    Non-photon clusters will not be supported any more.
+    Other Databricks Runtime versions will not be supported anymore.
 
 If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions

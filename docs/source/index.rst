@@ -42,7 +42,7 @@ Mosaic is an extension to the `Apache Spark <https://spark.apache.org/>`_ framew
      * Databricks Runtime 11.2+ with Photon enabled
      * Databricks Runtime for ML 11.2+
 
-    Other Databricks Runtime versions will not be supported any more.
+    Other Databricks Runtime versions will not be supported anymore.
 
 
 Mosaic provides:
