@@ -1,3 +1,16 @@
+## v0.3.10
+- Fixed k-ring logic for BNG grid close to the edge of the grid
+- Fixed deprecated st_centroid2D expression
+- Documentation improvements
+- Fix handling null geometry fields for OGRFileFormat reader
+- Added warning for future DBR environment support
+- Added support for GeometryCollection
+- Fix intersection operations with ESRI geometry APIs
+- Fixed custom grid issues for grids not multiple of the root size resolution
+- Fixed python binding for rst_georeference
+- Fixed ESRI create polygon with correct path order with ESRI APIs
+- Fixed automatic SQL registration with GDAL
+
 ## v0.3.9
 - Fixed k-ring interpolation on raster data read
 
