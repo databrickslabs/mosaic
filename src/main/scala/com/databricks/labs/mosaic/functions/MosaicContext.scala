@@ -941,7 +941,7 @@ object MosaicContext extends Logging {
         val isML = sparkVersion.contains("-ml-")
         var isPhoton = false
         try {
-          // NOTE: spark.conf.get("spark.databricks.photon.enabled", "false) does not work as expected
+          // NOTE: spark.conf.get("spark.databricks.photon.enabled", "false") does not work as expected
           //       It would always overwrite the actual variable value with the default.
           isPhoton = spark.conf.get("spark.databricks.photon.enabled").toBoolean
         }
