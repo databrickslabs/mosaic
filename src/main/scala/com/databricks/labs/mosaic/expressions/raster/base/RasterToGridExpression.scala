@@ -2,12 +2,12 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
+import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
-import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.DataType
 
 import scala.reflect.ClassTag
@@ -35,7 +35,8 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     measureType: DataType,
     expressionConfig: MosaicExpressionConfig
 ) extends Raster1ArgExpression[T](pathExpr, resolution, RasterToGridType(expressionConfig.getCellIdType, measureType), expressionConfig)
-      with NullIntolerant
+    with RasterGridExpression
+    with NullIntolerant
       with Serializable {
 
     /** The index system to be used. */
@@ -53,22 +54,10 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       *   Sequence of (cellId, measure) of each band of the raster.
       */
     override def rasterTransform(raster: MosaicRaster, arg1: Any): Any = {
-        val gt = raster.getRaster.GetGeoTransform()
         val resolution = arg1.asInstanceOf[Int]
-        val bandTransform = (band: MosaicRasterBand) => {
-            val results = band.transformValues[(Long, Double)](pixelTransformer(gt, resolution), (0L, -1.0))
-            results
-                // Filter out default cells. We don't want to return them since they are masked in original raster.
-                // We use 0L as a dummy cell ID for default cells.
-                .map(row => row.filter(_._1 != 0L))
-                .filterNot(_.isEmpty)
-                .flatten
-                .groupBy(_._1) // Group by cell ID.
-                .mapValues(values => valuesCombiner(values.map(_._2))) // Apply combiner that is overridden in subclasses.
-        }
-        val transformed = raster.transformBands(bandTransform)
-
-        serialize(transformed)
+        val transformed = griddedPixels(raster, indexSystem, resolution)
+        val results = transformed.map(_.mapValues(valuesCombiner))
+        serialize(results)
     }
 
     /**
@@ -81,15 +70,6 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       */
     def valuesCombiner(values: Seq[Double]): P
 
-    private def pixelTransformer(gt: Seq[Double], resolution: Int)(x: Int, y: Int, value: Double): (Long, Double) = {
-        val offset = 0.5 // This centers the point to the pixel centroid
-        val xOffset = offset + x
-        val yOffset = offset + y
-        val xGeo = gt(0) + xOffset * gt(1) + yOffset * gt(2)
-        val yGeo = gt(3) + xOffset * gt(4) + yOffset * gt(5)
-        val cellID = indexSystem.pointToIndex(xGeo, yGeo, resolution)
-        (cellID, value)
-    }
 
     /**
       * Serializes the result of the raster transform to the desired output

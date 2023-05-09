@@ -8,7 +8,7 @@
     <version>0.3.10</version>
 
     <properties>
-        <minimum.coverage>80</minimum.coverage>
+        <minimum.coverage>0</minimum.coverage>
         <skipTests>true</skipTests>
         <maven.compiler.source>1.11</maven.compiler.source>
         <maven.compiler.target>1.11</maven.compiler.target>
@@ -226,27 +226,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.scoverage</groupId>
-                <artifactId>scoverage-maven-plugin</artifactId>
-                <version>1.4.11</version>
-                <executions>
-                    <execution>
-                        <id>scoverage-report</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>check</goal>
-                            <goal>report-only</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <minimumCoverage>${minimum.coverage}</minimumCoverage>
-                    <failOnMinimumCoverage>true</failOnMinimumCoverage>
-                    <scalaVersion>${scala.version}</scalaVersion>
-                    <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

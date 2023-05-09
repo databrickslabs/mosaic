@@ -28,8 +28,7 @@ object MosaicGDAL extends Logging {
                 copyInitScript(initScriptPath)
                 copySharedObjects(sharedObjectsPath)
             } match {
-                case scala.util.Success(_)         =>
-                    logInfo("GDAL environment prepared successfully.")
+                case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
                 case scala.util.Failure(exception) =>
                     logError("GDAL environment preparation failed.", exception)
                     throw exception
@@ -71,7 +70,7 @@ object MosaicGDAL extends Logging {
         s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so.30 $path/libgdalalljni.so.30".!!
     }
 
-    //noinspection ScalaStyle
+    // noinspection ScalaStyle
     private def copyInitScript(path: String): Unit = {
         val destPath = Paths.get(path)
         if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
@@ -80,22 +79,24 @@ object MosaicGDAL extends Logging {
         val w = new PrintWriter(new File(s"$mosaicGDALAbsolutePath/mosaic-gdal-init.sh"))
         val scriptLines = readResourceLines("/scripts/install-gdal-databricks.sh")
         scriptLines
-          .map { x => if (x.contains("__DEFAULT_JNI_PATH__")) x.replace("__DEFAULT_JNI_PATH__", path) else x }
-          .foreach(x => w.println(x))
+            .map { x => if (x.contains("__DEFAULT_JNI_PATH__")) x.replace("__DEFAULT_JNI_PATH__", path) else x }
+            .foreach(x => w.println(x))
         w.close()
 
         s"sudo cp $mosaicGDALAbsolutePath/mosaic-gdal-init.sh $path/mosaic-gdal-init.sh".!!
     }
 
     private def loadSharedObjects(): Unit = {
-        System.load("/usr/lib/libgdal.so.30")
-        if (!Files.exists(Paths.get("/usr/lib/libgdal.so"))) {
-            "sudo cp /usr/lib/libgdal.so.30 /usr/lib/libgdal.so".!!
+        try {
+            if (Files.exists(Paths.get("/usr/lib/libgdal.so.30"))) System.load("/usr/lib/libgdal.so.30")
+            if (!Files.exists(Paths.get("/usr/lib/libgdal.so"))) {
+                if (Files.exists(Paths.get("/usr/lib/libgdal.so.30"))) "sudo cp /usr/lib/libgdal.so.30 /usr/lib/libgdal.so".!!
+            }
+            if (Files.exists(Paths.get("/usr/lib/libgdal.so"))) System.load("/usr/lib/libgdal.so")
+            if (Files.exists(Paths.get("/usr/lib/libgdal.so.30.0.3"))) System.load("/usr/lib/libgdal.so.30.0.3")
+            if (Files.exists(Paths.get("/usr/lib/jni/libgdalalljni.so.30"))) System.load("/usr/lib/jni/libgdalalljni.so.30")
+            if (Files.exists(Paths.get("/usr/lib/ogdi/libgdal.so"))) System.load("/usr/lib/ogdi/libgdal.so")
         }
-        System.load("/usr/lib/libgdal.so")
-        System.load("/usr/lib/libgdal.so.30.0.3")
-        System.load("/usr/lib/jni/libgdalalljni.so.30")
-        System.load("/usr/lib/ogdi/libgdal.so")
     }
 
     private def readResourceBytes(name: String): Array[Byte] = {

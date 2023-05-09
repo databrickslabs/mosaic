@@ -1,7 +1,11 @@
 package com.databricks.labs.mosaic.core.raster
 
-import org.gdal.gdal.{gdal, Dataset}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
+import org.gdal.gdal.{Dataset, gdal}
 import org.gdal.gdalconst.gdalconstConstants._
+import org.gdal.osr
 import org.gdal.osr.SpatialReference
 import org.locationtech.proj4j.CRSFactory
 
@@ -30,7 +34,8 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
                             .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
                             .getOrElse(Map.empty[String, String])
                     )
-                    .reduceOption(_ ++ _).getOrElse(Map.empty[String, String])
+                    .reduceOption(_ ++ _)
+                    .getOrElse(Map.empty[String, String])
             )
             .getOrElse(Map.empty[String, String])
 
@@ -86,7 +91,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
 
     override def ySize: Int = raster.GetRasterYSize
 
-    def getGeoTransform: Array[Double] = raster.GetGeoTransform()
+    override def getGeoTransform: Array[Double] = raster.GetGeoTransform()
 
     def getGeoTransform(extent: (Int, Int, Int, Int)): Array[Double] = {
         val gt = getGeoTransform
@@ -131,6 +136,18 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
         val tmpDir = Files.createTempDirectory(s"mosaic_$stageId").toFile.getAbsolutePath
         val outPath = s"$tmpDir/raster_${rasterId.toString.replace("-", "_")}.tif"
         Files.createDirectories(Paths.get(outPath).getParent)
+
+        val outputDs = getRasterForExtend(extent, outPath)
+        outputDs.FlushCache()
+
+        val destinationPath = Paths.get(checkpointPath.replace("dbfs:/", "/dbfs/"), s"raster_$rasterId.tif")
+        Files.createDirectories(destinationPath)
+        Files.copy(Paths.get(outPath), destinationPath, REPLACE_EXISTING)
+        Files.delete(Paths.get(outPath))
+        destinationPath.toAbsolutePath.toString.replace("dbfs:/", "/dbfs/")
+    }
+
+    override  def getRasterForExtend(extent: (Int, Int, Int, Int), outPath: String): Dataset = {
         val (xmin, ymin, xmax, ymax) = extent
         val xSize = xmax - xmin
         val ySize = ymax - ymin
@@ -151,13 +168,35 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
             maskBand.FlushCache()
         }
         outputDs.SetGeoTransform(getGeoTransform(extent))
-        outputDs.FlushCache()
+        outputDs
+    }
 
-        val destinationPath = Paths.get(checkpointPath.replace("dbfs:/", "/dbfs/"), s"raster_$rasterId.tif")
-        Files.createDirectories(destinationPath)
-        Files.copy(Paths.get(outPath), destinationPath, REPLACE_EXISTING)
-        Files.delete(Paths.get(outPath))
-        destinationPath.toAbsolutePath.toString.replace("dbfs:/", "/dbfs/")
+    /**
+      * @return
+      *   Returns MosaicGeometry representing bounding box of the raster.
+      */
+    override def bbox(geometryAPI: GeometryAPI): MosaicGeometry = {
+        val gt = getGeoTransform
+
+        val sourceCRS = spatialRef
+        val destCRS = new osr.SpatialReference()
+        destCRS.ImportFromEPSG(4326)
+        val transform = new osr.CoordinateTransformation(sourceCRS, destCRS)
+
+        val bbox = geometryAPI.geometry(
+          Seq(
+            (gt(0), gt(3)),
+            (gt(0) + gt(1) * xSize, gt(3)),
+            (gt(0) + gt(1) * xSize, gt(3) + gt(5) * ySize),
+            (gt(0), gt(3) + gt(5) * ySize)
+          ).map(t => {
+              val p = transform.TransformPoint(t._1, t._2)
+              geometryAPI.fromCoords(p.toSeq)
+          }),
+          POLYGON
+        )
+
+        bbox
     }
 
 }

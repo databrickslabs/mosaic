@@ -1,5 +1,7 @@
 package com.databricks.labs.mosaic.core.raster
 
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import org.gdal.gdal.Dataset
 
 /**
@@ -34,6 +36,8 @@ abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
       */
     def saveCheckpoint(stageId: String, rasterId: Long, extent: (Int, Int, Int, Int), checkpointPath: String): String
 
+    def getRasterForExtend(extent: (Int, Int, Int, Int), outPath: String): Dataset
+
     /** @return Returns the metadata of the raster file. */
     def metadata: Map[String, String]
 
@@ -64,6 +68,12 @@ abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
 
     /** @return Returns the extent(xmin, ymin, xmax, ymax) of the raster. */
     def extent: Seq[Double]
+
+    /** @return Returns MosaicGeometry representing bounding box of the raster.  */
+    def bbox(geometryAPI: GeometryAPI): MosaicGeometry
+
+    /** @return Returns the path to the raster file. */
+    def getGeoTransform : Array[Double]
 
     /** @return Returns the GDAL Dataset representing the raster. */
     def getRaster: Dataset

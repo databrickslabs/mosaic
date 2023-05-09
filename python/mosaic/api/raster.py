@@ -27,6 +27,7 @@ __all__ = [
     "rst_rastertoworldcoordx",
     "rst_rastertoworldcoordy",
     "rst_retile",
+    "rst_gridtiles",
     "rst_rotation",
     "rst_scalex",
     "rst_scaley",
@@ -433,6 +434,13 @@ def rst_retile(raster: ColumnOrName, tileWidth: ColumnOrName, tileHeight: Column
         pyspark_to_java_column(raster),
         pyspark_to_java_column(tileWidth),
         pyspark_to_java_column(tileHeight)
+    )
+
+def rst_gridtiles(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
+    return config.mosaic_context.invoke_function(
+        "rst_gridtiles",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(resolution)
     )
 
 def rst_rotation(raster: ColumnOrName) -> Column:
