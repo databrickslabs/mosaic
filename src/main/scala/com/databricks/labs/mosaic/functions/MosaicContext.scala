@@ -939,7 +939,12 @@ object MosaicContext extends Logging {
     def checkDBR(spark: SparkSession): Boolean = {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "")
         val isML = sparkVersion.contains("-ml-")
-        val isPhoton = spark.conf.get("spark.databricks.photon.enabled", "false").toBoolean
+        var isPhoton = false
+        try {
+          // NOTE: spark.conf.get("spark.databricks.photon.enabled", "false) does not work as expected
+          //       It would always overwrite the actual variable value with the default.
+          isPhoton = spark.conf.get("spark.databricks.photon.enabled").toBoolean
+        }
         if (!isML && !isPhoton) {
             // Print out the warnings both to the log and to the console
             logWarning("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
