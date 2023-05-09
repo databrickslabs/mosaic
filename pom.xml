@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.databricks.labs</groupId>
     <artifactId>mosaic</artifactId>
-    <version>0.3.10</version>
+    <version>${mosaic.version}</version>
 
     <properties>
         <minimum.coverage>80</minimum.coverage>
@@ -288,6 +288,7 @@
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
                 <spark.version>3.3.2</spark.version>
+                <mosaic.version>0.3.10</mosaic.version>
             </properties>
         </profile>
     </profiles>
