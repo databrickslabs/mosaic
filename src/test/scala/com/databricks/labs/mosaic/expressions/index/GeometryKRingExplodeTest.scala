@@ -8,5 +8,6 @@ class GeometryKRingExplodeTest extends MosaicSpatialQueryTest with SharedSparkSe
     testAllNoCodegen("GeometryKRingExplode behavior") { behavior }
     testAllNoCodegen("GeometryKRingExplode column function signatures") { columnFunctionSignatures }
     testAllNoCodegen("GeometryKRingExplode auxiliary methods") { auxiliaryMethods }
-
+    testAllNoCodegen("GeometryKRingExplode cases identified by issue 360") { issue360 }
+    
 }
