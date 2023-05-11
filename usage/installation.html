@@ -446,8 +446,19 @@
 
 <h2 id="supported-platforms">Supported platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this headline">¶</a></h2>
 <p>In order to use Mosaic, you must have access to a Databricks cluster running
-Databricks Runtime 10.0 or higher (11.2 with photon or later is recommended).
-If you have cluster creation permissions in your Databricks
+Databricks Runtime 10.0 or higher (11.2 with photon or later is recommended).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<dl class="simple">
+<dt>From version 0.4.x, Mosaic will require either</dt><dd><ul class="simple">
+<li><p>Databricks Runtime 11.2+ with Photon enabled</p></li>
+<li><p>Databricks Runtime for ML 11.2+</p></li>
+</ul>
+</dd>
+</dl>
+<p>Other Databricks Runtime versions will not be supported anymore.</p>
+</div>
+<p>If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
 <a class="reference external" href="https://docs.databricks.com/clusters/create.html#use-the-cluster-ui">here</a>.</p>
 <p>You will also need “Can Manage” permissions on this cluster in order to attach the
