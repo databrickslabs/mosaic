@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.core.index
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.Coordinates
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POLYGON}
 import com.uber.h3core.H3Core
 import com.uber.h3core.util.GeoCoord
 import org.apache.spark.sql.types.LongType
@@ -11,6 +11,7 @@ import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.util.{Success, Try}
 
 /**
@@ -93,10 +94,9 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
-        geometryAPI.geometry(
-          extended.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
-          POLYGON
-        )
+
+        if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
+        else makeSafeGeometry(extended, geometryAPI)
     }
 
     /**
@@ -198,10 +198,9 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
-        geometryAPI.geometry(
-          extended.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
-          POLYGON
-        )
+
+        if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
+        else makeSafeGeometry(extended, geometryAPI)
     }
 
     override def format(id: Long): String = {
@@ -226,5 +225,95 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     }
 
     override def distance(cellId: Long, cellId2: Long): Long = Try(h3.h3Distance(cellId, cellId2)).map(_.toLong).getOrElse(0)
+
+    private val northPoleCells = Range.inclusive(0, 15).map(h3.geoToH3(90, 0, _))
+    private val southPoleCells = Range.inclusive(0, 15).map(h3.geoToH3(-90, 0, _))
+
+    private def crossesNorthPole(cell_id: Long): Boolean = northPoleCells contains cell_id
+    private def crossesSouthPole(cell_id: Long): Boolean = southPoleCells contains cell_id
+    private def crossesNorthPole(cell_id: String): Boolean = northPoleCells contains h3.stringToH3(cell_id)
+    private def crossesSouthPole(cell_id: String): Boolean = southPoleCells contains h3.stringToH3(cell_id)
+
+    private def crossesAntiMeridian(geometry: MosaicGeometry): Boolean = {
+        val minX = geometry.minMaxCoord("X", "MIN")
+        val maxX = geometry.minMaxCoord("X", "MAX")
+        minX < 0 && maxX >= 0 && ((maxX - minX > 180) || !geometry.isValid)
+    }
+
+    private def shiftWest(lng: Double, lat: Double): (Double, Double) = {
+        if (lng < 0) (lng + 360.0, lat)
+        else (lng, lat)
+    }
+
+    private def shiftEast(lng: Double, lat: Double): (Double, Double) = {
+        if (lng >= 180.0) (lng - 360.0, lat)
+        else (lng, lat)
+    }
+
+
+    private def makeUnsafeGeometry(coordinates: mutable.Buffer[GeoCoord], geometryAPI: GeometryAPI): MosaicGeometry = {
+        geometryAPI.geometry(
+            coordinates.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
+            POLYGON
+        )
+    }
+
+    private def makeWestBBox(geometryAPI: GeometryAPI): MosaicGeometry = makeUnsafeGeometry(
+        mutable.Buffer(
+            new GeoCoord(-90, 0),
+            new GeoCoord(90, 0),
+            new GeoCoord(90, 180),
+            new GeoCoord(-90, 180),
+            new GeoCoord(-90, 0)),
+        geometryAPI: GeometryAPI)
+
+
+    private def makeShiftedEastBBox(geometryAPI: GeometryAPI): MosaicGeometry = makeUnsafeGeometry(
+        mutable.Buffer(
+            new GeoCoord(-90, 180),
+            new GeoCoord(90, 180),
+            new GeoCoord(90, 360),
+            new GeoCoord(-90, 360),
+            new GeoCoord(-90, 180)),
+        geometryAPI: GeometryAPI)
+
+
+    private def makePoleGeometry(coordinates: mutable.Buffer[GeoCoord], isNorthPole: Boolean, geometryAPI: GeometryAPI): MosaicGeometry = {
+
+        val lat = if (isNorthPole) 90 else -90
+
+        val coords = coordinates.map(geoCoord => shiftWest(geoCoord.lng, geoCoord.lat)).sortBy(_._1)
+        val lineString = geometryAPI.geometry(
+            coords.map(p => geometryAPI.fromGeoCoord(Coordinates(p._2, p._1))),
+            LINESTRING
+        )
+
+        val westernLine = lineString.intersection(makeWestBBox(geometryAPI))
+        val easternLine = lineString.intersection(makeShiftedEastBBox(geometryAPI)).mapXY(shiftEast)
+
+        val vertices = westernLine.getShellPoints.head ++
+          Seq(geometryAPI.fromGeoCoord(Coordinates(lat, 180)),
+              geometryAPI.fromGeoCoord(Coordinates(lat, -180))) ++
+          easternLine.getShellPoints.head ++ Seq(westernLine.getShellPoints.head.head)
+
+        geometryAPI.geometry(vertices, POLYGON)
+
+    }
+
+    private def makeSafeGeometry(coordinates: mutable.Buffer[GeoCoord], geometryAPI: GeometryAPI): MosaicGeometry = {
+
+        val unsafeGeometry = makeUnsafeGeometry(coordinates, geometryAPI)
+
+        if (crossesAntiMeridian(unsafeGeometry)) {
+            val shiftedGeometry = unsafeGeometry.mapXY(shiftWest)
+            val westGeom = shiftedGeometry.intersection(makeWestBBox(geometryAPI: GeometryAPI))
+            val eastGeom = shiftedGeometry.intersection(makeShiftedEastBBox(geometryAPI: GeometryAPI)).mapXY(shiftEast)
+            westGeom.union(eastGeom)
+        }
+        else {
+            unsafeGeometry
+        }
+
+    }
 
 }
