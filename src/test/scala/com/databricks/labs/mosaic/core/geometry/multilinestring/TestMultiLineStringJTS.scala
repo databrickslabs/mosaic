@@ -34,12 +34,14 @@ class TestMultiLineStringJTS extends AnyFlatSpec {
         noException should be thrownBy MosaicMultiLineStringJTS.fromHEX(multiLineString.toHEX)
         noException should be thrownBy MosaicMultiLineStringJTS.fromJSON(multiLineString.toJSON)
         noException should be thrownBy MosaicMultiLineStringJTS.fromInternal(multiLineString.toInternal.serialize.asInstanceOf[InternalRow])
+        noException should be thrownBy MosaicMultiLineStringJTS.fromEWKT(multiLineString.toEWKT)
         multiLineString.equals(MosaicMultiLineStringJTS.fromWKB(multiLineString.toWKB)) shouldBe true
         multiLineString.equals(MosaicMultiLineStringJTS.fromHEX(multiLineString.toHEX)) shouldBe true
         multiLineString.equals(MosaicMultiLineStringJTS.fromJSON(multiLineString.toJSON)) shouldBe true
         multiLineString.equals(
           MosaicMultiLineStringJTS.fromInternal(multiLineString.toInternal.serialize.asInstanceOf[InternalRow])
         ) shouldBe true
+        multiLineString.equals(MosaicMultiLineStringJTS.fromEWKT(multiLineString.toEWKT)) shouldBe true
     }
 
     "MosaicMultiLineStringJTS" should "be instantiable from a Seq of MosaicLineStringJTS" in {
@@ -124,6 +126,18 @@ class TestMultiLineStringJTS extends AnyFlatSpec {
         multiLineString.getBoundary.getSpatialReference shouldBe srid
         multiLineString.getShells.head.getSpatialReference shouldBe srid
         multiLineString.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
+    }
+
+    "MosaicMultiLineStringJTS" should "maintain SRID after EWKT conversion" in {
+        val srid = 32632
+        val wkt = "MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))"
+        val expectedEWKT = s"SRID=${srid};${wkt}"
+        val multiLineString = MosaicMultiLineStringJTS.fromWKT(wkt).asInstanceOf[MosaicMultiLineStringJTS]
+        multiLineString.setSpatialReference(srid)
+
+        val ewkt = multiLineString.toEWKT
+        ewkt.equals(expectedEWKT) shouldBe true
+        MosaicMultiLineStringJTS.fromEWKT(ewkt).equals(multiLineString) shouldBe true
     }
 
 }

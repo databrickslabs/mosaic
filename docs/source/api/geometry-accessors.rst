@@ -278,3 +278,60 @@ st_aswkt
 
 
 .. note:: Alias for :ref:`st_astext`.
+
+st_aswkt
+********
+
+.. function:: st_aeswkt(col)
+
+    Translate a geometry into its representation in Extended Well-known Text (EWKT) format.
+
+    :param col: Geometry column
+    :type col: Column: BinaryType, HexType, JSONType or InternalGeometryType
+    :rtype: Column: StringType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+    >>> df.select(st_asewkt(st_point('lon', 'lat')).alias('ewkt')).show()
+    +-----------------------+
+    |                   ewkt|
+    +-----------------------+
+    |SRID=4326;POINT (30 10)|
+    +-----------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
+    >>> df.select(st_asewkt(st_point($"lon", $"lat")).alias("ewkt")).show()
+    +-----------------------+
+    |                   ewkt|
+    +-----------------------+
+    |SRID=4326;POINT (30 10)|
+    +-----------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_asewkt(st_point(30.0D, 10.0D)) AS ewkt
+    +-----------------------+
+    |                   ewkt|
+    +-----------------------+
+    |SRID=4326;POINT (30 10)|
+    +-----------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    >>> showDF(select(df, alias(st_asewkt(st_point(column("lon"), column("lat"))), "ewkt")), truncate=F)
+    +-----------------------+
+    |                   ewkt|
+    +-----------------------+
+    |SRID=4326;POINT (30 10)|
+    +-----------------------+
+
+
+.. note:: Default SRID value of a geometry created without specifying the explicit SRID value may be specific to a chosen geometry API. Currently,
+          default SRID on ESRI is 4326 (as shown in the examples), whereas it is 0 on JTS.

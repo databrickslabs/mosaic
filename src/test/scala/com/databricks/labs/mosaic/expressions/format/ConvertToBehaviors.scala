@@ -22,6 +22,7 @@ trait ConvertToBehaviors extends QueryTest {
         val hexes = getHexRowsDf(mc).select("hex")
         val geojsons = getGeoJSONDf(mc).select("geojson")
         val coords = getWKTRowsDf().select(st_geomfromwkt(col("wkt")).alias("coords"))
+        val ewkts = getWKTRowsDf().select(st_asewkt(col("wkt")).alias("ewkt"))
 
         val wkbExpr = wkbs.col("wkb").expr
         wkbExpr.checkInputDataTypes() shouldEqual TypeCheckSuccess
@@ -31,26 +32,31 @@ trait ConvertToBehaviors extends QueryTest {
         ConvertTo(wkbs.col("wkb").expr, "COORDS", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(wkbs.col("wkb").expr, "HEX", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(wkbs.col("wkb").expr, "GEOJSON", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
+        ConvertTo(wkbs.col("wkb").expr, "EWKT", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(wkts.col("wkt").expr, "WKT", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(wkts.col("wkt").expr, "WKB", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(wkts.col("wkt").expr, "COORDS", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(wkts.col("wkt").expr, "HEX", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(wkts.col("wkt").expr, "GEOJSON", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
+        ConvertTo(wkts.col("wkt").expr, "EWKT", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(hexes.col("hex").expr, "WKT", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(hexes.col("hex").expr, "WKB", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(hexes.col("hex").expr, "COORDS", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(hexes.col("hex").expr, "HEX", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(hexes.col("hex").expr, "GEOJSON", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
+        ConvertTo(hexes.col("hex").expr, "EWKT", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(geojsons.col("geojson").expr, "WKT", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(geojsons.col("geojson").expr, "WKB", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(geojsons.col("geojson").expr, "COORDS", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(geojsons.col("geojson").expr, "HEX", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(geojsons.col("geojson").expr, "GEOJSON", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
+        ConvertTo(geojsons.col("geojson").expr, "EWKT", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(coords.col("coords").expr, "WKT", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(coords.col("coords").expr, "WKB", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(coords.col("coords").expr, "COORDS", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(coords.col("coords").expr, "HEX", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(coords.col("coords").expr, "GEOJSON", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
+        ConvertTo(coords.col("coords").expr, "EWKT", geometryAPI.name).checkInputDataTypes() shouldEqual TypeCheckSuccess
         ConvertTo(lit(1).expr, "GEOJSON", geometryAPI.name).checkInputDataTypes().isFailure shouldEqual true
         an[Error] should be thrownBy ConvertTo(coords.col("coords").expr, "ERROR", geometryAPI.name)
             .checkInputDataTypes()

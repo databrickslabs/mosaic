@@ -38,10 +38,12 @@ class TestLineStringESRI extends AnyFlatSpec {
         noException should be thrownBy MosaicLineStringESRI.fromHEX(lineString.toHEX)
         noException should be thrownBy MosaicLineStringESRI.fromJSON(lineString.toJSON)
         noException should be thrownBy MosaicLineStringESRI.fromInternal(lineString.toInternal.serialize.asInstanceOf[InternalRow])
+        noException should be thrownBy MosaicLineStringESRI.fromEWKT(lineString.toEWKT)
         lineString.equals(MosaicLineStringESRI.fromWKB(lineString.toWKB)) shouldBe true
         lineString.equals(MosaicLineStringESRI.fromHEX(lineString.toHEX)) shouldBe true
         lineString.equals(MosaicLineStringESRI.fromJSON(lineString.toJSON)) shouldBe true
         lineString.equals(MosaicLineStringESRI.fromInternal(lineString.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
+        lineString.equals(MosaicLineStringESRI.fromEWKT(lineString.toEWKT)) shouldBe true
     }
 
     "MosaicLineStringESRI" should "be instantiable from a Seq of MosaicPointESRI" in {
@@ -139,6 +141,18 @@ class TestLineStringESRI extends AnyFlatSpec {
             .asInstanceOf[MosaicLineStringESRI]
         val testResult = testLine.transformCRSXY(sridTarget).asInstanceOf[MosaicLineStringESRI]
         expectedResult.distance(testResult) should be < 0.001d
+    }
+
+    "MosaicLineStringESRI" should "maintain SRID after EWKT conversion" in {
+        val srid = 32632
+        val wkt = "LINESTRING (1 1, 2 2, 3 3)"
+        val expectedEWKT = s"SRID=${srid};${wkt}"
+        val lineString = MosaicLineStringESRI.fromWKT(wkt).asInstanceOf[MosaicLineStringESRI]
+        lineString.setSpatialReference(srid)
+
+        val ewkt = lineString.toEWKT
+        ewkt.equals(expectedEWKT) shouldBe true
+        MosaicLineStringESRI.fromEWKT(ewkt).equals(lineString) shouldBe true
     }
 
 }

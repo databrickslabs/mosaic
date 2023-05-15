@@ -14,10 +14,7 @@ import org.apache.spark.sql.types.{BinaryType, StringType}
 object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
 
     override def fromWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
-        val inputGeom = ctx.freshName("inputGeom")
-        val jtsGeom = classOf[Geometry].getName
-        val wktReader = classOf[WKTReader].getName
-        (s"""$jtsGeom $inputGeom = new $wktReader().read($eval.toString());""", inputGeom)
+        fromEWKT(ctx, eval, geometryAPI)
     }
 
     override def fromWKB(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
@@ -75,6 +72,30 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
              |$geometryClass $geometry = (($mosaicGeometryClass)$mosaicGeometryClass.fromInternal($eval)).getGeom();
              |""".stripMargin,
           geometry
+        )
+    }
+
+    override def fromEWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
+        val inputGeom = ctx.freshName("inputGeom")
+        val geom = ctx.freshName("geom")
+        val parts = ctx.freshName("parts")
+        val srid = ctx.freshName("srid")
+        val jtsGeom = classOf[Geometry].getName
+        val wktReader = classOf[WKTReader].getName
+        (
+            s"""
+               |$jtsGeom $inputGeom;
+               |String $geom = $eval.toString();
+               |if ($geom.startsWith("SRID=")) {
+               |    String[] $parts = $geom.split(";", 0);
+               |    String $srid = $parts[0].split("=", 0)[1];
+               |    $inputGeom = new $wktReader().read($parts[1]);
+               |    $inputGeom.setSRID(Integer.parseInt($srid));
+               |} else {
+               |    $inputGeom = new $wktReader().read($geom);;
+               |}
+               |""".stripMargin,
+            inputGeom
         )
     }
 
@@ -169,6 +190,18 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
              |$internalGeometryJavaType $outputGeom = (InternalRow)($mosaicGeometryClass.apply($eval).toInternal().serialize());
              |""".stripMargin,
           outputGeom
+        )
+    }
+
+    override def toEWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
+        val outputGeom = ctx.freshName("outputGeom")
+        val javaStringType = CodeGenerator.javaType(StringType)
+        val wktWriterClass = classOf[WKTWriter].getName
+        (
+            s"""
+               |$javaStringType $outputGeom = $javaStringType.fromString("SRID=" + Integer.toString($eval.getSRID()) + ";" + new $wktWriterClass().write($eval));
+               |""".stripMargin,
+            outputGeom
         )
     }
 

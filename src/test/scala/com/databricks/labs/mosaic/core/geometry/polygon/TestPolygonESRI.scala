@@ -34,10 +34,12 @@ class TestPolygonESRI extends AnyFlatSpec {
         noException should be thrownBy MosaicPolygonESRI.fromHEX(polygon.toHEX)
         noException should be thrownBy MosaicPolygonESRI.fromJSON(polygon.toJSON)
         noException should be thrownBy MosaicPolygonESRI.fromInternal(polygon.toInternal.serialize.asInstanceOf[InternalRow])
+        noException should be thrownBy MosaicPolygonESRI.fromEWKT(polygon.toEWKT)
         polygon.equals(MosaicPolygonESRI.fromWKB(polygon.toWKB)) shouldBe true
         polygon.equals(MosaicPolygonESRI.fromHEX(polygon.toHEX)) shouldBe true
         polygon.equals(MosaicPolygonESRI.fromJSON(polygon.toJSON)) shouldBe true
         polygon.equals(MosaicPolygonESRI.fromInternal(polygon.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
+        polygon.equals(MosaicPointESRI.fromEWKT(polygon.toEWKT)) shouldBe true
     }
 
     "MosaicPolygonESRI" should "be instantiable from a Seq of MosaicPointESRI" in {
@@ -151,4 +153,15 @@ class TestPolygonESRI extends AnyFlatSpec {
         intersection.getArea shouldBe expectedResult.getArea +- 1d
     }
 
+    "MosaicPolygonESRI" should "maintain SRID after EWKT conversion" in {
+        val srid = 32632
+        val wkt = "POLYGON ((0 1, 3 0, 4 3, 0 4, 0 1))"
+        val expectedEWKT = s"SRID=${srid};${wkt}"
+        val polygon = MosaicPolygonESRI.fromWKT(wkt).asInstanceOf[MosaicPolygonESRI]
+        polygon.setSpatialReference(srid)
+
+        val ewkt = polygon.toEWKT
+        ewkt.equals(expectedEWKT) shouldBe true
+        MosaicPolygonESRI.fromEWKT(ewkt).equals(polygon) shouldBe true
+    }
 }

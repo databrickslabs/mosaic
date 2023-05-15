@@ -50,10 +50,12 @@ class TestPointESRI extends AnyFlatSpec {
         noException should be thrownBy MosaicPointESRI.fromHEX(point.toHEX)
         noException should be thrownBy MosaicPointESRI.fromJSON(point.toJSON)
         noException should be thrownBy MosaicPointESRI.fromInternal(point.toInternal.serialize.asInstanceOf[InternalRow])
+        noException should be thrownBy MosaicPointESRI.fromEWKT(point.toEWKT)
         point.equals(MosaicPointESRI.fromWKB(point.toWKB)) shouldBe true
         point.equals(MosaicPointESRI.fromHEX(point.toHEX)) shouldBe true
         point.equals(MosaicPointESRI.fromJSON(point.toJSON)) shouldBe true
         point.equals(MosaicPointESRI.fromInternal(point.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
+        point.equals(MosaicPointESRI.fromEWKT(point.toEWKT)) shouldBe true
     }
 
     "MosaicPointESRI" should "maintain SRID across operations" in {
@@ -95,4 +97,15 @@ class TestPointESRI extends AnyFlatSpec {
         comparison should contain only true
     }
 
+    "MosaicPointESRI" should "maintain SRID after EWKT conversion" in {
+        val srid = 32632
+        val wkt = "POINT (1 2)"
+        val expectedEWKT = s"SRID=${srid};${wkt}"
+        val point = MosaicPointESRI.fromWKT(wkt).asInstanceOf[MosaicPointESRI]
+        point.setSpatialReference(srid)
+
+        val ewkt = point.toEWKT
+        ewkt.equals(expectedEWKT) shouldBe true
+        MosaicPointESRI.fromEWKT(ewkt).equals(point) shouldBe true
+    }
 }

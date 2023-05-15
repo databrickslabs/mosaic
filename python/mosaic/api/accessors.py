@@ -17,6 +17,7 @@ __all__ = [
     "as_hex",
     "as_json",
     "convert_to",
+    "st_asewkt",
 ]
 
 
@@ -130,4 +131,23 @@ def as_json(geom: ColumnOrName) -> Column:
 def convert_to(geom: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
         "convert_to", pyspark_to_java_column(geom)
+    )
+
+def st_asewkt(geom: ColumnOrName) -> Column:
+    """
+    Translate a geometry into its Extended Well-known Text (EWKT) representation.
+
+    Parameters
+    ----------
+    geom : Column (BinaryType, HexType, JSONType or InternalGeometryType)
+        Geometry column
+
+    Returns
+    -------
+    Column (StringType)
+        An EWKT geometry
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_asewkt", pyspark_to_java_column(geom)
     )

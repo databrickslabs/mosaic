@@ -68,6 +68,7 @@ object ConvertToCodeGen {
             case "JSONOBJECT" => geometryCodeGen.toJSON(ctx, eval, geometryAPI)
             case "GEOJSON"    => geometryCodeGen.toGeoJSON(ctx, eval, geometryAPI)
             case "COORDS"     => geometryCodeGen.toInternal(ctx, eval, geometryAPI)
+            case "EWKT"       => geometryCodeGen.toEWKT(ctx, eval, geometryAPI)
             case _            => throw new Error(s"Data type unsupported: $outputDataFormatName.")
         }
     }

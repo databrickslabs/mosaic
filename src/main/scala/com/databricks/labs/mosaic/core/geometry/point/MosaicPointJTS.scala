@@ -117,4 +117,6 @@ object MosaicPointJTS extends GeometryReader {
 
     override def fromHEX(hex: String): MosaicGeometryJTS = MosaicGeometryJTS.fromHEX(hex)
 
+    override def fromEWKT(ewkt: String): MosaicGeometryJTS = MosaicGeometryJTS.fromEWKT(ewkt)
+
 }

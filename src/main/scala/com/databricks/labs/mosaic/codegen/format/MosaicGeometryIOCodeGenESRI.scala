@@ -2,10 +2,11 @@ package com.databricks.labs.mosaic.codegen.format
 
 import java.nio.ByteBuffer
 
-import com.databricks.labs.mosaic.core.geometry.MosaicGeometryESRI
+import com.databricks.labs.mosaic.core.geometry.{MosaicGeometry, MosaicGeometryESRI}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import com.esri.core.geometry.ogc.OGCGeometry
+import com.esri.core.geometry.SpatialReference
 import org.locationtech.jts.io.{WKBReader, WKBWriter}
 
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
@@ -15,9 +16,10 @@ import org.apache.spark.sql.types.{BinaryType, StringType}
 object MosaicGeometryIOCodeGenESRI extends GeometryIOCodeGen {
 
     override def fromWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
-        val inputGeom = ctx.freshName("inputGeom")
-        val ogcGeom = classOf[OGCGeometry].getName
-        (s"""$ogcGeom $inputGeom = $ogcGeom.fromText($eval.toString());""", inputGeom)
+        // Technically, fromEWKT can have an implementation which is only a subset of implementation of
+        // fromWKT but it's not really necessary and both can use the same implementation so long as
+        // it works for both.
+        fromEWKT(ctx, eval, geometryAPI)
     }
 
     override def fromWKB(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
@@ -74,6 +76,30 @@ object MosaicGeometryIOCodeGenESRI extends GeometryIOCodeGen {
              |$ogcGeom $geometry = $mosaicGeometryClass.fromInternal($eval).getGeom();
              |""".stripMargin,
           geometry
+        )
+    }
+
+    override def fromEWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
+        val inputGeom = ctx.freshName("inputGeom")
+        val geom = ctx.freshName("geom")
+        val parts = ctx.freshName("parts")
+        val srid = ctx.freshName("srid")
+        val ogcGeom = classOf[OGCGeometry].getName
+        val sptRef = classOf[SpatialReference].getName
+        (
+            s"""
+               |$ogcGeom $inputGeom;
+               |String $geom = $eval.toString();
+               |if ($geom.startsWith("SRID=")) {
+               |    String[] $parts = $geom.split(";", 0);
+               |    String $srid = $parts[0].split("=", 0)[1];
+               |    $inputGeom = $ogcGeom.fromText($parts[1]);
+               |    $inputGeom.setSpatialReference($sptRef.create(Integer.parseInt($srid)));
+               |} else {
+               |    $inputGeom = $ogcGeom.fromText($geom);
+               |}
+               |""".stripMargin,
+            inputGeom
         )
     }
 
@@ -150,6 +176,20 @@ object MosaicGeometryIOCodeGenESRI extends GeometryIOCodeGen {
              |$internalGeometryJavaType $outputGeom = (InternalRow)($mosaicGeometryClass.apply($eval).toInternal().serialize());
              |""".stripMargin,
           outputGeom
+        )
+    }
+
+    override def toEWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
+        val outputGeom = ctx.freshName("outputGeom")
+        val srid = ctx.freshName("grid")
+        val javaStringType = CodeGenerator.javaType(StringType)
+        (
+            s"""
+               |int $srid = 0;
+               |if ($eval.esriSR != null) $srid = $eval.getEsriSpatialReference().getID();
+               |$javaStringType $outputGeom = $javaStringType.fromString("SRID=" + Integer.toString($srid) + ";" + $eval.asText());
+               |""".stripMargin,
+            outputGeom
         )
     }
 

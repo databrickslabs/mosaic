@@ -35,6 +35,8 @@ trait ConversionBehaviors { this: AnyFlatSpec =>
             .withColumn("geom", expr("st_geomfromwkb(wkb)")) // WKB -> Geom
             .withColumn("geojson", expr("st_asgeojson(geom)")) // Geom -> GeoJSON
             .withColumn("geom", expr("st_geomfromgeojson(geojson)")) // GeoJSON -> Geom
+            .withColumn("ewkt", expr("st_asewkt(geom)")) // Geom -> EWKT
+            .withColumn("geom", expr("st_geomfromewkt(ewkt)")) // EWKT -> Geom
             .withColumn("new_wkt", expr("st_aswkt(geom)")) // Geom -> WKT
             .select("new_wkt")
             .collect()
@@ -69,6 +71,8 @@ trait ConversionBehaviors { this: AnyFlatSpec =>
             .withColumn("geom", st_geomfromwkb(col("wkb"))) // WKB -> Geom
             .withColumn("geojson", st_asgeojson(col("geom"))) // Geom -> GeoJSON
             .withColumn("geom", st_geomfromgeojson(col("geojson"))) // GeoJSON -> Geom
+            .withColumn("ewkt", expr("st_asewkt(geom)")) // Geom -> EWKT
+            .withColumn("geom", expr("st_geomfromewkt(ewkt)")) // EWKT -> Geom
             .withColumn("new_wkt", st_aswkt(col("geom"))) // Geom -> WKT
             .select("new_wkt")
             .collect()

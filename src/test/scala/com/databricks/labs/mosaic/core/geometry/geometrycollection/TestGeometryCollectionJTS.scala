@@ -43,11 +43,13 @@ class TestGeometryCollectionJTS extends AnyFunSuite {
         val geomJSON = geometryCollection.toJSON
         val geomWKT = geometryCollection.toWKT
         val geomHex = geometryCollection.toHEX
+        val geomEWKT = geometryCollection.toEWKT
 
         MosaicGeometryCollectionJTS.fromWKB(geomWKB).equals(geometryCollection) shouldBe true
         MosaicGeometryCollectionJTS.fromJSON(geomJSON).equals(geometryCollection) shouldBe true
         MosaicGeometryCollectionJTS.fromWKT(geomWKT).equals(geometryCollection) shouldBe true
         MosaicGeometryCollectionJTS.fromHEX(geomHex).equals(geometryCollection) shouldBe true
+        MosaicGeometryCollectionJTS.fromEWKT(geomEWKT).equals(geometryCollection) shouldBe true
 
     }
 
