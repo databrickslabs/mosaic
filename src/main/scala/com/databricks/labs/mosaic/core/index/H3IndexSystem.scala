@@ -240,12 +240,12 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         minX < 0 && maxX >= 0 && ((maxX - minX > 180) || !geometry.isValid)
     }
 
-    private def shiftWest(lng: Double, lat: Double): (Double, Double) = {
+    private def shiftEast(lng: Double, lat: Double): (Double, Double) = {
         if (lng < 0) (lng + 360.0, lat)
         else (lng, lat)
     }
 
-    private def shiftEast(lng: Double, lat: Double): (Double, Double) = {
+    private def shiftWest(lng: Double, lat: Double): (Double, Double) = {
         if (lng >= 180.0) (lng - 360.0, lat)
         else (lng, lat)
     }
@@ -258,7 +258,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         )
     }
 
-    private def makeWestBBox(geometryAPI: GeometryAPI): MosaicGeometry = makeUnsafeGeometry(
+    private def makeEastBBox(geometryAPI: GeometryAPI): MosaicGeometry = makeUnsafeGeometry(
         mutable.Buffer(
             new GeoCoord(-90, 0),
             new GeoCoord(90, 0),
@@ -268,7 +268,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         geometryAPI: GeometryAPI)
 
 
-    private def makeShiftedEastBBox(geometryAPI: GeometryAPI): MosaicGeometry = makeUnsafeGeometry(
+    private def makeShiftedWestBBox(geometryAPI: GeometryAPI): MosaicGeometry = makeUnsafeGeometry(
         mutable.Buffer(
             new GeoCoord(-90, 180),
             new GeoCoord(90, 180),
@@ -282,14 +282,14 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
         val lat = if (isNorthPole) 90 else -90
 
-        val coords = coordinates.map(geoCoord => shiftWest(geoCoord.lng, geoCoord.lat)).sortBy(_._1)
+        val coords = coordinates.map(geoCoord => shiftEast(geoCoord.lng, geoCoord.lat)).sortBy(_._1)
         val lineString = geometryAPI.geometry(
             coords.map(p => geometryAPI.fromGeoCoord(Coordinates(p._2, p._1))),
             LINESTRING
         )
 
-        val westernLine = lineString.intersection(makeWestBBox(geometryAPI))
-        val easternLine = lineString.intersection(makeShiftedEastBBox(geometryAPI)).mapXY(shiftEast)
+        val westernLine = lineString.intersection(makeEastBBox(geometryAPI))
+        val easternLine = lineString.intersection(makeShiftedWestBBox(geometryAPI)).mapXY(shiftWest)
 
         val vertices = westernLine.getShellPoints.head ++
           Seq(geometryAPI.fromGeoCoord(Coordinates(lat, 180)),
@@ -305,9 +305,9 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         val unsafeGeometry = makeUnsafeGeometry(coordinates, geometryAPI)
 
         if (crossesAntiMeridian(unsafeGeometry)) {
-            val shiftedGeometry = unsafeGeometry.mapXY(shiftWest)
-            val westGeom = shiftedGeometry.intersection(makeWestBBox(geometryAPI: GeometryAPI))
-            val eastGeom = shiftedGeometry.intersection(makeShiftedEastBBox(geometryAPI: GeometryAPI)).mapXY(shiftEast)
+            val shiftedGeometry = unsafeGeometry.mapXY(shiftEast)
+            val westGeom = shiftedGeometry.intersection(makeEastBBox(geometryAPI: GeometryAPI))
+            val eastGeom = shiftedGeometry.intersection(makeShiftedWestBBox(geometryAPI: GeometryAPI)).mapXY(shiftWest)
             westGeom.union(eastGeom)
         }
         else {
