@@ -17,8 +17,7 @@ rst_bandmetadata
 
 .. function:: rst_bandmetadata(raster, band)
 
-    Extract the metadata describing the raster band.
-    Metadata is return as a map of key value pairs.
+    Returns the metadata for the band as a map type, (key->value) pairs.
 
     :param raster: A column containing the path to a raster file.
     :type col: Column (StringType)
@@ -304,8 +303,8 @@ rst_metadata
 
 .. function:: rst_metadata(raster)
 
-    Extract the metadata describing the raster.
-    Metadata is return as a map of key value pairs.
+    Extracts the metadata describing the raster.
+    Metadata is returned as a map of key value pairs.
 
     :param raster: A column containing the path to a raster file.
     :type col: Column (StringType)
@@ -617,7 +616,7 @@ rst_rastertogridcount
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
     CellID can be LongType or StringType depending on the configuration of MosaicContext.
-    The value/measure for each cell is the average of the pixel values in the cell.
+    The value/measure for each cell is the number of pixels in the cell.
 
     :param raster: A column containing the path to a raster file.
     :type col: Column (StringType)
@@ -848,7 +847,7 @@ rst_rastertogridmin
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
     CellID can be LongType or StringType depending on the configuration of MosaicContext.
-    The value/measure for each cell is the median pixel value.
+    The value/measure for each cell is the minimum pixel value.
 
     :param raster: A column containing the path to a raster file.
     :type col: Column (StringType)
@@ -975,7 +974,7 @@ rst_rastertoworldcoord
 rst_rastertoworldcoordx
 **********************
 
-.. function:: rst_rastertoworldcoord(raster, x, y)
+.. function:: rst_rastertoworldcoordx(raster, x, y)
 
     Computes the world coordinates of the raster pixel at the given x and y coordinates.
     The result is the X coordinate of the point after applying the GeoTransform of the raster.
@@ -1032,7 +1031,7 @@ rst_rastertoworldcoordy
 .. function:: rst_rastertoworldcoordy(raster, x, y)
 
     Computes the world coordinates of the raster pixel at the given x and y coordinates.
-    The result is the X coordinate of the point after applying the GeoTransform of the raster.
+    The result is the Y coordinate of the point after applying the GeoTransform of the raster.
 
     :param raster: A column containing the path to a raster file.
     :type col: Column (StringType)
@@ -1343,7 +1342,7 @@ rst_skewx
 rst_skewy
 **********************
 
-.. function:: rst_skewx(raster)
+.. function:: rst_skewy(raster)
 
     Computes the skew of the raster in the Y direction.
 
