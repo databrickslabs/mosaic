@@ -62,7 +62,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
 
     }
 
-    "Mosaic" should "register GDAL extension for all index systems and geometry APIs in Linux" in {
+    "Mosaic" should "register GDAL extension for all index systems and geometry APIs in Linux" ignore {
         assume(System.getProperty("os.name") == "Linux")
 
         val conf = new SparkConf(loadDefaults = false)

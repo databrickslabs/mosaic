@@ -36,10 +36,12 @@ class TestMultiPointJTS extends AnyFlatSpec {
         noException should be thrownBy MosaicMultiPointJTS.fromHEX(multiPoint.toHEX)
         noException should be thrownBy MosaicMultiPointJTS.fromJSON(multiPoint.toJSON)
         noException should be thrownBy MosaicMultiPointJTS.fromInternal(multiPoint.toInternal.serialize.asInstanceOf[InternalRow])
+        noException should be thrownBy MosaicMultiPointJTS.fromEWKT(multiPoint.toEWKT)
         multiPoint.equals(MosaicMultiPointJTS.fromWKB(multiPoint.toWKB)) shouldBe true
         multiPoint.equals(MosaicMultiPointJTS.fromHEX(multiPoint.toHEX)) shouldBe true
         multiPoint.equals(MosaicMultiPointJTS.fromJSON(multiPoint.toJSON)) shouldBe true
         multiPoint.equals(MosaicMultiPointJTS.fromInternal(multiPoint.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
+        multiPoint.equals(MosaicMultiPointJTS.fromEWKT(multiPoint.toEWKT)) shouldBe true
     }
 
     "MosaicMultiPointJTS" should "be instantiable from a Seq of MosaicPointJTS" in {
@@ -119,6 +121,18 @@ class TestMultiPointJTS extends AnyFlatSpec {
         // MosaicMultiPointJTS
         multiPoint.getBoundary.getSpatialReference shouldBe srid
         multiPoint.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
+    }
+
+    "MosaicMultiPointJTS" should "maintain SRID after EWKT conversion" in {
+        val srid = 32632
+        val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT (1 1, 2 2, 3 3)").asInstanceOf[MosaicMultiPointJTS]
+        val wkt = multiPoint.toWKT
+        val expectedEWKT = s"SRID=${srid};${wkt}"
+        multiPoint.setSpatialReference(srid)
+
+        val ewkt = multiPoint.toEWKT
+        ewkt.equals(expectedEWKT) shouldBe true
+        MosaicMultiPointJTS.fromEWKT(ewkt).equals(multiPoint) shouldBe true
     }
 
 }

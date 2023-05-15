@@ -19,12 +19,14 @@ trait GeometryAPIBehaviors { this: AnyFunSuite =>
         val hexRow = InternalRow.fromSeq(Seq(geometryAPI.serialize(point, HexType)))
         val geojsonRow = InternalRow.fromSeq(Seq(geometryAPI.serialize(point, JSONType)))
         val coordsRow = InternalRow.fromSeq(Seq(geometryAPI.serialize(point, InternalGeometryType)))
+        val ewktRow = InternalRow.fromSeq(Seq(UTF8String.fromString(point.toEWKT)))
 
         val wktSer = geometryAPI.serialize(point, "WKT")
         val wkbSer = geometryAPI.serialize(point, "WKB")
         val hexSer = geometryAPI.serialize(point, "HEX")
         val jsonSer = geometryAPI.serialize(point, "JSONOBJECT")
         val coordsSer = geometryAPI.serialize(point, "COORDS")
+        val ewktSer = geometryAPI.serialize(point, "EWKT")
 
         val wktSerDT = geometryAPI.serialize(point, StringType)
         val wkbSerDT = geometryAPI.serialize(point, BinaryType)
@@ -44,6 +46,7 @@ trait GeometryAPIBehaviors { this: AnyFunSuite =>
         geometryAPI.geometry(hexSer, HexType).equals(point) shouldEqual true
         geometryAPI.geometry(jsonSer, JSONType).equals(point) shouldEqual true
         geometryAPI.geometry(coordsSer, InternalGeometryType).equals(point) shouldEqual true
+        geometryAPI.geometry(ewktSer, StringType).equals(point) shouldEqual true
 
         geometryAPI.geometry(wktSerDT, StringType).equals(point) shouldEqual true
         geometryAPI.geometry(wkbSerDT, BinaryType).equals(point) shouldEqual true
@@ -55,6 +58,7 @@ trait GeometryAPIBehaviors { this: AnyFunSuite =>
         geometryAPI.geometry(point.toWKT, "WKT").equals(point) shouldEqual true
         geometryAPI.geometry(point.toHEX, "HEX").equals(point) shouldEqual true
         geometryAPI.geometry(point.toJSON, "GEOJSON").equals(point) shouldEqual true
+        geometryAPI.geometry(point.toEWKT, "EWKT").equals(point) shouldEqual true
         an[Error] should be thrownBy geometryAPI.geometry(point.toInternal, "COORDS")
 
         geometryAPI.geometry(wkbRow, BinaryType).equals(point) shouldEqual true
@@ -62,6 +66,7 @@ trait GeometryAPIBehaviors { this: AnyFunSuite =>
         geometryAPI.geometry(hexRow, HexType).equals(point) shouldEqual true
         geometryAPI.geometry(geojsonRow, JSONType).equals(point) shouldEqual true
         geometryAPI.geometry(coordsRow, InternalGeometryType).equals(point) shouldEqual true
+        geometryAPI.geometry(ewktRow, StringType).equals(point) shouldEqual true
         an[Error] should be thrownBy geometryAPI.geometry(wkbRow, IntegerType)
     }
 

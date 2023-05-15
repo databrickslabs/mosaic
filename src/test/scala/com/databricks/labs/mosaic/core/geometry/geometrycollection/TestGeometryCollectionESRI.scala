@@ -42,11 +42,13 @@ class TestGeometryCollectionESRI extends AnyFunSuite {
         val geomJSON = geometryCollection.toJSON
         val geomWKT = geometryCollection.toWKT
         val geomHex = geometryCollection.toHEX
+        val geomEWKT = geometryCollection.toEWKT
 
         MosaicGeometryCollectionESRI.fromWKB(geomWKB).equals(geometryCollection) shouldBe true
         MosaicGeometryCollectionESRI.fromJSON(geomJSON).equals(geometryCollection) shouldBe true
         MosaicGeometryCollectionESRI.fromWKT(geomWKT).equals(geometryCollection) shouldBe true
         MosaicGeometryCollectionESRI.fromHEX(geomHex).equals(geometryCollection) shouldBe true
+        MosaicGeometryCollectionESRI.fromEWKT(geomEWKT).equals(geometryCollection) shouldBe true
 
     }
 

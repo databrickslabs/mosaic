@@ -37,7 +37,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
     override def checkInputDataTypes(): TypeCheckResult = {
 
         val inputTypes = Seq(BinaryType, StringType, HexType, JSONType, InternalGeometryType)
-        val outputDataTypes = Seq("WKT", "WKB", "COORDS", "HEX", "GEOJSON", "JSONOBJECT")
+        val outputDataTypes = Seq("WKT", "WKB", "COORDS", "HEX", "GEOJSON", "JSONOBJECT", "EWKT")
 
         if (inputTypes.contains(inGeometry.dataType) && outputDataTypes.contains(outDataType.toUpperCase(Locale.ROOT))) {
             TypeCheckResult.TypeCheckSuccess
@@ -57,6 +57,7 @@ case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPINam
             case "COORDS"     => InternalGeometryType
             case "GEOJSON"    => StringType
             case "JSONOBJECT" => JSONType
+            case "EWKT"       => StringType
             case _         => throw new Error(s"Data type not supported: $outDataType")
         }
 

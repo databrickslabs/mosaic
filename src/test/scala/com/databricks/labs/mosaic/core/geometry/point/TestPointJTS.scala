@@ -50,10 +50,12 @@ class TestPointJTS extends AnyFlatSpec {
         noException should be thrownBy MosaicPointJTS.fromHEX(point.toHEX)
         noException should be thrownBy MosaicPointJTS.fromJSON(point.toJSON)
         noException should be thrownBy MosaicPointJTS.fromInternal(point.toInternal.serialize.asInstanceOf[InternalRow])
+        noException should be thrownBy MosaicPointJTS.fromEWKT(point.toEWKT)
         point.equals(MosaicPointJTS.fromWKB(point.toWKB)) shouldBe true
         point.equals(MosaicPointJTS.fromHEX(point.toHEX)) shouldBe true
         point.equals(MosaicPointJTS.fromJSON(point.toJSON)) shouldBe true
         point.equals(MosaicPointJTS.fromInternal(point.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
+        point.equals(MosaicPointJTS.fromEWKT(point.toEWKT)) shouldBe true
     }
 
     "MosaicPointJTS" should "maintain SRID across operations" in {
@@ -95,4 +97,15 @@ class TestPointJTS extends AnyFlatSpec {
         comparison.take(2) should contain only true
     }
 
+    "MosaicPointJTS" should "maintain SRID after EWKT conversion" in {
+        val srid = 32632
+        val wkt = "POINT (1 2)"
+        val expectedEWKT = s"SRID=${srid};${wkt}"
+        val point = MosaicPointJTS.fromWKT(wkt).asInstanceOf[MosaicPointJTS]
+        point.setSpatialReference(srid)
+
+        val ewkt = point.toEWKT
+        ewkt.equals(expectedEWKT) shouldBe true
+        MosaicPointJTS.fromEWKT(ewkt).equals(point) shouldBe true
+    }
 }

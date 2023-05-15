@@ -101,6 +101,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy getFunc("st_aswkb").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_asbinary").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_asgeojson").apply(Seq(multiPolygon.expr))
+        noException should be thrownBy getFunc("st_asewkt").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_length").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_perimeter").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_distance").apply(Seq(multiPolygon.expr, pointWkt))
