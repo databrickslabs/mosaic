@@ -145,8 +145,17 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
         val lvl1Cells = baseCells.flatMap(h3.h3ToChildren(_, 1).asScala)
         val testCells = Seq(baseCells, lvl1Cells)
 
+        val baseCellsStr = baseCells.map(h3.h3ToString(_))
+        val lvl1CellsStr = lvl1Cells.map(h3.h3ToString(_))
+        val testCellsStr = Seq(baseCellsStr, lvl1CellsStr)
+
         apis.foreach(api => {
             testCells.foreach(cells => {
+                val geoms = cells.map(indexToGeometry(_, api))
+                geoms.foreach(geom => geom.isValid shouldBe true)
+                geoms.foldLeft(0.0)((acc, geom) => acc + geom.getArea) shouldBe ((180.0 * 360.0) +- 0.0001)
+            })
+            testCellsStr.foreach(cells => {
                 val geoms = cells.map(indexToGeometry(_, api))
                 geoms.foreach(geom => geom.isValid shouldBe true)
                 geoms.foldLeft(0.0)((acc, geom) => acc + geom.getArea) shouldBe ((180.0 * 360.0) +- 0.0001)
