@@ -14,27 +14,7 @@ import org.apache.spark.sql.types.{BinaryType, StringType}
 object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
 
     override def fromWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
-        val inputGeom = ctx.freshName("inputGeom")
-        val geom = ctx.freshName("geom")
-        val parts = ctx.freshName("parts")
-        val srid = ctx.freshName("srid")
-        val jtsGeom = classOf[Geometry].getName
-        val wktReader = classOf[WKTReader].getName
-        (
-            s"""
-               |$jtsGeom $inputGeom;
-               |String $geom = $eval.toString();
-               |if ($geom.startsWith("SRID=")) {
-               |    String[] $parts = $geom.split(";", 0);
-               |    String $srid = $parts[0].split("=", 0)[1];
-               |    $inputGeom = new $wktReader().read($parts[1]);
-               |    $inputGeom.setSRID(Integer.parseInt($srid));
-               |} else {
-               |    $inputGeom = new $wktReader().read($geom);;
-               |}
-               |""".stripMargin,
-            inputGeom
-        )
+        fromEWKT(ctx, eval, geometryAPI)
     }
 
     override def fromWKB(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
@@ -97,19 +77,40 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
 
     override def fromEWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val inputGeom = ctx.freshName("inputGeom")
+        val geom = ctx.freshName("geom")
         val parts = ctx.freshName("parts")
         val srid = ctx.freshName("srid")
         val jtsGeom = classOf[Geometry].getName
         val wktReader = classOf[WKTReader].getName
         (
             s"""
-               |String[] $parts = $eval.toString().split(";", 0);
-               |String $srid = $parts[0].toString().split("=", 0)[1];
-               |$jtsGeom $inputGeom = new $wktReader().read($parts[1]);
-               |$inputGeom.setSRID(Integer.parseInt($srid));
+               |$jtsGeom $inputGeom;
+               |String $geom = $eval.toString();
+               |if ($geom.startsWith("SRID=")) {
+               |    String[] $parts = $geom.split(";", 0);
+               |    String $srid = $parts[0].split("=", 0)[1];
+               |    $inputGeom = new $wktReader().read($parts[1]);
+               |    $inputGeom.setSRID(Integer.parseInt($srid));
+               |} else {
+               |    $inputGeom = new $wktReader().read($geom);;
+               |}
                |""".stripMargin,
             inputGeom
         )
+//        val inputGeom = ctx.freshName("inputGeom")
+//        val parts = ctx.freshName("parts")
+//        val srid = ctx.freshName("srid")
+//        val jtsGeom = classOf[Geometry].getName
+//        val wktReader = classOf[WKTReader].getName
+//        (
+//            s"""
+//               |String[] $parts = $eval.toString().split(";", 0);
+//               |String $srid = $parts[0].toString().split("=", 0)[1];
+//               |$jtsGeom $inputGeom = new $wktReader().read($parts[1]);
+//               |$inputGeom.setSRID(Integer.parseInt($srid));
+//               |""".stripMargin,
+//            inputGeom
+//        )
     }
 
     override def toWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {

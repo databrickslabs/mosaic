@@ -16,27 +16,10 @@ import org.apache.spark.sql.types.{BinaryType, StringType}
 object MosaicGeometryIOCodeGenESRI extends GeometryIOCodeGen {
 
     override def fromWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
-        val inputGeom = ctx.freshName("inputGeom")
-        val geom = ctx.freshName("geom")
-        val parts = ctx.freshName("parts")
-        val srid = ctx.freshName("srid")
-        val ogcGeom = classOf[OGCGeometry].getName
-        val sptRef = classOf[SpatialReference].getName
-        (
-            s"""
-               |$ogcGeom $inputGeom;
-               |String $geom = $eval.toString();
-               |if ($geom.startsWith("SRID=")) {
-               |    String[] $parts = $geom.split(";", 0);
-               |    String $srid = $parts[0].split("=", 0)[1];
-               |    $inputGeom = $ogcGeom.fromText($parts[1]);
-               |    $inputGeom.setSpatialReference($sptRef.create(Integer.parseInt($srid)));
-               |} else {
-               |    $inputGeom = $ogcGeom.fromText($geom);
-               |}
-               |""".stripMargin,
-            inputGeom
-        )
+        // Technically, fromEWKT can have an implementation which is only a subset of implementation of
+        // fromWKT but it's not really necessary and both can use the same implementation so long as
+        // it works for both.
+        fromEWKT(ctx, eval, geometryAPI)
     }
 
     override def fromWKB(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
@@ -98,19 +81,41 @@ object MosaicGeometryIOCodeGenESRI extends GeometryIOCodeGen {
 
     override def fromEWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
         val inputGeom = ctx.freshName("inputGeom")
+        val geom = ctx.freshName("geom")
         val parts = ctx.freshName("parts")
         val srid = ctx.freshName("srid")
         val ogcGeom = classOf[OGCGeometry].getName
         val sptRef = classOf[SpatialReference].getName
         (
             s"""
-               |String[] $parts = $eval.toString().split(";", 0);
-               |String $srid = $parts[0].split("=", 0)[1];
-               |$inputGeom = $ogcGeom.fromText($parts[1]);
-               |$inputGeom.setSpatialReference($sptRef.create($srid))
+               |$ogcGeom $inputGeom;
+               |String $geom = $eval.toString();
+               |if ($geom.startsWith("SRID=")) {
+               |    String[] $parts = $geom.split(";", 0);
+               |    String $srid = $parts[0].split("=", 0)[1];
+               |    $inputGeom = $ogcGeom.fromText($parts[1]);
+               |    $inputGeom.setSpatialReference($sptRef.create(Integer.parseInt($srid)));
+               |} else {
+               |    $inputGeom = $ogcGeom.fromText($geom);
+               |}
                |""".stripMargin,
             inputGeom
         )
+
+//        val inputGeom = ctx.freshName("inputGeom")
+//        val parts = ctx.freshName("parts")
+//        val srid = ctx.freshName("srid")
+//        val ogcGeom = classOf[OGCGeometry].getName
+//        val sptRef = classOf[SpatialReference].getName
+//        (
+//            s"""
+//               |String[] $parts = $eval.toString().split(";", 0);
+//               |String $srid = $parts[0].split("=", 0)[1];
+//               |$inputGeom = $ogcGeom.fromText($parts[1]);
+//               |$inputGeom.setSpatialReference($sptRef.create($srid))
+//               |""".stripMargin,
+//            inputGeom
+//        )
     }
 
     override def toWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
