@@ -8,5 +8,5 @@ class PointIndexTest extends MosaicSpatialQueryTest with SharedSparkSession with
     testAllNoCodegen("PointIndex behavior int resolution") { behaviorInt }
     testAllNoCodegen("PointIndex behavior string resolution") { behaviorString }
     testAllNoCodegen("PointIndex auxiliary methods") { auxiliaryMethods }
-
+    testAllNoCodegen("PointIndex through saveAsTable") { issue_383 }
 }
