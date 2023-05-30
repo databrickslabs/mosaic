@@ -21,6 +21,8 @@ import scala.util.{Success, Try}
   */
 object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
+    override def crsID: Int = 4326
+
     val name = "H3"
 
     // An instance of H3Core to be used for IndexSystem implementation.

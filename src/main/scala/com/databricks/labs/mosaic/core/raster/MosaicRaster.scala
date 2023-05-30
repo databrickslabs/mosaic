@@ -2,7 +2,9 @@ package com.databricks.labs.mosaic.core.raster
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import org.gdal.gdal.Dataset
+import org.gdal.osr.SpatialReference
 
 /**
   * A base API for managing raster data in Mosaic. Any raster abstraction should
@@ -17,10 +19,13 @@ import org.gdal.gdal.Dataset
   */
 abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
 
+    def getPath: String = path
+
     /**
       * Writes out the current raster to the given checkpoint path. The raster
       * is written out as a GeoTiff. Only single subdataset is supported. Apply
       * mask to all bands. Trim down the raster to the provided extent.
+      *
       * @param stageId
       *   the UUI of the computation stage generating the raster. Used to avoid
       *   writing collisions.
@@ -30,13 +35,16 @@ abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
       *   The extent to trim the raster to.
       * @param checkpointPath
       *   The path to write the raster to.
-      *
       * @return
       *   Returns the path to the written raster.
       */
     def saveCheckpoint(stageId: String, rasterId: Long, extent: (Int, Int, Int, Int), checkpointPath: String): String
 
-    def getRasterForExtend(extent: (Int, Int, Int, Int), outPath: String): Dataset
+    def saveCheckpoint(stageId: String, checkpointPath: String): String
+
+    def getRasterForExtend(extent: (Int, Int, Int, Int), outPath: String): MosaicRaster
+
+    def getRasterForCell(cellID: Long, outPath: String, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRaster
 
     /** @return Returns the metadata of the raster file. */
     def metadata: Map[String, String]
@@ -66,14 +74,17 @@ abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
     /** @return Returns the bandId-th Band from the raster. */
     def getBand(bandId: Int): MosaicRasterBand
 
-    /** @return Returns the extent(xmin, ymin, xmax, ymax) of the raster. */
+    /** @return Returns the extent(xMin, yMin, xMax, yMax) of the raster. */
     def extent: Seq[Double]
 
-    /** @return Returns MosaicGeometry representing bounding box of the raster.  */
-    def bbox(geometryAPI: GeometryAPI): MosaicGeometry
+    /**
+      * @return
+      *   Returns MosaicGeometry representing bounding box of the raster.
+      */
+    def bbox(geometryAPI: GeometryAPI, destCRS: SpatialReference): MosaicGeometry
 
     /** @return Returns the path to the raster file. */
-    def getGeoTransform : Array[Double]
+    def getGeoTransform: Array[Double]
 
     /** @return Returns the GDAL Dataset representing the raster. */
     def getRaster: Dataset
@@ -96,5 +107,8 @@ abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
       *   The transform function. Will be applied on each band.
       */
     def transformBands[T](f: MosaicRasterBand => T): Seq[T]
+
+    /** A method that a boolean flat set to true if the raster is empty. */
+    def isEmpty: Boolean
 
 }

@@ -2,19 +2,24 @@ package com.databricks.labs.mosaic.core.raster
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.raster.operator.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
-import org.gdal.gdal.{Dataset, gdal}
+import org.apache.orc.util.Murmur3
+import org.gdal.gdal.gdal.GDALInfo
+import org.gdal.gdal.{Dataset, InfoOptions, gdal}
 import org.gdal.gdalconst.gdalconstConstants._
 import org.gdal.osr
 import org.gdal.osr.SpatialReference
 import org.locationtech.proj4j.CRSFactory
 
 import java.io.File
-import java.nio.file.{Files, Paths}
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
+import java.nio.file.{Files, Paths}
 import java.util.Locale
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util.Try
+import java.util.{Vector => JVector}
 
 /** GDAL implementation of the MosaicRaster trait. */
 //noinspection DuplicatedCode
@@ -22,7 +27,10 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
 
     import com.databricks.labs.mosaic.core.raster.MosaicRasterGDAL.toWorldCoord
 
-    val crsFactory: CRSFactory = new CRSFactory
+    protected val crsFactory: CRSFactory = new CRSFactory
+
+    private val wsg84 = new osr.SpatialReference()
+    wsg84.ImportFromEPSG(4326)
 
     override def metadata: Map[String, String] = {
         Option(raster.GetMetadataDomainList())
@@ -80,11 +88,11 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
 
     // noinspection ZeroIndexToHead
     override def extent: Seq[Double] = {
-        val minx = getGeoTransform(0)
-        val maxy = getGeoTransform(3)
-        val maxx = minx + getGeoTransform(1) * xSize
-        val miny = maxy + getGeoTransform(5) * ySize
-        Seq(minx, miny, maxx, maxy)
+        val minX = getGeoTransform(0)
+        val maxY = getGeoTransform(3)
+        val maxX = minX + getGeoTransform(1) * xSize
+        val minY = maxY + getGeoTransform(5) * ySize
+        Seq(minX, minY, maxX, maxY)
     }
 
     override def xSize: Int = raster.GetRasterXSize
@@ -93,10 +101,10 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
 
     override def getGeoTransform: Array[Double] = raster.GetGeoTransform()
 
-    def getGeoTransform(extent: (Int, Int, Int, Int)): Array[Double] = {
+    private def getGeoTransform(extent: (Int, Int, Int, Int)): Array[Double] = {
         val gt = getGeoTransform
-        val (xmin, _, _, ymax) = extent
-        val (xUpperLeft, yUpperLeft) = toWorldCoord(gt, xmin, ymax)
+        val (xMin, _, _, yMax) = extent
+        val (xUpperLeft, yUpperLeft) = toWorldCoord(gt, xMin, yMax)
         Array(xUpperLeft, gt(1), gt(2), yUpperLeft, gt(4), gt(5))
     }
 
@@ -137,7 +145,7 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
         val outPath = s"$tmpDir/raster_${rasterId.toString.replace("-", "_")}.tif"
         Files.createDirectories(Paths.get(outPath).getParent)
 
-        val outputDs = getRasterForExtend(extent, outPath)
+        val outputDs = getRasterForExtend(extent, outPath).getRaster
         outputDs.FlushCache()
 
         val destinationPath = Paths.get(checkpointPath.replace("dbfs:/", "/dbfs/"), s"raster_$rasterId.tif")
@@ -147,15 +155,30 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
         destinationPath.toAbsolutePath.toString.replace("dbfs:/", "/dbfs/")
     }
 
-    override  def getRasterForExtend(extent: (Int, Int, Int, Int), outPath: String): Dataset = {
-        val (xmin, ymin, xmax, ymax) = extent
-        val xSize = xmax - xmin
-        val ySize = ymax - ymin
+    override def saveCheckpoint(stageId: String, checkpointPath: String): String = {
+        val rasterId = Murmur3.hash64(path.getBytes)
+        val tmpDir = Files.createTempDirectory(s"mosaic_$stageId").toFile.getAbsolutePath
+        val outPath = s"$tmpDir/raster_${rasterId.toString.replace("-", "_")}.tif"
+        Files.createDirectories(Paths.get(outPath).getParent)
+        raster.FlushCache()
+        val outputDs = gdal.GetDriverByName("GTiff").CreateCopy(outPath, raster)
+        outputDs.FlushCache()
+        val destinationPath = Paths.get(checkpointPath.replace("dbfs:/", "/dbfs/"), s"raster_$rasterId.tif")
+        Files.createDirectories(destinationPath)
+        Files.copy(Paths.get(outPath), destinationPath, REPLACE_EXISTING)
+        Files.delete(Paths.get(outPath))
+        destinationPath.toAbsolutePath.toString.replace("dbfs:/", "/dbfs/")
+    }
+
+    override def getRasterForExtend(extent: (Int, Int, Int, Int), outPath: String): MosaicRaster = {
+        val (xMin, yMin, xMax, yMax) = extent
+        val xSize = xMax - xMin
+        val ySize = yMax - yMin
         val outputDs = gdal.GetDriverByName("GTiff").Create(outPath, xSize, ySize, numBands, GDT_Float64)
         for (i <- 1 to numBands) {
             val band = getBand(i)
-            val data = band.values(xmin, ymin, xSize, ySize)
-            val maskData = band.maskValues(xmin, ymin, xSize, ySize)
+            val data = band.values(xMin, yMin, xSize, ySize)
+            val maskData = band.maskValues(xMin, yMin, xSize, ySize)
             val noDataValue = band.noDataValue
 
             val outBand = outputDs.GetRasterBand(i)
@@ -168,19 +191,31 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
             maskBand.FlushCache()
         }
         outputDs.SetGeoTransform(getGeoTransform(extent))
-        outputDs
+        MosaicRasterGDAL(outputDs, outPath, 2 * xSize * ySize * numBands)
+    }
+
+    override def getRasterForCell(cellID: Long, outPath: String, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRaster = {
+        val cellGeom = indexSystem.indexToGeometry(cellID, geometryAPI)
+
+        val result = RasterClipByVector.clip(this, cellGeom, geometryAPI)
+        val xSizeRes = result.getRaster.GetRasterXSize
+        val ySizeRes = result.getRaster.GetRasterYSize
+
+        val tifFileName = s"/vsimem/$cellID.tif"
+        result.getRaster.GetDriver().CreateCopy(tifFileName, result.getRaster)
+        val outputDs = gdal.Open(tifFileName)
+        outputDs.SetGeoTransform(getGeoTransform)
+        MosaicRasterGDAL(outputDs, outPath, 2 * xSizeRes * ySizeRes * numBands)
     }
 
     /**
       * @return
       *   Returns MosaicGeometry representing bounding box of the raster.
       */
-    override def bbox(geometryAPI: GeometryAPI): MosaicGeometry = {
+    override def bbox(geometryAPI: GeometryAPI, destCRS: SpatialReference = wsg84): MosaicGeometry = {
         val gt = getGeoTransform
 
         val sourceCRS = spatialRef
-        val destCRS = new osr.SpatialReference()
-        destCRS.ImportFromEPSG(4326)
         val transform = new osr.CoordinateTransformation(sourceCRS, destCRS)
 
         val bbox = geometryAPI.geometry(
@@ -190,13 +225,32 @@ case class MosaicRasterGDAL(raster: Dataset, path: String, memSize: Long) extend
             (gt(0) + gt(1) * xSize, gt(3) + gt(5) * ySize),
             (gt(0), gt(3) + gt(5) * ySize)
           ).map(t => {
-              val p = transform.TransformPoint(t._1, t._2)
-              geometryAPI.fromCoords(p.toSeq)
+              // TransformPoint returns (x, y, z) coordinates
+              // We dont need the z coordinate
+              val p = transform.TransformPoint(t._1, t._2).dropRight(1)
+              // GDAL rasters are stored upside down
+              // We need to reverse the order of the coordinates
+              geometryAPI.fromCoords(p.toSeq.reverse)
           }),
           POLYGON
         )
 
         bbox
+    }
+
+    def isEmpty: Boolean = {
+        import org.json4s._
+        import org.json4s.jackson.JsonMethods._
+        implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
+
+        val vector = new JVector[String]()
+        vector.add("-stats")
+        vector.add("-json")
+        val infoOptions = new InfoOptions(vector)
+        val gdalInfo = GDALInfo(getRaster, infoOptions)
+        val json = parse(gdalInfo).extract[Map[String, Any]]
+
+        json("STATISTICS_VALID_PERCENT").asInstanceOf[Double] == 0.0
     }
 
 }

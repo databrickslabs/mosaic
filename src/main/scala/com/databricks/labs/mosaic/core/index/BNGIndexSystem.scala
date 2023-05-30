@@ -26,7 +26,10 @@ import scala.util.{Success, Try}
   * @see
   *   [[https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid]]
   */
+//noinspection ScalaWeakerAccess
 object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
+
+    override def crsID: Int = 27700
 
     val name = "BNG"
 
@@ -34,14 +37,14 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       * Quadrant encodings. The order is determined in a way that preserves
       * similarity to space filling curves.
       */
-    val quadrants = Seq("", "SW", "NW", "NE", "SE")
+    val quadrants: Seq[String] = Seq("", "SW", "NW", "NE", "SE")
 
     /**
       * Resolution mappings from string names to integer encodings. Resolutions
       * are uses as integers in any index math so we need to convert sizes to
       * corresponding index resolutions.
       */
-    val resolutionMap =
+    val resolutionMap: Map[String, Int] =
         Map(
           "500km" -> -1,
           "100km" -> 1,
@@ -60,7 +63,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
     /**
       * Mapping from string names to edge sizes expressed in eastings/northings.
       */
-    val sizeMap =
+    val sizeMap: Map[String, Int] =
         Map(
           "500km" -> 500000,
           "100km" -> 100000,
@@ -82,7 +85,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       * coverage of this index system having a lookup is more efficient than
       * performing any math transformations between ints and chars.
       */
-    val letterMap =
+    val letterMap: Seq[Seq[String]] =
         Seq(
           Seq("SV", "SW", "SX", "SY", "SZ", "TV", "TW"),
           Seq("SQ", "SR", "SS", "ST", "SU", "TQ", "TR"),
@@ -518,7 +521,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
         val digits = indexDigits(index)
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution).asInstanceOf[Double]
-        val area = math.pow((edgeSize / 1000), 2)
+        val area = math.pow(edgeSize / 1000, 2)
         area
     }
 

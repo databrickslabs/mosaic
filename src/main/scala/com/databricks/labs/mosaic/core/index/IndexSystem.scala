@@ -6,12 +6,21 @@ import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnu
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+import org.gdal.osr.SpatialReference
 
 /**
   * Defines the API that all index systems need to respect for Mosaic to support
   * them.
   */
 abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
+
+    def crsID: Int
+
+    def osrSpatialRef: SpatialReference = {
+        val sr = new SpatialReference()
+        sr.ImportFromEPSG(crsID)
+        sr
+    }
 
     def distance(cellId: Long, cellId2: Long): Long
 

@@ -39,6 +39,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
     spark.conf.set(MOSAIC_RASTER_API, rasterAPI.name)
 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
+    //noinspection ScalaWeakerAccess
     val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
     val expressionConfig: MosaicExpressionConfig = MosaicExpressionConfig(spark)
 
@@ -52,6 +53,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             throw new Error(s"Unsupported data type: $dataType")
         }
 
+    //noinspection ScalaWeakerAccess
     def registerProductH3(registry: FunctionRegistry, dbName: Option[String]): Unit = {
         aliasFunction(registry, "grid_longlatascellid", dbName, "h3_longlatash3", None)
         aliasFunction(registry, "grid_polyfill", dbName, "h3_polyfillash3", None)
@@ -59,6 +61,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         aliasFunction(registry, "grid_distance", dbName, "h3_distance", None)
     }
 
+    //noinspection ScalaWeakerAccess
     def aliasFunction(
         registry: FunctionRegistry,
         alias: String,
@@ -179,6 +182,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
         mosaicRegistry.registerExpression[ST_Haversine](expressionConfig)
 
+        //noinspection ScalaDeprecation
         registry.registerFunction(
           FunctionIdentifier("st_centroid2D", database),
           ST_Centroid.legacyInfo(database, "st_centroid2D"),
@@ -269,6 +273,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_RasterToWorldCoordX](expressionConfig)
         mosaicRegistry.registerExpression[RST_RasterToWorldCoordY](expressionConfig)
         mosaicRegistry.registerExpression[RST_ReTile](expressionConfig)
+        mosaicRegistry.registerExpression[RST_GridTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_GridTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_Rotation](expressionConfig)
         mosaicRegistry.registerExpression[RST_ScaleX](expressionConfig)
@@ -942,7 +947,7 @@ object MosaicContext extends Logging {
 
     def reset(): Unit = instance = None
 
-    // noinspection ScalaStyle
+    // noinspection ScalaStyle,ScalaWeakerAccess
     def checkDBR(spark: SparkSession): Boolean = {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "")
         val isML = sparkVersion.contains("-ml-")

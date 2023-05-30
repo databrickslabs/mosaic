@@ -218,11 +218,12 @@ object MosaicGeometryESRI extends GeometryReader {
             if (polygons.length == 1) Seq(polygons.head) else if (polygons.length > 1) Seq(polygons.reduce(_ union _)) else Nil
 
         val pieces = multiPoint ++ multiLine ++ multiPolygon
-        val result = if (pieces.length == 1) {
-            pieces.head
-        } else {
-            pieces.reduce(_ union _)
-        }
+        val result =
+            if (pieces.length == 1) {
+                pieces.head
+            } else {
+                pieces.reduce(_ union _)
+            }
         result.setSpatialReference(getSRID(srid))
         result
     }

@@ -12,7 +12,7 @@ class TestRaster(MosaicTestCaseWithGDAL):
     def test_raster(self):
         self.spark.read\
             .format("gdal")\
-            .option("driverName", "NetCDF")\
-            .load("/root/mosaic/src/test/resources/binary/netcdf-coral")\
-            .withColumn("grid_tiles", api.rst_gridtiles(lit("""NETCDF:"///root/mosaic/src/test/resources/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220103.nc":bleaching_alert_area"""), lit(7)))\
+            .option("driverName", "GTiff")\
+            .load("/root/mosaic/src/test/resources/binary/grid_tiles_tif")\
+            .withColumn("grid_tiles", api.rst_gridtiles("path", lit(6)))\
             .show(20, False)

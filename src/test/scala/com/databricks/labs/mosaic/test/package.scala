@@ -18,7 +18,7 @@ package object test {
         import org.apache.spark.sql._
         import org.apache.spark.sql.types.{StructField, StructType}
 
-        val hex_rows_epsg4326 =
+        val hex_rows_epsg4326: List[List[Any]] =
             List(
               List(
                 1,
@@ -52,7 +52,7 @@ package object test {
                 case id :: hex :: _ => List(id, JTS.geometry(hex, "HEX").mapXY((x, y) => (math.abs(x) * 1000, math.abs(y) * 1000)).toHEX)
                 case _              => throw new Error("Unexpected test data format!")
             }
-        val wkt_rows_epsg4326 =
+        val wkt_rows_epsg4326: List[List[Any]] =
             List(
               List(1, "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"),
               List(2, "MULTIPOLYGON (((0 0, 0 1, 2 2, 0 0)))"),
@@ -73,7 +73,7 @@ package object test {
               List(7, "LINESTRING (30 10, 10 30, 40 40)"),
               List(8, "MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))")
             )
-        val wkt_rows_epsg27700 =
+        val wkt_rows_epsg27700: List[List[Any]] =
             List(
               List(1, "POLYGON ((30000 10000, 40000 40000, 20000 40000, 10000 20000, 30000 10000))"),
               List(2, "MULTIPOLYGON (((0 0, 0 1000, 2000 2000, 0 0)))"),
@@ -94,7 +94,7 @@ package object test {
               List(7, "LINESTRING (30000 10000, 10000 30000, 40000 40000)"),
               List(8, "MULTILINESTRING ((10000 10000, 20000 20000, 10000 40000), (40000 40000, 30000 30000, 40000 20000, 30000 10000))")
             )
-        val geoJSON_rows =
+        val geoJSON_rows: List[List[Any]] =
             List(
               List(
                 1,
@@ -126,7 +126,7 @@ package object test {
                 """{"type":"MultiLineString","coordinates":[[[10,10],[20,20],[10,40]],[[40,40],[30,30],[40,20],[30,10]]],"crs":{"type":"name","properties":{"name":"EPSG:0"}}}"""
               )
             )
-        val wkt_rows_boroughs_epsg4326 =
+        val wkt_rows_boroughs_epsg4326: List[List[Any]] =
             List(
               List(
                 1,
@@ -358,6 +358,8 @@ package object test {
 
     // noinspection NotImplementedCode, ScalaStyle
     object MockIndexSystem extends IndexSystem(LongType) {
+
+        override def crsID: Int = ???
 
         override def name: String = "MOCK"
 

@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
-import com.databricks.labs.mosaic.expressions.raster.base.{RasterGeneratorExpression, RasterGridExpression}
+import com.databricks.labs.mosaic.expressions.raster.base.RasterGridExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.hive.common.util.Murmur3
 import org.apache.spark.sql.catalyst.InternalRow
@@ -15,7 +15,6 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.gdal.osr
 
 import java.nio.file.Files
 
@@ -60,37 +59,22 @@ case class RST_GridTiles(
       * Returns a set of new rasters with the specified tile size (tileWidth x
       * tileHeight).
       */
-    override def rasterGenerator(raster: MosaicRaster, resolution: Int): Seq[(Long, (Int, Int, Int, Int))] = {
-        val bbox = raster.bbox(geometryAPI)
+    def rasterGenerator(raster: MosaicRaster, resolution: Int): Seq[MosaicRaster] = {
+        val rasterId = Murmur3.hash64(raster.metadata.toString.getBytes) // assumes metadata is unique
+        val tmpDir = Files.createTempDirectory(s"mosaic_$uuid").toFile.getAbsolutePath
+        val outPath = s"$tmpDir/raster_${rasterId.toString.replace("-", "_")}"
+
+        val indexCRS = indexSystem.osrSpatialRef
+        val bbox = raster.bbox(geometryAPI, indexCRS)
+
         val cells = Mosaic
             .mosaicFill(bbox, resolution, keepCoreGeom = false, indexSystem, geometryAPI)
             .map(_.indexAsLong(indexSystem))
 
-        val cellBBoxes = cells.map(cell => indexSystem.indexToGeometry(cell, geometryAPI).envelope)
+        val rasters = cells.map(cellID => raster.getRasterForCell(cellID, f"${outPath}_$cellID.tif", indexSystem, geometryAPI))
 
-        val rasters = cellBBoxes.map(cellBBox => {
-            val extent = (
-              cellBBox.minMaxCoord("X", "MIN"),
-              cellBBox.minMaxCoord("Y", "MIN"),
-              cellBBox.minMaxCoord("X", "MAX"),
-              cellBBox.minMaxCoord("Y", "MAX")
-            )
-            val cellRaster = raster.getRasterForExtend(cellBBox, geometryAPI)
-            val cellID = cellRaster.cellID
-            val pixelValues = cellRaster.getPixelValues
-            createCellRaster(cellID, pixelValues)
-        })
-
-        val tmpDir = Files.createTempDirectory(s"mosaic_$uuid").toFile.getAbsolutePath
-        val outPath = s"$tmpDir/raster_${rasterId.toString.replace("-", "_")}.tif"
-
-        null
+        rasters
     }
-
-    def createCellRaster(
-        cellID: Long,
-        pixelValues: Seq[(Long, Seq[Double])]
-    )
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val inPath = pathExpr.eval(input).asInstanceOf[UTF8String].toString
@@ -100,9 +84,17 @@ case class RST_GridTiles(
         val raster = rasterAPI.raster(inPath)
         val tiles = rasterGenerator(raster, resolution)
 
+        tiles.map { tile =>
+            tile.saveCheckpoint(uuid, checkpointPath)
+            InternalRow.fromSeq(Seq(UTF8String.fromString(tile.getPath)))
+        }
     }
 
-    override def children: Seq[Expression] = Seq(pathExpr)
+    override def children: Seq[Expression] = Seq(pathExpr, resolutionExpr)
+
+    override protected def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = {
+        copy(pathExpr = newChildren(0), resolutionExpr = newChildren(1))
+    }
 
 }
 
@@ -127,7 +119,7 @@ object RST_GridTiles extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_GridTiles](3, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_GridTiles](2, expressionConfig)
     }
 
 }
