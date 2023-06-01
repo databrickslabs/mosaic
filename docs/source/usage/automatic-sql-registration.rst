@@ -73,3 +73,18 @@ To test the installation, create a new Python notebook and run the following com
     spark.sql("""show functions""").where("startswith(function, 'st_')").display()
 
 You should see all the supported functions registered by Mosaic appear in the output.
+
+.. warning::
+    Issue 317: https://github.com/databrickslabs/mosaic/issues/317
+    Mosaic jar needs to be installed via init script and not through the cluster UI.
+    Automatic SQL registration needs to happen at the cluster start up time when Spark context is created.
+    Cluster UI installed libraries are made available too late and the Automatic SQL registration
+    will not work, but there is no way to print an Error message in that case.
+
+.. warning::
+   Issue 297: https://github.com/databrickslabs/mosaic/issues/297
+   Since Mosaic V0.3.6 Automatic SQL Registration can fail with the following error message:
+   "java.lang.Exception: spark.databricks.labs.mosaic.raster.api". This is due to a missing key in the spark
+   configuration. The issue has been fixed since Mosaic V0.3.10. For releases between V0.3.6 and V0.3.10
+   please add the following configuration to your cluster spark configs: (spark.databricks.labs.mosaic.raster.api, "GDAL"),
+   or alternatively in python/scala code: spark.conf.set("spark.databricks.labs.mosaic.raster.api", "GDAL")

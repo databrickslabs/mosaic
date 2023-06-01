@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, Wi
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types._
 
@@ -51,5 +51,20 @@ object ST_Centroid extends WithExpressionInfo {
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
         GenericExpressionFactory.getBaseBuilder[ST_Centroid](1, expressionConfig)
     }
+
+    def legacyInfo(database: Option[String], name: String): ExpressionInfo =
+        new ExpressionInfo(
+          this.getClass.getCanonicalName,
+          database.getOrElse(this.database.orNull),
+          name,
+          usage,
+          "",
+          example,
+          "",
+          group,
+          "1.0",
+          "",
+          "built-in"
+        )
 
 }

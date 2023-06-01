@@ -4,4 +4,4 @@ from .utils.display_handler import displayMosaic
 from .models import SpatialKNN
 from .readers import read
 
-__version__ = "0.3.9"
+__version__ = "0.3.11"
