@@ -250,33 +250,25 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         else (lng, lat)
     }
 
-
     private def makeUnsafeGeometry(coordinates: mutable.Buffer[GeoCoord], geometryAPI: GeometryAPI): MosaicGeometry = {
         geometryAPI.geometry(
-            coordinates.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
-            POLYGON
+          coordinates.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
+          POLYGON
         )
     }
 
-    private def makeEastBBox(geometryAPI: GeometryAPI): MosaicGeometry = makeUnsafeGeometry(
-        mutable.Buffer(
-            new GeoCoord(-90, 0),
-            new GeoCoord(90, 0),
-            new GeoCoord(90, 180),
-            new GeoCoord(-90, 180),
-            new GeoCoord(-90, 0)),
-        geometryAPI: GeometryAPI)
+    private def makeEastBBox(geometryAPI: GeometryAPI): MosaicGeometry =
+        makeUnsafeGeometry(
+          mutable.Buffer(new GeoCoord(-90, 0), new GeoCoord(90, 0), new GeoCoord(90, 180), new GeoCoord(-90, 180), new GeoCoord(-90, 0)),
+          geometryAPI: GeometryAPI
+        )
 
-
-    private def makeShiftedWestBBox(geometryAPI: GeometryAPI): MosaicGeometry = makeUnsafeGeometry(
-        mutable.Buffer(
-            new GeoCoord(-90, 180),
-            new GeoCoord(90, 180),
-            new GeoCoord(90, 360),
-            new GeoCoord(-90, 360),
-            new GeoCoord(-90, 180)),
-        geometryAPI: GeometryAPI)
-
+    private def makeShiftedWestBBox(geometryAPI: GeometryAPI): MosaicGeometry =
+        makeUnsafeGeometry(
+          mutable
+              .Buffer(new GeoCoord(-90, 180), new GeoCoord(90, 180), new GeoCoord(90, 360), new GeoCoord(-90, 360), new GeoCoord(-90, 180)),
+          geometryAPI: GeometryAPI
+        )
 
     private def makePoleGeometry(coordinates: mutable.Buffer[GeoCoord], isNorthPole: Boolean, geometryAPI: GeometryAPI): MosaicGeometry = {
 
@@ -284,17 +276,16 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
         val coords = coordinates.map(geoCoord => shiftEast(geoCoord.lng, geoCoord.lat)).sortBy(_._1)
         val lineString = geometryAPI.geometry(
-            coords.map(p => geometryAPI.fromGeoCoord(Coordinates(p._2, p._1))),
-            LINESTRING
+          coords.map(p => geometryAPI.fromGeoCoord(Coordinates(p._2, p._1))),
+          LINESTRING
         )
 
         val westernLine = lineString.intersection(makeEastBBox(geometryAPI))
         val easternLine = lineString.intersection(makeShiftedWestBBox(geometryAPI)).mapXY(shiftWest)
 
         val vertices = westernLine.getShellPoints.head ++
-          Seq(geometryAPI.fromGeoCoord(Coordinates(lat, 180)),
-              geometryAPI.fromGeoCoord(Coordinates(lat, -180))) ++
-          easternLine.getShellPoints.head ++ Seq(westernLine.getShellPoints.head.head)
+            Seq(geometryAPI.fromGeoCoord(Coordinates(lat, 180)), geometryAPI.fromGeoCoord(Coordinates(lat, -180))) ++
+            easternLine.getShellPoints.head ++ Seq(westernLine.getShellPoints.head.head)
 
         geometryAPI.geometry(vertices, POLYGON)
 
@@ -309,8 +300,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
             val westGeom = shiftedGeometry.intersection(makeEastBBox(geometryAPI: GeometryAPI))
             val eastGeom = shiftedGeometry.intersection(makeShiftedWestBBox(geometryAPI: GeometryAPI)).mapXY(shiftWest)
             westGeom.union(eastGeom)
-        }
-        else {
+        } else {
             unsafeGeometry
         }
 
