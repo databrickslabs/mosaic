@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
+import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
@@ -32,8 +33,14 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystem:
     override def nullSafeEval(input1: Any, input2: Any): Any = {
         val resolution: Int = indexSystem.getResolution(input2)
 
+        // Saving to a table and reading back may not correctly map to the InternalGeometryType
+        val dataType = geom.dataType match {
+            case _: StructType           => InternalGeometryType
+            case _                       => geom.dataType
+        }
+
         // If another geometry type is provided, it will be converted to a centroid point.
-        val point = geometryAPI.geometry(input1, geom.dataType).getCentroid
+        val point = geometryAPI.geometry(input1, dataType).getCentroid
         val cellID = indexSystem.pointToIndex(point.getX, point.getY, resolution)
 
         indexSystem.serializeCellId(cellID)
