@@ -42,8 +42,11 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
                                                      |select rst_subdatasets("dummy/path") from source
                                                      |""".stripMargin)
 
-        result.head.keys.toList.length shouldBe 2
+        result.head.keys.toList.length shouldBe 6
         result.head.values.toList.map(_.nonEmpty).reduce(_ && _) shouldBe true
+
+        noException should be thrownBy rst_subdatasets($"path")
+        noException should be thrownBy rst_subdatasets("path")
 
     }
 

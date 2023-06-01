@@ -1,17 +1,17 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
+import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
-case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemName: String, geometryAPIName: String)
+case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends BinaryExpression
       with NullIntolerant
       with CodegenFallback {
 
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     /** Expression output DataType. */
@@ -33,8 +33,14 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemN
     override def nullSafeEval(input1: Any, input2: Any): Any = {
         val resolution: Int = indexSystem.getResolution(input2)
 
+        // Saving to a table and reading back may not correctly map to the InternalGeometryType
+        val dataType = geom.dataType match {
+            case _: StructType           => InternalGeometryType
+            case _                       => geom.dataType
+        }
+
         // If another geometry type is provided, it will be converted to a centroid point.
-        val point = geometryAPI.geometry(input1, geom.dataType).getCentroid
+        val point = geometryAPI.geometry(input1, dataType).getCentroid
         val cellID = indexSystem.pointToIndex(point.getX, point.getY, resolution)
 
         indexSystem.serializeCellId(cellID)
@@ -44,7 +50,7 @@ case class PointIndexGeom(geom: Expression, resolution: Expression, indexSystemN
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = PointIndexGeom(asArray(0), asArray(1), indexSystemName, geometryAPIName)
+        val res = PointIndexGeom(asArray(0), asArray(1), indexSystem, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }

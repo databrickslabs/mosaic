@@ -21,6 +21,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 9
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -43,6 +44,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 9
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -75,6 +77,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 9
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -106,6 +109,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 9
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -137,6 +141,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 11
             case BNGIndexSystem => 4
+            case _ => 9
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -172,28 +177,30 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr
+            case _ => lit("3").expr
         }
 
         val polyfillExpr = Polyfill(
           lit(wkt).expr,
           resExpr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
         mc.getIndexSystem match {
             case H3IndexSystem  => polyfillExpr.dataType shouldEqual ArrayType(LongType)
             case BNGIndexSystem => polyfillExpr.dataType shouldEqual ArrayType(StringType)
+            case _ => polyfillExpr.dataType shouldEqual ArrayType(LongType)
         }
 
         val badExpr = Polyfill(
           lit(10).expr,
           lit(true).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

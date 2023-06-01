@@ -90,7 +90,7 @@ def rst_georeference(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_bandmetadata",
+        "rst_georeference",
         pyspark_to_java_column(raster)
     )
 

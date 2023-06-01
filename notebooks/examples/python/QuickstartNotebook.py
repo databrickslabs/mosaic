@@ -6,6 +6,10 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install databricks-mosaic
+
+# COMMAND ----------
+
 user_name = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName().get()
 
 raw_path = f"dbfs:/tmp/mosaic/{user_name}"

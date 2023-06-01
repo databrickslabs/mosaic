@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.types._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions._
@@ -24,14 +24,13 @@ case class MosaicFill(
     geom: Expression,
     resolution: Expression,
     keepCoreGeom: Expression,
-    indexSystemName: String,
+    indexSystem: IndexSystem,
     geometryAPIName: String
 ) extends TernaryExpression
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
 
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID(indexSystemName))
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     // noinspection DuplicatedCode
@@ -94,7 +93,7 @@ case class MosaicFill(
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(3).map(_.asInstanceOf[Expression])
-        val res = MosaicFill(asArray(0), asArray(1), asArray(2), indexSystemName, geometryAPIName)
+        val res = MosaicFill(asArray(0), asArray(1), asArray(2), indexSystem, geometryAPIName)
         res.copyTagsFrom(this)
         res
     }

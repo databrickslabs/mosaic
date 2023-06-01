@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -26,6 +27,8 @@ import scala.util.{Success, Try}
   *   [[https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid]]
   */
 object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
+
+    val name = "BNG"
 
     /**
       * Quadrant encodings. The order is determined in a way that preserves
@@ -202,15 +205,6 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
     }
 
     /**
-      * Returns the index system ID instance that uniquely identifies an index
-      * system. This instance is used to select appropriate Mosaic expressions.
-      *
-      * @return
-      *   An instance of [[IndexSystemID]]
-      */
-    override def getIndexSystemID: IndexSystemID = BNG
-
-    /**
       * Get the k ring of indices around the provided index id.
       *
       * @param index
@@ -262,11 +256,13 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       */
     def isValid(index: Long): Boolean = {
         val digits = indexDigits(index)
+        val xLetterIndex = digits.slice(3, 5).mkString.toInt
+        val yLetterIndex = digits.slice(1, 3).mkString.toInt
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution)
         val x = getX(digits, edgeSize)
         val y = getY(digits, edgeSize)
-        x >= 0 && x <= 700000 && y >= 0 && y <= 1300000
+        x >= 0 && x <= 700000 && y >= 0 && y <= 1300000 && xLetterIndex < letterMap.length && yLetterIndex < letterMap.head.length
     }
 
     /**
@@ -419,21 +415,6 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
         }
     }
 
-    private def encode(eLetter: Int, nLetter: Int, eBin: Int, nBin: Int, quadrant: Int, nPositions: Int, resolution: Int): Long = {
-        val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#...#)(#...#)(#)
-        val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#...#)(#...#)(#)
-        val nLetterShift = math.pow(10, 1 + 2 * nPositions - 2) // (##)(#...#)(#...#)(#)
-        val eShift = math.pow(10, nPositions) // (#...#)(#...#)(#)
-        val nShift = 10
-        val id =
-            if (resolution == -1) {
-                (idPlaceholder + eLetter * eLetterShift) / 100 + quadrant
-            } else {
-                idPlaceholder + eLetter * eLetterShift + nLetter * nLetterShift + eBin * eShift + nBin * nShift + quadrant
-            }
-        id.toLong
-    }
-
     /**
       * Constructs a geometry representing the index tile corresponding to
       * provided index id.
@@ -532,5 +513,50 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
     }
 
     override def getResolutionStr(resolution: Int): String = resolutionMap.find(_._2 == resolution).map(_._1).getOrElse("")
+
+    override def area(index: Long): Double = {
+        val digits = indexDigits(index)
+        val resolution = getResolution(digits)
+        val edgeSize = getEdgeSize(resolution).asInstanceOf[Double]
+        val area = math.pow((edgeSize / 1000), 2)
+        area
+    }
+
+    override def indexToCenter(index: Long): Coordinates = {
+        throw new NotImplementedError
+    }
+
+    override def indexToBoundary(index: Long): Seq[Coordinates] = {
+        throw new NotImplementedError
+    }
+
+    override def distance(cellId: Long, cellId2: Long): Long = {
+        val digits1 = indexDigits(cellId)
+        val digits2 = indexDigits(cellId2)
+        val resolution1 = getResolution(digits1)
+        val resolution2 = getResolution(digits2)
+        val edgeSize = getEdgeSize(math.min(resolution1, resolution2))
+        val x1 = getX(digits1, edgeSize)
+        val x2 = getX(digits2, edgeSize)
+        val y1 = getY(digits1, edgeSize)
+        val y2 = getY(digits2, edgeSize)
+        // Manhattan distance with edge size precision
+        math.abs((x1 - x2) / edgeSize) + math.abs((y1 - y2) / edgeSize)
+    }
+
+    private def encode(eLetter: Int, nLetter: Int, eBin: Int, nBin: Int, quadrant: Int, nPositions: Int, resolution: Int): Long = {
+        val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#...#)(#...#)(#)
+        val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#...#)(#...#)(#)
+        val nLetterShift = math.pow(10, 1 + 2 * nPositions - 2) // (##)(#...#)(#...#)(#)
+        val eShift = math.pow(10, nPositions) // (#...#)(#...#)(#)
+        val nShift = 10
+        val id =
+            if (resolution == -1) {
+                (idPlaceholder + eLetter * eLetterShift) / 100 + quadrant
+            } else {
+                idPlaceholder + eLetter * eLetterShift + nLetter * nLetterShift + eBin * eShift + nBin * nShift + quadrant
+            }
+        id.toLong
+    }
 
 }

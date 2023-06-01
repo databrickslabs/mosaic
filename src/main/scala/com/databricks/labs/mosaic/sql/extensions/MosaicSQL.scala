@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.sql.extensions
 
 import com.databricks.labs.mosaic._
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI.{ESRI, JTS}
+import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
 import com.databricks.labs.mosaic.functions.MosaicContext
@@ -29,7 +29,10 @@ class MosaicSQL extends (SparkSessionExtensions => Unit) with Logging {
         ext.injectCheckRule(spark => {
             val indexSystem = spark.conf.get(MOSAIC_INDEX_SYSTEM)
             val geometryAPI = spark.conf.get(MOSAIC_GEOMETRY_API)
-            val rasterAPI = spark.conf.get(MOSAIC_RASTER_API)
+            // spark.conf.get will throw an Exception if the key is not found.
+            // Since GDAL is optional, we need to handle the case where the key is not found.
+            // Fixes issue #297.
+            val rasterAPI = spark.conf.get(MOSAIC_RASTER_API, "GDAL")
             val mosaicContext = (indexSystem, geometryAPI, rasterAPI) match {
                 case ("H3", "JTS", "GDAL")   => MosaicContext.build(H3IndexSystem, JTS, GDAL)
                 case ("H3", "ESRI", "GDAL")  => MosaicContext.build(H3IndexSystem, ESRI, GDAL)

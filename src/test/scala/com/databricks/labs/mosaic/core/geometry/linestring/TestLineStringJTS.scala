@@ -2,11 +2,11 @@ package com.databricks.labs.mosaic.core.geometry.linestring
 
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
+import org.apache.spark.sql.catalyst.InternalRow
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.catalyst.InternalRow
-
+//noinspection ScalaRedundantCast
 class TestLineStringJTS extends AnyFlatSpec {
 
     "MosaicLineStringJTS" should "return Nil for holes and hole points calls." in {
@@ -49,7 +49,7 @@ class TestLineStringJTS extends AnyFlatSpec {
 
     "MosaicLineStringJTS" should "not fail for empty Seq" in {
         val expected = MosaicLineStringJTS.fromWKT(
-            "LINESTRING EMPTY"
+          "LINESTRING EMPTY"
         )
         val actual = MosaicLineStringJTS.fromSeq(Seq[MosaicLineStringJTS]())
         expected.equals(actual) shouldBe true
@@ -100,7 +100,6 @@ class TestLineStringJTS extends AnyFlatSpec {
         lineString.convexHull.getSpatialReference shouldBe srid
         lineString.getCentroid.getSpatialReference shouldBe srid
         lineString.intersection(poly).getSpatialReference shouldBe srid
-        lineString.reduceFromMulti.getSpatialReference shouldBe srid
         lineString.rotate(45).getSpatialReference shouldBe srid
         lineString.scale(2d, 2d).getSpatialReference shouldBe srid
         lineString.simplify(0.001).getSpatialReference shouldBe srid

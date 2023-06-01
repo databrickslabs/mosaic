@@ -1,12 +1,14 @@
 package com.databricks.labs.mosaic.expressions.index
 
+import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.scalatest.matchers.should.Matchers._
 
 //noinspection ScalaDeprecation
@@ -52,7 +54,7 @@ trait GeometryKRingExplodeBehaviors extends MosaicSpatialQueryTest {
         val sc = spark
         import sc.implicits._
 
-        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val k = 4
         val resolution = 3
 
@@ -60,7 +62,7 @@ trait GeometryKRingExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(wkt).expr,
           lit(resolution).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
         val withNull = geomKRingExplodeExpr.copy(geom = lit(null).expr)
@@ -74,7 +76,7 @@ trait GeometryKRingExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(10).expr,
           lit(10).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -98,6 +100,41 @@ trait GeometryKRingExplodeBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy mc.functions.grid_geometrykringexplode(lit(""), lit(5), 2)
         noException should be thrownBy mc.functions.grid_geometrykringexplode(lit(""), 5, lit(2))
         noException should be thrownBy mc.functions.grid_geometrykringexplode(lit(""), 5, 2)
+    }
+
+    def issue360(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = mosaicContext
+        import mc.functions._
+        mc.register(spark)
+
+        mc.getIndexSystem match {
+            case H3IndexSystem =>
+                val tests = Seq(
+                    ("LINESTRING (-83.488541 42.220045, -83.4924813 42.2198315)", 13, 260),
+                    ("LINESTRING (-83.4924813 42.2198315, -83.488541 42.220045)", 13, 260),
+                    ("LINESTRING (-83.4924813 42.2198315, -83.488541 42.220045)", 12, 114),
+                    ("LINESTRING (-86.4012318 41.671962, -86.4045068 41.6719684)", 13, 235),
+                    ("LINESTRING (-86.4045068 41.6719684, -86.4012318 41.671962)", 13, 235),
+                    ("LINESTRING (-85.0040681 42.2975028, -85.0073029 42.2975266)", 13, 224)
+                )
+                val schema = StructType(
+                    List(
+                        StructField("wkt", StringType)
+                    )
+                )
+                val res: Seq[Boolean] = tests.map(
+                    v => {
+                        val rdd = spark.sparkContext.makeRDD(Seq(Row(v._1)))
+                        val df = spark.createDataFrame(rdd, schema)
+                        df.select(grid_geometrykringexplode(col("wkt"), v._2, 2))
+                            .collect().length == v._3
+                    }
+                )
+                res.reduce(_ && _) should be(true)
+
+            case _ => // do nothing
+        }
     }
 
 }

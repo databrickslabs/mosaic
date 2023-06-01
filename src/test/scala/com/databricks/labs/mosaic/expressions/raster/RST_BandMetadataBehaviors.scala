@@ -17,10 +17,13 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
+        noException should be thrownBy mc.getRasterAPI
+        noException should be thrownBy MosaicContext.geometryAPI
+
         val rasterDfWithBandMetadata = mocks
             .getNetCDFBinaryDf(spark)
             .withColumn("subdatasets", rst_subdatasets($"path"))
-            .withColumn("bleachingSubdataset", array_max(map_keys($"subdatasets")))
+            .withColumn("bleachingSubdataset", element_at($"subdatasets", "bleaching_alert_area"))
             .select(
               rst_bandmetadata($"bleachingSubdataset", lit(1))
                   .alias("metadata")
@@ -29,7 +32,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         mocks
             .getNetCDFBinaryDf(spark)
             .withColumn("subdatasets", rst_subdatasets($"path"))
-            .withColumn("bleachingSubdataset", element_at(map_keys($"subdatasets"), 1))
+            .withColumn("bleachingSubdataset", element_at($"subdatasets", "bleaching_alert_area"))
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -39,7 +42,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         noException should be thrownBy mocks
             .getNetCDFBinaryDf(spark)
             .withColumn("subdatasets", rst_subdatasets($"path"))
-            .withColumn("bleachingSubdataset", element_at(map_keys($"subdatasets"), 1))
+            .withColumn("bleachingSubdataset", element_at($"subdatasets", "bleaching_alert_area"))
             .select(
               rst_bandmetadata($"bleachingSubdataset", lit(1))
                   .alias("metadata")
@@ -52,6 +55,10 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         an[Exception] should be thrownBy spark.sql("""
                                                      |select rst_bandmetadata() from source
                                                      |""".stripMargin)
+
+        noException should be thrownBy rst_bandmetadata($"bleachingSubdataset", lit(1))
+        noException should be thrownBy rst_bandmetadata($"bleachingSubdataset", 1)
+        noException should be thrownBy rst_bandmetadata("bleachingSubdataset", 1)
 
     }
 

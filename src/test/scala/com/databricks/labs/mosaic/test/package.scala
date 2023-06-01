@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
+import com.databricks.labs.mosaic.core.types.model.Coordinates
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
@@ -195,6 +196,7 @@ package object test {
                           st_transform(col("geometry"), lit(27700))
                         )
                         .drop("greenwich")
+                case _              => df
             }
         }
 
@@ -233,6 +235,7 @@ package object test {
                           st_transform(col("geometry"), lit(27700))
                         )
                         .drop("greenwich")
+                case _              => df
             }
         }
 
@@ -255,10 +258,7 @@ package object test {
             spark.createDataFrame(rdd, schema)
         }
 
-        def getWKTRowsDf(mosaicContext: MosaicContext): DataFrame = {
-            val mc = mosaicContext
-
-            val indexSystem = mc.getIndexSystem
+        def getWKTRowsDf(indexSystem: IndexSystem = H3IndexSystem): DataFrame = {
             val spark = SparkSession.builder().getOrCreate()
             val rows = indexSystem match {
                 case H3IndexSystem  => wkt_rows_epsg4326.map { x => Row(x: _*) }
@@ -283,6 +283,7 @@ package object test {
             val rows = indexSystem match {
                 case H3IndexSystem  => wkt_rows_boroughs_epsg4326.map { x => Row(x: _*) }
                 case BNGIndexSystem => wkt_rows_boroughs_epsg27700.map { x => Row(x: _*) }
+                case _              => wkt_rows_boroughs_epsg4326.map { x => Row(x: _*) }
             }
             val rdd = spark.sparkContext.makeRDD(rows)
             val schema = StructType(
@@ -360,8 +361,6 @@ package object test {
 
         override def name: String = "MOCK"
 
-        override def getIndexSystemID: IndexSystemID = ???
-
         override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = ???
 
         override def format(id: Long): String = ???
@@ -385,6 +384,10 @@ package object test {
         override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = ???
 
         override def parse(id: String): Long = ???
+
+        override def indexToCenter(index: Long): Coordinates = ???
+        override def indexToBoundary(index: Long): Seq[Coordinates] = ???
+        override def distance(cellId: Long, cellId2: Long): Long = ???
 
     }
 

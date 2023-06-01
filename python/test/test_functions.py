@@ -46,10 +46,10 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_translate", api.st_translate("wkt", lit(1), lit(1)))
             .withColumn("st_scale", api.st_scale("wkt", lit(1), lit(1)))
             .withColumn("st_rotate", api.st_rotate("wkt", lit(1)))
-            .withColumn("st_centroid2D", api.st_centroid2D("wkt"))
-            .withColumn("st_centroid3D", api.st_centroid3D("wkt"))
+            .withColumn("st_centroid", api.st_centroid("wkt"))
             .withColumn("st_numpoints", api.st_numpoints("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
+            .withColumn("st_haversine", api.st_haversine(lit(0.0), lit(90.0), lit(0.0), lit(0.0)))
             .withColumn("st_isvalid", api.st_isvalid("wkt"))
             .withColumn(
                 "st_hasvalidcoordinates",
@@ -95,6 +95,7 @@ class TestFunctions(MosaicTestCase):
                 api.grid_tessellateexplode("wkt", lit(1), False),
             )
             .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
+            .withColumn("grid_cellarea", api.grid_cellarea(lit(613177664827555839)))
 
 
             # Deprecated
@@ -224,3 +225,24 @@ class TestFunctions(MosaicTestCase):
             .withColumn("grid_geometrykloopexplode", api.grid_geometrykloopexplode("wkt", lit(4), lit(1)))
         )
         self.assertEqual(result.count() > 1, True)
+
+    def test_grid_cell_union_intersection(self):
+        df = self.spark.createDataFrame(
+            [
+                # 2x1 rectangle starting at (0 0)
+                ["POLYGON ((0 0, 0 2, 1 2, 1 0, 0 0))"]
+            ],
+            ["wkt"],
+        )
+        df_chips = df.withColumn("chips", api.grid_tessellateexplode("wkt", lit(1)))
+
+        df_chips = (
+            df_chips
+            .withColumn("intersection", api.grid_cell_intersection("chips", "chips"))
+            .withColumn("union", api.grid_cell_union("chips", "chips"))
+        )
+        intersection = df_chips.groupBy("chips.index_id").agg(api.grid_cell_intersection_agg("chips"))
+        self.assertEqual(intersection.count() >= 0, True)
+
+        union = df_chips.groupBy("chips.index_id").agg(api.grid_cell_union_agg("chips"))
+        self.assertEqual(union.count() >= 0, True)

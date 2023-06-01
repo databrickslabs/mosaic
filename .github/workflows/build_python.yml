@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - "python/*"
-  pull_request:
-    branches:
-      - "python/*"
+
 jobs:
   build:
     runs-on: ubuntu-20.04

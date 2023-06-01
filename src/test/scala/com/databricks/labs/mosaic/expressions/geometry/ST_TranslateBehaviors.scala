@@ -43,7 +43,7 @@ trait ST_TranslateBehaviors extends QueryTest {
         mc.register(spark)
 
         val results = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .select(st_translate($"wkt", lit(1.1), lit(1.1)))
 
         val queryExecution = results.queryExecution
@@ -58,7 +58,7 @@ trait ST_TranslateBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stTranslate = ST_Translate(lit(1).expr, lit(1.1).expr, lit(1.2).expr, "JTS")
+        val stTranslate = ST_Translate(lit(1).expr, lit(1.1).expr, lit(1.2).expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stTranslate.genCode(ctx)
     }
@@ -68,7 +68,7 @@ trait ST_TranslateBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stTranslate = ST_Translate(lit("POINT (1 1)").expr, lit(1.1).expr, lit(1.2).expr, "illegalAPI")
+        val stTranslate = ST_Translate(lit("POINT (1 1)").expr, lit(1.1).expr, lit(1.2).expr, mc.expressionConfig)
 
         stTranslate.first shouldEqual lit("POINT (1 1)").expr
         stTranslate.second shouldEqual lit(1.1).expr

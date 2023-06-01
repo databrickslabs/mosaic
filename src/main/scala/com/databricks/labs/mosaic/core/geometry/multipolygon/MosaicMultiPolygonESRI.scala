@@ -1,8 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry.multipolygon
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
+import com.databricks.labs.mosaic.core.geometry.point.MosaicPointESRI
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonESRI
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOLYGON, POLYGON}
@@ -20,7 +21,7 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
         new InternalGeometry(MULTIPOLYGON.id, getSpatialReference, boundaries, holes)
     }
 
-    override def getBoundary: MosaicGeometry = MosaicGeometryESRI(multiPolygon.boundary())
+    override def getBoundary: MosaicGeometryESRI = MosaicGeometryESRI(multiPolygon.boundary())
 
     override def getLength: Double = MosaicGeometryESRI(multiPolygon.boundary()).getLength
 
@@ -28,73 +29,65 @@ class MosaicMultiPolygonESRI(multiPolygon: OGCMultiPolygon) extends MosaicGeomet
         getHolePoints.map(_.map(_.length).sum).sum + getShellPoints.map(_.length).sum
     }
 
-    override def getHoles: Seq[Seq[MosaicLineString]] = {
+    override def getHoles: Seq[Seq[MosaicLineStringESRI]] = {
         val n = multiPolygon.numGeometries()
         val holes = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getHoles
         holes.flatten
     }
 
-    override def getShells: Seq[MosaicLineString] = {
+    override def getShells: Seq[MosaicLineStringESRI] = {
         val n = multiPolygon.numGeometries()
         val shells = for (i <- 0 until n) yield MosaicPolygonESRI(multiPolygon.geometryN(i)).getShells
         shells.flatten
     }
 
-    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicGeometry = {
+    override def mapXY(f: (Double, Double) => (Double, Double)): MosaicMultiPolygonESRI = {
         MosaicMultiPolygonESRI.fromSeq(
           asSeq.map(_.asInstanceOf[MosaicPolygonESRI].mapXY(f).asInstanceOf[MosaicPolygonESRI])
         )
     }
 
-    override def asSeq: Seq[MosaicGeometry] =
+    override def asSeq: Seq[MosaicGeometryESRI] =
         for (i <- 0 until multiPolygon.numGeometries()) yield MosaicGeometryESRI(multiPolygon.geometryN(i))
+
+    override def flatten: Seq[MosaicGeometryESRI] = asSeq
+
+    override def getShellPoints: Seq[Seq[MosaicPointESRI]] = getShells.map(_.asSeq)
+
+    override def getHolePoints: Seq[Seq[Seq[MosaicPointESRI]]] = getHoles.map(_.map(_.asSeq))
 
 }
 
 object MosaicMultiPolygonESRI extends GeometryReader {
 
-    override def fromInternal(row: InternalRow): MosaicGeometry = {
+    override def fromInternal(row: InternalRow): MosaicMultiPolygonESRI = {
         val internalGeom = InternalGeometry(row)
         val polygon = createPolygon(internalGeom.boundaries, internalGeom.holes)
-        val spatialReference =
-            if (internalGeom.srid != 0) {
-                SpatialReference.create(internalGeom.srid)
-            } else {
-                MosaicGeometryESRI.defaultSpatialReference
-            }
+        val spatialReference = MosaicGeometryESRI.getSRID(internalGeom.srid)
         val ogcMultiLineString = new OGCMultiPolygon(polygon, spatialReference)
         MosaicMultiPolygonESRI(ogcMultiLineString)
     }
 
     // noinspection ZeroIndexToHead
     def createPolygon(shellCollection: Array[Array[InternalCoord]], holesCollection: Array[Array[Array[InternalCoord]]]): Polygon = {
-        val boundariesPath = MosaicMultiLineStringESRI.createPolyline(shellCollection, dontClose = true)
-        val holesPathsCollection = holesCollection.map(MosaicMultiLineStringESRI.createPolyline(_, dontClose = true))
-
         val polygon = new Polygon()
+        shellCollection.zip(holesCollection).foreach { case (boundary, holes) =>
+            val boundaryPath = MosaicMultiLineStringESRI.createPolyline(Array(boundary), dontClose = true)
+            val holesPath = MosaicMultiLineStringESRI.createPolyline(holes, dontClose = true)
 
-        for (i <- 0 until boundariesPath.getPathCount) {
-            val tmpPolygon = new Polygon()
-            tmpPolygon.addPath(boundariesPath, i, true)
-            if (tmpPolygon.calculateArea2D() < 0) {
-                polygon.addPath(boundariesPath, i, false)
-            } else {
-                polygon.addPath(boundariesPath, i, true)
+            val tmpBoundary = new Polygon()
+            tmpBoundary.addPath(boundaryPath, 0, true)
+            polygon.addPath(boundaryPath, 0, tmpBoundary.calculateArea2D() >= 0)
+
+            // Holes need to be added to path right after corresponding external boundary, otherwise they'll
+            // be picked up incorrectly by teh OGCPolygon constructor
+            for (j <- 0 until holesPath.getPathCount) {
+                val tmpHole = new Polygon()
+                tmpHole.addPath(holesPath, j, true)
+                polygon.addPath(holesPath, j, tmpHole.calculateArea2D() < 0)
             }
         }
-        holesPathsCollection.foreach(holesPath =>
-            for (i <- 0 until holesPath.getPathCount) {
-                val tmpPolygon = new Polygon()
-                tmpPolygon.addPath(holesPath, i, true)
-                if (tmpPolygon.calculateArea2D() < 0) {
-                    polygon.addPath(holesPath, i, true)
-                } else {
-                    polygon.addPath(holesPath, i, false)
-                }
-            }
-        )
-
-        polygon
+        polygon    
     }
 
     def apply(multiPolygon: OGCGeometry): MosaicMultiPolygonESRI = new MosaicMultiPolygonESRI(multiPolygon.asInstanceOf[OGCMultiPolygon])
@@ -119,12 +112,12 @@ object MosaicMultiPolygonESRI extends GeometryReader {
         MosaicMultiPolygonESRI(newGeom)
     }
 
-    override def fromWKB(wkb: Array[Byte]): MosaicGeometry = MosaicGeometryESRI.fromWKB(wkb)
+    override def fromWKB(wkb: Array[Byte]): MosaicGeometryESRI = MosaicGeometryESRI.fromWKB(wkb)
 
-    override def fromWKT(wkt: String): MosaicGeometry = MosaicGeometryESRI.fromWKT(wkt)
+    override def fromWKT(wkt: String): MosaicGeometryESRI = MosaicGeometryESRI.fromWKT(wkt)
 
-    override def fromJSON(geoJson: String): MosaicGeometry = MosaicGeometryESRI.fromJSON(geoJson)
+    override def fromJSON(geoJson: String): MosaicGeometryESRI = MosaicGeometryESRI.fromJSON(geoJson)
 
-    override def fromHEX(hex: String): MosaicGeometry = MosaicGeometryESRI.fromHEX(hex)
+    override def fromHEX(hex: String): MosaicGeometryESRI = MosaicGeometryESRI.fromHEX(hex)
 
 }

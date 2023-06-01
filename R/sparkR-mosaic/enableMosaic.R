@@ -20,8 +20,7 @@ enableMosaic <- function(
   ,rasterAPI="GDAL"
 ){
   geometry_api <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.geometry.api.GeometryAPI", methodName="apply", geometryAPI)
-  index_system_id <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemID", methodName="apply", indexSystem)
-  indexing_system <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemID", methodName="getIndexSystem", index_system_id)
+  indexing_system <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemFactory", methodName="getIndexSystem", indexSystem)
   
   raster_api <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.raster.api.RasterAPI", methodName="apply", rasterAPI)
   

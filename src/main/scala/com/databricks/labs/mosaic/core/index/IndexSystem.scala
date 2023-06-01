@@ -2,7 +2,8 @@ package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.model.MosaicChip
+import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum, MosaicChip}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -12,6 +13,8 @@ import org.apache.spark.unsafe.types.UTF8String
   */
 abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
 
+    def distance(cellId: Long, cellId2: Long): Long
+
     def getCellIdDataType: DataType = cellIdType
 
     def setCellIdDataType(dataType: DataType): Unit = {
@@ -20,15 +23,16 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
 
     def getResolutionStr(resolution: Int): String
 
-    def formatCellId(cellId: Any, dt: DataType): Any = (dt, cellId) match {
-        case (LongType, _: Long)           => cellId
-        case (LongType, cid: String)       => parse(cid)
-        case (LongType, cid: UTF8String)   => parse(cid.toString)
-        case (StringType, cid: Long)       => format(cid)
-        case (StringType, cid: UTF8String) => cid.toString
-        case (StringType, _: String)       => cellId
-        case _                             => throw new Error("Cell ID data type not supported.")
-    }
+    def formatCellId(cellId: Any, dt: DataType): Any =
+        (dt, cellId) match {
+            case (LongType, _: Long)           => cellId
+            case (LongType, cid: String)       => parse(cid)
+            case (LongType, cid: UTF8String)   => parse(cid.toString)
+            case (StringType, cid: Long)       => format(cid)
+            case (StringType, cid: UTF8String) => cid.toString
+            case (StringType, _: String)       => cellId
+            case _                             => throw new Error("Cell ID data type not supported.")
+        }
 
     def formatCellId(cellId: Any): Any = formatCellId(cellId, getCellIdDataType)
 
@@ -91,16 +95,7 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       * @return
       *   IndexSystem name.
       */
-    def name: String = getIndexSystemID.name
-
-    /**
-      * Returns the index system ID instance that uniquely identifies an index
-      * system. This instance is used to select appropriate Mosaic expressions.
-      *
-      * @return
-      *   An instance of [[IndexSystemID]]
-      */
-    def getIndexSystemID: IndexSystemID
+    def name: String
 
     /**
       * Returns the resolution value based on the nullSafeEval method inputs of
@@ -165,9 +160,10 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
         val intersections = for (index <- borderIndices) yield {
             val indexGeom = indexToGeometry(index, geometryAPI)
             val intersect = geometry.intersection(indexGeom)
-            val isCore = intersect.equals(indexGeom)
+            val coerced = coerceChipGeometry(intersect, index, geometryAPI)
+            val isCore = coerced.equals(indexGeom)
 
-            val chipGeom = if (!isCore || keepCoreGeom) intersect else null
+            val chipGeom = if (!isCore || keepCoreGeom) coerced else null
 
             MosaicChip(isCore = isCore, Left(index), chipGeom)
         }
@@ -225,5 +221,83 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       *   Index ID in this index system.
       */
     def pointToIndex(lon: Double, lat: Double, resolution: Int): Long
+
+    def indexToCenter(index: Long): Coordinates
+
+    def indexToCenter(index: String): Coordinates = indexToCenter(parse(index))
+
+    def indexToBoundary(index: Long): Seq[Coordinates]
+
+    def indexToBoundary(index: String): Seq[Coordinates] = indexToBoundary(parse(index))
+
+    // ASSUMPTION: index cells are convex. If index cells are not convex, you must override this method
+    def area(index: Long): Double = {
+        // Haversine distance between two coordinates in radians
+        def haversine(coords1: Coordinates, coords2: Coordinates): Double = {
+            val c = math.Pi / 180
+
+            val th1 = c * coords1.lat
+            val th2 = c * coords2.lat
+            val dph = c * (coords1.lng - coords2.lng)
+
+            val dz = math.sin(th1) - math.sin(th2)
+            val dx = math.cos(dph) * math.cos(th1) - math.cos(th2)
+            val dy = math.sin(dph) * math.cos(th1)
+
+            math.asin(math.sqrt(dx * dx + dy * dy + dz * dz) / 2) * 2
+        }
+
+        def triangle_area(boundary_coords: Seq[Coordinates], center_coord: Coordinates): Double = {
+            val a = haversine(center_coord, boundary_coords(0));
+            val b = haversine(boundary_coords(0), boundary_coords(1));
+            val c = haversine(boundary_coords(1), center_coord);
+
+            val s = (a + b + c) / 2;
+            val t = math.sqrt(
+              math.tan(s / 2)
+                  * math.tan((s - a) / 2)
+                  * math.tan((s - b) / 2)
+                  * math.tan((s - c) / 2)
+            );
+
+            val e = 4 * math.atan(t);
+
+            val r = 6371.0088;
+            val area = e * r * r
+            area
+        }
+
+        val center = indexToCenter(index);
+        val boundary = indexToBoundary(index);
+        val boundary_ring = boundary ++ Seq(boundary.head);
+        val res = boundary_ring.sliding(2).map(b => triangle_area(b, center)).sum
+        res
+    }
+
+    def area(index: String): Double = area(parse(index))
+
+    def coerceChipGeometry(geom: MosaicGeometry, cell: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
+        val geomType = GeometryTypeEnum.fromString(geom.getGeometryType)
+        if (geomType == GEOMETRYCOLLECTION) {
+            // This case can occur if partial geometry is a geometry collection
+            // or if the intersection includes a part of the boundary of the cell
+            geom.difference(indexToGeometry(cell, geometryAPI).getBoundary)
+        } else {
+            geom
+        }
+    }
+
+    def coerceChipGeometry(geometries: Seq[MosaicGeometry]): Seq[MosaicGeometry] = {
+        val types = geometries.map(_.getGeometryType).map(GeometryTypeEnum.fromString)
+        if (types.contains(MULTIPOLYGON) || types.contains(POLYGON)) {
+            geometries.filter(g => Seq(POLYGON, MULTIPOLYGON).contains(GeometryTypeEnum.fromString(g.getGeometryType)))
+        } else if (types.contains(MULTILINESTRING) || types.contains(LINESTRING)) {
+            geometries.filter(g => Seq(MULTILINESTRING, LINESTRING).contains(GeometryTypeEnum.fromString(g.getGeometryType)))
+        } else if (types.contains(MULTIPOINT) || types.contains(POINT)) {
+            geometries.filter(g => Seq(MULTIPOINT, POINT).contains(GeometryTypeEnum.fromString(g.getGeometryType)))
+        } else {
+            Nil
+        }
+    }
 
 }

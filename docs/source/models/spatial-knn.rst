@@ -2,6 +2,9 @@
 Spatial K Nearest Neighbours
 ============================
 
+* Runnable notebook based python example available, see `here <https://github.com/databrickslabs/mosaic/tree/main/notebooks/examples/python/SpatialKNN>`__
+* Also, reference SpatialKNN code-level APIs `Python <https://github.com/databrickslabs/mosaic/blob/main/python/mosaic/models/knn/spatial_knn.py>`__ |  `Scala <https://github.com/databrickslabs/mosaic/tree/main/src/main/scala/com/databricks/labs/mosaic/models/knn>`__ for any additions or changes
+
 Intro
 ###################
 
@@ -59,11 +62,44 @@ in the hex ring for any L[i] geometry in the set L for N iterations (knn.setEarl
 
    Fig 2. Spatial KNN example over 4 iterations.
 
+Parameters
+##########
+
+The transformer has the following parameters:
+
+* candidatesDf: the dataframe containing the geometries that will be used as candidates for the KNN search
+* candidatesFeatureCol: the name of the column that contains the candidates geometries
+* candidatesRowID: the name of the column that contains the candidates ids
+* landmarksFeatureCol: the name of the column that contains the landmarks geometries
+* landmarksRowID: the name of the column that contains the landmarks ids
+* kNeighbours: the number of neighbours to return
+* maxIterations: the maximum number of iterations to perform
+* distanceThreshold: the distance threshold to stop the iterations (in CRS units)
+* earlyStopIterations: the number of subsequent iterations upon which to stop if no new neighbours 
+* checkpointTablePrefix: the prefix of the checkpoint table
+* indexResolution: the resolution of the index (grid system specific)
+* approximate: whether to stop after max iterations (approximate = true) or to
+  perform the finalisation step (approximate = false) - no default value, the caller must specify this parameter
+
+Param distanceThreshold is specific to the CRS used, e.g. for 4326 units are decimal degrees. 
+This is useful as a a safety net for coarse grained indexResolution choices which could easily span large chunks of the globe.
+
+If the approximate is set to true the transformer wont perform the finalisation step.
+The finalisation takes into account that grid index cells may be skewed at different
+locations and we cant ensure radial growth between iterations. That means that some
+of the neighbours in returned K set arent nearest neighbours. The finalisation step
+will take the distance between the neighbours and the target geometry and will generate
+a buffered geometry around the target geometry. The buffered geometry will be used to
+identify missed neighbours. The missed neighbours will be added to the K set and the
+set will be sorted by distance to the target geometry. Grid cells can be skewed at different
+locations in a different way, meaning the hex rings are more of ellipses than circles.
+To account for that we need to perform the finalisation step that is based on buffer geometries.
+
 Usage
 #####
 
 Mosaic implements a transformer that implements the iterative approach outlined above.
-The transformer is called SpatialKnn and it is used as follows:
+The transformer is called SpatialKNN and it is used as follows:
 
 .. tabs::
    .. code-tab:: py
@@ -73,25 +109,38 @@ The transformer is called SpatialKnn and it is used as follows:
     >>>
     >>> spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
     >>>
-    >>> buildings_df = spark.read.table("buildings")
-    >>> buildings_df = buildings_df.withColumn("left_id", monotonically_increasing_id())
-    >>> roads_df = spark.read.table("roads")
-    >>> roads_df = roads_df.withColumn("right_id", monotonically_increasing_id())
+    >>> building_df = spark.read.table("building")
+    >>> trip_df = spark.read.table("trip")
+    >>> 
+    >>> from mosaic.models import SpatialKNN
     >>>
-    >>> from mosaic.models import SpatialKnn
     >>> knn = SpatialKNN()
-    >>> knn.setCandidates(roads_df)
-    >>> knn.setCandidatesGeometryColumn("geometry")
-    >>> knn.setCandidatesIdColumn("right_id")
-    >>> knn.setLandmarksGeometryColumn("geometry")
-    >>> knn.setLandmarksIdColumn("left_id")
-    >>> knn.setK(5)
-    >>> knn.setMaxIterations(10)
-    >>> knn.setDistanceThreshold(1.0)
+    >>> 
+    >>> knn.setUseTableCheckpoint(True)
     >>> knn.setCheckpointTablePrefix("checkpoint_table_knn")
+    >>> knn.model.cleanupCheckpoint
+    >>>
+    >>> # CRS Specific
+    >>> # - e.g. 4326 units are decimal degrees
+    >>> knn.setDistanceThreshold(1.0) 
+    >>> 
+    >>> # Grid System Specific
+    >>> # - e.g. H3 resolutions 0-15 
     >>> knn.setIndexResolution(10)
     >>>
-    >>> neighbours = knn.transform(buildings_df)
+    >>> knn.setKNeighbours(5)
+    >>> knn.setApproximate(True)
+    >>> knn.setMaxIterations(10)
+    >>> knn.setEarlyStopIterations(3) 
+    >>>
+    >>> knn.setLandmarksFeatureCol("geom_wkt")
+    >>> knn.setLandmarksRowID("left_id") # id will be generated
+    >>>
+    >>> knn.setCandidatesDf(trip_df.where("pickup_point is not null"))
+    >>> knn.setCandidatesFeatureCol("pickup_point")
+    >>> knn.setCandidatesRowID("right_id") # id will be generated
+    >>>
+    >>> neighbours = knn.transform(building_df)
     >>> neighbours.display()
     +-------+--------+-----------+--------------+--------------------------+---------+----------------+
     |left_id|right_id|   geometry|right_geometry|geometry_geometry_distance|iteration|neighbour_number|
@@ -116,24 +165,22 @@ The transformer is called SpatialKnn and it is used as follows:
     >>>
     >>> spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
     >>>
-    >>> val buildingsDf = spark.read.table("buildings")
-    >>>                     .withColumn("left_id", monotonically_increasing_id())
-    >>> val roads_df = spark.read.table("roads")
-    >>>                     .withColumn("right_id", monotonically_increasing_id())
+    >>> val buildingDf = spark.read.table("building")
+    >>> val tripDf = spark.read.table("trip")
     >>>
-    >>> val knn = SpatialKNN()
-    >>>             .setCandidates(roads_df)
-    >>>             .setCandidatesGeometryColumn("geometry")
-    >>>             .setCandidatesIdColumn("right_id")
-    >>>             .setLandmarksGeometryColumn("geometry")
-    >>>             .setLandmarksIdColumn("left_id")
-    >>>             .setK(5)
+    >>> val knn = SpatialKNN(tripDf)
+    >>>             .setDistanceThreshold(1.0) // crs specific units    
+    >>>             .setIndexResolution(10) // grid system specific
+    >>>             .setKNeighbours(5)
     >>>             .setMaxIterations(10)
-    >>>             .setDistanceThreshold(1.0)
-    >>>             .setCheckpointTablePrefix("checkpoint_table_knn")
-    >>>             .setIndexResolution(10)
+    >>>             .setEarlyStopIterations(3)
+    >>>             .setLandmarksFeatureCol("geom_wkt")
+    >>>             .setLandmarksRowID("left_id")  // will be generated
+    >>>             .setCandidatesFeatureCol("pickup_point")
+    >>>             .setCandidatesRowID("right_id") // will be generated
+    >>>             .setCheckpointTablePrefix("checkpoint_table_knn")         
     >>>
-    >>> val neighbours = knn.transform(buildings_df)
+    >>> val neighbours = knn.transform(buildingDf)
     >>> neighbours.display()
     +-------+--------+-----------+--------------+--------------------------+---------+----------------+
     |left_id|right_id|   geometry|right_geometry|geometry_geometry_distance|iteration|neighbour_number|
@@ -149,35 +196,6 @@ Note: the transformer is implemented only in python and scala at the moment.
 
 Mosaic supports all indexing systems for this transformer.
 Please see :doc:`Spatial Indexing </api/spatial-indexing>` for supported indexing operations.
-
-Parameters
-##########
-
-The transformer has the following parameters:
-
-* candidatesDf: the dataframe containing the geometries that will be used as candidates for the KNN search
-* candidatesGeometryColumn: the name of the column that contains the candidates geometries
-* candidatesIdColumn: the name of the column that contains the candidates ids
-* landmarksGeometryColumn: the name of the column that contains the landmarks geometries
-* landmarksIdColumn: the name of the column that contains the landmarks ids
-* k: the number of neighbours to return
-* maxIterations: the maximum number of iterations to perform
-* distanceThreshold: the distance threshold to stop the iterations
-* checkpointTablePrefix: the prefix of the checkpoint table
-* indexResolution: the resolution of the index
-* approximate: whether to stop after max iterations (approximate = true) or to
-  perform the finalisation step (approximate = false) - no default value, the caller must specify this parameter
-
-If the approximate is set to true the transformer wont perform the finalisation step.
-The finalisation takes into account that grid index cells may be skewed at different
-locations and we cant ensure radial growth between iterations. That means that some
-of the neighbours in returned K set arent nearest neighbours. The finalisation step
-will take the distance between the neighbours and the target geometry and will generate
-a buffered geometry around the target geometry. The buffered geometry will be used to
-identify missed neighbours. The missed neighbours will be added to the K set and the
-set will be sorted by distance to the target geometry. Grid cells can be skewed at different
-locations in a different way, meaning the hex rings are more of ellipses than circles.
-To account for that we need to perform the finalisation step that is based on buffer geometries.
 
 Visualisation
 #############
@@ -226,28 +244,15 @@ transformer after the convergence.
     >>> import mosaic as mos
     >>> mos.enable_mosaic(spark, dbutils)
     >>>
-    >>> buildings_df = spark.read.table("buildings")
-    >>> buildings_df = buildings_df.withColumn("left_id", monotonically_increasing_id())
-    >>> roads_df = spark.read.table("roads")
-    >>> roads_df = roads_df.withColumn("right_id", monotonically_increasing_id())
-    >>>
-    >>> from mosaic.models import SpatialKnn
+    >>> from mosaic.models import SpatialKNN
     >>> import mlflow
+    >>> mlflow.autolog(disable=False)
     >>>
     >>> with mlflow.start_run():
     >>>
-    >>>     knn = SpatialKNN(roads_df)
-    >>>     knn.setLeftGeometryColumn("geometry")
-    >>>     knn.setRightGeometryColumn("geometry")
-    >>>     knn.setLeftIdColumn("left_id")
-    >>>     knn.setRightIdColumn("right_id")
-    >>>     knn.setK(5)
-    >>>     knn.setMaxIterations(10)
-    >>>     knn.setDistanceThreshold(1.0)
-    >>>     knn.setCheckpointTablePrefix("checkpoint_table_knn")
-    >>>     knn.setIndexResolution(10)
-    >>>
-    >>>     neighbours = knn.transform(buildings_df)
+    >>>     knn = SpatialKNN()
+    >>>     ...
+    >>>     result_df = knn.transform(...)
     >>>
     >>>     mlflow.log_params(knn.getParams())
     >>>     mlflow.log_metrics(knn.getMetrics())
@@ -298,38 +303,25 @@ These datasets are not serialised with the model, and neither are the model outp
     >>>
     >>> spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
     >>>
-    >>> buildings_df = spark.read.table("buildings")
-    >>> buildings_df = buildings_df.withColumn("left_id", monotonically_increasing_id())
-    >>> roads_df = spark.read.table("roads")
-    >>> roads_df = roads_df.withColumn("right_id", monotonically_increasing_id())
-    >>>
-    >>> from mosaic.models import SpatialKnn
+    >>> from mosaic.models import SpatialKNN
     >>> knn = SpatialKNN()
-    >>> knn.setCandidates(roads_df)
-    >>> knn.setCandidatesGeometryColumn("geometry")
-    >>> knn.setCandidatesIdColumn("right_id")
-    >>> knn.setLandmarksGeometryColumn("geometry")
-    >>> knn.setLandmarksIdColumn("left_id")
-    >>> knn.setK(5)
-    >>> knn.setMaxIterations(10)
-    >>> knn.setDistanceThreshold(1.0)
-    >>> knn.setCheckpointTablePrefix("checkpoint_table_knn")
-    >>> knn.setIndexResolution(10)
-    >>>
-    >>> neighbours = knn.transform(buildings_df)
+    >>> ...
     >>>
     >>> knn.write.save("dbfs:/tmp/mosaic/username/knn_model")
     >>> loaded_knn = SpatialKNN.read.load("dbfs:/tmp/mosaic/username/knn_model")
     >>> loaded_knn.getParams()
-    {'candidates_geometry_column': 'geometry',
-     'candidates_id_column': 'right_id',
-     'distance_threshold': 1.0,
-     'index_resolution': 10,
-     'k': 5,
-     'landmarks_geometry_column': 'geometry',
-     'landmarks_id_column': 'left_id',
-     'max_iterations': 10,
-     'checkpoint_table_prefix': 'checkpoint_table_knn'}
+    {'approximate': 'true',
+     'candidatesFeatureCol': 'pickup_point',
+     'candidatesRowID': 'candidates_id',
+     'checkpointTablePrefix': 'checkpoint_table_knn',
+     'distanceThreshold': '1.0',
+     'earlyStopIterations': '3',
+     'indexResolution': '10',
+     'kNeighbours': '20',
+     'landmarksFeatureCol': 'geom_wkt',
+     'landmarksRowID': 'landmarks_id',
+     'maxIterations': '10',
+     'useTableCheckpoint': 'true'}
 
    .. code-tab:: scala
 
@@ -344,36 +336,25 @@ These datasets are not serialised with the model, and neither are the model outp
     >>>
     >>> spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
     >>>
-    >>> val buildingsDf = spark.read.table("buildings")
-    >>>                     .withColumn("left_id", monotonically_increasing_id())
-    >>> val roads_df = spark.read.table("roads")
-    >>>                     .withColumn("right_id", monotonically_increasing_id())
-    >>>
     >>> val knn = SpatialKNN()
-    >>>             .setCandidates(roads_df)
-    >>>             .setCandidatesGeometryColumn("geometry")
-    >>>             .setCandidatesIdColumn("right_id")
-    >>>             .setLandmarksGeometryColumn("geometry")
-    >>>             .setLandmarksIdColumn("left_id")
-    >>>             .setK(5)
-    >>>             .setMaxIterations(10)
-    >>>             .setDistanceThreshold(1.0)
-    >>>             .setCheckpointTablePrefix("checkpoint_table_knn")
-    >>>             .setIndexResolution(10)
+    >>> ...
     >>>
     >>> knn.write.save("dbfs:/tmp/mosaic/username/knn_model")
     >>> val loadedKnn = SpatialKNN.read.load("dbfs:/tmp/mosaic/username/knn_model")
     >>> val params = loadedKnn.getParams()
     >>> params.foreach(println)
-    ('candidates_geometry_column': 'geometry')
-    ('candidates_id_column': 'right_id')
-    ('distance_threshold': 1.0)
-    ('index_resolution': 10)
-    ('k': 5)
-    ('landmarks_geometry_column': 'geometry')
-    ('landmarks_id_column': 'left_id')
-    ('max_iterations': 10)
-    ('checkpoint_table_prefix': 'checkpoint_table_knn')
+    ('approximate': 'true')
+    ('candidatesFeatureCol': 'pickup_point')
+    ('candidatesRowID': 'candidates_id')
+    ('checkpointTablePrefix': 'checkpoint_table_knn')
+    ('distanceThreshold': '1.0')
+    ('earlyStopIterations': '3')
+    ('indexResolution': '10')
+    ('kNeighbours': '20')
+    ('landmarksFeatureCol': 'geom_wkt')
+    ('landmarksRowID': 'landmarks_id')
+    ('maxIterations': '10')
+    ('useTableCheckpoint': 'true')
 
 
 Shape Aware Hex Rings
@@ -392,6 +373,3 @@ skewed around the shape of the polygon, the polygon holes will be considered.
    :figclass: doc-figure
 
    Fig 7. Spatial KNN example of shape aware hex rings.
-
-
-

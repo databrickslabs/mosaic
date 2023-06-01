@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemID}
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.expressions.index.IndexGeometry
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
@@ -13,14 +13,13 @@ case class ST_IntersectionAggregate(
     leftChip: Expression,
     rightChip: Expression,
     geometryAPIName: String,
-    indexSystemName: String,
+    indexSystem: IndexSystem,
     mutableAggBufferOffset: Int,
     inputAggBufferOffset: Int
 ) extends TypedImperativeAggregate[Array[Byte]]
       with BinaryLike[Expression] {
 
     val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
-    val indexSystem: IndexSystem = IndexSystemID.getIndexSystem(IndexSystemID.apply(indexSystemName))
     override lazy val deterministic: Boolean = true
     override val left: Expression = leftChip
     override val right: Expression = rightChip
@@ -30,11 +29,11 @@ case class ST_IntersectionAggregate(
 
     override def prettyName: String = "st_intersection_aggregate"
 
-    private [geometry] def getCellGeom(row: InternalRow, dt: DataType) = {
-        dt.asInstanceOf[StructType].fields.find(_.name=="index_id").map(_.dataType) match {
-            case Some(LongType) => indexSystem.indexToGeometry(row.getLong(1), geometryAPI)
+    private[geometry] def getCellGeom(row: InternalRow, dt: DataType) = {
+        dt.asInstanceOf[StructType].fields.find(_.name == "index_id").map(_.dataType) match {
+            case Some(LongType)   => indexSystem.indexToGeometry(row.getLong(1), geometryAPI)
             case Some(StringType) => indexSystem.indexToGeometry(row.getString(1), geometryAPI)
-            case _ => throw new Error("Unsupported format for chips.")
+            case _                => throw new Error("Unsupported format for chips.")
         }
     }
 
@@ -48,17 +47,18 @@ case class ST_IntersectionAggregate(
         val leftCoreFlag = leftIndexValue.getBoolean(0)
         val rightCoreFlag = rightIndexValue.getBoolean(0)
 
-        val geomIncrement = if (leftCoreFlag && rightCoreFlag) {
-            getCellGeom(leftIndexValue, leftChip.dataType)
-        } else if (leftCoreFlag) {
-            geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
-        } else if (rightCoreFlag) {
-            geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
-        } else {
-            val leftChipGeom = geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
-            val rightChipGeom = geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
-            leftChipGeom.intersection(rightChipGeom)
-        }
+        val geomIncrement =
+            if (leftCoreFlag && rightCoreFlag) {
+                getCellGeom(leftIndexValue, leftChip.dataType)
+            } else if (leftCoreFlag) {
+                geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
+            } else if (rightCoreFlag) {
+                geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
+            } else {
+                val leftChipGeom = geometryAPI.geometry(leftIndexValue.getBinary(2), "WKB")
+                val rightChipGeom = geometryAPI.geometry(rightIndexValue.getBinary(2), "WKB")
+                leftChipGeom.intersection(rightChipGeom)
+            }
 
         partialGeom.union(geomIncrement).toWKB
     }

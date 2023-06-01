@@ -52,7 +52,7 @@ trait GeometryKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
         val sc = spark
         import sc.implicits._
 
-        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val k = 4
         val resolution = 3
 
@@ -60,7 +60,7 @@ trait GeometryKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(wkt).expr,
           lit(resolution).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -75,7 +75,7 @@ trait GeometryKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(10).expr,
           lit(resolution).expr,
           lit(k).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 

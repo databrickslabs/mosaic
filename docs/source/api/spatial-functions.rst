@@ -238,8 +238,8 @@ st_bufferloop
 
    Fig 1. ST_BufferLoop(geom, 0.02, 0.04)
 
-st_centroid2D
-*************
+st_centroid2D [Deprecated]
+**************************
 
 .. function:: st_centroid2D(col)
 
@@ -291,17 +291,58 @@ st_centroid2D
     |{25.454545454545453, 26.96969696969697}|
     +---------------------------------------+
 
-st_centroid3D
+st_centroid
 *************
 
-.. function:: st_centroid3D(col)
+.. function:: st_centroid(col)
 
-    Returns the x, y and z coordinates representing the centroid of the input geometry.
+    Returns the POINT geometry representing the centroid of the input geometry.
 
     :param col: Geometry
     :type col: Column
-    :rtype: Column: StructType[x: DoubleType, y: DoubleType, z: DoubleType]
+    :rtype: Column: Geometry
 
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_centroid('wkt')).show()
+    +---------------------------------------------+
+    |st_centroid(wkt)                             |
+    +---------------------------------------------+
+    |POINT (25.454545454545453, 26.96969696969697)|
+    +---------------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    >>> df.select(st_centroid(col("wkt"))).show()
+    +---------------------------------------------+
+    |st_centroid(wkt)                             |
+    +---------------------------------------------+
+    |POINT (25.454545454545453, 26.96969696969697)|
+    +---------------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_centroid("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +---------------------------------------------+
+    |st_centroid(wkt)                             |
+    +---------------------------------------------+
+    |POINT (25.454545454545453, 26.96969696969697)|
+    +---------------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_centroid(column("wkt"))), truncate=F)
+    +---------------------------------------------+
+    |st_centroid(wkt)                             |
+    +---------------------------------------------+
+    |POINT (25.454545454545453, 26.96969696969697)|
+    +---------------------------------------------+
 
 st_convexhull
 *************
@@ -469,7 +510,6 @@ st_distance
     +------------------------+
 
 .. note:: Results of this function are always expressed in the original units of the input geometries.
-
 
 st_dump
 *******
@@ -643,6 +683,68 @@ st_geometrytype
     +--------------------+
     |             POLYGON|
     +--------------------+
+
+
+st_haversine
+***********
+
+.. function:: st_haversine(lat1, lng1, lat2, lng2)
+
+    Compute the haversine distance between lat1/lng1 and lat2/lng2.
+
+    :param lat1: DoubleType
+    :type lat1: Column
+    :param lng1: DoubleType
+    :type lng1: Column
+    :param lat2: DoubleType
+    :type lat2: Column
+    :param lng2: DoubleType
+    :type lng2: Column
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'lat1': 0.0, 'lng1': 90.0, 'lat2': 0.0, 'lng2': 0.0}])
+    >>> df.select(st_distance('lat1', 'lng1', 'lat2', 'lng2')).show()
+    +------------------------------------+
+    |st_haversine(lat1, lng1, lat2, lng2)|
+    +------------------------------------+
+    |                   10007.55722101796|
+    +------------------------------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List((0.0, 90.0, 0.0, 0.0)).toDF("lat1", "lng1", "lat2", "lng2")
+    >>> df.select(st_haversine(col("lat1"), col("lng1"), col("lat2"), col("lng2"))).show()
+    +------------------------------------+
+    |st_haversine(lat1, lng1, lat2, lng2)|
+    +------------------------------------+
+    |                   10007.55722101796|
+    +------------------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_haversine(0.0, 90.0, 0.0, 0.0)
+    +------------------------------------+
+    |st_haversine(lat1, lng1, lat2, lng2)|
+    +------------------------------------+
+    |                   10007.55722101796|
+    +------------------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(lat1 = c(0.0), lng1 = c(90.0), lat2 = c(0.0), lng2 = c(0.0)))
+    >>> showDF(select(df, st_haversine(column("lat1"), column("lng1"), column("lat2"), column("lng2"))))
+    +------------------------------------+
+    |st_haversine(lat1, lng1, lat2, lng2)|
+    +------------------------------------+
+    |                   10007.55722101796|
+    +------------------------------------+
+
+.. note:: Results of this function are always expressed in km^2, while the input lat/lng pairs are expected to be in degrees.
 
 
 st_hasvalidcoordinates
@@ -1198,7 +1300,63 @@ st_setsrid
     rather it tells Mosaic the SRID in which the current coordinates are expressed.
     ST_SetSRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.
 
+st_simplify
+***********
 
+.. function:: st_simplify(geom, tol)
+
+    Returns the simplified geometry.
+
+    :param geom: Geometry
+    :type geom: Column
+    :param tol: Tolerance
+    :type tol: Column
+    :rtype: Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'LINESTRING (0 1, 1 2, 2 1, 3 0)'}])
+    >>> df.select(st_simplify('wkt', 1.0)).show()
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+   .. code-tab:: scala
+
+    >>> df = List(("LINESTRING (0 1, 1 2, 2 1, 3 0)")).toDF("wkt")
+    >>> df.select(st_simplify('wkt', 1.0)).show()
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_simplify("LINESTRING (0 1, 1 2, 2 1, 3 0)", 1.0)
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "LINESTRING (0 1, 1 2, 2 1, 3 0)")
+    >>> showDF(select(df, st_simplify(column("wkt"), 1.0)), truncate=F)
+    +----------------------------+
+    | st_simplify(wkt, 1.0)      |
+    +----------------------------+
+    | LINESTRING (0 1, 1 2, 3 0) |
+    +----------------------------+
+
+.. note::
+    The specified tolerance will be ignored by the ESRI geometry API.
 
 st_srid
 *******
@@ -1384,64 +1542,6 @@ st_translate
     |MULTIPOINT ((20 35), (50 25), (30 15), (40 5))|
     +----------------------------------------------+
 
-st_simplify
-***********
-
-.. function:: st_simplify(geom, tol)
-
-    Returns the simplified geometry.
-
-    :param geom: Geometry
-    :type geom: Column
-    :param tol: Tolerance
-    :type tol: Column
-    :rtype: Column: Geometry
-
-    :example:
-
-.. tabs::
-   .. code-tab:: py
-
-    >>> df = spark.createDataFrame([{'wkt': 'LINESTRING (0 1, 1 2, 2 1, 3 0)'}])
-    >>> df.select(st_simplify('wkt', 1.0)).show()
-    +----------------------------+
-    | st_simplify(wkt, 1.0)      |
-    +----------------------------+
-    | LINESTRING (0 1, 1 2, 3 0) |
-    +----------------------------+
-
-   .. code-tab:: scala
-
-    >>> df = List(("LINESTRING (0 1, 1 2, 2 1, 3 0)")).toDF("wkt")
-    >>> df.select(st_simplify('wkt', 1.0)).show()
-    +----------------------------+
-    | st_simplify(wkt, 1.0)      |
-    +----------------------------+
-    | LINESTRING (0 1, 1 2, 3 0) |
-    +----------------------------+
-
-   .. code-tab:: sql
-
-    >>> SELECT st_simplify("LINESTRING (0 1, 1 2, 2 1, 3 0)", 1.0)
-    +----------------------------+
-    | st_simplify(wkt, 1.0)      |
-    +----------------------------+
-    | LINESTRING (0 1, 1 2, 3 0) |
-    +----------------------------+
-
-   .. code-tab:: r R
-
-    >>> df <- createDataFrame(data.frame(wkt = "LINESTRING (0 1, 1 2, 2 1, 3 0)")
-    >>> showDF(select(df, st_simplify(column("wkt"), 1.0)), truncate=F)
-    +----------------------------+
-    | st_simplify(wkt, 1.0)      |
-    +----------------------------+
-    | LINESTRING (0 1, 1 2, 3 0) |
-    +----------------------------+
-
-.. note::
-    The specified tolerance will be ignored by the ESRI geometry API.
-
 st_union
 ********
 
@@ -1550,6 +1650,59 @@ st_unaryunion
     |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
     +-------------------------------------------------------------------------+
 
+st_x
+****
+
+.. function:: st_x(col)
+
+    Returns the x coordinate of the input geometry.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+     >>> df.select(st_x('wkt')).show()
+     +-----------------+
+     |st_x(wkt)        |
+     +-----------------+
+     |             30.0|
+     +-----------------+
+
+    .. code-tab:: scala
+
+     >>> val df = List(("POINT (30 10)")).toDF("wkt")
+     >>> df.select(st_x(col("wkt"))).show()
+     +-----------------+
+     |st_x(wkt)        |
+     +-----------------+
+     |             30.0|
+     +-----------------+
+
+    .. code-tab:: sql
+
+     >>> SELECT st_x("POINT (30 10)")
+     +-----------------+
+     |st_x(wkt)        |
+     +-----------------+
+     |             30.0|
+     +-----------------+
+
+    .. code-tab:: r R
+
+     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10)"))
+     >>> showDF(select(df, st_x(column("wkt"))), truncate=F)
+     +-----------------+
+     |st_x(wkt)        |
+     +-----------------+
+     |             30.0|
+     +-----------------+
+
 st_xmax
 *******
 
@@ -1657,6 +1810,57 @@ st_xmin
     |             10.0|
     +-----------------+
 
+st_y
+****
+.. function:: st_y(col)
+
+    Returns the y coordinate of the input geometry.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+     >>> df.select(st_y('wkt')).show()
+     +-----------------+
+     |st_y(wkt)        |
+     +-----------------+
+     |             10.0|
+     +-----------------+
+
+    .. code-tab:: scala
+
+     >>> val df = List(("POINT (30 10)")).toDF("wkt")
+     >>> df.select(st_y(col("wkt"))).show()
+     +-----------------+
+     |st_y(wkt)        |
+     +-----------------+
+     |             10.0|
+     +-----------------+
+
+    .. code-tab:: sql
+
+     >>> SELECT st_y("POINT (30 10)")
+     +-----------------+
+     |st_y(wkt)        |
+     +-----------------+
+     |             10.0|
+     +-----------------+
+
+    .. code-tab:: r R
+
+     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10)"))
+     >>> showDF(select(df, st_y(column("wkt"))), truncate=F)
+     +-----------------+
+     |st_y(wkt)        |
+     +-----------------+
+     |             10.0|
+     +-----------------+
 
 st_ymax
 *******
@@ -1777,6 +1981,49 @@ st_zmax
     :type col: Column
     :rtype: Column: DoubleType
 
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10 20)'}])
+     >>> df.select(st_zmax('wkt')).show()
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: scala
+
+     >>> val df = List(("POINT (30 10 20)")).toDF("wkt")
+     >>> df.select(st_zmax(col("wkt"))).show()
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: sql
+
+     >>> SELECT st_zmax("POINT (30 10 20)")
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: r R
+
+     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10 20)"))
+     >>> showDF(select(df, st_zmax(column("wkt"))), truncate=F)
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+
 
 st_zmin
 *******
@@ -1788,4 +2035,48 @@ st_zmin
     :param col: Geometry
     :type col: Column
     :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10 20)'}])
+     >>> df.select(st_zmin('wkt')).show()
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: scala
+
+     >>> val df = List(("POINT (30 10 20)")).toDF("wkt")
+     >>> df.select(st_zmin(col("wkt"))).show()
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: sql
+
+     >>> SELECT st_zmin("POINT (30 10 20)")
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: r R
+
+     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10 20)"))
+     >>> showDF(select(df, st_zmin(column("wkt"))), truncate=F)
+     +-----------------+
+     |st_minmaxxyz(wkt)|
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+
 

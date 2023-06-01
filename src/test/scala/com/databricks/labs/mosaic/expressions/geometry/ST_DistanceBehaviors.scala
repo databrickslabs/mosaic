@@ -26,7 +26,7 @@ trait ST_DistanceBehaviors extends QueryTest {
         mc.register(spark)
 
         val referenceGeoms = mocks
-            .getWKTRowsDf(mc)
+            .getWKTRowsDf()
             .orderBy("id")
             .select("wkt")
             .as[String]
@@ -81,7 +81,7 @@ trait ST_DistanceBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stDistance = ST_Distance(lit(1).expr, lit("POINT (2 2)").expr, "JTS")
+        val stDistance = ST_Distance(lit(1).expr, lit("POINT (2 2)").expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stDistance.genCode(ctx)
     }
@@ -91,7 +91,7 @@ trait ST_DistanceBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stDistance = ST_Distance(lit("POINT (1 1)").expr, lit("POINT (2 2) ").expr, "illegalAPI")
+        val stDistance = ST_Distance(lit("POINT (1 1)").expr, lit("POINT (2 2) ").expr, mc.expressionConfig)
 
         stDistance.left shouldEqual lit("POINT (1 1)").expr
         stDistance.right shouldEqual lit("POINT (2 2) ").expr

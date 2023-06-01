@@ -1,16 +1,15 @@
 package com.databricks.labs.mosaic.sql
 
 import java.util.concurrent.atomic.AtomicLong
-
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.sql.MosaicFrame._
 import com.databricks.labs.mosaic.sql.constants._
 import com.databricks.labs.mosaic.sql.join.PointInPolygonJoin
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql._
 import org.apache.spark.sql.adapters.MosaicDataset
+import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.types._
 
 class MosaicFrame(sparkDataFrame: DataFrame) extends MosaicDataset(sparkDataFrame) with Logging {

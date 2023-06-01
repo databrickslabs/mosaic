@@ -54,6 +54,13 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
         spark._jsparkSession, optionModule.apply(None)
     )
 
+    isSupported = config.mosaic_context._context.checkDBR(spark._jsparkSession)
+    if not isSupported:
+        print("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime. \n")
+        print("DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.4.0+. \n")
+        print("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits). \n")
+
+
     # Not yet added to the pyspark API
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=FutureWarning)

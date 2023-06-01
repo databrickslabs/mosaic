@@ -21,8 +21,9 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         mc.register(spark)
 
         val resolution = mc.getIndexSystem match {
-            case H3IndexSystem  => 3
+            case H3IndexSystem => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -55,6 +56,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val rdd = spark.sparkContext.makeRDD(
@@ -110,6 +112,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val rdd = spark.sparkContext.makeRDD(
@@ -146,9 +149,10 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 3
+            case _ => 3
         }
 
-        val wktRows: DataFrame = getWKTRowsDf(mc).where(col("wkt").contains("LINESTRING"))
+        val wktRows: DataFrame = getWKTRowsDf(mc.getIndexSystem).where(col("wkt").contains("LINESTRING"))
 
         val mosaics = wktRows
             .select(
@@ -212,6 +216,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -244,6 +249,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -276,6 +282,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 3
             case BNGIndexSystem => 5
+            case _ => 3
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
@@ -321,17 +328,18 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         val sc = spark
         import sc.implicits._
 
-        val wkt = mocks.getWKTRowsDf(mc).limit(1).select("wkt").as[String].collect().head
+        val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
         val resExpr = mc.getIndexSystem match {
             case H3IndexSystem  => lit(mc.getIndexSystem.resolutions.head).expr
             case BNGIndexSystem => lit("100m").expr
+            case _ => lit(3).expr
         }
 
         val mosaicExplodeExpr = MosaicExplode(
           lit(wkt).expr,
           resExpr,
           lit(false).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -343,7 +351,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
           lit(10).expr,
           resExpr,
           lit(false).expr,
-          mc.getIndexSystem.name,
+          mc.getIndexSystem,
           mc.getGeometryAPI.name
         )
 
@@ -374,4 +382,33 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy mc.functions.mosaic_explode(lit(""), 5, keepCoreGeometries = true)
     }
 
+    def issue360(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = mosaicContext
+        mc.register(spark)
+
+        mc.getIndexSystem match {
+            case H3IndexSystem =>
+                val rdd = spark.sparkContext.makeRDD(
+                    Seq(
+                        Row("LINESTRING (-85.0040681 42.2975028, -85.0073029 42.2975266)")
+                    )
+                )
+                val schema = StructType(
+                    List(
+                        StructField("wkt", StringType)
+                    )
+                )
+                val df = spark.createDataFrame(rdd, schema)
+
+                df.select(expr(s"grid_tessellateexplode(wkt, 12, true)"))
+                    .collect()
+                    .length shouldEqual 20
+
+                df.select(expr(s"grid_tessellateexplode(wkt, 13, true)"))
+                    .collect()
+                    .length shouldEqual 48
+            case _ => // do nothing
+        }
+    }
 }

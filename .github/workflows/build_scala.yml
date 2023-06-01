@@ -3,9 +3,7 @@ on:
   push:
     branches:
       - "scala/"
-  pull_request:
-    branches:
-      - "scala/"
+
 jobs:
   build:
     runs-on: ubuntu-20.04
