@@ -15,8 +15,8 @@ import org.gdal.gdal.InfoOptions
 import java.util.{Vector => JVector}
 
 /** Returns the summary info the raster. */
-case class RST_Summary(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Summary](path, StringType, expressionConfig: MosaicExpressionConfig)
+case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_Summary](raster, StringType, expressionConfig: MosaicExpressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

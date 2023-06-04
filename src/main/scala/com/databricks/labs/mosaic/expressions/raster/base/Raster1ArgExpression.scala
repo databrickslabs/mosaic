@@ -6,7 +6,6 @@ import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, NullIntolerant}
 import org.apache.spark.sql.types.DataType
-import org.apache.spark.unsafe.types.UTF8String
 
 import scala.reflect.ClassTag
 
@@ -15,8 +14,9 @@ import scala.reflect.ClassTag
   * the boilerplate code needed to create a function builder for a given
   * expression. It minimises amount of code needed to create a new expression.
   *
-  * @param pathExpr
-  *   The expression for the raster path.
+  * @param rasterExpr
+  *   The raster expression. It can be a path to a raster file or a byte array
+  *   containing the raster file content.
   * @param arg1Expr
   *   The expression for the first argument.
   * @param outputType
@@ -27,7 +27,7 @@ import scala.reflect.ClassTag
   *   The type of the extending class.
   */
 abstract class Raster1ArgExpression[T <: Expression: ClassTag](
-    pathExpr: Expression,
+    rasterExpr: Expression,
     arg1Expr: Expression,
     outputType: DataType,
     expressionConfig: MosaicExpressionConfig
@@ -42,7 +42,7 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
     protected val rasterAPI: RasterAPI = RasterAPI(expressionConfig.getRasterAPI)
     rasterAPI.enable()
 
-    override def left: Expression = pathExpr
+    override def left: Expression = rasterExpr
 
     override def right: Expression = arg1Expr
 
@@ -50,7 +50,7 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
     override def dataType: DataType = outputType
 
     /**
-      * The function to be overriden by the extending class. It is called when
+      * The function to be overridden by the extending class. It is called when
       * the expression is evaluated. It provides the raster and the arguments to
       * the expression. It abstracts spark serialization from the caller.
       * @param raster
@@ -66,8 +66,9 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
       * Evaluation of the expression. It evaluates the raster path and the loads
       * the raster from the path. It handles the clean up of the raster before
       * returning the results.
-      * @param inputPath
-      *   The path to the raster. It is a UTF8String.
+      * @param input
+      *   The input to the expression. It can be a path to a raster file or a
+      *   byte array containing the raster file content.
       *
       * @param arg1
       *   The first argument.
@@ -75,12 +76,11 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    override def nullSafeEval(inputPath: Any, arg1: Any): Any = {
-        val path = inputPath.asInstanceOf[UTF8String].toString
-
-        val raster = rasterAPI.raster(path)
+    override def nullSafeEval(input: Any, arg1: Any): Any = {
+        val raster = rasterAPI.readRaster(input, rasterExpr.dataType)
         val result = rasterTransform(raster, arg1)
 
+        raster.unlink()
         raster.cleanUp()
         result
     }

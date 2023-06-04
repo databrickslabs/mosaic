@@ -214,16 +214,17 @@ class MosaicRasterGDAL(_uuid: Long, raster: Dataset, path: String) extends Mosai
     }
 
     /**
-     * Unlinks the raster file.
-     * After this operation the raster object is no longer usable.
-     * To be used as last step in expression after writing to bytes.
-     */
+      * Unlinks the raster file. After this operation the raster object is no
+      * longer usable. To be used as last step in expression after writing to
+      * bytes.
+      */
     override def unlink(): Unit = {
         val isInMem = path.startsWith("/vsimem/")
-        if (!isInMem) {
+        if (isInMem) {
             gdal.Unlink(path)
         }
     }
+
 }
 
 //noinspection ZeroIndexToHead
@@ -247,35 +248,41 @@ object MosaicRasterGDAL extends RasterReader {
       * @return
       *   A MosaicRaster object.
       */
-    override def readRaster(inPath: String, vsizip: Boolean): MosaicRaster = {
+    override def readRaster(inPath: String): MosaicRaster = {
         val path = inPath.replace("dbfs:/", "/dbfs/").replace("file:/", "/")
         val uuid = Murmur3.hash64(path.getBytes())
+        // Subdatasets are paths with a colon in them.
+        // We need to check for this condition and handle it.
+        // Subdatasets paths are formatted as: "FORMAT:/path/to/file.tif:subdataset"
+        val isSubdataset = path.contains(":")
         val readPath =
-            if (vsizip && !path.startsWith("/vsizip/")) {
-                s"/vsizip/$path"
+            if (isSubdataset) {
+                val format :: filePath :: subdataset :: Nil = path.split(":").toList
+                val isZip = filePath.endsWith(".zip")
+                val vsiPrefix = if (isZip) "/vsizip/" else ""
+                s"$format:$vsiPrefix$filePath:$subdataset"
             } else {
-                path
+                val isZip = path.endsWith(".zip")
+                val readPath = if (path.startsWith("/vsizip/")) path else if (isZip) s"/vsizip/$path" else path
+                readPath
             }
         val dataset = gdal.Open(readPath, GA_ReadOnly)
         val raster = new MosaicRasterGDAL(uuid, dataset, path)
         raster
     }
 
-    override def readRaster(contentBytes: Array[Byte], vsizip: Boolean): MosaicRaster = {
+    override def readRaster(contentBytes: Array[Byte]): MosaicRaster = {
         if (Option(contentBytes).isEmpty || contentBytes.isEmpty) {
             // Handle empty rasters, easy check to -1L as UUID for empty rasters
             new MosaicRasterGDAL(-1L, null, "")
         } else {
-            val uuid = Murmur3.hash64(contentBytes)
+            val uuid = Murmur3.hash64(UUID.randomUUID().toString.getBytes())
             val extension = "tif"
-            val virtualPath =
-                if (vsizip) {
-                    s"/vsizip/vsimem/$uuid.$extension"
-                } else {
-                    s"/vsimem/$uuid.$extension"
-                }
+            val virtualPath = s"/vsimem/$uuid.$extension"
+            val zippedPath = s"/vsizip/$virtualPath"
             gdal.FileFromMemBuffer(virtualPath, contentBytes)
-            val dataset = gdal.Open(virtualPath)
+            // Try reading as a virtual file, if that fails, read as a zipped virtual file
+            val dataset = Option(gdal.Open(virtualPath)).getOrElse(gdal.Open(zippedPath))
             val raster = new MosaicRasterGDAL(uuid, dataset, virtualPath)
             raster
         }
@@ -295,8 +302,8 @@ object MosaicRasterGDAL extends RasterReader {
       * @return
       *   A MosaicRaster object.
       */
-    override def readBand(path: String, bandIndex: Int, vsizip: Boolean): MosaicRasterBand = {
-        val raster = readRaster(path, vsizip)
+    override def readBand(path: String, bandIndex: Int): MosaicRasterBand = {
+        val raster = readRaster(path)
         raster.getBand(bandIndex)
     }
 

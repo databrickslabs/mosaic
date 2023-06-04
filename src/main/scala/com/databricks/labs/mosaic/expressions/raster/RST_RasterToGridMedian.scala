@@ -10,11 +10,11 @@ import org.apache.spark.sql.types.DoubleType
 
 /** Returns the median value of the raster. */
 case class RST_RasterToGridMedian(
-    path: Expression,
+    raster: Expression,
     resolution: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterToGridExpression[RST_RasterToGridMedian, Double](
-      path,
+      raster,
       resolution,
       DoubleType,
       expressionConfig

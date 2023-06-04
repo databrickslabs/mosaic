@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns the metadata of the raster. */
-case class RST_MetaData(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_MetaData](path, MapType(StringType, StringType), expressionConfig)
+case class RST_MetaData(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_MetaData](raster, MapType(StringType, StringType), expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

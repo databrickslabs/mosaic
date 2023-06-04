@@ -13,8 +13,8 @@ import org.gdal.osr.SpatialReference
 import scala.util.Try
 
 /** Returns the SRID of the raster. */
-case class RST_SRID(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_SRID](path, IntegerType, expressionConfig)
+case class RST_SRID(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_SRID](raster, IntegerType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

@@ -11,18 +11,19 @@ import org.apache.spark.sql.types.IntegerType
 
 /** Returns the Y coordinate of the raster. */
 case class RST_WorldToRasterCoordY(
-    path: Expression,
+    raster: Expression,
     x: Expression,
     y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_WorldToRasterCoordY](path, x, y, IntegerType, expressionConfig)
+) extends Raster2ArgExpression[RST_WorldToRasterCoordY](raster, x, y, IntegerType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /**
-     * Returns the y coordinate of the raster by applying GeoTransform. This
-     * will ensure projection of the raster is respected.
-     */    override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
+      * Returns the y coordinate of the raster by applying GeoTransform. This
+      * will ensure projection of the raster is respected.
+      */
+    override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
         val xGeo = arg1.asInstanceOf[Double]
         val gt = raster.getRaster.GetGeoTransform()
         rasterAPI.fromWorldCoord(gt, xGeo, 0)._2

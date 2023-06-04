@@ -16,8 +16,6 @@ import org.apache.spark.sql.types.DataType
   */
 case class MosaicExpressionConfig(configs: Map[String, String]) {
 
-    def getRasterStorage: String = configs.getOrElse(MOSAIC_RASTER_STORAGE, MOSAIC_RASTER_STORAGE_DEFAULT)
-
     def updateSparkConf(): Unit = {
         val spark = SparkSession.builder().getOrCreate()
         val sparkConf = spark.sparkContext.getConf
@@ -69,6 +67,7 @@ object MosaicExpressionConfig {
             .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))
             .setRasterAPI(spark.conf.get(MOSAIC_RASTER_API, GDAL.name))
             .setRasterCheckpoint(spark.conf.get(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT))
+
     }
 
 }

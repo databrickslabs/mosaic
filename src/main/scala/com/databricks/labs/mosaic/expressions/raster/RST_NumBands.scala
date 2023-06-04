@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns the number of bands in the raster. */
-case class RST_NumBands(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_NumBands](path, IntegerType, expressionConfig)
+case class RST_NumBands(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_NumBands](raster, IntegerType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

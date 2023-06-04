@@ -12,11 +12,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the world coordinates of the raster (x,y) pixel. */
 case class RST_RasterToWorldCoord(
-    path: Expression,
+    raster: Expression,
     x: Expression,
     y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_RasterToWorldCoord](path, x, y, StringType, expressionConfig)
+) extends Raster2ArgExpression[RST_RasterToWorldCoord](raster, x, y, StringType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

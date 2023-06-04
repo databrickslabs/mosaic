@@ -1,11 +1,10 @@
 package com.databricks.labs.mosaic.datasource
 
-import com.databricks.labs.mosaic.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal_raster.MosaicRasterGDAL
+import com.databricks.labs.mosaic.{GDAL, MOSAIC_RASTER_STORAGE_DISK, MOSAIC_RASTER_STORAGE_IN_MEMORY}
 import com.google.common.io.{ByteStreams, Closeables}
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.hadoop.mapreduce.Job
-import org.apache.orc.util.Murmur3
 import org.apache.spark.SparkException
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
@@ -25,8 +24,12 @@ class GDALBinaryFileFormat extends BinaryFileFormat {
     override def inferSchema(sparkSession: SparkSession, options: Map[String, String], files: Seq[FileStatus]): Option[StructType] = {
         GDAL.enable()
 
+        val storage = options.getOrElse("raster_storage", "in-memory")
+
         super
             .inferSchema(sparkSession, options, files)
+            // If storage is disk, we dont need content column
+            .map(schema => if (storage == MOSAIC_RASTER_STORAGE_DISK) StructType(schema.filter(_.name != CONTENT)) else schema)
             .map(parentSchema =>
                 parentSchema
                     .add(StructField(UUID, LongType, nullable = false))
@@ -71,7 +74,6 @@ class GDALBinaryFileFormat extends BinaryFileFormat {
         val broadcastedHadoopConf = sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
         val filterFuncs = filters.flatMap(filter => createFilterFunction(filter))
         val maxLength = sparkSession.conf.get("spark.sql.sources.binaryFile.maxLength", Int.MaxValue.toString).toInt
-        val vsizip = options.getOrElse("vsizip", "false").toBoolean
 
         file: PartitionedFile => {
             val path = new Path(new URI(file.filePath))
@@ -82,8 +84,15 @@ class GDALBinaryFileFormat extends BinaryFileFormat {
             if (readRasterFlag && status.getLen > maxLength) throw CantReadBytesException(maxLength, status)
 
             var fields: Seq[Any] = Seq.empty[Any]
-            val contentBytes: Array[Byte] = readContent(fs, status, readRasterFlag)
-            val raster = MosaicRasterGDAL.readRaster(contentBytes, vsizip)
+            val rasterStorage = options.getOrElse("raster_storage", MOSAIC_RASTER_STORAGE_IN_MEMORY)
+            val isInMem = rasterStorage == MOSAIC_RASTER_STORAGE_IN_MEMORY
+            val contentBytes: Array[Byte] = readContent(fs, status, readRasterFlag && isInMem)
+            val raster =
+                if (isInMem) {
+                    MosaicRasterGDAL.readRaster(contentBytes)
+                } else {
+                    MosaicRasterGDAL.readRaster(status.getPath.toString)
+                }
 
             if (filterFuncs.forall(_.apply(status))) {
 
@@ -91,7 +100,7 @@ class GDALBinaryFileFormat extends BinaryFileFormat {
                     case PATH              => fields = fields :+ status.getPath.toString
                     case LENGTH            => fields = fields :+ status.getLen
                     case MODIFICATION_TIME => fields = fields :+ DateTimeUtils.millisToMicros(status.getModificationTime)
-                    case CONTENT           => fields = fields :+ contentBytes
+                    case CONTENT           => if (isInMem) fields = fields :+ contentBytes
                     case UUID              => fields = fields :+ raster.uuid
                     case X_SIZE            => fields = fields :+ raster.xSize
                     case Y_SIZE            => fields = fields :+ raster.ySize
@@ -151,19 +160,6 @@ object GDALBinaryFileFormat {
                 Closeables.close(stream, true)
             }
         } else null
-    }
-
-    private def getInMemPath(path: String, vsizip: Boolean): String = {
-        val uuid = Murmur3.hash64(path.getBytes)
-        val extension = path.split("\\.").last
-        val inMemPath =
-            if (vsizip) {
-                // has to be vsizip followed by vsimem
-                s"/vsizip/vsimem/$uuid.$extension"
-            } else {
-                s"/vsimem/$uuid.$extension"
-            }
-        inMemPath
     }
 
     private def createFilterFunction(filter: Filter): Option[FileStatus => Boolean] = {

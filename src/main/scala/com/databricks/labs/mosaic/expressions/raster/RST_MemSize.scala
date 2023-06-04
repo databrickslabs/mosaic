@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns the memory size of the raster in bytes. */
-case class RST_MemSize(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_MemSize](path, LongType, expressionConfig)
+case class RST_MemSize(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_MemSize](raster, LongType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

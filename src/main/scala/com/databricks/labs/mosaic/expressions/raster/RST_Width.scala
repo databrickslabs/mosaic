@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns the width of the raster. */
-case class RST_Width(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Width](path, IntegerType, expressionConfig)
+case class RST_Width(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_Width](raster, IntegerType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

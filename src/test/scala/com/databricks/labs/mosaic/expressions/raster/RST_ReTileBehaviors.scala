@@ -17,23 +17,30 @@ trait RST_ReTileBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val df = mocks
-            .getGeotiffBinaryDf(spark)
-            .withColumn("result", rst_retile($"path", lit(100), lit(100)))
+        val rastersAsPaths = spark.read
+            .format("gdal_binary")
+            .option("raster_storage", "disk")
+            .load("src/test/resources/modis")
+
+        val rastersInMemory = spark.read
+            .format("gdal_binary")
+            .option("raster_storage", "in-memory")
+            .load("src/test/resources/modis")
+
+        val df = rastersAsPaths
+            .withColumn("result", rst_retile($"path", lit(400), lit(400)))
             .select("result")
 
-        mocks
-            .getGeotiffBinaryDf(spark)
+        rastersInMemory
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_retile(path, 100, 100) from source
+                                                   |select rst_retile(content, 400, 400) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy mocks
-            .getGeotiffBinaryDf(spark)
-            .withColumn("result", rst_retile($"path", 100, 100))
-            .withColumn("result", rst_retile("/dummy/path", 100, 100))
+        noException should be thrownBy rastersInMemory
+            .withColumn("result", rst_retile($"content", 400, 400))
+            .withColumn("result", rst_retile($"content", 400, 400))
             .select("result")
 
         val result = df.as[String].collect().length

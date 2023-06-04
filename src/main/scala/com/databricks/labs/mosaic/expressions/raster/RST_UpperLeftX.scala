@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns the upper left x of the raster. */
-case class RST_UpperLeftX(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_UpperLeftX](path, DoubleType, expressionConfig)
+case class RST_UpperLeftX(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_UpperLeftX](raster, DoubleType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

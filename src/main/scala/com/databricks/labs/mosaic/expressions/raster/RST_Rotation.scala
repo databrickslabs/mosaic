@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns the rotation angle of the raster. */
-case class RST_Rotation(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Rotation](path, DoubleType, expressionConfig)
+case class RST_Rotation(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_Rotation](raster, DoubleType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

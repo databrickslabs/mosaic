@@ -20,8 +20,9 @@ import scala.reflect.ClassTag
   * Mosaic. All cells are projected to spatial coordinates and then to grid
   * index system. The pixels are grouped by cell ids and then combined to form a
   * grid -> value/measure collection per band of the raster.
-  * @param pathExpr
-  *   The expression for the raster path.
+  * @param rasterExpr
+  *   The raster expression. It can be a path to a raster file or a byte array
+  *   containing the raster file content.
   * @param measureType
   *   The output type of the result.
   * @param expressionConfig
@@ -30,13 +31,13 @@ import scala.reflect.ClassTag
   *   The type of the extending class.
   */
 abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
-    pathExpr: Expression,
+    rasterExpr: Expression,
     resolution: Expression,
     measureType: DataType,
     expressionConfig: MosaicExpressionConfig
-) extends Raster1ArgExpression[T](pathExpr, resolution, RasterToGridType(expressionConfig.getCellIdType, measureType), expressionConfig)
-    with RasterGridExpression
-    with NullIntolerant
+) extends Raster1ArgExpression[T](rasterExpr, resolution, RasterToGridType(expressionConfig.getCellIdType, measureType), expressionConfig)
+      with RasterGridExpression
+      with NullIntolerant
       with Serializable {
 
     /** The index system to be used. */
@@ -61,7 +62,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     }
 
     /**
-      * The method to be overriden to specify how the pixel values are combined
+      * The method to be overridden to specify how the pixel values are combined
       * within a cell.
       * @param values
       *   The values to be combined.
@@ -69,7 +70,6 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       *   The combined value/values.
       */
     def valuesCombiner(values: Seq[Double]): P
-
 
     /**
       * Serializes the result of the raster transform to the desired output

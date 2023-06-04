@@ -344,16 +344,6 @@ package object test {
             Paths.get(inFile.getPath).toAbsolutePath.toString
         }
 
-        // noinspection ScalaCustomHdfsFormat
-        def getBinaryDf(spark: SparkSession, resourcePath: String, pathGlobFilter: String): DataFrame =
-            spark.read.format("binaryFile").option("pathGlobFilter", pathGlobFilter).load(resourcePath)
-
-        def getGeotiffBinaryDf(spark: SparkSession): DataFrame = getBinaryDf(spark, "src/test/resources/modis/", "*.TIF")
-
-        def getGribBinaryDf(spark: SparkSession): DataFrame = getBinaryDf(spark, "src/test/resources/binary/grib-cams", "*.grib")
-
-        def getNetCDFBinaryDf(spark: SparkSession): DataFrame = getBinaryDf(spark, "src/test/resources/binary/netcdf-coral", "*.nc")
-
     }
 
     // noinspection NotImplementedCode, ScalaStyle

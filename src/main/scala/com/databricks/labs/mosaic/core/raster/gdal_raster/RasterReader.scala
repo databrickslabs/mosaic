@@ -18,16 +18,14 @@ trait RasterReader extends Logging {
       * is to a subdataset.
       *
       * @example
-      *   Raster: path = "file:///path/to/file.tif" Subdataset: path =
-      *   "file:///path/to/file.tif:subdataset"
+      *   Raster: path = "/path/to/file.tif" Subdataset: path =
+      *   "FORMAT:/path/to/file.tif:subdataset"
       * @param path
       *   The path to the raster file.
-      * @param vsizip
-      *   Boolean indicating if the file is a zip.
       * @return
       *   A MosaicRaster object.
       */
-    def readRaster(path: String, vsizip: Boolean): MosaicRaster
+    def readRaster(path: String): MosaicRaster
 
     /**
       * Reads a raster from an in memory buffer. Use the buffer bytes to produce
@@ -35,28 +33,24 @@ trait RasterReader extends Logging {
       *
       * @param contentBytes
       *   The file bytes.
-      * @param vsizip
-      *   Boolean indicating if the file is a zip.
       * @return
       *   A MosaicRaster object.
       */
-    def readRaster(contentBytes: Array[Byte], vsizip: Boolean): MosaicRaster
+    def readRaster(contentBytes: Array[Byte]): MosaicRaster
 
     /**
       * Reads a raster band from a file system path. Reads a subdataset band if
       * the path is to a subdataset.
       * @example
-      *   Raster: path = "file:///path/to/file.tif" Subdataset: path =
-      *   "file:///path/to/file.tif:subdataset"
+      *   Raster: path = "/path/to/file.tif" Subdataset: path =
+      *   "FORMAT:/path/to/file.tif:subdataset"
       * @param path
       *   The path to the raster file.
       * @param bandIndex
       *   The band index to read.
-      * @param vsizip
-      *   Boolean indicating if the file is a zip.
       * @return
       *   A MosaicRaster object.
       */
-    def readBand(path: String, bandIndex: Int, vsizip: Boolean): MosaicRasterBand
+    def readBand(path: String, bandIndex: Int): MosaicRasterBand
 
 }

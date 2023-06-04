@@ -16,22 +16,29 @@ trait RST_SRIDBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val df = mocks
-            .getGeotiffBinaryDf(spark)
+        val rastersAsPaths = spark.read
+            .format("gdal_binary")
+            .option("raster_storage", "disk")
+            .load("src/test/resources/modis")
+
+        val rastersInMemory = spark.read
+            .format("gdal_binary")
+            .option("raster_storage", "in-memory")
+            .load("src/test/resources/modis")
+
+        val df = rastersAsPaths
             .withColumn("result", rst_srid($"path"))
             .select("result")
 
-        mocks
-            .getGeotiffBinaryDf(spark)
+        rastersInMemory
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_srid(path) from source
+                                                   |select rst_srid(content) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy mocks
-            .getGeotiffBinaryDf(spark)
-            .withColumn("result", rst_srid("/dummy/path"))
+        noException should be thrownBy rastersInMemory
+            .withColumn("result", rst_srid($"content"))
             .select("result")
 
         val result = df.as[Double].collect().max

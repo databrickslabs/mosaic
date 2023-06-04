@@ -1,12 +1,11 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
-import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, NullIntolerant}
 import org.apache.spark.sql.types.DataType
-import org.apache.spark.unsafe.types.UTF8String
 
 import scala.reflect.ClassTag
 
@@ -15,8 +14,10 @@ import scala.reflect.ClassTag
   * provides the boilerplate code needed to create a function builder for a
   * given expression. It minimises amount of code needed to create a new
   * expression.
-  * @param pathExpr
-  *   The expression for the raster path.
+  * @param rasterExpr
+  *   The path to the raster if MOSAIC_RASTER_STORAGE is set to
+  *   MOSAIC_RASTER_STORAGE_DISC. The bytes of the raster if
+  *   MOSAIC_RASTER_STORAGE is set to MOSAIC_RASTER_STORAGE_BYTE.
   * @param bandExpr
   *   The expression for the band index.
   * @param outputType
@@ -27,7 +28,7 @@ import scala.reflect.ClassTag
   *   The type of the extending class.
   */
 abstract class RasterBandExpression[T <: Expression: ClassTag](
-    pathExpr: Expression,
+    rasterExpr: Expression,
     bandExpr: Expression,
     outputType: DataType,
     expressionConfig: MosaicExpressionConfig
@@ -42,7 +43,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
     protected val rasterAPI: RasterAPI = RasterAPI(expressionConfig.getRasterAPI)
     rasterAPI.enable()
 
-    override def left: Expression = pathExpr
+    override def left: Expression = rasterExpr
 
     override def right: Expression = bandExpr
 
@@ -50,7 +51,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
     override def dataType: DataType = outputType
 
     /**
-      * The function to be overriden by the extending class. It is called when
+      * The function to be overridden by the extending class. It is called when
       * the expression is evaluated. It provides the raster band to the
       * expression. It abstracts spark serialization from the caller.
       * @param raster
@@ -68,25 +69,24 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       * specified band. It handles the clean up of the raster before returning
       * the results.
       *
-      * @param inputPath
-      *   The path to the raster. It is a UTF8String.
-      *
+      * @param inputRaster
+      *   The path to the raster if MOSAIC_RASTER_STORAGE is set to
+      *   MOSAIC_RASTER_STORAGE_DISC. The bytes of the raster if
+      *   MOSAIC_RASTER_STORAGE is set to MOSAIC_RASTER_STORAGE_BYTE.
       * @param inputBand
       *   The band index to be used. It is an Int.
-      *
       * @return
       *   The result of the expression.
       */
-    override def nullSafeEval(inputPath: Any, inputBand: Any): Any = {
-        val path = inputPath.asInstanceOf[UTF8String].toString
+    override def nullSafeEval(inputRaster: Any, inputBand: Any): Any = {
+        val raster = rasterAPI.readRaster(inputRaster, rasterExpr.dataType)
         val bandIndex = inputBand.asInstanceOf[Int]
 
-        val raster = rasterAPI.raster(path)
         val band = raster.getBand(bandIndex)
         val result = bandTransform(raster, band)
 
+        raster.unlink()
         raster.cleanUp()
-
         result
     }
 

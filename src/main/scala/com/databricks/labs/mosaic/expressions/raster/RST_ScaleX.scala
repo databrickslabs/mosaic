@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns the scale x of the raster. */
-case class RST_ScaleX(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_ScaleX](path, DoubleType, expressionConfig)
+case class RST_ScaleX(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_ScaleX](raster, DoubleType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

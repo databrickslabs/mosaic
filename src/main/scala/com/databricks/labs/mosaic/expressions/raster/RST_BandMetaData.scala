@@ -11,15 +11,17 @@ import org.apache.spark.sql.types._
 
 /**
   * The expression for extracting metadata from a raster band.
-  * @param path
-  *   The path to the raster.
+  * @param raster
+  *   The expression for the raster. If the raster is stored on disc, the path
+  *   to the raster is provided. If the raster is stored in memory, the bytes of
+  *   the raster are provided.
   * @param band
   *   The band index.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   */
-case class RST_BandMetaData(path: Expression, band: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterBandExpression[RST_BandMetaData](path, band, MapType(StringType, StringType), expressionConfig)
+case class RST_BandMetaData(raster: Expression, band: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterBandExpression[RST_BandMetaData](raster, band, MapType(StringType, StringType), expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

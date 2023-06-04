@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
-import com.databricks.labs.mosaic.MOSAIC_RASTER_STORAGE_DISK
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
@@ -9,7 +8,6 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
 
 import scala.reflect.ClassTag
 
@@ -21,15 +19,17 @@ import scala.reflect.ClassTag
   * rasters based on the input raster. The new rasters are written in the
   * checkpoint directory. The files are written as GeoTiffs. Subdatasets are not
   * supported, please flatten beforehand.
-  * @param inPathExpr
-  *   The expression for the raster path.
+  * @param rasterExpr
+  *   The expression for the raster. If the raster is stored on disc, the path
+  *   to the raster is provided. If the raster is stored in memory, the bytes of
+  *   the raster are provided.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
   *   The type of the extending class.
   */
 abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
-    inPathExpr: Expression,
+    rasterExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
       with NullIntolerant
@@ -54,14 +54,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       * needs to be wrapped in a StructType. The actually type is that of the
       * structs element.
       */
-    override def elementSchema: StructType = {
-        val rasterStorage = expressionConfig.getRasterStorage
-        if (rasterStorage == MOSAIC_RASTER_STORAGE_DISK) {
-            StructType(Array(StructField("path", StringType)))
-        } else {
-            StructType(Array(StructField("raster", BinaryType)))
-        }
-    }
+    override def elementSchema: StructType = StructType(Array(StructField("raster", rasterExpr.dataType)))
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -75,14 +68,12 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
     def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        val inPath = inPathExpr.eval(input).asInstanceOf[UTF8String].toString
         val checkpointPath = expressionConfig.getRasterCheckpoint
-        val rasterStorage = expressionConfig.getRasterStorage
 
-        val inRaster = rasterAPI.raster(inPath)
+        val inRaster = rasterAPI.readRaster(rasterExpr.eval(input), rasterExpr.dataType)
         val generatedRasters = rasterGenerator(inRaster)
 
-        val rows = rasterAPI.writeRasters(generatedRasters, checkpointPath, rasterStorage)
+        val rows = rasterAPI.writeRasters(generatedRasters, checkpointPath, rasterExpr.dataType)
         generatedRasters.foreach(_.unlink())
         rows
     }

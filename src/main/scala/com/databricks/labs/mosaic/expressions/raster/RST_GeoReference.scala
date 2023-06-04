@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns the georeference of the raster. */
-case class RST_GeoReference(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_GeoReference](path, MapType(StringType, DoubleType), expressionConfig)
+case class RST_GeoReference(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_GeoReference](raster, MapType(StringType, DoubleType), expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -35,7 +35,7 @@ object RST_GeoReference extends WithExpressionInfo {
 
     override def name: String = "rst_georeference"
 
-    override def usage: String = "_FUNC_(expr1, expr2) - Extracts geo reference from a raster."
+    override def usage: String = "_FUNC_(expr1) - Extracts geo reference from a raster."
 
     override def example: String =
         """

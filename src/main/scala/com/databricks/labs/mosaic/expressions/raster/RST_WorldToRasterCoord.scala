@@ -11,11 +11,11 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 
 /** Returns the world coordinate of the raster. */
 case class RST_WorldToRasterCoord(
-    path: Expression,
+    raster: Expression,
     x: Expression,
     y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_WorldToRasterCoord](path, x, y, PixelCoordsType, expressionConfig)
+) extends Raster2ArgExpression[RST_WorldToRasterCoord](raster, x, y, PixelCoordsType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

@@ -17,23 +17,30 @@ trait RST_RasterToWorldCoordYBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val df = mocks
-            .getNetCDFBinaryDf(spark)
+        val rastersAsPaths = spark.read
+            .format("gdal_binary")
+            .option("raster_storage", "disk")
+            .load("src/test/resources/binary/netcdf-coral")
+
+        val rastersInMemory = spark.read
+            .format("gdal_binary")
+            .option("raster_storage", "in-memory")
+            .load("src/test/resources/binary/netcdf-coral")
+
+        val df = rastersAsPaths
             .withColumn("result", rst_rastertoworldcoordy($"path", lit(2), lit(2)))
             .select("result")
 
-        mocks
-            .getNetCDFBinaryDf(spark)
+        rastersInMemory
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_rastertoworldcoordy(path, 2, 2) from source
+                                                   |select rst_rastertoworldcoordy(content, 2, 2) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy mocks
-            .getNetCDFBinaryDf(spark)
+        noException should be thrownBy rastersInMemory
             .withColumn("result", rst_rastertoworldcoordy(lit("/dummy/path"), 2, 2))
-            .withColumn("result", rst_rastertoworldcoordy("/dummy/path", lit(2), lit(2)))
+            .withColumn("result", rst_rastertoworldcoordy($"content", lit(2), lit(2)))
             .select("result")
 
         val result = df.as[Double].collect().max

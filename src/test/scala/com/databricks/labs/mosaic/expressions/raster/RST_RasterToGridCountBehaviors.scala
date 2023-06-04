@@ -17,25 +17,32 @@ trait RST_RasterToGridCountBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val df = mocks
-            .getGeotiffBinaryDf(spark)
+        val rastersAsPaths = spark.read
+            .format("gdal_binary")
+            .option("raster_storage", "disk")
+            .load("src/test/resources/modis")
+
+        val rastersInMemory = spark.read
+            .format("gdal_binary")
+            .option("raster_storage", "in-memory")
+            .load("src/test/resources/modis")
+
+        val df = rastersAsPaths
             .withColumn("result", rst_rastertogridcount($"path", lit(3)))
             .select("result")
             .select(explode($"result").as("result"))
             .select(explode($"result").as("result"))
             .select($"result".getItem("measure").as("result"))
 
-        mocks
-            .getGeotiffBinaryDf(spark)
+        rastersInMemory
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_rastertogridcount(path, 3) from source
+                                                   |select rst_rastertogridcount(content, 3) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy mocks
-            .getGeotiffBinaryDf(spark)
-            .withColumn("result", rst_rastertogridcount("/dummy/path", lit(3)))
+        noException should be thrownBy rastersInMemory
+            .withColumn("result", rst_rastertogridcount($"content", lit(3)))
             .select("result")
 
         val result = df.as[Int].collect().max

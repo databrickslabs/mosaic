@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns the subdatasets of the raster. */
-case class RST_Subdatasets(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Subdatasets](path, MapType(StringType, StringType), expressionConfig)
+case class RST_Subdatasets(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_Subdatasets](raster, MapType(StringType, StringType), expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

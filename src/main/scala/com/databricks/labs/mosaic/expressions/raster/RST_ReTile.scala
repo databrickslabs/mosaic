@@ -15,11 +15,11 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
   * tileHeight).
   */
 case class RST_ReTile(
-    pathExpr: Expression,
+    rasterExpr: Expression,
     tileWidthExpr: Expression,
     tileHeightExpr: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends RasterGeneratorExpression[RST_ReTile](pathExpr, expressionConfig)
+) extends RasterGeneratorExpression[RST_ReTile](rasterExpr, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -57,7 +57,7 @@ case class RST_ReTile(
         tiles
     }
 
-    override def children: Seq[Expression] = Seq(pathExpr, tileWidthExpr, tileHeightExpr)
+    override def children: Seq[Expression] = Seq(rasterExpr, tileWidthExpr, tileHeightExpr)
 
 }
 

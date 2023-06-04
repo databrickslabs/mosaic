@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.core.raster.api
 
-import com.databricks.labs.mosaic.MOSAIC_RASTER_STORAGE_DISK
 import com.databricks.labs.mosaic.core.raster._
 import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterReader, RasterTransform}
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.gdal
 
@@ -14,14 +14,30 @@ import org.gdal.gdal.gdal
   */
 abstract class RasterAPI(reader: RasterReader) extends Serializable {
 
-    def writeRasters(generatedRasters: Seq[MosaicRaster], checkpointPath: String, rasterStorage: String): Seq[InternalRow] = {
+    def readRaster(inputRaster: Any, inputDT: DataType): MosaicRaster = {
+        inputDT match {
+            case StringType =>
+                val path = inputRaster.asInstanceOf[UTF8String].toString
+                reader.readRaster(path)
+            case BinaryType =>
+                val bytes = inputRaster.asInstanceOf[Array[Byte]]
+                val raster = reader.readRaster(bytes)
+                // If the raster is coming as a byte array, we can't check for zip condition.
+                // We first try to read the raster directly, if it fails, we read it as a zip.
+                Option(raster).getOrElse(reader.readRaster(bytes))
+        }
+    }
+
+    def writeRasters(generatedRasters: Seq[MosaicRaster], checkpointPath: String, rasterDT: DataType): Seq[InternalRow] = {
         generatedRasters.map(raster =>
-            if (rasterStorage == MOSAIC_RASTER_STORAGE_DISK) {
-                val outPath = raster.writeToPath(checkpointPath)
-                InternalRow.fromSeq(Seq(UTF8String.fromString(outPath)))
-            } else {
-                val bytes = raster.writeToBytes()
-                InternalRow.fromSeq(Seq(bytes))
+            rasterDT match {
+                case StringType =>
+                    val writePath = s"$checkpointPath/${raster.uuid}"
+                    val outPath = raster.writeToPath(writePath)
+                    InternalRow.fromSeq(Seq(UTF8String.fromString(outPath)))
+                case BinaryType =>
+                    val bytes = raster.writeToBytes()
+                    InternalRow.fromSeq(Seq(bytes))
             }
         )
     }
@@ -45,18 +61,7 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       * @return
       *   Returns a Raster object.
       */
-    def raster(path: String): MosaicRaster = reader.readRaster(path, vsizip = false)
-
-    /**
-      * Reads a raster from the given path, handles the zipped file.
-      *
-      * @param path
-      *   The path to the raster. This path has to be a path to a single raster.
-      *   Rasters with subdatasets are supported.
-      * @return
-      *   Returns a Raster object.
-      */
-    def raster(path: String, vsizip: Boolean): MosaicRaster = reader.readRaster(path, vsizip)
+    def raster(path: String): MosaicRaster = reader.readRaster(path)
 
     /**
       * Reads a raster from the given path. It extracts the specified band from
@@ -70,22 +75,7 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       * @return
       *   Returns a Raster band object.
       */
-    def band(path: String, bandIndex: Int): MosaicRasterBand = reader.readBand(path, bandIndex, vsizip = false)
-
-    /**
-      * Reads a raster from the given path. It extracts the specified band from
-      * the raster. If zip, use band(path, bandIndex, vsizip = true)
-      *
-      * @param path
-      *   The path to the raster. This path has to be a path to a single raster.
-      * @param bandIndex
-      *   The index of the band to read from the raster.
-      * @param vsizip
-      *   If the file is zipped.
-      * @return
-      *   Returns a Raster band object.
-      */
-    def band(path: String, bandIndex: Int, vsizip: Boolean): MosaicRasterBand = reader.readBand(path, bandIndex, vsizip)
+    def band(path: String, bandIndex: Int): MosaicRasterBand = reader.readBand(path, bandIndex)
 
     /**
       * Converts raster x, y coordinates to lat, lon coordinates.

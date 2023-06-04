@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns true if the raster is empty. */
-case class RST_IsEmpty(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_IsEmpty](path, BooleanType, expressionConfig)
+case class RST_IsEmpty(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_IsEmpty](raster, BooleanType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 

@@ -22,6 +22,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         conf.set(MOSAIC_RASTER_CHECKPOINT, Files.createTempDirectory("mosaic").toFile.getAbsolutePath)
         SparkSession.cleanupAnyExistingSession()
         val session = new TestSparkSession(conf)
+        session.sparkContext.setLogLevel("FATAL")
         if (conf.get(MOSAIC_GDAL_NATIVE, "false").toBoolean) {
             Try {
                 TestMosaicGDAL.installGDAL(session)

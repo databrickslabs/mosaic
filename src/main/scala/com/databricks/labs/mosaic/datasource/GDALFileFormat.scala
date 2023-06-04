@@ -119,8 +119,8 @@ object GDALFileFormat extends Serializable {
             val vsizip = options.getOrElse("vsizip", "false").toBoolean
             val path = Utils.getCleanPath(file.filePath, vsizip)
 
-            if (path.endsWith(getFileExtension(driverName)) || path.endsWith("zip")) {
-                val raster = MosaicRasterGDAL.readRaster(path, path.endsWith("zip"))
+            if (path.endsWith(getFileExtension(driverName)) || path.endsWith("zip") || path.contains(".zip:")) {
+                val raster = MosaicRasterGDAL.readRaster(path)
                 val ySize = raster.ySize
                 val xSize = raster.xSize
                 val bandCount = raster.numBands

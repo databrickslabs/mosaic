@@ -16,22 +16,29 @@ trait RST_UpperLeftYBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val df = mocks
-            .getNetCDFBinaryDf(spark)
+        val rastersAsPaths = spark.read
+            .format("gdal_binary")
+            .option("raster_storage", "disk")
+            .load("src/test/resources/binary/netcdf-coral")
+
+        val rastersInMemory = spark.read
+            .format("gdal_binary")
+            .option("raster_storage", "in-memory")
+            .load("src/test/resources/binary/netcdf-coral")
+
+        val df = rastersAsPaths
             .withColumn("result", rst_upperlefty($"path"))
             .select("result")
 
-        mocks
-            .getNetCDFBinaryDf(spark)
+        rastersInMemory
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_upperlefty(path) from source
+                                                   |select rst_upperlefty(content) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy mocks
-            .getNetCDFBinaryDf(spark)
-            .withColumn("result", rst_upperlefty("/dummy/path"))
+        noException should be thrownBy rastersInMemory
+            .withColumn("result", rst_upperlefty($"content"))
             .select("result")
 
         val result = df.as[String].collect().head.length

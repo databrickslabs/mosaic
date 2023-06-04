@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
 
 /** Returns the skew y of the raster. */
-case class RST_SkewY(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_SkewY](path, DoubleType, expressionConfig)
+case class RST_SkewY(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_SkewY](raster, DoubleType, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
