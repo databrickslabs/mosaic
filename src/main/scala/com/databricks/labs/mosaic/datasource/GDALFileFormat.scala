@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.datasource
 
-import com.databricks.labs.mosaic.core.raster.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal_raster._
 import com.databricks.labs.mosaic.GDAL
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
@@ -120,7 +120,7 @@ object GDALFileFormat extends Serializable {
             val path = Utils.getCleanPath(file.filePath, vsizip)
 
             if (path.endsWith(getFileExtension(driverName)) || path.endsWith("zip")) {
-                val raster = MosaicRasterGDAL.readRaster(path)
+                val raster = MosaicRasterGDAL.readRaster(path, path.endsWith("zip"))
                 val ySize = raster.ySize
                 val xSize = raster.xSize
                 val bandCount = raster.numBands

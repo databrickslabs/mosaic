@@ -1,11 +1,13 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
+import com.databricks.labs.mosaic.MOSAIC_RASTER_STORAGE_DISK
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -41,6 +43,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       */
     protected val rasterAPI: RasterAPI = RasterAPI(expressionConfig.getRasterAPI)
     rasterAPI.enable()
+    protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 
     override def position: Boolean = false
 
@@ -51,32 +54,37 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       * needs to be wrapped in a StructType. The actually type is that of the
       * structs element.
       */
-    override def elementSchema: StructType = StructType(Array(StructField("path", StringType)))
+    override def elementSchema: StructType = {
+        val rasterStorage = expressionConfig.getRasterStorage
+        if (rasterStorage == MOSAIC_RASTER_STORAGE_DISK) {
+            StructType(Array(StructField("path", StringType)))
+        } else {
+            StructType(Array(StructField("raster", BinaryType)))
+        }
+    }
 
     /**
-      * The function to be overriden by the extending class. It is called when
+      * The function to be overridden by the extending class. It is called when
       * the expression is evaluated. It provides the raster band to the
       * expression. It abstracts spark serialization from the caller.
       * @param raster
       *   The raster to be used.
       * @return
-      *   Sequence of subrasters = (id, reference to the input raster, extent of
-      *   the output raster, unified mask for all bands).
+      *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: MosaicRaster): Seq[(Long, (Int, Int, Int, Int))]
+    def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val inPath = inPathExpr.eval(input).asInstanceOf[UTF8String].toString
         val checkpointPath = expressionConfig.getRasterCheckpoint
+        val rasterStorage = expressionConfig.getRasterStorage
 
-        val raster = rasterAPI.raster(inPath)
-        val result = rasterGenerator(raster)
+        val inRaster = rasterAPI.raster(inPath)
+        val generatedRasters = rasterGenerator(inRaster)
 
-        for ((id, extent) <- result) yield {
-            val outPath = raster.saveCheckpoint(uuid, id, extent, checkpointPath)
-            InternalRow.fromSeq(Seq(UTF8String.fromString(outPath)))
-        }
-
+        val rows = rasterAPI.writeRasters(generatedRasters, checkpointPath, rasterStorage)
+        generatedRasters.foreach(_.unlink())
+        rows
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =

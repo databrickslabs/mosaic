@@ -15,8 +15,7 @@ object RasterTessellate {
         val cells = Mosaic.mosaicFill(bbox, resolution, keepCoreGeom = false, indexSystem, geometryAPI)
         cells.map(cell => {
             val cellID = cell.cellIdAsLong(indexSystem)
-            val cellRasterPath = s"${raster.getPath}_$cellID.tif"
-            val cellRaster = raster.getRasterForCell(cellID, cellRasterPath, indexSystem, geometryAPI)
+            val cellRaster = raster.getRasterForCell(cellID, indexSystem, geometryAPI)
             MosaicRasterChip(cell.isCore, cell.index, cellRaster)
         })
 

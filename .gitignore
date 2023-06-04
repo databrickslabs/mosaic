@@ -1,6 +1,7 @@
 #IntelliJ files
 .idea
 *.iml
+tmp_
 
 #VSCode files
 .vscode

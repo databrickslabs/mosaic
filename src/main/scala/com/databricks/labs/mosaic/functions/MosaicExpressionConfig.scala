@@ -16,6 +16,8 @@ import org.apache.spark.sql.types.DataType
   */
 case class MosaicExpressionConfig(configs: Map[String, String]) {
 
+    def getRasterStorage: String = configs.getOrElse(MOSAIC_RASTER_STORAGE, MOSAIC_RASTER_STORAGE_DEFAULT)
+
     def updateSparkConf(): Unit = {
         val spark = SparkSession.builder().getOrCreate()
         val sparkConf = spark.sparkContext.getConf

@@ -8,15 +8,12 @@ import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterGridExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import org.apache.hive.common.util.Murmur3
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-
-import java.nio.file.Files
 
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
@@ -30,8 +27,6 @@ case class RST_GridTiles(
       with RasterGridExpression
       with NullIntolerant
       with CodegenFallback {
-
-    val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
     /** The index system to be used. */
     val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
@@ -60,10 +55,6 @@ case class RST_GridTiles(
       * tileHeight).
       */
     def rasterGenerator(raster: MosaicRaster, resolution: Int): Seq[MosaicRaster] = {
-        val rasterId = Murmur3.hash64(raster.metadata.toString.getBytes) // assumes metadata is unique
-        val tmpDir = Files.createTempDirectory(s"mosaic_$uuid").toFile.getAbsolutePath
-        val outPath = s"$tmpDir/raster_${rasterId.toString.replace("-", "_")}"
-
         val indexCRS = indexSystem.osrSpatialRef
         val bbox = raster.bbox(geometryAPI, indexCRS)
 
@@ -71,7 +62,7 @@ case class RST_GridTiles(
             .mosaicFill(bbox, resolution, keepCoreGeom = false, indexSystem, geometryAPI)
             .map(_.indexAsLong(indexSystem))
 
-        val rasters = cells.map(cellID => raster.getRasterForCell(cellID, f"${outPath}_$cellID.tif", indexSystem, geometryAPI))
+        val rasters = cells.map(cellID => raster.getRasterForCell(cellID, indexSystem, geometryAPI))
 
         rasters
     }
@@ -83,11 +74,9 @@ case class RST_GridTiles(
 
         val raster = rasterAPI.raster(inPath)
         val tiles = rasterGenerator(raster, resolution)
+        val rasterStorage = expressionConfig.getRasterStorage
 
-        tiles.map { tile =>
-            tile.saveCheckpoint(uuid, checkpointPath)
-            InternalRow.fromSeq(Seq(UTF8String.fromString(tile.getPath)))
-        }
+        rasterAPI.writeRasters(tiles, checkpointPath, rasterStorage)
     }
 
     override def children: Seq[Expression] = Seq(pathExpr, resolutionExpr)

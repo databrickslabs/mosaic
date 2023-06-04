@@ -9,7 +9,7 @@
 
     <properties>
         <minimum.coverage>0</minimum.coverage>
-        <skipTests>true</skipTests>
+        <skipTests>false</skipTests>
         <maven.compiler.source>1.11</maven.compiler.source>
         <maven.compiler.target>1.11</maven.compiler.target>
         <encoding>UTF-8</encoding>

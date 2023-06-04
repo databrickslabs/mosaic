@@ -91,7 +91,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
         val zarr = "/binary/zarr-example/"
         val filePath = getClass.getResource(zarr).getPath
 
-        noException should be thrownBy spark.read
+        spark.read
             .format("gdal")
             .option("vsizip", "true")
             .load(filePath)

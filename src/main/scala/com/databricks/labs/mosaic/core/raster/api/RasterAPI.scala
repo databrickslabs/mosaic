@@ -1,6 +1,10 @@
 package com.databricks.labs.mosaic.core.raster.api
 
+import com.databricks.labs.mosaic.MOSAIC_RASTER_STORAGE_DISK
 import com.databricks.labs.mosaic.core.raster._
+import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterReader, RasterTransform}
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.gdal
 
 /**
@@ -9,6 +13,18 @@ import org.gdal.gdal.gdal
   *   The RasterReader to use for reading the raster.
   */
 abstract class RasterAPI(reader: RasterReader) extends Serializable {
+
+    def writeRasters(generatedRasters: Seq[MosaicRaster], checkpointPath: String, rasterStorage: String): Seq[InternalRow] = {
+        generatedRasters.map(raster =>
+            if (rasterStorage == MOSAIC_RASTER_STORAGE_DISK) {
+                val outPath = raster.writeToPath(checkpointPath)
+                InternalRow.fromSeq(Seq(UTF8String.fromString(outPath)))
+            } else {
+                val bytes = raster.writeToBytes()
+                InternalRow.fromSeq(Seq(bytes))
+            }
+        )
+    }
 
     /**
       * This method should be called in every raster expression if the RasterAPI
@@ -20,7 +36,8 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
     def name: String
 
     /**
-      * Reads a raster from the given path.
+      * Reads a raster from the given path. Assume not zipped file. If zipped,
+      * use raster(path, vsizip = true)
       *
       * @param path
       *   The path to the raster. This path has to be a path to a single raster.
@@ -28,11 +45,22 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       * @return
       *   Returns a Raster object.
       */
-    def raster(path: String): MosaicRaster = reader.readRaster(path)
+    def raster(path: String): MosaicRaster = reader.readRaster(path, vsizip = false)
+
+    /**
+      * Reads a raster from the given path, handles the zipped file.
+      *
+      * @param path
+      *   The path to the raster. This path has to be a path to a single raster.
+      *   Rasters with subdatasets are supported.
+      * @return
+      *   Returns a Raster object.
+      */
+    def raster(path: String, vsizip: Boolean): MosaicRaster = reader.readRaster(path, vsizip)
 
     /**
       * Reads a raster from the given path. It extracts the specified band from
-      * the raster.
+      * the raster. If zip, use band(path, bandIndex, vsizip = true)
       *
       * @param path
       *   The path to the raster. This path has to be a path to a single raster.
@@ -42,7 +70,22 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       * @return
       *   Returns a Raster band object.
       */
-    def band(path: String, bandIndex: Int): MosaicRasterBand = reader.readBand(path, bandIndex)
+    def band(path: String, bandIndex: Int): MosaicRasterBand = reader.readBand(path, bandIndex, vsizip = false)
+
+    /**
+      * Reads a raster from the given path. It extracts the specified band from
+      * the raster. If zip, use band(path, bandIndex, vsizip = true)
+      *
+      * @param path
+      *   The path to the raster. This path has to be a path to a single raster.
+      * @param bandIndex
+      *   The index of the band to read from the raster.
+      * @param vsizip
+      *   If the file is zipped.
+      * @return
+      *   Returns a Raster band object.
+      */
+    def band(path: String, bandIndex: Int, vsizip: Boolean): MosaicRasterBand = reader.readBand(path, bandIndex, vsizip)
 
     /**
       * Converts raster x, y coordinates to lat, lon coordinates.
@@ -56,7 +99,7 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       *   Returns a tuple of (lat, lon).
       */
     def toWorldCoord(gt: Seq[Double], x: Int, y: Int): (Double, Double) = {
-        val (xGeo, yGeo) = reader.toWorldCoord(gt, x, y)
+        val (xGeo, yGeo) = RasterTransform.toWorldCoord(gt, x, y)
         (xGeo, yGeo)
     }
 
@@ -72,7 +115,7 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       *   Returns a tuple of (xPixel, yPixel).
       */
     def fromWorldCoord(gt: Seq[Double], x: Double, y: Double): (Int, Int) = {
-        val (xPixel, yPixel) = reader.fromWorldCoord(gt, x, y)
+        val (xPixel, yPixel) = RasterTransform.fromWorldCoord(gt, x, y)
         (xPixel, yPixel)
     }
 

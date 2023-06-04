@@ -8,6 +8,12 @@ import org.gdal.osr.SpatialReference
 
 object SpatialRefUtils {
 
+    val ws84SR: SpatialReference = {
+        val sr = new SpatialReference()
+        sr.ImportFromEPSG(4326)
+        sr
+    }
+
     def getDestinationSR(raster: MosaicRaster, geometry: MosaicGeometry): SpatialReference = {
         val geomSR = new SpatialReference()
         geomSR.ImportFromEPSG(geometry.getSpatialReference)
@@ -25,10 +31,12 @@ object SpatialRefUtils {
         geomSR.ImportFromEPSG(geometry.getSpatialReference)
         // We need to swap the coordinates because GDAL is expecting (lat long)
         // and we are providing (long lat)
-        geometryAPI.geometry(
-            geometry.getShellPoints.head.map(p => geometryAPI.fromCoords(p.asSeq.reverse)),
-            POLYGON
-        ).osrTransformCRS(geomSR, destSR, geometryAPI)
+        geometryAPI
+            .geometry(
+              geometry.getShellPoints.head.map(p => geometryAPI.fromCoords(p.asSeq.reverse)),
+              POLYGON
+            )
+            .osrTransformCRS(geomSR, destSR, geometryAPI)
     }
 
 }

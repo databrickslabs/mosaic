@@ -1,13 +1,14 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.operator.RasterClipByVector
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterGeneratorExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import org.apache.hive.common.util.Murmur3
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
@@ -26,7 +27,7 @@ case class RST_ReTile(
       * Returns a set of new rasters with the specified tile size (tileWidth x
       * tileHeight).
       */
-    override def rasterGenerator(raster: MosaicRaster): Seq[(Long, (Int, Int, Int, Int))] = {
+    override def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
 
@@ -36,13 +37,21 @@ case class RST_ReTile(
         val xTiles = Math.ceil(xSize / tileWidthValue).toInt
         val yTiles = Math.ceil(ySize / tileHeightValue).toInt
 
+        val gt = raster.getGeoTransform
+
         val tiles = for (x <- 0 until xTiles; y <- 0 until yTiles) yield {
             val xMin = x * tileWidthValue
             val yMin = y * tileHeightValue
             val xMax = Math.min(xMin + tileWidthValue, xSize)
             val yMax = Math.min(yMin + tileHeightValue, ySize)
-            val id = Murmur3.hash64(s"${raster.toString}$xMin$yMin$xMax$yMax".getBytes)
-            (id, (xMin, yMin, xMax, yMax))
+
+            val extentGeom = geometryAPI.geometry(
+              Seq((xMin, yMin), (xMin, yMax), (xMax, yMax), (xMax, yMin), (xMin, yMin))
+                  .map(t => rasterAPI.toWorldCoord(gt, t._1, t._2).productIterator.toSeq.asInstanceOf[Seq[Double]])
+                  .map(geometryAPI.fromCoords),
+              POLYGON
+            )
+            RasterClipByVector.clip(raster, extentGeom, geometryAPI, reproject = false)
         }
 
         tiles

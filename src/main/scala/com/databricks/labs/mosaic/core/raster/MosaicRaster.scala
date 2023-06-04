@@ -3,48 +3,32 @@ package com.databricks.labs.mosaic.core.raster
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterWriter
 import org.gdal.gdal.Dataset
 import org.gdal.osr.SpatialReference
 
 /**
   * A base API for managing raster data in Mosaic. Any raster abstraction should
-  * extend this trait.
+  * extend this trait. If the raster is in memory, then the path is the
+  * "/vsimem/UUID.extension" of the raster. The in memory raster is not written
+  * to disk but is kept in binary column. The default extension is ".tif" and
+  * the format is COG (Cloud Optimized GeoTIFF).
   *
-  * @param path
-  *   The path to the raster file. This has to be a path that can be read by the
-  *   worker nodes.
-  *
-  * @param memSize
-  *   The amount of memory occupied by the file in bytes.
+  * @param isInMem
+  *   A flag to indicate if the raster is in memory or not.
   */
-abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
+abstract class MosaicRaster(
+    isInMem: Boolean
+) extends Serializable with RasterWriter {
 
-    def getPath: String = path
+    def uuid: Long
 
-    /**
-      * Writes out the current raster to the given checkpoint path. The raster
-      * is written out as a GeoTiff. Only single subdataset is supported. Apply
-      * mask to all bands. Trim down the raster to the provided extent.
-      *
-      * @param stageId
-      *   the UUI of the computation stage generating the raster. Used to avoid
-      *   writing collisions.
-      * @param rasterId
-      *   the UUID of the raster. Used to avoid writing collisions.
-      * @param extent
-      *   The extent to trim the raster to.
-      * @param checkpointPath
-      *   The path to write the raster to.
-      * @return
-      *   Returns the path to the written raster.
-      */
-    def saveCheckpoint(stageId: String, rasterId: Long, extent: (Int, Int, Int, Int), checkpointPath: String): String
+    def getExtension: String
 
-    def saveCheckpoint(stageId: String, checkpointPath: String): String
+    def getPath: String
 
-    def getRasterForExtend(extent: (Int, Int, Int, Int), outPath: String): MosaicRaster
 
-    def getRasterForCell(cellID: Long, outPath: String, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRaster
+    def getRasterForCell(cellID: Long, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRaster
 
     /** @return Returns the metadata of the raster file. */
     def metadata: Map[String, String]
@@ -93,7 +77,7 @@ abstract class MosaicRaster(path: String, memSize: Long) extends Serializable {
     def cleanUp(): Unit
 
     /** @return Returns the amount of memory occupied by the file in bytes. */
-    def getMemSize: Long = memSize
+    def getMemSize: Long
 
     /**
       * A template method for transforming the raster bands into new bands. Each

@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.test.TestMosaicGDAL
 import com.databricks.labs.mosaic.{MOSAIC_GDAL_NATIVE, MOSAIC_RASTER_CHECKPOINT}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
+import org.gdal.gdal.gdal
 
 import java.nio.file.Files
 import scala.util.Try
@@ -30,6 +31,11 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
             }
         }
         session
+    }
+
+    override def beforeEach(): Unit = {
+        super.beforeEach()
+        gdal.AllRegister()
     }
 
 }
