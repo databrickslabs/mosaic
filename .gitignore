@@ -66,6 +66,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 /python/test/.run/
+spatial_knn
 
 # Translations
 *.mo
