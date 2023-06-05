@@ -104,44 +104,44 @@ The transformer is called SpatialKNN and it is used as follows:
 .. tabs::
    .. code-tab:: py
 
-    >>> import mosaic as mos
-    >>> mos.enable_mosaic(spark, dbutils)
+    import mosaic as mos
+    mos.enable_mosaic(spark, dbutils)
     >>>
-    >>> spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
+    spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
     >>>
-    >>> building_df = spark.read.table("building")
-    >>> trip_df = spark.read.table("trip")
-    >>> 
-    >>> from mosaic.models import SpatialKNN
+    building_df = spark.read.table("building")
+    trip_df = spark.read.table("trip")
+
+    from mosaic.models import SpatialKNN
     >>>
-    >>> knn = SpatialKNN()
-    >>> 
-    >>> knn.setUseTableCheckpoint(True)
-    >>> knn.setCheckpointTablePrefix("checkpoint_table_knn")
-    >>> knn.model.cleanupCheckpoint
+    knn = SpatialKNN()
+
+    knn.setUseTableCheckpoint(True)
+    knn.setCheckpointTablePrefix("checkpoint_table_knn")
+    knn.model.cleanupCheckpoint
     >>>
-    >>> # CRS Specific
-    >>> # - e.g. 4326 units are decimal degrees
-    >>> knn.setDistanceThreshold(1.0) 
-    >>> 
-    >>> # Grid System Specific
-    >>> # - e.g. H3 resolutions 0-15 
-    >>> knn.setIndexResolution(10)
+    # CRS Specific
+    # - e.g. 4326 units are decimal degrees
+    knn.setDistanceThreshold(1.0)
+
+    # Grid System Specific
+    # - e.g. H3 resolutions 0-15
+    knn.setIndexResolution(10)
     >>>
-    >>> knn.setKNeighbours(5)
-    >>> knn.setApproximate(True)
-    >>> knn.setMaxIterations(10)
-    >>> knn.setEarlyStopIterations(3) 
+    knn.setKNeighbours(5)
+    knn.setApproximate(True)
+    knn.setMaxIterations(10)
+    knn.setEarlyStopIterations(3)
     >>>
-    >>> knn.setLandmarksFeatureCol("geom_wkt")
-    >>> knn.setLandmarksRowID("left_id") # id will be generated
+    knn.setLandmarksFeatureCol("geom_wkt")
+    knn.setLandmarksRowID("left_id") # id will be generated
     >>>
-    >>> knn.setCandidatesDf(trip_df.where("pickup_point is not null"))
-    >>> knn.setCandidatesFeatureCol("pickup_point")
-    >>> knn.setCandidatesRowID("right_id") # id will be generated
+    knn.setCandidatesDf(trip_df.where("pickup_point is not null"))
+    knn.setCandidatesFeatureCol("pickup_point")
+    knn.setCandidatesRowID("right_id") # id will be generated
     >>>
-    >>> neighbours = knn.transform(building_df)
-    >>> neighbours.display()
+    neighbours = knn.transform(building_df)
+    neighbours.display()
     +-------+--------+-----------+--------------+--------------------------+---------+----------------+
     |left_id|right_id|   geometry|right_geometry|geometry_geometry_distance|iteration|neighbour_number|
     +-------+--------+-----------+--------------+--------------------------+---------+----------------+
@@ -154,34 +154,34 @@ The transformer is called SpatialKNN and it is used as follows:
 
    .. code-tab:: scala
 
-    >>> import com.databricks.labs.mosaic.models.knn.SpatialKNN
-    >>> import com.databricks.labs.mosaic.functions.MosaicContext
-    >>> import com.databricks.labs.mosaic.H3
-    >>> import com.databricks.labs.mosaic.ESRI
+    import com.databricks.labs.mosaic.models.knn.SpatialKNN
+    import com.databricks.labs.mosaic.functions.MosaicContext
+    import com.databricks.labs.mosaic.H3
+    import com.databricks.labs.mosaic.ESRI
     >>>
-    >>> val mosaicContext = MosaicContext.build(H3, ESRI)
-    >>> import mosaicContext.functions._
-    >>> mosaicContext.register(spark)
+    val mosaicContext = MosaicContext.build(H3, ESRI)
+    import mosaicContext.functions._
+    mosaicContext.register(spark)
     >>>
-    >>> spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
+    spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
     >>>
-    >>> val buildingDf = spark.read.table("building")
-    >>> val tripDf = spark.read.table("trip")
+    val buildingDf = spark.read.table("building")
+    val tripDf = spark.read.table("trip")
     >>>
-    >>> val knn = SpatialKNN(tripDf)
-    >>>             .setDistanceThreshold(1.0) // crs specific units    
-    >>>             .setIndexResolution(10) // grid system specific
-    >>>             .setKNeighbours(5)
-    >>>             .setMaxIterations(10)
-    >>>             .setEarlyStopIterations(3)
-    >>>             .setLandmarksFeatureCol("geom_wkt")
-    >>>             .setLandmarksRowID("left_id")  // will be generated
-    >>>             .setCandidatesFeatureCol("pickup_point")
-    >>>             .setCandidatesRowID("right_id") // will be generated
-    >>>             .setCheckpointTablePrefix("checkpoint_table_knn")         
+    val knn = SpatialKNN(tripDf)
+                .setDistanceThreshold(1.0) // crs specific units
+                .setIndexResolution(10) // grid system specific
+                .setKNeighbours(5)
+                .setMaxIterations(10)
+                .setEarlyStopIterations(3)
+                .setLandmarksFeatureCol("geom_wkt")
+                .setLandmarksRowID("left_id")  // will be generated
+                .setCandidatesFeatureCol("pickup_point")
+                .setCandidatesRowID("right_id") // will be generated
+                .setCheckpointTablePrefix("checkpoint_table_knn")
     >>>
-    >>> val neighbours = knn.transform(buildingDf)
-    >>> neighbours.display()
+    val neighbours = knn.transform(buildingDf)
+    neighbours.display()
     +-------+--------+-----------+--------------+--------------------------+---------+----------------+
     |left_id|right_id|   geometry|right_geometry|geometry_geometry_distance|iteration|neighbour_number|
     +-------+--------+-----------+--------------+--------------------------+---------+----------------+
@@ -241,21 +241,21 @@ transformer after the convergence.
 .. tabs::
    .. code-tab:: py
 
-    >>> import mosaic as mos
-    >>> mos.enable_mosaic(spark, dbutils)
+    import mosaic as mos
+    mos.enable_mosaic(spark, dbutils)
     >>>
-    >>> from mosaic.models import SpatialKNN
-    >>> import mlflow
-    >>> mlflow.autolog(disable=False)
+    from mosaic.models import SpatialKNN
+    import mlflow
+    mlflow.autolog(disable=False)
     >>>
-    >>> with mlflow.start_run():
+    with mlflow.start_run():
     >>>
-    >>>     knn = SpatialKNN()
-    >>>     ...
-    >>>     result_df = knn.transform(...)
+        knn = SpatialKNN()
+        ...
+        result_df = knn.transform(...)
     >>>
-    >>>     mlflow.log_params(knn.getParams())
-    >>>     mlflow.log_metrics(knn.getMetrics())
+        mlflow.log_params(knn.getParams())
+        mlflow.log_metrics(knn.getMetrics())
 
 
 .. figure:: ../images/knn_mlflow_notebook.png
@@ -298,18 +298,18 @@ These datasets are not serialised with the model, and neither are the model outp
 .. tabs::
    .. code-tab:: py
 
-    >>> import mosaic as mos
-    >>> mos.enable_mosaic(spark, dbutils)
+    import mosaic as mos
+    mos.enable_mosaic(spark, dbutils)
     >>>
-    >>> spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
+    spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
     >>>
-    >>> from mosaic.models import SpatialKNN
-    >>> knn = SpatialKNN()
-    >>> ...
+    from mosaic.models import SpatialKNN
+    knn = SpatialKNN()
+    ...
     >>>
-    >>> knn.write.save("dbfs:/tmp/mosaic/username/knn_model")
-    >>> loaded_knn = SpatialKNN.read.load("dbfs:/tmp/mosaic/username/knn_model")
-    >>> loaded_knn.getParams()
+    knn.write.save("dbfs:/tmp/mosaic/username/knn_model")
+    loaded_knn = SpatialKNN.read.load("dbfs:/tmp/mosaic/username/knn_model")
+    loaded_knn.getParams()
     {'approximate': 'true',
      'candidatesFeatureCol': 'pickup_point',
      'candidatesRowID': 'candidates_id',
@@ -325,24 +325,24 @@ These datasets are not serialised with the model, and neither are the model outp
 
    .. code-tab:: scala
 
-    >>> import com.databricks.labs.mosaic.models.knn.SpatialKNN
-    >>> import com.databricks.labs.mosaic.functions.MosaicContext
-    >>> import com.databricks.labs.mosaic.H3
-    >>> import com.databricks.labs.mosaic.ESRI
+    import com.databricks.labs.mosaic.models.knn.SpatialKNN
+    import com.databricks.labs.mosaic.functions.MosaicContext
+    import com.databricks.labs.mosaic.H3
+    import com.databricks.labs.mosaic.ESRI
     >>>
-    >>> val mosaicContext = MosaicContext.build(H3, ESRI)
-    >>> import mosaicContext.functions._
-    >>> mosaicContext.register(spark)
+    val mosaicContext = MosaicContext.build(H3, ESRI)
+    import mosaicContext.functions._
+    mosaicContext.register(spark)
     >>>
-    >>> spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
+    spark.sparkContext.setCheckpointDir("dbfs:/tmp/mosaic/username/checkpoints")
     >>>
-    >>> val knn = SpatialKNN()
-    >>> ...
+    val knn = SpatialKNN()
+    ...
     >>>
-    >>> knn.write.save("dbfs:/tmp/mosaic/username/knn_model")
-    >>> val loadedKnn = SpatialKNN.read.load("dbfs:/tmp/mosaic/username/knn_model")
-    >>> val params = loadedKnn.getParams()
-    >>> params.foreach(println)
+    knn.write.save("dbfs:/tmp/mosaic/username/knn_model")
+    val loadedKnn = SpatialKNN.read.load("dbfs:/tmp/mosaic/username/knn_model")
+    val params = loadedKnn.getParams()
+    params.foreach(println)
     ('approximate': 'true')
     ('candidatesFeatureCol': 'pickup_point')
     ('candidatesRowID': 'candidates_id')

@@ -1,439 +1,90 @@
-
 <!DOCTYPE html>
-
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <meta name="lang:clipboard.copy" content="Copy to clipboard">
-  <meta name="lang:clipboard.copied" content="Copied to clipboard">
-  <meta name="lang:search.language" content="en">
-  <meta name="lang:search.pipeline.stopwords" content="True">
-  <meta name="lang:search.pipeline.trimmer" content="True">
-  <meta name="lang:search.result.none" content="No matching documents">
-  <meta name="lang:search.result.one" content="1 matching document">
-  <meta name="lang:search.result.other" content="# matching documents">
-  <meta name="lang:search.tokenizer" content="[\s\-]+">
-
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Using grid index systems in Mosaic &mdash; Mosaic</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/fonts.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-    <link href="https://fonts.gstatic.com/" rel="preconnect" crossorigin>
-    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,500,700|Roboto:300,400,400i,700&display=fallback" rel="stylesheet">
-
-    <style>
-      body,
-      input {
-        font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif
-      }
-
-      code,
-      kbd,
-      pre {
-        font-family: "Roboto Mono", "Courier New", Courier, monospace
-      }
-    </style>
-  
-
-  <link rel="stylesheet" href="../_static/stylesheets/application.css"/>
-  <link rel="stylesheet" href="../_static/stylesheets/application-palette.css"/>
-  <link rel="stylesheet" href="../_static/stylesheets/application-fixes.css"/>
-  
-  <link rel="stylesheet" href="../_static/fonts/material-icons.css"/>
-  
-  <meta name="theme-color" content="#3f51b5">
-  <script src="../_static/javascripts/modernizr.js"></script>
-  
-  
-  
-    <title>Using grid index systems in Mosaic &#8212; Mosaic</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/material.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="BNG - British National Grid" href="grid-indexes-bng.html" />
-    <link rel="prev" title="GDAL Installation guide" href="install-gdal.html" />
-  
-   
+    <link rel="prev" title="GDAL Installation guide" href="install-gdal.html" /> 
+</head>
 
-  </head>
-  <body dir=ltr
-        data-md-color-primary=green data-md-color-accent=green>
-  
-  <svg class="md-svg">
-    <defs data-children-count="0">
-      
-      <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
-      
-    </defs>
-  </svg>
-  
-  <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer">
-  <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search">
-  <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
-  <a href="#usage/grid-indexes" tabindex="1" class="md-skip"> Skip to content </a>
-  <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid">
-    <div class="md-flex navheader">
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../index.html" title="Mosaic"
-           class="md-header-nav__button md-logo">
-          
-              <img src="../_static/mosaic_logo.svg" height="26"
-                   alt="Mosaic logo">
-          
-        </a>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
-      </div>
-      <div class="md-flex__cell md-flex__cell--stretch">
-        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
-          <span class="md-header-nav__topic">Mosaic v0.3.11</span>
-          <span class="md-header-nav__topic"> Using grid index systems in Mosaic </span>
-        </div>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
-        
-<div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" action="../search.html" method="get" name="search">
-      <input type="text" class="md-search__input" name="q" placeholder="Search"
-             autocapitalize="off" autocomplete="off" spellcheck="false"
-             data-md-component="query" data-md-state="active">
-      <label class="md-icon md-search__icon" for="__search"></label>
-      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
-        &#xE5CD;
-      </button>
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="result">
-          <div class="md-search-result__meta">
-            Type to start searching
-          </div>
-          <ol class="md-search-result__list"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Mosaic
+            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
 </div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">API Documentation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="usage.html">Usage</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-gdal.html">GDAL Installation guide</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Using grid index systems in Mosaic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid-indexes-bng.html">BNG - British National Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kepler.html">Kepler visualizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="automatic-sql-registration.html">Automatic SQL registration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/models.html">Models</a></li>
+</ul>
 
-      </div>
-      
-        <div class="md-flex__cell md-flex__cell--shrink">
-          <div class="md-header-nav__source">
-            <a href="https://github.com/databrickslabs/mosaic/" title="Go to repository" class="md-source" data-md-source="github">
-
-    <div class="md-source__icon">
-      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
-  <div class="md-source__repository">
-    Mosaic
-  </div>
-</a>
-          </div>
         </div>
-      
-      
-  
-  <script src="../_static/javascripts/version_dropdown.js"></script>
-  <script>
-    var json_loc = "../"versions.json"",
-        target_loc = "../../",
-        text = "Versions";
-    $( document ).ready( add_version_dropdown(json_loc, target_loc, text));
-  </script>
-  
+      </div>
+    </nav>
 
-    </div>
-  </nav>
-</header>
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mosaic</a>
+      </nav>
 
-  
-  <div class="md-container">
-    
-    
-    
-  <nav class="md-tabs" data-md-component="tabs">
-    <div class="md-tabs__inner md-grid">
-      <ul class="md-tabs__list">
-          <li class="md-tabs__item"><a href="../index.html" class="md-tabs__link">Mosaic</a></li>
-          <li class="md-tabs__item"><a href="usage.html" class="md-tabs__link">Usage</a></li>
-      </ul>
-    </div>
-  </nav>
-    <main class="md-main">
-      <div class="md-main__inner md-grid" data-md-component="container">
-        
-          <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
-            <div class="md-sidebar__scrollwrap">
-              <div class="md-sidebar__inner">
-                <nav class="md-nav md-nav--primary" data-md-level="0">
-  <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../index.html" title="Mosaic" class="md-nav__button md-logo">
-      
-        <img src="../_static/mosaic_logo.svg" alt=" logo" width="48" height="48">
-      
-    </a>
-    <a href="../index.html"
-       title="Mosaic">Mosaic v0.3.11</a>
-  </label>
-    <div class="md-nav__source">
-      <a href="https://github.com/databrickslabs/mosaic/" title="Go to repository" class="md-source" data-md-source="github">
-
-    <div class="md-source__icon">
-      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24" width="28" height="28">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
-  <div class="md-source__repository">
-    Mosaic
-  </div>
-</a>
-    </div>
-  
-  
-
-  
-  <ul class="md-nav__list">
-    <li class="md-nav__item">
-    
-      <span class="md-nav__link caption"><span class="caption-text">Contents:</span></span>
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/api.html" class="md-nav__link">API Documentation</a>
-      <ul class="md-nav__list"> 
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/vector-format-readers.html" class="md-nav__link">Vector Format Readers</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/raster-format-readers.html" class="md-nav__link">Raster Format Readers</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/geometry-constructors.html" class="md-nav__link">Geometry constructors</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/geometry-accessors.html" class="md-nav__link">Geometry accessors</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/spatial-functions.html" class="md-nav__link">Spatial functions</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/spatial-indexing.html" class="md-nav__link">Spatial grid indexing</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/spatial-predicates.html" class="md-nav__link">Spatial predicates</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/spatial-aggregations.html" class="md-nav__link">Spatial aggregation functions</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../api/raster-functions.html" class="md-nav__link">Raster functions</a>
-      
-    
-    </li></ul>
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="usage.html" class="md-nav__link">Usage</a>
-      <ul class="md-nav__list"> 
-    <li class="md-nav__item">
-    
-    
-      <a href="installation.html" class="md-nav__link">Installation guide</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="install-gdal.html" class="md-nav__link">GDAL Installation guide</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    <label class="md-nav__link md-nav__link--active" for="__toc"> Using grid index systems in Mosaic </label>
-    
-      <a href="#" class="md-nav__link md-nav__link--active">Using grid index systems in Mosaic</a>
-      
-        
-<nav class="md-nav md-nav--secondary">
-    <label class="md-nav__title" for="__toc">Contents</label>
-  <ul class="md-nav__list" data-md-scrollfix="">
-        <li class="md-nav__item"><a href="#usage-grid-indexes--page-root" class="md-nav__link">Using grid index systems in Mosaic</a><nav class="md-nav">
-              <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#1.-Read-the-source-point-and-polygon-datasets." class="md-nav__link">1. Read the source point and polygon datasets.</a>
-        </li>
-        <li class="md-nav__item"><a href="#2.-Compute-the-resolution-of-index-required-to-optimize-the-join." class="md-nav__link">2. Compute the resolution of index required to optimize the join.</a>
-        </li>
-        <li class="md-nav__item"><a href="#3.-Apply-the-index-to-the-set-of-points-in-your-left-hand-dataframe." class="md-nav__link">3. Apply the index to the set of points in your left-hand dataframe.</a>
-        </li>
-        <li class="md-nav__item"><a href="#4.-Compute-the-set-of-indices-that-fully-covers-each-polygon-in-the-right-hand-dataframe" class="md-nav__link">4. Compute the set of indices that fully covers each polygon in the right-hand dataframe</a>
-        </li>
-        <li class="md-nav__item"><a href="#5.-‘Explode’-the-polygon-index-dataframe,-such-that-each-polygon-index-becomes-a-row-in-a-new-dataframe." class="md-nav__link">5. ‘Explode’ the polygon index dataframe, such that each polygon index becomes a row in a new dataframe.</a>
-        </li>
-        <li class="md-nav__item"><a href="#6.-Join-the-new-left--and-right-hand-dataframes-directly-on-the-index." class="md-nav__link">6. Join the new left- and right-hand dataframes directly on the index.</a>
-        </li>
-        <li class="md-nav__item"><a href="#Final-notes" class="md-nav__link">Final notes</a>
-        </li></ul>
-            </nav>
-        </li>
-    
-<li class="md-nav__item"><a class="md-nav__extra_link" href="../_sources/usage/grid-indexes.ipynb.txt">Show Source</a> </li>
-
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="usage.html">Usage</a></li>
+      <li class="breadcrumb-item active">Using grid index systems in Mosaic</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/usage/grid-indexes.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
   </ul>
-</nav>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="grid-indexes-bng.html" class="md-nav__link">BNG - British National Grid</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="quickstart.html" class="md-nav__link">Quickstart notebook</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="kepler.html" class="md-nav__link">Kepler visualizations</a>
-      
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="automatic-sql-registration.html" class="md-nav__link">Automatic SQL registration</a>
-      
-    
-    </li></ul>
-    
-    </li>
-    <li class="md-nav__item">
-    
-    
-      <a href="../models/models.html" class="md-nav__link">Models</a>
-      <ul class="md-nav__list"> 
-    <li class="md-nav__item">
-    
-    
-      <a href="../models/spatial-knn.html" class="md-nav__link">Spatial K Nearest Neighbours</a>
-      
-    
-    </li></ul>
-    
-    </li>
-  </ul>
-  
-
-</nav>
-              </div>
-            </div>
-          </div>
-          <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
-            <div class="md-sidebar__scrollwrap">
-              <div class="md-sidebar__inner">
-                
-<nav class="md-nav md-nav--secondary">
-    <label class="md-nav__title" for="__toc">Contents</label>
-  <ul class="md-nav__list" data-md-scrollfix="">
-        <li class="md-nav__item"><a href="#usage-grid-indexes--page-root" class="md-nav__link">Using grid index systems in Mosaic</a><nav class="md-nav">
-              <ul class="md-nav__list">
-        <li class="md-nav__item"><a href="#1.-Read-the-source-point-and-polygon-datasets." class="md-nav__link">1. Read the source point and polygon datasets.</a>
-        </li>
-        <li class="md-nav__item"><a href="#2.-Compute-the-resolution-of-index-required-to-optimize-the-join." class="md-nav__link">2. Compute the resolution of index required to optimize the join.</a>
-        </li>
-        <li class="md-nav__item"><a href="#3.-Apply-the-index-to-the-set-of-points-in-your-left-hand-dataframe." class="md-nav__link">3. Apply the index to the set of points in your left-hand dataframe.</a>
-        </li>
-        <li class="md-nav__item"><a href="#4.-Compute-the-set-of-indices-that-fully-covers-each-polygon-in-the-right-hand-dataframe" class="md-nav__link">4. Compute the set of indices that fully covers each polygon in the right-hand dataframe</a>
-        </li>
-        <li class="md-nav__item"><a href="#5.-‘Explode’-the-polygon-index-dataframe,-such-that-each-polygon-index-becomes-a-row-in-a-new-dataframe." class="md-nav__link">5. ‘Explode’ the polygon index dataframe, such that each polygon index becomes a row in a new dataframe.</a>
-        </li>
-        <li class="md-nav__item"><a href="#6.-Join-the-new-left--and-right-hand-dataframes-directly-on-the-index." class="md-nav__link">6. Join the new left- and right-hand dataframes directly on the index.</a>
-        </li>
-        <li class="md-nav__item"><a href="#Final-notes" class="md-nav__link">Final notes</a>
-        </li></ul>
-            </nav>
-        </li>
-    
-<li class="md-nav__item"><a class="md-nav__extra_link" href="../_sources/usage/grid-indexes.ipynb.txt">Show Source</a> </li>
-
-<li id="searchbox" class="md-nav__item"></li>
-
-  </ul>
-</nav>
-              </div>
-            </div>
-          </div>
-        
-        <div class="md-content">
-          <article class="md-content__inner md-typeset" role="main">
-            
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
   
 <style>
 /* CSS for nbsphinx extension */
@@ -682,8 +333,8 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-
-<h1 id="usage-grid-indexes--page-root">Using grid index systems in Mosaic<a class="headerlink" href="#usage-grid-indexes--page-root" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="Using-grid-index-systems-in-Mosaic">
+<h1>Using grid index systems in Mosaic<a class="headerlink" href="#Using-grid-index-systems-in-Mosaic" title="Permalink to this headline"></a></h1>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -698,7 +349,7 @@ enable_mosaic(spark, dbutils)
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<style scoped="">
+<style scoped>
   .ansiout {
     display: block;
     unicode-bidi: embed;
@@ -716,23 +367,23 @@ enable_mosaic(spark, dbutils)
 </div>
 <p>Set operations over big geospatial datasets become very expensive without some form of spatial indexing.</p>
 <p>Spatial indexes not only allow operations like point-in-polygon joins to be partitioned but, if only approximate results are required, can be used to reduce these to deterministic SQL joins directly on the indexes.</p>
-<p><img alt="example h3 point-in-poly image" src="https://databricks.com/wp-content/uploads/2021/01/blog-geospatial-3.jpg"/></p>
+<p><img alt="example h3 point-in-poly image" src="https://databricks.com/wp-content/uploads/2021/01/blog-geospatial-3.jpg" /></p>
 <p>The workflow for a point-in-poly spatial join might look like the following:</p>
-
-<h2 id="1.-Read-the-source-point-and-polygon-datasets.">1. Read the source point and polygon datasets.<a class="headerlink" href="#1.-Read-the-source-point-and-polygon-datasets." title="Permalink to this headline">¶</a></h2>
+<div class="section" id="1.-Read-the-source-point-and-polygon-datasets.">
+<h2>1. Read the source point and polygon datasets.<a class="headerlink" href="#1.-Read-the-source-point-and-polygon-datasets." title="Permalink to this headline"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>drop_cols = [
-  "rate_code_id", "store_and_fwd_flag", "dropoff_longitude",
-  "dropoff_latitude", "payment_type", "fare_amount",
-  "extra", "mta_tax", "tip_amount", "tolls_amount",
-  "total_amount"
+  &quot;rate_code_id&quot;, &quot;store_and_fwd_flag&quot;, &quot;dropoff_longitude&quot;,
+  &quot;dropoff_latitude&quot;, &quot;payment_type&quot;, &quot;fare_amount&quot;,
+  &quot;extra&quot;, &quot;mta_tax&quot;, &quot;tip_amount&quot;, &quot;tolls_amount&quot;,
+  &quot;total_amount&quot;
 ]
 
 trips = (
-  spark.table("delta.`/databricks-datasets/nyctaxi/tables/nyctaxi_yellow`")
+  spark.table(&quot;delta.`/databricks-datasets/nyctaxi/tables/nyctaxi_yellow`&quot;)
   .drop(*drop_cols)
   .limit(5_000_000)
   .repartition(sc.defaultParallelism * 20)
@@ -746,7 +397,7 @@ trips.show()
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<style scoped="">
+<style scoped>
   .ansiout {
     display: block;
     unicode-bidi: embed;
@@ -794,15 +445,15 @@ only showing top 20 rows
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import st_geomfromgeojson
 
-user = spark.sql("select current_user() as user").collect()[0]["user"]
+user = spark.sql(&quot;select current_user() as user&quot;).collect()[0][&quot;user&quot;]
 
 neighbourhoods = (
-  spark.read.format("json")
-  .load(f"dbfs:/FileStore/shared_uploads/{user}/NYC_Taxi_Zones.geojson")
+  spark.read.format(&quot;json&quot;)
+  .load(f&quot;dbfs:/FileStore/shared_uploads/{user}/NYC_Taxi_Zones.geojson&quot;)
   .repartition(sc.defaultParallelism)
-  .withColumn("geometry", st_geomfromgeojson(to_json(col("geometry"))))
-  .select("properties.*", "geometry")
-  .drop("shape_area", "shape_leng")
+  .withColumn(&quot;geometry&quot;, st_geomfromgeojson(to_json(col(&quot;geometry&quot;))))
+  .select(&quot;properties.*&quot;, &quot;geometry&quot;)
+  .drop(&quot;shape_area&quot;, &quot;shape_leng&quot;)
 )
 
 neighbourhoods.show()
@@ -813,7 +464,7 @@ neighbourhoods.show()
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<style scoped="">
+<style scoped>
   .ansiout {
     display: block;
     unicode-bidi: embed;
@@ -855,16 +506,16 @@ only showing top 20 rows
 
 </div></div>
 </div>
-
-
-<h2 id="2.-Compute-the-resolution-of-index-required-to-optimize-the-join.">2. Compute the resolution of index required to optimize the join.<a class="headerlink" href="#2.-Compute-the-resolution-of-index-required-to-optimize-the-join." title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="2.-Compute-the-resolution-of-index-required-to-optimize-the-join.">
+<h2>2. Compute the resolution of index required to optimize the join.<a class="headerlink" href="#2.-Compute-the-resolution-of-index-required-to-optimize-the-join." title="Permalink to this headline"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import MosaicFrame
 
-neighbourhoods_mdf = MosaicFrame(neighbourhoods, "geometry")
+neighbourhoods_mdf = MosaicFrame(neighbourhoods, &quot;geometry&quot;)
 help(neighbourhoods_mdf.get_optimal_resolution)
 </pre></div>
 </div>
@@ -873,7 +524,7 @@ help(neighbourhoods_mdf.get_optimal_resolution)
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<style scoped="">
+<style scoped>
   .ansiout {
     display: block;
     unicode-bidi: embed;
@@ -922,7 +573,7 @@ get_optimal_resolution(sample_rows: Union[int, NoneType] = None, sample_fraction
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<style scoped="">
+<style scoped>
   .ansiout {
     display: block;
     unicode-bidi: embed;
@@ -938,16 +589,16 @@ get_optimal_resolution(sample_rows: Union[int, NoneType] = None, sample_fraction
 </style>
 <div class="ansiout">Out[15]: 9</div></div>
 </div>
-
-
-<h2 id="3.-Apply-the-index-to-the-set-of-points-in-your-left-hand-dataframe.">3. Apply the index to the set of points in your left-hand dataframe.<a class="headerlink" href="#3.-Apply-the-index-to-the-set-of-points-in-your-left-hand-dataframe." title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="3.-Apply-the-index-to-the-set-of-points-in-your-left-hand-dataframe.">
+<h2>3. Apply the index to the set of points in your left-hand dataframe.<a class="headerlink" href="#3.-Apply-the-index-to-the-set-of-points-in-your-left-hand-dataframe." title="Permalink to this headline"></a></h2>
 <p>This will generate an index value that corresponds to the grid ‘cell’ that this point occupies.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import grid_longlatascellid
-indexed_trips = trips.withColumn("ix", grid_longlatascellid(lon="pickup_longitude", lat="pickup_latitude", resolution=lit(resolution)))
+indexed_trips = trips.withColumn(&quot;ix&quot;, grid_longlatascellid(lon=&quot;pickup_longitude&quot;, lat=&quot;pickup_latitude&quot;, resolution=lit(resolution)))
 indexed_trips.show()
 </pre></div>
 </div>
@@ -956,7 +607,7 @@ indexed_trips.show()
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<style scoped="">
+<style scoped>
   .ansiout {
     display: block;
     unicode-bidi: embed;
@@ -998,9 +649,9 @@ only showing top 20 rows
 
 </div></div>
 </div>
-
-
-<h2 id="4.-Compute-the-set-of-indices-that-fully-covers-each-polygon-in-the-right-hand-dataframe">4. Compute the set of indices that fully covers each polygon in the right-hand dataframe<a class="headerlink" href="#4.-Compute-the-set-of-indices-that-fully-covers-each-polygon-in-the-right-hand-dataframe" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="4.-Compute-the-set-of-indices-that-fully-covers-each-polygon-in-the-right-hand-dataframe">
+<h2>4. Compute the set of indices that fully covers each polygon in the right-hand dataframe<a class="headerlink" href="#4.-Compute-the-set-of-indices-that-fully-covers-each-polygon-in-the-right-hand-dataframe" title="Permalink to this headline"></a></h2>
 <p>This is commonly referred to as a polyfill operation.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
@@ -1010,8 +661,8 @@ only showing top 20 rows
 
 indexed_neighbourhoods = (
   neighbourhoods
-  .select("*", grid_polyfill("geometry", lit(resolution)).alias("ix_set"))
-  .drop("geometry")
+  .select(&quot;*&quot;, grid_polyfill(&quot;geometry&quot;, lit(resolution)).alias(&quot;ix_set&quot;))
+  .drop(&quot;geometry&quot;)
 )
 
 indexed_neighbourhoods.show()
@@ -1022,7 +673,7 @@ indexed_neighbourhoods.show()
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<style scoped="">
+<style scoped>
   .ansiout {
     display: block;
     unicode-bidi: embed;
@@ -1064,17 +715,17 @@ only showing top 20 rows
 
 </div></div>
 </div>
-
-
-<h2 id="5.-‘Explode’-the-polygon-index-dataframe,-such-that-each-polygon-index-becomes-a-row-in-a-new-dataframe.">5. ‘Explode’ the polygon index dataframe, such that each polygon index becomes a row in a new dataframe.<a class="headerlink" href="#5.-‘Explode’-the-polygon-index-dataframe,-such-that-each-polygon-index-becomes-a-row-in-a-new-dataframe." title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="5.-‘Explode’-the-polygon-index-dataframe,-such-that-each-polygon-index-becomes-a-row-in-a-new-dataframe.">
+<h2>5. ‘Explode’ the polygon index dataframe, such that each polygon index becomes a row in a new dataframe.<a class="headerlink" href="#5.-‘Explode’-the-polygon-index-dataframe,-such-that-each-polygon-index-becomes-a-row-in-a-new-dataframe." title="Permalink to this headline"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>exploded_indexed_neighbourhoods = (
   indexed_neighbourhoods
-  .withColumn("ix", explode("ix_set"))
-  .drop("ix_set")
+  .withColumn(&quot;ix&quot;, explode(&quot;ix_set&quot;))
+  .drop(&quot;ix_set&quot;)
 )
 
 exploded_indexed_neighbourhoods.show()
@@ -1085,7 +736,7 @@ exploded_indexed_neighbourhoods.show()
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<style scoped="">
+<style scoped>
   .ansiout {
     display: block;
     unicode-bidi: embed;
@@ -1127,16 +778,16 @@ only showing top 20 rows
 
 </div></div>
 </div>
-
-
-<h2 id="6.-Join-the-new-left--and-right-hand-dataframes-directly-on-the-index.">6. Join the new left- and right-hand dataframes directly on the index.<a class="headerlink" href="#6.-Join-the-new-left--and-right-hand-dataframes-directly-on-the-index." title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="6.-Join-the-new-left--and-right-hand-dataframes-directly-on-the-index.">
+<h2>6. Join the new left- and right-hand dataframes directly on the index.<a class="headerlink" href="#6.-Join-the-new-left--and-right-hand-dataframes-directly-on-the-index." title="Permalink to this headline"></a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>joined_df = (
-  indexed_trips.alias("t")
-  .join(exploded_indexed_neighbourhoods.alias("n"), on="ix", how="inner"))
+  indexed_trips.alias(&quot;t&quot;)
+  .join(exploded_indexed_neighbourhoods.alias(&quot;n&quot;), on=&quot;ix&quot;, how=&quot;inner&quot;))
 joined_df.count()
 </pre></div>
 </div>
@@ -1145,7 +796,7 @@ joined_df.count()
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area rendered_html docutils container">
-<style scoped="">
+<style scoped>
   .ansiout {
     display: block;
     unicode-bidi: embed;
@@ -1161,69 +812,42 @@ joined_df.count()
 </style>
 <div class="ansiout">Out[25]: 4934937</div></div>
 </div>
-
-
-<h2 id="Final-notes">Final notes<a class="headerlink" href="#Final-notes" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="Final-notes">
+<h2>Final notes<a class="headerlink" href="#Final-notes" title="Permalink to this headline"></a></h2>
 <p>Mosaic provides support for Uber’s H3 spatial indexing library as a core part of the API, but we plan to add support for other index systems, including S2 and British National Grid in due course.</p>
+</div>
+</div>
 
 
-
-
-          </article>
-        </div>
-      </div>
-    </main>
-  </div>
-  <footer class="md-footer">
-    <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid">
-          
-            <a href="install-gdal.html" title="GDAL Installation guide"
-               class="md-flex md-footer-nav__link md-footer-nav__link--prev"
-               rel="prev">
-              <div class="md-flex__cell md-flex__cell--shrink">
-                <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
-              </div>
-              <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-                <span class="md-flex__ellipsis">
-                  <span
-                      class="md-footer-nav__direction"> Previous </span> GDAL Installation guide </span>
-              </div>
-            </a>
-          
-          
-            <a href="grid-indexes-bng.html" title="BNG - British National Grid"
-               class="md-flex md-footer-nav__link md-footer-nav__link--next"
-               rel="next">
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title"><span
-                class="md-flex__ellipsis"> <span
-                class="md-footer-nav__direction"> Next </span> BNG - British National Grid </span>
-            </div>
-            <div class="md-flex__cell md-flex__cell--shrink"><i
-                class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
-            </div>
-          
-        </a>
-        
-      </nav>
-    </div>
-    <div class="md-footer-meta md-typeset">
-      <div class="md-footer-meta__inner md-grid">
-        <div class="md-footer-copyright">
-          <div class="md-footer-copyright__highlight">
-              &#169; Copyright 2022, Databricks Inc.
-              
+           </div>
           </div>
-            Created using
-            <a href="http://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
-             and
-            <a href="https://github.com/bashtage/sphinx-material/">Material for
-              Sphinx</a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install-gdal.html" class="btn btn-neutral float-left" title="GDAL Installation guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="grid-indexes-bng.html" class="btn btn-neutral float-right" title="BNG - British National Grid" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Databricks Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
         </div>
       </div>
-    </div>
-  </footer>
-  <script src="../_static/javascripts/application.js"></script>
-  <script>app.initialize({version: "1.0.4", url: {base: ".."}})</script>
-  </body>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>
