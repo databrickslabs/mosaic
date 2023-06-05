@@ -279,10 +279,14 @@ object MosaicRasterGDAL extends RasterReader {
             val uuid = Murmur3.hash64(UUID.randomUUID().toString.getBytes())
             val extension = "tif"
             val virtualPath = s"/vsimem/$uuid.$extension"
-            val zippedPath = s"/vsizip/$virtualPath"
             gdal.FileFromMemBuffer(virtualPath, contentBytes)
             // Try reading as a virtual file, if that fails, read as a zipped virtual file
-            val dataset = Option(gdal.Open(virtualPath)).getOrElse(gdal.Open(zippedPath))
+            val dataset = Option(gdal.Open(virtualPath)).getOrElse({
+                val virtualPath = s"/vsimem/$uuid.zip"
+                val zippedPath = s"/vsizip/$virtualPath"
+                gdal.FileFromMemBuffer(virtualPath, contentBytes)
+                gdal.Open(zippedPath)
+            })
             val raster = new MosaicRasterGDAL(uuid, dataset, virtualPath)
             raster
         }

@@ -18,12 +18,12 @@ trait RST_RasterToGridMaxBehaviors extends QueryTest {
         import sc.implicits._
 
         val rastersAsPaths = spark.read
-            .format("gdal_binary")
+            .format("gdal")
             .option("raster_storage", "disk")
             .load("src/test/resources/modis")
 
         val rastersInMemory = spark.read
-            .format("gdal_binary")
+            .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/modis")
 

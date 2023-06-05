@@ -1,33 +1,56 @@
 package com.databricks.labs.mosaic.datasource
 
-import com.databricks.labs.mosaic.core.raster.gdal_raster._
-import com.databricks.labs.mosaic.GDAL
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.FileStatus
+import com.databricks.labs.mosaic.core.raster.gdal_raster.MosaicRasterGDAL
+import com.databricks.labs.mosaic.{GDAL, MOSAIC_RASTER_STORAGE_DISK, MOSAIC_RASTER_STORAGE_IN_MEMORY}
+import com.google.common.io.{ByteStreams, Closeables}
+import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.hadoop.mapreduce.Job
-import org.apache.spark.sql.execution.datasources._
-import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
+import org.apache.spark.SparkException
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.util.DateTimeUtils
+import org.apache.spark.sql.execution.datasources.binaryfile.BinaryFileFormat
+import org.apache.spark.sql.execution.datasources.{OutputWriterFactory, PartitionedFile}
+import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types._
+import org.apache.spark.util.SerializableConfiguration
 
-/**
-  * A base Spark SQL data source for reading GDAL raster data sources. It reads
-  * metadata of the raster and exposes the direct paths for the raster files.
-  */
-class GDALFileFormat extends FileFormat with DataSourceRegister with Serializable {
+import java.net.URI
+import java.sql.Timestamp
+import java.util.Locale
+
+class GDALFileFormat extends BinaryFileFormat {
 
     import GDALFileFormat._
 
-    override def shortName(): String = "gdal"
-
-    override def inferSchema(
-        sparkSession: SparkSession,
-        options: Map[String, String],
-        files: Seq[FileStatus]
-    ): Option[StructType] = {
+    override def inferSchema(sparkSession: SparkSession, options: Map[String, String], files: Seq[FileStatus]): Option[StructType] = {
         GDAL.enable()
-        inferSchemaImpl()
+
+        val storage = options.getOrElse("raster_storage", "in-memory")
+
+        super
+            .inferSchema(sparkSession, options, files)
+            // If storage is disk, we dont need content column
+            .map(schema => if (storage == MOSAIC_RASTER_STORAGE_DISK) StructType(schema.filter(_.name != CONTENT)) else schema)
+            .map(parentSchema =>
+                parentSchema
+                    .add(StructField(UUID, LongType, nullable = false))
+                    .add(StructField(X_SIZE, IntegerType, nullable = false))
+                    .add(StructField(Y_SIZE, IntegerType, nullable = false))
+                    .add(StructField(BAND_COUNT, IntegerType, nullable = false))
+                    .add(StructField(METADATA, MapType(StringType, StringType), nullable = false))
+                    .add(StructField(SUBDATASETS, MapType(StringType, StringType), nullable = false))
+                    .add(StructField(SRID, IntegerType, nullable = false))
+                    .add(StructField(PROJ4_STR, StringType, nullable = false))
+            )
+    }
+
+    override def prepareWrite(
+        sparkSession: SparkSession,
+        job: Job,
+        options: Map[String, String],
+        dataSchema: StructType
+    ): OutputWriterFactory = {
+        throw new Error("Writing to GDALFileFormat is not supported.")
     }
 
     override def isSplitable(
@@ -36,6 +59,8 @@ class GDALFileFormat extends FileFormat with DataSourceRegister with Serializabl
         path: org.apache.hadoop.fs.Path
     ): Boolean = false
 
+    override def shortName(): String = GDAL_BINARY_FILE
+
     override def buildReader(
         sparkSession: SparkSession,
         dataSchema: StructType,
@@ -43,96 +68,135 @@ class GDALFileFormat extends FileFormat with DataSourceRegister with Serializabl
         requiredSchema: StructType,
         filters: Seq[Filter],
         options: Map[String, String],
-        hadoopConf: Configuration
-    ): PartitionedFile => Iterator[InternalRow] = {
-        val driverName = options.getOrElse("driverName", "")
-        buildReaderImpl(driverName, options)
-    }
+        hadoopConf: org.apache.hadoop.conf.Configuration
+    ): PartitionedFile => Iterator[org.apache.spark.sql.catalyst.InternalRow] = {
+        GDAL.enable()
 
-    override def prepareWrite(
-        sparkSession: SparkSession,
-        job: Job,
-        options: Map[String, String],
-        dataSchema: StructType
-    ): OutputWriterFactory = throw new Error("Not implemented")
+        val broadcastedHadoopConf = sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
+        val filterFuncs = filters.flatMap(createFilterFunction)
+        val maxLength = sparkSession.conf.get("spark.sql.sources.binaryFile.maxLength", Int.MaxValue.toString).toInt
+
+        file: PartitionedFile => {
+            val path = new Path(new URI(file.filePath))
+            val fs = path.getFileSystem(broadcastedHadoopConf.value.value)
+            val status = fs.getFileStatus(path)
+
+            val readRasterFlag = shouldReadRaster(requiredSchema)
+            if (readRasterFlag && status.getLen > maxLength) throw CantReadBytesException(maxLength, status)
+
+            var fields: Seq[Any] = Seq.empty[Any]
+            val rasterStorage = options.getOrElse("raster_storage", MOSAIC_RASTER_STORAGE_IN_MEMORY)
+            val isInMem = rasterStorage == MOSAIC_RASTER_STORAGE_IN_MEMORY
+
+            if (filterFuncs.forall(_.apply(status)) && isAllowedExtension(status, options)) {
+
+                val contentBytes: Array[Byte] = readContent(fs, status, readRasterFlag && isInMem)
+                val raster =
+                    if (isInMem) {
+                        MosaicRasterGDAL.readRaster(contentBytes)
+                    } else {
+                        MosaicRasterGDAL.readRaster(status.getPath.toString)
+                    }
+
+                requiredSchema.fieldNames.foreach {
+                    case PATH              => fields = fields :+ status.getPath.toString
+                    case LENGTH            => fields = fields :+ status.getLen
+                    case MODIFICATION_TIME => fields = fields :+ DateTimeUtils.millisToMicros(status.getModificationTime)
+                    case CONTENT           => if (isInMem) fields = fields :+ contentBytes
+                    case UUID              => fields = fields :+ raster.uuid
+                    case X_SIZE            => fields = fields :+ raster.xSize
+                    case Y_SIZE            => fields = fields :+ raster.ySize
+                    case BAND_COUNT        => fields = fields :+ raster.numBands
+                    case METADATA          => fields = fields :+ raster.metadata
+                    case SUBDATASETS       => fields = fields :+ raster.subdatasets
+                    case SRID              => fields = fields :+ raster.SRID
+                    case PROJ4_STR         => fields = fields :+ raster.proj4String
+                    case other             => throw new RuntimeException(s"Unsupported field name: $other")
+                }
+                val row = Utils.createRow(fields)
+                Seq(row).iterator
+            } else {
+                Iterator.empty
+            }
+        }
+
+    }
 
 }
 
-object GDALFileFormat extends Serializable {
+object GDALFileFormat {
 
-    /**
-      * Returns the supported file extension for the driver name.
-      *
-      * @param driverName
-      *   the GDAL driver name
-      * @return
-      *   the file extension
-      */
-    def getFileExtension(driverName: String): String = {
-        // Not a complete list of GDAL drivers
-        driverName match {
-            case "GTiff"       => "tif"
-            case "HDF4"        => "hdf"
-            case "HDF5"        => "hdf"
-            case "JP2ECW"      => "jp2"
-            case "JP2KAK"      => "jp2"
-            case "JP2MrSID"    => "jp2"
-            case "JP2OpenJPEG" => "jp2"
-            case "NetCDF"      => "nc"
-            case "PDF"         => "pdf"
-            case "PNG"         => "png"
-            case "VRT"         => "vrt"
-            case "XPM"         => "xpm"
-            case "COG"         => "tif"
-            case "GRIB"        => "grib"
-            case "Zarr"        => "zarr"
-            case _             => "UNSUPPORTED"
-        }
-    }
+    private val GDAL_BINARY_FILE = "gdal"
+    private val PATH = "path"
+    private val LENGTH = "length"
+    private val MODIFICATION_TIME = "modificationTime"
+    private val CONTENT = "content"
+    private val X_SIZE = "xSize"
+    private val Y_SIZE = "ySize"
+    private val BAND_COUNT = "bandCount"
+    private val METADATA = "metadata"
+    val SUBDATASETS: String = "subdatasets"
+    val SRID = "srid"
+    private val PROJ4_STR = "proj4Str"
+    val UUID = "uuid"
 
-    /** GDAL readers have fixed schema. */
-    def inferSchemaImpl(): Option[StructType] = {
-
-        Some(
-          StructType(
-            Array(
-              StructField("path", StringType, nullable = false),
-              StructField("ySize", IntegerType, nullable = false),
-              StructField("xSize", IntegerType, nullable = false),
-              StructField("bandCount", IntegerType, nullable = false),
-              StructField("metadata", MapType(StringType, StringType), nullable = false),
-              StructField("subdatasets", MapType(StringType, StringType), nullable = false),
-              StructField("srid", IntegerType, nullable = false),
-              StructField("proj4Str", StringType, nullable = false)
-            )
-          )
+    private def CantReadBytesException(maxLength: Long, status: FileStatus) =
+        new SparkException(
+          s"Can't read binary files bigger than $maxLength bytes. " +
+              s"File ${status.getPath} is ${status.getLen} bytes"
         )
 
+    private def shouldReadRaster(requiredSchema: StructType): Boolean =
+        requiredSchema.fieldNames.exists {
+            case UUID | X_SIZE | Y_SIZE | BAND_COUNT | METADATA | SUBDATASETS | SRID | PROJ4_STR => true
+            case _                                                                               => false
+        }
+
+    // noinspection UnstableApiUsage
+    private def readContent(fs: FileSystem, status: FileStatus, readRasterFlag: Boolean): Array[Byte] = {
+        if (readRasterFlag) {
+            val stream = fs.open(status.getPath)
+            try {
+                ByteStreams.toByteArray(stream)
+            } finally {
+                Closeables.close(stream, true)
+            }
+        } else null
     }
 
-    def buildReaderImpl(
-        driverName: String,
-        options: Map[String, String]
-    ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
-        {
-            GDAL.enable()
-            val vsizip = options.getOrElse("vsizip", "false").toBoolean
-            val path = Utils.getCleanPath(file.filePath, vsizip)
+    private def isAllowedExtension(status: FileStatus, options: Map[String, String]): Boolean = {
+        val allowedExtensions = options.getOrElse("extensions", "*").split(";").map(_.trim.toLowerCase(Locale.ROOT))
+        val fileExtension = status.getPath.getName.toLowerCase(Locale.ROOT)
+        allowedExtensions.contains("*") || allowedExtensions.exists(fileExtension.endsWith)
+    }
 
-            if (path.endsWith(getFileExtension(driverName)) || path.endsWith("zip") || path.contains(".zip:")) {
-                val raster = MosaicRasterGDAL.readRaster(path)
-                val ySize = raster.ySize
-                val xSize = raster.xSize
-                val bandCount = raster.numBands
-                val metadata = raster.metadata
-                val subdatasets = raster.subdatasets
-                val srid = raster.SRID
-                val proj4Str = raster.proj4String
-                val row = Utils.createRow(Seq(path, ySize, xSize, bandCount, metadata, subdatasets, srid, proj4Str))
-                Seq(row).iterator
-            } else {
-                Seq.empty[InternalRow].iterator
-            }
+    private def createFilterFunction(filter: Filter): Option[FileStatus => Boolean] = {
+        filter match {
+            case And(left, right)                                     => (createFilterFunction(left), createFilterFunction(right)) match {
+                    case (Some(leftPred), Some(rightPred)) => Some(s => leftPred(s) && rightPred(s))
+                    case (Some(leftPred), None)            => Some(leftPred)
+                    case (None, Some(rightPred))           => Some(rightPred)
+                    case (None, None)                      => Some(_ => true)
+                }
+            case Or(left, right)                                      => (createFilterFunction(left), createFilterFunction(right)) match {
+                    case (Some(leftPred), Some(rightPred)) => Some(s => leftPred(s) || rightPred(s))
+                    case _                                 => Some(_ => true)
+                }
+            case Not(child)                                           => createFilterFunction(child) match {
+                    case Some(pred) => Some(s => !pred(s))
+                    case _          => Some(_ => true)
+                }
+            case LessThan(LENGTH, value: Long)                        => Some(_.getLen < value)
+            case LessThanOrEqual(LENGTH, value: Long)                 => Some(_.getLen <= value)
+            case GreaterThan(LENGTH, value: Long)                     => Some(_.getLen > value)
+            case GreaterThanOrEqual(LENGTH, value: Long)              => Some(_.getLen >= value)
+            case EqualTo(LENGTH, value: Long)                         => Some(_.getLen == value)
+            case LessThan(MODIFICATION_TIME, value: Timestamp)        => Some(_.getModificationTime < value.getTime)
+            case LessThanOrEqual(MODIFICATION_TIME, value: Timestamp) => Some(_.getModificationTime <= value.getTime)
+            case GreaterThan(MODIFICATION_TIME, value: Timestamp)     => Some(_.getModificationTime > value.getTime)
+            case GreaterThanOrEqual(MODIFICATION_TIME, value: Timestamp) => Some(_.getModificationTime >= value.getTime)
+            case EqualTo(MODIFICATION_TIME, value: Timestamp)            => Some(_.getModificationTime == value.getTime)
+            case _                                                       => None
         }
     }
 

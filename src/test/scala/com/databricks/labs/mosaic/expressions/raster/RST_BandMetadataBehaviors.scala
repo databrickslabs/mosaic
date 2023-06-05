@@ -21,12 +21,12 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         noException should be thrownBy MosaicContext.geometryAPI
 
         val rastersAsPaths = spark.read
-            .format("gdal_binary")
+            .format("gdal")
             .option("raster_storage", "disk")
             .load("src/test/resources/binary/netcdf-coral")
 
         val rastersInMemory = spark.read
-            .format("gdal_binary")
+            .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 

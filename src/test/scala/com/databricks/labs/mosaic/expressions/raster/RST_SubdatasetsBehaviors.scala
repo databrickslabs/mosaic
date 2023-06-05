@@ -16,12 +16,12 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
         import sc.implicits._
 
         val rastersAsPaths = spark.read
-            .format("gdal_binary")
+            .format("gdal")
             .option("raster_storage", "disk")
             .load("src/test/resources/binary/netcdf-coral")
 
         val rastersInMemory = spark.read
-            .format("gdal_binary")
+            .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 

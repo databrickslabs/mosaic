@@ -12,7 +12,7 @@ import org.apache.spark.sql.types._
 /**
   * The expression for extracting metadata from a raster band.
   * @param raster
-  *   The expression for the raster. If the raster is stored on disc, the path
+  *   The expression for the raster. If the raster is stored on disk, the path
   *   to the raster is provided. If the raster is stored in memory, the bytes of
   *   the raster are provided.
   * @param band

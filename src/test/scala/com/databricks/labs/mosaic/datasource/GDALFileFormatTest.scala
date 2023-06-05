@@ -2,8 +2,8 @@ package com.databricks.labs.mosaic.datasource
 
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.test.SharedSparkSession
-import org.scalatest.matchers.must.Matchers.{be, noException, not}
-import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
+import org.scalatest.matchers.must.Matchers.{be, noException}
+import org.scalatest.matchers.should.Matchers.an
 
 class GDALFileFormatTest extends QueryTest with SharedSparkSession {
 
@@ -41,18 +41,22 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
 
         noException should be thrownBy spark.read
             .format("gdal")
+            .option("raster_storage", "disk")
+            .option("extensions", "grib")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("gdal")
-            .option("driverName", "NetCDF")
+            .option("raster_storage", "disk")
+            .option("extensions", "grib")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("gdal")
-            .option("driverName", "NetCDF")
+            .option("raster_storage", "disk")
+            .option("extensions", "grib")
             .load(filePath)
             .select("proj4Str")
             .take(1)
@@ -91,7 +95,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
         val zarr = "/binary/zarr-example/"
         val filePath = getClass.getResource(zarr).getPath
 
-        spark.read
+        noException should be thrownBy spark.read
             .format("gdal")
             .option("vsizip", "true")
             .load(filePath)
@@ -117,30 +121,6 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSession {
     test("GDALFileFormat utility tests") {
         val reader = new GDALFileFormat()
         an[Error] should be thrownBy reader.prepareWrite(spark, null, null, null)
-
-        for (
-          driver <- Seq(
-            "GTiff",
-            "HDF4",
-            "HDF5",
-            "JP2ECW",
-            "JP2KAK",
-            "JP2MrSID",
-            "JP2OpenJPEG",
-            "NetCDF",
-            "PDF",
-            "PNG",
-            "VRT",
-            "XPM",
-            "COG",
-            "GRIB",
-            "Zarr"
-          )
-        ) {
-            GDALFileFormat.getFileExtension(driver) should not be "UNSUPPORTED"
-        }
-
-        GDALFileFormat.getFileExtension("NotADriver") should be("UNSUPPORTED")
 
         noException should be thrownBy Utils.createRow(Array(null))
         noException should be thrownBy Utils.createRow(Array(1, 2, 3))

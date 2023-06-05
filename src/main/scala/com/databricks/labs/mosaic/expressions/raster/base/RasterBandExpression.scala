@@ -16,7 +16,7 @@ import scala.reflect.ClassTag
   * expression.
   * @param rasterExpr
   *   The path to the raster if MOSAIC_RASTER_STORAGE is set to
-  *   MOSAIC_RASTER_STORAGE_DISC. The bytes of the raster if
+  *   MOSAIC_RASTER_STORAGE_DISK. The bytes of the raster if
   *   MOSAIC_RASTER_STORAGE is set to MOSAIC_RASTER_STORAGE_BYTE.
   * @param bandExpr
   *   The expression for the band index.
@@ -71,7 +71,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       *
       * @param inputRaster
       *   The path to the raster if MOSAIC_RASTER_STORAGE is set to
-      *   MOSAIC_RASTER_STORAGE_DISC. The bytes of the raster if
+      *   MOSAIC_RASTER_STORAGE_DISK. The bytes of the raster if
       *   MOSAIC_RASTER_STORAGE is set to MOSAIC_RASTER_STORAGE_BYTE.
       * @param inputBand
       *   The band index to be used. It is an Int.
