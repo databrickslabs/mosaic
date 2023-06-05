@@ -1,10 +1,11 @@
 package com.databricks.labs.mosaic.datasource
 
 import com.databricks.labs.mosaic.core.raster.gdal_raster.MosaicRasterGDAL
-import com.databricks.labs.mosaic.{GDAL, MOSAIC_RASTER_STORAGE_DISK, MOSAIC_RASTER_STORAGE_IN_MEMORY}
+import com.databricks.labs.mosaic.{GDAL, MOSAIC_RASTER_STORAGE_IN_MEMORY}
 import com.google.common.io.{ByteStreams, Closeables}
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.hadoop.mapreduce.Job
+import org.apache.orc.util.Murmur3
 import org.apache.spark.SparkException
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
@@ -25,12 +26,12 @@ class GDALFileFormat extends BinaryFileFormat {
     override def inferSchema(sparkSession: SparkSession, options: Map[String, String], files: Seq[FileStatus]): Option[StructType] = {
         GDAL.enable()
 
-        val storage = options.getOrElse("raster_storage", "in-memory")
+        val storage = options.getOrElse("raster_storage", MOSAIC_RASTER_STORAGE_IN_MEMORY)
 
         super
             .inferSchema(sparkSession, options, files)
-            // If storage is disk, we dont need content column
-            .map(schema => if (storage == MOSAIC_RASTER_STORAGE_DISK) StructType(schema.filter(_.name != CONTENT)) else schema)
+            // Drop CONTENT since RASTER will contain the CONTENT bytes if they are needed
+            .map(schema => StructType(schema.filter(_.name != CONTENT)))
             .map(parentSchema =>
                 parentSchema
                     .add(StructField(UUID, LongType, nullable = false))
@@ -41,6 +42,10 @@ class GDALFileFormat extends BinaryFileFormat {
                     .add(StructField(SUBDATASETS, MapType(StringType, StringType), nullable = false))
                     .add(StructField(SRID, IntegerType, nullable = false))
                     .add(StructField(PROJ4_STR, StringType, nullable = false))
+            )
+            .map(schema =>
+                if (storage == MOSAIC_RASTER_STORAGE_IN_MEMORY) schema.add(StructField(RASTER, BinaryType, nullable = false))
+                else schema
             )
     }
 
@@ -97,12 +102,18 @@ class GDALFileFormat extends BinaryFileFormat {
                     } else {
                         MosaicRasterGDAL.readRaster(status.getPath.toString)
                     }
+                val uuid = Murmur3.hash64(
+                  status.getPath.toString.getBytes("UTF-8") ++
+                      status.getLen.toString.getBytes("UTF-8") ++
+                      status.getModificationTime.toString.getBytes("UTF-8")
+                )
+                raster.updateMetadata("Mosaic_UUID", uuid)
 
                 requiredSchema.fieldNames.foreach {
                     case PATH              => fields = fields :+ status.getPath.toString
                     case LENGTH            => fields = fields :+ status.getLen
                     case MODIFICATION_TIME => fields = fields :+ DateTimeUtils.millisToMicros(status.getModificationTime)
-                    case CONTENT           => if (isInMem) fields = fields :+ contentBytes
+                    case RASTER            => if (isInMem) fields = fields :+ contentBytes else fields = fields :+ status.getPath.toString
                     case UUID              => fields = fields :+ raster.uuid
                     case X_SIZE            => fields = fields :+ raster.xSize
                     case Y_SIZE            => fields = fields :+ raster.ySize
@@ -130,6 +141,7 @@ object GDALFileFormat {
     private val PATH = "path"
     private val LENGTH = "length"
     private val MODIFICATION_TIME = "modificationTime"
+    private val RASTER = "raster"
     private val CONTENT = "content"
     private val X_SIZE = "xSize"
     private val Y_SIZE = "ySize"

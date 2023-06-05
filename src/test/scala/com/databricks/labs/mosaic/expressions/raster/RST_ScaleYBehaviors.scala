@@ -34,11 +34,11 @@ trait RST_ScaleYBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_scaley(content) from source
+                                                   |select rst_scaley(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_scaley($"content"))
+            .withColumn("result", rst_scaley($"raster"))
             .select("result")
 
         val result = df.as[Double].collect().max

@@ -85,7 +85,6 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
         val band = raster.getBand(bandIndex)
         val result = bandTransform(raster, band)
 
-        raster.unlink()
         raster.cleanUp()
         result
     }

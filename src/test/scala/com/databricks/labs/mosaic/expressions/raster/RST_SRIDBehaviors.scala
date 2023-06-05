@@ -34,11 +34,11 @@ trait RST_SRIDBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_srid(content) from source
+                                                   |select rst_srid(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_srid($"content"))
+            .withColumn("result", rst_srid($"raster"))
             .select("result")
 
         val result = df.as[Double].collect().max

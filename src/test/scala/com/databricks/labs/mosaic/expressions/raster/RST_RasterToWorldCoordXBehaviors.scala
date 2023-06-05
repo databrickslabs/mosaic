@@ -35,12 +35,12 @@ trait RST_RasterToWorldCoordXBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_rastertoworldcoordx(content, 2, 2) from source
+                                                   |select rst_rastertoworldcoordx(raster, 2, 2) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_rastertoworldcoordx(lit($"content"), 2, 2))
-            .withColumn("result", rst_rastertoworldcoordx($"content", lit(2), lit(2)))
+            .withColumn("result", rst_rastertoworldcoordx(lit($"raster"), 2, 2))
+            .withColumn("result", rst_rastertoworldcoordx($"raster", lit(2), lit(2)))
             .select("result")
 
         val result = df.as[Double].collect().max

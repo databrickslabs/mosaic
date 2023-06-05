@@ -35,12 +35,12 @@ trait RST_ReTileBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_retile(content, 400, 400) from source
+                                                   |select rst_retile(raster, 400, 400) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_retile($"content", 400, 400))
-            .withColumn("result", rst_retile($"content", 400, 400))
+            .withColumn("result", rst_retile($"raster", 400, 400))
+            .withColumn("result", rst_retile($"raster", 400, 400))
             .select("result")
 
         val result = df.as[String].collect().length

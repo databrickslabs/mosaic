@@ -19,14 +19,16 @@ import org.gdal.osr.SpatialReference
   */
 abstract class MosaicRaster(
     isInMem: Boolean
-) extends Serializable with RasterWriter {
+) extends Serializable
+      with RasterWriter {
+
+    def updateMetadata(str: String, uuid: Long): Unit
 
     def uuid: Long
 
     def getExtension: String
 
     def getPath: String
-
 
     def getRasterForCell(cellID: Long, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRaster
 

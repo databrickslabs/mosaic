@@ -34,11 +34,11 @@ trait RST_PixelHeightBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_pixelheight(content) from source
+                                                   |select rst_pixelheight(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_pixelheight($"content"))
+            .withColumn("result", rst_pixelheight($"raster"))
             .select("result")
             .collect()
 

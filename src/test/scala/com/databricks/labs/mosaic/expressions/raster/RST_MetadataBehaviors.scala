@@ -37,7 +37,7 @@ trait RST_MetadataBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_metadata(content) from source
+                                                   |select rst_metadata(raster) from source
                                                    |""".stripMargin)
 
         result.head.getOrElse("SHORTNAME", "") shouldBe "MCD43A4"

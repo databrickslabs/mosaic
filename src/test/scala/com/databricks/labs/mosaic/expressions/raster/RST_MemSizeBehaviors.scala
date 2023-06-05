@@ -32,12 +32,12 @@ trait RST_MemSizeBehaviors extends QueryTest {
         rastersInMemory
             .createOrReplaceTempView("source")
 
-        noException should be thrownBy spark.sql("""
-                                                   |select rst_memsize(content) from source
+        spark.sql("""
+                                                   |select rst_memsize(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_memsize($"content"))
+            .withColumn("result", rst_memsize($"raster"))
             .select("result")
 
         val result = df.as[Long].collect()

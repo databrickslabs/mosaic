@@ -48,7 +48,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("subdatasets", rst_subdatasets($"content"))
+            .withColumn("subdatasets", rst_subdatasets($"raster"))
             .withColumn("bleachingSubdataset", element_at($"subdatasets", "bleaching_alert_area"))
             .select(
               rst_bandmetadata($"bleachingSubdataset", lit(1))

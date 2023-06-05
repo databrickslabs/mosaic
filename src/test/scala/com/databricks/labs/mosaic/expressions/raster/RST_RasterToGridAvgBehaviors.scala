@@ -38,11 +38,11 @@ trait RST_RasterToGridAvgBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_rastertogridavg(content, 3) from source
+                                                   |select rst_rastertogridavg(raster, 3) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_rastertogridavg($"content", lit(3)))
+            .withColumn("result", rst_rastertogridavg($"raster", lit(3)))
             .select("result")
 
         val result = df.as[Double].collect().max

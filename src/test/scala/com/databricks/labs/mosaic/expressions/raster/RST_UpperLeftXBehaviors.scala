@@ -34,11 +34,11 @@ trait RST_UpperLeftXBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_upperleftx(content) from source
+                                                   |select rst_upperleftx(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_upperleftx($"content"))
+            .withColumn("result", rst_upperleftx($"raster"))
             .select("result")
 
         val result = df.as[String].collect().head.length

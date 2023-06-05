@@ -51,7 +51,7 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
 
         noException should be thrownBy rastersInMemory
             .select(
-              rst_subdatasets($"content")
+              rst_subdatasets($"raster")
                   .alias("subdatasets")
             )
             .take(1)

@@ -35,11 +35,11 @@ trait RST_GeoReferenceBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_georeference(content) from source
+                                                   |select rst_georeference(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("georeference", rst_georeference($"content"))
+            .withColumn("georeference", rst_georeference($"raster"))
             .select("georeference")
 
         val result = geoReferenceDf.as[Map[String, Double]].collect()

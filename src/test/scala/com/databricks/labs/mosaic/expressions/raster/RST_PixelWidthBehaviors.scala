@@ -34,11 +34,11 @@ trait RST_PixelWidthBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_pixelwidth(content) from source
+                                                   |select rst_pixelwidth(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_pixelwidth($"content"))
+            .withColumn("result", rst_pixelwidth($"raster"))
             .select("result")
 
         val result = df.as[Double].collect()

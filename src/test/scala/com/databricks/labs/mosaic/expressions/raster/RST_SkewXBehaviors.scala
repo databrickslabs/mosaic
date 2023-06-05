@@ -34,11 +34,11 @@ trait RST_SkewXBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_skewx(content) from source
+                                                   |select rst_skewx(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_skewx($"content"))
+            .withColumn("result", rst_skewx($"raster"))
             .select("result")
 
         val result = df.as[Double].collect().max

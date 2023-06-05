@@ -38,11 +38,11 @@ trait RST_RasterToGridMedianBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_rastertogridmedian(content, 3) from source
+                                                   |select rst_rastertogridmedian(raster, 3) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_rastertogridmedian($"content", lit(3)))
+            .withColumn("result", rst_rastertogridmedian($"raster", lit(3)))
             .select("result")
 
         val result = df.as[Double].collect().max

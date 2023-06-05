@@ -74,7 +74,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
         val generatedRasters = rasterGenerator(inRaster)
 
         val rows = rasterAPI.writeRasters(generatedRasters, checkpointPath, rasterExpr.dataType)
-        generatedRasters.foreach(_.unlink())
+        generatedRasters.foreach(_.cleanUp())
         rows
     }
 

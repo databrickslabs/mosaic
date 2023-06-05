@@ -68,8 +68,6 @@ abstract class RasterExpression[T <: Expression: ClassTag](
     override def nullSafeEval(input: Any): Any = {
         val raster = rasterAPI.readRaster(input, rasterExpr.dataType)
         val result = rasterTransform(raster)
-
-        raster.unlink()
         raster.cleanUp()
         result
     }

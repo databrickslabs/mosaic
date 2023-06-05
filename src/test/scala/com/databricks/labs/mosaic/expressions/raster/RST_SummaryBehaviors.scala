@@ -34,11 +34,11 @@ trait RST_SummaryBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_summary(content) from source
+                                                   |select rst_summary(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_summary($"content"))
+            .withColumn("result", rst_summary($"raster"))
             .select("result")
 
         val result = df.as[String].collect().head.length

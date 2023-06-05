@@ -33,11 +33,11 @@ trait RST_NumBandsBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_numbands(content) from source
+                                                   |select rst_numbands(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_numbands($"content"))
+            .withColumn("result", rst_numbands($"raster"))
             .select("result")
 
         val result = df.as[Int].collect().max

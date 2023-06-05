@@ -34,11 +34,11 @@ trait RST_IsEmptyBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_isempty(content) from source
+                                                   |select rst_isempty(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_isempty($"content"))
+            .withColumn("result", rst_isempty($"raster"))
             .select("result")
 
         val result = df.as[Boolean].collect()
@@ -46,7 +46,7 @@ trait RST_IsEmptyBehaviors extends QueryTest {
         result.head shouldBe false
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_isempty(content, 1, 1) from source
+                                                     |select rst_isempty(raster, 1, 1) from source
                                                      |""".stripMargin)
 
     }

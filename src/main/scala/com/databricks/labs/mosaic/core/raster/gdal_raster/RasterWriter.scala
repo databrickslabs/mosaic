@@ -24,9 +24,4 @@ trait RasterWriter {
      */
     def writeToBytes(): Array[Byte]
 
-    /**
-     * Unlinks the raster file.
-     */
-    def unlink(): Unit
-
 }

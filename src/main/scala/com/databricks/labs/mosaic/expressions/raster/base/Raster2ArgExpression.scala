@@ -86,8 +86,6 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
     override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
         val raster = rasterAPI.readRaster(input, rasterExpr.dataType)
         val result = rasterTransform(raster, arg1, arg2)
-
-        raster.unlink()
         raster.cleanUp()
         result
     }

@@ -38,11 +38,11 @@ trait RST_RasterToGridMinBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_rastertogridmin(content, 3) from source
+                                                   |select rst_rastertogridmin(raster, 3) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_rastertogridmin($"content", lit(3)))
+            .withColumn("result", rst_rastertogridmin($"raster", lit(3)))
             .select("result")
 
         val result = df.as[Double].collect().max

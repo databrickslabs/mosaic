@@ -33,11 +33,11 @@ trait RST_HeightBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_height(content) from source
+                                                   |select rst_height(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_height($"content"))
+            .withColumn("result", rst_height($"raster"))
             .select("result")
 
         val result = df.as[Int].collect()

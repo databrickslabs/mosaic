@@ -34,11 +34,11 @@ trait RST_RotationBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_rotation(content) from source
+                                                   |select rst_rotation(raster) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_rotation($"content"))
+            .withColumn("result", rst_rotation($"raster"))
             .select("result")
 
         val result = df.as[Double].collect().max

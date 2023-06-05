@@ -38,11 +38,11 @@ trait RST_RasterToGridCountBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_rastertogridcount(content, 3) from source
+                                                   |select rst_rastertogridcount(raster, 3) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_rastertogridcount($"content", lit(3)))
+            .withColumn("result", rst_rastertogridcount($"raster", lit(3)))
             .select("result")
 
         val result = df.as[Int].collect().max

@@ -15,6 +15,7 @@ import org.gdal.osr.SpatialReference
 import org.locationtech.proj4j.CRSFactory
 
 import java.nio.file.{Files, Paths}
+import java.util
 import java.util.{Locale, UUID, Vector => JVector}
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util.Try
@@ -159,8 +160,19 @@ class MosaicRasterGDAL(_uuid: Long, raster: Dataset, path: String) extends Mosai
         RasterClipByVector.clip(this, swappedCellGeom, geometryAPI, reproject = true)
     }
 
-    /** Cleans up the raster driver and references. */
-    override def cleanUp(): Unit = {}
+    /**
+      * Cleans up the raster driver and references.
+      *
+      * Unlinks the raster file. After this operation the raster object is no
+      * longer usable. To be used as last step in expression after writing to
+      * bytes.
+      */
+    override def cleanUp(): Unit = {
+        val isInMem = path.startsWith("/vsimem/")
+        if (isInMem) {
+            gdal.Unlink(path)
+        }
+    }
 
     /** @return Returns the amount of memory occupied by the file in bytes. */
     override def getMemSize: Long = writeToBytes().length
@@ -213,16 +225,10 @@ class MosaicRasterGDAL(_uuid: Long, raster: Dataset, path: String) extends Mosai
         extension
     }
 
-    /**
-      * Unlinks the raster file. After this operation the raster object is no
-      * longer usable. To be used as last step in expression after writing to
-      * bytes.
-      */
-    override def unlink(): Unit = {
-        val isInMem = path.startsWith("/vsimem/")
-        if (isInMem) {
-            gdal.Unlink(path)
-        }
+    override def updateMetadata(key: String, uuid: Long): Unit = {
+        val metadata = getRaster.GetMetadata_Dict().asInstanceOf[util.Hashtable[String, String]]
+        metadata.put(key, uuid.toString)
+        getRaster.SetMetadata(metadata)
     }
 
 }
@@ -276,6 +282,8 @@ object MosaicRasterGDAL extends RasterReader {
             // Handle empty rasters, easy check to -1L as UUID for empty rasters
             new MosaicRasterGDAL(-1L, null, "")
         } else {
+            // This is a temp UUID for purposes of reading the raster through GDAL from memory
+            // The stable UUID is kept in metadata of the raster
             val uuid = Murmur3.hash64(UUID.randomUUID().toString.getBytes())
             val extension = "tif"
             val virtualPath = s"/vsimem/$uuid.$extension"
