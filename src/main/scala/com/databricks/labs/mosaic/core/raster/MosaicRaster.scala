@@ -22,8 +22,6 @@ abstract class MosaicRaster(
 ) extends Serializable
       with RasterWriter {
 
-    def updateMetadata(str: String, uuid: Long): Unit
-
     def uuid: Long
 
     def getExtension: String

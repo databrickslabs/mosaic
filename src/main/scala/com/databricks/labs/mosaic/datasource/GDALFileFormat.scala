@@ -107,14 +107,13 @@ class GDALFileFormat extends BinaryFileFormat {
                       status.getLen.toString.getBytes("UTF-8") ++
                       status.getModificationTime.toString.getBytes("UTF-8")
                 )
-                raster.updateMetadata("Mosaic_UUID", uuid)
 
                 requiredSchema.fieldNames.foreach {
                     case PATH              => fields = fields :+ status.getPath.toString
                     case LENGTH            => fields = fields :+ status.getLen
                     case MODIFICATION_TIME => fields = fields :+ DateTimeUtils.millisToMicros(status.getModificationTime)
                     case RASTER            => if (isInMem) fields = fields :+ contentBytes else fields = fields :+ status.getPath.toString
-                    case UUID              => fields = fields :+ raster.uuid
+                    case UUID              => fields = fields :+ uuid
                     case X_SIZE            => fields = fields :+ raster.xSize
                     case Y_SIZE            => fields = fields :+ raster.ySize
                     case BAND_COUNT        => fields = fields :+ raster.numBands

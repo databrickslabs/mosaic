@@ -225,12 +225,6 @@ class MosaicRasterGDAL(_uuid: Long, raster: Dataset, path: String) extends Mosai
         extension
     }
 
-    override def updateMetadata(key: String, uuid: Long): Unit = {
-        val metadata = getRaster.GetMetadata_Dict().asInstanceOf[util.Hashtable[String, String]]
-        metadata.put(key, uuid.toString)
-        getRaster.SetMetadata(metadata)
-    }
-
 }
 
 //noinspection ZeroIndexToHead
