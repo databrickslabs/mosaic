@@ -63,22 +63,22 @@ The mechanism for enabling the Mosaic functions varies by language:
 .. tabs::
    .. code-tab:: py
 
-    >>> from mosaic import enable_mosaic
-    >>> enable_mosaic(spark, dbutils)
+    from mosaic import enable_mosaic
+    enable_mosaic(spark, dbutils)
 
    .. code-tab:: scala
 
-    >>> import com.databricks.labs.mosaic.functions.MosaicContext
-    >>> import com.databricks.labs.mosaic.H3
-    >>> import com.databricks.labs.mosaic.ESRI
-    >>>
-    >>> val mosaicContext = MosaicContext.build(H3, ESRI)
-    >>> import mosaicContext.functions._
+    import com.databricks.labs.mosaic.functions.MosaicContext
+    import com.databricks.labs.mosaic.H3
+    import com.databricks.labs.mosaic.ESRI
+
+    val mosaicContext = MosaicContext.build(H3, ESRI)
+    import mosaicContext.functions._
 
    .. code-tab:: r R
 
-    >>> library(sparkrMosaic)
-    >>> enableMosaic()
+    library(sparkrMosaic)
+    enableMosaic()
 
 
 SQL usage

@@ -27,9 +27,10 @@ mosaic library and place them in the /dbfs/FileStore/geospatial/mosaic/gdal/ dir
 
 .. code-block:: py
 
-    >>> import mosaic as mos
-    >>> mos.enable_mosaic(spark, dbutils)
-    >>> mos.setup_gdal(spark)
+    import mosaic as mos
+
+    mos.enable_mosaic(spark, dbutils)
+    mos.setup_gdal(spark)
     GDAL setup complete.
     Shared objects (*.so) stored in: /dbfs/FileStore/geospatial/mosaic/gdal/.
     Init script stored in: /dbfs/FileStore/geospatial/mosaic/gdal/.
@@ -53,8 +54,9 @@ code at the top of the notebook:
 
 .. code-block:: py
 
-    >>> import mosaic as mos
-    >>> mos.enable_mosaic(spark, dbutils)
-    >>> mos.enable_gdal(spark)
+    import mosaic as mos
+
+    mos.enable_mosaic(spark, dbutils)
+    mos.enable_gdal(spark)
     GDAL enabled.
     GDAL 3.4.3, released 2022/04/22
