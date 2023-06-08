@@ -1,6 +1,6 @@
 # Open Street Maps processing with Delta Live Tables
 
-This is an example of how to ingest and process Open Street Maps using Databricks Delta Live Tablas and Mosaic.
+This is an example of how to ingest and process Open Street Maps using Databricks Delta Live Tables and Mosaic.
 
 The aim is to ingest and process OSM data and form the medallion layers of our delta lake following the best practices. Then used these tables to identify the density of residential buildings, hospitals and train stations across Italy as an example of the new insights this capability unlocks.
 

@@ -58,7 +58,7 @@ For more information on the CRS you can visit `EPSG:27700 <https://epsg.io/27700
 
 If your data in is not provided in EPSG:27700 we would recommend to either switch the indexing strategy to H3
 or to reproject the data from source CRS to EPSG:27700. Mosaic provides the functionality to set CRS ID
-even for geometries that arive as WKT and WKB (the formats do not capture the CRS information and this information
+even for geometries that arrive as WKT and WKB (the formats do not capture the CRS information and this information
 has to be set manually).
 
 .. tabs::
@@ -82,7 +82,7 @@ has to be set manually).
     df <- withColumn(df, "geometry", mos.st_transform(df$geometry, 27700))
 
 Mosaic provides functionality to verify provided geometries have all of their vertices within bounds of the
-specified CRS. If the CRS isnt EPSG:4326 then the functionality allows to prefer checks on the coordinates
+specified CRS. If the CRS isn't EPSG:4326 then the functionality allows to prefer checks on the coordinates
 before and/or after reprojection. This allows the end users to filter out geometries that would not be
 possible to index with BNG.
 
