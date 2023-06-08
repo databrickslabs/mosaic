@@ -72,6 +72,7 @@ Documentation
    api/api
    usage/usage
    models/models
+   literature/videos
 
 
 Indices and tables
