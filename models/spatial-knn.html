@@ -111,7 +111,7 @@ neighbour problem is a set of geometries from the candidates set C that are clos
 set of landmarks L. This in effect formulates a join condition where a point pair (L[i], C[j]) is a match if
 st_distance(L[i], C[j]) &lt;= st_distance(L[i], C[k]) where C[k] is the kth nearest neighbour of L[i].</p>
 <p>The above definition of k nearest neighbour problem is in effect a left join between the set of landmarks L and the set of
-candidates C. The result set isnt symmetric and it does depend on the direction of operation. If S[j] is in the knn set of Q[i]
+candidates C. The result set isn’t symmetric and it does depend on the direction of operation. If S[j] is in the knn set of Q[i]
 it does not imply that Q[i] is in the knn set of S[j]. This join would default to a Cartesian product if we were to
 use the traditional join syntax. We have to use a different approach.</p>
 </div>
@@ -158,7 +158,7 @@ This is useful as a a safety net for coarse grained indexResolution choices whic
 <p>If the approximate is set to true the transformer wont perform the finalisation step.
 The finalisation takes into account that grid index cells may be skewed at different
 locations and we cant ensure radial growth between iterations. That means that some
-of the neighbours in returned K set arent nearest neighbours. The finalisation step
+of the neighbours in returned K set aren’t nearest neighbours. The finalisation step
 will take the distance between the neighbours and the target geometry and will generate
 a buffered geometry around the target geometry. The buffered geometry will be used to
 identify missed neighbours. The missed neighbours will be added to the K set and the
