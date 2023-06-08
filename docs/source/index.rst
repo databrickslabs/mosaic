@@ -7,8 +7,7 @@
    :alt: mosaic
    :class: mosaic-logo
 
-.. raw:: html
-    </br>
+
 .. container:: package_health
 
     .. image:: https://badge.fury.io/py/databricks-mosaic.svg
@@ -38,8 +37,7 @@
        :target: https://github.com/psf/black
        :alt: Code style: black
 
-.. raw:: html
-    </br>
+
 
 Mosaic is an extension to the `Apache Spark <https://spark.apache.org/>`_ framework that allows easy and fast processing of very large geospatial datasets.
 
