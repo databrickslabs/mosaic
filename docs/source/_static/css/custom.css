@@ -20,3 +20,34 @@
     flex-wrap: wrap;
     justify-content: center;
 }
+
+.mosaic-logo {
+    display: block;
+    margin-left: 10%;
+    margin-right: 10%;
+    margin-bottom: 2%;
+    width: 80%;
+}
+
+.wy-nav-content {
+    max-width: 70% !important;
+}
+
+.icon-home .logo {
+    filter: invert(66%) sepia(76%) saturate(752%) hue-rotate(317deg) brightness(95%) contrast(94%);
+}
+
+.package-health {
+    margin-bottom: 2%;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+li {
+    list-style: disc;
+}
+
+.output_area img {
+    height: 20px;
+}
