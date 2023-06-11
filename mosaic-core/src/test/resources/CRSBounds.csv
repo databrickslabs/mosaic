@@ -1,0 +1,2 @@
+name,bound_xmin,bound_ymin,bound_xmax,bound_ymax,reprojected_bound_xmin,reprojected_bound_ymin,reprojected_bound_xmax,reprojected_bound_ymax
+EPSG:4326: WGS 84,-180.0000,-90.0000,180.0000,90.0000,-180.0000,-90.0000,180.0000,90.0000
