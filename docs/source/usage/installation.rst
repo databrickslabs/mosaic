@@ -6,6 +6,14 @@ Supported platforms
 ###################
 In order to use Mosaic, you must have access to a Databricks cluster running
 Databricks Runtime 10.0 or higher (11.2 with photon or later is recommended).
+
+.. warning::
+    From version 0.4.x, Mosaic will require either
+     * Databricks Runtime 11.2+ with Photon enabled
+     * Databricks Runtime for ML 11.2+
+
+    Other Databricks Runtime versions will not be supported anymore.
+
 If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
 `here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
@@ -55,22 +63,22 @@ The mechanism for enabling the Mosaic functions varies by language:
 .. tabs::
    .. code-tab:: py
 
-    >>> from mosaic import enable_mosaic
-    >>> enable_mosaic(spark, dbutils)
+    from mosaic import enable_mosaic
+    enable_mosaic(spark, dbutils)
 
    .. code-tab:: scala
 
-    >>> import com.databricks.labs.mosaic.functions.MosaicContext
-    >>> import com.databricks.labs.mosaic.H3
-    >>> import com.databricks.labs.mosaic.ESRI
-    >>>
-    >>> val mosaicContext = MosaicContext.build(H3, ESRI)
-    >>> import mosaicContext.functions._
+    import com.databricks.labs.mosaic.functions.MosaicContext
+    import com.databricks.labs.mosaic.H3
+    import com.databricks.labs.mosaic.ESRI
+
+    val mosaicContext = MosaicContext.build(H3, ESRI)
+    import mosaicContext.functions._
 
    .. code-tab:: r R
 
-    >>> library(sparkrMosaic)
-    >>> enableMosaic()
+    library(sparkrMosaic)
+    enableMosaic()
 
 
 SQL usage

@@ -6,7 +6,6 @@ import org.gdal.gdal.gdal
 
 import java.io.{BufferedInputStream, File, PrintWriter}
 import java.nio.file.{Files, Paths}
-import scala.io.Source
 import scala.language.postfixOps
 import scala.sys.process._
 import scala.util.Try
@@ -105,10 +104,10 @@ object MosaicGDAL extends Logging {
         finally bis.close()
     }
 
+    //noinspection SameParameterValue
     private def readResourceLines(name: String): Array[String] = {
-        val source = Source.fromFile(getClass.getResource(name).getPath)
-        val lines = source.getLines.toArray
-        source.close()
+        val bytes = readResourceBytes(name)
+        val lines = new String(bytes).split("\n")
         lines
     }
 

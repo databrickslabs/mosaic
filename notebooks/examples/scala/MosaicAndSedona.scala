@@ -4,7 +4,7 @@
 // MAGIC 
 // MAGIC You can combine the usage of Mosaic with other geospatial libraries. 
 // MAGIC 
-// MAGIC In this example we combine the use of [Sedona](https://sedona.apache.org/setup/databricks/) and Mosaic.
+// MAGIC In this example we combine the use of [Sedona](https://sedona.apache.org) and Mosaic.
 // MAGIC 
 // MAGIC ## Setup
 // MAGIC 
@@ -12,7 +12,7 @@
 // MAGIC 
 // MAGIC ### Install sedona
 // MAGIC 
-// MAGIC To install Sedona, follow the [official Sedona instructions](https://sedona.apache.org/setup/databricks/).
+// MAGIC To install Sedona, follow the [official Sedona instructions](https://sedona.apache.org/1.4.0/setup/databricks).
 
 // COMMAND ----------
 
