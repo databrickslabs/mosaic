@@ -5,35 +5,35 @@
 
 # MAGIC %md
 # MAGIC # Process Open Street Maps data
-# MAGIC 
+# MAGIC
 # MAGIC This notebook creates a [Delta Live Table](https://databricks.com/product/delta-live-tables) data pipeline that processes the OSM data ingested by the [0_Download](./0_Download) notebook.
-# MAGIC 
+# MAGIC
 # MAGIC ![Process pipeline](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/1_Process.png)
-# MAGIC 
+# MAGIC
 # MAGIC ## Setup
-# MAGIC 
+# MAGIC
 # MAGIC Go to `Workflows` -> `Delta Live Tables` -> `Create pipeline`
-# MAGIC 
+# MAGIC
 # MAGIC ![create pipeline](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/1_CreatePipelineDLT.png)
-# MAGIC 
+# MAGIC
 # MAGIC * Select this notebook in the Notebook libraries
 # MAGIC * Set the Target database name to `open_street_maps`
 # MAGIC * Set the Pipeline mode to Triggered
 # MAGIC * Set your desired cluster settings 
 # MAGIC * Create the pipeline
 # MAGIC * Run the pipeline
-# MAGIC 
+# MAGIC
 # MAGIC Delta live tables will run the data transformations defined in this notebook and populate the tables in the target database.
-# MAGIC 
+# MAGIC
 # MAGIC ![Pipeline](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/1_Pipeline.png)
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Mosaic
-# MAGIC 
+# MAGIC
 # MAGIC This workflow is using [Mosaic](https://github.com/databrickslabs/mosaic) to process the geospatial data.
-# MAGIC 
+# MAGIC
 # MAGIC You can check out the documentation [here](https://databrickslabs.github.io/mosaic/).
 
 # COMMAND ----------
@@ -247,6 +247,13 @@ def buildings_indexed():
       .withColumn("centroid_index_res_6", mos.grid_pointascellid("centroid", f.lit(6)))
       .withColumn("centroid_index_res_7", mos.grid_pointascellid("centroid", f.lit(7)))
       .withColumn("centroid_index_res_8", mos.grid_pointascellid("centroid", f.lit(8)))
+      .withColumn("centroid_index_res_9", mos.grid_pointascellid("centroid", f.lit(9)))
+      .withColumn("centroid_index_res_10", mos.grid_pointascellid("centroid", f.lit(10)))
+      .withColumn("centroid_index_res_11", mos.grid_pointascellid("centroid", f.lit(11)))
+      .withColumn("centroid_index_res_12", mos.grid_pointascellid("centroid", f.lit(12)))
+      .withColumn("centroid_index_res_13", mos.grid_pointascellid("centroid", f.lit(13)))
+      .withColumn("centroid_index_res_14", mos.grid_pointascellid("centroid", f.lit(14)))
+      .withColumn("centroid_index_res_15", mos.grid_pointascellid("centroid", f.lit(15)))
   )
 
 # COMMAND ----------
@@ -282,4 +289,55 @@ def train_station_buildings():
   return (
     dlt.read("buildings_indexed")
       .filter(f.col("building").isin(["train_station"]))
+  )
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Highways
+
+# COMMAND ----------
+
+def get_highways():
+  
+  highway_tags = (dlt.read("ways")
+      .select(
+        f.col("_id").alias("id"),
+        f.explode_outer("tag")
+       )
+       .select(f.col("id"), f.col("col._k").alias("key"), f.col("col._v").alias("value"))
+       .filter(f.col("key") == "highway")
+  )
+      
+  return (
+    dlt.read("lines")
+      .join(highway_tags, "id")
+      .withColumnRenamed("value", "highway")
+
+      .drop("key")
+     )
+  
+  
+@dlt.table()
+def highways():
+  fields = ["id", "highway", "line"]
+  return get_highways().select(fields)
+  
+  
+@dlt.table()
+def highways_indexed():
+  return (
+    dlt.read("highways")
+      .withColumn("centroid", mos.st_centroid("line"))
+      .withColumn("centroid_index_res_5", mos.grid_pointascellid("centroid", f.lit(5)))
+      .withColumn("centroid_index_res_6", mos.grid_pointascellid("centroid", f.lit(6)))
+      .withColumn("centroid_index_res_7", mos.grid_pointascellid("centroid", f.lit(7)))
+      .withColumn("centroid_index_res_8", mos.grid_pointascellid("centroid", f.lit(8)))
+      .withColumn("centroid_index_res_9", mos.grid_pointascellid("centroid", f.lit(9)))
+      .withColumn("centroid_index_res_10", mos.grid_pointascellid("centroid", f.lit(10)))
+      .withColumn("centroid_index_res_11", mos.grid_pointascellid("centroid", f.lit(11)))
+      .withColumn("centroid_index_res_12", mos.grid_pointascellid("centroid", f.lit(12)))
+      .withColumn("centroid_index_res_13", mos.grid_pointascellid("centroid", f.lit(13)))
+      .withColumn("centroid_index_res_14", mos.grid_pointascellid("centroid", f.lit(14)))
+      .withColumn("centroid_index_res_15", mos.grid_pointascellid("centroid", f.lit(15)))
   )
