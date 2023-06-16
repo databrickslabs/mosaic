@@ -11,7 +11,7 @@ class ConvertToCodegenMockTest extends AnyFunSuite with MockFactory {
     test("ConvertTo Expression from GEOJSON to Unsupported format should throw an exception") {
         val ctx = stub[CodegenContext]
         val api = stub[GeometryAPI]
-        api.name _ when () returns "ESRI"
+        api.name _ when () returns "JTS"
 
         assertThrows[Error] {
             ConvertToCodeGen writeGeometryCode (ctx, "", "unsupported", api)
