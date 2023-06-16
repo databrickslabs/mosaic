@@ -70,9 +70,9 @@ The mechanism for enabling the Mosaic functions varies by language:
 
     import com.databricks.labs.mosaic.functions.MosaicContext
     import com.databricks.labs.mosaic.H3
-    import com.databricks.labs.mosaic.ESRI
+    import com.databricks.labs.mosaic.JTS
 
-    val mosaicContext = MosaicContext.build(H3, ESRI)
+    val mosaicContext = MosaicContext.build(H3, JTS)
     import mosaicContext.functions._
 
    .. code-tab:: r R
@@ -90,8 +90,8 @@ register the Mosaic SQL functions in your SparkSession from a Scala notebook cel
 
     import com.databricks.labs.mosaic.functions.MosaicContext
     import com.databricks.labs.mosaic.H3
-    import com.databricks.labs.mosaic.ESRI
+    import com.databricks.labs.mosaic.JTS
 
-    val mosaicContext = MosaicContext.build(H3, ESRI)
+    val mosaicContext = MosaicContext.build(H3, JTS)
     mosaicContext.register(spark)
 
