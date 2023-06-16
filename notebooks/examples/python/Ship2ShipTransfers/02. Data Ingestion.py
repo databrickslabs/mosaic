@@ -11,7 +11,7 @@
 from pyspark.sql.functions import *
 import mosaic as mos
 
-spark.conf.set("spark.databricks.labs.mosaic.geometry.api", "ESRI")
+spark.conf.set("spark.databricks.labs.mosaic.geometry.api", "JTS")
 spark.conf.set("spark.databricks.labs.mosaic.index.system", "H3")
 mos.enable_mosaic(spark, dbutils)
 

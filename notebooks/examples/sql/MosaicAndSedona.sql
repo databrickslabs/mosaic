@@ -34,9 +34,9 @@
 -- MAGIC // Import Mosaic functions
 -- MAGIC import com.databricks.labs.mosaic.functions.MosaicContext
 -- MAGIC import com.databricks.labs.mosaic.H3
--- MAGIC import com.databricks.labs.mosaic.ESRI
+-- MAGIC import com.databricks.labs.mosaic.JTS
 -- MAGIC 
--- MAGIC val mosaicContext = MosaicContext.build(H3, ESRI)
+-- MAGIC val mosaicContext = MosaicContext.build(H3, JTS)
 -- MAGIC import mosaicContext.functions._
 -- MAGIC import org.apache.spark.sql.functions._
 

@@ -21,8 +21,8 @@ Mosaic was created to simplify the implementation of scalable geospatial data pi
 Mosaic provides geospatial tools for
 * Data ingestion (WKT, WKB, GeoJSON)
 * Data processing
-    * Geometry and geography `ST_` operations (with [ESRI](https://github.com/Esri/geometry-api-java) or [JTS](https://github.com/locationtech/jts)) 
-    * Indexing (with [H3](https://github.com/uber/h3) or BNG)
+    * Geometry and geography `ST_` operations (with default [JTS](https://github.com/locationtech/jts) or [ESRI](https://github.com/Esri/geometry-api-java)) 
+    * Indexing (with default [H3](https://github.com/uber/h3) or BNG)
     * Chipping of polygons and lines over an indexing grid [co-developed with Ordnance Survey and Microsoft](https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html)
 * Data visualization ([Kepler](https://github.com/keplergl/kepler.gl))
 
@@ -81,9 +81,9 @@ Then enable it with
 ```scala
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.H3
-import com.databricks.labs.mosaic.ESRI
+import com.databricks.labs.mosaic.JTS
 
-val mosaicContext = MosaicContext.build(H3, ESRI)
+val mosaicContext = MosaicContext.build(H3, JTS)
 import mosaicContext.functions._
 ```
 
@@ -109,9 +109,9 @@ Configure the [Automatic SQL Registration](https://databrickslabs.github.io/mosa
 %scala
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.H3
-import com.databricks.labs.mosaic.ESRI
+import com.databricks.labs.mosaic.JTS
 
-val mosaicContext = MosaicContext.build(H3, ESRI)
+val mosaicContext = MosaicContext.build(H3, JTS)
 mosaicContext.register(spark)
 ```
 

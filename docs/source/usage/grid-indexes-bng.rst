@@ -34,15 +34,15 @@ configurations. Spark provides an easy way to supply configuration parameters us
    .. code-tab:: scala
 
     import com.databricks.labs.mosaic.functions.MosaicContext
-    import com.databricks.labs.mosaic.{BNG, ESRI}
+    import com.databricks.labs.mosaic.{BNG, JTS}
 
-    val mosaicContext = MosaicContext.build(BNG, ESRI)
+    val mosaicContext = MosaicContext.build(BNG, JTS)
     import mosaicContext.functions._
 
    .. code-tab:: r R
 
     library(sparkrMosaic)
-    enableMosaic("ESRI", "BNG")
+    enableMosaic("JTS", "BNG")
 
    .. code-tab:: sql
 

@@ -487,7 +487,7 @@ def st_isvalid(geom: ColumnOrName) -> Column:
     Notes
     -----
     Validity assertions will be dependent on the chosen geometry API.
-    The assertions used in the ESRI geometry API (the default) follow the definitions in
+    The assertions used in the ESRI geometry API (JTS is the default) follow the definitions in
     the “Simple feature access - Part 1” document (OGC 06-103r4) for each geometry type.
 
     """
