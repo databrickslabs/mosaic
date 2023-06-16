@@ -2,7 +2,7 @@
 #' 
 #' @description enableMosaic activates the context dependent Databricks Mosaic functions, giving control over the geometry API and index system used.
 #' See \url{https://databrickslabs.github.io/mosaic/} for full documentation
-#' @param geometryAPI character, default="ESRI"
+#' @param geometryAPI character, default="JTS"
 #' @param indexSystem character, default="H3"
 #' @param indexSystem boolean, default=F
 #' @name enableMosaic
@@ -12,10 +12,10 @@
 #' @examples
 #' \dontrun{
 #' enableMosaic()
-#' enableMosaic("ESRI", "H3")
-#' enableMosaic("ESRI", "BNG") }
+#' enableMosaic("JTS", "H3")
+#' enableMosaic("JTS", "BNG") }
 enableMosaic <- function(
-  geometryAPI="ESRI"
+  geometryAPI="JTS"
   ,indexSystem="H3"
   ,rasterAPI="GDAL"
 ){
