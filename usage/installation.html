@@ -89,8 +89,6 @@
 <h1>Installation guide<a class="headerlink" href="#installation-guide" title="Permalink to this headline"></a></h1>
 <div class="section" id="supported-platforms">
 <h2>Supported platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this headline"></a></h2>
-<p>In order to use Mosaic, you must have access to a Databricks cluster running
-Databricks Runtime 10.0 or higher (11.2 with photon or later is recommended).</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <dl class="simple">
@@ -100,8 +98,20 @@ Databricks Runtime 10.0 or higher (11.2 with photon or later is recommended).</p
 </ul>
 </dd>
 </dl>
-<p>Other Databricks Runtime versions will not be supported anymore.</p>
+<p>Mosaic 0.3.x series does not support DBR 13.x (coming soon with Mosaic 0.4.x series);
+also, DBR 10 is no longer supported in Mosaic.</p>
 </div>
+<p>We recommend using Databricks Runtime versions 11.3 LTS or 12.2 LTS with Photon enabled;
+this will leverage the Databricks h3 expressions when using H3 grid system.
+As of the 0.3.11 release, Mosaic issues the following warning when initialized on a cluster
+that is neither Photon Runtime nor Databricks Runtime ML [<a class="reference external" href="https://learn.microsoft.com/en-us/azure/databricks/runtime/">ADB</a> | <a class="reference external" href="https://docs.databricks.com/runtime/index.html">AWS</a> | <a class="reference external" href="https://docs.gcp.databricks.com/runtime/index.html">GCP</a>]:</p>
+<blockquote>
+<div><p>DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime. Mosaic will stop working on this cluster from version v0.4.0+. Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).</p>
+</div></blockquote>
+<p>If you are receiving this warning in v0.3.11+, you will want to change to a supported runtime prior
+to updating Mosaic to run 0.4.0. The reason we are making this change is that we are streamlining Mosaic
+internals to be more aligned with future product APIs which are powered by Photon. Along this direction
+of change, Mosaic will be standardizing to JTS as its default and supported Vector Geometry Provider.</p>
 <p>If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
 <a class="reference external" href="https://docs.databricks.com/clusters/create.html#use-the-cluster-ui">here</a>.</p>
