@@ -87,14 +87,17 @@
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <dl class="simple">
-<dt>From version 0.4.x, Mosaic will require either</dt><dd><ul class="simple">
+<dt>From version 0.4.0, Mosaic will require either</dt><dd><ul class="simple">
 <li><p>Databricks Runtime 11.2+ with Photon enabled</p></li>
 <li><p>Databricks Runtime for ML 11.2+</p></li>
 </ul>
 </dd>
 </dl>
-<p>Other Databricks Runtime versions will not be supported anymore.</p>
+<p>Mosaic 0.3 series does not support DBR 13 (coming soon with Mosaic 0.4 series);
+also, DBR 10 is no longer supported in Mosaic.</p>
 </div>
+<p>We recommend using Databricks Runtime versions 11.3 LTS or 12.2 LTS with Photon enabled;
+this will leverage the Databricks H3 expressions when using H3 grid system.</p>
 <dl class="simple">
 <dt>Mosaic provides:</dt><dd><ul class="simple">
 <li><p>easy conversion between common spatial data encodings (WKT, WKB and GeoJSON);</p></li>
