@@ -6,15 +6,15 @@ Supported platforms
 ###################
 
 .. warning::
-    From version 0.4.x, Mosaic will require either
+    From version 0.4.0, Mosaic will require either
      * Databricks Runtime 11.2+ with Photon enabled
      * Databricks Runtime for ML 11.2+
     
-    Mosaic 0.3.x series does not support DBR 13.x (coming soon with Mosaic 0.4.x series); 
+    Mosaic 0.3 series does not support DBR 13 (coming soon with Mosaic 0.4 series); 
     also, DBR 10 is no longer supported in Mosaic. 
 
 We recommend using Databricks Runtime versions 11.3 LTS or 12.2 LTS with Photon enabled; 
-this will leverage the Databricks h3 expressions when using H3 grid system. 
+this will leverage the Databricks H3 expressions when using H3 grid system.  
 As of the 0.3.11 release, Mosaic issues the following warning when initialized on a cluster
 that is neither Photon Runtime nor Databricks Runtime ML [`ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`__ | `AWS <https://docs.databricks.com/runtime/index.html>`__ | `GCP <https://docs.gcp.databricks.com/runtime/index.html>`__]:
 
