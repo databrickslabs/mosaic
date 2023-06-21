@@ -43,9 +43,9 @@ Image1: Mosaic logical design.
 ## Getting started
 
 We recommend using Databricks Runtime versions 11.3 LTS or 12.2 LTS with Photon enabled; this will leverage the 
-Databricks h3 expressions when using H3 grid system. 
+Databricks H3 expressions when using H3 grid system. 
 
-:warning: **Mosaic 0.3.x series does not support DBR 13.x** (coming soon with Mosaic 0.4.x series); also, DBR 10 is no longer supported in Mosaic. 
+:warning: **Mosaic 0.3 series does not support DBR 13** (coming soon with Mosaic 0.4 series); also, DBR 10 is no longer supported in Mosaic. 
 
 As of the 0.3.11 release, Mosaic issues the following warning when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML [[ADB](https://learn.microsoft.com/en-us/azure/databricks/runtime/) | [AWS](https://docs.databricks.com/runtime/index.html) | [GCP](https://docs.gcp.databricks.com/runtime/index.html)]:
 
