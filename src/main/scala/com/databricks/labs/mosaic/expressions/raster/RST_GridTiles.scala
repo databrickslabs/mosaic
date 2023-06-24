@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -60,6 +61,7 @@ case class RST_GridTiles(
             .map(_.indexAsLong(indexSystem))
 
         val rasters = cells.map(cellID => raster.getRasterForCell(cellID, indexSystem, geometryAPI))
+        RasterCleaner.dispose(raster)
 
         rasters
     }
@@ -71,7 +73,14 @@ case class RST_GridTiles(
         val raster = rasterAPI.readRaster(rasterExpr.eval(input), rasterExpr.dataType)
         val tiles = rasterGenerator(raster, resolution)
 
-        rasterAPI.writeRasters(tiles, checkpointPath, rasterExpr.dataType)
+        val result = rasterAPI
+            .writeRasters(tiles, checkpointPath, rasterExpr.dataType)
+            .map(row => InternalRow.fromSeq(Seq(row)))
+
+        RasterCleaner.dispose(raster)
+        tiles.foreach(RasterCleaner.dispose)
+
+        result
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, resolutionExpr)

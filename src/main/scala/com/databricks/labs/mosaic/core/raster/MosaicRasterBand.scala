@@ -6,6 +6,10 @@ package com.databricks.labs.mosaic.core.raster
   */
 trait MosaicRasterBand extends Serializable {
 
+    def isNoDataMask: Boolean
+
+    def maskFlags: Seq[Any]
+
     /** @return Returns the bandId of the band. */
     def index: Int
 

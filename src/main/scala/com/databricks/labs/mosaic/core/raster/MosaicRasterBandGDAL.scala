@@ -157,4 +157,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
         }
     }
 
+    override def maskFlags: Seq[Any] = Seq(band.GetMaskFlags())
+
+    override def isNoDataMask: Boolean = band.GetMaskFlags() == gdalconstConstants.GMF_NODATA
 }

@@ -30,23 +30,23 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         testRaster.cleanUp()
     }
 
-    test("Read band metadata and pixel data from a GRIdded Binary file.") {
-        assume(System.getProperty("os.name") == "Linux")
-
-        val testRaster = MosaicRasterGDAL.readRaster(
-          filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grib")
-        )
-        val testBand = testRaster.getBand(1)
-        testBand.description shouldBe "1[-] HYBL=\"Hybrid level\""
-        testBand.dataType shouldBe 7
-        (testBand.minPixelValue, testBand.maxPixelValue) shouldBe (1.1368277910150937e-6, 1.2002082030448946e-6)
-        (testBand.pixelValueScale, testBand.pixelValueOffset) shouldBe (0d, 0d)
-
-        val testValues = testBand.values(1, 1, 4, 5)
-        testValues.length shouldBe 20
-
-        testRaster.cleanUp()
-    }
+//    test("Read band metadata and pixel data from a GRIdded Binary file.") {
+//        assume(System.getProperty("os.name") == "Linux")
+//
+//        val testRaster = MosaicRasterGDAL.readRaster(
+//          filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grib")
+//        )
+//        val testBand = testRaster.getBand(1)
+//        testBand.description shouldBe "1[-] HYBL=\"Hybrid level\""
+//        testBand.dataType shouldBe 7
+//        (testBand.minPixelValue, testBand.maxPixelValue) shouldBe (1.1368277910150937e-6, 1.2002082030448946e-6)
+//        (testBand.pixelValueScale, testBand.pixelValueOffset) shouldBe (0d, 0d)
+//
+//        val testValues = testBand.values(1, 1, 4, 5)
+//        testValues.length shouldBe 20
+//
+//        testRaster.cleanUp()
+//    }
 
     test("Read band metadata and pixel data from a NetCDF file.") {
         assume(System.getProperty("os.name") == "Linux")

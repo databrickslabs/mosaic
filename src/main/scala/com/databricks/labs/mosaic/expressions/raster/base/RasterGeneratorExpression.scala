@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -74,8 +75,10 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
         val generatedRasters = rasterGenerator(inRaster)
 
         val rows = rasterAPI.writeRasters(generatedRasters, checkpointPath, rasterExpr.dataType)
-        generatedRasters.foreach(_.cleanUp())
-        rows
+        RasterCleaner.dispose(inRaster)
+        generatedRasters.foreach(RasterCleaner.dispose)
+
+        rows.map(row => InternalRow.fromSeq(Seq(row)))
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =

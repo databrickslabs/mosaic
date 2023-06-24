@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -16,7 +17,7 @@ case class RST_RasterToWorldCoord(
     x: Expression,
     y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_RasterToWorldCoord](raster, x, y, StringType, expressionConfig)
+) extends Raster2ArgExpression[RST_RasterToWorldCoord](raster, x, y, StringType, returnsRaster = false, expressionConfig = expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -34,7 +35,9 @@ case class RST_RasterToWorldCoord(
 
         val geometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
         val point = geometryAPI.fromCoords(Seq(xGeo, yGeo))
-        geometryAPI.serialize(point, StringType)
+        val result = geometryAPI.serialize(point, StringType)
+        RasterCleaner.dispose(raster)
+        result
     }
 
 }

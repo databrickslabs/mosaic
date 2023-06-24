@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -15,7 +16,7 @@ case class RST_WorldToRasterCoordY(
     x: Expression,
     y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_WorldToRasterCoordY](raster, x, y, IntegerType, expressionConfig)
+) extends Raster2ArgExpression[RST_WorldToRasterCoordY](raster, x, y, IntegerType, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -26,7 +27,9 @@ case class RST_WorldToRasterCoordY(
     override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
         val xGeo = arg1.asInstanceOf[Double]
         val gt = raster.getRaster.GetGeoTransform()
-        rasterAPI.fromWorldCoord(gt, xGeo, 0)._2
+        val result = rasterAPI.fromWorldCoord(gt, xGeo, 0)._2
+        RasterCleaner.dispose(raster)
+        result
     }
 
 }

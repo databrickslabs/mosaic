@@ -36,6 +36,7 @@ __all__ = [
     "rst_srid",
     "rst_subdatasets",
     "rst_summary",
+    "rst_tessellate",
     "rst_upperleftx",
     "rst_upperlefty",
     "rst_width",
@@ -609,6 +610,32 @@ def rst_summary(raster: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
         "rst_summary",
         pyspark_to_java_column(raster)
+    )
+
+def rst_tessellate(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
+    """
+    Computes the summary of the raster.
+    The summary is a map of the statistics of the raster.
+    The logic is produced by gdalinfo procedure.
+    The result is stored as JSON.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    resolution : Column (IntegerType)
+        The resolution of the tiles.
+
+    Returns
+    -------
+    Column (RasterTiles)
+        A struct containing the tiles of the raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_tessellate",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(resolution)
     )
 
 def rst_upperleftx(raster: ColumnOrName) -> Column:

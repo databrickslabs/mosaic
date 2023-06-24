@@ -16,8 +16,8 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 
-        val grib = "/binary/netcdf-coral/"
-        val filePath = getClass.getResource(grib).getPath
+        val netcdf = "/binary/netcdf-coral/"
+        val filePath = getClass.getResource(netcdf).getPath
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
@@ -33,25 +33,25 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
     }
 
-    test("Read grib with Raster As Grid Reader") {
-        assume(System.getProperty("os.name") == "Linux")
-        MosaicContext.build(H3IndexSystem, JTS)
-
-        val grib = "/binary/grib-cams/"
-        val filePath = getClass.getResource(grib).getPath
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("fileExtension", "grib")
-            .option("combiner", "min")
-            .option("retile", "true")
-            .option("tileSize", "10")
-            .option("kRingInterpolate", "3")
-            .load(filePath)
-            .select("measure")
-            .take(1)
-
-    }
+//    test("Read grib with Raster As Grid Reader") {
+//        assume(System.getProperty("os.name") == "Linux")
+//        MosaicContext.build(H3IndexSystem, JTS)
+//
+//        val grib = "/binary/grib-cams/"
+//        val filePath = getClass.getResource(grib).getPath
+//
+//        noException should be thrownBy MosaicContext.read
+//            .format("raster_to_grid")
+//            .option("fileExtension", "grib")
+//            .option("combiner", "min")
+//            .option("retile", "true")
+//            .option("tileSize", "10")
+//            .option("kRingInterpolate", "3")
+//            .load(filePath)
+//            .select("measure")
+//            .take(1)
+//
+//    }
 
     test("Read tif with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")

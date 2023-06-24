@@ -8,9 +8,9 @@ import org.apache.spark.unsafe.types.UTF8String
 
 import java.util.UUID
 
-case class MosaicRasterChip(isCore: Boolean, index: Either[Long, String], raster: MosaicRaster) {
+case class MosaicRasterChip(index: Either[Long, String], raster: MosaicRaster) {
 
-    def isEmpty: Boolean = !isCore & Option(raster).forall(_.isEmpty)
+    def isEmpty: Boolean = Option(raster).forall(_.isEmpty)
 
     def formatCellId(indexSystem: IndexSystem): MosaicRasterChip = {
         (indexSystem.getCellIdDataType, index) match {
@@ -41,8 +41,8 @@ case class MosaicRasterChip(isCore: Boolean, index: Either[Long, String], raster
       *   An instance of [[InternalRow]].
       */
     def serialize: InternalRow = {
-        if (index.isLeft) InternalRow.fromSeq(Seq(isCore, index.left.get, encodeGeom))
-        else InternalRow.fromSeq(Seq(isCore, UTF8String.fromString(index.right.get), encodeGeom))
+        if (index.isLeft) InternalRow.fromSeq(Seq(index.left.get, encodeGeom))
+        else InternalRow.fromSeq(Seq(UTF8String.fromString(index.right.get), encodeGeom))
     }
 
     /**
@@ -51,22 +51,7 @@ case class MosaicRasterChip(isCore: Boolean, index: Either[Long, String], raster
       * @return
       *   An instance of [[Array]] of [[Byte]] representing WKB.
       */
-    private def encodeGeom: Array[Byte] = {
-        import java.nio.file.{Files, Paths}
-        val path = raster.getPath
-        if (path.startsWith("/vsimem/")) {
-            val driver = raster.getRaster.GetDriver()
-            val ext = path.split("\\.").last
-            val uuid = UUID.fromString(path)
-            val outPath = s"${uuid.toString}.$ext"
-            driver.CreateCopy(outPath, raster.getRaster)
-            val byteArray = Files.readAllBytes(Paths.get(outPath))
-            Files.delete(Paths.get(outPath))
-            byteArray
-        } else {
-            Files.readAllBytes(Paths.get(path))
-        }
-    }
+    private def encodeGeom: Array[Byte] = raster.writeToBytes()
 
     def indexAsLong(indexSystem: IndexSystem): Long = {
         if (index.isLeft) index.left.get
@@ -74,3 +59,4 @@ case class MosaicRasterChip(isCore: Boolean, index: Either[Long, String], raster
     }
 
 }
+

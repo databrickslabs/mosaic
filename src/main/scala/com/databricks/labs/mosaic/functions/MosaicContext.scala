@@ -258,8 +258,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         /** RasterAPI dependent functions */
         mosaicRegistry.registerExpression[RST_BandMetaData](expressionConfig)
         mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
+        mosaicRegistry.registerExpression[RST_GridTiles](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Height](expressionConfig)
         mosaicRegistry.registerExpression[RST_IsEmpty](expressionConfig)
         mosaicRegistry.registerExpression[RST_MemSize](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Merge](expressionConfig)
         mosaicRegistry.registerExpression[RST_MetaData](expressionConfig)
         mosaicRegistry.registerExpression[RST_NumBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_PixelWidth](expressionConfig)
@@ -273,8 +276,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_RasterToWorldCoordX](expressionConfig)
         mosaicRegistry.registerExpression[RST_RasterToWorldCoordY](expressionConfig)
         mosaicRegistry.registerExpression[RST_ReTile](expressionConfig)
-        mosaicRegistry.registerExpression[RST_GridTiles](expressionConfig)
-        mosaicRegistry.registerExpression[RST_GridTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_Rotation](expressionConfig)
         mosaicRegistry.registerExpression[RST_ScaleX](expressionConfig)
         mosaicRegistry.registerExpression[RST_ScaleY](expressionConfig)
@@ -283,10 +284,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_SRID](expressionConfig)
         mosaicRegistry.registerExpression[RST_Subdatasets](expressionConfig)
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
         mosaicRegistry.registerExpression[RST_UpperLeftX](expressionConfig)
         mosaicRegistry.registerExpression[RST_UpperLeftY](expressionConfig)
         mosaicRegistry.registerExpression[RST_Width](expressionConfig)
-        mosaicRegistry.registerExpression[RST_Height](expressionConfig)
         mosaicRegistry.registerExpression[RST_WorldToRasterCoord](expressionConfig)
         mosaicRegistry.registerExpression[RST_WorldToRasterCoordX](expressionConfig)
         mosaicRegistry.registerExpression[RST_WorldToRasterCoordY](expressionConfig)
@@ -306,6 +307,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
           FunctionIdentifier("st_union_agg", database),
           ST_UnionAgg.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_UnionAgg(exprs(0), geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("rst_merge_agg", database),
+            RST_MergeAgg.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => RST_MergeAgg(exprs(0), expressionConfig)
         )
 
         /** IndexSystem and GeometryAPI Specific methods */
@@ -603,6 +609,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def rst_isempty(raster: String): Column = ColumnAdapter(RST_IsEmpty(lit(raster).expr, expressionConfig))
         def rst_memsize(raster: Column): Column = ColumnAdapter(RST_MemSize(raster.expr, expressionConfig))
         def rst_memsize(raster: String): Column = ColumnAdapter(RST_MemSize(lit(raster).expr, expressionConfig))
+        def rst_merge(rasterArray: Column): Column = ColumnAdapter(RST_Merge(rasterArray.expr, expressionConfig))
         def rst_metadata(raster: Column): Column = ColumnAdapter(RST_MetaData(raster.expr, expressionConfig))
         def rst_metadata(raster: String): Column = ColumnAdapter(RST_MetaData(lit(raster).expr, expressionConfig))
         def rst_numbands(raster: Column): Column = ColumnAdapter(RST_NumBands(raster.expr, expressionConfig))
@@ -677,6 +684,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def rst_subdatasets(raster: String): Column = ColumnAdapter(RST_Subdatasets(lit(raster).expr, expressionConfig))
         def rst_summary(raster: Column): Column = ColumnAdapter(RST_Summary(raster.expr, expressionConfig))
         def rst_summary(raster: String): Column = ColumnAdapter(RST_Summary(lit(raster).expr, expressionConfig))
+        def rst_tessellate(raster: Column, resolution: Column): Column = ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
+        def rst_tessellate(raster: String, resolution: Column): Column = ColumnAdapter(RST_Tessellate(col(raster).expr, resolution.expr, expressionConfig))
+        def rst_tessellate(raster: Column, resolution: Int): Column = ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
         def rst_upperleftx(raster: Column): Column = ColumnAdapter(RST_UpperLeftX(raster.expr, expressionConfig))
         def rst_upperleftx(raster: String): Column = ColumnAdapter(RST_UpperLeftX(lit(raster).expr, expressionConfig))
         def rst_upperlefty(raster: Column): Column = ColumnAdapter(RST_UpperLeftY(raster.expr, expressionConfig))
@@ -714,6 +724,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             )
         def st_union_agg(geom: Column): Column =
             ColumnAdapter(ST_UnionAgg(geom.expr, geometryAPI.name).toAggregateExpression(isDistinct = false))
+        def rst_merge_agg(raster: Column): Column =
+            ColumnAdapter(RST_MergeAgg(raster.expr, expressionConfig, 0, 0).toAggregateExpression(isDistinct = false))
+
 
         /** IndexSystem Specific */
 

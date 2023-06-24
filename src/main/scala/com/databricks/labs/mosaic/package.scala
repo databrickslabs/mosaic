@@ -25,8 +25,10 @@ package object mosaic {
     val MOSAIC_RASTER_CHECKPOINT = "spark.databricks.labs.mosaic.raster.checkpoint"
     val MOSAIC_RASTER_CHECKPOINT_DEFAULT = "dbfs:/tmp/mosaic/raster/checkpoint"
 
-    val MOSAIC_RASTER_STORAGE_DISK = "disk"
-    val MOSAIC_RASTER_STORAGE_IN_MEMORY = "in-memory"
+    val MOSAIC_RASTER_READ_STRATEGY = "raster.read.strategy"
+    val MOSAIC_RASTER_READ_IN_MEMORY = "in_memory"
+    val MOSAIC_RASTER_READ_AS_PATH = "as_path"
+    val MOSAIC_RASTER_RE_TILE_ON_READ = "retile_on_read"
 
     def read: MosaicDataFrameReader = new MosaicDataFrameReader(SparkSession.builder().getOrCreate())
 

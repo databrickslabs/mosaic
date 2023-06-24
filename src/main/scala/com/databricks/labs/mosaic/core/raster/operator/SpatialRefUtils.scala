@@ -28,6 +28,10 @@ object SpatialRefUtils {
 
     def transform(geometry: MosaicGeometry, destSR: SpatialReference, geometryAPI: GeometryAPI): MosaicGeometry = {
         val geomSR = new SpatialReference()
+        // TODO: We need to set the axis mapping strategy to traditional GIS order
+        // Maybe there is no need to swap the coords if we set the axis strategy
+        // geomSR.SetAxisMappingStrategy(SpatialReference.OAMS_TRADITIONAL_GIS_ORDER)
+        // org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER
         geomSR.ImportFromEPSG(geometry.getSpatialReference)
         // We need to swap the coordinates because GDAL is expecting (lat long)
         // and we are providing (long lat)

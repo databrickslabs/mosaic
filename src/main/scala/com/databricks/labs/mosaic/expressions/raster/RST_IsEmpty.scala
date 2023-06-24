@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -11,12 +12,16 @@ import org.apache.spark.sql.types._
 
 /** Returns true if the raster is empty. */
 case class RST_IsEmpty(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_IsEmpty](raster, BooleanType, expressionConfig)
+    extends RasterExpression[RST_IsEmpty](raster, BooleanType, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /** Returns true if the raster is empty. */
-    override def rasterTransform(raster: MosaicRaster): Any = raster.ySize == 0 && raster.xSize == 0
+    override def rasterTransform(raster: MosaicRaster): Any = {
+        val result = raster.ySize == 0 && raster.xSize == 0
+        RasterCleaner.dispose(raster)
+        result
+    }
 
 }
 

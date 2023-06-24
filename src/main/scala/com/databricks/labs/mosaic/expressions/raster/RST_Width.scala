@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -11,12 +12,16 @@ import org.apache.spark.sql.types._
 
 /** Returns the width of the raster. */
 case class RST_Width(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Width](raster, IntegerType, expressionConfig)
+    extends RasterExpression[RST_Width](raster, IntegerType, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /** Returns the width of the raster. */
-    override def rasterTransform(raster: MosaicRaster): Any = raster.xSize
+    override def rasterTransform(raster: MosaicRaster): Any = {
+        val result = raster.xSize
+        RasterCleaner.dispose(raster)
+        result
+    }
 
 }
 

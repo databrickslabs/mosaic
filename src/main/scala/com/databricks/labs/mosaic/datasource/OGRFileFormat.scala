@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.datasource
 
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.mapreduce.Job
@@ -366,7 +367,7 @@ object OGRFileFormat extends Serializable {
       *   the data source
       */
     def getDataSource(driverName: String, path: String, useZipPath: Boolean): org.gdal.ogr.DataSource = {
-        val cleanPath = Utils.getCleanPath(path, useZipPath)
+        val cleanPath = PathUtils.getCleanPath(path, useZipPath)
         // 0 is for no update driver
         if (driverName.nonEmpty) {
             ogr.GetDriverByName(driverName).Open(cleanPath, 0)

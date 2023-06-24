@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -11,7 +12,7 @@ import org.apache.spark.sql.types._
 
 /** Returns the pixel width of the raster. */
 case class RST_PixelWidth(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_PixelWidth](raster, DoubleType, expressionConfig)
+    extends RasterExpression[RST_PixelWidth](raster, DoubleType, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -21,7 +22,9 @@ case class RST_PixelWidth(raster: Expression, expressionConfig: MosaicExpression
         val skewY = raster.getRaster.GetGeoTransform()(4)
         // when there is no skew width is scaleX, but we cant assume 0-only skew
         // skew is not to be confused with rotation
-        math.sqrt(scaleX * scaleX + skewY * skewY)
+        val result = math.sqrt(scaleX * scaleX + skewY * skewY)
+        RasterCleaner.dispose(raster)
+        result
     }
 
 }

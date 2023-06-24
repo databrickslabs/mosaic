@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -11,14 +12,16 @@ import org.apache.spark.sql.types._
 
 /** Returns the subdatasets of the raster. */
 case class RST_Subdatasets(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Subdatasets](raster, MapType(StringType, StringType), expressionConfig)
+    extends RasterExpression[RST_Subdatasets](raster, MapType(StringType, StringType), returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /** Returns the subdatasets of the raster. */
     override def rasterTransform(raster: MosaicRaster): Any = {
         val subdatasets = raster.subdatasets
-        buildMapString(subdatasets)
+        val result = buildMapString(subdatasets)
+        RasterCleaner.dispose(raster)
+        result
     }
 
 }

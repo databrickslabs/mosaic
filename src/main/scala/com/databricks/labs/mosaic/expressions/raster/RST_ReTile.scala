@@ -1,8 +1,8 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.operator.RasterClipByVector
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
+import com.databricks.labs.mosaic.core.raster.operator.retile.ReTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterGeneratorExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -30,31 +30,9 @@ case class RST_ReTile(
     override def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
-
-        val xSize = raster.xSize
-        val ySize = raster.ySize
-
-        val xTiles = Math.ceil(xSize / tileWidthValue).toInt
-        val yTiles = Math.ceil(ySize / tileHeightValue).toInt
-
-        val gt = raster.getGeoTransform
-
-        val tiles = for (x <- 0 until xTiles; y <- 0 until yTiles) yield {
-            val xMin = x * tileWidthValue
-            val yMin = y * tileHeightValue
-            val xMax = Math.min(xMin + tileWidthValue, xSize)
-            val yMax = Math.min(yMin + tileHeightValue, ySize)
-
-            val extentGeom = geometryAPI.geometry(
-              Seq((xMin, yMin), (xMin, yMax), (xMax, yMax), (xMax, yMin), (xMin, yMin))
-                  .map(t => rasterAPI.toWorldCoord(gt, t._1, t._2).productIterator.toSeq.asInstanceOf[Seq[Double]])
-                  .map(geometryAPI.fromCoords),
-              POLYGON
-            )
-            RasterClipByVector.clip(raster, extentGeom, geometryAPI, reproject = false)
-        }
-
-        tiles
+        val result = ReTile.reTile(raster, tileWidthValue, tileHeightValue)
+        RasterCleaner.dispose(raster)
+        result
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, tileWidthExpr, tileHeightExpr)

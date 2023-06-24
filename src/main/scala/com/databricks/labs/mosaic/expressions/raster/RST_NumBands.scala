@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -11,12 +12,16 @@ import org.apache.spark.sql.types._
 
 /** Returns the number of bands in the raster. */
 case class RST_NumBands(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_NumBands](raster, IntegerType, expressionConfig)
+    extends RasterExpression[RST_NumBands](raster, IntegerType, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /** Returns the number of bands in the raster. */
-    override def rasterTransform(raster: MosaicRaster): Any = raster.numBands
+    override def rasterTransform(raster: MosaicRaster): Any = {
+        val result = raster.numBands
+        RasterCleaner.dispose(raster)
+        result
+    }
 
 }
 

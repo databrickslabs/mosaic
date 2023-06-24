@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -11,12 +12,16 @@ import org.apache.spark.sql.types._
 
 /** Returns the memory size of the raster in bytes. */
 case class RST_MemSize(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_MemSize](raster, LongType, expressionConfig)
+    extends RasterExpression[RST_MemSize](raster, LongType, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /** Returns the memory size of the raster in bytes. */
-    override def rasterTransform(raster: MosaicRaster): Any = raster.getMemSize
+    override def rasterTransform(raster: MosaicRaster): Any = {
+        val result = raster.getMemSize
+        RasterCleaner.dispose(raster)
+        result
+    }
 
 }
 

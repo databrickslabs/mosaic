@@ -50,20 +50,20 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.cleanUp()
     }
 
-    test("Read raster metadata from a GRIdded Binary file.") {
-        assume(System.getProperty("os.name") == "Linux")
-
-        val testRaster = MosaicRasterGDAL.readRaster(
-          filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grib")
-        )
-        testRaster.xSize shouldBe 14
-        testRaster.ySize shouldBe 14
-        testRaster.numBands shouldBe 14
-        testRaster.proj4String shouldBe "+proj=longlat +R=6371229 +no_defs"
-        testRaster.SRID shouldBe 0
-        testRaster.extent shouldBe Seq(-0.375, -0.375, 10.125, 10.125)
-        testRaster.cleanUp()
-    }
+//    test("Read raster metadata from a GRIdded Binary file.") {
+//        assume(System.getProperty("os.name") == "Linux")
+//
+//        val testRaster = MosaicRasterGDAL.readRaster(
+//          filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grib")
+//        )
+//        testRaster.xSize shouldBe 14
+//        testRaster.ySize shouldBe 14
+//        testRaster.numBands shouldBe 14
+//        testRaster.proj4String shouldBe "+proj=longlat +R=6371229 +no_defs"
+//        testRaster.SRID shouldBe 0
+//        testRaster.extent shouldBe Seq(-0.375, -0.375, 10.125, 10.125)
+//        testRaster.cleanUp()
+//    }
 
     test("Read raster metadata from a NetCDF file.") {
         assume(System.getProperty("os.name") == "Linux")

@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.core.raster
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterWriter
+import com.databricks.labs.mosaic.core.raster.gdal_raster.{RasterCleaner, RasterWriter}
 import org.gdal.gdal.Dataset
 import org.gdal.osr.SpatialReference
 
@@ -20,7 +20,14 @@ import org.gdal.osr.SpatialReference
 abstract class MosaicRaster(
     isInMem: Boolean
 ) extends Serializable
-      with RasterWriter {
+      with RasterWriter
+      with RasterCleaner {
+
+    def getBands: Seq[MosaicRasterBand] =  (1 to numBands).map(getBand)
+
+    def refresh(): Unit
+
+    def getDimensions: (Int, Int)
 
     def uuid: Long
 
@@ -94,5 +101,7 @@ abstract class MosaicRaster(
 
     /** A method that a boolean flat set to true if the raster is empty. */
     def isEmpty: Boolean
+
+    def getBandStats: Map[Int, Map[String, Double]]
 
 }

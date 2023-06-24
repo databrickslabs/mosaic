@@ -1,8 +1,7 @@
 package com.databricks.labs.mosaic.core.raster.api
 
 import com.databricks.labs.mosaic.core.raster._
-import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterReader, RasterTransform}
-import org.apache.spark.sql.catalyst.InternalRow
+import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterCleaner, RasterReader, RasterTransform}
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.gdal
@@ -28,16 +27,19 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
         }
     }
 
-    def writeRasters(generatedRasters: Seq[MosaicRaster], checkpointPath: String, rasterDT: DataType): Seq[InternalRow] = {
+    def writeRasters(generatedRasters: Seq[MosaicRaster], checkpointPath: String, rasterDT: DataType): Seq[Any] = {
         generatedRasters.map(raster =>
             rasterDT match {
                 case StringType =>
-                    val writePath = s"$checkpointPath/${raster.uuid}"
+                    val extension = raster.getRaster.GetDriver().GetMetadataItem("DMD_EXTENSION")
+                    val writePath = s"$checkpointPath/${raster.uuid}.$extension"
                     val outPath = raster.writeToPath(writePath)
-                    InternalRow.fromSeq(Seq(UTF8String.fromString(outPath)))
+                    RasterCleaner.dispose(raster)
+                    UTF8String.fromString(outPath)
                 case BinaryType =>
                     val bytes = raster.writeToBytes()
-                    InternalRow.fromSeq(Seq(bytes))
+                    RasterCleaner.dispose(raster)
+                    bytes
             }
         )
     }
@@ -62,6 +64,8 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       *   Returns a Raster object.
       */
     def raster(path: String): MosaicRaster = reader.readRaster(path)
+
+    def raster(content: Array[Byte]): MosaicRaster = reader.readRaster(content)
 
     /**
       * Reads a raster from the given path. It extracts the specified band from

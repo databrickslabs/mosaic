@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -31,10 +32,12 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
     bandExpr: Expression,
     outputType: DataType,
+    returnsRaster: Boolean,
     expressionConfig: MosaicExpressionConfig
 ) extends BinaryExpression
       with NullIntolerant
-      with Serializable {
+      with Serializable
+      with RasterExpressionSerialization {
 
     /**
       * The raster API to be used. Enable the raster so that subclasses dont
@@ -78,6 +81,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
+    // noinspection DuplicatedCode
     override def nullSafeEval(inputRaster: Any, inputBand: Any): Any = {
         val raster = rasterAPI.readRaster(inputRaster, rasterExpr.dataType)
         val bandIndex = inputBand.asInstanceOf[Int]
@@ -85,8 +89,10 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
         val band = raster.getBand(bandIndex)
         val result = bandTransform(raster, band)
 
-        raster.cleanUp()
-        result
+        val serialized = serialize(result, returnsRaster, dataType, rasterAPI, expressionConfig)
+        RasterCleaner.dispose(raster)
+        RasterCleaner.dispose(result)
+        serialized
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 2, expressionConfig)

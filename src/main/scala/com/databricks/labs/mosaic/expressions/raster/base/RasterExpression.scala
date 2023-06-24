@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
@@ -27,10 +28,12 @@ import scala.reflect.ClassTag
 abstract class RasterExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
     outputType: DataType,
+    returnsRaster: Boolean,
     expressionConfig: MosaicExpressionConfig
 ) extends UnaryExpression
       with NullIntolerant
-      with Serializable {
+      with Serializable
+      with RasterExpressionSerialization {
 
     /**
       * The raster API to be used. Enable the raster so that subclasses dont
@@ -68,8 +71,10 @@ abstract class RasterExpression[T <: Expression: ClassTag](
     override def nullSafeEval(input: Any): Any = {
         val raster = rasterAPI.readRaster(input, rasterExpr.dataType)
         val result = rasterTransform(raster)
-        raster.cleanUp()
-        result
+        val serialized = serialize(result, returnsRaster, dataType, rasterAPI, expressionConfig)
+        RasterCleaner.dispose(raster)
+        RasterCleaner.dispose(result)
+        serialized
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 1, expressionConfig)

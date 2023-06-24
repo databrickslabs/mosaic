@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -11,7 +12,7 @@ import org.apache.spark.sql.types._
 
 /** Returns the georeference of the raster. */
 case class RST_GeoReference(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_GeoReference](raster, MapType(StringType, DoubleType), expressionConfig)
+    extends RasterExpression[RST_GeoReference](raster, MapType(StringType, DoubleType), returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -26,7 +27,9 @@ case class RST_GeoReference(raster: Expression, expressionConfig: MosaicExpressi
           "skewX" -> geoTransform(2),
           "skewY" -> geoTransform(4)
         )
-        buildMapDouble(geoReference)
+        val result = buildMapDouble(geoReference)
+        RasterCleaner.dispose(raster)
+        result
     }
 }
 

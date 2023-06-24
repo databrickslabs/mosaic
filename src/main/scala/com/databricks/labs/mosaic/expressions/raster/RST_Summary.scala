@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -16,7 +17,7 @@ import java.util.{Vector => JVector}
 
 /** Returns the summary info the raster. */
 case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Summary](raster, StringType, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_Summary](raster, StringType, returnsRaster = false, expressionConfig: MosaicExpressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -28,7 +29,9 @@ case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionCon
         vector.add("-json")
         val infoOptions = new InfoOptions(vector)
         val gdalInfo = GDALInfo(raster.getRaster, infoOptions)
-        UTF8String.fromString(gdalInfo)
+        val result = UTF8String.fromString(gdalInfo)
+        RasterCleaner.dispose(raster)
+        result
     }
 
 }

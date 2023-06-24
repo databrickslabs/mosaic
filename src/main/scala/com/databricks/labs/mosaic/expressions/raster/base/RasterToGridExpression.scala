@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -35,7 +36,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     resolution: Expression,
     measureType: DataType,
     expressionConfig: MosaicExpressionConfig
-) extends Raster1ArgExpression[T](rasterExpr, resolution, RasterToGridType(expressionConfig.getCellIdType, measureType), expressionConfig)
+) extends Raster1ArgExpression[T](rasterExpr, resolution, RasterToGridType(expressionConfig.getCellIdType, measureType), returnsRaster = false, expressionConfig)
       with RasterGridExpression
       with NullIntolerant
       with Serializable {
@@ -58,6 +59,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
         val resolution = arg1.asInstanceOf[Int]
         val transformed = griddedPixels(raster, indexSystem, resolution)
         val results = transformed.map(_.mapValues(valuesCombiner))
+        RasterCleaner.dispose(raster)
         serialize(results)
     }
 

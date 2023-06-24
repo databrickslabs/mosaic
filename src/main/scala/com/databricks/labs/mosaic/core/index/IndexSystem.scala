@@ -19,6 +19,7 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
     def osrSpatialRef: SpatialReference = {
         val sr = new SpatialReference()
         sr.ImportFromEPSG(crsID)
+        sr.SetAxisMappingStrategy(org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
         sr
     }
 

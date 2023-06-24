@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -11,13 +12,14 @@ import org.apache.spark.sql.types._
 
 /** Returns the upper left y of the raster. */
 case class RST_UpperLeftY(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_UpperLeftY](raster, DoubleType, expressionConfig)
+    extends RasterExpression[RST_UpperLeftY](raster, DoubleType, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /** Returns the upper left y of the raster. */
     override def rasterTransform(raster: MosaicRaster): Any = {
         val upperLeftY = raster.getRaster.GetGeoTransform()(3)
+        RasterCleaner.dispose(raster)
         upperLeftY
     }
 
