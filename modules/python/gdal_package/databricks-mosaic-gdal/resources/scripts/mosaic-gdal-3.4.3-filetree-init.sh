@@ -2,12 +2,14 @@
 #
 # File: mosaic-gdal-3.4.3-filetree-init.sh
 # Author: Michael Johns
-# Modified: 2023-03-21
+# Modified: 2023-07-23
+#
+# !!! FOR DBR 11.x and 12.x ONLY [Ubuntu 20.04] !!!
+# !!! NOT for DBR 13.x           [Ubuntu 22.04] !!!
+#
 #  1. script is using custom tarballs for offline / self-contained install of GDAL
 #  2. This will unpack files directly into the filetree across cluster nodes (vs run apt install)
-#  3. Note: Mosaic will be able to auto-detect and handle tarball unpacking
-#           without this init script on/around APR 2023 (so this is an alt to that capability)
-
+#
 # -- install databricks-mosaic-gdal on cluster 
 # - from pypi.org (once available)
 pip install databricks-mosaic-gdal==3.4.3
