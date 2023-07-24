@@ -144,7 +144,11 @@ class MosaicRasterGDAL(_uuid: Long, var raster: Dataset, path: String) extends M
         val gdalInfo = GDALInfo(raster, infoOptions)
         val json = parse(gdalInfo).extract[Map[String, Any]]
 
-        json("STATISTICS_VALID_PERCENT").asInstanceOf[Double] == 0.0
+        if (json.contains("STATISTICS_VALID_PERCENT")) {
+            json("STATISTICS_VALID_PERCENT").asInstanceOf[Double] == 0.0
+        } else {
+            false
+        }
     }
 
     override def getPath: String = path
@@ -308,9 +312,11 @@ object MosaicRasterGDAL extends RasterReader {
       *   A MosaicRaster object.
       */
     override def readRaster(inPath: String): MosaicRaster = {
-        val path = PathUtils.getCleanPath(inPath, inPath.endsWith(".zip"))
+        val isSubdataset = PathUtils.isSubdataset(inPath)
+        val localCopy = PathUtils.copyToTmp(inPath)
+        val path = PathUtils.getCleanPath(localCopy, localCopy.endsWith(".zip"))
+
         val uuid = Murmur3.hash64(path.getBytes())
-        val isSubdataset = PathUtils.isSubdataset(path)
         val readPath =
             if (isSubdataset) PathUtils.getSubdatasetPath(path)
             else PathUtils.getZipPath(path)

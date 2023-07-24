@@ -15,7 +15,7 @@ object PathUtils {
     }
 
     def isSubdataset(path: String): Boolean = {
-        path.contains(":")
+        path.split(":").length == 3
     }
 
     def isInMemory(path: String): Boolean = {
@@ -42,20 +42,37 @@ object PathUtils {
         readPath
     }
 
-    def copyToTmp(path: String): String = {
-        val fileName = path.split("/").last
-        val extension = fileName.split("\\.").last
-        val inPath = getCleanPath(path, useZipPath = extension == "zip")
+    def copyToTmp(rawPath: String): String = {
+        try {
+            val path =
+                if (isSubdataset(rawPath)) {
+                    val _ :: filePath :: _ :: Nil = rawPath.split(":").toList
+                    filePath
+                } else {
+                    rawPath
+                }
 
-        val randomID = UUID.randomUUID().toString
-        val tmpDir = Files.createTempDirectory(s"mosaic_$randomID").toFile.getAbsolutePath
+            val fileName = path.split("/").last
+            val extension = fileName.split("\\.").last
+            val inPath = getCleanPath(path, useZipPath = extension == "zip")
 
-        val outPath = s"$tmpDir/$fileName"
+            val randomID = UUID.randomUUID().toString
+            val tmpDir = Files.createTempDirectory(s"mosaic_$randomID").toFile.getAbsolutePath
 
-        Files.createDirectories(Paths.get(tmpDir))
-        Files.copy(Paths.get(inPath), Paths.get(outPath))
+            val outPath = s"$tmpDir/$fileName"
 
-        outPath
+            Files.createDirectories(Paths.get(tmpDir))
+            Files.copy(Paths.get(inPath), Paths.get(outPath))
+
+            if (isSubdataset(rawPath)) {
+                val format :: _ :: subdataset :: Nil = rawPath.split(":").toList
+                getSubdatasetPath(s"$format:$outPath:$subdataset")
+            } else {
+                outPath
+            }
+        } catch {
+            case _: Throwable => rawPath
+        }
     }
 
     def createTmpFilePath(uuid: String, extension: String): String = {

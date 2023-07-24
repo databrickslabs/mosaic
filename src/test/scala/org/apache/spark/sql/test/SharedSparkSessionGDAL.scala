@@ -27,7 +27,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
             Try {
                 TestMosaicGDAL.installGDAL(session)
                 val tempPath = Files.createTempDirectory("mosaic-gdal")
-                MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString, "/usr/lib/jni")
+                MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString)
                 MosaicGDAL.enableGDAL(session)
             }
         }

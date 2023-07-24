@@ -7,11 +7,17 @@ import org.gdal.gdal.gdal
 import java.io.{BufferedInputStream, File, PrintWriter}
 import java.nio.file.{Files, Paths}
 import scala.language.postfixOps
-import scala.sys.process._
 import scala.util.Try
 
 //noinspection DuplicatedCode
 object MosaicGDAL extends Logging {
+
+    private val usrlibsoPath = "/usr/lib/libgdal.so"
+    private val usrlibso30Path = "/usr/lib/libgdal.so.30"
+    private val usrlibso3003Path = "/usr/lib/libgdal.so.30.0.3"
+    private val libjnisoPath = "/lib/jni/libgdalalljni.so"
+    private val libjniso30Path = "/lib/jni/libgdalalljni.so.30"
+    private val libogdisoPath = "/lib/ogdi/libgdal.so"
 
     // noinspection ScalaWeakerAccess
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
@@ -21,16 +27,14 @@ object MosaicGDAL extends Logging {
 
     def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean
 
-    def prepareEnvironment(spark: SparkSession, initScriptPath: String, sharedObjectsPath: String): Unit = {
+    def prepareEnvironment(spark: SparkSession, initScriptPath: String): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 copyInitScript(initScriptPath)
-                copySharedObjects(sharedObjectsPath)
+                copySharedObjects()
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
-                case scala.util.Failure(exception) =>
-                    logError("GDAL environment preparation failed.", exception)
-                    throw exception
+                case scala.util.Failure(exception) => logWarning("GDAL environment preparation failed.", exception)
             }
         }
     }
@@ -39,6 +43,7 @@ object MosaicGDAL extends Logging {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 isEnabled = true
+                //copySharedObjects()
                 loadSharedObjects()
                 gdal.AllRegister()
                 spark.conf.set(GDAL_ENABLED, "true")
@@ -55,56 +60,66 @@ object MosaicGDAL extends Logging {
         }
     }
 
-    private def copySharedObjects(path: String): Unit = {
-        val so = readResourceBytes("/gdal/ubuntu/libgdalalljni.so")
-        val so30 = readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30")
+    private def copySharedObjects(): Unit = {
 
-        val usrGDALPath = Paths.get("/usr/lib/jni/")
-        if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
-        if (!Files.exists(usrGDALPath)) Files.createDirectories(usrGDALPath)
-        Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so"), so)
-        Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so.30"), so30)
+        val libjniso = readResourceBytes(s"/gdal/ubuntu/$libjnisoPath")
+        val libjniso30 = readResourceBytes(s"/gdal/ubuntu/$libjniso30Path")
+        val libogdiso = readResourceBytes(s"/gdal/ubuntu/$libogdisoPath")
+        val usrlibso = readResourceBytes(s"/gdal/ubuntu/$usrlibsoPath")
+        val usrlibso30 = readResourceBytes(s"/gdal/ubuntu/$usrlibso30Path")
+        val usrlibso3003 = readResourceBytes(s"/gdal/ubuntu/$usrlibso3003Path")
 
-        s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so $path/libgdalalljni.so".!!
-        s"sudo cp $mosaicGDALAbsolutePath/libgdalalljni.so.30 $path/libgdalalljni.so.30".!!
+        if (!Files.exists(Paths.get("/usr/lib"))) Files.createDirectories(Paths.get("/usr/lib"))
+        if (!Files.exists(Paths.get("/lib/jni"))) Files.createDirectories(Paths.get("/lib/jni"))
+        if (!Files.exists(Paths.get("/lib/ogdi"))) Files.createDirectories(Paths.get("/lib/ogdi"))
+
+        if (!Files.exists(Paths.get(usrlibsoPath))) Files.write(Paths.get(usrlibsoPath), usrlibso)
+        if (!Files.exists(Paths.get(usrlibso30Path))) Files.write(Paths.get(usrlibso30Path), usrlibso30)
+        if (!Files.exists(Paths.get(usrlibso3003Path))) Files.write(Paths.get(usrlibso3003Path), usrlibso3003)
+        if (!Files.exists(Paths.get(libjnisoPath))) Files.write(Paths.get(libogdisoPath), libjniso)
+        if (!Files.exists(Paths.get(libjniso30Path))) Files.write(Paths.get(libjniso30Path), libjniso30)
+        if (!Files.exists(Paths.get(libogdisoPath))) Files.write(Paths.get(libogdisoPath), libogdiso)
+
     }
 
     // noinspection ScalaStyle
     private def copyInitScript(path: String): Unit = {
         val destPath = Paths.get(path)
-        if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
         if (!Files.exists(destPath)) Files.createDirectories(destPath)
 
-        val w = new PrintWriter(new File(s"$mosaicGDALAbsolutePath/mosaic-gdal-init.sh"))
+        val w = new PrintWriter(new File(s"$path/mosaic-gdal-init.sh"))
         val scriptLines = readResourceLines("/scripts/install-gdal-databricks.sh")
         scriptLines
             .map { x => if (x.contains("__DEFAULT_JNI_PATH__")) x.replace("__DEFAULT_JNI_PATH__", path) else x }
             .foreach(x => w.println(x))
         w.close()
-
-        s"sudo cp $mosaicGDALAbsolutePath/mosaic-gdal-init.sh $path/mosaic-gdal-init.sh".!!
     }
 
     private def loadSharedObjects(): Unit = {
+        loadOrNOOP(usrlibsoPath)
+        loadOrNOOP(usrlibso30Path)
+        loadOrNOOP(usrlibso3003Path)
+        loadOrNOOP(libjnisoPath)
+        loadOrNOOP(libjniso30Path)
+        loadOrNOOP(libogdisoPath)
+    }
+
+    private def loadOrNOOP(path: String): Unit = {
         try {
-            if (Files.exists(Paths.get("/usr/lib/libgdal.so.30"))) System.load("/usr/lib/libgdal.so.30")
-            if (!Files.exists(Paths.get("/usr/lib/libgdal.so"))) {
-                if (Files.exists(Paths.get("/usr/lib/libgdal.so.30"))) "sudo cp /usr/lib/libgdal.so.30 /usr/lib/libgdal.so".!!
-            }
-            if (Files.exists(Paths.get("/usr/lib/libgdal.so"))) System.load("/usr/lib/libgdal.so")
-            if (Files.exists(Paths.get("/usr/lib/libgdal.so.30.0.3"))) System.load("/usr/lib/libgdal.so.30.0.3")
-            if (Files.exists(Paths.get("/usr/lib/jni/libgdalalljni.so.30"))) System.load("/usr/lib/jni/libgdalalljni.so.30")
-            if (Files.exists(Paths.get("/usr/lib/ogdi/libgdal.so"))) System.load("/usr/lib/ogdi/libgdal.so")
+            //if (!Files.exists(Paths.get(path)))
+                System.load(path)
+        } catch {
+            case t: Throwable => logWarning(s"Failed to load $path", t)
         }
     }
 
     private def readResourceBytes(name: String): Array[Byte] = {
         val bis = new BufferedInputStream(getClass.getResourceAsStream(name))
-        try Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray
+        try { Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray }
         finally bis.close()
     }
 
-    //noinspection SameParameterValue
+    // noinspection SameParameterValue
     private def readResourceLines(name: String): Array[String] = {
         val bytes = readResourceBytes(name)
         val lines = new String(bytes).split("\n")

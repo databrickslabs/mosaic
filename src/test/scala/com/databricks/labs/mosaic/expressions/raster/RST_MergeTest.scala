@@ -25,7 +25,7 @@ class RST_MergeTest extends QueryTest with SharedSparkSessionGDAL with RST_Merge
     test("Testing RST_Merge with manual GDAL registration (H3, JTS).") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
-            //geoReferenceBehavior(H3IndexSystem, JTS)
+            behaviors(H3IndexSystem, JTS)
         }
     }
 

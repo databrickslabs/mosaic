@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
 import org.apache.spark.sql.catalyst.trees.UnaryLike
-import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
+import org.apache.spark.sql.types.{BinaryType, DataType}
 
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
@@ -46,13 +46,13 @@ case class RST_MergeAgg(
             val newRaster = rasterAPI.readRaster(rasterExpr.eval(inputRow), rasterExpr.dataType)
 
             val mergedRaster = MergeRasters.merge(Seq(partialRaster, newRaster))
-            val newState = serialize(mergedRaster, returnsRaster = true, BinaryType, rasterAPI, expressionConfig)
+            val newState = mergedRaster.writeToBytes()
 
             RasterCleaner.dispose(partialRaster)
             RasterCleaner.dispose(newRaster)
             RasterCleaner.dispose(mergedRaster)
 
-            newState.asInstanceOf[Array[Byte]]
+            newState
         }
     }
 
@@ -65,13 +65,13 @@ case class RST_MergeAgg(
             val leftPartial = rasterAPI.readRaster(accumulator, BinaryType)
             val rightPartial = rasterAPI.readRaster(input, BinaryType)
             val mergedRaster = MergeRasters.merge(Seq(leftPartial, rightPartial))
-            val newState = serialize(mergedRaster, returnsRaster = true, BinaryType, rasterAPI, expressionConfig)
+            val newState = mergedRaster.writeToBytes()
 
             RasterCleaner.dispose(leftPartial)
             RasterCleaner.dispose(rightPartial)
             RasterCleaner.dispose(mergedRaster)
 
-            newState.asInstanceOf[Array[Byte]]
+            newState
         }
     }
 

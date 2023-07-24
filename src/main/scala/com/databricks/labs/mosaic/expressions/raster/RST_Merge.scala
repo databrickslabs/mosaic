@@ -9,7 +9,7 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
-import org.apache.spark.sql.types.ArrayType
+import org.apache.spark.sql.types.BinaryType
 
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
@@ -20,8 +20,8 @@ case class RST_Merge(
     expressionConfig: MosaicExpressionConfig
 ) extends RasterArrayExpression[RST_Merge](
       rastersExpr,
-      null,
-      returnsRaster = true,
+      BinaryType,
+      returnsRaster = false,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
@@ -34,7 +34,7 @@ case class RST_Merge(
     override def rasterTransform(rasters: Seq[MosaicRaster]): Any = {
         val result = MergeRasters.merge(rasters)
         rasters.foreach(RasterCleaner.dispose)
-        result
+        rasterAPI.writeRasters(Seq(result), expressionConfig.getRasterCheckpoint, BinaryType).head
     }
 
 }

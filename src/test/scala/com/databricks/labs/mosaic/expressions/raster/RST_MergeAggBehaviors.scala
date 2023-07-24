@@ -10,7 +10,7 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_MergeAggBehaviors extends QueryTest {
 
     // noinspection MapGetGet
-    def geoReferenceBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark
@@ -28,11 +28,11 @@ trait RST_MergeAggBehaviors extends QueryTest {
             .load("src/test/resources/modis")
 
         val gridTiles = rastersAsPaths
-            .withColumn("tiles", rst_gridtiles($"path", 3))
+            .withColumn("tiles", rst_tessellate($"path", 3))
             .select("path", "tiles")
             .groupBy("path")
             .agg(
-              rst_merge_agg($"tiles").as("tiles")
+              rst_merge_agg($"tiles.raster").as("tiles")
             )
             .select("tiles")
 

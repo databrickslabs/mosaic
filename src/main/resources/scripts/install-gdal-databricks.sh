@@ -5,8 +5,6 @@
 # Created: 2022-08-19
 #
 
-MOSAIC_GDAL_JNI_DIR="${MOSAIC_GDAL_JNI_DIR:-__DEFAULT_JNI_PATH__}"
-
 sudo rm -r /var/lib/apt/lists/*
 sudo add-apt-repository main
 sudo add-apt-repository universe
@@ -25,9 +23,3 @@ cd /usr/lib/python3/dist-packages/osgeo \
   && mv _ogr.cpython-38-x86_64-linux-gnu.so _ogr.so \
   && mv _gnm.cpython-38-x86_64-linux-gnu.so _gnm.so \
   && mv _osr.cpython-38-x86_64-linux-gnu.so _osr.so
-
-# add pre-build JNI shared object to the path
-# please run MosaicGDAL.copySharedObjects("/dbfs/FileStore/geospatial/mosaic/gdal/") before enabling this init script
-mkdir -p /usr/lib/jni
-cp "${MOSAIC_GDAL_JNI_DIR}/libgdalalljni.so" /usr/lib/jni
-cp "${MOSAIC_GDAL_JNI_DIR}/libgdalalljni.so.30" /usr/lib/jni

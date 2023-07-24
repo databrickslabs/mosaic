@@ -1,54 +1,38 @@
 package com.databricks.labs.mosaic.test
 
 import com.databricks.labs.mosaic.gdal.MosaicGDAL._
-import com.twitter.chill.Base64.InputStream
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.SparkException
 import org.apache.spark.internal.Logging
+import org.apache.spark.sql.SparkSession
 
-import java.io.{ByteArrayInputStream, IOException}
+import java.io.BufferedInputStream
+import java.nio.file.Files
 import scala.io.{BufferedSource, Source}
+import scala.language.postfixOps
 import scala.sys.process._
 
 object TestMosaicGDAL extends Logging {
 
+    private def readResourceBytes(): Array[Byte] = {
+        val bis = new BufferedInputStream(getClass.getResourceAsStream("/scripts/install-gdal-databricks.sh"))
+        try {
+            Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray
+        }
+        finally bis.close()
+    }
+
     def installGDAL(spark: SparkSession): Unit = {
-        if (!wasEnabled(spark) && !isEnabled) installGDAL(Some(spark))
+        if (!wasEnabled(spark) && !isEnabled) installGDAL()
     }
 
-    def installGDAL(spark: Option[SparkSession]): Unit = {
-        val sc = spark.map(_.sparkContext)
-        val numExecutors = sc.map(_.getExecutorMemoryStatus.size - 1)
-        val script = getScript
-        for (cmd <- script.getLines.toList) {
-            try {
-                if (!cmd.startsWith("#") || cmd.nonEmpty) cmd.!!
-                sc.map { sparkContext =>
-                    if (!sparkContext.isLocal) {
-                        sparkContext.parallelize(1 to numExecutors.get).pipe(cmd).collect
-                    }
-                }
-            } catch {
-                case e: IOException           => logError(e.getMessage)
-                case e: IllegalStateException => logError(e.getMessage)
-                case e: SparkException        => logError(e.getMessage)
-                case e: Throwable             => logError(e.getMessage)
-            } finally {
-                script.close
-            }
-        }
+    def installGDAL(): Unit = {
+        val bytes = readResourceBytes()
+        val tempPath = Files.createTempFile("gdal-ubuntu-install", ".sh")
+        Files.write(tempPath, bytes)
+
+        s"chmod +x ${tempPath.toAbsolutePath.toString}".!!
+        s"sh ${tempPath.toAbsolutePath.toString}".!!
     }
 
-    def getScript: BufferedSource = {
-        System.getProperty("os.name").toLowerCase() match {
-            case o: String if o.contains("nux") =>
-                val script = Source.fromInputStream(getClass.getResourceAsStream("/scripts/install-gdal-databricks.sh"))
-                script
-            case _ =>
-                logInfo("This method only supports Ubuntu Linux with `apt`.")
-                Source.fromInputStream(getClass.getResourceAsStream(""))
-        }
 
-    }
 
 }

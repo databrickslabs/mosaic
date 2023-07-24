@@ -10,7 +10,7 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_MergeBehaviors extends QueryTest {
 
     //noinspection MapGetGet
-    def geoReferenceBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark

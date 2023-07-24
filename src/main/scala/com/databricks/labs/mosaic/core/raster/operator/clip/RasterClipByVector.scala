@@ -14,8 +14,6 @@ object RasterClipByVector {
         val rasterCRS = raster.getRaster.GetSpatialRef()
         val outShortName = raster.getRaster.GetDriver().getShortName
 
-        val uuid = java.util.UUID.randomUUID()
-        //val resultFileName = s"/vsimem/${raster.uuid}_${uuid.toString}.${raster.getExtension}"
         val resultFileName = PathUtils.createTmpFilePath(raster.uuid.toString, raster.getExtension)
 
         val shapeFileName = VectorClipper.generateClipper(geometry, geomCRS, rasterCRS, geometryAPI)
@@ -23,7 +21,7 @@ object RasterClipByVector {
         val result = GDALWarp.executeWarp(
           resultFileName,
           Seq(raster),
-          command = s"gdalwarp -of $outShortName -cutline $shapeFileName -crop_to_cutline -multi -wm 500 -wo NUM_THREADS=ALL_CPUS -co NUM_THREADS=ALL_CPUS"
+          command = s"gdalwarp -of $outShortName -cutline $shapeFileName -crop_to_cutline"
         )
 
         gdal.Unlink(shapeFileName)

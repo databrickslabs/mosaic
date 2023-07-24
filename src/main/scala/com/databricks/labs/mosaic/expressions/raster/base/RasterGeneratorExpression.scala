@@ -36,6 +36,8 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
+    override def dataType: DataType = rasterExpr.dataType
+
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
     /**
@@ -55,7 +57,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       * needs to be wrapped in a StructType. The actually type is that of the
       * structs element.
       */
-    override def elementSchema: StructType = StructType(Array(StructField("raster", rasterExpr.dataType)))
+    override def elementSchema: StructType = StructType(Array(StructField("raster", dataType)))
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -74,7 +76,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
         val inRaster = rasterAPI.readRaster(rasterExpr.eval(input), rasterExpr.dataType)
         val generatedRasters = rasterGenerator(inRaster)
 
-        val rows = rasterAPI.writeRasters(generatedRasters, checkpointPath, rasterExpr.dataType)
+        val rows = rasterAPI.writeRasters(generatedRasters, checkpointPath, dataType)
         RasterCleaner.dispose(inRaster)
         generatedRasters.foreach(RasterCleaner.dispose)
 

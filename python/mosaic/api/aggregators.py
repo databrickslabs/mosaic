@@ -8,7 +8,14 @@ from mosaic.utils.types import ColumnOrName
 # Spatial aggregators #
 #######################
 
-__all__ = ["st_intersection_aggregate", "st_intersects_aggregate", "st_union_agg", "grid_cell_union_agg", "grid_cell_intersection_agg"]
+__all__ = [
+    "st_intersection_aggregate",
+    "st_intersects_aggregate",
+    "st_union_agg",
+    "grid_cell_union_agg",
+    "grid_cell_intersection_agg",
+    "rst_merge_agg"
+]
 
 
 def st_intersection_aggregate(
@@ -112,4 +119,22 @@ def grid_cell_union_agg(chips: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "grid_cell_union_agg", pyspark_to_java_column(chips)
+    )
+
+
+def rst_merge_agg(raster: ColumnOrName) -> Column:
+    """
+    Returns the raster representing the aggregated union of rasters on some grid cell.
+
+    Parameters
+    ----------
+    raster: Column
+
+    Returns
+    -------
+    Column
+        The union raster.
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_merge_agg", pyspark_to_java_column(raster)
     )

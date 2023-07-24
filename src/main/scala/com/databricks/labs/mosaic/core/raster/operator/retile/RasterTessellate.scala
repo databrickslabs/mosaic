@@ -17,14 +17,13 @@ object RasterTessellate {
                 val cellID = cell.cellIdAsLong(indexSystem)
                 val cellRaster = raster.getRasterForCell(cellID, indexSystem, geometryAPI)
                 cellRaster.getRaster.FlushCache()
-                if (cell.isCore) (true, MosaicRasterChip(cell.index, cellRaster))
-                else {
-                    (
-                      // If the cell is not core, we check if it has any data, if it doesn't we don't return it
-                      cellRaster.getBands.exists { band => band.values.count(_ != band.noDataValue) + band.maskValues.count(_ != 0) != 0 },
-                      MosaicRasterChip(cell.index, cellRaster)
-                    )
-                }
+                (
+                  cellRaster.getBands.exists { band =>
+                      band.values.count(_ != band.noDataValue) > 0 &&
+                      band.maskValues.count(_ > 0) > 0
+                  } && !cellRaster.isEmpty,
+                  MosaicRasterChip(cell.index, cellRaster)
+                )
             })
             .filter(_._1)
             .map(_._2)
