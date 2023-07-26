@@ -55,10 +55,10 @@ The output of the reader is a DataFrame with the following columns:
 .. tabs::
     .. code-tab:: py
 
-        >>> df = spark.read.format("gdal")\
+        df = spark.read.format("gdal")\
             .option("driverName", "GTiff")\
             .load("dbfs:/path/to/raster.tif")
-        >>> df.show()
+        df.show()
         +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
         |                path|ySize|xSize|bandCount|            metadata|         subdatasets|srid|            proj4Str|
         +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
@@ -67,10 +67,10 @@ The output of the reader is a DataFrame with the following columns:
 
     .. code-tab:: scala
 
-        >>> val df = spark.read.format("gdal")
+        val df = spark.read.format("gdal")
             .option("driverName", "GTiff")
             .load("dbfs:/path/to/raster.tif")
-        >>> df.show()
+        df.show()
         +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
         |                path|ySize|xSize|bandCount|            metadata|         subdatasets|srid|            proj4Str|
         +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
@@ -119,7 +119,7 @@ The reader supports the following options:
 .. tabs::
     .. code-tab:: py
 
-        >>> df = mos.read().format("raster_to_grid")\
+        df = mos.read().format("raster_to_grid")\
             .option("fileExtension", "*.tif")\
             .option("resolution", "8")\
             .option("combiner", "mean")\
@@ -127,7 +127,7 @@ The reader supports the following options:
             .option("tileSize", "1000")\
             .option("kRingInterpolate", "2")\
             .load("dbfs:/path/to/raster.tif")
-        >>> df.show()
+        df.show()
         +--------+--------+------------------+
         |band_id |cell_id |cell_value        |
         +--------+--------+------------------+
@@ -139,7 +139,7 @@ The reader supports the following options:
 
     .. code-tab:: scala
 
-        >>> val df = MosaicContext.read.format("raster_to_grid")
+        val df = MosaicContext.read.format("raster_to_grid")
             .option("fileExtension", "*.tif")
             .option("resolution", "8")
             .option("combiner", "mean")
@@ -147,7 +147,7 @@ The reader supports the following options:
             .option("tileSize", "1000")
             .option("kRingInterpolate", "2")
             .load("dbfs:/path/to/raster.tif")
-        >>> df.show()
+        df.show()
         +--------+--------+------------------+
         |band_id |cell_id |cell_value        |
         +--------+--------+------------------+

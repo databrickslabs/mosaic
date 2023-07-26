@@ -60,7 +60,7 @@ To install Mosaic on your Databricks cluster, take the following steps:
         spark.databricks.labs.mosaic.index.system H3
         # JTS or ESRI
         spark.databricks.labs.mosaic.geometry.api JTS
-        # MosaicSQL or MosaicSQLDefault, MosaicSQLDefault corresponds to (H3, ESRI)
+        # MosaicSQL or MosaicSQLDefault, MosaicSQLDefault corresponds to (H3, JTS)
         spark.sql.extensions com.databricks.labs.mosaic.sql.extensions.MosaicSQL
 
 Testing

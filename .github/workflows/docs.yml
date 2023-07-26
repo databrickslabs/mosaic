@@ -4,6 +4,7 @@ on:
     branches:
     - main
     - feature/docs_fix
+    - feature/new_docs
 jobs:
   build:
     runs-on: ubuntu-latest

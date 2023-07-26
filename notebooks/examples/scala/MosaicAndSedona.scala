@@ -4,7 +4,7 @@
 // MAGIC 
 // MAGIC You can combine the usage of Mosaic with other geospatial libraries. 
 // MAGIC 
-// MAGIC In this example we combine the use of [Sedona](https://sedona.apache.org/setup/databricks/) and Mosaic.
+// MAGIC In this example we combine the use of [Sedona](https://sedona.apache.org) and Mosaic.
 // MAGIC 
 // MAGIC ## Setup
 // MAGIC 
@@ -12,7 +12,7 @@
 // MAGIC 
 // MAGIC ### Install sedona
 // MAGIC 
-// MAGIC To install Sedona, follow the [official Sedona instructions](https://sedona.apache.org/setup/databricks/).
+// MAGIC To install Sedona, follow the [official Sedona instructions](https://sedona.apache.org/1.4.0/setup/databricks).
 
 // COMMAND ----------
 
@@ -23,9 +23,9 @@ SedonaSQLRegistrator.registerAll(spark)
 // Import Mosaic functions
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.H3
-import com.databricks.labs.mosaic.ESRI
+import com.databricks.labs.mosaic.JTS
 
-val mosaicContext = MosaicContext.build(H3, ESRI)
+val mosaicContext = MosaicContext.build(H3, JTS)
 import mosaicContext.functions._
 import org.apache.spark.sql.functions._
 

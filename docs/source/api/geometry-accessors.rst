@@ -18,8 +18,8 @@ st_asbinary
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
-    >>> df.select(st_asbinary('wkt').alias('wkb')).show()
+    df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+    df.select(st_asbinary('wkt').alias('wkb')).show()
     +--------------------+
     |                 wkb|
     +--------------------+
@@ -28,8 +28,8 @@ st_asbinary
 
    .. code-tab:: scala
 
-    >>> val df = List(("POINT (30 10)")).toDF("wkt")
-    >>> df.select(st_asbinary($"wkt").alias("wkb")).show()
+    val df = List(("POINT (30 10)")).toDF("wkt")
+    df.select(st_asbinary($"wkt").alias("wkb")).show()
     +--------------------+
     |                 wkb|
     +--------------------+
@@ -38,7 +38,7 @@ st_asbinary
 
    .. code-tab:: sql
 
-    >>> SELECT st_asbinary("POINT (30 10)") AS wkb
+    SELECT st_asbinary("POINT (30 10)") AS wkb
     +--------------------+
     |                 wkb|
     +--------------------+
@@ -47,8 +47,8 @@ st_asbinary
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
-    >>> showDF(select(df, alias(st_asbinary(column("wkt")), "wkb")))
+    df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
+    showDF(select(df, alias(st_asbinary(column("wkt")), "wkb")))
     +--------------------+
     |                 wkb|
     +--------------------+
@@ -74,8 +74,8 @@ st_asgeojson
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
-    >>> df.select(st_asgeojson('wkt').cast('string').alias('json')).show(truncate=False)
+    df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+    df.select(st_asgeojson('wkt').cast('string').alias('json')).show(truncate=False)
     +------------------------------------------------------------------------------------------------+
     |json                                                                                            |
     +------------------------------------------------------------------------------------------------+
@@ -84,8 +84,8 @@ st_asgeojson
 
    .. code-tab:: scala
 
-    >>> val df = List(("POINT (30 10)")).toDF("wkt")
-    >>> df.select(st_asgeojson($"wkt").cast("string").alias("json")).show(false)
+    val df = List(("POINT (30 10)")).toDF("wkt")
+    df.select(st_asgeojson($"wkt").cast("string").alias("json")).show(false)
     +------------------------------------------------------------------------------------------------+
     |json                                                                                            |
     +------------------------------------------------------------------------------------------------+
@@ -94,7 +94,7 @@ st_asgeojson
 
    .. code-tab:: sql
 
-    >>> SELECT cast(st_asgeojson("POINT (30 10)") AS string) AS json
+    SELECT cast(st_asgeojson("POINT (30 10)") AS string) AS json
     +------------------------------------------------------------------------------------------------+
     |json                                                                                            |
     +------------------------------------------------------------------------------------------------+
@@ -103,8 +103,8 @@ st_asgeojson
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
-    >>> showDF(select(df, alias(st_asgeojson(column("wkt")), "json")), truncate=F)
+    df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
+    showDF(select(df, alias(st_asgeojson(column("wkt")), "json")), truncate=F)
     +------------------------------------------------------------------------------------------------+
     |json                                                                                            |
     +------------------------------------------------------------------------------------------------+
@@ -128,8 +128,8 @@ st_astext
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-    >>> df.select(st_astext(st_point('lon', 'lat')).alias('wkt')).show()
+    df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+    df.select(st_astext(st_point('lon', 'lat')).alias('wkt')).show()
     +-------------+
     |          wkt|
     +-------------+
@@ -138,8 +138,8 @@ st_astext
 
    .. code-tab:: scala
 
-    >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
-    >>> df.select(st_astext(st_point($"lon", $"lat")).alias("wkt")).show()
+    val df = List((30.0, 10.0)).toDF("lon", "lat")
+    df.select(st_astext(st_point($"lon", $"lat")).alias("wkt")).show()
     +-------------+
     |          wkt|
     +-------------+
@@ -148,7 +148,7 @@ st_astext
 
    .. code-tab:: sql
 
-    >>> SELECT st_astext(st_point(30.0D, 10.0D)) AS wkt
+    SELECT st_astext(st_point(30.0D, 10.0D)) AS wkt
     +-------------+
     |          wkt|
     +-------------+
@@ -157,8 +157,8 @@ st_astext
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
-    >>> showDF(select(df, alias(st_astext(st_point(column("lon"), column("lat"))), "wkt")), truncate=F)
+    df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    showDF(select(df, alias(st_astext(st_point(column("lon"), column("lat"))), "wkt")), truncate=F)
     +-------------+
     |          wkt|
     +-------------+
@@ -184,8 +184,8 @@ st_aswkb
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
-    >>> df.select(st_aswkb('wkt').alias('wkb')).show()
+    df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+    df.select(st_aswkb('wkt').alias('wkb')).show()
     +--------------------+
     |                 wkb|
     +--------------------+
@@ -194,8 +194,8 @@ st_aswkb
 
    .. code-tab:: scala
 
-    >>> val df = List(("POINT (30 10)")).toDF("wkt")
-    >>> df.select(st_aswkb($"wkt").alias("wkb")).show()
+    val df = List(("POINT (30 10)")).toDF("wkt")
+    df.select(st_aswkb($"wkt").alias("wkb")).show()
     +--------------------+
     |                 wkb|
     +--------------------+
@@ -204,7 +204,7 @@ st_aswkb
 
    .. code-tab:: sql
 
-    >>> SELECT st_aswkb("POINT (30 10)") AS wkb
+    SELECT st_aswkb("POINT (30 10)") AS wkb
     +--------------------+
     |                 wkb|
     +--------------------+
@@ -213,8 +213,8 @@ st_aswkb
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
-    >>> showDF(select(df, alias(st_aswkb(column("wkt")), "wkb")))
+    df <- createDataFrame(data.frame('wkt'= "POINT (30 10)"))
+    showDF(select(df, alias(st_aswkb(column("wkt")), "wkb")))
     +--------------------+
     |                 wkb|
     +--------------------+
@@ -239,8 +239,8 @@ st_aswkt
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-    >>> df.select(st_aswkt(st_point('lon', 'lat')).alias('wkt')).show()
+    df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+    df.select(st_aswkt(st_point('lon', 'lat')).alias('wkt')).show()
     +-------------+
     |          wkt|
     +-------------+
@@ -249,8 +249,8 @@ st_aswkt
 
    .. code-tab:: scala
 
-    >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
-    >>> df.select(st_aswkt(st_point($"lon", $"lat")).alias("wkt")).show()
+    val df = List((30.0, 10.0)).toDF("lon", "lat")
+    df.select(st_aswkt(st_point($"lon", $"lat")).alias("wkt")).show()
     +-------------+
     |          wkt|
     +-------------+
@@ -259,7 +259,7 @@ st_aswkt
 
    .. code-tab:: sql
 
-    >>> SELECT st_aswkt(st_point(30.0D, 10.0D)) AS wkt
+    SELECT st_aswkt(st_point(30.0D, 10.0D)) AS wkt
     +-------------+
     |          wkt|
     +-------------+
@@ -268,8 +268,8 @@ st_aswkt
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
-    >>> showDF(select(df, alias(st_aswkt(st_point(column("lon"), column("lat"))), "wkt")), truncate=F)
+    df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    showDF(select(df, alias(st_aswkt(st_point(column("lon"), column("lat"))), "wkt")), truncate=F)
     +-------------+
     |          wkt|
     +-------------+

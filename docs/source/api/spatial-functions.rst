@@ -19,10 +19,10 @@ flatten_polygons
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([
-        {'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}
+    df = spark.createDataFrame([
+            {'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}
         ])
-    >>> df.select(flatten_polygons('wkt')).show(2, False)
+    df.select(flatten_polygons('wkt')).show(2, False)
     +------------------------------------------+
     |element                                   |
     +------------------------------------------+
@@ -32,8 +32,8 @@ flatten_polygons
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-    >>> df.select(flatten_polygons(col("wkt"))).show(false)
+    val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
+    df.select(flatten_polygons(col("wkt"))).show(false)
     +------------------------------------------+
     |element                                   |
     +------------------------------------------+
@@ -43,7 +43,7 @@ flatten_polygons
 
    .. code-tab:: sql
 
-    >>> SELECT flatten_polygons("'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'")
+    SELECT flatten_polygons("'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'")
     +------------------------------------------+
     |element                                   |
     +------------------------------------------+
@@ -53,8 +53,8 @@ flatten_polygons
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
-    >>> showDF(select(df, flatten_polygons(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
+    showDF(select(df, flatten_polygons(column("wkt"))), truncate=F)
     +------------------------------------------+
     |element                                   |
     +------------------------------------------+
@@ -79,8 +79,8 @@ st_area
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_area('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_area('wkt')).show()
     +------------+
     |st_area(wkt)|
     +------------+
@@ -89,8 +89,8 @@ st_area
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_area(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_area(col("wkt"))).show()
     +------------+
     |st_area(wkt)|
     +------------+
@@ -99,7 +99,7 @@ st_area
 
    .. code-tab:: sql
 
-    >>> SELECT st_area("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_area("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +------------+
     |st_area(wkt)|
     +------------+
@@ -108,8 +108,8 @@ st_area
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_area(column("wkt"))))
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_area(column("wkt"))))
     +------------+
     |st_area(wkt)|
     +------------+
@@ -137,8 +137,8 @@ st_buffer
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_buffer('wkt', lit(2.))).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_buffer('wkt', lit(2.))).show()
     +--------------------+
     | st_buffer(wkt, 2.0)|
     +--------------------+
@@ -147,8 +147,8 @@ st_buffer
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_buffer(col("wkt"), 2d)).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_buffer(col("wkt"), 2d)).show()
     +--------------------+
     | st_buffer(wkt, 2.0)|
     +--------------------+
@@ -157,7 +157,7 @@ st_buffer
 
    .. code-tab:: sql
 
-    >>> SELECT st_buffer("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d)
+    SELECT st_buffer("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d)
     +--------------------+
     | st_buffer(wkt, 2.0)|
     +--------------------+
@@ -166,8 +166,8 @@ st_buffer
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_buffer(column("wkt"), lit(2))))
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_buffer(column("wkt"), lit(2))))
     +--------------------+
     | st_buffer(wkt, 2.0)|
     +--------------------+
@@ -195,8 +195,8 @@ st_bufferloop
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_bufferloop('wkt', lit(2.), lit(2.1)).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_bufferloop('wkt', lit(2.), lit(2.1)).show()
     +-------------------------+
     | st_buffer(wkt, 2.0, 2.1)|
     +-------------------------+
@@ -205,8 +205,8 @@ st_bufferloop
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_bufferloop('wkt', lit(2.), lit(2.1))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_bufferloop('wkt', lit(2.), lit(2.1))).show()
     +-------------------------+
     | st_buffer(wkt, 2.0, 2.1)|
     +-------------------------+
@@ -215,7 +215,7 @@ st_bufferloop
 
    .. code-tab:: sql
 
-    >>> SELECT st_bufferloop("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d, 2.1d)
+    SELECT st_bufferloop("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 2d, 2.1d)
     +-------------------------+
     | st_buffer(wkt, 2.0, 2.1)|
     +-------------------------+
@@ -224,8 +224,8 @@ st_bufferloop
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_bufferloop('wkt', lit(2.), lit(2.1))))
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_bufferloop('wkt', lit(2.), lit(2.1))))
     +-------------------------+
     | st_buffer(wkt, 2.0, 2.1)|
     +-------------------------+
@@ -254,8 +254,8 @@ st_centroid2D [Deprecated]
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_centroid2D('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_centroid2D('wkt')).show()
     +---------------------------------------+
     |st_centroid(wkt)                       |
     +---------------------------------------+
@@ -264,8 +264,8 @@ st_centroid2D [Deprecated]
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_centroid2D(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_centroid2D(col("wkt"))).show()
     +---------------------------------------+
     |st_centroid(wkt)                       |
     +---------------------------------------+
@@ -274,7 +274,7 @@ st_centroid2D [Deprecated]
 
    .. code-tab:: sql
 
-    >>> SELECT st_centroid2D("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_centroid2D("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +---------------------------------------+
     |st_centroid(wkt)                       |
     +---------------------------------------+
@@ -283,8 +283,8 @@ st_centroid2D [Deprecated]
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_centroid2D(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_centroid2D(column("wkt"))), truncate=F)
     +---------------------------------------+
     |st_centroid(wkt)                       |
     +---------------------------------------+
@@ -307,8 +307,8 @@ st_centroid
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_centroid('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_centroid('wkt')).show()
     +---------------------------------------------+
     |st_centroid(wkt)                             |
     +---------------------------------------------+
@@ -317,8 +317,8 @@ st_centroid
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_centroid(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_centroid(col("wkt"))).show()
     +---------------------------------------------+
     |st_centroid(wkt)                             |
     +---------------------------------------------+
@@ -327,7 +327,7 @@ st_centroid
 
    .. code-tab:: sql
 
-    >>> SELECT st_centroid("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_centroid("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +---------------------------------------------+
     |st_centroid(wkt)                             |
     +---------------------------------------------+
@@ -336,8 +336,8 @@ st_centroid
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_centroid(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_centroid(column("wkt"))), truncate=F)
     +---------------------------------------------+
     |st_centroid(wkt)                             |
     +---------------------------------------------+
@@ -360,8 +360,8 @@ st_convexhull
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
-    >>> df.select(st_convexhull('wkt')).show(1, False)
+    df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+    df.select(st_convexhull('wkt')).show(1, False)
     +---------------------------------------------+
     |st_convexhull(wkt)                           |
     +---------------------------------------------+
@@ -370,8 +370,8 @@ st_convexhull
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
-    >>> df.select(st_convexhull(col("wkt"))).show(false)
+    val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
+    df.select(st_convexhull(col("wkt"))).show(false)
     +---------------------------------------------+
     |st_convexhull(wkt)                           |
     +---------------------------------------------+
@@ -380,7 +380,7 @@ st_convexhull
 
    .. code-tab:: sql
 
-    >>> SELECT st_convexhull("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")
+    SELECT st_convexhull("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")
     +---------------------------------------------+
     |st_convexhull(wkt)                           |
     +---------------------------------------------+
@@ -389,8 +389,8 @@ st_convexhull
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
-    >>> showDF(select(df, st_convexhull(column("wkt"))))
+    df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    showDF(select(df, st_convexhull(column("wkt"))))
     +---------------------------------------------+
     |st_convexhull(wkt)                           |
     +---------------------------------------------+
@@ -416,8 +416,8 @@ st_difference
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'left': 'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))', 'right': 'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'}])
-    >>> df.select(st_difference(col('left'), col('right'))).show()
+    df = spark.createDataFrame([{'left': 'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))', 'right': 'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'}])
+    df.select(st_difference(col('left'), col('right'))).show()
     +-----------------------------------------------------------+
     | st_difference(left, right)                                |
     +-----------------------------------------------------------+
@@ -426,8 +426,8 @@ st_difference
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")).toDF("left", "right")
-    >>> df.select(st_difference(col('left'), col('right'))).show()
+    val df = List(("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")).toDF("left", "right")
+    df.select(st_difference(col('left'), col('right'))).show()
     +-----------------------------------------------------------+
     | st_difference(left, right)                                |
     +-----------------------------------------------------------+
@@ -436,7 +436,7 @@ st_difference
 
    .. code-tab:: sql
 
-    >>> SELECT st_difference("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")
+    SELECT st_difference("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")
     +-----------------------------------------------------------+
     | st_difference(left, right)                                |
     +-----------------------------------------------------------+
@@ -445,8 +445,8 @@ st_difference
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(p1 = "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", p2 = "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))"))
-    >>> showDF(select(df, st_difference(column("p1"), column("p2"))), truncate=F)
+    df <- createDataFrame(data.frame(p1 = "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", p2 = "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))"))
+    showDF(select(df, st_difference(column("p1"), column("p2"))), truncate=F)
     +-----------------------------------------------------------+
     | st_difference(left, right)                                |
     +-----------------------------------------------------------+
@@ -472,8 +472,8 @@ st_distance
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'point': 'POINT (5 5)', 'poly': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_distance('poly', 'point')).show()
+    df = spark.createDataFrame([{'point': 'POINT (5 5)', 'poly': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_distance('poly', 'point')).show()
     +------------------------+
     |st_distance(poly, point)|
     +------------------------+
@@ -482,8 +482,8 @@ st_distance
 
    .. code-tab:: scala
 
-    >>> val df = List(("POINT (5 5)", "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("point", "poly")
-    >>> df.select(st_distance(col("poly"), col("point"))).show()
+    val df = List(("POINT (5 5)", "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("point", "poly")
+    df.select(st_distance(col("poly"), col("point"))).show()
     +------------------------+
     |st_distance(poly, point)|
     +------------------------+
@@ -492,7 +492,7 @@ st_distance
 
    .. code-tab:: sql
 
-    >>> SELECT st_distance("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", "POINT (5 5)")
+    SELECT st_distance("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", "POINT (5 5)")
     +------------------------+
     |st_distance(poly, point)|
     +------------------------+
@@ -501,8 +501,8 @@ st_distance
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(point = c( "POINT (5 5)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_distance(column("poly"), column("point"))))
+    df <- createDataFrame(data.frame(point = c( "POINT (5 5)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_distance(column("poly"), column("point"))))
     +------------------------+
     |st_distance(poly, point)|
     +------------------------+
@@ -527,8 +527,8 @@ st_dump
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
-    >>> df.select(st_dump('wkt')).show(5, False)
+    df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+    df.select(st_dump('wkt')).show(5, False)
     +-------------+
     |element      |
     +-------------+
@@ -540,8 +540,8 @@ st_dump
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
-    >>> df.select(st_dump(col("wkt"))).show(false)
+    val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
+    df.select(st_dump(col("wkt"))).show(false)
     +-------------+
     |element      |
     +-------------+
@@ -553,7 +553,7 @@ st_dump
 
    .. code-tab:: sql
 
-    >>> SELECT st_dump("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")
+    SELECT st_dump("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")
     +-------------+
     |element      |
     +-------------+
@@ -564,8 +564,8 @@ st_dump
     +-------------+
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
-    >>> showDF(select(df, st_dump(column("wkt"))))
+    df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    showDF(select(df, st_dump(column("wkt"))))
     +-------------+
     |element      |
     +-------------+
@@ -593,8 +593,8 @@ st_envelope
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((10 10, 20 10, 15 20, 10 10))'}])
-    >>> df.select(st_envelope('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((10 10, 20 10, 15 20, 10 10))'}])
+    df.select(st_envelope('wkt')).show()
     +-----------------------------------------------+
     | st_envelope(wkt)                              |
     +-----------------------------------------------+
@@ -603,8 +603,8 @@ st_envelope
 
    .. code-tab:: scala
 
-    >>> df = List(("POLYGON ((10 10, 20 10, 15 20, 10 10))")).toDF("wkt")
-    >>> df.select(st_envelope('wkt')).show()
+    df = List(("POLYGON ((10 10, 20 10, 15 20, 10 10))")).toDF("wkt")
+    df.select(st_envelope('wkt')).show()
     +-----------------------------------------------+
     | st_envelope(wkt)                              |
     +-----------------------------------------------+
@@ -613,7 +613,7 @@ st_envelope
 
    .. code-tab:: sql
 
-    >>> SELECT st_envelope("POLYGON ((10 10, 20 10, 15 20, 10 10))")
+    SELECT st_envelope("POLYGON ((10 10, 20 10, 15 20, 10 10))")
     +-----------------------------------------------+
     | st_envelope(wkt)                              |
     +-----------------------------------------------+
@@ -622,8 +622,8 @@ st_envelope
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((10 10, 20 10, 15 20, 10 10))")
-    >>> showDF(select(df, st_envelope(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((10 10, 20 10, 15 20, 10 10))")
+    showDF(select(df, st_envelope(column("wkt"))), truncate=F)
     +-----------------------------------------------+
     | st_envelope(wkt)                              |
     +-----------------------------------------------+
@@ -647,8 +647,8 @@ st_geometrytype
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_geometrytype('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_geometrytype('wkt')).show()
     +--------------------+
     |st_geometrytype(wkt)|
     +--------------------+
@@ -657,8 +657,8 @@ st_geometrytype
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_geometrytype(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_geometrytype(col("wkt"))).show()
     +--------------------+
     |st_geometrytype(wkt)|
     +--------------------+
@@ -667,7 +667,7 @@ st_geometrytype
 
    .. code-tab:: sql
 
-    >>> SELECT st_geometrytype("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))")
+    SELECT st_geometrytype("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))")
     +--------------------+
     |st_geometrytype(wkt)|
     +--------------------+
@@ -676,8 +676,8 @@ st_geometrytype
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_geometrytype(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_geometrytype(column("wkt"))), truncate=F)
     +--------------------+
     |st_geometrytype(wkt)|
     +--------------------+
@@ -707,8 +707,8 @@ st_haversine
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'lat1': 0.0, 'lng1': 90.0, 'lat2': 0.0, 'lng2': 0.0}])
-    >>> df.select(st_distance('lat1', 'lng1', 'lat2', 'lng2')).show()
+    df = spark.createDataFrame([{'lat1': 0.0, 'lng1': 90.0, 'lat2': 0.0, 'lng2': 0.0}])
+    df.select(st_distance('lat1', 'lng1', 'lat2', 'lng2')).show()
     +------------------------------------+
     |st_haversine(lat1, lng1, lat2, lng2)|
     +------------------------------------+
@@ -717,8 +717,8 @@ st_haversine
 
    .. code-tab:: scala
 
-    >>> val df = List((0.0, 90.0, 0.0, 0.0)).toDF("lat1", "lng1", "lat2", "lng2")
-    >>> df.select(st_haversine(col("lat1"), col("lng1"), col("lat2"), col("lng2"))).show()
+    val df = List((0.0, 90.0, 0.0, 0.0)).toDF("lat1", "lng1", "lat2", "lng2")
+    df.select(st_haversine(col("lat1"), col("lng1"), col("lat2"), col("lng2"))).show()
     +------------------------------------+
     |st_haversine(lat1, lng1, lat2, lng2)|
     +------------------------------------+
@@ -727,7 +727,7 @@ st_haversine
 
    .. code-tab:: sql
 
-    >>> SELECT st_haversine(0.0, 90.0, 0.0, 0.0)
+    SELECT st_haversine(0.0, 90.0, 0.0, 0.0)
     +------------------------------------+
     |st_haversine(lat1, lng1, lat2, lng2)|
     +------------------------------------+
@@ -736,8 +736,8 @@ st_haversine
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(lat1 = c(0.0), lng1 = c(90.0), lat2 = c(0.0), lng2 = c(0.0)))
-    >>> showDF(select(df, st_haversine(column("lat1"), column("lng1"), column("lat2"), column("lng2"))))
+    df <- createDataFrame(data.frame(lat1 = c(0.0), lng1 = c(90.0), lat2 = c(0.0), lng2 = c(0.0)))
+    showDF(select(df, st_haversine(column("lat1"), column("lng1"), column("lat2"), column("lng2"))))
     +------------------------------------+
     |st_haversine(lat1, lng1, lat2, lng2)|
     +------------------------------------+
@@ -768,8 +768,8 @@ st_hasvalidcoordinates
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))'}])
-    >>> df.select(st_hasvalidcoordinates(col('wkt'), lit('EPSG:2192'), lit('bounds'))).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))'}])
+    df.select(st_hasvalidcoordinates(col('wkt'), lit('EPSG:2192'), lit('bounds'))).show()
     +----------------------------------------------+
     |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
     +----------------------------------------------+
@@ -778,8 +778,8 @@ st_hasvalidcoordinates
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))")).toDF("wkt")
-    >>> df.select(st_hasvalidcoordinates(col("wkt"), lit("EPSG:2192"), lit("bounds"))).show()
+    val df = List(("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))")).toDF("wkt")
+    df.select(st_hasvalidcoordinates(col("wkt"), lit("EPSG:2192"), lit("bounds"))).show()
     +----------------------------------------------+
     |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
     +----------------------------------------------+
@@ -788,7 +788,7 @@ st_hasvalidcoordinates
 
    .. code-tab:: sql
 
-    >>> SELECT st_hasvalidcoordinates("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))", "EPSG:2192", "bounds")
+    SELECT st_hasvalidcoordinates("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))", "EPSG:2192", "bounds")
     +----------------------------------------------+
     |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
     +----------------------------------------------+
@@ -797,8 +797,8 @@ st_hasvalidcoordinates
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))"))
-    >>> showDF(select(df, st_hasvalidcoordinates(column("wkt"), lit("EPSG:2192"), lit("bounds"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))"))
+    showDF(select(df, st_hasvalidcoordinates(column("wkt"), lit("EPSG:2192"), lit("bounds"))), truncate=F)
     +----------------------------------------------+
     |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
     +----------------------------------------------+
@@ -824,8 +824,8 @@ st_intersection
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'p1': 'POLYGON ((0 0, 0 3, 3 3, 3 0))', 'p2': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
-    >>> df.select(st_intersection(col('p1'), col('p2'))).show(1, False)
+    df = spark.createDataFrame([{'p1': 'POLYGON ((0 0, 0 3, 3 3, 3 0))', 'p2': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
+    df.select(st_intersection(col('p1'), col('p2'))).show(1, False)
     +-----------------------------------+
     |st_intersection(p1, p2)            |
     +-----------------------------------+
@@ -834,8 +834,8 @@ st_intersection
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")).toDF("p1", "p2")
-    >>> df.select(st_intersection(col("p1"), col("p2"))).show(false)
+    val df = List(("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")).toDF("p1", "p2")
+    df.select(st_intersection(col("p1"), col("p2"))).show(false)
     +-----------------------------------+
     |st_intersection(p1, p2)            |
     +-----------------------------------+
@@ -844,7 +844,7 @@ st_intersection
 
    .. code-tab:: sql
 
-    >>> SELECT st_intersection("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")
+    SELECT st_intersection("POLYGON ((0 0, 0 3, 3 3, 3 0))", "POLYGON ((2 2, 2 4, 4 4, 4 2))")
     +-----------------------------------+
     |st_intersection(p1, p2)            |
     +-----------------------------------+
@@ -853,8 +853,8 @@ st_intersection
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(p1 = "POLYGON ((0 0, 0 3, 3 3, 3 0))", p2 = "POLYGON ((2 2, 2 4, 4 4, 4 2))"))
-    >>> showDF(select(df, st_intersection(column("p1"), column("p2"))), truncate=F)
+    df <- createDataFrame(data.frame(p1 = "POLYGON ((0 0, 0 3, 3 3, 3 0))", p2 = "POLYGON ((2 2, 2 4, 4 4, 4 2))"))
+    showDF(select(df, st_intersection(column("p1"), column("p2"))), truncate=F)
     +-----------------------------------+
     |st_intersection(p1, p2)            |
     +-----------------------------------+
@@ -878,18 +878,18 @@ st_isvalid
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_isvalid('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_isvalid('wkt')).show()
     +---------------+
     |st_isvalid(wkt)|
     +---------------+
     |           true|
     +---------------+
 
-    >>> df = spark.createDataFrame([{
+    df = spark.createDataFrame([{
         'wkt': 'POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))'
         }])
-    >>> df.select(st_isvalid('wkt')).show()
+    df.select(st_isvalid('wkt')).show()
     +---------------+
     |st_isvalid(wkt)|
     +---------------+
@@ -898,16 +898,16 @@ st_isvalid
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_isvalid(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_isvalid(col("wkt"))).show()
     +---------------+
     |st_isvalid(wkt)|
     +---------------+
     |           true|
     +---------------+
 
-    >>> val df = List(("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))")).toDF("wkt")
-    >>> df.select(st_isvalid(col("wkt"))).show()
+    val df = List(("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))")).toDF("wkt")
+    df.select(st_isvalid(col("wkt"))).show()
     +---------------+
     |st_isvalid(wkt)|
     +---------------+
@@ -916,14 +916,14 @@ st_isvalid
 
    .. code-tab:: sql
 
-    >>> SELECT st_isvalid("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_isvalid("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +---------------+
     |st_isvalid(wkt)|
     +---------------+
     |           true|
     +---------------+
 
-    >>> SELECT st_isvalid("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))")
+    SELECT st_isvalid("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))")
     +---------------+
     |st_isvalid(wkt)|
     +---------------+
@@ -932,16 +932,16 @@ st_isvalid
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_isvalid(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_isvalid(column("wkt"))), truncate=F)
     +---------------+
     |st_isvalid(wkt)|
     +---------------+
     |           true|
     +---------------+
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))"))
-    >>> showDF(select(df, st_isvalid(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0), (15 15, 15 20, 20 20, 20 15, 15 15))"))
+    showDF(select(df, st_isvalid(column("wkt"))), truncate=F)
     +---------------+
     |st_isvalid(wkt)|
     +---------------+
@@ -949,7 +949,7 @@ st_isvalid
     +---------------+
 
 .. note:: Validity assertions will be dependent on the chosen geometry API.
-    The assertions used in the ESRI geometry API (the default) follow the definitions in the
+    The assertions used in the ESRI geometry API (JTS is the default) follow the definitions in the
     "Simple feature access - Part 1" document (OGC 06-103r4) for each geometry type.
 
 
@@ -969,8 +969,8 @@ st_length
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_length('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_length('wkt')).show()
     +-----------------+
     |   st_length(wkt)|
     +-----------------+
@@ -979,8 +979,8 @@ st_length
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_length(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_length(col("wkt"))).show()
     +-----------------+
     |   st_length(wkt)|
     +-----------------+
@@ -989,7 +989,7 @@ st_length
 
    .. code-tab:: sql
 
-    >>> SELECT st_length("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_length("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +-----------------+
     |   st_length(wkt)|
     +-----------------+
@@ -997,8 +997,8 @@ st_length
     +-----------------+
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_length(column("wkt"))))
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_length(column("wkt"))))
     +-----------------+
     |   st_length(wkt)|
     +-----------------+
@@ -1028,8 +1028,8 @@ st_numpoints
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_numpoints('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_numpoints('wkt')).show()
     +-----------------+
     |st_numpoints(wkt)|
     +-----------------+
@@ -1038,8 +1038,8 @@ st_numpoints
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_numpoints(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_numpoints(col("wkt"))).show()
     +-----------------+
     |st_numpoints(wkt)|
     +-----------------+
@@ -1048,7 +1048,7 @@ st_numpoints
 
    .. code-tab:: sql
 
-    >>> SELECT st_numpoints("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_numpoints("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +-----------------+
     |st_numpoints(wkt)|
     +-----------------+
@@ -1057,8 +1057,8 @@ st_numpoints
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_numpoints(column("wkt"))))
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_numpoints(column("wkt"))))
     +-----------------+
     |st_numpoints(wkt)|
     +-----------------+
@@ -1081,8 +1081,8 @@ st_perimeter
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_perimeter('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_perimeter('wkt')).show()
     +-----------------+
     |st_perimeter(wkt)|
     +-----------------+
@@ -1091,8 +1091,8 @@ st_perimeter
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_perimeter(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_perimeter(col("wkt"))).show()
     +-----------------+
     |st_perimeter(wkt)|
     +-----------------+
@@ -1101,7 +1101,7 @@ st_perimeter
 
    .. code-tab:: sql
 
-    >>> SELECT st_perimeter("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_perimeter("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +-----------------+
     |st_perimeter(wkt)|
     +-----------------+
@@ -1109,8 +1109,8 @@ st_perimeter
     +-----------------+
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_perimeter(column("wkt"))))
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_perimeter(column("wkt"))))
     +-----------------+
     |st_perimeter(wkt)|
     +-----------------+
@@ -1141,9 +1141,9 @@ st_rotate
 .. tabs::
    .. code-tab:: py
 
-    >>> from math import pi
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_rotate('wkt', lit(pi))).show(1, False)
+    from math import pi
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_rotate('wkt', lit(pi))).show(1, False)
     +-------------------------------------------------------+
     |st_rotate(wkt, 3.141592653589793)                      |
     +-------------------------------------------------------+
@@ -1152,9 +1152,9 @@ st_rotate
 
    .. code-tab:: scala
 
-    >>> import math.Pi
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_rotate(col("wkt"), lit(Pi))).show(false)
+    import math.Pi
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_rotate(col("wkt"), lit(Pi))).show(false)
     +-------------------------------------------------------+
     |st_rotate(wkt, 3.141592653589793)                      |
     +-------------------------------------------------------+
@@ -1163,7 +1163,7 @@ st_rotate
 
    .. code-tab:: sql
 
-    >>> SELECT st_rotate("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", pi())
+    SELECT st_rotate("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", pi())
     +-------------------------------------------------------+
     |st_rotate(wkt, 3.141592653589793)                      |
     +-------------------------------------------------------+
@@ -1172,8 +1172,8 @@ st_rotate
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_rotate(column("wkt"), lit(pi))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_rotate(column("wkt"), lit(pi))), truncate=F)
     +-------------------------------------------------------+
     |st_rotate(wkt, 3.141592653589793)                      |
     +-------------------------------------------------------+
@@ -1202,8 +1202,8 @@ st_scale
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_scale('wkt', lit(0.5), lit(2))).show(1, False)
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_scale('wkt', lit(0.5), lit(2))).show(1, False)
     +--------------------------------------------+
     |st_scale(wkt, 0.5, 2)                       |
     +--------------------------------------------+
@@ -1212,8 +1212,8 @@ st_scale
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_scale(col("wkt"), lit(0.5), lit(2.0))).show(false)
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_scale(col("wkt"), lit(0.5), lit(2.0))).show(false)
     +--------------------------------------------+
     |st_scale(wkt, 0.5, 2)                       |
     +--------------------------------------------+
@@ -1222,7 +1222,7 @@ st_scale
 
    .. code-tab:: sql
 
-    >>> SELECT st_scale("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 0.5d, 2.0d)
+    SELECT st_scale("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))", 0.5d, 2.0d)
     +--------------------------------------------+
     |st_scale(wkt, 0.5, 2)                       |
     +--------------------------------------------+
@@ -1231,8 +1231,8 @@ st_scale
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_scale(column('wkt'), lit(0.5), lit(2))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_scale(column('wkt'), lit(0.5), lit(2))), truncate=F)
     +--------------------------------------------+
     |st_scale(wkt, 0.5, 2)                       |
     +--------------------------------------------+
@@ -1258,8 +1258,8 @@ st_setsrid
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
-    >>> df.select(st_setsrid(st_geomfromwkt('wkt'), lit(4326))).show(1)
+    df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+    df.select(st_setsrid(st_geomfromwkt('wkt'), lit(4326))).show(1)
     +---------------------------------+
     |st_setsrid(convert_to(wkt), 4326)|
     +---------------------------------+
@@ -1268,8 +1268,8 @@ st_setsrid
 
    .. code-tab:: scala
 
-    >>> val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
-    >>> df.select(st_setsrid(st_geomfromwkt(col("wkt")), lit(4326))).show
+    val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
+    df.select(st_setsrid(st_geomfromwkt(col("wkt")), lit(4326))).show
     +---------------------------------+
     |st_setsrid(convert_to(wkt), 4326)|
     +---------------------------------+
@@ -1278,7 +1278,7 @@ st_setsrid
 
    .. code-tab:: sql
 
-    >>> select st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326)
+    select st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326)
     +---------------------------------+
     |st_setsrid(convert_to(wkt), 4326)|
     +---------------------------------+
@@ -1287,8 +1287,8 @@ st_setsrid
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
-    >>> showDF(select(df, st_setsrid(st_geomfromwkt(column("wkt")), lit(4326L))))
+    df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    showDF(select(df, st_setsrid(st_geomfromwkt(column("wkt")), lit(4326L))))
     +---------------------------------+
     |st_setsrid(convert_to(wkt), 4326)|
     +---------------------------------+
@@ -1318,8 +1318,8 @@ st_simplify
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'LINESTRING (0 1, 1 2, 2 1, 3 0)'}])
-    >>> df.select(st_simplify('wkt', 1.0)).show()
+    df = spark.createDataFrame([{'wkt': 'LINESTRING (0 1, 1 2, 2 1, 3 0)'}])
+    df.select(st_simplify('wkt', 1.0)).show()
     +----------------------------+
     | st_simplify(wkt, 1.0)      |
     +----------------------------+
@@ -1328,8 +1328,8 @@ st_simplify
 
    .. code-tab:: scala
 
-    >>> df = List(("LINESTRING (0 1, 1 2, 2 1, 3 0)")).toDF("wkt")
-    >>> df.select(st_simplify('wkt', 1.0)).show()
+    df = List(("LINESTRING (0 1, 1 2, 2 1, 3 0)")).toDF("wkt")
+    df.select(st_simplify('wkt', 1.0)).show()
     +----------------------------+
     | st_simplify(wkt, 1.0)      |
     +----------------------------+
@@ -1338,7 +1338,7 @@ st_simplify
 
    .. code-tab:: sql
 
-    >>> SELECT st_simplify("LINESTRING (0 1, 1 2, 2 1, 3 0)", 1.0)
+    SELECT st_simplify("LINESTRING (0 1, 1 2, 2 1, 3 0)", 1.0)
     +----------------------------+
     | st_simplify(wkt, 1.0)      |
     +----------------------------+
@@ -1347,8 +1347,8 @@ st_simplify
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "LINESTRING (0 1, 1 2, 2 1, 3 0)")
-    >>> showDF(select(df, st_simplify(column("wkt"), 1.0)), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "LINESTRING (0 1, 1 2, 2 1, 3 0)")
+    showDF(select(df, st_simplify(column("wkt"), 1.0)), truncate=F)
     +----------------------------+
     | st_simplify(wkt, 1.0)      |
     +----------------------------+
@@ -1374,9 +1374,9 @@ st_srid
 .. tabs::
    .. code-tab:: py
 
-    >>> json_geom = '{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'
-    >>> df = spark.createDataFrame([{'json': json_geom}])
-    >>> df.select(st_srid(as_json('json'))).show(1)
+    json_geom = '{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'
+    df = spark.createDataFrame([{'json': json_geom}])
+    df.select(st_srid(as_json('json'))).show(1)
     +----------------------+
     |st_srid(as_json(json))|
     +----------------------+
@@ -1385,10 +1385,10 @@ st_srid
 
    .. code-tab:: scala
 
-    >>> val df =
-    >>>    List("""{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}""")
-    >>>    .toDF("json")
-    >>> df.select(st_srid(as_json(col("json")))).show(1)
+    val df =
+       List("""{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}""")
+       .toDF("json")
+    df.select(st_srid(as_json(col("json")))).show(1)
     +----------------------+
     |st_srid(as_json(json))|
     +----------------------+
@@ -1397,7 +1397,7 @@ st_srid
 
    .. code-tab:: sql
 
-    >>> select st_srid(as_json('{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'))
+    select st_srid(as_json('{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'))
     +------------+
     |st_srid(...)|
     +------------+
@@ -1406,9 +1406,9 @@ st_srid
 
    .. code-tab:: r R
 
-    >>> json_geom <- '{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'
-    >>> df <- createDataFrame(data.frame(json=json_geom))
-    >>> showDF(select(df, st_srid(as_json(column('json')))))
+    json_geom <- '{"type":"MultiPoint","coordinates":[[10,40],[40,30],[20,20],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'
+    df <- createDataFrame(data.frame(json=json_geom))
+    showDF(select(df, st_srid(as_json(column('json')))))
     +------------+
     |st_srid(...)|
     +------------+
@@ -1437,11 +1437,11 @@ st_transform
 .. tabs::
    .. code-tab:: py
 
-    >>> df = (
-    >>>   spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
-    >>>   .withColumn('geom', st_setsrid(st_geomfromwkt('wkt'), lit(4326)))
-    >>> )
-    >>> df.select(st_astext(st_transform('geom', lit(3857)))).show(1, False)
+    df = (
+      spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+      .withColumn('geom', st_setsrid(st_geomfromwkt('wkt'), lit(4326)))
+    )
+    df.select(st_astext(st_transform('geom', lit(3857)))).show(1, False)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1450,9 +1450,9 @@ st_transform
 
    .. code-tab:: scala
 
-    >>> val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
-    >>>   .withColumn("geom", st_setsrid(st_geomfromwkt(col("wkt")), lit(4326)))
-    >>> df.select(st_astext(st_transform(col("geom"), lit(3857)))).show(1, false)
+    val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
+      .withColumn("geom", st_setsrid(st_geomfromwkt(col("wkt")), lit(4326)))
+    df.select(st_astext(st_transform(col("geom"), lit(3857)))).show(1, false)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1461,7 +1461,7 @@ st_transform
 
    .. code-tab:: sql
 
-    >>> select st_astext(st_transform(st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326), 3857))
+    select st_astext(st_transform(st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326), 3857))
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1470,10 +1470,10 @@ st_transform
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
-    >>> df <- withColumn(df, 'geom', st_setsrid(st_geomfromwkt(column('wkt')), lit(4326L)))
+    df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    df <- withColumn(df, 'geom', st_setsrid(st_geomfromwkt(column('wkt')), lit(4326L)))
     >>>
-    >>> showDF(select(df, st_astext(st_transform(column('geom'), lit(3857L)))), truncate=F)
+    showDF(select(df, st_astext(st_transform(column('geom'), lit(3857L)))), truncate=F)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1505,8 +1505,8 @@ st_translate
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
-    >>> df.select(st_translate('wkt', lit(10), lit(-5))).show(1, False)
+    df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+    df.select(st_translate('wkt', lit(10), lit(-5))).show(1, False)
     +----------------------------------------------+
     |st_translate(wkt, 10, -5)                     |
     +----------------------------------------------+
@@ -1515,8 +1515,8 @@ st_translate
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
-    >>> df.select(st_translate(col("wkt"), lit(10d), lit(-5d))).show(false)
+    val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
+    df.select(st_translate(col("wkt"), lit(10d), lit(-5d))).show(false)
     +----------------------------------------------+
     |st_translate(wkt, 10, -5)                     |
     +----------------------------------------------+
@@ -1525,7 +1525,7 @@ st_translate
 
    .. code-tab:: sql
 
-    >>> SELECT st_translate("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))", 10d, -5d)
+    SELECT st_translate("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))", 10d, -5d)
     +----------------------------------------------+
     |st_translate(wkt, 10, -5)                     |
     +----------------------------------------------+
@@ -1534,8 +1534,8 @@ st_translate
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
-    >>> showDF(select(df, st_translate(column('wkt'), lit(10), lit(-5))))
+    df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    showDF(select(df, st_translate(column('wkt'), lit(10), lit(-5))))
     +----------------------------------------------+
     |st_translate(wkt, 10, -5)                     |
     +----------------------------------------------+
@@ -1560,8 +1560,8 @@ st_union
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'left': 'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))', 'right': 'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'}])
-    >>> df.select(st_union(col('left'), col('right'))).show()
+    df = spark.createDataFrame([{'left': 'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))', 'right': 'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'}])
+    df.select(st_union(col('left'), col('right'))).show()
     +-------------------------------------------------------------------------+
     | st_union(left, right)                                                   |
     +-------------------------------------------------------------------------+
@@ -1570,8 +1570,8 @@ st_union
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")).toDF("left", "right")
-    >>> df.select(st_union(col('left'), col('right'))).show()
+    val df = List(("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")).toDF("left", "right")
+    df.select(st_union(col('left'), col('right'))).show()
     +-------------------------------------------------------------------------+
     | st_union(left, right)                                                   |
     +-------------------------------------------------------------------------+
@@ -1580,7 +1580,7 @@ st_union
 
    .. code-tab:: sql
 
-    >>> SELECT st_union("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")
+    SELECT st_union("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))")
     +-------------------------------------------------------------------------+
     | st_union(left, right)                                                   |
     +-------------------------------------------------------------------------+
@@ -1589,8 +1589,8 @@ st_union
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(p1 = "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", p2 = "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))"))
-    >>> showDF(select(df, st_union(column("p1"), column("p2"))), truncate=F)
+    df <- createDataFrame(data.frame(p1 = "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", p2 = "POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))"))
+    showDF(select(df, st_union(column("p1"), column("p2"))), truncate=F)
     +-------------------------------------------------------------------------+
     | st_union(left, right)                                                   |
     +-------------------------------------------------------------------------+
@@ -1613,8 +1613,8 @@ st_unaryunion
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))'}])
-    >>> df.select(st_unaryunion('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))'}])
+    df.select(st_unaryunion('wkt')).show()
     +-------------------------------------------------------------------------+
     | st_unaryunion(wkt, 2.0)                                                 |
     +-------------------------------------------------------------------------+
@@ -1623,8 +1623,8 @@ st_unaryunion
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")).toDF("wkt")
-    >>> df.select(st_unaryunion(col("wkt"))).show()
+    val df = List(("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")).toDF("wkt")
+    df.select(st_unaryunion(col("wkt"))).show()
     +-------------------------------------------------------------------------+
     | st_unaryunion(wkt, 2.0)                                                 |
     +-------------------------------------------------------------------------+
@@ -1633,7 +1633,7 @@ st_unaryunion
 
    .. code-tab:: sql
 
-    >>> SELECT st_unaryunion("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
+    SELECT st_unaryunion("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
     +-------------------------------------------------------------------------+
     | st_unaryunion(wkt, 2.0)                                                 |
     +-------------------------------------------------------------------------+
@@ -1642,8 +1642,8 @@ st_unaryunion
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
-    >>> showDF(select(df, st_unaryunion(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
+    showDF(select(df, st_unaryunion(column("wkt"))), truncate=F)
     +-------------------------------------------------------------------------+
     | st_unaryunion(wkt, 2.0)                                                 |
     +-------------------------------------------------------------------------+
@@ -1666,8 +1666,8 @@ st_x
 .. tabs::
     .. code-tab:: py
 
-     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
-     >>> df.select(st_x('wkt')).show()
+     df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+     df.select(st_x('wkt')).show()
      +-----------------+
      |st_x(wkt)        |
      +-----------------+
@@ -1676,8 +1676,8 @@ st_x
 
     .. code-tab:: scala
 
-     >>> val df = List(("POINT (30 10)")).toDF("wkt")
-     >>> df.select(st_x(col("wkt"))).show()
+     val df = List(("POINT (30 10)")).toDF("wkt")
+     df.select(st_x(col("wkt"))).show()
      +-----------------+
      |st_x(wkt)        |
      +-----------------+
@@ -1686,7 +1686,7 @@ st_x
 
     .. code-tab:: sql
 
-     >>> SELECT st_x("POINT (30 10)")
+     SELECT st_x("POINT (30 10)")
      +-----------------+
      |st_x(wkt)        |
      +-----------------+
@@ -1695,8 +1695,8 @@ st_x
 
     .. code-tab:: r R
 
-     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10)"))
-     >>> showDF(select(df, st_x(column("wkt"))), truncate=F)
+     df <- createDataFrame(data.frame(wkt = "POINT (30 10)"))
+     showDF(select(df, st_x(column("wkt"))), truncate=F)
      +-----------------+
      |st_x(wkt)        |
      +-----------------+
@@ -1719,8 +1719,8 @@ st_xmax
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_xmax('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_xmax('wkt')).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1729,8 +1729,8 @@ st_xmax
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_xmax(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_xmax(col("wkt"))).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1739,7 +1739,7 @@ st_xmax
 
    .. code-tab:: sql
 
-    >>> SELECT st_xmax("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_xmax("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1748,8 +1748,8 @@ st_xmax
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_xmax(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_xmax(column("wkt"))), truncate=F)
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1773,8 +1773,8 @@ st_xmin
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_xmin('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_xmin('wkt')).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1783,8 +1783,8 @@ st_xmin
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_xmin(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_xmin(col("wkt"))).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1793,7 +1793,7 @@ st_xmin
 
    .. code-tab:: sql
 
-    >>> SELECT st_xmin("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_xmin("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1802,8 +1802,8 @@ st_xmin
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_xmin(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_xmin(column("wkt"))), truncate=F)
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1825,8 +1825,8 @@ st_y
 .. tabs::
     .. code-tab:: py
 
-     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
-     >>> df.select(st_y('wkt')).show()
+     df = spark.createDataFrame([{'wkt': 'POINT (30 10)'}])
+     df.select(st_y('wkt')).show()
      +-----------------+
      |st_y(wkt)        |
      +-----------------+
@@ -1835,8 +1835,8 @@ st_y
 
     .. code-tab:: scala
 
-     >>> val df = List(("POINT (30 10)")).toDF("wkt")
-     >>> df.select(st_y(col("wkt"))).show()
+     val df = List(("POINT (30 10)")).toDF("wkt")
+     df.select(st_y(col("wkt"))).show()
      +-----------------+
      |st_y(wkt)        |
      +-----------------+
@@ -1845,7 +1845,7 @@ st_y
 
     .. code-tab:: sql
 
-     >>> SELECT st_y("POINT (30 10)")
+     SELECT st_y("POINT (30 10)")
      +-----------------+
      |st_y(wkt)        |
      +-----------------+
@@ -1854,8 +1854,8 @@ st_y
 
     .. code-tab:: r R
 
-     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10)"))
-     >>> showDF(select(df, st_y(column("wkt"))), truncate=F)
+     df <- createDataFrame(data.frame(wkt = "POINT (30 10)"))
+     showDF(select(df, st_y(column("wkt"))), truncate=F)
      +-----------------+
      |st_y(wkt)        |
      +-----------------+
@@ -1878,8 +1878,8 @@ st_ymax
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_ymax('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_ymax('wkt')).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1888,8 +1888,8 @@ st_ymax
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_ymax(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_ymax(col("wkt"))).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1898,7 +1898,7 @@ st_ymax
 
    .. code-tab:: sql
 
-    >>> SELECT st_ymax("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_ymax("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1907,8 +1907,8 @@ st_ymax
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_ymax(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_ymax(column("wkt"))), truncate=F)
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1932,8 +1932,8 @@ st_ymin
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_ymin('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_ymin('wkt')).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1942,8 +1942,8 @@ st_ymin
 
    .. code-tab:: scala
 
-    >>> val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    >>> df.select(st_ymin(col("wkt"))).show()
+    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
+    df.select(st_ymin(col("wkt"))).show()
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1952,7 +1952,7 @@ st_ymin
 
    .. code-tab:: sql
 
-    >>> SELECT st_ymin("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_ymin("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1961,8 +1961,8 @@ st_ymin
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_ymin(column("wkt"))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_ymin(column("wkt"))), truncate=F)
     +-----------------+
     |st_minmaxxyz(wkt)|
     +-----------------+
@@ -1986,8 +1986,8 @@ st_zmax
 .. tabs::
     .. code-tab:: py
 
-     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10 20)'}])
-     >>> df.select(st_zmax('wkt')).show()
+     df = spark.createDataFrame([{'wkt': 'POINT (30 10 20)'}])
+     df.select(st_zmax('wkt')).show()
      +-----------------+
      |st_minmaxxyz(wkt)|
      +-----------------+
@@ -1996,8 +1996,8 @@ st_zmax
 
     .. code-tab:: scala
 
-     >>> val df = List(("POINT (30 10 20)")).toDF("wkt")
-     >>> df.select(st_zmax(col("wkt"))).show()
+     val df = List(("POINT (30 10 20)")).toDF("wkt")
+     df.select(st_zmax(col("wkt"))).show()
      +-----------------+
      |st_minmaxxyz(wkt)|
      +-----------------+
@@ -2006,7 +2006,7 @@ st_zmax
 
     .. code-tab:: sql
 
-     >>> SELECT st_zmax("POINT (30 10 20)")
+     SELECT st_zmax("POINT (30 10 20)")
      +-----------------+
      |st_minmaxxyz(wkt)|
      +-----------------+
@@ -2015,8 +2015,8 @@ st_zmax
 
     .. code-tab:: r R
 
-     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10 20)"))
-     >>> showDF(select(df, st_zmax(column("wkt"))), truncate=F)
+     df <- createDataFrame(data.frame(wkt = "POINT (30 10 20)"))
+     showDF(select(df, st_zmax(column("wkt"))), truncate=F)
      +-----------------+
      |st_minmaxxyz(wkt)|
      +-----------------+
@@ -2041,8 +2041,8 @@ st_zmin
 .. tabs::
     .. code-tab:: py
 
-     >>> df = spark.createDataFrame([{'wkt': 'POINT (30 10 20)'}])
-     >>> df.select(st_zmin('wkt')).show()
+     df = spark.createDataFrame([{'wkt': 'POINT (30 10 20)'}])
+     df.select(st_zmin('wkt')).show()
      +-----------------+
      |st_minmaxxyz(wkt)|
      +-----------------+
@@ -2051,8 +2051,8 @@ st_zmin
 
     .. code-tab:: scala
 
-     >>> val df = List(("POINT (30 10 20)")).toDF("wkt")
-     >>> df.select(st_zmin(col("wkt"))).show()
+     val df = List(("POINT (30 10 20)")).toDF("wkt")
+     df.select(st_zmin(col("wkt"))).show()
      +-----------------+
      |st_minmaxxyz(wkt)|
      +-----------------+
@@ -2061,7 +2061,7 @@ st_zmin
 
     .. code-tab:: sql
 
-     >>> SELECT st_zmin("POINT (30 10 20)")
+     SELECT st_zmin("POINT (30 10 20)")
      +-----------------+
      |st_minmaxxyz(wkt)|
      +-----------------+
@@ -2070,8 +2070,8 @@ st_zmin
 
     .. code-tab:: r R
 
-     >>> df <- createDataFrame(data.frame(wkt = "POINT (30 10 20)"))
-     >>> showDF(select(df, st_zmin(column("wkt"))), truncate=F)
+     df <- createDataFrame(data.frame(wkt = "POINT (30 10 20)"))
+     showDF(select(df, st_zmin(column("wkt"))), truncate=F)
      +-----------------+
      |st_minmaxxyz(wkt)|
      +-----------------+

@@ -31,7 +31,7 @@ class MosaicContext:
                 "spark.databricks.labs.mosaic.geometry.api"
             )
         except Py4JJavaError as e:
-            self._geometry_api = "ESRI"
+            self._geometry_api = "JTS"
 
         try:
             self._index_system = spark.conf.get(

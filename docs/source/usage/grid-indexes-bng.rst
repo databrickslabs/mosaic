@@ -26,26 +26,28 @@ configurations. Spark provides an easy way to supply configuration parameters us
 .. tabs::
    .. code-tab:: py
 
-    >>> import mosaic as mos
-    >>> spark.conf.set("spark.databricks.labs.mosaic.index.system", "BNG")
-    >>> mos.enable_mosaic(spark, dbutils)
+    import mosaic as mos
+
+    spark.conf.set("spark.databricks.labs.mosaic.index.system", "BNG")
+    mos.enable_mosaic(spark, dbutils)
 
    .. code-tab:: scala
 
-    >>> import com.databricks.labs.mosaic.functions.MosaicContext
-    >>> import com.databricks.labs.mosaic.{BNG, ESRI}
-    >>> val mosaicContext = MosaicContext.build(BNG, ESRI)
-    >>> import mosaicContext.functions._
+    import com.databricks.labs.mosaic.functions.MosaicContext
+    import com.databricks.labs.mosaic.{BNG, JTS}
+
+    val mosaicContext = MosaicContext.build(BNG, JTS)
+    import mosaicContext.functions._
 
    .. code-tab:: r R
 
-    >>> library(sparkrMosaic)
-    >>> enableMosaic("ESRI", "BNG")
+    library(sparkrMosaic)
+    enableMosaic("JTS", "BNG")
 
    .. code-tab:: sql
 
-    >>> -- For SQL please use Automatic SQL Configuration. See: https://databrickslabs.github.io/mosaic/usage/automatic-sql-registration.html
-    >>> -- Otherwise, use python configuration in the first cell of your notebook, then use SQL in the rest of the notebook.
+    -- For SQL please use Automatic SQL Configuration. See: https://databrickslabs.github.io/mosaic/usage/automatic-sql-registration.html
+    -- Otherwise, use python configuration in the first cell of your notebook, then use SQL in the rest of the notebook.
 
 Coordinate Reference System
 ###########################
@@ -56,50 +58,50 @@ For more information on the CRS you can visit `EPSG:27700 <https://epsg.io/27700
 
 If your data in is not provided in EPSG:27700 we would recommend to either switch the indexing strategy to H3
 or to reproject the data from source CRS to EPSG:27700. Mosaic provides the functionality to set CRS ID
-even for geometries that arive as WKT and WKB (the formats do not capture the CRS information and this information
+even for geometries that arrive as WKT and WKB (the formats do not capture the CRS information and this information
 has to be set manually).
 
 .. tabs::
    .. code-tab:: py
 
-    >>> ### CRS codes assume EPSG
-    >>> df = df.withColumn("geometry", mos.st_setsrid("geometry", 4326))
-    >>> df = df.withColumn("geometry", mos.st_transform("geometry", 27700))
+    ### CRS codes assume EPSG
+    df = df.withColumn("geometry", mos.st_setsrid("geometry", 4326))
+    df = df.withColumn("geometry", mos.st_transform("geometry", 27700))
 
 
    .. code-tab:: scala
 
-    >>> ### CRS codes assume EPSG
-    >>> val withSrcCRS = df.withColumn("geometry", mos.st_setsrid("geometry", 4326))
-    >>> val withReprojected = withSrcCRS.withColumn("geometry", mos.st_transform("geometry", 27700))
+    ### CRS codes assume EPSG
+    val withSrcCRS = df.withColumn("geometry", mos.st_setsrid("geometry", 4326))
+    val withReprojected = withSrcCRS.withColumn("geometry", mos.st_transform("geometry", 27700))
 
    .. code-tab:: r R
 
-    >>> ### CRS codes assume EPSG
-    >>> df <- withColumn(df, "geometry", mos.st_setsrid(df$geometry, 4326))
-    >>> df <- withColumn(df, "geometry", mos.st_transform(df$geometry, 27700))
+    ### CRS codes assume EPSG
+    df <- withColumn(df, "geometry", mos.st_setsrid(df$geometry, 4326))
+    df <- withColumn(df, "geometry", mos.st_transform(df$geometry, 27700))
 
 Mosaic provides functionality to verify provided geometries have all of their vertices within bounds of the
-specified CRS. If the CRS isnt EPSG:4326 then the functionality allows to prefer checks on the coordinates
+specified CRS. If the CRS isn't EPSG:4326 then the functionality allows to prefer checks on the coordinates
 before and/or after reprojection. This allows the end users to filter out geometries that would not be
 possible to index with BNG.
 
 .. tabs::
    .. code-tab:: py
 
-    >>> df = df.withColumn("is_within_bng_bounds", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
+    df = df.withColumn("is_within_bng_bounds", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
 
    .. code-tab:: scala
 
-    >>> val withValidCoords = df.withColumn("is_within_bng_bounds", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
+    val withValidCoords = df.withColumn("is_within_bng_bounds", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
 
    .. code-tab:: r R
 
-    >>> df <- withColumn(df, "is_within_bng_bounds", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
+    df <- withColumn(df, "is_within_bng_bounds", st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds'))
 
    .. code-tab:: sql
 
-    >>> SELECT *, st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds') as is_within_bng_bounds
+    SELECT *, st_hasvalidcoordinates(geometry, 'EPSG:27700', 'reprojected_bounds') as is_within_bng_bounds
 
 Mosaic supports all indexing operations for both H3 and BNG.
 Please see :doc:`Spatial Indexing </api/spatial-indexing>` for supported indexing operations.
