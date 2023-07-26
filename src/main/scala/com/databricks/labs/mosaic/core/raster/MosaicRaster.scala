@@ -23,7 +23,13 @@ abstract class MosaicRaster(
       with RasterWriter
       with RasterCleaner {
 
-    def getBands: Seq[MosaicRasterBand] =  (1 to numBands).map(getBand)
+    def flushCache(): MosaicRaster = {
+        this.destroy()
+        this.refresh()
+        this
+    }
+
+    def getBands: Seq[MosaicRasterBand] = (1 to numBands).map(getBand)
 
     def refresh(): Unit
 

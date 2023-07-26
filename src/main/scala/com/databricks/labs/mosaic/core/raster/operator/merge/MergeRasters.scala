@@ -12,8 +12,8 @@ object MergeRasters {
         val rasterUUID = java.util.UUID.randomUUID.toString
         val outShortName = rasters.head.getRaster.GetDriver.getShortName
 
-        //val vrtPath = s"/vsimem/$vrtUUID.vrt"
-        //val rasterPath = s"/vsimem/$rasterUUID.tif"
+        // val vrtPath = s"/vsimem/$vrtUUID.vrt"
+        // val rasterPath = s"/vsimem/$rasterUUID.tif"
         val vrtPath = PathUtils.createTmpFilePath(vrtUUID, "vrt")
         val rasterPath = PathUtils.createTmpFilePath(rasterUUID, "tif")
 
@@ -27,8 +27,8 @@ object MergeRasters {
 
         val result2 = GDALWarp.executeWarp(
           rasterPath,
-            rasters,
-                command = s"gdalwarp -r bilinear -of $outShortName -co COMPRESS=PACKBITS -overwrite"
+          rasters,
+          command = s"gdalwarp -r bilinear -of $outShortName -co COMPRESS=PACKBITS -overwrite"
         )
 
 //        RasterCleaner.dispose(vrtRaster)

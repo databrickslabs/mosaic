@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression, UnsafeArrayData}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{ArrayType, DataType}
 
@@ -72,7 +72,9 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       */
     override def nullSafeEval(input: Any): Any = {
         val rasterDT = rastersExpr.dataType.asInstanceOf[ArrayType].elementType
-        val rasters = input.asInstanceOf[ArrayData].array.map(rasterAPI.readRaster(_, rasterDT))
+        val arrayData = input.asInstanceOf[ArrayData]
+        val n = arrayData.numElements()
+        val rasters = (0 until n).map(i => rasterAPI.readRaster(arrayData.get(i, rasterDT), rasterDT))
         val result = rasterTransform(rasters)
         val serialized = serialize(result, returnsRaster, dataType, rasterAPI, expressionConfig)
         rasters.foreach(RasterCleaner.dispose)

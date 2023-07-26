@@ -12,7 +12,8 @@ object GDALTranslate {
             val translateOptionsVec = OperatorOptions.parseOptions(command)
             val translateOptions = new TranslateOptions(translateOptionsVec)
             val result = gdal.Translate(outputPath, raster.getRaster, translateOptions)
-            MosaicRasterGDAL(result, outputPath)
+            val mosaicRaster = MosaicRasterGDAL(result, outputPath)
+            mosaicRaster.flushCache()
         } else {
             throw new Exception("Not a valid GDAL Translate command.")
         }

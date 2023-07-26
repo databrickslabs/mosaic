@@ -13,7 +13,8 @@ object GDALWarp {
             val warpOptionsVec = OperatorOptions.parseOptions(command)
             val warpOptions = new WarpOptions(warpOptionsVec)
             val result = gdal.Warp(outputPath, rasters.map(_.getRaster).toArray, warpOptions)
-            MosaicRasterGDAL(result, outputPath)
+            val mosaicRaster = MosaicRasterGDAL(result, outputPath)
+            mosaicRaster.flushCache()
         } else {
             throw new Exception("Not a valid GDAL Warp command.")
         }

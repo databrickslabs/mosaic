@@ -199,6 +199,8 @@ class MosaicRasterGDAL(_uuid: Long, var raster: Dataset, path: String) extends M
         if (isInMem) {
             val driver = raster.GetDriver()
             raster.FlushCache()
+            this.destroy()
+            this.refresh()
             val ds = driver.CreateCopy(path, raster)
             RasterCleaner.destroy(ds)
             if (destroy) this.destroy()

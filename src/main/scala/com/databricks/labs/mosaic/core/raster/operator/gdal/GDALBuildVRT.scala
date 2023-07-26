@@ -12,7 +12,8 @@ object GDALBuildVRT {
             val vrtOptionsVec = OperatorOptions.parseOptions(command)
             val vrtOptions = new BuildVRTOptions(vrtOptionsVec)
             val result = gdal.BuildVRT(outputPath, rasters.map(_.getRaster).toArray, vrtOptions)
-            MosaicRasterGDAL(result, outputPath)
+            val mosaicRaster = MosaicRasterGDAL(result, outputPath)
+            mosaicRaster.flushCache()
         } else {
             throw new Exception("Not a valid GDAL Warp command.")
         }
