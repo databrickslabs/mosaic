@@ -227,7 +227,7 @@ class MosaicRasterGDAL(_uuid: Long, var raster: Dataset, path: String) extends M
       * usable again.
       */
     override def refresh(): Unit = {
-        this.raster = gdal.Open(path)
+        this.raster = gdal.Open(path, GA_ReadOnly)
     }
 
     /**
@@ -339,11 +339,11 @@ object MosaicRasterGDAL extends RasterReader {
             val virtualPath = s"/vsimem/$uuid.$extension"
             gdal.FileFromMemBuffer(virtualPath, contentBytes)
             // Try reading as a virtual file, if that fails, read as a zipped virtual file
-            val dataset = Option(gdal.Open(virtualPath)).getOrElse({
+            val dataset = Option(gdal.Open(virtualPath, GA_ReadOnly)).getOrElse({
                 val virtualPath = s"/vsimem/$uuid.zip"
                 val zippedPath = s"/vsizip/$virtualPath"
                 gdal.FileFromMemBuffer(virtualPath, contentBytes)
-                gdal.Open(zippedPath)
+                gdal.Open(zippedPath, GA_ReadOnly)
             })
             val raster = new MosaicRasterGDAL(uuid, dataset, virtualPath)
             raster

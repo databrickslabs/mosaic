@@ -39,12 +39,24 @@ object MosaicGDAL extends Logging {
         }
     }
 
+    def configureGDAL(): Unit = {
+        val tmpDirLocal = Files.createTempDirectory("mosaic-gdal-tmp").toAbsolutePath.toString
+        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
+        gdal.SetConfigOption("CPL_TMPDIR", tmpDirLocal)
+        gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", tmpDirLocal)
+        gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "YES")
+        //gdal.SetConfigOption("GDAL_ENABLE_TIFF_SPLIT", "FALSE")
+        //gdal.SetConfigOption("GTIFF_DIRECT_IO", "YES")
+        //gdal.SetConfigOption("GTIFF_VIRTUAL_MEM_IO", "IF_ENOUGH_RAM")
+    }
+
     def enableGDAL(spark: SparkSession): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 isEnabled = true
                 //copySharedObjects()
                 loadSharedObjects()
+                configureGDAL()
                 gdal.AllRegister()
                 spark.conf.set(GDAL_ENABLED, "true")
             } match {

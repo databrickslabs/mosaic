@@ -98,9 +98,9 @@ grid_tessellate_df\
   .groupBy("raster.index_id", "date")\
   .agg(F.collect_list("raster.raster").alias("raster"))\
   .withColumn("raster", mos.rst_merge("raster"))\
-  .write.mode("overwrite").format("delta").save("dbfs:/FileStore/geospatial/odin/dais23demo/indexed")
+  .write.mode("overwrite").format("delta").save("dbfs:/FileStore/geospatial/odin/dais23demo_indexed")
 
-grid_tessellate_df = spark.read.format("delta").load("dbfs:/FileStore/geospatial/odin/dais23demo/indexed")
+grid_tessellate_df = spark.read.format("delta").load("dbfs:/FileStore/geospatial/odin/dais23demo_indexed")
 
 # COMMAND ----------
 
@@ -108,7 +108,11 @@ grid_tessellate_df.display()
 
 # COMMAND ----------
 
-library.plot_raster(to_plot[4]["raster"])
+to_plot = grid_tessellate_df.limit(50).collect()
+
+# COMMAND ----------
+
+library.plot_raster(to_plot[5]["raster"])
 
 # COMMAND ----------
 
