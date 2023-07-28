@@ -6,13 +6,13 @@ import org.gdal.gdal.{TranslateOptions, gdal}
 
 object GDALTranslate {
 
-    def executeTranslate(outputPath: String, raster: MosaicRaster, command: String): MosaicRaster = {
+    def executeTranslate(outputPath: String, isTemp: Boolean, raster: MosaicRaster, command: String): MosaicRaster = {
         val args = command.split(" ")
         if (args.head == "gdal_translate") {
             val translateOptionsVec = OperatorOptions.parseOptions(command)
             val translateOptions = new TranslateOptions(translateOptionsVec)
             val result = gdal.Translate(outputPath, raster.getRaster, translateOptions)
-            val mosaicRaster = MosaicRasterGDAL(result, outputPath)
+            val mosaicRaster = MosaicRasterGDAL(result, outputPath, isTemp)
             mosaicRaster.flushCache()
         } else {
             throw new Exception("Not a valid GDAL Translate command.")

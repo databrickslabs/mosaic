@@ -6,14 +6,14 @@ import org.gdal.gdal.{WarpOptions, gdal}
 
 object GDALWarp {
 
-    def executeWarp(outputPath: String, rasters: Seq[MosaicRaster], command: String): MosaicRaster = {
+    def executeWarp(outputPath: String, isTemp: Boolean, rasters: Seq[MosaicRaster], command: String): MosaicRaster = {
         val args = command.split(" ")
         if (args.head == "gdalwarp") {
             // Test: gdal.ParseCommandLine(command)
             val warpOptionsVec = OperatorOptions.parseOptions(command)
             val warpOptions = new WarpOptions(warpOptionsVec)
             val result = gdal.Warp(outputPath, rasters.map(_.getRaster).toArray, warpOptions)
-            val mosaicRaster = MosaicRasterGDAL(result, outputPath)
+            val mosaicRaster = MosaicRasterGDAL(result, outputPath, isTemp)
             mosaicRaster.flushCache()
         } else {
             throw new Exception("Not a valid GDAL Warp command.")

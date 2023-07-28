@@ -23,7 +23,10 @@ abstract class MosaicRaster(
       with RasterWriter
       with RasterCleaner {
 
+    def asTemp: MosaicRaster
+
     def flushCache(): MosaicRaster = {
+        this.getRaster.FlushCache()
         this.destroy()
         this.refresh()
         this

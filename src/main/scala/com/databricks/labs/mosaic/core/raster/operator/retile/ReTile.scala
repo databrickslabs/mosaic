@@ -21,11 +21,14 @@ object ReTile {
             val xMin = x * tileWidth
             val yMin = y * tileHeight
 
-            val uuid = java.util.UUID.randomUUID()
-            //val resultFileName = s"/vsimem/${raster.uuid}_${uuid.toString}.${raster.getExtension}"
             val resultFileName = PathUtils.createTmpFilePath(raster.uuid.toString, raster.getExtension)
 
-            GDALTranslate.executeTranslate(resultFileName, raster, s"gdal_translate -srcwin $xMin $yMin $tileWidth $tileHeight")
+            GDALTranslate.executeTranslate(
+              resultFileName,
+              isTemp = true,
+              raster,
+              command = s"gdal_translate -srcwin $xMin $yMin $tileWidth $tileHeight -co COMPRESS=PACKBITS"
+            )
         }
 
         tiles

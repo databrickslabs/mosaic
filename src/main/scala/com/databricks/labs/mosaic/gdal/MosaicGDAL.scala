@@ -21,8 +21,6 @@ object MosaicGDAL extends Logging {
 
     // noinspection ScalaWeakerAccess
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
-    private val mosaicGDALPath = Files.createTempDirectory("mosaic-gdal")
-    private val mosaicGDALAbsolutePath = mosaicGDALPath.toAbsolutePath.toString
     var isEnabled = false
 
     def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean
@@ -45,16 +43,17 @@ object MosaicGDAL extends Logging {
         gdal.SetConfigOption("CPL_TMPDIR", tmpDirLocal)
         gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", tmpDirLocal)
         gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "YES")
-        //gdal.SetConfigOption("GDAL_ENABLE_TIFF_SPLIT", "FALSE")
-        //gdal.SetConfigOption("GTIFF_DIRECT_IO", "YES")
-        //gdal.SetConfigOption("GTIFF_VIRTUAL_MEM_IO", "IF_ENOUGH_RAM")
+        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
+        gdal.SetConfigOption("GDAL_ENABLE_TIFF_SPLIT", "FALSE")
+        gdal.SetConfigOption("GTIFF_DIRECT_IO", "YES")
+        gdal.SetConfigOption("GTIFF_VIRTUAL_MEM_IO", "IF_ENOUGH_RAM")
     }
 
     def enableGDAL(spark: SparkSession): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 isEnabled = true
-                //copySharedObjects()
+                // copySharedObjects()
                 loadSharedObjects()
                 configureGDAL()
                 gdal.AllRegister()
@@ -118,8 +117,8 @@ object MosaicGDAL extends Logging {
 
     private def loadOrNOOP(path: String): Unit = {
         try {
-            //if (!Files.exists(Paths.get(path)))
-                System.load(path)
+            // if (!Files.exists(Paths.get(path)))
+            System.load(path)
         } catch {
             case t: Throwable => logWarning(s"Failed to load $path", t)
         }

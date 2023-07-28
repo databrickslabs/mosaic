@@ -20,8 +20,9 @@ object RasterClipByVector {
 
         val result = GDALWarp.executeWarp(
           resultFileName,
+          isTemp = true,
           Seq(raster),
-          command = s"gdalwarp -of $outShortName -cutline $shapeFileName -crop_to_cutline"
+          command = s"gdalwarp -of $outShortName -cutline $shapeFileName -crop_to_cutline -co COMPRESS=PACKBITS"
         )
 
         gdal.Unlink(shapeFileName)

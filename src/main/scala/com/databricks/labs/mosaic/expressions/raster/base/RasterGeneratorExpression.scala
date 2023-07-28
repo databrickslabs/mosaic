@@ -10,6 +10,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
+import java.nio.file.{Files, Paths}
 import scala.reflect.ClassTag
 
 /**
@@ -76,9 +77,9 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
         val inRaster = rasterAPI.readRaster(rasterExpr.eval(input), rasterExpr.dataType)
         val generatedRasters = rasterGenerator(inRaster)
 
+        // Writing rasters disposes of the written raster
         val rows = rasterAPI.writeRasters(generatedRasters, checkpointPath, dataType)
         RasterCleaner.dispose(inRaster)
-        generatedRasters.foreach(RasterCleaner.dispose)
 
         rows.map(row => InternalRow.fromSeq(Seq(row)))
     }

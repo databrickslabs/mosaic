@@ -7,6 +7,13 @@ import scala.collection.immutable
 
 object BalancedSubdivision {
 
+    def getNumSplits(raster: MosaicRaster, destSize: Int): Int = {
+        val size = raster.getMemSize
+        val n = size.toDouble / (destSize * 1000 * 1000)
+        val nInt = Math.ceil(n).toInt + 1
+        Math.pow(4, Math.ceil(Math.log(nInt) / Math.log(4))).toInt
+    }
+
     def getTileSize(x: Int, y: Int, numSplits: Int): (Int, Int) = {
         def split(tile: (Int, Int)): (Int, Int) = {
             val (a, b) = tile
@@ -28,8 +35,9 @@ object BalancedSubdivision {
 
     def splitRaster(
         mosaicRaster: MosaicRaster,
-        numSplits: Int
+        sizeInMb: Int
     ): immutable.Seq[MosaicRaster] = {
+        val numSplits = getNumSplits(mosaicRaster, sizeInMb)
         val (x, y) = mosaicRaster.getDimensions
         val (tileX, tileY) = getTileSize(x, y, numSplits)
         ReTile.reTile(mosaicRaster, tileX, tileY)

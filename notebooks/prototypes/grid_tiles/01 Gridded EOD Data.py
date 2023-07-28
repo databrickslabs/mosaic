@@ -8,7 +8,10 @@
 
 # COMMAND ----------
 
-# check if copy shared objects is really needed
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
+#spark.conf.set("spark.sql.parquet.columnarReaderBatchSize", "2048")
+
+# COMMAND ----------
 
 import library
 import mosaic as mos
@@ -30,10 +33,6 @@ mos.enable_gdal(spark)
 
 # COMMAND ----------
 
-spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Data load
 
@@ -44,7 +43,9 @@ spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
 
 # COMMAND ----------
 
-catalog_df = spark.read.table("mosaic_odin_files")
+catalog_df = \
+  spark.read.table("mosaic_odin_alaska_B02")\
+    .withColumn("souce_band", F.lit("B02"))
 catalog_df.display()
 
 # COMMAND ----------
@@ -56,12 +57,9 @@ catalog_df.display()
 # COMMAND ----------
 
 tiles_df = catalog_df\
-  .withColumn("raster", mos.rst_subdivide("outputfile", F.lit(16)))\
+  .repartition(200, F.rand())\
+  .withColumn("raster", mos.rst_subdivide("outputfile", F.lit(8)))\
   .withColumn("size", mos.rst_memsize("raster"))
-
-# COMMAND ----------
-
-tiles_df.limit(50).display()
 
 # COMMAND ----------
 
@@ -74,7 +72,7 @@ to_plot = tiles_df.limit(50).collect()
 
 # COMMAND ----------
 
-library.plot_raster(to_plot[42]["raster"])
+library.plot_raster(to_plot[12]["raster"])
 
 # COMMAND ----------
 
@@ -84,6 +82,7 @@ library.plot_raster(to_plot[42]["raster"])
 # COMMAND ----------
 
 grid_tessellate_df = tiles_df\
+  .repartition(200, F.rand())\
   .withColumn("raster", mos.rst_tessellate("raster", F.lit(6)))\
   .withColumn("index_id", F.col("raster.index_id"))
 
@@ -95,25 +94,8 @@ library.plot_raster(to_plot[15]["raster"]["raster"])
 
 # COMMAND ----------
 
-grid_tessellate_df2 = tiles_df\
-  .repartition(200)\
-  .withColumn("raster", mos.rst_tessellate("raster", F.lit(6)))\
-  .withColumn("index_id", F.col("raster.index_id"))
-
-grid_tessellate_df2.write.mode("overwrite").format("delta").save("dbfs:/FileStore/geospatial/odin/dais23demo/tessellated2")
-
-# COMMAND ----------
-
-to_plot = grid_tessellate_df2.limit(50).collect()
-
-# COMMAND ----------
-
-library.plot_raster(to_plot[6]["raster"]["raster"])
-
-# COMMAND ----------
-
-grid_tessellate_df.write.mode("overwrite").format("delta").save("dbfs:/FileStore/geospatial/odin/dais23demo/indexed")
-grid_tessellate_df = spark.read.format("delta").load("dbfs:/FileStore/geospatial/odin/dais23demo/indexed")
+grid_tessellate_df.write.mode("overwrite").format("delta").save("dbfs:/FileStore/geospatial/odin/alaska_indexed_B02")
+grid_tessellate_df = spark.read.format("delta").load("dbfs:/FileStore/geospatial/odin/alaska_indexed_B02")
 
 # COMMAND ----------
 
@@ -247,7 +229,3 @@ df_12_05 = measurements.where("date == '2020-12-05'")
 
 # MAGIC %%mosaic_kepler
 # MAGIC df_12_05 index_id h3 5000
-
-# COMMAND ----------
-
-

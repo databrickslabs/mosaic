@@ -11,6 +11,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.{BinaryType, DataType}
 
+import java.nio.file.{Files, Paths}
+
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
   * tileHeight).
@@ -27,14 +29,11 @@ case class RST_Subdivide(
 
     /**
       * Returns a set of new rasters with the specified tile size (tileWidth x
-      * tileHeight).
+      * tileHeight). Rasters are disposed in super class.
       */
     override def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster] = {
-        val targetSize = sizeInMB.eval().asInstanceOf[Int] * 1024 * 1024
-        val size = raster.getMemSize
-        val numSplits = Math.ceil(size / targetSize).toInt
-        val tiles = BalancedSubdivision.splitRaster(raster, numSplits)
-        RasterCleaner.dispose(raster)
+        val targetSize = sizeInMB.eval().asInstanceOf[Int]
+        val tiles = BalancedSubdivision.splitRaster(raster, targetSize)
         tiles
     }
 
