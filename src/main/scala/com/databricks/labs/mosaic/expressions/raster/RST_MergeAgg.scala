@@ -61,6 +61,8 @@ case class RST_MergeAgg(
             Array.empty[Byte]
         } else if (accumulator.isEmpty) {
             input
+        } else if (input.isEmpty) {
+            accumulator
         } else {
             val leftPartial = rasterAPI.readRaster(accumulator, BinaryType)
             val rightPartial = rasterAPI.readRaster(input, BinaryType)

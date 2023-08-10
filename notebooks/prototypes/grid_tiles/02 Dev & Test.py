@@ -29,6 +29,7 @@ mos.enable_gdal(spark)
 # COMMAND ----------
 
 spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
+spark.conf.set("spark.sql.adaptive.enabled", "false")
 
 # COMMAND ----------
 
@@ -42,7 +43,8 @@ spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
 
 # COMMAND ----------
 
-catalog_df = spark.read.table("mosaic_odin_files")
+catalog_df = spark.read.table("mosaic_odin_files")\
+  .repartition(300, "outputfile", F.rand())
 catalog_df.display()
 
 # COMMAND ----------
@@ -54,6 +56,7 @@ catalog_df.display()
 # COMMAND ----------
 
 tiles_df = catalog_df\
+  .repartition(300, "outputfile", F.rand())\
   .withColumn("raster", mos.rst_subdivide("outputfile", F.lit(16)))\
   .withColumn("size", mos.rst_memsize("raster"))
 
@@ -112,7 +115,7 @@ to_plot = grid_tessellate_df.limit(50).collect()
 
 # COMMAND ----------
 
-library.plot_raster(to_plot[5]["raster"])
+library.plot_raster(to_plot[45]["raster"])
 
 # COMMAND ----------
 
@@ -254,6 +257,53 @@ df_12_05 = measurements.where("date == '2020-12-05'")
 
 # MAGIC %%mosaic_kepler
 # MAGIC df_12_05 index_id h3 5000
+
+# COMMAND ----------
+
+with_measurement = spark.read.table("mosaic_odin_gridded")
+
+# COMMAND ----------
+
+library.plot_raster(with_measurement.limit(50).collect()[0]["raster"])
+
+# COMMAND ----------
+
+# MAGIC %pip install torch transformers
+
+# COMMAND ----------
+
+import torch
+from PIL import Image
+import requests
+from transformers import SamModel, SamProcessor
+
+# COMMAND ----------
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = SamModel.from_pretrained("facebook/sam-vit-huge").to(device)
+processor = SamProcessor.from_pretrained("facebook/sam-vit-huge")
+
+# COMMAND ----------
+
+img_url = "https://huggingface.co/ybelkada/segment-anything/resolve/main/assets/car.png"
+raw_image = Image.open(requests.get(img_url, stream=True).raw).convert("RGB")
+input_points = [[[450, 600]]]  # 2D location of a window in the image
+
+# COMMAND ----------
+
+inputs = processor(raw_image, input_points=input_points, return_tensors="pt").to(device)
+outputs = model(**inputs)
+
+# COMMAND ----------
+
+masks = processor.image_processor.post_process_masks(
+    outputs.pred_masks.cpu(), inputs["original_sizes"].cpu(), inputs["reshaped_input_sizes"].cpu()
+)
+scores = outputs.iou_scores
+
+# COMMAND ----------
+
+scores
 
 # COMMAND ----------
 

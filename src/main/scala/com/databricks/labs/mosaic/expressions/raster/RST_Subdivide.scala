@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterGeneratorExpression
@@ -10,8 +9,6 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.{BinaryType, DataType}
-
-import java.nio.file.{Files, Paths}
 
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
@@ -33,7 +30,7 @@ case class RST_Subdivide(
       */
     override def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster] = {
         val targetSize = sizeInMB.eval().asInstanceOf[Int]
-        val tiles = BalancedSubdivision.splitRaster(raster, targetSize)
+        val tiles = BalancedSubdivision.splitRaster(raster, targetSize, geometryAPI, rasterAPI)
         tiles
     }
 

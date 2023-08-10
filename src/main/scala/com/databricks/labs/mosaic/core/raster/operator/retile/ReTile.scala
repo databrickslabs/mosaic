@@ -1,8 +1,9 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 
 import scala.collection.immutable
 
@@ -11,7 +12,9 @@ object ReTile {
     def reTile(
         raster: MosaicRaster,
         tileWidth: Int,
-        tileHeight: Int
+        tileHeight: Int,
+        geometryAPI: GeometryAPI,
+        rasterAPI: RasterAPI
     ): immutable.Seq[MosaicRaster] = {
         val (xR, yR) = raster.getDimensions
         val xTiles = Math.ceil(xR / tileWidth).toInt
@@ -21,14 +24,11 @@ object ReTile {
             val xMin = x * tileWidth
             val yMin = y * tileHeight
 
-            val resultFileName = PathUtils.createTmpFilePath(raster.uuid.toString, raster.getExtension)
+            val bbox = geometryAPI.createBbox(xMin, yMin, xMin + tileWidth, yMin + tileHeight)
+                .mapXY((x, y) => rasterAPI.toWorldCoord(raster.getGeoTransform, x.toInt, y.toInt))
 
-            GDALTranslate.executeTranslate(
-              resultFileName,
-              isTemp = true,
-              raster,
-              command = s"gdal_translate -srcwin $xMin $yMin $tileWidth $tileHeight -co COMPRESS=PACKBITS"
-            )
+            RasterClipByVector.clip(raster, bbox, raster.getRaster.GetSpatialRef(), geometryAPI)
+
         }
 
         tiles

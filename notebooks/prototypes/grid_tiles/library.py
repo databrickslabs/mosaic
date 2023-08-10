@@ -16,6 +16,9 @@ from pyspark.sql.types import *
 from pyspark.sql import functions as F
 from pyspark.sql.functions import udf
 
+from pyspark.sql.functions import pandas_udf
+import pandas as pd
+
 def generate_cells(extent, resolution, spark, mos):
   polygon = shapely.geometry.box(*extent, ccw=True)
   wkt_poly = str(polygon.wkt)
@@ -23,19 +26,25 @@ def generate_cells(extent, resolution, spark, mos):
   cells = cells.withColumn("grid", mos.grid_tessellateexplode("geom", F.lit(resolution)))
   return cells
 
-@udf("array<string>")
-def get_items(geojson, datetime, collections):
-  catalog = pystac_client.Client.open(
+@pandas_udf("array<string>")
+def get_items(geojson: pd.Series, datetime: pd.Series, collections: pd.Series) -> pd.Series:
+  catalog =  pystac_client.Client.open(
     "https://planetarycomputer.microsoft.com/api/stac/v1",
-    modifier=planetary_computer.sign_inplace,
+    modifier=planetary_computer.sign_inplace
   )
-  search = catalog.search(
-    collections=collections,
-    intersects=geojson,
-    datetime=datetime
+  dt = datetime[0]
+  coll = collections[0]
+  searches = geojson.apply(lambda gj: catalog.search(
+    collections = coll,
+    intersects = gj,
+    datetime = dt
+  ))
+    
+  return searches.apply(
+    lambda search: search.item_collection()
+  ).apply(
+    lambda items: [json.dumps(item.to_dict()) for item in items]
   )
-  items = search.item_collection()
-  return [json.dumps(item.to_dict()) for item in items]
 
 @udf("array<string>")
 def get_assets(item):
@@ -44,10 +53,9 @@ def get_assets(item):
   return [json.dumps({**{"name": asset}, **assets[asset]}) for asset in assets]
 
 
-def get_assets_for_cells(cells_df):
+def get_assets_for_cells(cells_df, period, source):
   return cells_df\
-    .repartition(200, F.rand())\
-    .withColumn("items", get_items("geojson", F.lit("2020-12-01/2020-12-31"), F.array(F.lit("landsat-c2-l2"))))\
+    .withColumn("items", get_items("geojson", F.lit(period), F.array(F.lit(source))))\
     .repartition(200, F.rand())\
     .withColumn("items", F.explode("items"))\
     .withColumn("assets", get_assets("items"))\
@@ -63,18 +71,21 @@ def get_assets_for_cells(cells_df):
     .drop("assets", "items", "item")\
     .repartition(200, F.rand())
 
-def get_unique_hrefs(assets_df):
-  return assets_df.select(
-    "area_id",
-    "h3",
-    "asset.name",
-    "asset.href",
-    "item_id",
-    F.to_date("item_properties.datetime").alias("date")
-  ).where(
-    "name == 'swir22'"
-  ).groupBy("href", "item_id", "date")\
-  .agg(F.first("h3").alias("h3"))
+def get_unique_hrefs(assets_df, item_name):
+  return assets_df\
+    .select(
+      "area_id",
+      "h3",
+      "asset.name",
+      "asset.href",
+      "item_id",
+      F.to_date("item_properties.datetime").alias("date")
+    ).where(
+      f"name == '{item_name}'"
+    ).groupBy(
+      "href", "item_id", "date"
+    )\
+    .agg(F.first("h3").alias("h3"))
 
 @udf("string")
 def download_asset(href, dir_path, filename):
@@ -100,7 +111,7 @@ def plot_raster(raster):
 
   with MemoryFile(BytesIO(raster)) as memfile:
     with memfile.open() as src:
-      show(src.read(1), ax=ax, cmap='pink')
+      show(src, ax=ax)
       pyplot.show()
   
 def rasterio_lambda(raster, lambda_f):

@@ -1,6 +1,8 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 
 import scala.collection.immutable
 
@@ -35,12 +37,14 @@ object BalancedSubdivision {
 
     def splitRaster(
         mosaicRaster: MosaicRaster,
-        sizeInMb: Int
+        sizeInMb: Int,
+        geometryAPI: GeometryAPI,
+        rasterAPI: RasterAPI
     ): immutable.Seq[MosaicRaster] = {
         val numSplits = getNumSplits(mosaicRaster, sizeInMb)
         val (x, y) = mosaicRaster.getDimensions
         val (tileX, tileY) = getTileSize(x, y, numSplits)
-        ReTile.reTile(mosaicRaster, tileX, tileY)
+        ReTile.reTile(mosaicRaster, tileX, tileY, geometryAPI, rasterAPI)
     }
 
 }

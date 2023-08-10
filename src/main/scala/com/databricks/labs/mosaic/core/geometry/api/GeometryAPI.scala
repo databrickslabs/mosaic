@@ -15,6 +15,16 @@ abstract class GeometryAPI(
     reader: GeometryReader
 ) extends Serializable {
 
+    def createBbox(xMin: Double, yMin: Double, xMax: Double, yMax: Double): MosaicGeometry = {
+        val p1 = fromGeoCoord(Coordinates(xMin, yMin))
+        val p2 = fromGeoCoord(Coordinates(xMin, yMax))
+        val p3 = fromGeoCoord(Coordinates(xMax, yMax))
+        val p4 = fromGeoCoord(Coordinates(xMax, yMin))
+        val p5 = fromGeoCoord(Coordinates(xMin, yMin))
+        geometry(Seq(p1, p2, p3, p4, p5), GeometryTypeEnum.POLYGON)
+    }
+
+
     def name: String
 
     def geometry(input: Any, typeName: String): MosaicGeometry = {

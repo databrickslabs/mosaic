@@ -16,6 +16,7 @@ __all__ = [
     "rst_memsize",
     "rst_metadata",
     "rst_merge",
+    "rst_mergebands",
     "rst_numbands",
     "rst_pixelheight",
     "rst_pixelwidth",
@@ -196,6 +197,29 @@ def rst_merge(rasters: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
         "rst_merge",
         pyspark_to_java_column(rasters)
+    )
+
+
+def rst_mergebands(bands: ColumnOrName) -> Column:
+    """
+    Merges the bands into a single raster.
+    The result is the path to the merged raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    bands : Column (ArrayType(StringType))
+        Paths to the bands to merge.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the merged raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_mergebands",
+        pyspark_to_java_column(bands)
     )
 
 

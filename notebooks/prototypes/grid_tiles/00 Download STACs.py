@@ -25,26 +25,94 @@ mos.enable_gdal(spark)
 
 # COMMAND ----------
 
+# MAGIC %reload_ext autoreload
+# MAGIC %autoreload 2
+# MAGIC %reload_ext library
+
+# COMMAND ----------
+
 spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC We have selected an area near Seatle for this demo, this is just an illustrative choice, the code will work with an area anywhere on the surface of the planet. Our solution provides an easy way to tesselate the area into indexed pieces. This tessellation will allow us to parallelise the download of the data.
+# MAGIC We will download census data from TIGER feed for this demo. The data can be downloaded as a zip to dbfs (or managed volumes).
 
 # COMMAND ----------
 
-cells = library.generate_cells((-123, 47, -122, 48), 8, spark, mos)
-cells.display()
+import urllib.request
+urllib.request.urlretrieve(
+  "https://www2.census.gov/geo/tiger/TIGER2021/COUNTY/tl_2021_us_county.zip",
+  "/dbfs/FileStore/geospatial/odin/census/data.zip"
+)
 
 # COMMAND ----------
 
-to_display = cells.select("grid.wkb")
+# MAGIC %sh ls -al /dbfs/FileStore/geospatial/odin/census/
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC Mosaic has specialised readers for shape files and other GDAL supported formats. We dont need to unzip the data zip file. Just need to pass "vsizip" option to the reader.
+
+# COMMAND ----------
+
+census_df = mos.read().format("multi_read_ogr")\
+  .option("vsizip", "true")\
+  .option("chunkSize", "50")\
+  .load("dbfs:/FileStore/geospatial/odin/census/data.zip")\
+  .cache() # We will cache the loaded data to avoid schema inference being done repeatedly for each query
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC For this exmaple we will focus on Alaska counties. Alska state code is 02 so we will apply a filter to our ingested data.
+
+# COMMAND ----------
+
+census_df.where("STATEFP == 2").display()
+
+# COMMAND ----------
+
+to_display = census_df\
+  .where("STATEFP == 2")\
+  .withColumn(
+    "geom_0",
+    mos.st_updatesrid("geom_0", "geom_0_srid", F.lit(4326))
+  )\
+  .select("geom_0")
 
 # COMMAND ----------
 
 # MAGIC %%mosaic_kepler
-# MAGIC to_display wkb geometry 200000
+# MAGIC to_display geom_0 geometry 50
+
+# COMMAND ----------
+
+cells = census_df\
+  .where("STATEFP == 2")\
+  .withColumn(
+    "geom_0",
+    mos.st_updatesrid("geom_0", "geom_0_srid", F.lit(4326))
+  )\
+  .withColumn("geom_0_srid", F.lit(4326))\
+  .withColumn(
+    "grid",
+    mos.grid_tessellateexplode("geom_0", F.lit(3))
+  )
+
+# COMMAND ----------
+
+cells.display()
+
+# COMMAND ----------
+
+to_display = cells.select(mos.st_simplify("grid.wkb", F.lit(0.1)).alias("wkb"))
+
+# COMMAND ----------
+
+# MAGIC %%mosaic_kepler
+# MAGIC to_display wkb geometry 100000
 
 # COMMAND ----------
 
@@ -65,24 +133,15 @@ collections
 
 # COMMAND ----------
 
-time_range = "2020-12-01/2020-12-31"
-bbox = [-123, 47, -122, 48]
-
-search = catalog.search(collections=["landsat-c2-l2"], bbox=bbox, datetime=time_range)
-items = search.item_collection()
-items
+time_range = "2021-06-01/2021-06-07"
 
 # COMMAND ----------
 
-[json.dumps(item.to_dict()) for item in items]
-
-# COMMAND ----------
-
-cell_jsons = cells.select(
-  F.hash("geom").alias("area_id"),
-  F.col("grid.index_id").alias("h3"),
-  mos.st_asgeojson("grid.wkb").alias("geojson")
-)
+cell_jsons = cells\
+  .withColumn("area_id", F.hash("geom_0"))\
+  .withColumn("h3", F.col("grid.index_id"))\
+  .withColumn("geojson", mos.st_asgeojson("grid.wkb"))\
+  .drop("geom_0")
 
 # COMMAND ----------
 
@@ -95,12 +154,33 @@ cell_jsons.display()
 
 # COMMAND ----------
 
+cell_jsons.count()
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC Our framework allows for easy preparation of stac requests with only one line of code. This data is delta ready as this point and can easily be stored for lineage purposes.
 
 # COMMAND ----------
 
-eod_items = library.get_assets_for_cells(cell_jsons.limit(200))
+census_jsons = census_df\
+  .where("STATEFP == 2")\
+  .withColumn(
+    "geom_0",
+    mos.st_updatesrid("geom_0", "geom_0_srid", F.lit(4326))
+  )\
+  .withColumn("geom_0_srid", F.lit(4326))\
+  .withColumn("area_id", F.hash("geom_0"))\
+  .withColumn("geojson", mos.st_asgeojson("geom_0"))
+
+# COMMAND ----------
+
+eod_items = library.get_assets_for_cells(census_jsons.repartition(10), time_range ,"sentinel-2-l2a" ).cache()
+#eod_items.display()
+
+# COMMAND ----------
+
+eod_items = library.get_assets_for_cells(cell_jsons.repartition(200), time_range ,"sentinel-2-l2a" ).cache()
 eod_items.display()
 
 # COMMAND ----------
@@ -110,21 +190,40 @@ eod_items.display()
 
 # COMMAND ----------
 
-to_download = library.get_unique_hrefs(eod_items)
+item_name = "BO1"
+
+to_download = eod_items\
+  .withColumn("timestamp", F.col("item_properties.datetime"))\
+  .groupBy("item_id", "timestamp")\
+  .agg(
+    *[F.first(cn).alias(cn) for cn in eod_items.columns]
+  )\
+  .withColumn("date", F.to_date("timestamp"))\
+  .where(
+    f"asset.name == '{item_name}'"
+  )
+
+# COMMAND ----------
+
+#to_download = library.get_unique_hrefs(eod_items, item_name="B01")
 to_download.display()
 
 # COMMAND ----------
 
-# MAGIC %fs mkdirs /FileStore/geospatial/odin/dais23demo
+# MAGIC %fs mkdirs /FileStore/geospatial/odin/alaska/WVP
 
 # COMMAND ----------
 
 catalof_df = to_download\
-  .withColumn("outputfile", library.download_asset("href", F.lit("/dbfs/FileStore/geospatial/odin/dais23demo"), F.concat(F.hash(F.rand()), F.lit("tif"))))
+  .withColumn(
+    "outputfile", 
+    library.download_asset("href", F.lit("/dbfs/FileStore/geospatial/odin/alaskaWVP"),
+    F.concat(F.hash(F.rand()), F.lit(".tif")))
+  )
 
 # COMMAND ----------
 
-catalof_df.write.format("delta").saveAsTable("mosaic_odin_files")
+catalof_df.write.mode("overwrite").format("delta").saveAsTable("mosaic_odin_alaska_WVP")
 
 # COMMAND ----------
 
@@ -133,7 +232,11 @@ catalof_df.write.format("delta").saveAsTable("mosaic_odin_files")
 
 # COMMAND ----------
 
-catalof_df = spark.read.table("mosaic_odin_files")
+# MAGIC %fs ls /FileStore/geospatial/odin/alaskaWVP
+
+# COMMAND ----------
+
+catalof_df = spark.read.table("mosaic_odin_alaska_B04")
 
 # COMMAND ----------
 
