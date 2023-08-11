@@ -4,12 +4,11 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install rasterio==1.3.5 --quiet gdal==3.4.3 pystac pystac_client planetary_computer
+# MAGIC %pip install databricks-mosaic rasterio==1.3.5 --quiet gdal==3.4.3 pystac pystac_client planetary_computer tenacity rich
 
 # COMMAND ----------
 
 spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
-#spark.conf.set("spark.sql.parquet.columnarReaderBatchSize", "2048")
 
 # COMMAND ----------
 
@@ -43,8 +42,14 @@ mos.enable_gdal(spark)
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC USE odin_alaska;
+# MAGIC SHOW TABLES;
+
+# COMMAND ----------
+
 catalog_df = \
-  spark.read.table("mosaic_odin_alaska_B02")\
+  spark.read.table("alaska_b02")\
     .withColumn("souce_band", F.lit("B02"))
 catalog_df.display()
 
@@ -94,11 +99,37 @@ library.plot_raster(to_plot[15]["raster"]["raster"])
 
 # COMMAND ----------
 
-grid_tessellate_df.write.mode("overwrite").format("delta").save("dbfs:/FileStore/geospatial/odin/alaska_indexed_B02")
-grid_tessellate_df = spark.read.format("delta").load("dbfs:/FileStore/geospatial/odin/alaska_indexed_B02")
+def index_band(band_table, resolution):
+  catalog_df = \
+    spark.read.table(band_table)\
+      .withColumn("souce_band", F.col("asset.name"))
+  
+  tiles_df = catalog_df\
+    .repartition(200, F.rand())\
+    .withColumn("raster", mos.rst_subdivide("outputfile", F.lit(8)))\
+    .withColumn("size", mos.rst_memsize("raster"))
+  
+  grid_tessellate_df = tiles_df\
+    .repartition(200, F.rand())\
+    .withColumn("raster", mos.rst_tessellate("raster", F.lit(resolution)))\
+    .withColumn("index_id", F.col("raster.index_id"))
+  
+  grid_tessellate_df.write.mode("overwrite").format("delta").saveAsTable(f"{band_table}_indexed")
 
 # COMMAND ----------
 
+tables_to_index = spark.sql("SHOW TABLES").where("tableName not like '%indexed'").select("tableName").collect()
+tables_to_index = [tbl["tableName"] for tbl in tables_to_index]
+tables_to_index
+
+# COMMAND ----------
+
+for tbl in tables_to_index:
+  index_band(tbl, 5)
+
+# COMMAND ----------
+
+grid_tessellate_df = spark.read.table("alaska_b02_indexed")
 grid_tessellate_df.display()
 
 # COMMAND ----------

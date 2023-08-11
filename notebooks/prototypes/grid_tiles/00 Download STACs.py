@@ -9,7 +9,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-mosaic rasterio==1.3.5 --quiet gdal==3.4.3 pystac pystac_client planetary_computer
+# MAGIC %pip install databricks-mosaic rasterio==1.3.5 --quiet gdal==3.4.3 pystac pystac_client planetary_computer tenacity rich
 
 # COMMAND ----------
 
@@ -37,6 +37,11 @@ spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
 
 # MAGIC %md
 # MAGIC We will download census data from TIGER feed for this demo. The data can be downloaded as a zip to dbfs (or managed volumes).
+
+# COMMAND ----------
+
+dbutils.fs.rm("/FileStore/geospatial/odin/census/", True)
+dbutils.fs.mkdirs("/FileStore/geospatial/odin/census/")
 
 # COMMAND ----------
 
@@ -121,18 +126,6 @@ to_display = cells.select(mos.st_simplify("grid.wkb", F.lit(0.1)).alias("wkb"))
 
 # COMMAND ----------
 
-catalog = pystac_client.Client.open(
-    "https://planetarycomputer.microsoft.com/api/stac/v1",
-    modifier=planetary_computer.sign_inplace,
-)
-
-# COMMAND ----------
-
-collections = list(catalog.get_collections())
-collections
-
-# COMMAND ----------
-
 time_range = "2021-06-01/2021-06-07"
 
 # COMMAND ----------
@@ -163,23 +156,6 @@ cell_jsons.count()
 
 # COMMAND ----------
 
-census_jsons = census_df\
-  .where("STATEFP == 2")\
-  .withColumn(
-    "geom_0",
-    mos.st_updatesrid("geom_0", "geom_0_srid", F.lit(4326))
-  )\
-  .withColumn("geom_0_srid", F.lit(4326))\
-  .withColumn("area_id", F.hash("geom_0"))\
-  .withColumn("geojson", mos.st_asgeojson("geom_0"))
-
-# COMMAND ----------
-
-eod_items = library.get_assets_for_cells(census_jsons.repartition(10), time_range ,"sentinel-2-l2a" ).cache()
-#eod_items.display()
-
-# COMMAND ----------
-
 eod_items = library.get_assets_for_cells(cell_jsons.repartition(200), time_range ,"sentinel-2-l2a" ).cache()
 eod_items.display()
 
@@ -190,57 +166,94 @@ eod_items.display()
 
 # COMMAND ----------
 
-item_name = "BO1"
-
-to_download = eod_items\
-  .withColumn("timestamp", F.col("item_properties.datetime"))\
-  .groupBy("item_id", "timestamp")\
-  .agg(
-    *[F.first(cn).alias(cn) for cn in eod_items.columns]
-  )\
-  .withColumn("date", F.to_date("timestamp"))\
-  .where(
-    f"asset.name == '{item_name}'"
-  )
+dbutils.fs.rm("/FileStore/geospatial/odin/alaska/", True)
+dbutils.fs.mkdirs("/FileStore/geospatial/odin/alaska/")
 
 # COMMAND ----------
 
-#to_download = library.get_unique_hrefs(eod_items, item_name="B01")
-to_download.display()
+# MAGIC %sql
+# MAGIC CREATE DATABASE IF NOT EXISTS odin_alaska;
+# MAGIC USE odin_alaska;
 
 # COMMAND ----------
 
-# MAGIC %fs mkdirs /FileStore/geospatial/odin/alaska/WVP
+def download_band(eod_items, band_name):
+  to_download = eod_items\
+    .withColumn("timestamp", F.col("item_properties.datetime"))\
+    .groupBy("item_id", "timestamp")\
+    .agg(
+      *[F.first(cn).alias(cn) for cn in eod_items.columns if cn not in ["item_id"]]
+    )\
+    .withColumn("date", F.to_date("timestamp"))\
+    .withColumn("href", F.col("asset.href"))\
+    .where(
+      f"asset.name == '{band_name}'"
+    )
+  
+  spark.sql(f"DROP TABLE IF EXISTS alaska_{band_name}")
+  dbutils.fs.rm(f"/FileStore/geospatial/odin/alaska/{band_name}", True)
+  dbutils.fs.mkdirs(f"/FileStore/geospatial/odin/alaska/{band_name}")
+
+  catalof_df = to_download\
+    .withColumn(
+      "outputfile", 
+      library.download_asset("href", F.lit(f"/dbfs/FileStore/geospatial/odin/alaska/{band_name}"),
+      F.concat(F.hash(F.rand()), F.lit(".tif")))
+    )
+  
+  catalof_df.write\
+    .mode("overwrite")\
+    .option("overwriteSchema", "true")\
+    .format("delta")\
+    .saveAsTable(f"alaska_{band_name}")
+
 
 # COMMAND ----------
 
-catalof_df = to_download\
-  .withColumn(
-    "outputfile", 
-    library.download_asset("href", F.lit("/dbfs/FileStore/geospatial/odin/alaskaWVP"),
-    F.concat(F.hash(F.rand()), F.lit(".tif")))
-  )
+import rich.table
+
+region = census_df.where("STATEFP == 2").select(mos.st_asgeojson("geom_0").alias("geojson")).limit(1).collect()[0]["geojson"]
+
+catalog = pystac_client.Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace,
+)
+
+search = catalog.search(
+    collections=["sentinel-2-l2a"],
+    intersects=region, 
+    datetime=time_range
+)
+
+items = search.item_collection()
+
+table = rich.table.Table("Asset Key", "Description")
+for asset_key, asset in items[0].assets.items():
+    table.add_row(asset_key, asset.title)
+
+table
 
 # COMMAND ----------
 
-catalof_df.write.mode("overwrite").format("delta").saveAsTable("mosaic_odin_alaska_WVP")
+bands = []
+for asset_key, asset in items[0].assets.items():
+  bands.append(asset_key)
+
+bands = [b for b in bands if b not in ["visual", "preview", "safe-manifest", "tilejson", "rendered_preview", "granule-metadata", "inspire-metadata", "product-metadata", "datastrip-metadata"]]
+bands
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC We have now dowloaded all the tile os interest and we can browse them from our delta table.
+for band in bands:
+  download_band(eod_items, band)
 
 # COMMAND ----------
 
-# MAGIC %fs ls /FileStore/geospatial/odin/alaskaWVP
+# MAGIC %fs ls /FileStore/geospatial/odin/alaska/
 
 # COMMAND ----------
 
-catalof_df = spark.read.table("mosaic_odin_alaska_B04")
-
-# COMMAND ----------
-
-catalof_df.display()
+# MAGIC %fs ls /FileStore/geospatial/odin/alaska/B02
 
 # COMMAND ----------
 
@@ -249,10 +262,6 @@ from matplotlib import pyplot
 from rasterio.plot import show
 
 fig, ax = pyplot.subplots(1, figsize=(12, 12))
-raster = rasterio.open("""/dbfs/FileStore/geospatial/odin/dais23demo/1219604474tif""")
+raster = rasterio.open("""/dbfs/FileStore/geospatial/odin/alaska/B02/-718806860.tif""")
 show(raster, ax=ax, cmap='Greens')
 pyplot.show()
-
-# COMMAND ----------
-
-

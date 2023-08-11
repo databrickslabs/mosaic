@@ -19,6 +19,12 @@ from pyspark.sql.functions import udf
 from pyspark.sql.functions import pandas_udf
 import pandas as pd
 
+catalog =  pystac_client.Client.open(
+  "https://planetarycomputer.microsoft.com/api/stac/v1",
+  modifier=planetary_computer.sign_inplace
+)
+
+
 def generate_cells(extent, resolution, spark, mos):
   polygon = shapely.geometry.box(*extent, ccw=True)
   wkt_poly = str(polygon.wkt)
@@ -26,31 +32,45 @@ def generate_cells(extent, resolution, spark, mos):
   cells = cells.withColumn("grid", mos.grid_tessellateexplode("geom", F.lit(resolution)))
   return cells
 
-@pandas_udf("array<string>")
-def get_items(geojson: pd.Series, datetime: pd.Series, collections: pd.Series) -> pd.Series:
-  catalog =  pystac_client.Client.open(
-    "https://planetarycomputer.microsoft.com/api/stac/v1",
-    modifier=planetary_computer.sign_inplace
-  )
-  dt = datetime[0]
-  coll = collections[0]
-  searches = geojson.apply(lambda gj: catalog.search(
-    collections = coll,
-    intersects = gj,
-    datetime = dt
-  ))
-    
-  return searches.apply(
-    lambda search: search.item_collection()
-  ).apply(
-    lambda items: [json.dumps(item.to_dict()) for item in items]
-  )
 
 @udf("array<string>")
 def get_assets(item):
   item_dict = json.loads(item)
   assets = item_dict["assets"]
   return [json.dumps({**{"name": asset}, **assets[asset]}) for asset in assets]
+
+
+@pandas_udf("array<string>")
+def get_items(geojson: pd.Series, datetime: pd.Series, collections: pd.Series) -> pd.Series:
+
+  from tenacity import retry, wait_exponential
+
+  @retry(wait=wait_exponential(multiplier=2, min=4, max=120))
+  def search_with_retry(geojson, catalog, collection, dt):
+    search = catalog.search(
+        collections = collection,
+        intersects = geojson,
+        datetime = dt
+      )
+    items = search.item_collection()
+    return [json.dumps(item.to_dict()) for item in items]
+
+  def search_catalog(geojson, catalog, collection, dt):
+    try:
+      return search_with_retry(geojson, catalog, collection, dt)
+    except Exception as inst:
+      return [str(inst)]
+
+  catalog =  pystac_client.Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1",
+    modifier=planetary_computer.sign_inplace
+  )
+
+  dt = datetime[0]
+  coll = collections[0]
+  return geojson.apply(
+    lambda gj: search_catalog(gj, catalog, coll, dt)
+  )
 
 
 def get_assets_for_cells(cells_df, period, source):
@@ -71,6 +91,7 @@ def get_assets_for_cells(cells_df, period, source):
     .drop("assets", "items", "item")\
     .repartition(200, F.rand())
 
+
 def get_unique_hrefs(assets_df, item_name):
   return assets_df\
     .select(
@@ -86,6 +107,7 @@ def get_unique_hrefs(assets_df, item_name):
       "href", "item_id", "date"
     )\
     .agg(F.first("h3").alias("h3"))
+
 
 @udf("string")
 def download_asset(href, dir_path, filename):
@@ -113,7 +135,8 @@ def plot_raster(raster):
     with memfile.open() as src:
       show(src, ax=ax)
       pyplot.show()
-  
+
+
 def rasterio_lambda(raster, lambda_f):
   @udf("double")
   def f_udf(f_raster):
