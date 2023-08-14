@@ -23,9 +23,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         val session = new TestSparkSession(conf)
         if (conf.get(MOSAIC_GDAL_NATIVE, "false").toBoolean) {
             Try {
-                TestMosaicGDAL.installGDAL(session)
                 val tempPath = Files.createTempDirectory("mosaic-gdal")
                 MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString, "/usr/lib/jni")
+                TestMosaicGDAL.installGDAL(session, tempPath.toAbsolutePath.toString, "/usr/lib/jni")
                 MosaicGDAL.enableGDAL(session)
             }
         }

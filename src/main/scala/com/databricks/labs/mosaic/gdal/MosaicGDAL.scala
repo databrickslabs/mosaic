@@ -60,7 +60,7 @@ object MosaicGDAL extends Logging {
         val so = readResourceBytes("/gdal/ubuntu/libgdalalljni.so")
         val so30 = readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30")
 
-        val usrGDALPath = Paths.get("/usr/lib/jni/")
+        val usrGDALPath = Paths.get(path)
         if (!Files.exists(mosaicGDALPath)) Files.createDirectories(mosaicGDALPath)
         if (!Files.exists(usrGDALPath)) Files.createDirectories(usrGDALPath)
         Files.write(Paths.get(s"$mosaicGDALAbsolutePath/libgdalalljni.so"), so)

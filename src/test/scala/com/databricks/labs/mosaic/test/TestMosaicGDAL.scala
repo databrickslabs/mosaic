@@ -12,32 +12,37 @@ import scala.sys.process._
 
 object TestMosaicGDAL extends Logging {
 
-    def installGDAL(spark: SparkSession): Unit = {
-        if (!wasEnabled(spark) && !isEnabled) installGDAL(Some(spark))
+    def installGDAL(spark: SparkSession, initScriptPath: String, sharedObjectsPath: String): Unit = {
+        if (!wasEnabled(spark) && !isEnabled) installGDAL(Some(spark), initScriptPath, sharedObjectsPath)
     }
 
-    def installGDAL(spark: Option[SparkSession]): Unit = {
+    def installGDAL(spark: Option[SparkSession], initScriptPath: String, sharedObjectsPath: String): Unit = {
         val sc = spark.map(_.sparkContext)
         val numExecutors = sc.map(_.getExecutorMemoryStatus.size - 1)
-        val script = getScript
-        for (cmd <- script.getLines.toList) {
-            try {
-                if (!cmd.startsWith("#") || cmd.nonEmpty) cmd.!!
-                sc.map { sparkContext =>
-                    if (!sparkContext.isLocal) {
-                        sparkContext.parallelize(1 to numExecutors.get).pipe(cmd).collect
-                    }
-                }
+        val scriptPath = s"$initScriptPath/mosaic-gdal-init.sh"
+        sc.foreach(_.addFile(scriptPath))
+        try {
+            s"sudo sh $scriptPath".!!
+//        val script = getScript
+//        for (cmd <- script.getLines.toList) {
+//            try {
+//                if (!cmd.startsWith("#") & cmd.nonEmpty) {
+//                    s"sudo bash -c '$cmd'".!!
+//                    sc.map { sparkContext =>
+//                        if (!sparkContext.isLocal) {
+//                            sparkContext.parallelize(1 to numExecutors.get).pipe(cmd).collect
+//                        }
+//                    }
+//                }
             } catch {
                 case e: IOException           => logError(e.getMessage)
                 case e: IllegalStateException => logError(e.getMessage)
                 case e: SparkException        => logError(e.getMessage)
                 case e: Throwable             => logError(e.getMessage)
             } finally {
-                script.close
+//                script.close
             }
         }
-    }
 
     def getScript: BufferedSource = {
         System.getProperty("os.name").toLowerCase() match {
