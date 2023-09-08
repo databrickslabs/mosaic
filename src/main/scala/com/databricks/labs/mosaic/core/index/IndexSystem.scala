@@ -14,6 +14,9 @@ import org.gdal.osr.SpatialReference
   */
 abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
 
+    // Passthrough if not redefined
+    def isValid(cellID: Long): Boolean = true
+
     def crsID: Int
 
     def osrSpatialRef: SpatialReference = {

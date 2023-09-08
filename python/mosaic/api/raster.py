@@ -10,6 +10,7 @@ from mosaic.utils.types import ColumnOrName
 
 __all__ = [
     "rst_bandmetadata",
+    "rst_clip",
     "rst_georeference",
     "rst_height",
     "rst_isempty",
@@ -18,6 +19,7 @@ __all__ = [
     "rst_merge",
     "rst_mergebands",
     "rst_numbands",
+    "rst_ndvi",
     "rst_pixelheight",
     "rst_pixelwidth",
     "rst_rastertogridavg",
@@ -70,6 +72,32 @@ def rst_bandmetadata(raster: ColumnOrName, band: ColumnOrName) -> Column:
         "rst_bandmetadata",
         pyspark_to_java_column(raster),
         pyspark_to_java_column(band)
+    )
+
+
+def rst_clip(raster: ColumnOrName, geometry: ColumnOrName) -> Column:
+    """
+    Clips the raster to the given geometry.
+    The result is the path to the clipped raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    geometry : Column (StringType)
+        The geometry to clip the raster to.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the clipped raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_clip",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(geometry)
     )
 
 
@@ -239,6 +267,35 @@ def rst_numbands(raster: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
         "rst_numbands",
         pyspark_to_java_column(raster)
+    )
+
+
+def rst_ndvi(raster: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName) -> Column:
+    """
+    Computes the NDVI of the raster.
+    The result is the path to the NDVI raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    band1 : Column (IntegerType)
+        The first band index.
+    band2 : Column (IntegerType)
+        The second band index.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the NDVI raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_ndvi",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(band1),
+        pyspark_to_java_column(band2)
     )
 
 

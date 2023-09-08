@@ -87,19 +87,20 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       */
     val letterMap: Seq[Seq[String]] =
         Seq(
-          Seq("SV", "SW", "SX", "SY", "SZ", "TV", "TW"),
-          Seq("SQ", "SR", "SS", "ST", "SU", "TQ", "TR"),
-          Seq("SL", "SM", "SN", "SO", "SP", "TL", "TM"),
-          Seq("SF", "SG", "SH", "SJ", "SK", "TF", "TG"),
-          Seq("SA", "SB", "SC", "SD", "SE", "TA", "TB"),
-          Seq("NV", "NW", "NX", "NY", "NZ", "OV", "OW"),
-          Seq("NQ", "NR", "NS", "NT", "NU", "OQ", "OR"),
-          Seq("NL", "NM", "NN", "NO", "NP", "OL", "OM"),
-          Seq("NF", "NG", "NH", "NJ", "NK", "OF", "OG"),
-          Seq("NA", "NB", "NC", "ND", "NE", "OA", "OB"),
-          Seq("HV", "HW", "HX", "HY", "SZ", "JV", "JW"),
-          Seq("HQ", "HR", "HS", "HT", "HU", "JQ", "JR"),
-          Seq("HL", "HM", "HN", "HO", "HP", "JL", "JM")
+          Seq("SV", "SW", "SX", "SY", "SZ", "TV", "TW", "TX"),
+          Seq("SQ", "SR", "SS", "ST", "SU", "TQ", "TR", "TS"),
+          Seq("SL", "SM", "SN", "SO", "SP", "TL", "TM", "TN"),
+          Seq("SF", "SG", "SH", "SJ", "SK", "TF", "TG", "TH"),
+          Seq("SA", "SB", "SC", "SD", "SE", "TA", "TB", "TC"),
+          Seq("NV", "NW", "NX", "NY", "NZ", "OV", "OW", "OX"),
+          Seq("NQ", "NR", "NS", "NT", "NU", "OQ", "OR", "OS"),
+          Seq("NL", "NM", "NN", "NO", "NP", "OL", "OM", "ON"),
+          Seq("NF", "NG", "NH", "NJ", "NK", "OF", "OG", "OH"),
+          Seq("NA", "NB", "NC", "ND", "NE", "OA", "OB", "OC"),
+          Seq("HV", "HW", "HX", "HY", "SZ", "JV", "JW", "JX"),
+          Seq("HQ", "HR", "HS", "HT", "HU", "JQ", "JR", "JS"),
+          Seq("HL", "HM", "HN", "HO", "HP", "JL", "JM", "JN"),
+          Seq("HF", "HG", "HH", "HJ", "HK", "JF", "JG", "JH")
         )
 
     /**
@@ -257,7 +258,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       * @return
       *   Boolean representing validity.
       */
-    def isValid(index: Long): Boolean = {
+    override def isValid(index: Long): Boolean = {
         val digits = indexDigits(index)
         val xLetterIndex = digits.slice(3, 5).mkString.toInt
         val yLetterIndex = digits.slice(1, 3).mkString.toInt
@@ -437,7 +438,9 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
         val p2 = geometryAPI.fromCoords(Seq(x + edgeSize, y))
         val p3 = geometryAPI.fromCoords(Seq(x + edgeSize, y + edgeSize))
         val p4 = geometryAPI.fromCoords(Seq(x, y + edgeSize))
-        geometryAPI.geometry(Seq(p1, p2, p3, p4, p1), POLYGON)
+        val geom = geometryAPI.geometry(Seq(p1, p2, p3, p4, p1), POLYGON)
+        geom.setSpatialReference(this.crsID)
+        geom
     }
 
     /**

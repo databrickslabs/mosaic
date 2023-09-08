@@ -39,10 +39,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
     spark.conf.set(MOSAIC_RASTER_API, rasterAPI.name)
 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
-    //noinspection ScalaWeakerAccess
+    // noinspection ScalaWeakerAccess
     val mirror: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
     val expressionConfig: MosaicExpressionConfig = MosaicExpressionConfig(spark)
-
 
     def setCellIdDataType(dataType: String): Unit =
         if (dataType == "string") {
@@ -53,7 +52,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             throw new Error(s"Unsupported data type: $dataType")
         }
 
-    //noinspection ScalaWeakerAccess
+    // noinspection ScalaWeakerAccess
     def registerProductH3(registry: FunctionRegistry, dbName: Option[String]): Unit = {
         aliasFunction(registry, "grid_longlatascellid", dbName, "h3_longlatash3", None)
         aliasFunction(registry, "grid_polyfill", dbName, "h3_polyfillash3", None)
@@ -61,7 +60,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         aliasFunction(registry, "grid_distance", dbName, "h3_distance", None)
     }
 
-    //noinspection ScalaWeakerAccess
+    // noinspection ScalaWeakerAccess
     def aliasFunction(
         registry: FunctionRegistry,
         alias: String,
@@ -182,7 +181,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
         mosaicRegistry.registerExpression[ST_Haversine](expressionConfig)
 
-        //noinspection ScalaDeprecation
+        // noinspection ScalaDeprecation
         registry.registerFunction(
           FunctionIdentifier("st_centroid2D", database),
           ST_Centroid.legacyInfo(database, "st_centroid2D"),
@@ -257,6 +256,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 
         /** RasterAPI dependent functions */
         mosaicRegistry.registerExpression[RST_BandMetaData](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Clip](expressionConfig)
         mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
         mosaicRegistry.registerExpression[RST_GridTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_Height](expressionConfig)
@@ -265,6 +265,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_Merge](expressionConfig)
         mosaicRegistry.registerExpression[RST_MergeBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_MetaData](expressionConfig)
+        mosaicRegistry.registerExpression[RST_NDVI](expressionConfig)
         mosaicRegistry.registerExpression[RST_NumBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_PixelWidth](expressionConfig)
         mosaicRegistry.registerExpression[RST_PixelHeight](expressionConfig)
@@ -311,9 +312,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
           (exprs: Seq[Expression]) => ST_UnionAgg(exprs(0), geometryAPI.name)
         )
         registry.registerFunction(
-            FunctionIdentifier("rst_merge_agg", database),
-            RST_MergeAgg.registryExpressionInfo(database),
-            (exprs: Seq[Expression]) => RST_MergeAgg(exprs(0), expressionConfig)
+          FunctionIdentifier("rst_merge_agg", database),
+          RST_MergeAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => RST_MergeAgg(exprs(0), expressionConfig)
         )
 
         /** IndexSystem and GeometryAPI Specific methods */
@@ -603,6 +604,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(RST_BandMetaData(raster.expr, lit(band).expr, expressionConfig))
         def rst_bandmetadata(raster: String, band: Int): Column =
             ColumnAdapter(RST_BandMetaData(lit(raster).expr, lit(band).expr, expressionConfig))
+        def rst_clip(raster: Column, geometry: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, expressionConfig))
         def rst_georeference(raster: Column): Column = ColumnAdapter(RST_GeoReference(raster.expr, expressionConfig))
         def rst_georeference(raster: String): Column = ColumnAdapter(RST_GeoReference(lit(raster).expr, expressionConfig))
         def rst_height(raster: Column): Column = ColumnAdapter(RST_Height(raster.expr, expressionConfig))
@@ -615,6 +617,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def rst_merge(rasterArray: Column): Column = ColumnAdapter(RST_Merge(rasterArray.expr, expressionConfig))
         def rst_metadata(raster: Column): Column = ColumnAdapter(RST_MetaData(raster.expr, expressionConfig))
         def rst_metadata(raster: String): Column = ColumnAdapter(RST_MetaData(lit(raster).expr, expressionConfig))
+        def rst_ndvi(raster: Column, band1: Column, band2: Column): Column =
+            ColumnAdapter(RST_NDVI(raster.expr, band1.expr, band2.expr, expressionConfig))
+        def rst_ndvi(raster: Column, band1: Int, band2: Int): Column =
+            ColumnAdapter(RST_NDVI(raster.expr, lit(band1).expr, lit(band2).expr, expressionConfig))
         def rst_numbands(raster: Column): Column = ColumnAdapter(RST_NumBands(raster.expr, expressionConfig))
         def rst_numbands(raster: String): Column = ColumnAdapter(RST_NumBands(lit(raster).expr, expressionConfig))
         def rst_pixelheight(raster: Column): Column = ColumnAdapter(RST_PixelHeight(raster.expr, expressionConfig))
@@ -687,11 +693,16 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def rst_subdatasets(raster: String): Column = ColumnAdapter(RST_Subdatasets(lit(raster).expr, expressionConfig))
         def rst_summary(raster: Column): Column = ColumnAdapter(RST_Summary(raster.expr, expressionConfig))
         def rst_summary(raster: String): Column = ColumnAdapter(RST_Summary(lit(raster).expr, expressionConfig))
-        def rst_tessellate(raster: Column, resolution: Column): Column = ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
-        def rst_tessellate(raster: String, resolution: Column): Column = ColumnAdapter(RST_Tessellate(col(raster).expr, resolution.expr, expressionConfig))
-        def rst_tessellate(raster: Column, resolution: Int): Column = ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
-        def rst_subdivide(raster: Column, sizeInMB: Column): Column = ColumnAdapter(RST_Subdivide(raster.expr, sizeInMB.expr, expressionConfig))
-        def rst_subdivide(raster: Column, sizeInMB: Int): Column = ColumnAdapter(RST_Subdivide(raster.expr, lit(sizeInMB).expr, expressionConfig))
+        def rst_tessellate(raster: Column, resolution: Column): Column =
+            ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
+        def rst_tessellate(raster: String, resolution: Column): Column =
+            ColumnAdapter(RST_Tessellate(col(raster).expr, resolution.expr, expressionConfig))
+        def rst_tessellate(raster: Column, resolution: Int): Column =
+            ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
+        def rst_subdivide(raster: Column, sizeInMB: Column): Column =
+            ColumnAdapter(RST_Subdivide(raster.expr, sizeInMB.expr, expressionConfig))
+        def rst_subdivide(raster: Column, sizeInMB: Int): Column =
+            ColumnAdapter(RST_Subdivide(raster.expr, lit(sizeInMB).expr, expressionConfig))
         def rst_upperleftx(raster: Column): Column = ColumnAdapter(RST_UpperLeftX(raster.expr, expressionConfig))
         def rst_upperleftx(raster: String): Column = ColumnAdapter(RST_UpperLeftX(lit(raster).expr, expressionConfig))
         def rst_upperlefty(raster: Column): Column = ColumnAdapter(RST_UpperLeftY(raster.expr, expressionConfig))
@@ -731,7 +742,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(ST_UnionAgg(geom.expr, geometryAPI.name).toAggregateExpression(isDistinct = false))
         def rst_merge_agg(raster: Column): Column =
             ColumnAdapter(RST_MergeAgg(raster.expr, expressionConfig, 0, 0).toAggregateExpression(isDistinct = false))
-
 
         /** IndexSystem Specific */
 
@@ -928,8 +938,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         @deprecated("Please use 'st_centroid' expressions instead.")
         def st_centroid2D(geom: Column): Column = {
             struct(
-                ColumnAdapter(ST_X(ST_Centroid(geom.expr, expressionConfig), expressionConfig)),
-                ColumnAdapter(ST_Y(ST_Centroid(geom.expr, expressionConfig), expressionConfig))
+              ColumnAdapter(ST_X(ST_Centroid(geom.expr, expressionConfig), expressionConfig)),
+              ColumnAdapter(ST_Y(ST_Centroid(geom.expr, expressionConfig), expressionConfig))
             )
         }
 

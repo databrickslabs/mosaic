@@ -200,10 +200,12 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
-        geometryAPI.geometry(
+        val geom = geometryAPI.geometry(
           extended.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
           POLYGON
         )
+        geom.setSpatialReference(crsID)
+        geom
     }
 
     override def format(id: Long): String = {

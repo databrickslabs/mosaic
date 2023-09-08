@@ -35,6 +35,7 @@ import scala.reflect.ClassTag
   */
 abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
+    resolutionExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
       with NullIntolerant
@@ -72,11 +73,12 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * @return
       *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: MosaicRaster): Seq[MosaicRasterChip]
+    def rasterGenerator(raster: MosaicRaster, resolution: Int): Seq[MosaicRasterChip]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val inRaster = rasterAPI.readRaster(rasterExpr.eval(input), rasterExpr.dataType)
-        val generatedChips = rasterGenerator(inRaster)
+        val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
+        val generatedChips = rasterGenerator(inRaster, inResolution)
 
         val rows = generatedChips.map(chip => InternalRow.fromSeq(Seq(chip.serialize)))
 

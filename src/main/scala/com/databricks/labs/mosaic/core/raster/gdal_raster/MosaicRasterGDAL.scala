@@ -279,7 +279,7 @@ class MosaicRasterGDAL(_uuid: Long, var raster: Dataset, path: String, isTemp: B
                 val max = Array.ofDim[Double](1)
                 val mean = Array.ofDim[Double](1)
                 val stddev = Array.ofDim[Double](1)
-                band.GetStatistics(true, false, min, max, mean, stddev)
+                band.GetStatistics(true, true, min, max, mean, stddev)
                 i -> Map(
                   "min" -> min(0),
                   "max" -> max(0),

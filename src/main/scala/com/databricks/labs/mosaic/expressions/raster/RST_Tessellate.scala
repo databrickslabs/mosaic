@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.core.index.BNGIndexSystem
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.retile.RasterTessellate
@@ -19,7 +20,7 @@ case class RST_Tessellate(
     rasterExpr: Expression,
     resolutionExpr: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends RasterTessellateGeneratorExpression[RST_Tessellate](rasterExpr, expressionConfig)
+) extends RasterTessellateGeneratorExpression[RST_Tessellate](rasterExpr, resolutionExpr, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -27,8 +28,7 @@ case class RST_Tessellate(
       * Returns a set of new rasters with the specified tile size (tileWidth x
       * tileHeight).
       */
-    override def rasterGenerator(raster: MosaicRaster): Seq[MosaicRasterChip] = {
-        val resolution = resolutionExpr.eval().asInstanceOf[Int]
+    override def rasterGenerator(raster: MosaicRaster, resolution: Int): Seq[MosaicRasterChip] = {
         val result = RasterTessellate.tessellate(
           raster,
           resolution,
@@ -37,6 +37,8 @@ case class RST_Tessellate(
         )
         RasterCleaner.dispose(raster)
         result
+            .filter(c => indexSystem.isValid(c.indexAsLong(indexSystem)))
+            .map(_.formatCellId(indexSystem))
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, resolutionExpr)

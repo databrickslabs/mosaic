@@ -29,17 +29,21 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
 
     def writeRasters(generatedRasters: Seq[MosaicRaster], checkpointPath: String, rasterDT: DataType): Seq[Any] = {
         generatedRasters.map(raster =>
-            rasterDT match {
-                case StringType =>
-                    val extension = raster.getRaster.GetDriver().GetMetadataItem("DMD_EXTENSION")
-                    val writePath = s"$checkpointPath/${raster.uuid}.$extension"
-                    val outPath = raster.writeToPath(writePath)
-                    RasterCleaner.dispose(raster)
-                    UTF8String.fromString(outPath)
-                case BinaryType =>
-                    val bytes = raster.writeToBytes()
-                    RasterCleaner.dispose(raster)
-                    bytes
+            if (Option(raster).isDefined) {
+                rasterDT match {
+                    case StringType =>
+                        val extension = raster.getRaster.GetDriver().GetMetadataItem("DMD_EXTENSION")
+                        val writePath = s"$checkpointPath/${raster.uuid}.$extension"
+                        val outPath = raster.writeToPath(writePath)
+                        RasterCleaner.dispose(raster)
+                        UTF8String.fromString(outPath)
+                    case BinaryType =>
+                        val bytes = raster.writeToBytes()
+                        RasterCleaner.dispose(raster)
+                        bytes
+                }
+            } else {
+                null
             }
         )
     }

@@ -26,7 +26,9 @@ abstract class MosaicRaster(
     def asTemp: MosaicRaster
 
     def flushCache(): MosaicRaster = {
-        this.getRaster.FlushCache()
+        if (Option(getRaster).isDefined) {
+            getRaster.FlushCache()
+        }
         this.destroy()
         this.refresh()
         this

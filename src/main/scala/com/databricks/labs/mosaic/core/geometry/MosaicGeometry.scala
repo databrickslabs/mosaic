@@ -113,8 +113,8 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def osrTransformCRS(srcSR: SpatialReference, destSR: SpatialReference, geometryAPI: GeometryAPI): MosaicGeometry = {
         if (srcSR.IsSame(destSR) == 1) return this
         val ogcGeometry = ogr.CreateGeometryFromWkb(this.toWKB)
-        val transform = new CoordinateTransformation(srcSR, destSR)
-        ogcGeometry.Transform(transform)
+        ogcGeometry.AssignSpatialReference(srcSR)
+        ogcGeometry.TransformTo(destSR)
         val mosaicGeometry = geometryAPI.geometry(ogcGeometry.ExportToWkb, "WKB")
         mosaicGeometry
     }
