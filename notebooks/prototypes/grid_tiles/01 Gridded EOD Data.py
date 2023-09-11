@@ -9,6 +9,7 @@
 # COMMAND ----------
 
 spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
+spark.conf.set("spark.sql.adaptive.enabled", "false")
 
 # COMMAND ----------
 
@@ -49,8 +50,8 @@ mos.enable_gdal(spark)
 # COMMAND ----------
 
 catalog_df = \
-  spark.read.table("alaska_b02")\
-    .withColumn("souce_band", F.lit("B02"))
+  spark.read.table("alaska_b04")\
+    .withColumn("souce_band", F.lit("B04"))
 catalog_df.display()
 
 # COMMAND ----------
@@ -91,11 +92,13 @@ grid_tessellate_df = tiles_df\
   .withColumn("raster", mos.rst_tessellate("raster", F.lit(6)))\
   .withColumn("index_id", F.col("raster.index_id"))
 
+# COMMAND ----------
+
 to_plot = grid_tessellate_df.limit(50).collect()
 
 # COMMAND ----------
 
-library.plot_raster(to_plot[15]["raster"]["raster"])
+library.plot_raster(to_plot[18]["raster"]["raster"])
 
 # COMMAND ----------
 
@@ -124,13 +127,20 @@ tables_to_index
 
 # COMMAND ----------
 
-for tbl in tables_to_index:
-  index_band(tbl, 5)
+index_band("alaska_b02", 6)
+
+# COMMAND ----------
+
+index_band("alaska_b03", 6)
+
+# COMMAND ----------
+
+index_band("alaska_b04", 6)
 
 # COMMAND ----------
 
 grid_tessellate_df = spark.read.table("alaska_b02_indexed")
-grid_tessellate_df.display()
+grid_tessellate_df.limit(20).display()
 
 # COMMAND ----------
 
@@ -144,7 +154,7 @@ grid_tessellate_df.display()
 
 # COMMAND ----------
 
-line_example = "LINESTRING(-122.2163001236001 47.77530703528161,-122.1503821548501 47.51996083856245,-121.8867102798501 47.62743233444236,-122.0954505142251 47.360200479212935,-121.8152991470376 47.41970286748326,-121.5131751236001 47.360200479212935,-121.7603675064126 47.23726461439514,-122.2547522720376 47.0691640536914,-121.9361487564126 47.08038730142549,-121.3813391861001 47.10282670591806,-121.2110511001626 47.31925361681828,-120.9308997329751 47.56816499155946,-120.7661048111001 47.41226874260139,-121.1616126236001 47.11404286281199,-121.7933264907876 46.885516358226546,-122.3206702407876 46.79909683431514)"
+line_example = "LINESTRING(-158.34445841325555 68.0176784075422,-155.55393106950555 68.0423396963395,-154.82883341325555 67.84431100260183,-159.33322794450555 67.81114172848677,-160.01438028825555 67.47684671455214,-154.43332560075555 67.56925103744871,-154.01584513200555 67.30791374746678,-160.16818888200555 67.25700024664256,-160.58566935075555 66.94924133006975,-153.73020060075555 67.0693906319206,-154.49924356950555 66.70715520513478,-160.12424356950555 66.70715520513478,-159.02561075700555 66.37476822845568,-154.56516153825555 66.49774379983036,-155.04855997575555 66.22462528148408,-158.76193888200555 66.16254082040112,-157.94895060075555 65.94851918639993,-155.64182169450555 66.0021934684043,-158.58615763200555 66.55900493948819,-155.26828653825555 67.43472555587037,-161.64035685075555 67.86087797718164,-161.66232950700555 67.44315575603868)"
 
 line_df = spark.createDataFrame([line_example], "string")\
   .select(F.col("value").alias("wkt"))\
@@ -169,7 +179,7 @@ cells_of_interest = grid_tessellate_df.repartition(40, F.rand()).join(line_df, o
 
 # COMMAND ----------
 
-cells_of_interest.display()
+cells_of_interest.limit(10).display()
 
 # COMMAND ----------
 
@@ -248,15 +258,19 @@ measurements.display()
 
 # COMMAND ----------
 
-df_12_13 = measurements.where("date == '2020-12-13'")
-df_12_05 = measurements.where("date == '2020-12-05'")
+df_06_20 = measurements.where("date == '2021-06-20'")
+df_06_03 = measurements.where("date == '2021-06-03'")
 
 # COMMAND ----------
 
 # MAGIC %%mosaic_kepler
-# MAGIC df_12_13 index_id h3 5000
+# MAGIC df_06_20 index_id h3 5000
 
 # COMMAND ----------
 
 # MAGIC %%mosaic_kepler
-# MAGIC df_12_05 index_id h3 5000
+# MAGIC df_06_03 index_id h3 5000
+
+# COMMAND ----------
+
+

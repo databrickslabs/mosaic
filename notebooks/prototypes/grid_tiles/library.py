@@ -114,7 +114,7 @@ def download_asset(href, dir_path, filename):
   try:
     outpath = f"{dir_path}/{filename}"
     # Make the actual request, set the timeout for no data to 10 seconds and enable streaming responses so we don't have to keep the large files in memory
-    request = requests.get(href, timeout=10, stream=True)
+    request = requests.get(href, timeout=100, stream=True)
 
     # Open the output file and make sure we write in binary mode
     with open(outpath, 'wb') as fh:

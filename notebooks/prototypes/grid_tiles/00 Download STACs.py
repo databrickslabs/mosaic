@@ -126,15 +126,19 @@ to_display = cells.select(mos.st_simplify("grid.wkb", F.lit(0.1)).alias("wkb"))
 
 # COMMAND ----------
 
-time_range = "2021-06-01/2021-06-07"
+time_range = "2021-06-01/2021-06-30"
 
 # COMMAND ----------
 
 cell_jsons = cells\
   .withColumn("area_id", F.hash("geom_0"))\
   .withColumn("h3", F.col("grid.index_id"))\
-  .withColumn("geojson", mos.st_asgeojson("grid.wkb"))\
-  .drop("geom_0")
+  .groupBy("h3")\
+  .agg(
+    mos.st_union_agg("grid.wkb").alias("geom_1")
+  )\
+  .withColumn("geojson", mos.st_asgeojson(mos.grid_boundaryaswkb("h3")))\
+  .drop("count", "geom_1")
 
 # COMMAND ----------
 
@@ -148,6 +152,11 @@ cell_jsons.display()
 # COMMAND ----------
 
 cell_jsons.count()
+
+# COMMAND ----------
+
+# MAGIC %%mosaic_kepler
+# MAGIC cell_jsons h3 h3
 
 # COMMAND ----------
 
@@ -172,7 +181,12 @@ dbutils.fs.mkdirs("/FileStore/geospatial/odin/alaska/")
 # COMMAND ----------
 
 # MAGIC %sql
+# MAGIC DROP DATABASE IF EXISTS odin_alaska CASCADE;
 # MAGIC CREATE DATABASE IF NOT EXISTS odin_alaska;
+
+# COMMAND ----------
+
+# MAGIC %sql
 # MAGIC USE odin_alaska;
 
 # COMMAND ----------
@@ -249,11 +263,7 @@ for band in bands:
 
 # COMMAND ----------
 
-# MAGIC %fs ls /FileStore/geospatial/odin/alaska/
-
-# COMMAND ----------
-
-# MAGIC %fs ls /FileStore/geospatial/odin/alaska/B02
+# MAGIC %fs ls /FileStore/geospatial/odin/alaska/B08
 
 # COMMAND ----------
 
@@ -262,6 +272,10 @@ from matplotlib import pyplot
 from rasterio.plot import show
 
 fig, ax = pyplot.subplots(1, figsize=(12, 12))
-raster = rasterio.open("""/dbfs/FileStore/geospatial/odin/alaska/B02/-718806860.tif""")
+raster = rasterio.open("""/dbfs/FileStore/geospatial/odin/alaska/B08/2764922.tif""")
 show(raster, ax=ax, cmap='Greens')
 pyplot.show()
+
+# COMMAND ----------
+
+
