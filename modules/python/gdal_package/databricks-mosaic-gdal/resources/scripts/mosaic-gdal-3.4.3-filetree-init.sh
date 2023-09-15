@@ -11,7 +11,7 @@
 #  2. This will unpack files directly into the filetree across cluster nodes (vs run apt install)
 #
 # -- install databricks-mosaic-gdal on cluster 
-# - from pypi.org (once available)
+# - use version 3.4.3 (exactly) from pypi.org
 pip install databricks-mosaic-gdal==3.4.3
 
 # -- find the install dir
