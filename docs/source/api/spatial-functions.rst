@@ -509,7 +509,7 @@ st_distance
     |      15.652475842498529|
     +------------------------+
 
-.. note:: Results of this function are always expressed in the original units of the input geometries.
+.. note:: Results of this function are always expressed in the original units of the input geometries, e.g. for WGS84 (SRID 4326) units are degrees.
 
 st_dump
 *******
