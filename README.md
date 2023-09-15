@@ -51,7 +51,7 @@ As of the 0.3.11 release, Mosaic issues the following warning when initialized o
 
 > DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime. Mosaic will stop working on this cluster after v0.3.x. Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).
 
-If you are receiving this warning in v0.3.11+, you will want to change to being to plan for a supported runtime. The reason we are making this change is that we are streamlining Mosaic internals to be more aligned with future product APIs which are powered by Photon. Along this direction of change, Mosaic will be standardizing to JTS as its default and supported Vector Geometry Provider.
+If you are receiving this warning in v0.3.11+, you will want to begin to plan for a supported runtime. The reason we are making this change is that we are streamlining Mosaic internals to be more aligned with future product APIs which are powered by Photon. Along this direction of change, Mosaic will be standardizing to JTS as its default and supported Vector Geometry Provider.
 
 ### Documentation
 
