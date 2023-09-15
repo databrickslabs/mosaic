@@ -744,7 +744,7 @@ st_haversine
     |                   10007.55722101796|
     +------------------------------------+
 
-.. note:: Results of this function are always expressed in km^2, while the input lat/lng pairs are expected to be in degrees.
+.. note:: Results of this function are always expressed in km, while the input lat/lng pairs are expected to be in degrees. The radius used (in km) is 6371.0088.
 
 
 st_hasvalidcoordinates
