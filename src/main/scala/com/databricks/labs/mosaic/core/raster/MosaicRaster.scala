@@ -73,6 +73,9 @@ abstract class MosaicRaster(
     /** @return Returns the y size of the raster. */
     def ySize: Int
 
+    /** @return Returns the diagonal size of the raster. */
+    def diagSize: Double = math.sqrt(xSize * xSize + ySize * ySize)
+
     /** @return Returns the bandId-th Band from the raster. */
     def getBand(bandId: Int): MosaicRasterBand
 
@@ -87,6 +90,33 @@ abstract class MosaicRaster(
 
     /** @return Returns the path to the raster file. */
     def getGeoTransform: Array[Double]
+
+    /** @return Returns pixel x size. */
+    def pixelXSize: Double = getGeoTransform(1)
+
+    /** @return Returns pixel y size. */
+    def pixelYSize: Double = getGeoTransform(5)
+
+    /** @return Returns the origin x coordinate. */
+    def originX: Double = getGeoTransform(0)
+
+    /** @return Returns the origin y coordinate. */
+    def originY: Double = getGeoTransform(3)
+
+    /** @return Returns the max x coordinate. */
+    def xMax: Double = originX + xSize * pixelXSize
+
+    /** @return Returns the max y coordinate. */
+    def yMax: Double = originY + ySize * pixelYSize
+
+    /** @return Returns the min x coordinate. */
+    def xMin: Double = originX
+
+    /** @return Returns the min y coordinate. */
+    def yMin: Double = originY
+
+    /** @return Returns the diagonal size of a pixel. */
+    def pixelDiagSize: Double = math.sqrt(pixelXSize * pixelXSize + pixelYSize * pixelYSize)
 
     /** @return Returns the GDAL Dataset representing the raster. */
     def getRaster: Dataset

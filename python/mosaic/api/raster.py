@@ -769,6 +769,27 @@ def rst_tessellate(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
     )
 
 
+def rst_tryopen(raster: ColumnOrName) -> Column:
+    """
+    Tries to open the raster and returns a flag indicating if the raster can be opened.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+
+    Returns
+    -------
+    Column (BooleanType)
+        Whether the raster can be opened.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_tryopen",
+        pyspark_to_java_column(raster)
+    )
+
+
 def rst_subdivide(raster: ColumnOrName, size_in_mb: ColumnOrName) -> Column:
     """
 

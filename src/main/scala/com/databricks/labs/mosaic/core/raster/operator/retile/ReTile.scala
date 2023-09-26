@@ -27,7 +27,11 @@ object ReTile {
             val bbox = geometryAPI.createBbox(xMin, yMin, xMin + tileWidth, yMin + tileHeight)
                 .mapXY((x, y) => rasterAPI.toWorldCoord(raster.getGeoTransform, x.toInt, y.toInt))
 
-            RasterClipByVector.clip(raster, bbox, raster.getRaster.GetSpatialRef(), geometryAPI)
+            // buffer bbox by the diagonal size of the raster to ensure we get all the pixels in the tile
+            val bufferR = raster.pixelDiagSize * 1.01
+            val bufferedBBox = bbox.buffer(bufferR)
+
+            RasterClipByVector.clip(raster, bufferedBBox, raster.getRaster.GetSpatialRef(), geometryAPI)
 
         }
 

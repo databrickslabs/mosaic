@@ -155,6 +155,10 @@ class MosaicRasterGDAL(_uuid: Long, var raster: Dataset, path: String, isTemp: B
 
     override def getRasterForCell(cellID: Long, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRaster = {
         val cellGeom = indexSystem.indexToGeometry(cellID, geometryAPI)
+        // buffer by diagonal size of the raster pixel to avoid clipping issues
+        // add 1% to avoid rounding errors
+        val bufferR = pixelDiagSize*1.01
+        val bufferedCell = cellGeom.buffer(bufferR)
         val geomCRS =
             if (cellGeom.getSpatialReference == 0) wsg84
             else {
@@ -164,7 +168,7 @@ class MosaicRasterGDAL(_uuid: Long, var raster: Dataset, path: String, isTemp: B
                 geomCRS.SetAxisMappingStrategy(osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
                 geomCRS
             }
-        RasterClipByVector.clip(this, cellGeom, geomCRS, geometryAPI)
+        RasterClipByVector.clip(this, bufferedCell, geomCRS, geometryAPI)
     }
 
     /**
@@ -180,7 +184,11 @@ class MosaicRasterGDAL(_uuid: Long, var raster: Dataset, path: String, isTemp: B
             gdal.Unlink(path)
         }
         if (isTemp) {
-            Files.delete(Paths.get(path))
+            try {
+                Files.delete(Paths.get(path))
+            } catch {
+                case _: Throwable => ()
+            }
         }
     }
 

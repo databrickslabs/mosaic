@@ -287,6 +287,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_Subdatasets](expressionConfig)
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
+        mosaicRegistry.registerExpression[RST_TryOpen](expressionConfig)
         mosaicRegistry.registerExpression[RST_Subdivide](expressionConfig)
         mosaicRegistry.registerExpression[RST_UpperLeftX](expressionConfig)
         mosaicRegistry.registerExpression[RST_UpperLeftY](expressionConfig)
@@ -699,6 +700,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(RST_Tessellate(col(raster).expr, resolution.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
+        def rst_tryopen(raster: Column): Column = ColumnAdapter(RST_TryOpen(raster.expr, expressionConfig))
         def rst_subdivide(raster: Column, sizeInMB: Column): Column =
             ColumnAdapter(RST_Subdivide(raster.expr, sizeInMB.expr, expressionConfig))
         def rst_subdivide(raster: Column, sizeInMB: Int): Column =

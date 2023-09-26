@@ -65,7 +65,8 @@ catalog_df.display()
 tiles_df = catalog_df\
   .repartition(200, F.rand())\
   .withColumn("raster", mos.rst_subdivide("outputfile", F.lit(8)))\
-  .withColumn("size", mos.rst_memsize("raster"))
+  .withColumn("size", mos.rst_memsize("raster"))\
+  .where(~mos.rst_isempty("raster"))
 
 # COMMAND ----------
 
@@ -78,7 +79,7 @@ to_plot = tiles_df.limit(50).collect()
 
 # COMMAND ----------
 
-library.plot_raster(to_plot[12]["raster"])
+library.plot_raster(to_plot[7]["raster"])
 
 # COMMAND ----------
 
@@ -98,13 +99,24 @@ to_plot = grid_tessellate_df.limit(50).collect()
 
 # COMMAND ----------
 
-library.plot_raster(to_plot[18]["raster"]["raster"])
+library.plot_raster(to_plot[2]["raster"]["raster"])
+
+# COMMAND ----------
+
+spark.read.table("alaska_b08")\
+      .withColumn("souce_band", F.col("asset.name"))\
+      .repartition(200, F.rand())\
+      .where(F.expr("rst_tryopen(outputfile)"))\
+      .withColumn("raster", mos.rst_subdivide("outputfile", F.lit(8)))\
+      
+      .display()
 
 # COMMAND ----------
 
 def index_band(band_table, resolution):
   catalog_df = \
     spark.read.table(band_table)\
+      .where(F.expr("rst_tryopen(outputfile)"))\
       .withColumn("souce_band", F.col("asset.name"))
   
   tiles_df = catalog_df\
@@ -136,6 +148,10 @@ index_band("alaska_b03", 6)
 # COMMAND ----------
 
 index_band("alaska_b04", 6)
+
+# COMMAND ----------
+
+index_band("alaska_b08", 6)
 
 # COMMAND ----------
 

@@ -18,7 +18,7 @@ case class RST_IsEmpty(raster: Expression, expressionConfig: MosaicExpressionCon
 
     /** Returns true if the raster is empty. */
     override def rasterTransform(raster: MosaicRaster): Any = {
-        val result = raster.ySize == 0 && raster.xSize == 0
+        val result = (raster.ySize == 0 && raster.xSize == 0) || raster.isEmpty
         RasterCleaner.dispose(raster)
         result
     }
@@ -40,7 +40,7 @@ object RST_IsEmpty extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_IsEmpty](2, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_IsEmpty](1, expressionConfig)
     }
 
 }

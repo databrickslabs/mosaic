@@ -6,9 +6,12 @@ import com.databricks.labs.mosaic.utils.PathUtils
 
 object NDVI {
 
-    def emptyCopy(raster: MosaicRaster, path: String): MosaicRaster = {
+    val doubleDataType: Int = org.gdal.gdalconst.gdalconstConstants.GDT_Float64
+
+    def newNDVIRaster(raster: MosaicRaster, path: String): MosaicRaster = {
         val driver = raster.getRaster.GetDriver()
-        val newRaster = driver.Create(path, raster.xSize, raster.ySize, raster.numBands, raster.getRaster.GetRasterBand(1).getDataType)
+        // NDVI is always a single band raster with double data type
+        val newRaster = driver.Create(path, raster.xSize, raster.ySize, 1, doubleDataType)
         newRaster.SetGeoTransform(raster.getRaster.GetGeoTransform)
         newRaster.SetProjection(raster.getRaster.GetProjection)
         MosaicRasterGDAL(newRaster, path, isTemp = true)
@@ -23,17 +26,17 @@ object NDVI {
         val lineSize = redBand.GetXSize
 
         val ndviPath = PathUtils.createTmpFilePath(raster.uuid.toString, raster.getExtension)
-        val ndviRaster = emptyCopy(raster, ndviPath)
+        val ndviRaster = newNDVIRaster(raster, ndviPath)
 
         var outputLine: Array[Double] = null
         var redScanline: Array[Double] = null
         var nirScanline: Array[Double] = null
-        val dataType = org.gdal.gdalconst.gdalconstConstants.GDT_Float64
+
         for (line <- Range(0, numLines)) {
             redScanline = Array.fill[Double](lineSize)(0.0)
             nirScanline = Array.fill[Double](lineSize)(0.0)
-            redBand.ReadRaster(0, line, lineSize, 1, dataType, redScanline)
-            nirBand.ReadRaster(0, line, lineSize, 1, dataType, nirScanline)
+            redBand.ReadRaster(0, line, lineSize, 1, doubleDataType, redScanline)
+            nirBand.ReadRaster(0, line, lineSize, 1, doubleDataType, nirScanline)
 
             outputLine = redScanline.zip(nirScanline).map { case (red, nir) =>
                 if (red + nir == 0) 0.0
@@ -41,7 +44,7 @@ object NDVI {
             }
             ndviRaster.getRaster
                 .GetRasterBand(1)
-                .WriteRaster(0, line, lineSize, 1, dataType, outputLine.array)
+                .WriteRaster(0, line, lineSize, 1, doubleDataType, outputLine.array)
         }
         outputLine = null
         redScanline = null

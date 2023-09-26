@@ -10,9 +10,6 @@ import com.databricks.labs.mosaic.core.types.model.MosaicRasterChip
 object RasterTessellate {
 
     def tessellate(raster: MosaicRaster, resolution: Int, indexSystem: IndexSystem, geometryAPI: GeometryAPI): Seq[MosaicRasterChip] = {
-
-        Array.fill(10)(1.0)
-
         val indexSR = indexSystem.osrSpatialRef
         val bbox = raster.bbox(geometryAPI, indexSR)
         val cells = Mosaic.mosaicFill(bbox, resolution, keepCoreGeom = false, indexSystem, geometryAPI)

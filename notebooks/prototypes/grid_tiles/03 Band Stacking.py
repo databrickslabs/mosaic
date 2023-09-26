@@ -54,6 +54,8 @@ df_b03 = spark.read.table("alaska_b03_indexed")\
   .withColumn("h3", F.col("raster.index_id"))
 df_b04 = spark.read.table("alaska_b04_indexed")\
   .withColumn("h3", F.col("raster.index_id"))
+df_b08 = spark.read.table("alaska_b08_indexed")\
+  .withColumn("h3", F.col("raster.index_id"))
 
 # COMMAND ----------
 
@@ -97,6 +99,9 @@ df_b03_resolved = df_b03.groupBy("h3", "date")\
 df_b04_resolved = df_b04.groupBy("h3", "date")\
   .agg(mos.rst_merge(F.collect_list("raster.raster")).alias("raster"))
 
+df_b08_resolved = df_b08.groupBy("h3", "date")\
+  .agg(mos.rst_merge(F.collect_list("raster.raster")).alias("raster"))
+
 
 # COMMAND ----------
 
@@ -124,7 +129,13 @@ stacked_df = df_b02_resolved\
         .withColumnRenamed("raster", "b04"),
       on = ["h3", "date"]
     )\
-    .withColumn("raster", mos.rst_mergebands(F.array("b04", "b03", "b02"))) # b04 = red b03 = blue b02 = green b08 = nir
+    .join(
+      df_b08_resolved\
+        .repartition(200, F.rand())\
+        .withColumnRenamed("raster", "b08"),
+      on = ["h3", "date"]
+    )\
+    .withColumn("raster", mos.rst_mergebands(F.array("b04", "b03", "b02", "b08"))) # b04 = red b03 = blue b02 = green b08 = nir
 
 # COMMAND ----------
 
@@ -137,7 +148,7 @@ stacked_df.limit(50).display()
 # COMMAND ----------
 
 ndvi_test = stacked_df.withColumn(
-  "ndvi", mos.rst_ndvi("raster", F.lit(1), F.lit(2))
+  "ndvi", mos.rst_ndvi("raster", F.lit(4), F.lit(1))
 )
 
 # COMMAND ----------
@@ -146,28 +157,8 @@ to_plot = ndvi_test.limit(50).collect()
 
 # COMMAND ----------
 
-library.plot_raster(to_plot[12]["test"])
+library.plot_raster(to_plot[4]["ndvi"])
 
 # COMMAND ----------
 
-stacked_df.createOrReplaceTempView("multiband")
 
-# COMMAND ----------
-
-to_plot = stacked_df.limit(50).collect()
-
-# COMMAND ----------
-
-library.plot_raster(to_plot[0]["b04"])
-
-# COMMAND ----------
-
-library.plot_raster(to_plot[0]["b03"])
-
-# COMMAND ----------
-
-library.plot_raster(to_plot[2]["b02"])
-
-# COMMAND ----------
-
-library.plot_raster(to_plot[2]["ndvi"])
