@@ -6,11 +6,11 @@ Supported platforms
 ###################
 
 .. warning::
-    From version 0.4.0, Mosaic will require either
+    From versions after 0.3.x, Mosaic will require either
      * Databricks Runtime 11.2+ with Photon enabled
      * Databricks Runtime for ML 11.2+
     
-    Mosaic 0.3 series does not support DBR 13 (coming soon with Mosaic 0.4 series); 
+    Mosaic 0.3 series does not support DBR 13 (coming soon); 
     also, DBR 10 is no longer supported in Mosaic. 
 
 We recommend using Databricks Runtime versions 11.3 LTS or 12.2 LTS with Photon enabled; 
@@ -18,10 +18,10 @@ this will leverage the Databricks H3 expressions when using H3 grid system.
 As of the 0.3.11 release, Mosaic issues the following warning when initialized on a cluster
 that is neither Photon Runtime nor Databricks Runtime ML [`ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`__ | `AWS <https://docs.databricks.com/runtime/index.html>`__ | `GCP <https://docs.gcp.databricks.com/runtime/index.html>`__]:
 
-    DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime. Mosaic will stop working on this cluster from version v0.4.0+. Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).
+    DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime. Mosaic will stop working on this cluster after v0.3.x. Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).
 
-If you are receiving this warning in v0.3.11+, you will want to change to a supported runtime prior 
-to updating Mosaic to run 0.4.0. The reason we are making this change is that we are streamlining Mosaic
+If you are receiving this warning in v0.3.11+, you will want to begin to plan for a supported runtime.
+The reason we are making this change is that we are streamlining Mosaic
 internals to be more aligned with future product APIs which are powered by Photon. Along this direction 
 of change, Mosaic will be standardizing to JTS as its default and supported Vector Geometry Provider.
 

@@ -459,7 +459,7 @@ st_distance
 
 .. function:: st_distance(geom1, geom2)
 
-    Compute the distance between `geom1` and `geom2`.
+    Compute the euclidean distance between `geom1` and `geom2`.
 
     :param geom1: Geometry
     :type geom1: Column
@@ -509,7 +509,7 @@ st_distance
     |      15.652475842498529|
     +------------------------+
 
-.. note:: Results of this function are always expressed in the original units of the input geometries.
+.. note:: Results of this euclidean distance function are always expressed in the original units of the input geometries, e.g. for WGS84 (SRID 4326) units are degrees.
 
 st_dump
 *******
@@ -744,7 +744,7 @@ st_haversine
     |                   10007.55722101796|
     +------------------------------------+
 
-.. note:: Results of this function are always expressed in km^2, while the input lat/lng pairs are expected to be in degrees.
+.. note:: Results of this function are always expressed in km, while the input lat/lng pairs are expected to be in degrees. The radius used (in km) is 6371.0088.
 
 
 st_hasvalidcoordinates
