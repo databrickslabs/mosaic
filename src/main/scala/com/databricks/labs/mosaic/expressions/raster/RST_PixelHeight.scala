@@ -22,6 +22,7 @@ case class RST_PixelHeight(raster: Expression, expressionConfig: MosaicExpressio
         val skewX = raster.getRaster.GetGeoTransform()(2)
         // when there is no skew the height is scaleY, but we cant assume 0-only skew
         // skew is not to be confused with rotation
+        // TODO - check if this is correct
         val result = math.sqrt(scaleY * scaleY + skewX * skewX)
         RasterCleaner.dispose(raster)
         result

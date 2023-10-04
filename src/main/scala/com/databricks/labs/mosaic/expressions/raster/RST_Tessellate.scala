@@ -1,8 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.index.BNGIndexSystem
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.retile.RasterTessellate
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterChip
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
@@ -29,16 +27,12 @@ case class RST_Tessellate(
       * tileHeight).
       */
     override def rasterGenerator(raster: MosaicRaster, resolution: Int): Seq[MosaicRasterChip] = {
-        val result = RasterTessellate.tessellate(
+        RasterTessellate.tessellate(
           raster,
           resolution,
           indexSystem,
           geometryAPI
         )
-        RasterCleaner.dispose(raster)
-        result
-            .filter(c => indexSystem.isValid(c.indexAsLong(indexSystem)))
-            .map(_.formatCellId(indexSystem))
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, resolutionExpr)

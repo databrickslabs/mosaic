@@ -1,7 +1,5 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterCleaner}
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
 import com.databricks.labs.mosaic.datasource.Utils
@@ -43,11 +41,10 @@ object ReTileOnRead extends ReadStrategy {
         val localCopy = PathUtils.copyToTmp(status.getPath.toString)
         val raster = MosaicRasterGDAL.readRaster(localCopy)
         val uuid = getUUID(status)
-        val geometryAPI = GeometryAPI.apply(options.getOrElse("geometry_api", "JTS"))
 
         val size = status.getLen
         val numSplits = Math.ceil(size / MB16).toInt
-        val tiles = BalancedSubdivision.splitRaster(raster, numSplits, geometryAPI, GDAL)
+        val tiles = BalancedSubdivision.splitRaster(raster, numSplits)
 
         val rows = tiles.map(tile => {
             val trimmedSchema = StructType(requiredSchema.filter(field => field.name != RASTER && field.name != LENGTH))

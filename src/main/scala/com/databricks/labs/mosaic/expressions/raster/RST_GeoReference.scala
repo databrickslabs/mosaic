@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /** Returns the georeference of the raster. */
@@ -19,17 +18,16 @@ case class RST_GeoReference(raster: Expression, expressionConfig: MosaicExpressi
     /** Returns the georeference of the raster. */
     override def rasterTransform(raster: MosaicRaster): Any = {
         val geoTransform = raster.getRaster.GetGeoTransform()
-        val geoReference = Map(
-          "upperLeftX" -> geoTransform(0),
-          "upperLeftY" -> geoTransform(3),
-          "scaleX" -> geoTransform(1),
-          "scaleY" -> geoTransform(5),
-          "skewX" -> geoTransform(2),
-          "skewY" -> geoTransform(4)
+        buildMapDouble(
+          Map(
+            "upperLeftX" -> geoTransform(0),
+            "upperLeftY" -> geoTransform(3),
+            "scaleX" -> geoTransform(1),
+            "scaleY" -> geoTransform(5),
+            "skewX" -> geoTransform(2),
+            "skewY" -> geoTransform(4)
+          )
         )
-        val result = buildMapDouble(geoReference)
-        RasterCleaner.dispose(raster)
-        result
     }
 }
 

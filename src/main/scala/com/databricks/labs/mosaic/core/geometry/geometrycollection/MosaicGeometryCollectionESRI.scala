@@ -167,7 +167,7 @@ object MosaicGeometryCollectionESRI extends GeometryReader {
                 // POINT by convention, MULTIPOINT are always flattened to POINT in the internal representation
                 val coordinates = holesRings.head.head.coords
                 MosaicPointESRI(
-                  new OGCPoint(new Point(coordinates(0), coordinates(1)), spatialReference)
+                  new OGCPoint(new Point(coordinates.head, coordinates(1)), spatialReference)
                 )
             } else {
                 MosaicGeometryESRI.fromWKT("POINT EMPTY")

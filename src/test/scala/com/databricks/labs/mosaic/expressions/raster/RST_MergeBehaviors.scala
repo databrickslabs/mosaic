@@ -28,7 +28,7 @@ trait RST_MergeBehaviors extends QueryTest {
             .load("src/test/resources/modis")
 
         val gridTiles = rastersAsPaths
-            .withColumn("tiles", rst_gridtiles($"path", 3))
+            .withColumn("tiles", rst_tessellate($"path", 3))
             .select("path", "tiles")
             .groupBy("path")
             .agg(
@@ -55,7 +55,7 @@ trait RST_MergeBehaviors extends QueryTest {
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("tiles", rst_gridtiles($"path", 3))
+            .withColumn("tiles", rst_tessellate($"path", 3))
             .select("path", "tiles")
             .groupBy("path")
             .agg(

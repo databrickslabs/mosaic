@@ -10,7 +10,6 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-import java.nio.file.{Files, Paths}
 import scala.reflect.ClassTag
 
 /**
@@ -37,7 +36,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
-    override def dataType: DataType = rasterExpr.dataType
+    override def dataType: DataType = BinaryType
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
@@ -58,7 +57,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       * needs to be wrapped in a StructType. The actually type is that of the
       * structs element.
       */
-    override def elementSchema: StructType = StructType(Array(StructField("raster", dataType)))
+    override def elementSchema: StructType = StructType(Array(StructField("raster", BinaryType)))
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -72,13 +71,12 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
     def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        val checkpointPath = expressionConfig.getRasterCheckpoint
-
         val inRaster = rasterAPI.readRaster(rasterExpr.eval(input), rasterExpr.dataType)
         val generatedRasters = rasterGenerator(inRaster)
 
         // Writing rasters disposes of the written raster
-        val rows = rasterAPI.writeRasters(generatedRasters, checkpointPath, dataType)
+        val rows = generatedRasters.map(_.writeToBytes())
+        generatedRasters.foreach(RasterCleaner.dispose)
         RasterCleaner.dispose(inRaster)
 
         rows.map(row => InternalRow.fromSeq(Seq(row)))

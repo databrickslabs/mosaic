@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -18,9 +17,7 @@ case class RST_TryOpen(raster: Expression, expressionConfig: MosaicExpressionCon
 
     /** Returns true if the raster can be opened. */
     override def rasterTransform(raster: MosaicRaster): Any = {
-        val result = Option(raster.getRaster).isDefined
-        RasterCleaner.dispose(raster)
-        result
+        Option(raster.getRaster).isDefined
     }
 
 }

@@ -258,7 +258,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_BandMetaData](expressionConfig)
         mosaicRegistry.registerExpression[RST_Clip](expressionConfig)
         mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
-        mosaicRegistry.registerExpression[RST_GridTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_Height](expressionConfig)
         mosaicRegistry.registerExpression[RST_IsEmpty](expressionConfig)
         mosaicRegistry.registerExpression[RST_MemSize](expressionConfig)
@@ -672,12 +671,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(RST_ReTile(raster.expr, lit(tileWidth).expr, lit(tileHeight).expr, expressionConfig))
         def rst_retile(raster: String, tileWidth: Int, tileHeight: Int): Column =
             ColumnAdapter(RST_ReTile(lit(raster).expr, lit(tileWidth).expr, lit(tileHeight).expr, expressionConfig))
-        def rst_gridtiles(raster: Column, resolution: Column): Column =
-            ColumnAdapter(RST_GridTiles(raster.expr, resolution.expr, expressionConfig))
-        def rst_gridtiles(raster: String, resolution: Column): Column =
-            ColumnAdapter(RST_GridTiles(lit(raster).expr, resolution.expr, expressionConfig))
-        def rst_gridtiles(raster: Column, resolution: Int): Column =
-            ColumnAdapter(RST_GridTiles(raster.expr, lit(resolution).expr, expressionConfig))
         def rst_rotation(raster: Column): Column = ColumnAdapter(RST_Rotation(raster.expr, expressionConfig))
         def rst_rotation(raster: String): Column = ColumnAdapter(RST_Rotation(lit(raster).expr, expressionConfig))
         def rst_scalex(raster: Column): Column = ColumnAdapter(RST_ScaleX(raster.expr, expressionConfig))

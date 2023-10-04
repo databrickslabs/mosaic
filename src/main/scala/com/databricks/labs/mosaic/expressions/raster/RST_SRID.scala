@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 import org.gdal.osr.SpatialReference
 
@@ -24,9 +23,7 @@ case class RST_SRID(raster: Expression, expressionConfig: MosaicExpressionConfig
         // Reference: https://gis.stackexchange.com/questions/267321/extracting-epsg-from-a-raster-using-gdal-bindings-in-python
         val proj = new SpatialReference(raster.getRaster.GetProjection())
         Try(proj.AutoIdentifyEPSG())
-        val result = Try(proj.GetAttrValue("AUTHORITY", 1).toInt).getOrElse(0)
-        RasterCleaner.dispose(raster)
-        result
+        Try(proj.GetAttrValue("AUTHORITY", 1).toInt).getOrElse(0)
     }
 
 }

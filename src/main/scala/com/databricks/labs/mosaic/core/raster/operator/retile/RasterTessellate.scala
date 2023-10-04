@@ -14,20 +14,28 @@ object RasterTessellate {
         val bbox = raster.bbox(geometryAPI, indexSR)
         val cells = Mosaic.mosaicFill(bbox, resolution, keepCoreGeom = false, indexSystem, geometryAPI)
         val tmpRaster = RasterProject.project(raster, indexSR)
-        val result = cells
+
+        val chips = cells
             .map(cell => {
                 val cellID = cell.cellIdAsLong(indexSystem)
-                val cellRaster = tmpRaster.getRasterForCell(cellID, indexSystem, geometryAPI)
-                cellRaster.getRaster.FlushCache()
-                (
-                  cellRaster.getBandStats.values.map(_("mean")).sum > 0 && !cellRaster.isEmpty,
-                  MosaicRasterChip(cell.index, cellRaster)
-                )
+                val isValidCell = indexSystem.isValid(cellID)
+                if (!isValidCell) {
+                    (false, MosaicRasterChip(cell.index, null))
+                } else {
+                    val cellRaster = tmpRaster.getRasterForCell(cellID, indexSystem, geometryAPI)
+                    val isValidRaster = cellRaster.getBandStats.values.map(_("mean")).sum > 0 && !cellRaster.isEmpty
+                    (
+                      isValidRaster,
+                      MosaicRasterChip(cell.index, cellRaster)
+                    )
+                }
             })
-            .filter(_._1)
-            .map(_._2)
+
+        val (result, invalid) = chips.partition(_._1)
+        invalid.foreach(_._2.raster.destroy())
         tmpRaster.destroy()
-        result
+
+        result.map(_._2)
     }
 
 }

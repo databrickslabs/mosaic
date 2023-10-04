@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.retile.ReTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterGeneratorExpression
@@ -30,9 +29,7 @@ case class RST_ReTile(
     override def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
-        val result = ReTile.reTile(raster, tileWidthValue, tileHeightValue, geometryAPI, rasterAPI)
-        RasterCleaner.dispose(raster)
-        result
+        ReTile.reTile(raster, tileWidthValue, tileHeightValue)
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, tileWidthExpr, tileHeightExpr)

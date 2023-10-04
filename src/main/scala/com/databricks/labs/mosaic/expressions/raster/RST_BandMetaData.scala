@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterBandExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /**
@@ -22,7 +21,13 @@ import org.apache.spark.sql.types._
   *   Additional arguments for the expression (expressionConfigs).
   */
 case class RST_BandMetaData(raster: Expression, band: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterBandExpression[RST_BandMetaData](raster, band, MapType(StringType, StringType), returnsRaster = false, expressionConfig = expressionConfig)
+    extends RasterBandExpression[RST_BandMetaData](
+      raster,
+      band,
+      MapType(StringType, StringType),
+      returnsRaster = false,
+      expressionConfig = expressionConfig
+    )
       with NullIntolerant
       with CodegenFallback {
 
@@ -35,10 +40,7 @@ case class RST_BandMetaData(raster: Expression, band: Expression, expressionConf
       *   The band metadata of the band as a map type result.
       */
     override def bandTransform(raster: MosaicRaster, band: MosaicRasterBand): Any = {
-        val metaData = band.metadata
-        val result = buildMapString(metaData)
-        RasterCleaner.dispose(raster)
-        result
+        buildMapString(band.metadata)
     }
 }
 

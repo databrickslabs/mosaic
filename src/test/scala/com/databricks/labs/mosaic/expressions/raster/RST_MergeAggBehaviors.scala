@@ -49,7 +49,7 @@ trait RST_MergeAggBehaviors extends QueryTest {
                     |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("tiles", rst_gridtiles($"path", 3))
+            .withColumn("tiles", rst_tessellate($"path", 3))
             .select("path", "tiles")
             .groupBy("path")
             .agg(

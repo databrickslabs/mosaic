@@ -2,8 +2,9 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
-import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
+import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -11,42 +12,51 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /** Returns the world coordinates of the raster (x,y) pixel. */
-case class RST_RasterToWorldCoord(
+case class RST_BoundingBox(
     raster: Expression,
-    x: Expression,
-    y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_RasterToWorldCoord](raster, x, y, StringType, returnsRaster = false, expressionConfig = expressionConfig)
+) extends RasterExpression[RST_RasterToWorldCoord](raster, BinaryType, returnsRaster = false, expressionConfig = expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /**
-      * Returns the world coordinates of the raster (x,y) pixel by applying
-      * GeoTransform. This ensures the projection of the raster is respected.
-      * The output is a WKT point.
+      * The function to be overridden by the extending class. It is called when
+      * the expression is evaluated. It provides the raster to the expression.
+      * It abstracts spark serialization from the caller.
+      *
+      * @param raster
+      *   The raster to be used.
+      * @return
+      *   The result of the expression.
       */
-    override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
-        val x = arg1.asInstanceOf[Int]
-        val y = arg2.asInstanceOf[Int]
+    override def rasterTransform(raster: MosaicRaster): Any = {
         val gt = raster.getRaster.GetGeoTransform()
-
-        val (xGeo, yGeo) = rasterAPI.toWorldCoord(gt, x, y)
-
+        val (originX, originY) = rasterAPI.toWorldCoord(gt, 0, 0)
+        val (endX, endY) = rasterAPI.toWorldCoord(gt, raster.xSize, raster.ySize)
         val geometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
-        val point = geometryAPI.fromCoords(Seq(xGeo, yGeo))
-        geometryAPI.serialize(point, StringType)
+        val bboxPolygon = geometryAPI.geometry(
+          Seq(
+            Seq(originX, originY),
+            Seq(originX, endY),
+            Seq(endX, endY),
+            Seq(endX, originY),
+            Seq(originX, originY)
+          ).map(geometryAPI.fromCoords),
+          GeometryTypeEnum.POLYGON
+        )
+        bboxPolygon.toWKB
     }
 
 }
 
 /** Expression info required for the expression registration for spark SQL. */
-object RST_RasterToWorldCoord extends WithExpressionInfo {
+object RST_BoundingBox extends WithExpressionInfo {
 
-    override def name: String = "rst_rastertoworldcoord"
+    override def name: String = "rst_boundingbox"
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns the (x, y) pixel in world coordinates using geo transform of the raster.
+          |_FUNC_(expr1) - Returns the bounding box of the raster.
           |""".stripMargin
 
     override def example: String =

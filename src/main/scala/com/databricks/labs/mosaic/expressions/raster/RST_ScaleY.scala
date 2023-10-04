@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /** Returns the scale y of the raster. */
@@ -18,9 +17,7 @@ case class RST_ScaleY(raster: Expression, expressionConfig: MosaicExpressionConf
 
     /** Returns the scale y of the raster. */
     override def rasterTransform(raster: MosaicRaster): Any = {
-        val scaleY = raster.getRaster.GetGeoTransform()(5)
-        RasterCleaner.dispose(raster)
-        scaleY
+        raster.getRaster.GetGeoTransform()(5)
     }
 
 }

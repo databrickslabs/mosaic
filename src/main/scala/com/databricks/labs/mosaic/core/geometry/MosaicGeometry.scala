@@ -5,7 +5,8 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import org.gdal.ogr.ogr
-import org.gdal.osr._
+import org.gdal.osr.SpatialReference
+import org.gdal.osr.osrConstants._
 import org.locationtech.proj4j._
 
 import java.util.Locale
@@ -65,10 +66,10 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def extent: (Double, Double, Double, Double) = {
         val env = envelope
         (
-            env.minMaxCoord("X", "MIN"),
-            env.minMaxCoord("Y", "MIN"),
-            env.minMaxCoord("X", "MAX"),
-            env.minMaxCoord("Y", "MAX")
+          env.minMaxCoord("X", "MIN"),
+          env.minMaxCoord("Y", "MIN"),
+          env.minMaxCoord("X", "MAX"),
+          env.minMaxCoord("Y", "MAX")
         )
     }
 
@@ -148,6 +149,21 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def getSpatialReference: Int
 
     def setSpatialReference(srid: Int): Unit
+
+    def getSpatialReferenceOSR: SpatialReference = {
+        val srID = getSpatialReference
+        if (srID == 0) {
+            val wsg84 = new SpatialReference()
+            wsg84.ImportFromEPSG(4326)
+            wsg84.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER)
+            wsg84
+        } else {
+            val geomCRS = new SpatialReference()
+            geomCRS.ImportFromEPSG(srID)
+            geomCRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER)
+            geomCRS
+        }
+    }
 
     def hasValidCoords(crsBoundsProvider: CRSBoundsProvider, crsCode: String, which: String): Boolean = {
         val crsCodeIn = crsCode.split(":")

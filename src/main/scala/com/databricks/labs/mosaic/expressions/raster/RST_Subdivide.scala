@@ -30,8 +30,7 @@ case class RST_Subdivide(
       */
     override def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster] = {
         val targetSize = sizeInMB.eval().asInstanceOf[Int]
-        val tiles = BalancedSubdivision.splitRaster(raster, targetSize, geometryAPI, rasterAPI)
-        tiles
+        BalancedSubdivision.splitRaster(raster, targetSize)
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, sizeInMB)
@@ -59,7 +58,7 @@ object RST_Subdivide extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Subdivide](3, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_Subdivide](2, expressionConfig)
     }
 
 }

@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.IntegerType
 
 /** Returns the Y coordinate of the raster. */
@@ -27,9 +26,7 @@ case class RST_WorldToRasterCoordY(
     override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
         val xGeo = arg1.asInstanceOf[Double]
         val gt = raster.getRaster.GetGeoTransform()
-        val result = rasterAPI.fromWorldCoord(gt, xGeo, 0)._2
-        RasterCleaner.dispose(raster)
-        result
+        rasterAPI.fromWorldCoord(gt, xGeo, 0)._2
     }
 
 }

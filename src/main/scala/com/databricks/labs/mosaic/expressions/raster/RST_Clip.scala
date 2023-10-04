@@ -10,8 +10,6 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.BinaryType
-import org.gdal.osr
-import org.gdal.osr.SpatialReference
 
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
@@ -25,7 +23,7 @@ case class RST_Clip(
       rastersExpr,
       geometryExpr,
       BinaryType,
-      returnsRaster = false,
+      returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
@@ -47,22 +45,8 @@ case class RST_Clip(
       */
     override def rasterTransform(raster: MosaicRaster, arg1: Any): Any = {
         val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
-        val geomCRS =
-            if (geometry.getSpatialReference == 0) {
-                val wsg84 = new osr.SpatialReference()
-                wsg84.ImportFromEPSG(4326)
-                wsg84.SetAxisMappingStrategy(osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
-                wsg84
-            }
-            else {
-                val geomCRS = new SpatialReference()
-                geomCRS.ImportFromEPSG(geometry.getSpatialReference)
-                // debug for this
-                geomCRS.SetAxisMappingStrategy(osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
-                geomCRS
-            }
-        val result = RasterClipByVector.clip(raster, geometry, geomCRS, geometryAPI)
-        rasterAPI.writeRasters(Seq(result), expressionConfig.getRasterCheckpoint, BinaryType).head
+        val geomCRS = geometry.getSpatialReferenceOSR
+        RasterClipByVector.clip(raster, geometry, geomCRS, geometryAPI)
     }
 
 }

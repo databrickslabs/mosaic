@@ -37,14 +37,12 @@ object BalancedSubdivision {
 
     def splitRaster(
         mosaicRaster: MosaicRaster,
-        sizeInMb: Int,
-        geometryAPI: GeometryAPI,
-        rasterAPI: RasterAPI
+        sizeInMb: Int
     ): immutable.Seq[MosaicRaster] = {
         val numSplits = getNumSplits(mosaicRaster, sizeInMb)
         val (x, y) = mosaicRaster.getDimensions
         val (tileX, tileY) = getTileSize(x, y, numSplits)
-        ReTile.reTile(mosaicRaster, tileX, tileY, geometryAPI, rasterAPI)
+        ReTile.reTile(mosaicRaster, tileX, tileY)
     }
 
 }

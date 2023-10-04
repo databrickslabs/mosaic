@@ -24,32 +24,32 @@ case class RST_NDVI(
       redIndex,
       nirIndex,
       BinaryType,
-      returnsRaster = false,
+      returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
     /**
-     * The function to be overridden by the extending class. It is called when
-     * the expression is evaluated. It provides the raster and the arguments to
-     * the expression. It abstracts spark serialization from the caller.
-     *
-     * @param raster
-     * The raster to be used.
-     * @param arg1
-     * The first argument.
-     * @param arg2
-     * The second argument.
-     * @return
-     * A result of the expression.
-     */
+      * The function to be overridden by the extending class. It is called when
+      * the expression is evaluated. It provides the raster and the arguments to
+      * the expression. It abstracts spark serialization from the caller.
+      *
+      * @param raster
+      *   The raster to be used.
+      * @param arg1
+      *   The first argument.
+      * @param arg2
+      *   The second argument.
+      * @return
+      *   A result of the expression.
+      */
     override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
         val redInd = arg1.asInstanceOf[Int]
         val nirInd = arg2.asInstanceOf[Int]
-        val result = NDVI.compute(raster, redInd, nirInd)
-        rasterAPI.writeRasters(Seq(result), expressionConfig.getRasterCheckpoint, BinaryType).head
+        NDVI.compute(raster, redInd, nirInd)
     }
+
 }
 
 /** Expression info required for the expression registration for spark SQL. */

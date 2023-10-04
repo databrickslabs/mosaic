@@ -1,17 +1,16 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.gdal.gdal.gdal.GDALInfo
 import org.gdal.gdal.InfoOptions
+import org.gdal.gdal.gdal.GDALInfo
 
 import java.util.{Vector => JVector}
 
@@ -29,9 +28,7 @@ case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionCon
         vector.add("-json")
         val infoOptions = new InfoOptions(vector)
         val gdalInfo = GDALInfo(raster.getRaster, infoOptions)
-        val result = UTF8String.fromString(gdalInfo)
-        RasterCleaner.dispose(raster)
-        result
+        UTF8String.fromString(gdalInfo)
     }
 
 }
