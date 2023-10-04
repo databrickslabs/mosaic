@@ -567,7 +567,7 @@ df.select(st_difference(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <dl class="py function">
 <dt class="sig sig-object py" id="st_distance">
 <span class="sig-name descname"><span class="pre">st_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geom2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_distance" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the distance between <cite>geom1</cite> and <cite>geom2</cite>.</p>
+<dd><p>Compute the euclidean distance between <cite>geom1</cite> and <cite>geom2</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -622,7 +622,7 @@ df.select(st_difference(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </div></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Results of this function are always expressed in the original units of the input geometries.</p>
+<p>Results of this euclidean distance function are always expressed in the original units of the input geometries, e.g. for WGS84 (SRID 4326) units are degrees.</p>
 </div>
 </div>
 <div class="section" id="st-dump">
@@ -868,7 +868,7 @@ df.select(st_envelope(&#39;wkt&#39;)).show()
 </div></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Results of this function are always expressed in km^2, while the input lat/lng pairs are expected to be in degrees.</p>
+<p>Results of this function are always expressed in km, while the input lat/lng pairs are expected to be in degrees. The radius used (in km) is 6371.0088.</p>
 </div>
 </div>
 <div class="section" id="st-hasvalidcoordinates">

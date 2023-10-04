@@ -42,14 +42,14 @@
 Mosaic is an extension to the `Apache Spark <https://spark.apache.org/>`_ framework that allows easy and fast processing of very large geospatial datasets.
 
 .. warning::
-    From version 0.4.0, Mosaic will require either
+    From versions after 0.3.x, Mosaic will require either
      * Databricks Runtime 11.2+ with Photon enabled
      * Databricks Runtime for ML 11.2+
     
-    Mosaic 0.3 series does not support DBR 13 (coming soon with Mosaic 0.4 series); 
+    Mosaic 0.3 series does not yet support DBR 13 (coming soon); 
     also, DBR 10 is no longer supported in Mosaic. 
 
-We recommend using Databricks Runtime versions 11.3 LTS or 12.2 LTS with Photon enabled; 
+We currently recommend using Databricks Runtime versions 11.3 LTS or 12.2 LTS with Photon enabled; 
 this will leverage the Databricks H3 expressions when using H3 grid system. 
 
 Mosaic provides:
