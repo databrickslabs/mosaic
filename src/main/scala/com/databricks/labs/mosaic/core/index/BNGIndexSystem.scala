@@ -94,7 +94,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
           Seq("NL", "NM", "NN", "NO", "NP", "OL", "OM"),
           Seq("NF", "NG", "NH", "NJ", "NK", "OF", "OG"),
           Seq("NA", "NB", "NC", "ND", "NE", "OA", "OB"),
-          Seq("HV", "HW", "HX", "HY", "SZ", "JV", "JW"),
+          Seq("HV", "HW", "HX", "HY", "HZ", "JV", "JW"),
           Seq("HQ", "HR", "HS", "HT", "HU", "JQ", "JR"),
           Seq("HL", "HM", "HN", "HO", "HP", "JL", "JM")
         )
