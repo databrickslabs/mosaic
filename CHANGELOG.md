@@ -1,3 +1,6 @@
+## v0.3.12
+- Make JTS default Geometry Provider
+
 ## v0.3.11
 - Update the CONTRIBUTING.md to follow the standard process.
 - Fix for issue 383: grid_pointascellid fails with a Java type error when run on an already instantiated point.
