@@ -157,9 +157,9 @@ The transformer is called SpatialKNN and it is used as follows:
     import com.databricks.labs.mosaic.models.knn.SpatialKNN
     import com.databricks.labs.mosaic.functions.MosaicContext
     import com.databricks.labs.mosaic.H3
-    import com.databricks.labs.mosaic.ESRI
+    import com.databricks.labs.mosaic.JTS
     >>>
-    val mosaicContext = MosaicContext.build(H3, ESRI)
+    val mosaicContext = MosaicContext.build(H3, JTS)
     import mosaicContext.functions._
     mosaicContext.register(spark)
     >>>
@@ -328,9 +328,9 @@ These datasets are not serialised with the model, and neither are the model outp
     import com.databricks.labs.mosaic.models.knn.SpatialKNN
     import com.databricks.labs.mosaic.functions.MosaicContext
     import com.databricks.labs.mosaic.H3
-    import com.databricks.labs.mosaic.ESRI
+    import com.databricks.labs.mosaic.JTS
     >>>
-    val mosaicContext = MosaicContext.build(H3, ESRI)
+    val mosaicContext = MosaicContext.build(H3, JTS)
     import mosaicContext.functions._
     mosaicContext.register(spark)
     >>>

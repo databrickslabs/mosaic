@@ -24,9 +24,9 @@ print(s"The raw data is stored in $raw_path")
 
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.H3
-import com.databricks.labs.mosaic.ESRI
+import com.databricks.labs.mosaic.JTS
 
-val mosaicContext = MosaicContext.build(H3, ESRI)
+val mosaicContext = MosaicContext.build(H3, JTS)
 import mosaicContext.functions._
 import org.apache.spark.sql.functions._
 

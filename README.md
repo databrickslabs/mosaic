@@ -11,6 +11,7 @@ An extension to the [Apache Spark](https://spark.apache.org/) framework that all
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/databrickslabs/mosaic.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/databrickslabs/mosaic/context:python)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+
 ## Why Mosaic?
 
 Mosaic was created to simplify the implementation of scalable geospatial data pipelines by bounding together common Open Source geospatial libraries via Apache Spark, with a set of [examples and best practices](#examples) for common geospatial use cases.
@@ -20,8 +21,8 @@ Mosaic was created to simplify the implementation of scalable geospatial data pi
 Mosaic provides geospatial tools for
 * Data ingestion (WKT, WKB, GeoJSON)
 * Data processing
-    * Geometry and geography `ST_` operations (with [ESRI](https://github.com/Esri/geometry-api-java) or [JTS](https://github.com/locationtech/jts)) 
-    * Indexing (with [H3](https://github.com/uber/h3) or BNG)
+    * Geometry and geography `ST_` operations (with default [JTS](https://github.com/locationtech/jts) or [ESRI](https://github.com/Esri/geometry-api-java)) 
+    * Indexing (with default [H3](https://github.com/uber/h3) or BNG)
     * Chipping of polygons and lines over an indexing grid [co-developed with Ordnance Survey and Microsoft](https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html)
 * Data visualization ([Kepler](https://github.com/keplergl/kepler.gl))
 
@@ -41,11 +42,16 @@ Image1: Mosaic logical design.
 
 ## Getting started
 
-Create a Databricks cluster running __Databricks Runtime 10.0__ (or later).
+We recommend using Databricks Runtime versions 11.3 LTS or 12.2 LTS with Photon enabled; this will leverage the 
+Databricks H3 expressions when using H3 grid system. 
 
-We recommend using Databricks Runtime versions 11.2 or higher with Photon enabled, this will leverage the 
-Databricks h3 expressions when using H3 grid system.
+:warning: **Mosaic 0.3 series does not support DBR 13** (coming soon); also, DBR 10 is no longer supported in Mosaic. 
 
+As of the 0.3.11 release, Mosaic issues the following warning when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML [[ADB](https://learn.microsoft.com/en-us/azure/databricks/runtime/) | [AWS](https://docs.databricks.com/runtime/index.html) | [GCP](https://docs.gcp.databricks.com/runtime/index.html)]:
+
+> DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime. Mosaic will stop working on this cluster after v0.3.x. Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).
+
+If you are receiving this warning in v0.3.11+, you will want to begin to plan for a supported runtime. The reason we are making this change is that we are streamlining Mosaic internals to be more aligned with future product APIs which are powered by Photon. Along this direction of change, Mosaic will be standardizing to JTS as its default and supported Vector Geometry Provider.
 
 ### Documentation
 
@@ -75,9 +81,9 @@ Then enable it with
 ```scala
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.H3
-import com.databricks.labs.mosaic.ESRI
+import com.databricks.labs.mosaic.JTS
 
-val mosaicContext = MosaicContext.build(H3, ESRI)
+val mosaicContext = MosaicContext.build(H3, JTS)
 import mosaicContext.functions._
 ```
 
@@ -103,9 +109,9 @@ Configure the [Automatic SQL Registration](https://databrickslabs.github.io/mosa
 %scala
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.H3
-import com.databricks.labs.mosaic.ESRI
+import com.databricks.labs.mosaic.JTS
 
-val mosaicContext = MosaicContext.build(H3, ESRI)
+val mosaicContext = MosaicContext.build(H3, JTS)
 mosaicContext.register(spark)
 ```
 
