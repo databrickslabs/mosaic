@@ -20,38 +20,34 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         noException should be thrownBy mc.getRasterAPI
         noException should be thrownBy MosaicContext.geometryAPI
 
-        val rastersAsPaths = spark.read
-            .format("gdal")
-            .option("raster_storage", "disk")
-            .load("src/test/resources/binary/netcdf-coral")
-
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val rasterDfWithBandMetadata = rastersAsPaths
-            .withColumn("subdatasets", rst_subdatasets($"path"))
-            .withColumn("bleachingSubdataset", element_at($"subdatasets", "bleaching_alert_area"))
+        val rasterDfWithBandMetadata = rastersInMemory
+            .withColumn("subdatasets", rst_subdatasets($"tile"))
+            .withColumn("tile", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
+            .withColumn("tile", rst_subdivide($"tile", 100))
             .select(
-              rst_bandmetadata($"bleachingSubdataset", lit(1))
+              rst_bandmetadata($"tile", lit(1))
                   .alias("metadata")
             )
 
         rastersInMemory
-            .withColumn("subdatasets", rst_subdatasets($"path"))
-            .withColumn("bleachingSubdataset", element_at($"subdatasets", "bleaching_alert_area"))
+            .withColumn("subdatasets", rst_subdatasets($"tile"))
+            .withColumn("tile", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_bandmetadata(bleachingSubdataset, 1) from source
+                                                   |select rst_bandmetadata(tile, 1) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("subdatasets", rst_subdatasets($"raster"))
-            .withColumn("bleachingSubdataset", element_at($"subdatasets", "bleaching_alert_area"))
+            .withColumn("subdatasets", rst_subdatasets($"tile"))
+            .withColumn("tile", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
             .select(
-              rst_bandmetadata($"bleachingSubdataset", lit(1))
+              rst_bandmetadata($"tile", lit(1))
                   .alias("metadata")
             )
             .collect()

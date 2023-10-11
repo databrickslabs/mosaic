@@ -15,19 +15,14 @@ trait RST_MetadataBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val rastersAsPaths = spark.read
-            .format("gdal")
-            .option("raster_storage", "disk")
-            .load("src/test/resources/modis")
-
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/modis")
 
-        val rasterDfWithMetadata = rastersAsPaths
+        val rasterDfWithMetadata = rastersInMemory
             .select(
-              rst_metadata($"path").alias("metadata")
+              rst_metadata($"tile").alias("metadata")
             )
             .select("metadata")
 
@@ -37,7 +32,7 @@ trait RST_MetadataBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_metadata(raster) from source
+                                                   |select rst_metadata(tile) from source
                                                    |""".stripMargin)
 
         result.head.getOrElse("SHORTNAME", "") shouldBe "MCD43A4"

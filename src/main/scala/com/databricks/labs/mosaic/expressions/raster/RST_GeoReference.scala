@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -16,7 +16,8 @@ case class RST_GeoReference(raster: Expression, expressionConfig: MosaicExpressi
       with CodegenFallback {
 
     /** Returns the georeference of the raster. */
-    override def rasterTransform(raster: MosaicRaster): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        val raster = tile.raster
         val geoTransform = raster.getRaster.GetGeoTransform()
         buildMapDouble(
           Map(

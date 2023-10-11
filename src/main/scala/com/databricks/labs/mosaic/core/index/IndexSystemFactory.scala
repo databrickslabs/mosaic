@@ -1,6 +1,13 @@
 package com.databricks.labs.mosaic.core.index
 
+import org.apache.spark.sql.SparkSession
+
 object IndexSystemFactory {
+
+    def getIndexSystem(spark: SparkSession): IndexSystem = {
+        val indexSystem = spark.conf.get("spark.databricks.labs.mosaic.index.system", "H3")
+        getIndexSystem(indexSystem)
+    }
 
     def getIndexSystem(name: String): IndexSystem = {
         val customIndexRE = "CUSTOM\\((-?\\d+), ?(-?\\d+), ?(-?\\d+), ?(-?\\d+), ?(\\d+), ?(\\d+), ?(\\d+) ?\\)".r
@@ -35,4 +42,5 @@ object IndexSystemFactory {
             case _ => throw new Error("Index not supported yet!")
         }
     }
+
 }

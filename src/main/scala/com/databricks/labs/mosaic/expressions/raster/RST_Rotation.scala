@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -16,8 +16,8 @@ case class RST_Rotation(raster: Expression, expressionConfig: MosaicExpressionCo
       with CodegenFallback {
 
     /** Returns the rotation angle of the raster. */
-    override def rasterTransform(raster: MosaicRaster): Any = {
-        val gt = raster.getRaster.GetGeoTransform()
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        val gt = tile.raster.getRaster.GetGeoTransform()
         // arctan of y_skew and x_scale
         math.atan(gt(4) / gt(1))
     }

@@ -1,10 +1,11 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, NullIntolerant}
 import org.apache.spark.sql.types.DataType
 
@@ -63,7 +64,7 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
       * @return
       *   A result of the expression.
       */
-    def rasterTransform(raster: MosaicRaster, arg1: Any): Any
+    def rasterTransform(raster: MosaicRasterTile, arg1: Any): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -80,8 +81,9 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
       */
     //noinspection DuplicatedCode
     override def nullSafeEval(input: Any, arg1: Any): Any = {
-        val raster = rasterAPI.readRaster(input, rasterExpr.dataType)
-        val result = rasterTransform(raster, arg1)
+        val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], expressionConfig.getCellIdType, rasterAPI)
+        val raster = tile.raster
+        val result = rasterTransform(tile, arg1)
         val serialized = serialize(result, returnsRaster, outputType, rasterAPI, expressionConfig)
         RasterCleaner.dispose(raster)
         RasterCleaner.dispose(result)

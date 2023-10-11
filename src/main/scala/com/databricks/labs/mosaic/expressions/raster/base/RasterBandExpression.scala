@@ -1,10 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
+import com.databricks.labs.mosaic.core.raster.MosaicRasterBand
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
-import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, NullIntolerant}
 import org.apache.spark.sql.types.DataType
 
@@ -64,7 +66,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    def bandTransform(raster: MosaicRaster, band: MosaicRasterBand): Any
+    def bandTransform(raster: MosaicRasterTile, band: MosaicRasterBand): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -83,14 +85,14 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       */
     // noinspection DuplicatedCode
     override def nullSafeEval(inputRaster: Any, inputBand: Any): Any = {
-        val raster = rasterAPI.readRaster(inputRaster, rasterExpr.dataType)
+        val tile = MosaicRasterTile.deserialize(inputRaster.asInstanceOf[InternalRow], expressionConfig.getCellIdType, rasterAPI)
         val bandIndex = inputBand.asInstanceOf[Int]
 
-        val band = raster.getBand(bandIndex)
-        val result = bandTransform(raster, band)
+        val band = tile.raster.getBand(bandIndex)
+        val result = bandTransform(tile, band)
 
         val serialized = serialize(result, returnsRaster, dataType, rasterAPI, expressionConfig)
-        RasterCleaner.dispose(raster)
+        RasterCleaner.dispose(tile)
         RasterCleaner.dispose(result)
         serialized
     }

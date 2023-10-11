@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.GDAL
+import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.google.common.io.{ByteStreams, Closeables}
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.hadoop.mapreduce.Job
@@ -27,7 +28,7 @@ class GDALFileFormat extends BinaryFileFormat {
         val reader = ReadStrategy.getReader(options)
         val schema = super
             .inferSchema(sparkSession, options, files)
-            .map(reader.getSchema(options, files, _))
+            .map(reader.getSchema(options, files, _, sparkSession))
 
         schema
     }
@@ -60,6 +61,10 @@ class GDALFileFormat extends BinaryFileFormat {
     ): PartitionedFile => Iterator[org.apache.spark.sql.catalyst.InternalRow] = {
         GDAL.enable()
 
+        val indexSystem = IndexSystemFactory.getIndexSystem(sparkSession)
+
+        val supportedExtensions = options.getOrElse("extensions", "*").split(";").map(_.trim.toLowerCase(Locale.ROOT))
+
         val broadcastedHadoopConf = sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
         val filterFuncs = filters.flatMap(createFilterFunction)
         val maxLength = sparkSession.conf.get("spark.sql.sources.binaryFile.maxLength", Int.MaxValue.toString).toInt
@@ -74,8 +79,12 @@ class GDALFileFormat extends BinaryFileFormat {
 
             if (status.getLen > maxLength) throw CantReadBytesException(maxLength, status)
 
-            if (filterFuncs.forall(_.apply(status)) && isAllowedExtension(status, options)) {
-                reader.read(status, fs, requiredSchema, options)
+            if (supportedExtensions.contains("*") || supportedExtensions.exists(status.getPath.getName.toLowerCase(Locale.ROOT).endsWith)) {
+                if (filterFuncs.forall(_.apply(status)) && isAllowedExtension(status, options)) {
+                    reader.read(status, fs, requiredSchema, options, indexSystem, GDAL)
+                } else {
+                    Iterator.empty
+                }
             } else {
                 Iterator.empty
             }
@@ -91,7 +100,7 @@ object GDALFileFormat {
     val PATH = "path"
     val LENGTH = "length"
     val MODIFICATION_TIME = "modificationTime"
-    val RASTER = "raster"
+    val TILE = "tile"
     val CONTENT = "content"
     val X_SIZE = "x_size"
     val Y_SIZE = "y_size"

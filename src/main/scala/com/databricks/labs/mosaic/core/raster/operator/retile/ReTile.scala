@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.utils.PathUtils
 
 import scala.collection.immutable
@@ -9,10 +9,11 @@ import scala.collection.immutable
 object ReTile {
 
     def reTile(
-        raster: MosaicRaster,
+        tile: MosaicRasterTile,
         tileWidth: Int,
         tileHeight: Int
-    ): immutable.Seq[MosaicRaster] = {
+    ): immutable.Seq[MosaicRasterTile] = {
+        val raster = tile.raster
         val (xR, yR) = raster.getDimensions
         val xTiles = Math.ceil(xR / tileWidth).toInt
         val yTiles = Math.ceil(yR / tileHeight).toInt
@@ -22,13 +23,15 @@ object ReTile {
             val yMin = if (y == 0) y * tileHeight else y * tileHeight - 1
 
             val rasterUUID = java.util.UUID.randomUUID.toString
-            val rasterPath = PathUtils.createTmpFilePath(rasterUUID, "tif")
+            val fileExtension = raster.getRasterFileExtension
+            val rasterPath = PathUtils.createTmpFilePath(rasterUUID, fileExtension)
+            val shortDriver = raster.getRaster.GetDriver().getShortName
 
             val result = GDALTranslate.executeTranslate(
-                rasterPath,
-                isTemp = true,
-                raster,
-                command = s"gdal_translate -srcwin $xMin $yMin ${tileWidth + 1} ${tileHeight + 1}"
+              rasterPath,
+              isTemp = true,
+              raster,
+              command = s"gdal_translate -of $shortDriver -srcwin $xMin $yMin ${tileWidth + 1} ${tileHeight + 1}"
             )
 
             result.flushCache()
@@ -36,7 +39,7 @@ object ReTile {
 
         }
 
-        tiles
+        tiles.map(MosaicRasterTile(Left(-1), _, raster.getParentPath, raster.getDriversShortName))
 
     }
 

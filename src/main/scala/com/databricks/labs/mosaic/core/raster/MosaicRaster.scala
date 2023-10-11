@@ -18,10 +18,20 @@ import org.gdal.osr.SpatialReference
   *   A flag to indicate if the raster is in memory or not.
   */
 abstract class MosaicRaster(
-    isInMem: Boolean
+    isInMem: Boolean,
+    parentPath: String,
+    driverShortName: String
 ) extends Serializable
       with RasterWriter
       with RasterCleaner {
+
+    def getSubdataset(subsetName: String): MosaicRaster
+
+    def getDriversShortName: String = driverShortName
+
+    def getParentPath: String = parentPath
+
+    def getRasterFileExtension: String = getRaster.GetDriver().GetMetadataItem("DMD_EXTENSION")
 
     def asTemp: MosaicRaster
 

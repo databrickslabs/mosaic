@@ -1,10 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.types.DataType
 
@@ -29,7 +31,7 @@ abstract class RasterExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
     outputType: DataType,
     returnsRaster: Boolean,
-    expressionConfig: MosaicExpressionConfig
+    expressionConfig: MosaicExpressionConfig,
 ) extends UnaryExpression
       with NullIntolerant
       with Serializable
@@ -41,6 +43,10 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       */
     protected val rasterAPI: RasterAPI = RasterAPI(expressionConfig.getRasterAPI)
     rasterAPI.enable()
+
+    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+
+    protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
 
     override def child: Expression = rasterExpr
 
@@ -56,7 +62,7 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    def rasterTransform(raster: MosaicRaster): Any
+    def rasterTransform(raster: MosaicRasterTile): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -69,10 +75,10 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       *   The result of the expression.
       */
     override def nullSafeEval(input: Any): Any = {
-        val raster = rasterAPI.readRaster(input, rasterExpr.dataType)
-        val result = rasterTransform(raster)
+        val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], cellIdDataType, rasterAPI)
+        val result = rasterTransform(tile)
         val serialized = serialize(result, returnsRaster, dataType, rasterAPI, expressionConfig)
-        RasterCleaner.dispose(raster)
+        RasterCleaner.dispose(tile)
         RasterCleaner.dispose(result)
         serialized
     }

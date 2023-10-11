@@ -1,9 +1,11 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
+import com.databricks.labs.mosaic.core.types.RasterTileType
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -36,7 +38,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
-    override def dataType: DataType = BinaryType
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
@@ -48,6 +50,10 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
     rasterAPI.enable()
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 
+    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+
+    protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
+
     override def position: Boolean = false
 
     override def inline: Boolean = false
@@ -57,7 +63,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       * needs to be wrapped in a StructType. The actually type is that of the
       * structs element.
       */
-    override def elementSchema: StructType = StructType(Array(StructField("raster", BinaryType)))
+    override def elementSchema: StructType = StructType(Array(StructField("tile", dataType)))
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -68,16 +74,16 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       * @return
       *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster]
+    def rasterGenerator(raster: MosaicRasterTile): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        val inRaster = rasterAPI.readRaster(rasterExpr.eval(input), rasterExpr.dataType)
-        val generatedRasters = rasterGenerator(inRaster)
+        val tile = MosaicRasterTile.deserialize(rasterExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType, rasterAPI)
+        val generatedRasters = rasterGenerator(tile)
 
         // Writing rasters disposes of the written raster
-        val rows = generatedRasters.map(_.writeToBytes())
+        val rows = generatedRasters.map(_.serialize(rasterAPI))
         generatedRasters.foreach(RasterCleaner.dispose)
-        RasterCleaner.dispose(inRaster)
+        RasterCleaner.dispose(tile)
 
         rows.map(row => InternalRow.fromSeq(Seq(row)))
     }

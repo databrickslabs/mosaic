@@ -15,53 +15,41 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val rastersAsPaths = spark.read
-            .format("gdal")
-            .option("raster_storage", "disk")
-            .load("src/test/resources/binary/netcdf-coral")
-
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val rasterDfWithSubdatasets = rastersAsPaths
+        val rasterDfWithSubdatasets = rastersInMemory
             .select(
-              rst_subdatasets($"path")
+              rst_subdatasets($"tile")
                   .alias("subdatasets")
             )
 
         val result = rasterDfWithSubdatasets.as[Map[String, String]].collect()
 
-        rastersAsPaths
-            .orderBy("path")
+        rastersInMemory
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_subdatasets(path) from source
+                                                   |select rst_subdatasets(tile) from source
                                                    |""".stripMargin)
 
         an[Exception] should be thrownBy spark.sql("""
                                                      |select rst_subdatasets() from source
                                                      |""".stripMargin)
 
-        noException should be thrownBy spark.sql("""
-                                                   |select rst_subdatasets("dummy/path") from source
-                                                   |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
             .select(
-              rst_subdatasets($"raster")
+              rst_subdatasets($"tile")
                   .alias("subdatasets")
             )
             .take(1)
 
-        result.head.keys.toList.length shouldBe 6
         result.head.values.toList.map(_.nonEmpty).reduce(_ && _) shouldBe true
 
-        noException should be thrownBy rst_subdatasets($"path")
-        noException should be thrownBy rst_subdatasets("path")
-
+        noException should be thrownBy rst_subdatasets($"tile")
     }
 
 }

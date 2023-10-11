@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -19,9 +19,9 @@ case class RST_SRID(raster: Expression, expressionConfig: MosaicExpressionConfig
       with CodegenFallback {
 
     /** Returns the SRID of the raster. */
-    override def rasterTransform(raster: MosaicRaster): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
         // Reference: https://gis.stackexchange.com/questions/267321/extracting-epsg-from-a-raster-using-gdal-bindings-in-python
-        val proj = new SpatialReference(raster.getRaster.GetProjection())
+        val proj = new SpatialReference(tile.raster.getRaster.GetProjection())
         Try(proj.AutoIdentifyEPSG())
         Try(proj.GetAttrValue("AUTHORITY", 1).toInt).getOrElse(0)
     }

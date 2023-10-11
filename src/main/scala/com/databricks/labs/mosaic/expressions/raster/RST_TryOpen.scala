@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -16,8 +16,8 @@ case class RST_TryOpen(raster: Expression, expressionConfig: MosaicExpressionCon
       with CodegenFallback {
 
     /** Returns true if the raster can be opened. */
-    override def rasterTransform(raster: MosaicRaster): Any = {
-        Option(raster.getRaster).isDefined
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        Option(tile.raster.getRaster).isDefined
     }
 
 }

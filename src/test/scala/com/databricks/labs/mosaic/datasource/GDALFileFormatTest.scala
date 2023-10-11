@@ -43,6 +43,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
         noException should be thrownBy spark.read
             .format("gdal")
+            .option("extensions", "grib")
             .option("raster_storage", "disk")
             .option("extensions", "grib")
             .load(filePath)
@@ -50,6 +51,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
         noException should be thrownBy spark.read
             .format("gdal")
+            .option("extensions", "grib")
             .option("raster_storage", "disk")
             .option("extensions", "grib")
             .load(filePath)
@@ -57,6 +59,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
         noException should be thrownBy spark.read
             .format("gdal")
+            .option("extensions", "grib")
             .option("raster_storage", "disk")
             .option("extensions", "grib")
             .load(filePath)

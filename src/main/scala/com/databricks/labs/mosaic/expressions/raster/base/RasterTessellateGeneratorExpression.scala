@@ -2,11 +2,10 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
-import com.databricks.labs.mosaic.core.types.RasterChipType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterChip
+import com.databricks.labs.mosaic.core.types.RasterTileType
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -62,7 +61,7 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * needs to be wrapped in a StructType. The actually type is that of the
       * structs element.
       */
-    override def elementSchema: StructType = StructType(Array(StructField("element", RasterChipType(indexSystem.getCellIdDataType))))
+    override def elementSchema: StructType = StructType(Array(StructField("element", RasterTileType(indexSystem.getCellIdDataType))))
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -73,16 +72,21 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * @return
       *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: MosaicRaster, resolution: Int): Seq[MosaicRasterChip]
+    def rasterGenerator(raster: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        val inRaster = rasterAPI.readRaster(rasterExpr.eval(input), rasterExpr.dataType)
+        val tile = MosaicRasterTile
+            .deserialize(
+              rasterExpr.eval(input).asInstanceOf[InternalRow],
+              indexSystem.getCellIdDataType,
+              rasterAPI
+            )
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
-        val generatedChips = rasterGenerator(inRaster, inResolution)
+        val generatedChips = rasterGenerator(tile, inResolution)
 
-        val rows = generatedChips.map(chip => InternalRow.fromSeq(Seq(chip.serialize)))
+        val rows = generatedChips.map(chip => InternalRow.fromSeq(Seq(chip.serialize(rasterAPI))))
 
-        RasterCleaner.dispose(inRaster)
+        RasterCleaner.dispose(tile)
         generatedChips.foreach(chip => RasterCleaner.dispose(chip.raster))
 
         rows.iterator

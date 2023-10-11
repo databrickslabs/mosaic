@@ -3,8 +3,10 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.types.DataType
 
@@ -88,7 +90,8 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
       */
     //noinspection DuplicatedCode
     override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
-        val raster = rasterAPI.readRaster(input, rasterExpr.dataType)
+        val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], expressionConfig.getCellIdType, rasterAPI)
+        val raster = tile.raster
         val result = rasterTransform(raster, arg1, arg2)
         val serialized = serialize(result, returnsRaster, dataType, rasterAPI, expressionConfig)
         RasterCleaner.dispose(raster)

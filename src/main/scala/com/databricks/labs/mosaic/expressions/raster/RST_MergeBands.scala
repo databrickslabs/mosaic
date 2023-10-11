@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.operator.merge.MergeBands
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterArrayExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -30,7 +30,7 @@ case class RST_MergeBands(
       * Returns a set of new rasters with the specified tile size (tileWidth x
       * tileHeight).
       */
-    override def rasterTransform(rasters: Seq[MosaicRaster]): Any = MergeBands.merge(rasters, "bilinear")
+    override def rasterTransform(rasters: Seq[MosaicRasterTile]): Any = MergeBands.merge(rasters.map(_.raster), "bilinear")
 
 }
 

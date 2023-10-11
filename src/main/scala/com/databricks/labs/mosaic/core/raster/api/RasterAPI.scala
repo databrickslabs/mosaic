@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.core.raster.api
 
 import com.databricks.labs.mosaic.core.raster._
 import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterCleaner, RasterReader, RasterTransform}
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.gdal
@@ -13,17 +14,28 @@ import org.gdal.gdal.gdal
   */
 abstract class RasterAPI(reader: RasterReader) extends Serializable {
 
-    def readRaster(inputRaster: Any, inputDT: DataType): MosaicRaster = {
+    def getExtension(driverShortName: String): String
+
+    def readRaster(
+        inputRaster: Any,
+        parentPath: String,
+        shortDriverName: String,
+        inputDT: DataType,
+        readDirect: Boolean = false
+    ): MosaicRaster = {
         inputDT match {
             case StringType =>
                 val path = inputRaster.asInstanceOf[UTF8String].toString
-                reader.readRaster(path)
+                val isSubdataset = PathUtils.isSubdataset(path)
+                reader.readRaster(path, parentPath, shortDriverName, readDirect || isSubdataset)
             case BinaryType =>
                 val bytes = inputRaster.asInstanceOf[Array[Byte]]
-                val raster = reader.readRaster(bytes)
+                val raster = reader.readRaster(bytes, parentPath, shortDriverName)
                 // If the raster is coming as a byte array, we can't check for zip condition.
                 // We first try to read the raster directly, if it fails, we read it as a zip.
-                Option(raster).getOrElse(reader.readRaster(bytes))
+                Option(raster).getOrElse(
+                  reader.readRaster(bytes, parentPath, shortDriverName)
+                )
         }
     }
 
@@ -67,9 +79,11 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       * @return
       *   Returns a Raster object.
       */
-    def raster(path: String): MosaicRaster = reader.readRaster(path)
+    def raster(path: String, parentPath: String, driverShortName: String): MosaicRaster =
+        reader.readRaster(path, parentPath, driverShortName)
 
-    def raster(content: Array[Byte]): MosaicRaster = reader.readRaster(content)
+    def raster(content: Array[Byte], parentPath: String, driverShortName: String): MosaicRaster =
+        reader.readRaster(content, parentPath, driverShortName)
 
     /**
       * Reads a raster from the given path. It extracts the specified band from
@@ -83,7 +97,8 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       * @return
       *   Returns a Raster band object.
       */
-    def band(path: String, bandIndex: Int): MosaicRasterBand = reader.readBand(path, bandIndex)
+    def band(path: String, bandIndex: Int, parentPath: String, driverShortName: String): MosaicRasterBand =
+        reader.readBand(path, bandIndex, parentPath, driverShortName)
 
     /**
       * Converts raster x, y coordinates to lat, lon coordinates.
@@ -163,6 +178,11 @@ object RasterAPI extends Serializable {
         override def enable(): Unit = {
             gdal.UseExceptions()
             if (gdal.GetDriverCount() == 0) gdal.AllRegister()
+        }
+
+        override def getExtension(driverShortName: String): String = {
+            val driver = gdal.GetDriverByName(driverShortName)
+            driver.GetMetadataItem("DMD_EXTENSION")
         }
 
     }

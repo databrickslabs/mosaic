@@ -1,8 +1,8 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster1ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -36,17 +36,22 @@ case class RST_Clip(
       * the expression is evaluated. It provides the raster and the arguments to
       * the expression. It abstracts spark serialization from the caller.
       *
-      * @param raster
+      * @param tile
       *   The raster to be used.
       * @param arg1
       *   The first argument.
       * @return
       *   A result of the expression.
       */
-    override def rasterTransform(raster: MosaicRaster, arg1: Any): Any = {
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
         val geomCRS = geometry.getSpatialReferenceOSR
-        RasterClipByVector.clip(raster, geometry, geomCRS, geometryAPI)
+        MosaicRasterTile(
+          tile.index,
+          RasterClipByVector.clip(tile.raster, geometry, geomCRS, geometryAPI),
+          tile.parentPath,
+          tile.driver
+        )
     }
 
 }

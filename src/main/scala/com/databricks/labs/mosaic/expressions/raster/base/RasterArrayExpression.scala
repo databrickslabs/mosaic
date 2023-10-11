@@ -1,11 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression, UnsafeArrayData}
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{ArrayType, DataType}
 
@@ -57,7 +58,7 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       * @return
       *   A result of the expression.
       */
-    def rasterTransform(rasters: Seq[MosaicRaster]): Any
+    def rasterTransform(rasters: Seq[MosaicRasterTile]): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -74,10 +75,15 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
         val rasterDT = rastersExpr.dataType.asInstanceOf[ArrayType].elementType
         val arrayData = input.asInstanceOf[ArrayData]
         val n = arrayData.numElements()
-        val rasters = (0 until n).map(i => rasterAPI.readRaster(arrayData.get(i, rasterDT), rasterDT))
-        val result = rasterTransform(rasters)
+        val tiles = (0 until n)
+            .map(i =>
+                MosaicRasterTile
+                    .deserialize(arrayData.get(i, rasterDT).asInstanceOf[InternalRow], expressionConfig.getCellIdType, rasterAPI)
+            )
+
+        val result = rasterTransform(tiles)
         val serialized = serialize(result, returnsRaster, dataType, rasterAPI, expressionConfig)
-        rasters.foreach(RasterCleaner.dispose)
+        tiles.foreach(RasterCleaner.dispose)
         RasterCleaner.dispose(result)
         serialized
     }

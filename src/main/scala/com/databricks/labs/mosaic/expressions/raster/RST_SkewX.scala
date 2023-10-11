@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -16,8 +16,8 @@ case class RST_SkewX(raster: Expression, expressionConfig: MosaicExpressionConfi
       with CodegenFallback {
 
     /** Returns the skew x of the raster. */
-    override def rasterTransform(raster: MosaicRaster): Any = {
-        raster.getRaster.GetGeoTransform()(2)
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        tile.raster.getRaster.GetGeoTransform()(2)
     }
 
 }

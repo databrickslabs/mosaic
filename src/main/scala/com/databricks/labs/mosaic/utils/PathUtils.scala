@@ -5,6 +5,24 @@ import java.util.UUID
 
 object PathUtils {
 
+    def getFormatExtension(rawPath: String): String = {
+        val path: String = resolvePath(rawPath)
+        val fileName = path.split("/").last
+        val extension = fileName.split("\\.").last
+        extension
+    }
+
+    private def resolvePath(rawPath: String): String = {
+        val path =
+            if (isSubdataset(rawPath)) {
+                val _ :: filePath :: _ :: Nil = rawPath.split(":").toList
+                filePath
+            } else {
+                rawPath
+            }
+        path
+    }
+
     def getCleanPath(path: String, useZipPath: Boolean): String = {
         val cleanPath = path.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
         if (useZipPath && cleanPath.endsWith(".zip")) {
@@ -44,16 +62,11 @@ object PathUtils {
 
     def copyToTmp(rawPath: String): String = {
         try {
-            val path =
-                if (isSubdataset(rawPath)) {
-                    val _ :: filePath :: _ :: Nil = rawPath.split(":").toList
-                    filePath
-                } else {
-                    rawPath
-                }
+            val path: String = resolvePath(rawPath)
 
             val fileName = path.split("/").last
-            val extension = fileName.split("\\.").last
+            val extension = getFormatExtension(path)
+
             val inPath = getCleanPath(path, useZipPath = extension == "zip")
 
             val randomID = UUID.randomUUID().toString

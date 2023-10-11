@@ -15,29 +15,24 @@ trait RST_HeightBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val rastersAsPaths = spark.read
-            .format("gdal")
-            .option("raster_storage", "disk")
-            .load("src/test/resources/binary/netcdf-coral")
-
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val df = rastersAsPaths
-            .withColumn("result", rst_height($"path"))
+        val df = rastersInMemory
+            .withColumn("result", rst_height($"tile"))
             .select("result")
 
         rastersInMemory
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_height(raster) from source
+                                                   |select rst_height(tile) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_height($"raster"))
+            .withColumn("result", rst_height($"tile"))
             .select("result")
 
         val result = df.as[Int].collect()

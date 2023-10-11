@@ -14,7 +14,10 @@ object NDVI {
         val newRaster = driver.Create(path, raster.xSize, raster.ySize, 1, doubleDataType)
         newRaster.SetGeoTransform(raster.getRaster.GetGeoTransform)
         newRaster.SetProjection(raster.getRaster.GetProjection)
-        MosaicRasterGDAL(newRaster, path, isTemp = true)
+        // Avoid costly IO to compute MEM size here
+        // It will be available when the raster is serialized for next operation
+        // If value is needed then it will be computed when getMemSize is called
+        MosaicRasterGDAL(newRaster, path, isTemp = true, raster.getParentPath, raster.getDriversShortName, -1)
     }
 
     def compute(raster: MosaicRaster, redIndex: Int, nirIndex: Int): MosaicRaster = {

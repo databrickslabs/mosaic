@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -21,7 +21,8 @@ case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionCon
       with CodegenFallback {
 
     /** Returns the summary info the raster. */
-    override def rasterTransform(raster: MosaicRaster): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        val raster = tile.raster
         val vector = new JVector[String]()
         // For other flags check the way gdalinfo.py script is called, InfoOptions expects a collection of same flags.
         // https://gdal.org/programs/gdalinfo.html

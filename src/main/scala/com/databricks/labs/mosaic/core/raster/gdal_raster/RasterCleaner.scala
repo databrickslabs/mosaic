@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.core.raster.gdal_raster
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import org.gdal.gdal.Dataset
 
 trait RasterCleaner {
@@ -30,11 +31,14 @@ object RasterCleaner {
 
     def dispose(raster: Any): Unit = {
         raster match {
-            case r: MosaicRaster =>
+            case r: MosaicRaster      =>
                 r.destroy()
                 r.cleanUp()
+            case rt: MosaicRasterTile =>
+                rt.raster.destroy()
+                rt.raster.cleanUp()
             // NOOP for simpler code handling in expressions, removes need for repeated if/else
-            case _               => ()
+            case _                    => ()
         }
     }
 

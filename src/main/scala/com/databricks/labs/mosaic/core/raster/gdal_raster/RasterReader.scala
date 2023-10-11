@@ -22,10 +22,14 @@ trait RasterReader extends Logging {
       *   "FORMAT:/path/to/file.tif:subdataset"
       * @param path
       *   The path to the raster file.
+      * @param parentPath
+      *   The path of the parent raster file.
+      * @param driverShortName
+      *   The driver short name of the raster file.
       * @return
       *   A MosaicRaster object.
       */
-    def readRaster(path: String): MosaicRaster
+    def readRaster(path: String, parentPath: String, driverShortName: String, readDirect: Boolean = false): MosaicRaster
 
     /**
       * Reads a raster from an in memory buffer. Use the buffer bytes to produce
@@ -33,10 +37,14 @@ trait RasterReader extends Logging {
       *
       * @param contentBytes
       *   The file bytes.
+      * @param parentPath
+      *   The path of the parent raster file.
+      * @param driverShortName
+      *   The driver short name of the raster file.
       * @return
       *   A MosaicRaster object.
       */
-    def readRaster(contentBytes: Array[Byte]): MosaicRaster
+    def readRaster(contentBytes: Array[Byte], parentPath: String, driverShortName: String): MosaicRaster
 
     /**
       * Reads a raster band from a file system path. Reads a subdataset band if
@@ -48,9 +56,13 @@ trait RasterReader extends Logging {
       *   The path to the raster file.
       * @param bandIndex
       *   The band index to read.
+      * @param parentPath
+      *   The path of the parent raster file.
+      * @param driverShortName
+      *   The driver short name of the raster file.
       * @return
       *   A MosaicRaster object.
       */
-    def readBand(path: String, bandIndex: Int): MosaicRasterBand
+    def readBand(path: String, bandIndex: Int, parentPath: String, driverShortName: String): MosaicRasterBand
 
 }

@@ -1,8 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, MosaicRasterTile}
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -24,12 +23,13 @@ case class RST_BoundingBox(
       * the expression is evaluated. It provides the raster to the expression.
       * It abstracts spark serialization from the caller.
       *
-      * @param raster
-      *   The raster to be used.
+      * @param tile
+      *   The raster tile to be used.
       * @return
       *   The result of the expression.
       */
-    override def rasterTransform(raster: MosaicRaster): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        val raster = tile.raster
         val gt = raster.getRaster.GetGeoTransform()
         val (originX, originY) = rasterAPI.toWorldCoord(gt, 0, 0)
         val (endX, endY) = rasterAPI.toWorldCoord(gt, raster.xSize, raster.ySize)

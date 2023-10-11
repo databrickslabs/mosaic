@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.datasource.multiread
 
-import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
@@ -21,11 +20,12 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     mc.getRasterAPI.enable()
     import mc.functions._
 
-    val vsizipPathColF: Column => Column = (path: Column) =>
-        when(
-            path.endsWith(".zip"),
-            concat(lit("/vsizip/"), path)
-        ).otherwise(path)
+    val vsizipPathColF: Column => Column =
+        (path: Column) =>
+            when(
+              path.endsWith(".zip"),
+              concat(lit("/vsizip/"), path)
+            ).otherwise(path)
 
     override def load(path: String): DataFrame = load(Seq(path): _*)
 
@@ -35,13 +35,10 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val resolution = config("resolution").toInt
 
         val pathsDf = sparkSession.read
-            .option("pathGlobFilter", config("fileExtension"))
-            .format("binaryFile")
+            .format("gdal")
+            .option("extensions", config("extensions"))
+            .option("raster_storage", "in-memory")
             .load(paths: _*)
-            .select("path")
-            .select(
-              vsizipPathColF(col("path")).alias("path")
-            )
 
         val rasterToGridCombiner = getRasterToGridFunc(config("combiner"))
 
@@ -52,18 +49,16 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val loadedDf = retiledDf
             .withColumn(
               "grid_measures",
-              rasterToGridCombiner(col("raster"), lit(resolution))
+              rasterToGridCombiner(col("tile"), lit(resolution))
             )
             .select(
               "grid_measures",
-              "raster"
+              "tile"
             )
             .select(
-              posexplode(col("grid_measures")).as(Seq("band_id", "grid_measures")),
-              col("raster")
+              posexplode(col("grid_measures")).as(Seq("band_id", "grid_measures"))
             )
             .select(
-              col("raster"),
               col("band_id"),
               explode(col("grid_measures")).alias("grid_measures")
             )
@@ -96,8 +91,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         if (retile) {
             rasterDf.withColumn(
-              "raster",
-              rst_retile(col("raster"), lit(tileSize), lit(tileSize))
+              "tile",
+              rst_retile(col("tile"), lit(tileSize), lit(tileSize))
             )
         } else {
             rasterDf
@@ -120,30 +115,14 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       */
     private def resolveRaster(pathsDf: DataFrame, config: Map[String, String]) = {
         val readSubdataset = config("readSubdataset").toBoolean
-        val subdatasetNumber = config("subdatasetNumber").toInt
         val subdatasetName = config("subdatasetName")
 
         if (readSubdataset) {
             pathsDf
-                .withColumn(
-                  "subdatasets",
-                  rst_subdatasets(col("path"))
-                )
-                .withColumn(
-                  "subdataset",
-                  if (subdatasetName.isEmpty) {
-                      element_at(map_keys(col("subdatasets")), subdatasetNumber)
-                  } else {
-                      element_at(col("subdatasets"), subdatasetName)
-                  }
-                )
-                .select(
-                    vsizipPathColF(col("subdataset")).alias("raster")
-                )
+                .withColumn("subdatasets", rst_subdatasets(col("tile")))
+                .withColumn("tile", rst_getsubdataset(col("tile"), lit(subdatasetName)))
         } else {
-            pathsDf.select(
-              col("path").alias("raster")
-            )
+            pathsDf.select(col("tile"))
         }
     }
 
@@ -207,7 +186,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       */
     private def getConfig: Map[String, String] = {
         Map(
-          "fileExtension" -> this.extraOptions.getOrElse("fileExtension", "*"),
+          "extensions" -> this.extraOptions.getOrElse("extensions", "*"),
           "readSubdataset" -> this.extraOptions.getOrElse("readSubdataset", "false"),
           "vsizip" -> this.extraOptions.getOrElse("vsizip", "false"),
           "subdatasetNumber" -> this.extraOptions.getOrElse("subdatasetNumber", "0"),

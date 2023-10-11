@@ -4,7 +4,6 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.functions.collect_set
 import org.scalatest.matchers.should.Matchers._
 
 trait RST_MergeAggBehaviors extends QueryTest {
@@ -17,22 +16,17 @@ trait RST_MergeAggBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val rastersAsPaths = spark.read
-            .format("gdal")
-            .option("raster_storage", "disk")
-            .load("src/test/resources/modis")
-
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersAsPaths
-            .withColumn("tiles", rst_tessellate($"path", 3))
+        val gridTiles = rastersInMemory
+            .withColumn("tiles", rst_tessellate($"tile", 3))
             .select("path", "tiles")
             .groupBy("path")
             .agg(
-              rst_merge_agg($"tiles.raster").as("tiles")
+              rst_merge_agg($"tiles").as("tiles")
             )
             .select("tiles")
 
@@ -42,14 +36,14 @@ trait RST_MergeAggBehaviors extends QueryTest {
         spark.sql("""
                     |select rst_merge_agg(tiles) as tiles
                     |from (
-                    |  select path, rst_gridtiles(raster, 3) as tiles
+                    |  select path, rst_tessellate(tile, 3) as tiles
                     |  from source
                     |)
                     |group by path
                     |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("tiles", rst_tessellate($"path", 3))
+            .withColumn("tiles", rst_tessellate($"tile", 3))
             .select("path", "tiles")
             .groupBy("path")
             .agg(
@@ -57,9 +51,9 @@ trait RST_MergeAggBehaviors extends QueryTest {
             )
             .select("tiles")
 
-        val result = gridTiles.as[String].collect()
+        val result = gridTiles.collect()
 
-        result.length should be(rastersAsPaths.count())
+        result.length should be(rastersInMemory.count())
 
     }
 

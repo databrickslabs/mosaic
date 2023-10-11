@@ -258,6 +258,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_BandMetaData](expressionConfig)
         mosaicRegistry.registerExpression[RST_Clip](expressionConfig)
         mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
+        mosaicRegistry.registerExpression[RST_GetSubdataset](expressionConfig)
         mosaicRegistry.registerExpression[RST_Height](expressionConfig)
         mosaicRegistry.registerExpression[RST_IsEmpty](expressionConfig)
         mosaicRegistry.registerExpression[RST_MemSize](expressionConfig)
@@ -607,6 +608,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def rst_clip(raster: Column, geometry: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, expressionConfig))
         def rst_georeference(raster: Column): Column = ColumnAdapter(RST_GeoReference(raster.expr, expressionConfig))
         def rst_georeference(raster: String): Column = ColumnAdapter(RST_GeoReference(lit(raster).expr, expressionConfig))
+        def rst_getsubdataset(raster: Column, subdatasetName: Column): Column =
+            ColumnAdapter(RST_GetSubdataset(raster.expr, subdatasetName.expr, expressionConfig))
         def rst_height(raster: Column): Column = ColumnAdapter(RST_Height(raster.expr, expressionConfig))
         def rst_height(raster: String): Column = ColumnAdapter(RST_Height(lit(raster).expr, expressionConfig))
         def rst_isempty(raster: Column): Column = ColumnAdapter(RST_IsEmpty(raster.expr, expressionConfig))
@@ -736,7 +739,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def st_union_agg(geom: Column): Column =
             ColumnAdapter(ST_UnionAgg(geom.expr, geometryAPI.name).toAggregateExpression(isDistinct = false))
         def rst_merge_agg(raster: Column): Column =
-            ColumnAdapter(RST_MergeAgg(raster.expr, expressionConfig, 0, 0).toAggregateExpression(isDistinct = false))
+            ColumnAdapter(RST_MergeAgg(raster.expr, expressionConfig).toAggregateExpression(isDistinct = false))
 
         /** IndexSystem Specific */
 

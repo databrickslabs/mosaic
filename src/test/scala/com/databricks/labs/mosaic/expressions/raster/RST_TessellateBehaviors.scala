@@ -16,34 +16,29 @@ trait RST_TessellateBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val rastersAsPaths = spark.read
-            .format("gdal")
-            .option("raster_storage", "disk")
-            .load("src/test/resources/modis")
-
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersAsPaths
-            .withColumn("tiles", rst_tessellate($"path", 3))
+        val gridTiles = rastersInMemory
+            .withColumn("tiles", rst_tessellate($"tile", 3))
             .select("tiles")
 
         rastersInMemory
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_tessellate(raster, 3) from source
+                                                   |select rst_tessellate(tile, 3) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("tiles", rst_tessellate($"raster", 3))
+            .withColumn("tiles", rst_tessellate($"tile", 3))
             .select("tiles")
 
         val result = gridTiles.collect()
 
-        result.length should be(791)
+        result.length should be(409)
 
     }
 

@@ -5,11 +5,11 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.operator.proj.RasterProject
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterChip
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 
 object RasterTessellate {
 
-    def tessellate(raster: MosaicRaster, resolution: Int, indexSystem: IndexSystem, geometryAPI: GeometryAPI): Seq[MosaicRasterChip] = {
+    def tessellate(raster: MosaicRaster, resolution: Int, indexSystem: IndexSystem, geometryAPI: GeometryAPI): Seq[MosaicRasterTile] = {
         val indexSR = indexSystem.osrSpatialRef
         val bbox = raster.bbox(geometryAPI, indexSR)
         val cells = Mosaic.mosaicFill(bbox, resolution, keepCoreGeom = false, indexSystem, geometryAPI)
@@ -20,13 +20,13 @@ object RasterTessellate {
                 val cellID = cell.cellIdAsLong(indexSystem)
                 val isValidCell = indexSystem.isValid(cellID)
                 if (!isValidCell) {
-                    (false, MosaicRasterChip(cell.index, null))
+                    (false, MosaicRasterTile(cell.index, null, "", ""))
                 } else {
                     val cellRaster = tmpRaster.getRasterForCell(cellID, indexSystem, geometryAPI)
                     val isValidRaster = cellRaster.getBandStats.values.map(_("mean")).sum > 0 && !cellRaster.isEmpty
                     (
                       isValidRaster,
-                      MosaicRasterChip(cell.index, cellRaster)
+                        MosaicRasterTile(cell.index, cellRaster, raster.getParentPath, raster.getDriversShortName)
                     )
                 }
             })

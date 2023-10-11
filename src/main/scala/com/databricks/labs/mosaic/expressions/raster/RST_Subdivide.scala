@@ -1,14 +1,13 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterGeneratorExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
-import org.apache.spark.sql.types.{BinaryType, DataType}
 
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
@@ -22,15 +21,13 @@ case class RST_Subdivide(
       with NullIntolerant
       with CodegenFallback {
 
-    override def dataType: DataType = BinaryType
-
     /**
       * Returns a set of new rasters with the specified tile size (tileWidth x
       * tileHeight). Rasters are disposed in super class.
       */
-    override def rasterGenerator(raster: MosaicRaster): Seq[MosaicRaster] = {
+    override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
         val targetSize = sizeInMB.eval().asInstanceOf[Int]
-        BalancedSubdivision.splitRaster(raster, targetSize)
+        BalancedSubdivision.splitRaster(tile, targetSize)
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, sizeInMB)

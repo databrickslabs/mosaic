@@ -1,8 +1,9 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
+import com.databricks.labs.mosaic.core.types.RasterTileType
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.types.DataType
 
@@ -16,10 +17,11 @@ trait RasterExpressionSerialization {
         expressionConfig: MosaicExpressionConfig
     ): Any = {
         if (returnsRaster) {
-            val raster = data.asInstanceOf[MosaicRaster]
+            val tile = data.asInstanceOf[MosaicRasterTile]
             val checkpoint = expressionConfig.getRasterCheckpoint
-            val result = rasterAPI.writeRasters(Seq(raster), checkpoint, outputDataType).head
-            RasterCleaner.dispose(raster)
+            val rasterType = outputDataType.asInstanceOf[RasterTileType].rasterType
+            val result = tile.serialize(rasterAPI, rasterType, checkpoint)
+            RasterCleaner.dispose(tile)
             result
         } else {
             data

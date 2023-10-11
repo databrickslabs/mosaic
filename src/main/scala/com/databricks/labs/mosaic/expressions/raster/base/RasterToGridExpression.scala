@@ -2,8 +2,8 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -50,16 +50,16 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       * result is a Sequence of (cellId, measure) of each band of the raster. It
       * applies the values combiner on the measures of each cell. For no
       * combine, use the identity function.
-      * @param raster
+      * @param tile
       *   The raster to be used.
       * @return
       *   Sequence of (cellId, measure) of each band of the raster.
       */
-    override def rasterTransform(raster: MosaicRaster, arg1: Any): Any = {
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         val resolution = arg1.asInstanceOf[Int]
-        val transformed = griddedPixels(raster, indexSystem, resolution)
+        val transformed = griddedPixels(tile.raster, indexSystem, resolution)
         val results = transformed.map(_.mapValues(valuesCombiner))
-        RasterCleaner.dispose(raster)
+        RasterCleaner.dispose(tile)
         serialize(results)
     }
 

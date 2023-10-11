@@ -16,29 +16,24 @@ trait RST_IsEmptyBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val rastersAsPaths = spark.read
-            .format("gdal")
-            .option("raster_storage", "disk")
-            .load("src/test/resources/binary/netcdf-coral")
-
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val df = rastersAsPaths
-            .withColumn("result", rst_isempty($"path"))
+        val df = rastersInMemory
+            .withColumn("result", rst_isempty($"tile"))
             .select("result")
 
         rastersInMemory
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_isempty(raster) from source
+                                                   |select rst_isempty(tile) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_isempty($"raster"))
+            .withColumn("result", rst_isempty($"tile"))
             .select("result")
 
         val result = df.as[Boolean].collect()
@@ -46,7 +41,7 @@ trait RST_IsEmptyBehaviors extends QueryTest {
         result.head shouldBe false
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_isempty(raster, 1, 1) from source
+                                                     |select rst_isempty() from source
                                                      |""".stripMargin)
 
     }

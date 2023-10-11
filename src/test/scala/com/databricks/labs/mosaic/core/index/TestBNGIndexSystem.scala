@@ -3,7 +3,6 @@ package com.databricks.labs.mosaic.core.index
 import com.databricks.labs.mosaic.core.geometry.{MosaicGeometryESRI, MosaicGeometryJTS}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
-import org.apache.spark.sql.types.StringType
 import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
@@ -246,7 +245,7 @@ class TestBNGIndexSystem extends AnyFunSuite {
 
     test("Issue 354: KRing should work near the edge of the grid") {
         val kring = BNGIndexSystem.kRing("TM99", 1)
-        kring should contain theSameElementsAs(Seq("TM99", "TM88", "TM98", "TG90", "TG80", "TM89"))
+        kring should contain theSameElementsAs Seq("TM99", "TM88", "TM98", "TN08", "TN09", "TH00", "TG90", "TG80", "TM89")
     }
 
 }

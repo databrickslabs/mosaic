@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.operator.merge.MergeRasters
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterArrayExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -30,7 +30,15 @@ case class RST_Merge(
       * Returns a set of new rasters with the specified tile size (tileWidth x
       * tileHeight).
       */
-    override def rasterTransform(rasters: Seq[MosaicRaster]): Any = MergeRasters.merge(rasters)
+    override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
+        val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else Left(-1L)
+        MosaicRasterTile(
+          index,
+          MergeRasters.merge(tiles.map(_.raster)),
+          tiles.head.parentPath,
+          tiles.head.driver
+        )
+    }
 
 }
 

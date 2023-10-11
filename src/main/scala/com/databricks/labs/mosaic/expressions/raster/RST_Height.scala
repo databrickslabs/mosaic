@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -16,7 +16,7 @@ case class RST_Height(raster: Expression, expressionConfig: MosaicExpressionConf
       with CodegenFallback {
 
     /** Returns the width of the raster. */
-    override def rasterTransform(raster: MosaicRaster): Any = raster.ySize
+    override def rasterTransform(tile: MosaicRasterTile): Any = tile.raster.ySize
 
 }
 

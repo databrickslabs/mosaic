@@ -9,7 +9,7 @@ import org.scalatest.matchers.should.Matchers._
 
 trait RST_MergeBehaviors extends QueryTest {
 
-    //noinspection MapGetGet
+    // noinspection MapGetGet
     def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
@@ -17,57 +17,51 @@ trait RST_MergeBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val rastersAsPaths = spark.read
-            .format("gdal")
-            .option("raster_storage", "disk")
-            .load("src/test/resources/modis")
-
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersAsPaths
-            .withColumn("tiles", rst_tessellate($"path", 3))
-            .select("path", "tiles")
+        val gridTiles = rastersInMemory
+            .withColumn("tile", rst_tessellate($"tile", 3))
+            .select("path", "tile")
             .groupBy("path")
             .agg(
-              collect_set("tiles").as("tiles")
+              collect_set("tile").as("tiles")
             )
             .select(
-              rst_merge($"tiles").as("raster")
+              rst_merge($"tiles").as("tile")
             )
-
 
         rastersInMemory
             .createOrReplaceTempView("source")
 
         spark.sql("""
-                                                   |select rst_merge(tiles) as tiles
-                                                   |from (
-                                                   |  select collect_set(tiles) as tiles
-                                                   |  from (
-                                                   |    select path, rst_gridtiles(raster, 3) as tiles
-                                                   |    from source
-                                                   |  )
-                                                   |  group by path
-                                                   |)
-                                                   |""".stripMargin)
+                    |select rst_merge(tiles) as tile
+                    |from (
+                    |  select collect_set(tile) as tiles
+                    |  from (
+                    |    select path, rst_tessellate(tile, 3) as tile
+                    |    from source
+                    |  )
+                    |  group by path
+                    |)
+                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("tiles", rst_tessellate($"path", 3))
-            .select("path", "tiles")
+            .withColumn("tile", rst_tessellate($"tile", 3))
+            .select("path", "tile")
             .groupBy("path")
             .agg(
-                collect_set("tiles").as("tiles")
+              collect_set("tile").as("tiles")
             )
             .select(
-                rst_merge($"tiles").as("raster")
+              rst_merge($"tiles").as("tile")
             )
 
-        val result = gridTiles.as[String].collect()
+        val result = gridTiles.collect()
 
-        result.length should be (rastersAsPaths.count())
+        result.length should be(rastersInMemory.count())
 
     }
 

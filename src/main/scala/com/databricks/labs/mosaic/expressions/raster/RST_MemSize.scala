@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -16,7 +16,7 @@ case class RST_MemSize(raster: Expression, expressionConfig: MosaicExpressionCon
       with CodegenFallback {
 
     /** Returns the memory size of the raster in bytes. */
-    override def rasterTransform(raster: MosaicRaster): Any = raster.getMemSize
+    override def rasterTransform(tile: MosaicRasterTile): Any = tile.raster.getMemSize
 
 }
 
