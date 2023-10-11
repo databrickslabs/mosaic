@@ -52,12 +52,17 @@ case class MosaicRasterTile(
         val parentPathUTF8 = UTF8String.fromString(parentPath)
         val driverUTF8 = UTF8String.fromString(driver)
         val encodedRaster = encodeRaster(rasterAPI, rasterDataType, checkpointLocation)
-        if (index.isLeft) InternalRow.fromSeq(
-          Seq(index.left.get, encodedRaster, parentPathUTF8, driverUTF8)
-        )
-        else InternalRow.fromSeq(
-          Seq(UTF8String.fromString(index.right.get), encodedRaster, parentPathUTF8, driverUTF8)
-        )
+        if (Option(index).isDefined) {
+            if (index.isLeft) InternalRow.fromSeq(
+              Seq(index.left.get, encodedRaster, parentPathUTF8, driverUTF8)
+            )
+            else InternalRow.fromSeq(
+              Seq(UTF8String.fromString(index.right.get), encodedRaster, parentPathUTF8, driverUTF8)
+            )
+        } else {
+            InternalRow.fromSeq(Seq(null, encodedRaster, parentPathUTF8, driverUTF8))
+        }
+
     }
 
     /**
@@ -90,11 +95,16 @@ object MosaicRasterTile {
         val driver = row.get(3, StringType).toString
         val raster = rasterAPI.readRaster(rasterBytes, parentPath, driver, BinaryType)
         // noinspection TypeCheckCanBeMatch
-        if (index.isInstanceOf[Long]) {
-            MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, parentPath, driver)
+        if (Option(index).isDefined) {
+            if (index.isInstanceOf[Long]) {
+                MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, parentPath, driver)
+            } else {
+                MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, parentPath, driver)
+            }
         } else {
-            MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, parentPath, driver)
+            MosaicRasterTile(null, raster, parentPath, driver)
         }
+
     }
 
 }

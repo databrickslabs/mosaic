@@ -39,7 +39,7 @@ object ReTile {
 
         }
 
-        tiles.map(MosaicRasterTile(Left(-1), _, raster.getParentPath, raster.getDriversShortName))
+        tiles.map(MosaicRasterTile(null, _, raster.getParentPath, raster.getDriversShortName))
 
     }
 

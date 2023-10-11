@@ -53,7 +53,7 @@ object ReTileOnRead extends ReadStrategy {
 
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
 
-        val inTile = MosaicRasterTile(Left(-1), raster, inPath, driverShortName)
+        val inTile = MosaicRasterTile(null, raster, inPath, driverShortName)
         val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)
 
         val rows = tiles.map(tile => {

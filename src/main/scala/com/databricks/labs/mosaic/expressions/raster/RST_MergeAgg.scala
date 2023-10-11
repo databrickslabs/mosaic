@@ -67,10 +67,11 @@ case class RST_MergeAgg(
             buffer.head
         } else {
 
-            val tiles = buffer.map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], LongType, rasterAPI))
+            // Do do move the expression
+            val tiles = buffer.map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType, rasterAPI))
 
             // If merging multiple index rasters, the index value is dropped
-            val idx = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else Left(-1L)
+            val idx = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
             val merged = MergeRasters.merge(tiles.map(_.raster))
             // TODO: should parent path be an array?
             val parentPath = tiles.head.parentPath

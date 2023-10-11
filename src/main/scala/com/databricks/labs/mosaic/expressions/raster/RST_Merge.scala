@@ -31,7 +31,7 @@ case class RST_Merge(
       * tileHeight).
       */
     override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
-        val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else Left(-1L)
+        val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
         MosaicRasterTile(
           index,
           MergeRasters.merge(tiles.map(_.raster)),

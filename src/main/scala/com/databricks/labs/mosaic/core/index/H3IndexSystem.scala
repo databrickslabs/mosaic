@@ -97,8 +97,9 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
 
-        val geom = if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
-        else makeSafeGeometry(extended, geometryAPI)
+        val geom =
+            if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
+            else makeSafeGeometry(extended, geometryAPI)
         geom.setSpatialReference(crsID)
         geom
     }
