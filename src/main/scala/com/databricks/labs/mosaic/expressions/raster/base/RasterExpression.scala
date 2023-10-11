@@ -31,7 +31,7 @@ abstract class RasterExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
     outputType: DataType,
     returnsRaster: Boolean,
-    expressionConfig: MosaicExpressionConfig,
+    expressionConfig: MosaicExpressionConfig
 ) extends UnaryExpression
       with NullIntolerant
       with Serializable
