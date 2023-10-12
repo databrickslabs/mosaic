@@ -8,7 +8,6 @@ __all__ = ["setup_gdal", "enable_gdal"]
 def setup_gdal(
     spark: SparkSession,
     init_script_path: str = "/dbfs/FileStore/geospatial/mosaic/gdal/",
-    shared_objects_path: str = "/dbfs/FileStore/geospatial/mosaic/gdal/",
 ) -> None:
     """
     Prepare GDAL init script and shared objects required for GDAL to run on spark.
@@ -21,9 +20,6 @@ def setup_gdal(
             The active SparkSession.
     init_script_path : str
             Path to write out the init script for GDAL installation.
-    shared_objects_path : str
-            Path to write out shared objects (libgdalalljni.so and libgdalalljni.so.30) that GDAL requires at runtime.
-            Note: If you dont use the default path you will need to update the generated init script.
 
     Returns
     -------
@@ -34,9 +30,7 @@ def setup_gdal(
         sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
     )
     mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
-    mosaicGDALObject.prepareEnvironment(
-        spark._jsparkSession, init_script_path, shared_objects_path
-    )
+    mosaicGDALObject.prepareEnvironment(spark._jsparkSession, init_script_path)
     print("GDAL setup complete.\n")
     print(f"Shared objects (*.so) stored in: {shared_objects_path}.\n")
     print(f"Init script stored in: {init_script_path}.\n")
