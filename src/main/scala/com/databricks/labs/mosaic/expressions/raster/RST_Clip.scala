@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
+import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster1ArgExpression
@@ -9,7 +10,6 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
-import org.apache.spark.sql.types.BinaryType
 
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
@@ -22,7 +22,7 @@ case class RST_Clip(
 ) extends Raster1ArgExpression[RST_Clip](
       rastersExpr,
       geometryExpr,
-      BinaryType,
+      RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
