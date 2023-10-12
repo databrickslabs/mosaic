@@ -49,7 +49,10 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_centroid", api.st_centroid("wkt"))
             .withColumn("st_numpoints", api.st_numpoints("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
-            .withColumn("st_haversine", api.st_haversine(lit(0.0), lit(90.0), lit(0.0), lit(0.0)))
+            .withColumn(
+                "st_haversine",
+                api.st_haversine(lit(0.0), lit(90.0), lit(0.0), lit(0.0)),
+            )
             .withColumn("st_isvalid", api.st_isvalid("wkt"))
             .withColumn(
                 "st_hasvalidcoordinates",
@@ -70,7 +73,6 @@ class TestFunctions(MosaicTestCase):
             .withColumn("st_zmin", api.st_zmin("wkt"))
             .withColumn("st_zmax", api.st_zmax("wkt"))
             .withColumn("flatten_polygons", api.flatten_polygons("wkt"))
-
             # SRID functions
             .withColumn(
                 "geom_with_srid", api.st_setsrid(api.st_geomfromwkt("wkt"), lit(4326))
@@ -79,13 +81,18 @@ class TestFunctions(MosaicTestCase):
             .withColumn(
                 "transformed_geom", api.st_transform("geom_with_srid", lit(3857))
             )
-
             # Grid functions
-            .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1)))
-            .withColumn("grid_pointascellid", api.grid_pointascellid("point_wkt", lit(1)))
+            .withColumn(
+                "grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1))
+            )
+            .withColumn(
+                "grid_pointascellid", api.grid_pointascellid("point_wkt", lit(1))
+            )
             .withColumn("grid_boundaryaswkb", api.grid_boundaryaswkb(lit(1)))
             .withColumn("grid_polyfill", api.grid_polyfill("wkt", lit(1)))
-            .withColumn("grid_tessellateexplode", api.grid_tessellateexplode("wkt", lit(1)))
+            .withColumn(
+                "grid_tessellateexplode", api.grid_tessellateexplode("wkt", lit(1))
+            )
             .withColumn(
                 "grid_tessellateexplode_no_core_chips",
                 api.grid_tessellateexplode("wkt", lit(1), lit(False)),
@@ -96,8 +103,6 @@ class TestFunctions(MosaicTestCase):
             )
             .withColumn("grid_tessellate", api.grid_tessellate("wkt", lit(1)))
             .withColumn("grid_cellarea", api.grid_cellarea(lit(613177664827555839)))
-
-
             # Deprecated
             .withColumn(
                 "point_index_lonlat", api.point_index_lonlat(lit(1), lit(1), lit(1))
@@ -122,7 +127,6 @@ class TestFunctions(MosaicTestCase):
                 "mosaicfill_no_core_chips_bool",
                 api.mosaicfill("wkt", lit(1), lit(False)),
             )
-
         )
 
         self.assertEqual(result.count(), 1)
@@ -213,16 +217,38 @@ class TestFunctions(MosaicTestCase):
             ],
             ["wkt", "point_wkt"],
         )
-        result = (df
-            .withColumn("grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1)))
-            .withColumn("grid_cellkring", api.grid_cellkring("grid_longlatascellid", lit(1)))
-            .withColumn("grid_cellkloop", api.grid_cellkloop("grid_longlatascellid", lit(1)))
-            .withColumn("grid_cellkringexplode", api.grid_cellkringexplode("grid_longlatascellid", lit(1)))
-            .withColumn("grid_cellkloopexplode", api.grid_cellkloopexplode("grid_longlatascellid", lit(1)))
-            .withColumn("grid_geometrykring", api.grid_geometrykring("wkt", lit(4), lit(1)))
-            .withColumn("grid_geometrykloop", api.grid_geometrykloop("wkt", lit(4), lit(1)))
-            .withColumn("grid_geometrykringexplode", api.grid_geometrykringexplode("wkt", lit(4), lit(1)))
-            .withColumn("grid_geometrykloopexplode", api.grid_geometrykloopexplode("wkt", lit(4), lit(1)))
+        result = (
+            df.withColumn(
+                "grid_longlatascellid", api.grid_longlatascellid(lit(1), lit(1), lit(1))
+            )
+            .withColumn(
+                "grid_cellkring", api.grid_cellkring("grid_longlatascellid", lit(1))
+            )
+            .withColumn(
+                "grid_cellkloop", api.grid_cellkloop("grid_longlatascellid", lit(1))
+            )
+            .withColumn(
+                "grid_cellkringexplode",
+                api.grid_cellkringexplode("grid_longlatascellid", lit(1)),
+            )
+            .withColumn(
+                "grid_cellkloopexplode",
+                api.grid_cellkloopexplode("grid_longlatascellid", lit(1)),
+            )
+            .withColumn(
+                "grid_geometrykring", api.grid_geometrykring("wkt", lit(4), lit(1))
+            )
+            .withColumn(
+                "grid_geometrykloop", api.grid_geometrykloop("wkt", lit(4), lit(1))
+            )
+            .withColumn(
+                "grid_geometrykringexplode",
+                api.grid_geometrykringexplode("wkt", lit(4), lit(1)),
+            )
+            .withColumn(
+                "grid_geometrykloopexplode",
+                api.grid_geometrykloopexplode("wkt", lit(4), lit(1)),
+            )
         )
         self.assertEqual(result.count() > 1, True)
 
@@ -236,12 +262,12 @@ class TestFunctions(MosaicTestCase):
         )
         df_chips = df.withColumn("chips", api.grid_tessellateexplode("wkt", lit(1)))
 
-        df_chips = (
-            df_chips
-            .withColumn("intersection", api.grid_cell_intersection("chips", "chips"))
-            .withColumn("union", api.grid_cell_union("chips", "chips"))
+        df_chips = df_chips.withColumn(
+            "intersection", api.grid_cell_intersection("chips", "chips")
+        ).withColumn("union", api.grid_cell_union("chips", "chips"))
+        intersection = df_chips.groupBy("chips.index_id").agg(
+            api.grid_cell_intersection_agg("chips")
         )
-        intersection = df_chips.groupBy("chips.index_id").agg(api.grid_cell_intersection_agg("chips"))
         self.assertEqual(intersection.count() >= 0, True)
 
         union = df_chips.groupBy("chips.index_id").agg(api.grid_cell_union_agg("chips"))

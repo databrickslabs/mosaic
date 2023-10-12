@@ -14,7 +14,7 @@ __all__ = [
     "st_union_agg",
     "grid_cell_union_agg",
     "grid_cell_intersection_agg",
-    "rst_merge_agg"
+    "rst_merge_agg",
 ]
 
 
@@ -69,6 +69,7 @@ def st_intersects_aggregate(
         pyspark_to_java_column(rightIndex),
     )
 
+
 def st_union_agg(geom: ColumnOrName) -> Column:
     """
     Returns the point set union of the aggregated geometries.
@@ -103,6 +104,7 @@ def grid_cell_intersection_agg(chips: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
         "grid_cell_intersection_agg", pyspark_to_java_column(chips)
     )
+
 
 def grid_cell_union_agg(chips: ColumnOrName) -> Column:
     """

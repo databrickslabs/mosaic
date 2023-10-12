@@ -2,15 +2,14 @@ from pyspark.sql import SparkSession
 from typing import Any
 import subprocess
 
-__all__ = [
-    "setup_gdal",
-    "enable_gdal"
-]
+__all__ = ["setup_gdal", "enable_gdal"]
+
 
 def setup_gdal(
-        spark: SparkSession,
-        init_script_path: str = "/dbfs/FileStore/geospatial/mosaic/gdal/",
-        shared_objects_path: str = "/dbfs/FileStore/geospatial/mosaic/gdal/") -> None:
+    spark: SparkSession,
+    init_script_path: str = "/dbfs/FileStore/geospatial/mosaic/gdal/",
+    shared_objects_path: str = "/dbfs/FileStore/geospatial/mosaic/gdal/",
+) -> None:
     """
     Prepare GDAL init script and shared objects required for GDAL to run on spark.
     This function will generate the init script that will install GDAL on each worker node.
@@ -35,11 +34,15 @@ def setup_gdal(
         sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
     )
     mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
-    mosaicGDALObject.prepareEnvironment(spark._jsparkSession, init_script_path, shared_objects_path)
+    mosaicGDALObject.prepareEnvironment(
+        spark._jsparkSession, init_script_path, shared_objects_path
+    )
     print("GDAL setup complete.\n")
     print(f"Shared objects (*.so) stored in: {shared_objects_path}.\n")
     print(f"Init script stored in: {init_script_path}.\n")
-    print("Please restart the cluster with the generated init script to complete the setup.\n")
+    print(
+        "Please restart the cluster with the generated init script to complete the setup.\n"
+    )
 
 
 def enable_gdal(spark: SparkSession) -> None:
@@ -60,13 +63,21 @@ def enable_gdal(spark: SparkSession) -> None:
         mosaicContextClass = getattr(
             sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
         )
-        mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
+        mosaicGDALObject = getattr(
+            sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
+        )
         mosaicGDALObject.enableGDAL(spark._jsparkSession)
         print("GDAL enabled.\n")
-        result = subprocess.run(['gdalinfo', '--version'], stdout=subprocess.PIPE)
+        result = subprocess.run(["gdalinfo", "--version"], stdout=subprocess.PIPE)
         print(result.stdout.decode() + "\n")
     except Exception as e:
-        print("GDAL not enabled. Mosaic with GDAL requires that GDAL be installed on the cluster.\n")
-        print("Please run setup_gdal() to generate the init script for install GDAL install.\n")
-        print("After the init script is generated, please restart the cluster with the init script to complete the setup.\n")
+        print(
+            "GDAL not enabled. Mosaic with GDAL requires that GDAL be installed on the cluster.\n"
+        )
+        print(
+            "Please run setup_gdal() to generate the init script for install GDAL install.\n"
+        )
+        print(
+            "After the init script is generated, please restart the cluster with the init script to complete the setup.\n"
+        )
         print("Error: " + str(e))

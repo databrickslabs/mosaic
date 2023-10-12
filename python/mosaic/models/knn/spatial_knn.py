@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession, DataFrame, SQLContext
 from mosaic.utils import scala_utils
 
+
 class SpatialKNN:
 
     """
@@ -54,7 +55,7 @@ class SpatialKNN:
 
         self.model.setLandmarksFeatureCol(feature)
         return self
-        
+
     def setLandmarksRowID(self, rowID):
         """
         Set the row ID column name for the landmarks.
@@ -64,7 +65,7 @@ class SpatialKNN:
 
         self.model.setLandmarksRowID(rowID)
         return self
-        
+
     def setCandidatesFeatureCol(self, feature):
         """
         Ser the feature column name for the candidates.
@@ -74,7 +75,7 @@ class SpatialKNN:
 
         self.model.setCandidatesFeatureCol(feature)
         return self
-        
+
     def setCandidatesRowID(self, rowID):
         """
         Set the row ID column name for the candidates.
@@ -84,7 +85,7 @@ class SpatialKNN:
 
         self.model.setCandidatesRowID(rowID)
         return self
-        
+
     def setDistanceThreshold(self, d):
         """
         Set the distance threshold for the nearest neighbours.
@@ -94,7 +95,7 @@ class SpatialKNN:
 
         self.model.setDistanceThreshold(d)
         return self
-        
+
     def setIndexResolution(self, resolution):
         """
         Set the index resolution for the spatial index.
@@ -203,8 +204,6 @@ class SpatialKNN:
         return self.model.read
 
     def load(self, path):
-        """
-
-        """
+        """ """
 
         return self.model.load(path)

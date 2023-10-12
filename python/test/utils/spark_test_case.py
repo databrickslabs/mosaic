@@ -8,7 +8,6 @@ import mosaic
 
 
 class SparkTestCase(unittest.TestCase):
-
     spark = None
     library_location = None
 
