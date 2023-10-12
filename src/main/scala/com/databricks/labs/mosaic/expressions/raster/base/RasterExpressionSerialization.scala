@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
+import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
@@ -20,7 +21,9 @@ trait RasterExpressionSerialization {
             val tile = data.asInstanceOf[MosaicRasterTile]
             val checkpoint = expressionConfig.getRasterCheckpoint
             val rasterType = outputDataType.asInstanceOf[RasterTileType].rasterType
-            val result = tile.serialize(rasterAPI, rasterType, checkpoint)
+            val result = tile
+                .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
+                .serialize(rasterAPI, rasterType, checkpoint)
             RasterCleaner.dispose(tile)
             result
         } else {

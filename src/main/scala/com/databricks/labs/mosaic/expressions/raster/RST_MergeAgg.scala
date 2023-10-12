@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.merge.MergeRasters
@@ -78,6 +79,7 @@ case class RST_MergeAgg(
             val driver = tiles.head.driver
 
             val result = MosaicRasterTile(idx, merged, parentPath, driver)
+                .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
                 .serialize(rasterAPI, BinaryType, expressionConfig.getRasterCheckpoint)
 
             tiles.foreach(RasterCleaner.dispose)

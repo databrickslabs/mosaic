@@ -17,6 +17,7 @@ case class MosaicRasterTile(
     def isEmpty: Boolean = Option(raster).forall(_.isEmpty)
 
     def formatCellId(indexSystem: IndexSystem): MosaicRasterTile = {
+        if (Option(index).isEmpty) return this
         (indexSystem.getCellIdDataType, index) match {
             case (_: LongType, Left(_))       => this
             case (_: StringType, Right(_))    => this

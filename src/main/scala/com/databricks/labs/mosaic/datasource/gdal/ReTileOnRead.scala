@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
+import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterCleaner}
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
@@ -46,15 +47,10 @@ object ReTileOnRead extends ReadStrategy {
         rasterAPI: RasterAPI
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
-        val localCopy = PathUtils.copyToTmp(inPath)
-        val driverShortName = MosaicRasterGDAL.indentifyDriver(localCopy)
-        val raster = MosaicRasterGDAL.readRaster(localCopy, inPath, driverShortName)
         val uuid = getUUID(status)
-
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
 
-        val inTile = MosaicRasterTile(null, raster, inPath, driverShortName)
-        val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)
+        val (raster, tiles) = localSubdivide(inPath, sizeInMB)
 
         val rows = tiles.map(tile => {
             val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
@@ -72,13 +68,22 @@ object ReTileOnRead extends ReadStrategy {
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
             // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-            val row = Utils.createRow(fields ++ Seq(tile.serialize(rasterAPI)))
+            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(rasterAPI)))
             RasterCleaner.dispose(tile)
             row
         })
 
         RasterCleaner.dispose(raster)
         rows.iterator
+    }
+
+    def localSubdivide(inPath: String, sizeInMB: Int): (MosaicRaster, Seq[MosaicRasterTile]) = {
+        val localCopy = PathUtils.copyToTmp(inPath)
+        val driverShortName = MosaicRasterGDAL.indentifyDriver(localCopy)
+        val raster = MosaicRasterGDAL.readRaster(localCopy, inPath, driverShortName)
+        val inTile = MosaicRasterTile(null, raster, inPath, driverShortName)
+        val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)
+        (raster, tiles)
     }
 
 }

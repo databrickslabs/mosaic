@@ -83,8 +83,10 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
             )
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
         val generatedChips = rasterGenerator(tile, inResolution)
+            .map(chip => chip.formatCellId(indexSystem))
 
-        val rows = generatedChips.map(chip => InternalRow.fromSeq(Seq(chip.serialize(rasterAPI))))
+        val rows = generatedChips
+            .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize(rasterAPI))))
 
         RasterCleaner.dispose(tile)
         generatedChips.foreach(chip => RasterCleaner.dispose(chip.raster))

@@ -10,8 +10,10 @@ from mosaic.utils.types import ColumnOrName
 
 __all__ = [
     "rst_bandmetadata",
+    "rst_boundingbox",
     "rst_clip",
     "rst_georeference",
+    "rst_getsubdataset",
     "rst_height",
     "rst_isempty",
     "rst_memsize",
@@ -31,7 +33,6 @@ __all__ = [
     "rst_rastertoworldcoordx",
     "rst_rastertoworldcoordy",
     "rst_retile",
-    "rst_gridtiles",
     "rst_rotation",
     "rst_scalex",
     "rst_scaley",
@@ -42,6 +43,8 @@ __all__ = [
     "rst_summary",
     "rst_subdivide",
     "rst_tessellate",
+    "rst_tile",
+    "rst_tryopen",
     "rst_upperleftx",
     "rst_upperlefty",
     "rst_width",
@@ -72,6 +75,27 @@ def rst_bandmetadata(raster: ColumnOrName, band: ColumnOrName) -> Column:
         "rst_bandmetadata",
         pyspark_to_java_column(raster),
         pyspark_to_java_column(band)
+    )
+
+
+def rst_boundingbox(raster: ColumnOrName) -> Column:
+    """
+    Returns the bounding box of the raster as a WKT polygon.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+
+    Returns
+    -------
+    Column (StringType)
+        A WKT polygon representing the bounding box of the raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_boundingbox",
+        pyspark_to_java_column(raster)
     )
 
 
@@ -126,6 +150,31 @@ def rst_georeference(raster: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
         "rst_georeference",
         pyspark_to_java_column(raster)
+    )
+
+
+def rst_getsubdataset(raster: ColumnOrName, subdataset: ColumnOrName) -> Column:
+    """
+    Returns the subdataset of the raster.
+    The subdataset is the path to the subdataset of the raster.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    subdataset : Column (IntegerType)
+        The index of the subdataset to get.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the subdataset.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_getsubdataset",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(subdataset)
     )
 
 
@@ -561,14 +610,6 @@ def rst_retile(raster: ColumnOrName, tileWidth: ColumnOrName, tileHeight: Column
     )
 
 
-def rst_gridtiles(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
-    return config.mosaic_context.invoke_function(
-        "rst_gridtiles",
-        pyspark_to_java_column(raster),
-        pyspark_to_java_column(resolution)
-    )
-
-
 def rst_rotation(raster: ColumnOrName) -> Column:
     """
     Computes the rotation of the raster in degrees.
@@ -766,6 +807,21 @@ def rst_tessellate(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
         "rst_tessellate",
         pyspark_to_java_column(raster),
         pyspark_to_java_column(resolution)
+    )
+
+
+def rst_tile(raster: ColumnOrName, sizeInMB: ColumnOrName) -> Column:
+    """
+    Tiles the raster into tiles of the given size.
+    :param raster:
+    :param sizeInMB:
+    :return:
+    """
+
+    return config.mosaic_context.invoke_function(
+        "rst_tile",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(sizeInMB)
     )
 
 

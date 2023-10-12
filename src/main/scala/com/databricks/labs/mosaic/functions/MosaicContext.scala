@@ -256,6 +256,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 
         /** RasterAPI dependent functions */
         mosaicRegistry.registerExpression[RST_BandMetaData](expressionConfig)
+        mosaicRegistry.registerExpression[RST_BoundingBox](expressionConfig)
         mosaicRegistry.registerExpression[RST_Clip](expressionConfig)
         mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
         mosaicRegistry.registerExpression[RST_GetSubdataset](expressionConfig)
@@ -287,6 +288,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_Subdatasets](expressionConfig)
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Tile](expressionConfig)
         mosaicRegistry.registerExpression[RST_TryOpen](expressionConfig)
         mosaicRegistry.registerExpression[RST_Subdivide](expressionConfig)
         mosaicRegistry.registerExpression[RST_UpperLeftX](expressionConfig)
@@ -605,11 +607,14 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(RST_BandMetaData(raster.expr, lit(band).expr, expressionConfig))
         def rst_bandmetadata(raster: String, band: Int): Column =
             ColumnAdapter(RST_BandMetaData(lit(raster).expr, lit(band).expr, expressionConfig))
+        def rst_boundbox(raster: Column): Column = ColumnAdapter(RST_BoundingBox(raster.expr, expressionConfig))
         def rst_clip(raster: Column, geometry: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, expressionConfig))
         def rst_georeference(raster: Column): Column = ColumnAdapter(RST_GeoReference(raster.expr, expressionConfig))
         def rst_georeference(raster: String): Column = ColumnAdapter(RST_GeoReference(lit(raster).expr, expressionConfig))
         def rst_getsubdataset(raster: Column, subdatasetName: Column): Column =
             ColumnAdapter(RST_GetSubdataset(raster.expr, subdatasetName.expr, expressionConfig))
+        def rst_getsubdataset(raster: Column, subdatasetName: String): Column =
+            ColumnAdapter(RST_GetSubdataset(raster.expr, lit(subdatasetName).expr, expressionConfig))
         def rst_height(raster: Column): Column = ColumnAdapter(RST_Height(raster.expr, expressionConfig))
         def rst_height(raster: String): Column = ColumnAdapter(RST_Height(lit(raster).expr, expressionConfig))
         def rst_isempty(raster: Column): Column = ColumnAdapter(RST_IsEmpty(raster.expr, expressionConfig))
@@ -696,6 +701,12 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(RST_Tessellate(col(raster).expr, resolution.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
+        def rst_tile(raster: Column, sizeInMB: Column): Column =
+            ColumnAdapter(RST_Tile(raster.expr, sizeInMB.expr, expressionConfig))
+        def rst_tile(raster: Column, sizeInMB: Int): Column =
+            ColumnAdapter(RST_Tile(raster.expr, lit(sizeInMB).expr, expressionConfig))
+        def rst_tile(raster: String): Column =
+            ColumnAdapter(RST_Tile(lit(raster).expr, lit(256).expr, expressionConfig))
         def rst_tryopen(raster: Column): Column = ColumnAdapter(RST_TryOpen(raster.expr, expressionConfig))
         def rst_subdivide(raster: Column, sizeInMB: Column): Column =
             ColumnAdapter(RST_Subdivide(raster.expr, sizeInMB.expr, expressionConfig))
@@ -982,7 +993,7 @@ object MosaicContext extends Logging {
         if (!isML && !isPhoton) {
             // Print out the warnings both to the log and to the console
             logWarning("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
-            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.x.") 
+            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.x.")
             logWarning("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).")
             println("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
             println("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.x.")

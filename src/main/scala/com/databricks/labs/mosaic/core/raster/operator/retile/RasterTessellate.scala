@@ -26,13 +26,13 @@ object RasterTessellate {
                     val isValidRaster = cellRaster.getBandStats.values.map(_("mean")).sum > 0 && !cellRaster.isEmpty
                     (
                       isValidRaster,
-                        MosaicRasterTile(cell.index, cellRaster, raster.getParentPath, raster.getDriversShortName)
+                      MosaicRasterTile(cell.index, cellRaster, raster.getParentPath, raster.getDriversShortName)
                     )
                 }
             })
 
         val (result, invalid) = chips.partition(_._1)
-        invalid.foreach(_._2.raster.destroy())
+        invalid.flatMap(t => Option(t._2.raster)).foreach(_.destroy())
         tmpRaster.destroy()
 
         result.map(_._2)
