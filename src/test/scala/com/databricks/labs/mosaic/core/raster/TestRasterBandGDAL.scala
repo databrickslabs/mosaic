@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster
 
-import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterBandGDAL, MosaicRasterGDAL}
+import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterBandGDAL, MosaicRasterGDAL}
 import com.databricks.labs.mosaic.test.mocks.filePath
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.should.Matchers._

@@ -1,4 +1,4 @@
-package com.databricks.labs.mosaic.core.raster.gdal_raster
+package com.databricks.labs.mosaic.core.raster.operator.transform
 
 object RasterTransform {
 

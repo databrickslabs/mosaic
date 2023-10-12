@@ -1,10 +1,11 @@
-package com.databricks.labs.mosaic.core.raster.gdal_raster
+package com.databricks.labs.mosaic.core.raster.gdal
 
 import com.databricks.labs.mosaic.GDAL
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster._
+import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader}
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.databricks.labs.mosaic.utils.PathUtils
