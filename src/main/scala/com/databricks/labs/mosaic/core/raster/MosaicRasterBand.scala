@@ -8,6 +8,7 @@ trait MosaicRasterBand extends Serializable {
 
     def isNoDataMask: Boolean
 
+    /** @return Return the status flags of the mask band associated with the band */
     def maskFlags: Seq[Any]
 
     /** @return Returns the bandId of the band. */
