@@ -22,9 +22,8 @@ object ReTile {
             val xMin = if (x == 0) x * tileWidth else x * tileWidth - 1
             val yMin = if (y == 0) y * tileHeight else y * tileHeight - 1
 
-            val rasterUUID = java.util.UUID.randomUUID.toString
             val fileExtension = raster.getRasterFileExtension
-            val rasterPath = PathUtils.createTmpFilePath(rasterUUID, fileExtension)
+            val rasterPath = PathUtils.createTmpFilePath(fileExtension)
             val shortDriver = raster.getRaster.GetDriver().getShortName
 
             val result = GDALTranslate.executeTranslate(

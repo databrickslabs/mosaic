@@ -28,7 +28,7 @@ object NDVI {
         val numLines = redBand.GetYSize
         val lineSize = redBand.GetXSize
 
-        val ndviPath = PathUtils.createTmpFilePath(raster.uuid.toString, raster.getExtension)
+        val ndviPath = PathUtils.createTmpFilePath(raster.getExtension)
         val ndviRaster = newNDVIRaster(raster, ndviPath)
 
         var outputLine: Array[Double] = null

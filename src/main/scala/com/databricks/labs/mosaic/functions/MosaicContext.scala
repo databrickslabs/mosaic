@@ -989,8 +989,9 @@ object MosaicContext extends Logging {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "")
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = spark.conf.getOption("spark.databricks.photon.enabled").getOrElse("false").toBoolean
+        val isTest = spark.conf.getOption("spark.databricks.clusterUsageTags.clusterType").getOrElse("true").toBoolean
 
-        if (!isML && !isPhoton) {
+        if (!isML && !isPhoton && !isTest) {
             // Print out the warnings both to the log and to the console
             logWarning("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
             logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.x.")

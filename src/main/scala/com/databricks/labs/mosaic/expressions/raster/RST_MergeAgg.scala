@@ -34,7 +34,7 @@ case class RST_MergeAgg(
     override lazy val deterministic: Boolean = true
     override val child: Expression = rasterExpr
     override val nullable: Boolean = false
-    override val dataType: DataType = RasterTileType(LongType)
+    override val dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
     override def prettyName: String = "rst_merge_agg"
 
     val rasterAPI: RasterAPI = RasterAPI.apply(expressionConfig.getRasterAPI)

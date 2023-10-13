@@ -26,9 +26,8 @@ object OverlappingTiles {
                 val width = Math.min(tileWidth, xSize - i) + 1
                 val height = Math.min(tileHeight, ySize - j) + 1
 
-                val uuid = java.util.UUID.randomUUID.toString
                 val fileExtension = raster.getExtension
-                val rasterPath = PathUtils.createTmpFilePath(uuid, fileExtension)
+                val rasterPath = PathUtils.createTmpFilePath(fileExtension)
                 val shortName = raster.getRaster.GetDriver.getShortName
 
                 val result = GDALTranslate.executeTranslate(

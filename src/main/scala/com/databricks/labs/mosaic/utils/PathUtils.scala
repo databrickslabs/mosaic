@@ -88,8 +88,9 @@ object PathUtils {
         }
     }
 
-    def createTmpFilePath(uuid: String, extension: String): String = {
+    def createTmpFilePath(extension: String): String = {
         val randomID = UUID.randomUUID()
+        val uuid = UUID.randomUUID().toString
         val tmpDir = Files.createTempDirectory(s"mosaic_$randomID").toFile.getAbsolutePath
         val outPath = s"$tmpDir/raster_${uuid.replace("-", "_")}.$extension"
         Files.createDirectories(Paths.get(outPath).getParent)

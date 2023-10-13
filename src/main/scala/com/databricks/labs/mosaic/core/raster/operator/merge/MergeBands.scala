@@ -7,11 +7,10 @@ import com.databricks.labs.mosaic.utils.PathUtils
 object MergeBands {
 
     def merge(rasters: Seq[MosaicRaster], resampling: String): MosaicRaster = {
-        val rasterUUID = java.util.UUID.randomUUID.toString
         val outShortName = rasters.head.getRaster.GetDriver.getShortName
 
-        val vrtPath = PathUtils.createTmpFilePath(rasterUUID, "vrt")
-        val rasterPath = PathUtils.createTmpFilePath(rasterUUID, "tif")
+        val vrtPath = PathUtils.createTmpFilePath("vrt")
+        val rasterPath = PathUtils.createTmpFilePath("tif")
 
         val vrtRaster = GDALBuildVRT.executeVRT(
           vrtPath,
@@ -31,11 +30,10 @@ object MergeBands {
     }
 
     def merge(rasters: Seq[MosaicRaster], pixel: (Double, Double), resampling: String): MosaicRaster = {
-        val rasterUUID = java.util.UUID.randomUUID.toString
         val outShortName = rasters.head.getRaster.GetDriver.getShortName
 
-        val vrtPath = PathUtils.createTmpFilePath(rasterUUID, "vrt")
-        val rasterPath = PathUtils.createTmpFilePath(rasterUUID, "tif")
+        val vrtPath = PathUtils.createTmpFilePath("vrt")
+        val rasterPath = PathUtils.createTmpFilePath("tif")
 
         val vrtRaster = GDALBuildVRT.executeVRT(
             vrtPath,

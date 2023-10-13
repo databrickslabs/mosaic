@@ -8,7 +8,6 @@ import com.databricks.labs.mosaic.core.raster._
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.databricks.labs.mosaic.utils.PathUtils
-import org.apache.orc.util.Murmur3
 import org.gdal.gdal.gdal.GDALInfo
 import org.gdal.gdal.{Dataset, InfoOptions, gdal}
 import org.gdal.gdalconst.gdalconstConstants._
@@ -24,7 +23,6 @@ import scala.util.Try
 /** GDAL implementation of the MosaicRaster trait. */
 //noinspection DuplicatedCode
 class MosaicRasterGDAL(
-    _uuid: Long,
     var raster: Dataset,
     path: String,
     isTemp: Boolean,
@@ -211,7 +209,7 @@ class MosaicRasterGDAL(
     override def getMemSize: Long = {
         if (memSize == -1) {
             if (PathUtils.isInMemory(path)) {
-                val tempPath = PathUtils.createTmpFilePath(this.uuid.toString, getExtension)
+                val tempPath = PathUtils.createTmpFilePath(getExtension)
                 writeToPath(tempPath)
                 this.refresh()
                 val size = Files.size(Paths.get(tempPath))
@@ -260,7 +258,7 @@ class MosaicRasterGDAL(
         if (PathUtils.isInMemory(path)) {
             // Create a temporary directory to store the raster
             // This is needed because Files cannot read from /vsimem/ directly
-            val path = PathUtils.createTmpFilePath(uuid.toString, getExtension)
+            val path = PathUtils.createTmpFilePath(getExtension)
             writeToPath(path, destroy)
             val byteArray = Files.readAllBytes(Paths.get(path))
             Files.delete(Paths.get(path))
@@ -290,8 +288,6 @@ class MosaicRasterGDAL(
         this.raster = openRaster(path)
     }
 
-    override def uuid: Long = _uuid
-
     override def getExtension: String = {
         val driver = gdal.GetDriverByName(driverShortName)
         val extension = driver.GetMetadataItem("DMD_EXTENSION")
@@ -320,7 +316,7 @@ class MosaicRasterGDAL(
     }
 
     override def asTemp: MosaicRaster = {
-        val temp = PathUtils.createTmpFilePath(uuid.toString, getExtension)
+        val temp = PathUtils.createTmpFilePath(getExtension)
         writeToPath(temp)
         if (PathUtils.isInMemory(path)) RasterCleaner.dispose(this)
         else this.destroy()
@@ -375,15 +371,13 @@ object MosaicRasterGDAL extends RasterReader {
         driverShortName: String,
         memSize: Long
     ): MosaicRasterGDAL = {
-        val uuid = Murmur3.hash64(path.getBytes())
-        val raster = new MosaicRasterGDAL(uuid, dataset, path, isTemp, parentPath, driverShortName, memSize)
+        val raster = new MosaicRasterGDAL(dataset, path, isTemp, parentPath, driverShortName, memSize)
         raster
     }
 
     def apply(path: String, isTemp: Boolean, parentPath: String, driverShortName: String, memSize: Long): MosaicRasterGDAL = {
-        val uuid = Murmur3.hash64(path.getBytes())
         val dataset = openRaster(path, driverShortName)
-        val raster = new MosaicRasterGDAL(uuid, dataset, path, isTemp, parentPath, driverShortName, memSize)
+        val raster = new MosaicRasterGDAL(dataset, path, isTemp, parentPath, driverShortName, memSize)
         raster
     }
 
@@ -403,8 +397,6 @@ object MosaicRasterGDAL extends RasterReader {
         val isSubdataset = PathUtils.isSubdataset(inPath)
         val localCopy = if (readDirect) inPath else PathUtils.copyToTmp(inPath)
         val path = PathUtils.getCleanPath(localCopy, localCopy.endsWith(".zip"))
-
-        val uuid = Murmur3.hash64(path.getBytes())
         val readPath =
             if (isSubdataset) PathUtils.getSubdatasetPath(path)
             else PathUtils.getZipPath(path)
@@ -414,18 +406,17 @@ object MosaicRasterGDAL extends RasterReader {
         // It will be available when the raster is serialized for next operation
         // If value is needed then it will be computed when getMemSize is called
         // We cannot just use memSize value of the parent due to the fact that the raster could be a subdataset
-        val raster = new MosaicRasterGDAL(uuid, dataset, path, true, parentPath, driverShortName, -1)
+        val raster = new MosaicRasterGDAL(dataset, path, true, parentPath, driverShortName, -1)
         raster
     }
 
     override def readRaster(contentBytes: Array[Byte], parentPath: String, driverShortName: String): MosaicRaster = {
         if (Option(contentBytes).isEmpty || contentBytes.isEmpty) {
-            // Handle empty rasters, easy check to -1L as UUID for empty rasters
-            new MosaicRasterGDAL(-1L, null, "", false, parentPath, "", -1)
+            new MosaicRasterGDAL(null, "", false, parentPath, "", -1)
         } else {
             // This is a temp UUID for purposes of reading the raster through GDAL from memory
             // The stable UUID is kept in metadata of the raster
-            val uuid = Murmur3.hash64(UUID.randomUUID().toString.getBytes())
+            val uuid = UUID.randomUUID().toString
             val extension = GDAL.getExtension(driverShortName)
             val virtualPath = s"/vsimem/$uuid.$extension"
             gdal.FileFromMemBuffer(virtualPath, contentBytes)
@@ -438,7 +429,7 @@ object MosaicRasterGDAL extends RasterReader {
                 gdal.FileFromMemBuffer(virtualPath, contentBytes)
                 openRaster(zippedPath, driverShortName)
             })
-            val raster = new MosaicRasterGDAL(uuid, dataset, virtualPath, false, parentPath, driverShortName, contentBytes.length)
+            val raster = new MosaicRasterGDAL(dataset, virtualPath, false, parentPath, driverShortName, contentBytes.length)
             raster
         }
     }

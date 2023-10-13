@@ -7,6 +7,8 @@ import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.gdal
 
+import java.util.UUID
+
 /**
   * A base trait for all Raster API's.
   * @param reader
@@ -45,7 +47,7 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
                 rasterDT match {
                     case StringType =>
                         val extension = raster.getRaster.GetDriver().GetMetadataItem("DMD_EXTENSION")
-                        val writePath = s"$checkpointPath/${raster.uuid}.$extension"
+                        val writePath = s"$checkpointPath/${UUID.randomUUID()}.$extension"
                         val outPath = raster.writeToPath(writePath)
                         RasterCleaner.dispose(raster)
                         UTF8String.fromString(outPath)
