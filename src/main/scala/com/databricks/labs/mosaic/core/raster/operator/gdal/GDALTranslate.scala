@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import org.gdal.gdal.{TranslateOptions, gdal}
 
 import java.nio.file.{Files, Paths}

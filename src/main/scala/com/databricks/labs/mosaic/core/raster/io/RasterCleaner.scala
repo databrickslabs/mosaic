@@ -1,4 +1,4 @@
-package com.databricks.labs.mosaic.core.raster.gdal_raster
+package com.databricks.labs.mosaic.core.raster.io
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile

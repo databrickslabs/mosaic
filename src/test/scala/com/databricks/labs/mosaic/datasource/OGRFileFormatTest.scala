@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.datasource
 
 import com.databricks.labs.mosaic.{H3, JTS}
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.utils.PathUtils

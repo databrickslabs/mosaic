@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.core.raster
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.gdal_raster.{RasterCleaner, RasterWriter}
+import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterWriter}
 import org.gdal.gdal.Dataset
 import org.gdal.osr.SpatialReference
 

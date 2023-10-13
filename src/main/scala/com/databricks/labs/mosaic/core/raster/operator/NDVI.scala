@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.raster.operator
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.utils.PathUtils
 
 object NDVI {
