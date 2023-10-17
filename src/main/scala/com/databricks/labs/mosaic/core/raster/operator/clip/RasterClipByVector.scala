@@ -14,7 +14,7 @@ object RasterClipByVector {
         val rasterCRS = raster.getRaster.GetSpatialRef()
         val outShortName = raster.getRaster.GetDriver().getShortName
 
-        val resultFileName = PathUtils.createTmpFilePath(raster.getExtension)
+        val resultFileName = PathUtils.createTmpFilePath(raster.uuid.toString, raster.getExtension)
 
         val shapeFileName = VectorClipper.generateClipper(geometry, geomCRS, rasterCRS, geometryAPI)
 

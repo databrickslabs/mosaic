@@ -86,7 +86,7 @@ object RST_Tile extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_ReTile](3, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_ReTile](2, expressionConfig)
     }
 
 }

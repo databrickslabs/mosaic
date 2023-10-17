@@ -146,12 +146,12 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[ST_Area](expressionConfig)
         mosaicRegistry.registerExpression[ST_Buffer](expressionConfig)
         mosaicRegistry.registerExpression[ST_BufferLoop](expressionConfig)
+        mosaicRegistry.registerExpression[ST_BufferCapStyle](expressionConfig)
         mosaicRegistry.registerExpression[ST_Centroid](expressionConfig)
         mosaicRegistry.registerExpression[ST_Contains](expressionConfig)
         mosaicRegistry.registerExpression[ST_ConvexHull](expressionConfig)
         mosaicRegistry.registerExpression[ST_Distance](expressionConfig)
         mosaicRegistry.registerExpression[ST_Difference](expressionConfig)
-        mosaicRegistry.registerExpression[ST_Buffer](expressionConfig)
         mosaicRegistry.registerExpression[ST_Envelope](expressionConfig)
         mosaicRegistry.registerExpression[ST_GeometryType](expressionConfig)
         mosaicRegistry.registerExpression[ST_HasValidCoordinates](expressionConfig)
@@ -289,6 +289,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tile](expressionConfig)
+        mosaicRegistry.registerExpression[RST_ToOverlappingTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_TryOpen](expressionConfig)
         mosaicRegistry.registerExpression[RST_Subdivide](expressionConfig)
         mosaicRegistry.registerExpression[RST_UpperLeftX](expressionConfig)
@@ -527,6 +528,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(ST_BufferLoop(geom.expr, r1.cast("double").expr, r2.cast("double").expr, expressionConfig))
         def st_bufferloop(geom: Column, r1: Double, r2: Double): Column =
             ColumnAdapter(ST_BufferLoop(geom.expr, lit(r1).cast("double").expr, lit(r2).cast("double").expr, expressionConfig))
+        def st_buffer_cap_style(geom: Column, radius: Column, capStyle: Column): Column =
+            ColumnAdapter(ST_BufferCapStyle(geom.expr, radius.cast("double").expr, capStyle.expr, expressionConfig))
+        def st_buffer_cap_style(geom: Column, radius: Double, capStyle: String): Column =
+            ColumnAdapter(ST_BufferCapStyle(geom.expr, lit(radius).cast("double").expr, lit(capStyle).expr, expressionConfig))
         def st_centroid(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, expressionConfig))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, expressionConfig))
         def st_difference(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Difference(geom1.expr, geom2.expr, expressionConfig))
@@ -607,7 +612,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(RST_BandMetaData(raster.expr, lit(band).expr, expressionConfig))
         def rst_bandmetadata(raster: String, band: Int): Column =
             ColumnAdapter(RST_BandMetaData(lit(raster).expr, lit(band).expr, expressionConfig))
-        def rst_boundbox(raster: Column): Column = ColumnAdapter(RST_BoundingBox(raster.expr, expressionConfig))
+        def rst_boundingbox(raster: Column): Column = ColumnAdapter(RST_BoundingBox(raster.expr, expressionConfig))
         def rst_clip(raster: Column, geometry: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, expressionConfig))
         def rst_georeference(raster: Column): Column = ColumnAdapter(RST_GeoReference(raster.expr, expressionConfig))
         def rst_georeference(raster: String): Column = ColumnAdapter(RST_GeoReference(lit(raster).expr, expressionConfig))
@@ -707,6 +712,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(RST_Tile(raster.expr, lit(sizeInMB).expr, expressionConfig))
         def rst_tile(raster: String): Column =
             ColumnAdapter(RST_Tile(lit(raster).expr, lit(256).expr, expressionConfig))
+        def rst_to_overlapping_tiles(raster: Column, width: Int, height: Int, overlap: Int): Column =
+            ColumnAdapter(RST_ToOverlappingTiles(raster.expr, lit(width).expr, lit(height).expr, lit(overlap).expr, expressionConfig))
+        def rst_to_overlapping_tiles(raster: Column, width: Column, height: Column, overlap: Column): Column =
+            ColumnAdapter(RST_ToOverlappingTiles(raster.expr, width.expr, height.expr, overlap.expr, expressionConfig))
         def rst_tryopen(raster: Column): Column = ColumnAdapter(RST_TryOpen(raster.expr, expressionConfig))
         def rst_subdivide(raster: Column, sizeInMB: Column): Column =
             ColumnAdapter(RST_Subdivide(raster.expr, sizeInMB.expr, expressionConfig))

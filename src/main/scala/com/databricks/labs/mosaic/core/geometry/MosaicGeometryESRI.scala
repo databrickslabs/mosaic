@@ -74,6 +74,8 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def buffer(distance: Double): MosaicGeometryESRI = MosaicGeometryESRI(geom.buffer(distance))
 
+    override def bufferCapStyle(distance: Double, capStyle: String): MosaicGeometry = buffer(distance)
+
     override def simplify(tolerance: Double): MosaicGeometryESRI = MosaicGeometryESRI(geom.makeSimple())
 
     override def envelope: MosaicGeometryESRI = MosaicGeometryESRI(geom.envelope())

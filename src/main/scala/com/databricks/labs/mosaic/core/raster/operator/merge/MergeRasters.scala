@@ -8,10 +8,11 @@ import org.gdal.gdal.gdal
 object MergeRasters {
 
     def merge(rasters: Seq[MosaicRaster]): MosaicRaster = {
+        val rasterUUID = java.util.UUID.randomUUID.toString
         val outShortName = rasters.head.getDriversShortName
         val extension = gdal.GetDriverByName(outShortName).GetMetadataItem("DMD_EXTENSION")
 
-        val rasterPath = PathUtils.createTmpFilePath(extension)
+        val rasterPath = PathUtils.createTmpFilePath(rasterUUID, extension)
 
         val result = GDALWarp.executeWarp(
           rasterPath,

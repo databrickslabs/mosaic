@@ -24,12 +24,10 @@ trait RasterReader extends Logging {
       *   The path to the raster file.
       * @param parentPath
       *   The path of the parent raster file.
-      * @param driverShortName
-      *   The driver short name of the raster file.
       * @return
       *   A MosaicRaster object.
       */
-    def readRaster(path: String, parentPath: String, driverShortName: String, readDirect: Boolean = false): MosaicRaster
+    def readRaster(path: String, parentPath: String): MosaicRaster
 
     /**
       * Reads a raster from an in memory buffer. Use the buffer bytes to produce
@@ -58,11 +56,9 @@ trait RasterReader extends Logging {
       *   The band index to read.
       * @param parentPath
       *   The path of the parent raster file.
-      * @param driverShortName
-      *   The driver short name of the raster file.
       * @return
       *   A MosaicRaster object.
       */
-    def readBand(path: String, bandIndex: Int, parentPath: String, driverShortName: String): MosaicRasterBand
+    def readBand(path: String, bandIndex: Int, parentPath: String): MosaicRasterBand
 
 }

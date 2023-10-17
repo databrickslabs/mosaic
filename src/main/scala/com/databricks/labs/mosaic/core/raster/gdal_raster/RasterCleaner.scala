@@ -23,20 +23,26 @@ object RasterCleaner {
       */
     def destroy(ds: Dataset): Unit = {
         if (ds != null) {
-            ds.FlushCache()
-            // Not to be confused with physical deletion, this is just deletes jvm object
-            ds.delete()
+            try {
+                ds.FlushCache()
+                // Not to be confused with physical deletion, this is just deletes jvm object
+                ds.delete()
+            }
         }
     }
 
     def dispose(raster: Any): Unit = {
         raster match {
             case r: MosaicRaster      =>
-                r.destroy()
-                r.cleanUp()
+                try {
+                    r.destroy()
+                    r.cleanUp()
+                }
             case rt: MosaicRasterTile =>
-                rt.raster.destroy()
-                rt.raster.cleanUp()
+                try {
+                    rt.raster.destroy()
+                    rt.raster.cleanUp()
+                }
             // NOOP for simpler code handling in expressions, removes need for repeated if/else
             case _                    => ()
         }

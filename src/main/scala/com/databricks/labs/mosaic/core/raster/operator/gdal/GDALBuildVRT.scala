@@ -1,8 +1,8 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
 import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterCleaner}
-import org.gdal.gdal.{BuildVRTOptions, Dataset, WarpOptions, gdal}
+import com.databricks.labs.mosaic.core.raster.gdal_raster.MosaicRasterGDAL
+import org.gdal.gdal.{BuildVRTOptions, gdal}
 
 object GDALBuildVRT {
 

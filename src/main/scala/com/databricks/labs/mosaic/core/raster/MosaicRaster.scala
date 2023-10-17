@@ -50,6 +50,8 @@ abstract class MosaicRaster(
 
     def getDimensions: (Int, Int)
 
+    def uuid: Long
+
     def getExtension: String
 
     def getPath: String

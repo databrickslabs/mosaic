@@ -2,12 +2,9 @@ package com.databricks.labs.mosaic.core.raster.api
 
 import com.databricks.labs.mosaic.core.raster._
 import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterCleaner, RasterReader, RasterTransform}
-import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.gdal
-
-import java.util.UUID
 
 /**
   * A base trait for all Raster API's.
@@ -22,14 +19,12 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
         inputRaster: Any,
         parentPath: String,
         shortDriverName: String,
-        inputDT: DataType,
-        readDirect: Boolean = false
+        inputDT: DataType
     ): MosaicRaster = {
         inputDT match {
             case StringType =>
                 val path = inputRaster.asInstanceOf[UTF8String].toString
-                val isSubdataset = PathUtils.isSubdataset(path)
-                reader.readRaster(path, parentPath, shortDriverName, readDirect || isSubdataset)
+                reader.readRaster(path, parentPath)
             case BinaryType =>
                 val bytes = inputRaster.asInstanceOf[Array[Byte]]
                 val raster = reader.readRaster(bytes, parentPath, shortDriverName)
@@ -47,7 +42,7 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
                 rasterDT match {
                     case StringType =>
                         val extension = raster.getRaster.GetDriver().GetMetadataItem("DMD_EXTENSION")
-                        val writePath = s"$checkpointPath/${UUID.randomUUID()}.$extension"
+                        val writePath = s"$checkpointPath/${raster.uuid}.$extension"
                         val outPath = raster.writeToPath(writePath)
                         RasterCleaner.dispose(raster)
                         UTF8String.fromString(outPath)
@@ -81,8 +76,8 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       * @return
       *   Returns a Raster object.
       */
-    def raster(path: String, parentPath: String, driverShortName: String): MosaicRaster =
-        reader.readRaster(path, parentPath, driverShortName)
+    def raster(path: String, parentPath: String): MosaicRaster =
+        reader.readRaster(path, parentPath)
 
     def raster(content: Array[Byte], parentPath: String, driverShortName: String): MosaicRaster =
         reader.readRaster(content, parentPath, driverShortName)
@@ -99,8 +94,8 @@ abstract class RasterAPI(reader: RasterReader) extends Serializable {
       * @return
       *   Returns a Raster band object.
       */
-    def band(path: String, bandIndex: Int, parentPath: String, driverShortName: String): MosaicRasterBand =
-        reader.readBand(path, bandIndex, parentPath, driverShortName)
+    def band(path: String, bandIndex: Int, parentPath: String): MosaicRasterBand =
+        reader.readBand(path, bandIndex, parentPath)
 
     /**
       * Converts raster x, y coordinates to lat, lon coordinates.

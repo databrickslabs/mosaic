@@ -14,7 +14,7 @@ import org.apache.spark.sql.types._
 case class RST_BoundingBox(
     raster: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends RasterExpression[RST_RasterToWorldCoord](raster, BinaryType, returnsRaster = false, expressionConfig = expressionConfig)
+) extends RasterExpression[RST_BoundingBox](raster, BinaryType, returnsRaster = false, expressionConfig = expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -67,7 +67,7 @@ object RST_BoundingBox extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_RasterToWorldCoord](3, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_BoundingBox](1, expressionConfig)
     }
 
 }

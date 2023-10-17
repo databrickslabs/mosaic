@@ -79,9 +79,8 @@ object ReTileOnRead extends ReadStrategy {
 
     def localSubdivide(inPath: String, sizeInMB: Int): (MosaicRaster, Seq[MosaicRasterTile]) = {
         val localCopy = PathUtils.copyToTmp(inPath)
-        val driverShortName = MosaicRasterGDAL.indentifyDriver(localCopy)
-        val raster = MosaicRasterGDAL.readRaster(localCopy, inPath, driverShortName)
-        val inTile = MosaicRasterTile(null, raster, inPath, driverShortName)
+        val raster = MosaicRasterGDAL.readRaster(localCopy, inPath)
+        val inTile = MosaicRasterTile(null, raster, inPath, raster.getDriversShortName)
         val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)
         (raster, tiles)
     }

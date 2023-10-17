@@ -10,7 +10,7 @@ object RasterProject {
     def project(raster: MosaicRaster, destCRS: SpatialReference): MosaicRaster = {
         val outShortName = raster.getRaster.GetDriver().getShortName
 
-        val resultFileName = PathUtils.createTmpFilePath(raster.getExtension)
+        val resultFileName = PathUtils.createTmpFilePath(raster.uuid.toString, raster.getExtension)
 
         // Note that Null is the right value here
         val authName = destCRS.GetAuthorityName(null)

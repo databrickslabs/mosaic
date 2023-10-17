@@ -38,15 +38,16 @@ object MosaicGDAL extends Logging {
     }
 
     def configureGDAL(): Unit = {
-        val tmpDirLocal = Files.createTempDirectory("mosaic-gdal-tmp").toAbsolutePath.toString
-        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
-        gdal.SetConfigOption("CPL_TMPDIR", tmpDirLocal)
-        gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", tmpDirLocal)
-        gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "YES")
+        val CPL_TMPDIR = Files.createTempDirectory("mosaic-gdal-tmp").toAbsolutePath.toString
+        val GDAL_PAM_PROXY_DIR = Files.createTempDirectory("mosaic-gdal-tmp").toAbsolutePath.toString
+        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+        gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)
+        gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", GDAL_PAM_PROXY_DIR)
+        gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "NO")
         gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
         gdal.SetConfigOption("GDAL_ENABLE_TIFF_SPLIT", "FALSE")
-        gdal.SetConfigOption("GTIFF_DIRECT_IO", "YES")
-        gdal.SetConfigOption("GTIFF_VIRTUAL_MEM_IO", "IF_ENOUGH_RAM")
+        gdal.SetConfigOption("GTIFF_DIRECT_IO", "NO")
+        gdal.SetConfigOption("GTIFF_VIRTUAL_MEM_IO", "NO")
     }
 
     def enableGDAL(spark: SparkSession): Unit = {
