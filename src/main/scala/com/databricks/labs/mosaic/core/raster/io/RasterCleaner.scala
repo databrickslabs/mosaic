@@ -27,6 +27,8 @@ object RasterCleaner {
                 ds.FlushCache()
                 // Not to be confused with physical deletion, this is just deletes jvm object
                 ds.delete()
+            } catch {
+                case _: Any => ()
             }
         }
     }
@@ -37,11 +39,15 @@ object RasterCleaner {
                 try {
                     r.destroy()
                     r.cleanUp()
+                } catch {
+                    case _: Any => ()
                 }
             case rt: MosaicRasterTile =>
                 try {
                     rt.raster.destroy()
                     rt.raster.cleanUp()
+                } catch {
+                    case _: Any => ()
                 }
             // NOOP for simpler code handling in expressions, removes need for repeated if/else
             case _                    => ()

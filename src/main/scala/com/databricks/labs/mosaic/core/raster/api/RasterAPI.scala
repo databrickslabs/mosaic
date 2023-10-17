@@ -4,8 +4,6 @@ import com.databricks.labs.mosaic.core.raster._
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader}
 import com.databricks.labs.mosaic.core.raster.operator.transform.RasterTransform
-import com.databricks.labs.mosaic.utils.PathUtils
-import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterCleaner, RasterReader, RasterTransform}
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
