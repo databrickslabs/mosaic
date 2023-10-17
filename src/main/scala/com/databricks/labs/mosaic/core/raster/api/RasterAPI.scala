@@ -1,10 +1,13 @@
 package com.databricks.labs.mosaic.core.raster.api
 
 import com.databricks.labs.mosaic.core.raster._
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader}
+import com.databricks.labs.mosaic.core.raster.operator.transform.RasterTransform
+import com.databricks.labs.mosaic.utils.PathUtils
 import com.databricks.labs.mosaic.core.raster.gdal_raster.{MosaicRasterGDAL, RasterCleaner, RasterReader, RasterTransform}
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
-import org.gdal.gdal.gdal
 
 /**
   * A base trait for all Raster API's.
@@ -160,28 +163,6 @@ object RasterAPI extends Serializable {
             case "GDAL" => MosaicRasterGDAL
         }
 
-    /**
-      * GDAL Raster API. It uses [[MosaicRasterGDAL]] as the [[RasterReader]].
-      */
-    object GDAL extends RasterAPI(MosaicRasterGDAL) {
 
-        override def name: String = "GDAL"
-
-        /**
-          * Enables GDAL on the worker nodes. GDAL requires drivers to be
-          * registered on the worker nodes. This method registers all the
-          * drivers on the worker nodes.
-          */
-        override def enable(): Unit = {
-            gdal.UseExceptions()
-            if (gdal.GetDriverCount() == 0) gdal.AllRegister()
-        }
-
-        override def getExtension(driverShortName: String): String = {
-            val driver = gdal.GetDriverByName(driverShortName)
-            driver.GetMetadataItem("DMD_EXTENSION")
-        }
-
-    }
 
 }

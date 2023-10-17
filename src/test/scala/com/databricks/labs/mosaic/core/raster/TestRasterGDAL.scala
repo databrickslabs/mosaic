@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.core.raster
 
 import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal_raster.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.sql.extensions.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
 import org.apache.spark.sql.test.SharedSparkSessionGDAL

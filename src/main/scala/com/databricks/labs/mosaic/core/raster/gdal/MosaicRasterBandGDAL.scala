@@ -1,5 +1,6 @@
-package com.databricks.labs.mosaic.core.raster
+package com.databricks.labs.mosaic.core.raster.gdal
 
+import com.databricks.labs.mosaic.core.raster.MosaicRasterBand
 import org.gdal.gdal.Band
 import org.gdal.gdalconst.gdalconstConstants
 

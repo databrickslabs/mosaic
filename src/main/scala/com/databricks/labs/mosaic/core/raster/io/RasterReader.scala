@@ -1,4 +1,4 @@
-package com.databricks.labs.mosaic.core.raster.gdal_raster
+package com.databricks.labs.mosaic.core.raster.io
 
 import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
 import org.apache.spark.internal.Logging
