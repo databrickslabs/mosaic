@@ -17,13 +17,13 @@ runs:
           shell: bash
           run: |
             pip install databricks-mosaic-gdal==3.4.3
-            tar -xf /home/runner/.local/lib/python3.8/site-packages/databricks-mosaic-gdal/resources/gdal-3.4.3-filetree.tar.xz -C /
-            tar -xhf /home/runner/.local/lib/python3.8/site-packages/databricks-mosaic-gdal/resources/gdal-3.4.3-symlinks.tar.xz -C /
-            sudo -E add-apt-repository ppa:ubuntugis/ubuntugis-unstable
-            sudo -E apt clean && sudo apt -o Acquire::Retries=3 update --fix-missing -y
-            sudo -E apt-get -o Acquire::Retries=3 update -y
-            sudo -E apt-get -o Acquire::Retries=3 install -y gdal-bin=3.4.3+dfsg-1~focal0 libgdal-dev=3.4.3+dfsg-1~focal0 python3-gdal=3.4.3+dfsg-1~focal0
-            sudo -E mvn -q clean install
+            sudo tar -xf /home/runner/.local/lib/python3.8/site-packages/databricks-mosaic-gdal/resources/gdal-3.4.3-filetree.tar.xz -C /
+            sudo tar -xhf /home/runner/.local/lib/python3.8/site-packages/databricks-mosaic-gdal/resources/gdal-3.4.3-symlinks.tar.xz -C /
+            sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+            sudo apt clean && sudo apt -o Acquire::Retries=3 update --fix-missing -y
+            sudo apt-get -o Acquire::Retries=3 update -y
+            sudo apt-get -o Acquire::Retries=3 install -y gdal-bin=3.4.3+dfsg-1~focal0 libgdal-dev=3.4.3+dfsg-1~focal0 python3-gdal=3.4.3+dfsg-1~focal0
+            sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash
