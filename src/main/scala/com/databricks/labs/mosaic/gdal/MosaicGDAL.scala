@@ -82,7 +82,7 @@ object MosaicGDAL extends Logging {
         val usrlibso3003 = readResourceBytes(s"/gdal/ubuntu/$usrlibso3003Path")
 
         if (!Files.exists(Paths.get("/usr/lib"))) Files.createDirectories(Paths.get("/usr/lib"))
-        if (!Files.exists(Paths.get("/usr/lib/jni"))) Files.createDirectories(Paths.get("/usr/lib/jni"))
+        if (!Files.exists(Paths.get("/usr/lib/jni/"))) Files.createDirectories(Paths.get("/usr/lib/jni"))
         if (!Files.exists(Paths.get("/usr/lib/ogdi"))) Files.createDirectories(Paths.get("/usr/lib/ogdi"))
 
         if (!Files.exists(Paths.get(usrlibsoPath))) Files.write(Paths.get(usrlibsoPath), usrlibso)
@@ -91,9 +91,9 @@ object MosaicGDAL extends Logging {
         if (!Files.exists(Paths.get(libjnisoPath))) Files.write(Paths.get(libjnisoPath), libjniso)
         if (!Files.exists(Paths.get(libjniso30Path))) Files.write(Paths.get(libjniso30Path), libjniso30)
         if (!Files.exists(Paths.get(libogdisoPath))) Files.write(Paths.get(libogdisoPath), libogdiso)
-        if (!Files.exists(Paths.get(s"usr/$libjnisoPath"))) Files.write(Paths.get(s"usr/$libjnisoPath"), libjniso)
-        if (!Files.exists(Paths.get(s"usr/$libjniso30Path"))) Files.write(Paths.get(s"usr/$libjniso30Path"), libjniso30)
-        //if (!Files.exists(Paths.get(s"usr/$libogdisoPath"))) Files.write(Paths.get(s"usr/$libogdisoPath"), libogdiso)
+        if (!Files.exists(Paths.get(s"/usr/$libjnisoPath"))) Files.write(Paths.get(s"/usr/$libjnisoPath"), libjniso)
+        if (!Files.exists(Paths.get(s"/usr/$libjniso30Path"))) Files.write(Paths.get(s"/usr/$libjniso30Path"), libjniso30)
+        if (!Files.exists(Paths.get(s"/usr/$libogdisoPath"))) Files.write(Paths.get(s"/usr/$libogdisoPath"), libogdiso)
 
     }
 
