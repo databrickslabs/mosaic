@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.io
 
-import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
+import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterBandGDAL, MosaicRasterGDAL}
 import org.apache.spark.internal.Logging
 
 /**
@@ -27,7 +27,7 @@ trait RasterReader extends Logging {
       * @return
       *   A MosaicRaster object.
       */
-    def readRaster(path: String, parentPath: String): MosaicRaster
+    def readRaster(path: String, parentPath: String): MosaicRasterGDAL
 
     /**
       * Reads a raster from an in memory buffer. Use the buffer bytes to produce
@@ -42,7 +42,7 @@ trait RasterReader extends Logging {
       * @return
       *   A MosaicRaster object.
       */
-    def readRaster(contentBytes: Array[Byte], parentPath: String, driverShortName: String): MosaicRaster
+    def readRaster(contentBytes: Array[Byte], parentPath: String, driverShortName: String): MosaicRasterGDAL
 
     /**
       * Reads a raster band from a file system path. Reads a subdataset band if
@@ -59,6 +59,6 @@ trait RasterReader extends Logging {
       * @return
       *   A MosaicRaster object.
       */
-    def readBand(path: String, bandIndex: Int, parentPath: String): MosaicRasterBand
+    def readBand(path: String, bandIndex: Int, parentPath: String): MosaicRasterBandGDAL
 
 }

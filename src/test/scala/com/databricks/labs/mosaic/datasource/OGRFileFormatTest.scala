@@ -146,7 +146,7 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
     test("OGRFileFormat should handle partial schema: ISSUE 351") {
         assume(System.getProperty("os.name") == "Linux")
 
-        val mc = MosaicContext.build(H3, JTS, GDAL)
+        val mc = MosaicContext.build(H3, JTS)
         import mc.functions._
 
         val issue351 = "/binary/issue351/"

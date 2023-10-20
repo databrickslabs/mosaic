@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import org.gdal.gdal.{TranslateOptions, gdal}
 
@@ -8,7 +7,7 @@ import java.nio.file.{Files, Paths}
 
 object GDALTranslate {
 
-    def executeTranslate(outputPath: String, isTemp: Boolean, raster: MosaicRaster, command: String): MosaicRaster = {
+    def executeTranslate(outputPath: String, isTemp: Boolean, raster: MosaicRasterGDAL, command: String): MosaicRasterGDAL = {
         val args = command.split(" ")
         if (args.head == "gdal_translate") {
             val translateOptionsVec = OperatorOptions.parseOptions(command)

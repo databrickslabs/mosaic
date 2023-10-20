@@ -10,8 +10,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 class TestAsJSONCodegen extends AnyFlatSpec with AsJSONCodegenBehaviors with SparkCodeGenSuite {
 
     "AsJson Expression" should "do codegen for any index system and any geometry API" in {
-        it should behave like codeGeneration(MosaicContext.build(H3IndexSystem, ESRI, GDAL))
-        it should behave like codeGeneration(MosaicContext.build(H3IndexSystem, JTS, GDAL))
+        it should behave like codeGeneration(MosaicContext.build(H3IndexSystem, ESRI))
+        it should behave like codeGeneration(MosaicContext.build(H3IndexSystem, JTS))
     }
 
 }

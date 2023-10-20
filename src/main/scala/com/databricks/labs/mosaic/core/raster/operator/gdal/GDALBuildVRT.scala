@@ -1,13 +1,11 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
-import org.gdal.gdal.{BuildVRTOptions, Dataset, WarpOptions, gdal}
+import org.gdal.gdal.{BuildVRTOptions, gdal}
 
 object GDALBuildVRT {
 
-    def executeVRT(outputPath: String, isTemp: Boolean, rasters: Seq[MosaicRaster], command: String): MosaicRaster = {
+    def executeVRT(outputPath: String, isTemp: Boolean, rasters: Seq[MosaicRasterGDAL], command: String): MosaicRasterGDAL = {
         val args = command.split(" ")
         if (args.head == "gdalbuildvrt") {
             val vrtOptionsVec = OperatorOptions.parseOptions(command)

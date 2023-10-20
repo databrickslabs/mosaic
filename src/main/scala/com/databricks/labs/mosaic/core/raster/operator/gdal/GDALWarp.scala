@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import org.gdal.gdal.{WarpOptions, gdal}
 
@@ -8,7 +7,7 @@ import java.nio.file.{Files, Paths}
 
 object GDALWarp {
 
-    def executeWarp(outputPath: String, isTemp: Boolean, rasters: Seq[MosaicRaster], command: String): MosaicRaster = {
+    def executeWarp(outputPath: String, isTemp: Boolean, rasters: Seq[MosaicRasterGDAL], command: String): MosaicRasterGDAL = {
         val args = command.split(" ")
         if (args.head == "gdalwarp") {
             // Test: gdal.ParseCommandLine(command)

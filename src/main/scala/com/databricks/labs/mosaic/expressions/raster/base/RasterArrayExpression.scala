@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
@@ -37,12 +37,7 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       with Serializable
       with RasterExpressionSerialization {
 
-    /**
-      * The raster API to be used. Enable the raster so that subclasses dont
-      * need to worry about this.
-      */
-    protected val rasterAPI: RasterAPI = RasterAPI(expressionConfig.getRasterAPI)
-    rasterAPI.enable()
+    GDAL.enable()
 
     override def child: Expression = rastersExpr
 
@@ -78,11 +73,11 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
         val tiles = (0 until n)
             .map(i =>
                 MosaicRasterTile
-                    .deserialize(arrayData.get(i, rasterDT).asInstanceOf[InternalRow], expressionConfig.getCellIdType, rasterAPI)
+                    .deserialize(arrayData.get(i, rasterDT).asInstanceOf[InternalRow], expressionConfig.getCellIdType)
             )
 
         val result = rasterTransform(tiles)
-        val serialized = serialize(result, returnsRaster, dataType, rasterAPI, expressionConfig)
+        val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
         tiles.foreach(RasterCleaner.dispose)
         RasterCleaner.dispose(result)
         serialized

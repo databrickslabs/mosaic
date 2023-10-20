@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.GDAL
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.google.common.io.{ByteStreams, Closeables}
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.hadoop.mapreduce.Job
@@ -81,7 +81,7 @@ class GDALFileFormat extends BinaryFileFormat {
 
             if (supportedExtensions.contains("*") || supportedExtensions.exists(status.getPath.getName.toLowerCase(Locale.ROOT).endsWith)) {
                 if (filterFuncs.forall(_.apply(status)) && isAllowedExtension(status, options)) {
-                    reader.read(status, fs, requiredSchema, options, indexSystem, GDAL)
+                    reader.read(status, fs, requiredSchema, options, indexSystem)
                 } else {
                     Iterator.empty
                 }

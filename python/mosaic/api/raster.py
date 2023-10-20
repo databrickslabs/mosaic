@@ -12,6 +12,8 @@ __all__ = [
     "rst_bandmetadata",
     "rst_boundingbox",
     "rst_clip",
+    "rst_fromfile",
+    "rst_frombands",
     "rst_georeference",
     "rst_getsubdataset",
     "rst_height",
@@ -19,7 +21,6 @@ __all__ = [
     "rst_memsize",
     "rst_metadata",
     "rst_merge",
-    "rst_mergebands",
     "rst_numbands",
     "rst_ndvi",
     "rst_pixelheight",
@@ -43,7 +44,6 @@ __all__ = [
     "rst_summary",
     "rst_subdivide",
     "rst_tessellate",
-    "rst_tile",
     "rst_to_overlapping_tiles",
     "rst_tryopen",
     "rst_upperleftx",
@@ -267,7 +267,7 @@ def rst_merge(rasters: ColumnOrName) -> Column:
     )
 
 
-def rst_mergebands(bands: ColumnOrName) -> Column:
+def rst_frombands(bands: ColumnOrName) -> Column:
     """
     Merges the bands into a single raster.
     The result is the path to the merged raster.
@@ -285,7 +285,7 @@ def rst_mergebands(bands: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_mergebands", pyspark_to_java_column(bands)
+        "rst_frombands", pyspark_to_java_column(bands)
     )
 
 
@@ -774,7 +774,8 @@ def rst_summary(raster: ColumnOrName) -> Column:
 
 def rst_tessellate(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
-
+    Clip the raster into raster tiles where each tile is a grid tile for the given resolution.
+    The tile set union forms the original raster.
 
     Parameters
     ----------
@@ -796,7 +797,7 @@ def rst_tessellate(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
     )
 
 
-def rst_tile(raster: ColumnOrName, sizeInMB: ColumnOrName) -> Column:
+def rst_fromfile(raster: ColumnOrName, sizeInMB: ColumnOrName) -> Column:
     """
     Tiles the raster into tiles of the given size.
     :param raster:
@@ -805,7 +806,9 @@ def rst_tile(raster: ColumnOrName, sizeInMB: ColumnOrName) -> Column:
     """
 
     return config.mosaic_context.invoke_function(
-        "rst_tile", pyspark_to_java_column(raster), pyspark_to_java_column(sizeInMB)
+        "rst_fromfile",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(sizeInMB)
     )
 
 
@@ -848,6 +851,8 @@ def rst_tryopen(raster: ColumnOrName) -> Column:
 
 def rst_subdivide(raster: ColumnOrName, size_in_mb: ColumnOrName) -> Column:
     """
+    Subdivides the raster into tiles that have to be smaller than the given size in MB.
+    All the tiles have the same aspect ratio as the original raster.
 
     Parameters
     ----------

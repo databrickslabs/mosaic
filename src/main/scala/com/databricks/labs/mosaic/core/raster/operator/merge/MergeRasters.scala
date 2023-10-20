@@ -1,13 +1,13 @@
 package com.databricks.labs.mosaic.core.raster.operator.merge
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALWarp
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.gdal.gdal.gdal
 
 object MergeRasters {
 
-    def merge(rasters: Seq[MosaicRaster]): MosaicRaster = {
+    def merge(rasters: Seq[MosaicRasterGDAL]): MosaicRasterGDAL = {
         val rasterUUID = java.util.UUID.randomUUID.toString
         val outShortName = rasters.head.getDriversShortName
         val extension = gdal.GetDriverByName(outShortName).GetMetadataItem("DMD_EXTENSION")

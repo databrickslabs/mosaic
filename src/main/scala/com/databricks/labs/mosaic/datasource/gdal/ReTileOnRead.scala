@@ -1,8 +1,6 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
@@ -44,8 +42,7 @@ object ReTileOnRead extends ReadStrategy {
         fs: FileSystem,
         requiredSchema: StructType,
         options: Map[String, String],
-        indexSystem: IndexSystem,
-        rasterAPI: RasterAPI
+        indexSystem: IndexSystem
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
@@ -69,7 +66,7 @@ object ReTileOnRead extends ReadStrategy {
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
             // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(rasterAPI)))
+            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize()))
             RasterCleaner.dispose(tile)
             row
         })
@@ -78,7 +75,7 @@ object ReTileOnRead extends ReadStrategy {
         rows.iterator
     }
 
-    def localSubdivide(inPath: String, sizeInMB: Int): (MosaicRaster, Seq[MosaicRasterTile]) = {
+    def localSubdivide(inPath: String, sizeInMB: Int): (MosaicRasterGDAL, Seq[MosaicRasterTile]) = {
         val localCopy = PathUtils.copyToTmp(inPath)
         val raster = MosaicRasterGDAL.readRaster(localCopy, inPath)
         val inTile = MosaicRasterTile(null, raster, inPath, raster.getDriversShortName)

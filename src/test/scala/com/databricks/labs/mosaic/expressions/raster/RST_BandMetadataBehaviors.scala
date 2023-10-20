@@ -17,7 +17,6 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        noException should be thrownBy mc.getRasterAPI
         noException should be thrownBy MosaicContext.geometryAPI
 
         val rastersInMemory = spark.read

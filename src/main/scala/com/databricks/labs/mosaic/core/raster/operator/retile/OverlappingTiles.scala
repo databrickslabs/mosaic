@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.utils.PathUtils
@@ -28,7 +29,7 @@ object OverlappingTiles {
                 val height = Math.min(tileHeight, ySize - j)
 
                 val uuid = java.util.UUID.randomUUID.toString
-                val fileExtension = raster.getExtension
+                val fileExtension = GDAL.getExtension(tile.driver)
                 val rasterPath = PathUtils.createTmpFilePath(uuid, fileExtension)
                 val shortName = raster.getRaster.GetDriver.getShortName
 

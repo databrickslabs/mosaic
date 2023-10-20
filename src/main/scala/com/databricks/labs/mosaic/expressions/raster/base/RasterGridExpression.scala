@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
+import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterBandGDAL, MosaicRasterGDAL}
 
 trait RasterGridExpression {
 
@@ -20,12 +20,12 @@ trait RasterGridExpression {
     }
 
     def griddedPixels(
-        raster: MosaicRaster,
+        raster: MosaicRasterGDAL,
         indexSystem: IndexSystem,
         resolution: Int
     ): Seq[Map[Long, Seq[Double]]] = {
         val gt = raster.getRaster.GetGeoTransform()
-        val bandTransform = (band: MosaicRasterBand) => {
+        val bandTransform = (band: MosaicRasterBandGDAL) => {
             val results = band.transformValues[(Long, Double)](pixelTransformer(gt, indexSystem, resolution), (0L, -1.0))
             results
                 // Filter out default cells. We don't want to return them since they are masked in original raster.

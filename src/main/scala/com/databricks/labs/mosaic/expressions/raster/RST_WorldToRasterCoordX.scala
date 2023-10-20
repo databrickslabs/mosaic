@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -23,10 +24,10 @@ case class RST_WorldToRasterCoordX(
       * Returns the x coordinate of the raster by applying GeoTransform. This
       * will ensure projection of the raster is respected.
       */
-    override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(raster: MosaicRasterGDAL, arg1: Any, arg2: Any): Any = {
         val xGeo = arg1.asInstanceOf[Double]
         val gt = raster.getRaster.GetGeoTransform()
-        rasterAPI.fromWorldCoord(gt, xGeo, 0)._1
+        GDAL.fromWorldCoord(gt, xGeo, 0)._1
     }
 
 }

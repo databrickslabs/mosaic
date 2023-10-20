@@ -1,25 +1,29 @@
 #!/bin/bash
 #
-# File: init-gdal_3.4.3_ubuntugis.sh
+# File: mosaic-gdal-3.4.3-filetree-init.sh
 # Author: Michael Johns
-# Created: 2022-08-19
+# Modified: 2023-07-23
 #
+# !!! FOR DBR 11.x and 12.x ONLY [Ubuntu 20.04] !!!
+# !!! NOT for DBR 13.x           [Ubuntu 22.04] !!!
+#
+#  1. script is using custom tarballs for offline / self-contained install of GDAL
+#  2. This will unpack files directly into the filetree across cluster nodes (vs run apt install)
+#
+# -- install databricks-mosaic-gdal on cluster
+# - use version 3.4.3 (exactly) from pypi.org
+pip install databricks-mosaic-gdal==3.4.3
 
-sudo rm -r /var/lib/apt/lists/*
-sudo add-apt-repository main
-sudo add-apt-repository universe
-sudo add-apt-repository restricted
-sudo add-apt-repository multiverse
-sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
-sudo apt clean && sudo apt -o Acquire::Retries=3 update --fix-missing -y
-sudo apt-get -o Acquire::Retries=3 update -y
-sudo apt-get -o Acquire::Retries=3 install -y gdal-bin=3.4.3+dfsg-1~focal0 libgdal-dev=3.4.3+dfsg-1~focal0 python3-gdal=3.4.3+dfsg-1~focal0
+# -- find the install dir
+# - if this were run in a notebook would use $VIRTUAL_ENV
+# - since it is init script it lands in $DATABRICKS_ROOT_VIRTUALENV_ENV
+INSTALL_DIR="${DATABRICKS_ROOT_VIRTUALENV_ENV:-/usr/local/lib/python3.9/dist-packages/}"
+GDAL_RESOURCE_DIR=$(find $INSTALL_DIR -name "databricks-mosaic-gdal")
 
-# fix python file naming in osgeo package
-cd /usr/lib/python3/dist-packages/osgeo \
-  && mv _gdal.cpython-38-x86_64-linux-gnu.so _gdal.so \
-  && mv _gdal_array.cpython-38-x86_64-linux-gnu.so _gdal_array.so \
-  && mv _gdalconst.cpython-38-x86_64-linux-gnu.so _gdalconst.so \
-  && mv _ogr.cpython-38-x86_64-linux-gnu.so _ogr.so \
-  && mv _gnm.cpython-38-x86_64-linux-gnu.so _gnm.so \
-  && mv _osr.cpython-38-x86_64-linux-gnu.so _osr.so
+# -- untar files to root
+# - from databricks-mosaic-gdal install dir
+tar -xf $GDAL_RESOURCE_DIR/resources/gdal-3.4.3-filetree.tar.xz -C /
+
+# -- untar symlinks to root
+# - from databricks-mosaic-gdal install dir
+tar -xhf $GDAL_RESOURCE_DIR/resources/gdal-3.4.3-symlinks.tar.xz -C /

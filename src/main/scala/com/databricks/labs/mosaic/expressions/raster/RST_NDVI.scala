@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.NDVI
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
@@ -44,7 +44,7 @@ case class RST_NDVI(
       * @return
       *   A result of the expression.
       */
-    override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(raster: MosaicRasterGDAL, arg1: Any, arg2: Any): Any = {
         val redInd = arg1.asInstanceOf[Int]
         val nirInd = arg2.asInstanceOf[Int]
         NDVI.compute(raster, redInd, nirInd)

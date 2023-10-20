@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.core.raster.gdal
 
-import com.databricks.labs.mosaic.core.raster.MosaicRasterBand
 import org.gdal.gdal.Band
 import org.gdal.gdalconst.gdalconstConstants
 
@@ -8,11 +7,23 @@ import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util._
 
 /** GDAL implementation of the MosaicRasterBand trait. */
-case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
+case class MosaicRasterBandGDAL(band: Band, id: Int) {
 
-    override def index: Int = id
+    def index: Int = id
 
-    override def description: String = coerceNull(Try(band.GetDescription))
+    def description: String = coerceNull(Try(band.GetDescription))
+
+    /**
+     * @return
+     * Returns the pixels of the raster as a 1D array.
+     */
+    def values: Array[Double] = values(0, 0, xSize, ySize)
+
+    /**
+     * @return
+     * Returns the pixels of the raster as a 1D array.
+     */
+    def maskValues: Array[Double] = maskValues(0, 0, xSize, ySize)
 
     /**
       * Get the band's metadata as a Map.
@@ -20,12 +31,12 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
       * @return
       *   A Map of the band's metadata.
       */
-    override def metadata: Map[String, String] =
+    def metadata: Map[String, String] =
         Option(band.GetMetadata_Dict)
             .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
             .getOrElse(Map.empty[String, String])
 
-    override def units: String = coerceNull(Try(band.GetUnitType))
+    def units: String = coerceNull(Try(band.GetUnitType))
 
     /**
       * Utility method to coerce a null value to an empty string.
@@ -36,15 +47,15 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
       */
     def coerceNull(tryVal: Try[String]): String = tryVal.filter(_ != null).getOrElse("")
 
-    override def dataType: Int = Try(band.getDataType).getOrElse(0)
+    def dataType: Int = Try(band.getDataType).getOrElse(0)
 
-    override def xSize: Int = Try(band.GetXSize).getOrElse(0)
+    def xSize: Int = Try(band.GetXSize).getOrElse(0)
 
-    override def ySize: Int = Try(band.GetYSize).getOrElse(0)
+    def ySize: Int = Try(band.GetYSize).getOrElse(0)
 
-    override def minPixelValue: Double = computeMinMax.head
+    def minPixelValue: Double = computeMinMax.head
 
-    override def maxPixelValue: Double = computeMinMax.last
+    def maxPixelValue: Double = computeMinMax.last
 
     def computeMinMax: Seq[Double] = {
         val minMaxVals = Array.fill[Double](2)(0)
@@ -53,7 +64,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
             .getOrElse(Seq(Double.NaN, Double.NaN))
     }
 
-    override def noDataValue: Double = {
+    def noDataValue: Double = {
         val noDataVal = Array.fill[java.lang.Double](1)(0)
         band.GetNoDataValue(noDataVal)
         noDataVal.head
@@ -73,7 +84,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
       * @return
       *   A 2D array of pixels from the band.
       */
-    override def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
+    def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
         val flatArray = Array.ofDim[Double](xSize * ySize)
         (xSize, ySize) match {
             case (0, 0) => Array.empty[Double]
@@ -97,7 +108,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
      * @return
      *   A 2D array of pixels from the band.
      */
-    override def maskValues(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
+    def maskValues(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
         val flatArray = Array.ofDim[Double](xSize * ySize)
         val maskBand = band.GetMaskBand
         (xSize, ySize) match {
@@ -108,16 +119,16 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
         }
     }
 
-    override def pixelValueToUnitValue(pixelValue: Double): Double = (pixelValue * pixelValueScale) + pixelValueOffset
+    def pixelValueToUnitValue(pixelValue: Double): Double = (pixelValue * pixelValueScale) + pixelValueOffset
 
-    override def pixelValueScale: Double = {
+    def pixelValueScale: Double = {
         val scale = Array.fill[java.lang.Double](1)(0)
         Try(band.GetScale(scale))
             .map(_ => scale.head.doubleValue())
             .getOrElse(0.0)
     }
 
-    override def pixelValueOffset: Double = {
+    def pixelValueOffset: Double = {
         val offset = Array.fill[java.lang.Double](1)(0)
         Try(band.GetOffset(offset))
             .map(_ => offset.head.doubleValue())
@@ -136,7 +147,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
       * @return
       *   an array of the results of applying f to each pixel.
       */
-    override def transformValues[T](f: (Int, Int, Double) => T, default: T = null): Seq[Seq[T]] = {
+    def transformValues[T](f: (Int, Int, Double) => T, default: T = null): Seq[Seq[T]] = {
         val maskBand = band.GetMaskBand()
         val bandValues = Array.ofDim[Double](band.GetXSize() * band.GetYSize())
         val maskValues = Array.ofDim[Byte](band.GetXSize() * band.GetYSize())
@@ -158,7 +169,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) extends MosaicRasterBand {
         }
     }
 
-    override def maskFlags: Seq[Any] = Seq(band.GetMaskFlags())
+    def maskFlags: Seq[Any] = Seq(band.GetMaskFlags())
 
-    override def isNoDataMask: Boolean = band.GetMaskFlags() == gdalconstConstants.GMF_NODATA
+    def isNoDataMask: Boolean = band.GetMaskFlags() == gdalconstConstants.GMF_NODATA
 }

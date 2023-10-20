@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.operator
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.utils.PathUtils
 
@@ -8,7 +8,7 @@ object NDVI {
 
     val doubleDataType: Int = org.gdal.gdalconst.gdalconstConstants.GDT_Float64
 
-    def newNDVIRaster(raster: MosaicRaster, path: String): MosaicRaster = {
+    def newNDVIRaster(raster: MosaicRasterGDAL, path: String): MosaicRasterGDAL = {
         val driver = raster.getRaster.GetDriver()
         // NDVI is always a single band raster with double data type
         val newRaster = driver.Create(path, raster.xSize, raster.ySize, 1, doubleDataType)
@@ -20,7 +20,7 @@ object NDVI {
         MosaicRasterGDAL(newRaster, path, isTemp = true, raster.getParentPath, raster.getDriversShortName, -1)
     }
 
-    def compute(raster: MosaicRaster, redIndex: Int, nirIndex: Int): MosaicRaster = {
+    def compute(raster: MosaicRasterGDAL, redIndex: Int, nirIndex: Int): MosaicRasterGDAL = {
 
         val redBand = raster.getRaster.GetRasterBand(redIndex)
         val nirBand = raster.getRaster.GetRasterBand(nirIndex)
@@ -28,7 +28,7 @@ object NDVI {
         val numLines = redBand.GetYSize
         val lineSize = redBand.GetXSize
 
-        val ndviPath = PathUtils.createTmpFilePath(raster.uuid.toString, raster.getExtension)
+        val ndviPath = PathUtils.createTmpFilePath(raster.uuid.toString, GDAL.getExtension(raster.getDriversShortName))
         val ndviRaster = newNDVIRaster(raster, ndviPath)
 
         var outputLine: Array[Double] = null

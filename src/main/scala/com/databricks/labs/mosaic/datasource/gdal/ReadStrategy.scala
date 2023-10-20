@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
@@ -17,8 +16,7 @@ trait ReadStrategy extends Serializable {
         fs: FileSystem,
         requiredSchema: StructType,
         options: Map[String, String],
-        indexSystem: IndexSystem,
-        rasterAPI: RasterAPI
+        indexSystem: IndexSystem
     ): Iterator[InternalRow]
 
 }

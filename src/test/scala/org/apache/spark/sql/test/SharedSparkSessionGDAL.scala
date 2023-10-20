@@ -23,19 +23,18 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         SparkSession.cleanupAnyExistingSession()
         val session = new TestSparkSession(conf)
         session.sparkContext.setLogLevel("FATAL")
-        if (conf.get(MOSAIC_GDAL_NATIVE, "false").toBoolean) {
-            Try {
-                TestMosaicGDAL.installGDAL(session)
-                val tempPath = Files.createTempDirectory("mosaic-gdal")
-                MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString)
-                MosaicGDAL.enableGDAL(session)
-            }
+        Try {
+            TestMosaicGDAL.installGDAL(session)
+            val tempPath = Files.createTempDirectory("mosaic-gdal")
+            MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString)
+            MosaicGDAL.enableGDAL(session)
         }
         session
     }
 
     override def beforeEach(): Unit = {
         super.beforeEach()
+        MosaicGDAL.enableGDAL(this.spark)
         gdal.AllRegister()
     }
 

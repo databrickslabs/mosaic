@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
@@ -19,7 +19,7 @@ import org.apache.spark.unsafe.types.UTF8String
   * Returns a set of new rasters with the specified tile size (tileWidth x
   * tileHeight).
   */
-case class RST_Tile(
+case class RST_FromFile(
     rasterPathExpr: Expression,
     sizeInMB: Expression,
     expressionConfig: MosaicExpressionConfig
@@ -28,12 +28,12 @@ case class RST_Tile(
       with NullIntolerant
       with CodegenFallback {
 
+    GDAL.enable()
+
     override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
-    protected val rasterAPI: RasterAPI = RasterAPI(expressionConfig.getRasterAPI)
-    rasterAPI.enable()
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 
     protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
@@ -52,23 +52,23 @@ case class RST_Tile(
         val path = rasterPathExpr.eval(input).asInstanceOf[UTF8String].toString
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         val (raster, tiles) = ReTileOnRead.localSubdivide(path, targetSize)
-        val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterAPI))
+        val rows = tiles.map(_.formatCellId(indexSystem).serialize())
         tiles.foreach(RasterCleaner.dispose)
         RasterCleaner.dispose(raster)
         rows.map(row => InternalRow.fromSeq(Seq(row)))
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =
-        GenericExpressionFactory.makeCopyImpl[RST_Tile](this, newArgs, children.length, expressionConfig)
+        GenericExpressionFactory.makeCopyImpl[RST_FromFile](this, newArgs, children.length, expressionConfig)
 
     override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = makeCopy(newChildren.toArray)
 
 }
 
 /** Expression info required for the expression registration for spark SQL. */
-object RST_Tile extends WithExpressionInfo {
+object RST_FromFile extends WithExpressionInfo {
 
-    override def name: String = "rst_tile"
+    override def name: String = "rst_fromfile"
 
     override def usage: String =
         """
@@ -86,7 +86,7 @@ object RST_Tile extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_ReTile](2, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_FromFile](2, expressionConfig)
     }
 
 }

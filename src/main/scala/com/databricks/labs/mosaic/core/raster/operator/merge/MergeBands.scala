@@ -1,12 +1,12 @@
 package com.databricks.labs.mosaic.core.raster.operator.merge
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
 import com.databricks.labs.mosaic.utils.PathUtils
 
 object MergeBands {
 
-    def merge(rasters: Seq[MosaicRaster], resampling: String): MosaicRaster = {
+    def merge(rasters: Seq[MosaicRasterGDAL], resampling: String): MosaicRasterGDAL = {
         val rasterUUID = java.util.UUID.randomUUID.toString
         val outShortName = rasters.head.getRaster.GetDriver.getShortName
 
@@ -30,7 +30,7 @@ object MergeBands {
         result
     }
 
-    def merge(rasters: Seq[MosaicRaster], pixel: (Double, Double), resampling: String): MosaicRaster = {
+    def merge(rasters: Seq[MosaicRasterGDAL], pixel: (Double, Double), resampling: String): MosaicRasterGDAL = {
         val rasterUUID = java.util.UUID.randomUUID.toString
         val outShortName = rasters.head.getRaster.GetDriver.getShortName
 

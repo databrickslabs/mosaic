@@ -24,7 +24,7 @@ class MosaicSQLDefault extends (SparkSessionExtensions => Unit) with Logging {
       */
     override def apply(ext: SparkSessionExtensions): Unit = {
         ext.injectCheckRule(spark => {
-            val mosaicContext = MosaicContext.build(H3IndexSystem, JTS, GDAL)
+            val mosaicContext = MosaicContext.build(H3IndexSystem, JTS)
             logInfo(s"Registering Mosaic SQL Extensions (H3, JTS, GDAL).")
             mosaicContext.register(spark)
             // NOP rule. This rule is specified only to respect syntax.

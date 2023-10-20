@@ -1,11 +1,10 @@
 package com.databricks.labs.mosaic.core.raster.gdal
 
-import com.databricks.labs.mosaic.GDAL
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster._
-import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader}
+import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader, RasterWriter}
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.databricks.labs.mosaic.utils.PathUtils
@@ -32,7 +31,8 @@ class MosaicRasterGDAL(
     parentPath: String,
     driverShortName: String,
     memSize: Long
-) extends MosaicRaster(isInMem = false, parentPath, driverShortName) {
+) extends RasterWriter
+      with RasterCleaner {
 
     protected val crsFactory: CRSFactory = new CRSFactory
 
@@ -41,11 +41,57 @@ class MosaicRasterGDAL(
     wsg84.ImportFromEPSG(4326)
     wsg84.SetAxisMappingStrategy(osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
 
+    def getDriversShortName: String = driverShortName
+
+    def getParentPath: String = parentPath
+
+    def diagSize: Double = math.sqrt(xSize * xSize + ySize * ySize)
+
+    /** @return Returns pixel x size. */
+    def pixelXSize: Double = getGeoTransform(1)
+
+    /** @return Returns pixel y size. */
+    def pixelYSize: Double = getGeoTransform(5)
+
+    /** @return Returns the origin x coordinate. */
+    def originX: Double = getGeoTransform(0)
+
+    /** @return Returns the origin y coordinate. */
+    def originY: Double = getGeoTransform(3)
+
+    /** @return Returns the max x coordinate. */
+    def xMax: Double = originX + xSize * pixelXSize
+
+    /** @return Returns the max y coordinate. */
+    def yMax: Double = originY + ySize * pixelYSize
+
+    /** @return Returns the min x coordinate. */
+    def xMin: Double = originX
+
+    /** @return Returns the min y coordinate. */
+    def yMin: Double = originY
+
+    /** @return Returns the diagonal size of a pixel. */
+    def pixelDiagSize: Double = math.sqrt(pixelXSize * pixelXSize + pixelYSize * pixelYSize)
+
+    def getRasterFileExtension: String = getRaster.GetDriver().GetMetadataItem("DMD_EXTENSION")
+
+    def getBands: Seq[MosaicRasterBandGDAL] = (1 to numBands).map(getBand)
+
+    def flushCache(): MosaicRasterGDAL = {
+        if (Option(getRaster).isDefined) {
+            getRaster.FlushCache()
+        }
+        this.destroy()
+        this.refresh()
+        this
+    }
+
     def openRaster(path: String): Dataset = {
         MosaicRasterGDAL.openRaster(path, Some(driverShortName))
     }
 
-    override def metadata: Map[String, String] = {
+    def metadata: Map[String, String] = {
         Option(raster.GetMetadataDomainList())
             .map(_.toArray)
             .map(domain =>
@@ -62,7 +108,7 @@ class MosaicRasterGDAL(
 
     }
 
-    override def subdatasets: Map[String, String] = {
+    def subdatasets: Map[String, String] = {
         val subdatasetsMap = Option(raster.GetMetadata_Dict("SUBDATASETS"))
             .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
             .getOrElse(Map.empty[String, String])
@@ -80,7 +126,7 @@ class MosaicRasterGDAL(
         ).toMap
     }
 
-    override def SRID: Int = {
+    def SRID: Int = {
         Try(crsFactory.readEpsgFromParameters(proj4String))
             .filter(_ != null)
             .getOrElse("EPSG:0")
@@ -89,9 +135,9 @@ class MosaicRasterGDAL(
             .toInt
     }
 
-    override def proj4String: String = Try(raster.GetSpatialRef.ExportToProj4).filter(_ != null).getOrElse("")
+    def proj4String: String = Try(raster.GetSpatialRef.ExportToProj4).filter(_ != null).getOrElse("")
 
-    override def getBand(bandId: Int): MosaicRasterBand = {
+    def getBand(bandId: Int): MosaicRasterBandGDAL = {
         if (bandId > 0 && numBands >= bandId) {
             MosaicRasterBandGDAL(raster.GetRasterBand(bandId), bandId)
         } else {
@@ -99,10 +145,10 @@ class MosaicRasterGDAL(
         }
     }
 
-    override def numBands: Int = raster.GetRasterCount()
+    def numBands: Int = raster.GetRasterCount()
 
     // noinspection ZeroIndexToHead
-    override def extent: Seq[Double] = {
+    def extent: Seq[Double] = {
         val minX = getGeoTransform(0)
         val maxY = getGeoTransform(3)
         val maxX = minX + getGeoTransform(1) * xSize
@@ -110,23 +156,23 @@ class MosaicRasterGDAL(
         Seq(minX, minY, maxX, maxY)
     }
 
-    override def xSize: Int = raster.GetRasterXSize
+    def xSize: Int = raster.GetRasterXSize
 
-    override def ySize: Int = raster.GetRasterYSize
+    def ySize: Int = raster.GetRasterYSize
 
-    override def getGeoTransform: Array[Double] = raster.GetGeoTransform()
+    def getGeoTransform: Array[Double] = raster.GetGeoTransform()
 
-    override def getRaster: Dataset = this.raster
+    def getRaster: Dataset = this.raster
 
     def spatialRef: SpatialReference = raster.GetSpatialRef()
 
-    override def transformBands[T](f: MosaicRasterBand => T): Seq[T] = for (i <- 1 to numBands) yield f(getBand(i))
+    def transformBands[T](f: MosaicRasterBandGDAL => T): Seq[T] = for (i <- 1 to numBands) yield f(getBand(i))
 
     /**
       * @return
       *   Returns MosaicGeometry representing bounding box of the raster.
       */
-    override def bbox(geometryAPI: GeometryAPI, destCRS: SpatialReference = wsg84): MosaicGeometry = {
+    def bbox(geometryAPI: GeometryAPI, destCRS: SpatialReference = wsg84): MosaicGeometry = {
         val gt = getGeoTransform
 
         val sourceCRS = spatialRef
@@ -148,7 +194,7 @@ class MosaicRasterGDAL(
         geometryAPI.geometry(geom1.ExportToWkb(), "WKB")
     }
 
-    override def isEmpty: Boolean = {
+    def isEmpty: Boolean = {
         import org.json4s._
         import org.json4s.jackson.JsonMethods._
         implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
@@ -167,23 +213,15 @@ class MosaicRasterGDAL(
         }
     }
 
-    override def getPath: String = path
+    def getPath: String = path
 
-    override def getRasterForCell(cellID: Long, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRaster = {
+    def getRasterForCell(cellID: Long, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRasterGDAL = {
         val cellGeom = indexSystem.indexToGeometry(cellID, geometryAPI)
         // buffer by diagonal size of the raster pixel to avoid clipping issues
         // add 1% to avoid rounding errors
         val bufferR = pixelDiagSize * 1.01
         val bufferedCell = cellGeom.buffer(bufferR)
-        val geomCRS =
-            if (cellGeom.getSpatialReference == 0) wsg84
-            else {
-                val geomCRS = new SpatialReference()
-                geomCRS.ImportFromEPSG(cellGeom.getSpatialReference)
-                // debug for this
-                geomCRS.SetAxisMappingStrategy(osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
-                geomCRS
-            }
+        val geomCRS = indexSystem.osrSpatialRef
         RasterClipByVector.clip(this, bufferedCell, geomCRS, geometryAPI)
     }
 
@@ -194,7 +232,7 @@ class MosaicRasterGDAL(
       * longer usable. To be used as last step in expression after writing to
       * bytes.
       */
-    override def cleanUp(): Unit = {
+    def cleanUp(): Unit = {
         val isInMem = path.startsWith("/vsimem/")
         if (isInMem) {
             gdal.Unlink(path)
@@ -209,10 +247,10 @@ class MosaicRasterGDAL(
     }
 
     /** @return Returns the amount of memory occupied by the file in bytes. */
-    override def getMemSize: Long = {
+    def getMemSize: Long = {
         if (memSize == -1) {
             if (PathUtils.isInMemory(path)) {
-                val tempPath = PathUtils.createTmpFilePath(this.uuid.toString, getExtension)
+                val tempPath = PathUtils.createTmpFilePath(this.uuid.toString, GDAL.getExtension(driverShortName))
                 writeToPath(tempPath)
                 this.refresh()
                 val size = Files.size(Paths.get(tempPath))
@@ -237,7 +275,7 @@ class MosaicRasterGDAL(
       * @return
       *   A boolean indicating if the write was successful.
       */
-    override def writeToPath(path: String, destroy: Boolean = true): String = {
+    def writeToPath(path: String, destroy: Boolean = true): String = {
         val isInMem = PathUtils.isInMemory(getPath)
         if (isInMem) {
             val driver = raster.GetDriver()
@@ -257,11 +295,11 @@ class MosaicRasterGDAL(
       * @return
       *   A byte array containing the raster data.
       */
-    override def writeToBytes(destroy: Boolean = true): Array[Byte] = {
+    def writeToBytes(destroy: Boolean = true): Array[Byte] = {
         if (PathUtils.isInMemory(path)) {
             // Create a temporary directory to store the raster
             // This is needed because Files cannot read from /vsimem/ directly
-            val path = PathUtils.createTmpFilePath(uuid.toString, getExtension)
+            val path = PathUtils.createTmpFilePath(uuid.toString, GDAL.getExtension(driverShortName))
             writeToPath(path, destroy)
             val byteArray = Files.readAllBytes(Paths.get(path))
             Files.delete(Paths.get(path))
@@ -272,7 +310,7 @@ class MosaicRasterGDAL(
         }
     }
 
-    override def destroy(): Unit = {
+    def destroy(): Unit = {
         val raster = getRaster
         if (raster != null) {
             raster.FlushCache()
@@ -287,21 +325,15 @@ class MosaicRasterGDAL(
       * raster object is destroyed. After refresh operation the raster object is
       * usable again.
       */
-    override def refresh(): Unit = {
+    def refresh(): Unit = {
         this.raster = openRaster(path)
     }
 
-    override def uuid: Long = _uuid
+    def uuid: Long = _uuid
 
-    override def getExtension: String = {
-        val driver = gdal.GetDriverByName(driverShortName)
-        val extension = driver.GetMetadataItem("DMD_EXTENSION")
-        extension
-    }
+    def getDimensions: (Int, Int) = (xSize, ySize)
 
-    override def getDimensions: (Int, Int) = (xSize, ySize)
-
-    override def getBandStats: Map[Int, Map[String, Double]] = {
+    def getBandStats: Map[Int, Map[String, Double]] = {
         (1 to numBands)
             .map(i => {
                 val band = raster.GetRasterBand(i)
@@ -320,8 +352,8 @@ class MosaicRasterGDAL(
             .toMap
     }
 
-    override def asTemp: MosaicRaster = {
-        val temp = PathUtils.createTmpFilePath(uuid.toString, getExtension)
+    def asTemp: MosaicRasterGDAL = {
+        val temp = PathUtils.createTmpFilePath(uuid.toString, GDAL.getExtension(driverShortName))
         writeToPath(temp)
         if (PathUtils.isInMemory(path)) RasterCleaner.dispose(this)
         else this.destroy()
@@ -329,7 +361,8 @@ class MosaicRasterGDAL(
         MosaicRasterGDAL(ds, temp, isTemp = true, parentPath, driverShortName, memSize)
     }
 
-    override def getSubdataset(subsetName: String): MosaicRaster = {
+    def getSubdataset(subsetName: String): MosaicRasterGDAL = {
+        subdatasets
         val path = Option(raster.GetMetadata_Dict("SUBDATASETS"))
             .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
             .getOrElse(Map.empty[String, String])
@@ -404,7 +437,7 @@ object MosaicRasterGDAL extends RasterReader {
       * @return
       *   A MosaicRaster object.
       */
-    override def readRaster(inPath: String, parentPath: String): MosaicRaster = {
+    override def readRaster(inPath: String, parentPath: String): MosaicRasterGDAL = {
         val isSubdataset = PathUtils.isSubdataset(inPath)
         val localCopy = PathUtils.copyToTmp(inPath)
         val path = PathUtils.getCleanPath(localCopy, localCopy.endsWith(".zip"))
@@ -423,7 +456,7 @@ object MosaicRasterGDAL extends RasterReader {
         raster
     }
 
-    override def readRaster(contentBytes: Array[Byte], parentPath: String, driverShortName: String): MosaicRaster = {
+    override def readRaster(contentBytes: Array[Byte], parentPath: String, driverShortName: String): MosaicRasterGDAL = {
         if (Option(contentBytes).isEmpty || contentBytes.isEmpty) {
             new MosaicRasterGDAL(-1L, null, "", false, parentPath, "", -1)
         } else {
@@ -461,7 +494,7 @@ object MosaicRasterGDAL extends RasterReader {
       * @return
       *   A MosaicRaster object.
       */
-    override def readBand(path: String, bandIndex: Int, parentPath: String): MosaicRasterBand = {
+    override def readBand(path: String, bandIndex: Int, parentPath: String): MosaicRasterBandGDAL = {
         val raster = readRaster(path, parentPath)
         raster.getBand(bandIndex)
     }

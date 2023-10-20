@@ -1,7 +1,8 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -25,12 +26,12 @@ case class RST_RasterToWorldCoord(
       * GeoTransform. This ensures the projection of the raster is respected.
       * The output is a WKT point.
       */
-    override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(raster: MosaicRasterGDAL, arg1: Any, arg2: Any): Any = {
         val x = arg1.asInstanceOf[Int]
         val y = arg2.asInstanceOf[Int]
         val gt = raster.getRaster.GetGeoTransform()
 
-        val (xGeo, yGeo) = rasterAPI.toWorldCoord(gt, x, y)
+        val (xGeo, yGeo) = GDAL.toWorldCoord(gt, x, y)
 
         val geometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
         val point = geometryAPI.fromCoords(Seq(xGeo, yGeo))

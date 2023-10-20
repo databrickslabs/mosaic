@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
@@ -40,16 +40,12 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
+    GDAL.enable()
+
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
     val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
 
-    /**
-      * The raster API to be used. Enable the raster so that subclasses dont
-      * need to worry about this.
-      */
-    protected val rasterAPI: RasterAPI = RasterAPI(expressionConfig.getRasterAPI)
-    rasterAPI.enable()
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 
     override def position: Boolean = false
@@ -78,15 +74,14 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
         val tile = MosaicRasterTile
             .deserialize(
               rasterExpr.eval(input).asInstanceOf[InternalRow],
-              indexSystem.getCellIdDataType,
-              rasterAPI
+              indexSystem.getCellIdDataType
             )
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
         val generatedChips = rasterGenerator(tile, inResolution)
             .map(chip => chip.formatCellId(indexSystem))
 
         val rows = generatedChips
-            .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize(rasterAPI))))
+            .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize())))
 
         RasterCleaner.dispose(tile)
         generatedChips.foreach(chip => RasterCleaner.dispose(chip.raster))

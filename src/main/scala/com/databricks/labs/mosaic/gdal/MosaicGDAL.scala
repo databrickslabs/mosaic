@@ -15,21 +15,21 @@ object MosaicGDAL extends Logging {
     private val usrlibsoPath = "/usr/lib/libgdal.so"
     private val usrlibso30Path = "/usr/lib/libgdal.so.30"
     private val usrlibso3003Path = "/usr/lib/libgdal.so.30.0.3"
-    private val libjnisoPath = "/lib/jni/libgdalalljni.so"
-    private val libjniso30Path = "/lib/jni/libgdalalljni.so.30"
-    private val libogdisoPath = "/lib/ogdi/libgdal.so"
+    private val libjnisoPath = "/usr/lib/jni/libgdalalljni.so"
+    private val libjniso30Path = "/usr/lib/jni/libgdalalljni.so.30"
+    private val libogdisoPath = "/usr/lib/ogdi/libgdal.so"
 
     // noinspection ScalaWeakerAccess
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
     var isEnabled = false
 
-    def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean
+    def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "true").toBoolean
 
     def prepareEnvironment(spark: SparkSession, initScriptPath: String): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 copyInitScript(initScriptPath)
-                copySharedObjects()
+                //copySharedObjects()
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
                 case scala.util.Failure(exception) => logWarning("GDAL environment preparation failed.", exception)
@@ -54,10 +54,10 @@ object MosaicGDAL extends Logging {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 isEnabled = true
-                // copySharedObjects()
+                //copySharedObjects()
                 loadSharedObjects()
-                configureGDAL()
                 gdal.AllRegister()
+                configureGDAL()
                 spark.conf.set(GDAL_ENABLED, "true")
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment enabled successfully.")
@@ -82,8 +82,8 @@ object MosaicGDAL extends Logging {
         val usrlibso3003 = readResourceBytes(s"/gdal/ubuntu/$usrlibso3003Path")
 
         if (!Files.exists(Paths.get("/usr/lib"))) Files.createDirectories(Paths.get("/usr/lib"))
-        if (!Files.exists(Paths.get("/lib/jni"))) Files.createDirectories(Paths.get("/lib/jni"))
-        if (!Files.exists(Paths.get("/lib/ogdi"))) Files.createDirectories(Paths.get("/lib/ogdi"))
+        if (!Files.exists(Paths.get("/usr/lib/jni"))) Files.createDirectories(Paths.get("/usr/lib/jni"))
+        if (!Files.exists(Paths.get("/usr/lib/ogdi"))) Files.createDirectories(Paths.get("/usr/lib/ogdi"))
 
         if (!Files.exists(Paths.get(usrlibsoPath))) Files.write(Paths.get(usrlibsoPath), usrlibso)
         if (!Files.exists(Paths.get(usrlibso30Path))) Files.write(Paths.get(usrlibso30Path), usrlibso30)
@@ -118,8 +118,7 @@ object MosaicGDAL extends Logging {
 
     private def loadOrNOOP(path: String): Unit = {
         try {
-            // if (!Files.exists(Paths.get(path)))
-            System.load(path)
+            if (Files.exists(Paths.get(path))) System.load(path)
         } catch {
             case t: Throwable => logWarning(s"Failed to load $path", t)
         }

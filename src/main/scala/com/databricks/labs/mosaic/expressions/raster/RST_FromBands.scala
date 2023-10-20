@@ -14,10 +14,10 @@ import org.apache.spark.sql.types.BinaryType
   * Returns a set of new rasters with the specified tile size (tileWidth x
   * tileHeight).
   */
-case class RST_MergeBands(
+case class RST_FromBands(
     bandsExpr: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends RasterArrayExpression[RST_MergeBands](
+) extends RasterArrayExpression[RST_FromBands](
       bandsExpr,
       BinaryType,
       returnsRaster = true,
@@ -35,9 +35,9 @@ case class RST_MergeBands(
 }
 
 /** Expression info required for the expression registration for spark SQL. */
-object RST_MergeBands extends WithExpressionInfo {
+object RST_FromBands extends WithExpressionInfo {
 
-    override def name: String = "rst_mergebands"
+    override def name: String = "rst_frombands"
 
     override def usage: String =
         """
@@ -55,7 +55,7 @@ object RST_MergeBands extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_MergeBands](1, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_FromBands](1, expressionConfig)
     }
 
 }

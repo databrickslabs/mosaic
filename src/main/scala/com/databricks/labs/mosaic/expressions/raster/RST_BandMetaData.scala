@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRasterBand
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterBandGDAL
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterBandExpression
@@ -40,7 +40,7 @@ case class RST_BandMetaData(raster: Expression, band: Expression, expressionConf
       * @return
       *   The band metadata of the band as a map type result.
       */
-    override def bandTransform(raster: MosaicRasterTile, band: MosaicRasterBand): Any = {
+    override def bandTransform(raster: MosaicRasterTile, band: MosaicRasterBandGDAL): Any = {
         buildMapString(band.metadata)
     }
 }

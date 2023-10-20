@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
@@ -38,16 +38,12 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
+    GDAL.enable()
+
     override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
-    /**
-      * The raster API to be used. Enable the raster so that subclasses dont
-      * need to worry about this.
-      */
-    protected val rasterAPI: RasterAPI = RasterAPI(expressionConfig.getRasterAPI)
-    rasterAPI.enable()
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 
     protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
@@ -77,11 +73,11 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
     def rasterGenerator(raster: MosaicRasterTile): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        val tile = MosaicRasterTile.deserialize(rasterExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType, rasterAPI)
+        val tile = MosaicRasterTile.deserialize(rasterExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType)
         val generatedRasters = rasterGenerator(tile)
 
         // Writing rasters disposes of the written raster
-        val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize(rasterAPI))
+        val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize())
         generatedRasters.foreach(RasterCleaner.dispose)
         RasterCleaner.dispose(tile)
 

@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 
 import scala.collection.immutable
@@ -8,7 +8,7 @@ import scala.collection.immutable
 
 object BalancedSubdivision {
 
-    def getNumSplits(raster: MosaicRaster, destSize: Int): Int = {
+    def getNumSplits(raster: MosaicRasterGDAL, destSize: Int): Int = {
         val size = raster.getMemSize
         val n = size.toDouble / (destSize * 1000 * 1000)
         val nInt = Math.ceil(n).toInt

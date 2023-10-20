@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
-import com.databricks.labs.mosaic.core.raster.MosaicRasterBand
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterBandGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
@@ -41,12 +41,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       with Serializable
       with RasterExpressionSerialization {
 
-    /**
-      * The raster API to be used. Enable the raster so that subclasses dont
-      * need to worry about this.
-      */
-    protected val rasterAPI: RasterAPI = RasterAPI(expressionConfig.getRasterAPI)
-    rasterAPI.enable()
+    GDAL.enable()
 
     override def left: Expression = rasterExpr
 
@@ -66,7 +61,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    def bandTransform(raster: MosaicRasterTile, band: MosaicRasterBand): Any
+    def bandTransform(raster: MosaicRasterTile, band: MosaicRasterBandGDAL): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -85,13 +80,13 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       */
     // noinspection DuplicatedCode
     override def nullSafeEval(inputRaster: Any, inputBand: Any): Any = {
-        val tile = MosaicRasterTile.deserialize(inputRaster.asInstanceOf[InternalRow], expressionConfig.getCellIdType, rasterAPI)
+        val tile = MosaicRasterTile.deserialize(inputRaster.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
         val bandIndex = inputBand.asInstanceOf[Int]
 
         val band = tile.raster.getBand(bandIndex)
         val result = bandTransform(tile, band)
 
-        val serialized = serialize(result, returnsRaster, dataType, rasterAPI, expressionConfig)
+        val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
         RasterCleaner.dispose(tile)
         RasterCleaner.dispose(result)
         serialized

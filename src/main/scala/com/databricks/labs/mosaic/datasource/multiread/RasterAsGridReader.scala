@@ -17,7 +17,6 @@ import org.apache.spark.sql.functions._
 class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameReader(sparkSession) {
 
     private val mc = MosaicContext.context()
-    mc.getRasterAPI.enable()
     import mc.functions._
 
     val vsizipPathColF: Column => Column =

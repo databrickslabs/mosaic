@@ -1,12 +1,8 @@
 package com.databricks.labs.mosaic.core.raster
 
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
-import com.databricks.labs.mosaic.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.sql.extensions.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
-import org.apache.spark.sql.SparkSessionExtensions
 import org.scalatest.matchers.should.Matchers._
 
 import scala.sys.process._
@@ -47,7 +43,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
         testRaster.getRaster.GetProjection()
-        noException should be thrownBy testRaster.asInstanceOf[MosaicRasterGDAL].spatialRef
+        noException should be thrownBy testRaster.spatialRef
         an[Exception] should be thrownBy testRaster.getBand(-1)
         an[Exception] should be thrownBy testRaster.getBand(Int.MaxValue)
         testRaster.cleanUp()
@@ -92,16 +88,6 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         testRaster.cleanUp()
         superRaster.cleanUp()
-    }
-
-    test("Auxiliary logic") {
-        assume(System.getProperty("os.name") == "Linux")
-
-        RasterAPI.apply("GDAL") shouldBe GDAL
-        RasterAPI.getReader("GDAL") shouldBe MosaicRasterGDAL
-        GDAL.name shouldBe "GDAL"
-        val extension = new MosaicGDAL()
-        noException should be thrownBy extension.apply(new SparkSessionExtensions)
     }
 
 }

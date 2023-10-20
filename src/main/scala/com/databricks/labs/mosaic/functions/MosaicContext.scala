@@ -4,7 +4,6 @@ import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
 import com.databricks.labs.mosaic.core.types.ChipType
 import com.databricks.labs.mosaic.datasource.multiread.MosaicDataFrameReader
 import com.databricks.labs.mosaic.expressions.constructors._
@@ -25,7 +24,7 @@ import org.apache.spark.sql.types.{LongType, StringType}
 import scala.reflect.runtime.universe
 
 //noinspection DuplicatedCode
-class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI) extends Serializable with Logging {
+class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends Serializable with Logging {
 
     // Make spark aware of the mosaic setup
     // Check the DBR type and raise appropriate warnings
@@ -36,7 +35,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 
     spark.conf.set(MOSAIC_INDEX_SYSTEM, indexSystem.name)
     spark.conf.set(MOSAIC_GEOMETRY_API, geometryAPI.name)
-    spark.conf.set(MOSAIC_RASTER_API, rasterAPI.name)
 
     import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
     // noinspection ScalaWeakerAccess
@@ -264,7 +262,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_IsEmpty](expressionConfig)
         mosaicRegistry.registerExpression[RST_MemSize](expressionConfig)
         mosaicRegistry.registerExpression[RST_Merge](expressionConfig)
-        mosaicRegistry.registerExpression[RST_MergeBands](expressionConfig)
+        mosaicRegistry.registerExpression[RST_FromBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_MetaData](expressionConfig)
         mosaicRegistry.registerExpression[RST_NDVI](expressionConfig)
         mosaicRegistry.registerExpression[RST_NumBands](expressionConfig)
@@ -288,7 +286,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         mosaicRegistry.registerExpression[RST_Subdatasets](expressionConfig)
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
-        mosaicRegistry.registerExpression[RST_Tile](expressionConfig)
+        mosaicRegistry.registerExpression[RST_FromFile](expressionConfig)
         mosaicRegistry.registerExpression[RST_ToOverlappingTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_TryOpen](expressionConfig)
         mosaicRegistry.registerExpression[RST_Subdivide](expressionConfig)
@@ -483,8 +481,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
 
     def getGeometryAPI: GeometryAPI = this.geometryAPI
 
-    def getRasterAPI: RasterAPI = this.rasterAPI
-
     def getIndexSystem: IndexSystem = this.indexSystem
 
     def getProductMethod(methodName: String): universe.MethodMirror = {
@@ -626,7 +622,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
         def rst_isempty(raster: String): Column = ColumnAdapter(RST_IsEmpty(lit(raster).expr, expressionConfig))
         def rst_memsize(raster: Column): Column = ColumnAdapter(RST_MemSize(raster.expr, expressionConfig))
         def rst_memsize(raster: String): Column = ColumnAdapter(RST_MemSize(lit(raster).expr, expressionConfig))
-        def rst_mergebands(bandsArray: Column): Column = ColumnAdapter(RST_MergeBands(bandsArray.expr, expressionConfig))
+        def rst_frombands(bandsArray: Column): Column = ColumnAdapter(RST_FromBands(bandsArray.expr, expressionConfig))
         def rst_merge(rasterArray: Column): Column = ColumnAdapter(RST_Merge(rasterArray.expr, expressionConfig))
         def rst_metadata(raster: Column): Column = ColumnAdapter(RST_MetaData(raster.expr, expressionConfig))
         def rst_metadata(raster: String): Column = ColumnAdapter(RST_MetaData(lit(raster).expr, expressionConfig))
@@ -706,12 +702,12 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAP
             ColumnAdapter(RST_Tessellate(col(raster).expr, resolution.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
-        def rst_tile(raster: Column, sizeInMB: Column): Column =
-            ColumnAdapter(RST_Tile(raster.expr, sizeInMB.expr, expressionConfig))
-        def rst_tile(raster: Column, sizeInMB: Int): Column =
-            ColumnAdapter(RST_Tile(raster.expr, lit(sizeInMB).expr, expressionConfig))
-        def rst_tile(raster: String): Column =
-            ColumnAdapter(RST_Tile(lit(raster).expr, lit(256).expr, expressionConfig))
+        def rst_fromfile(raster: Column, sizeInMB: Column): Column =
+            ColumnAdapter(RST_FromFile(raster.expr, sizeInMB.expr, expressionConfig))
+        def rst_fromfile(raster: Column, sizeInMB: Int): Column =
+            ColumnAdapter(RST_FromFile(raster.expr, lit(sizeInMB).expr, expressionConfig))
+        def rst_fromfile(raster: String): Column =
+            ColumnAdapter(RST_FromFile(lit(raster).expr, lit(256).expr, expressionConfig))
         def rst_to_overlapping_tiles(raster: Column, width: Int, height: Int, overlap: Int): Column =
             ColumnAdapter(RST_ToOverlappingTiles(raster.expr, lit(width).expr, lit(height).expr, lit(overlap).expr, expressionConfig))
         def rst_to_overlapping_tiles(raster: Column, width: Column, height: Column, overlap: Column): Column =
@@ -971,8 +967,8 @@ object MosaicContext extends Logging {
 
     private var instance: Option[MosaicContext] = None
 
-    def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI, rasterAPI: RasterAPI = GDAL): MosaicContext = {
-        instance = Some(new MosaicContext(indexSystem, geometryAPI, rasterAPI))
+    def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {
+        instance = Some(new MosaicContext(indexSystem, geometryAPI))
         instance.get.setCellIdDataType(indexSystem.getCellIdDataType.typeName)
         context()
     }
@@ -980,8 +976,6 @@ object MosaicContext extends Logging {
     def read: MosaicDataFrameReader = new MosaicDataFrameReader(SparkSession.builder().getOrCreate())
 
     def geometryAPI: GeometryAPI = context().getGeometryAPI
-
-    def rasterAPI: RasterAPI = context().getRasterAPI
 
     def indexSystem: IndexSystem = context().getIndexSystem
 

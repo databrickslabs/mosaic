@@ -1,15 +1,15 @@
 package com.databricks.labs.mosaic.core.types.model
 
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
 case class MosaicRasterTile(
     index: Either[Long, String],
-    raster: MosaicRaster,
+    raster: MosaicRasterGDAL,
     parentPath: String,
     driver: String
 ) {
@@ -46,13 +46,12 @@ case class MosaicRasterTile(
       *   An instance of [[InternalRow]].
       */
     def serialize(
-        rasterAPI: RasterAPI,
         rasterDataType: DataType = BinaryType,
         checkpointLocation: String = ""
     ): InternalRow = {
         val parentPathUTF8 = UTF8String.fromString(parentPath)
         val driverUTF8 = UTF8String.fromString(driver)
-        val encodedRaster = encodeRaster(rasterAPI, rasterDataType, checkpointLocation)
+        val encodedRaster = encodeRaster(rasterDataType, checkpointLocation)
         if (Option(index).isDefined) {
             if (index.isLeft) InternalRow.fromSeq(
               Seq(index.left.get, encodedRaster, parentPathUTF8, driverUTF8)
@@ -73,11 +72,10 @@ case class MosaicRasterTile(
       *   An instance of [[Array]] of [[Byte]] representing WKB.
       */
     private def encodeRaster(
-        rasterAPI: RasterAPI,
         rasterDataType: DataType = BinaryType,
         checkpointLocation: String = ""
     ): Any = {
-        rasterAPI.writeRasters(Seq(raster), checkpointLocation, rasterDataType).head
+        GDAL.writeRasters(Seq(raster), checkpointLocation, rasterDataType).head
     }
 
     def indexAsLong(indexSystem: IndexSystem): Long = {
@@ -89,12 +87,12 @@ case class MosaicRasterTile(
 
 object MosaicRasterTile {
 
-    def deserialize(row: InternalRow, idDataType: DataType, rasterAPI: RasterAPI): MosaicRasterTile = {
+    def deserialize(row: InternalRow, idDataType: DataType): MosaicRasterTile = {
         val index = row.get(0, idDataType)
         val rasterBytes = row.get(1, BinaryType)
         val parentPath = row.get(2, StringType).toString
         val driver = row.get(3, StringType).toString
-        val raster = rasterAPI.readRaster(rasterBytes, parentPath, driver, BinaryType)
+        val raster = GDAL.readRaster(rasterBytes, parentPath, driver, BinaryType)
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {
             if (index.isInstanceOf[Long]) {

@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.merge.MergeRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
@@ -31,13 +31,13 @@ case class RST_MergeAgg(
       with UnaryLike[Expression]
       with RasterExpressionSerialization {
 
+    GDAL.enable()
+
     override lazy val deterministic: Boolean = true
     override val child: Expression = rasterExpr
     override val nullable: Boolean = false
     override val dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
     override def prettyName: String = "rst_merge_agg"
-
-    val rasterAPI: RasterAPI = RasterAPI.apply(expressionConfig.getRasterAPI)
 
     private lazy val projection = UnsafeProjection.create(Array[DataType](ArrayType(elementType = dataType, containsNull = false)))
     private lazy val row = new UnsafeRow(1)
@@ -69,7 +69,7 @@ case class RST_MergeAgg(
         } else {
 
             // Do do move the expression
-            val tiles = buffer.map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType, rasterAPI))
+            val tiles = buffer.map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType))
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
@@ -80,7 +80,7 @@ case class RST_MergeAgg(
 
             val result = MosaicRasterTile(idx, merged, parentPath, driver)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(rasterAPI, BinaryType, expressionConfig.getRasterCheckpoint)
+                .serialize(BinaryType, expressionConfig.getRasterCheckpoint)
 
             tiles.foreach(RasterCleaner.dispose)
             RasterCleaner.dispose(merged)
