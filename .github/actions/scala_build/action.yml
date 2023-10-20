@@ -17,7 +17,7 @@ runs:
           shell: bash
           run: |
             sudo apt update
-            sudo apt install heif-gdk-pixbuf libheif1 libogdi-dev
+            sudo apt install heif-gdk-pixbuf libheif1 libogdi-dev libarmadillo-dev
             sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
