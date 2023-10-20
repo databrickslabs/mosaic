@@ -16,6 +16,7 @@ runs:
           if: inputs.skip_tests == 'false'
           shell: bash
           run: |
+            pip install databricks-mosaic-gdal==3.4.3
             INSTALL_DIR=$(find . -name "databricks-mosaic-gdal")
             export DATABRICKS_ROOT_VIRTUALENV_ENV="$(dirname "$INSTALL_DIR")"
             sudo -E add-apt-repository ppa:ubuntugis/ubuntugis-unstable
