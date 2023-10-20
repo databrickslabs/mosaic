@@ -217,12 +217,8 @@ class MosaicRasterGDAL(
 
     def getRasterForCell(cellID: Long, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRasterGDAL = {
         val cellGeom = indexSystem.indexToGeometry(cellID, geometryAPI)
-        // buffer by diagonal size of the raster pixel to avoid clipping issues
-        // add 1% to avoid rounding errors
-        val bufferR = pixelDiagSize * 1.01
-        val bufferedCell = cellGeom.buffer(bufferR)
         val geomCRS = indexSystem.osrSpatialRef
-        RasterClipByVector.clip(this, bufferedCell, geomCRS, geometryAPI)
+        RasterClipByVector.clip(this, cellGeom, geomCRS, geometryAPI)
     }
 
     /**

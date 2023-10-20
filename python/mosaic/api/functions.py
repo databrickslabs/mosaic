@@ -49,9 +49,6 @@ __all__ = [
     "st_zmax",
     "st_x",
     "st_y",
-    "rst_bandmetadata",
-    "rst_metadata",
-    "rst_subdatasets",
     "flatten_polygons",
     "grid_boundaryaswkb",
     "grid_boundary",
@@ -882,85 +879,6 @@ def st_zmax(geom: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "st_zmax", pyspark_to_java_column(geom)
-    )
-
-
-def rst_metadata(raster: ColumnOrName, path: Any = "") -> Column:
-    """
-    Extracts metadata from a raster row.
-
-    Parameters
-    ----------
-    raster : ColumnOrName
-        The input raster column.
-    path : ColumnOrName
-        The path of the metadata within the raster row.
-
-    Returns
-    -------
-    Column
-        A map column containing the metadata.
-
-    """
-    if type(path) == str:
-        path = lit(path)
-    return config.mosaic_context.invoke_function(
-        "rst_metadata", pyspark_to_java_column(raster), pyspark_to_java_column(path)
-    )
-
-
-def rst_subdatasets(raster: ColumnOrName, path: Any = "") -> Column:
-    """
-    Extracts subdatasets from a raster row.
-
-    Parameters
-    ----------
-    raster : ColumnOrName
-        The input raster column.
-    path : ColumnOrName
-        The path of subdatasets within the raster row.
-
-    Returns
-    -------
-    Column
-        A map column containing the subdatasets.
-
-    """
-    if type(path) == str:
-        path = lit(path)
-    return config.mosaic_context.invoke_function(
-        "rst_subdatasets", pyspark_to_java_column(raster), pyspark_to_java_column(path)
-    )
-
-
-def rst_bandmetadata(
-    raster: ColumnOrName, band: ColumnOrName, path: Any = ""
-) -> Column:
-    """
-    Extracts band metadata from a raster row.
-
-    Parameters
-    ----------
-    raster : ColumnOrName
-        The input raster column.
-    band : ColumnOrName
-        The band index.
-    path : ColumnOrName
-        The path of the metadata within the raster row and the band.
-
-    Returns
-    -------
-    Column
-        A map column containing the metadata.
-
-    """
-    if type(path) == str:
-        path = lit(path)
-    return config.mosaic_context.invoke_function(
-        "rst_bandmetadata",
-        pyspark_to_java_column(raster),
-        pyspark_to_java_column(band),
-        pyspark_to_java_column(path),
     )
 
 

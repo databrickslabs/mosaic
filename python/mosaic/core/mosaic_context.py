@@ -50,10 +50,9 @@ class MosaicContext:
 
         IndexSystem = self._indexSystemFactory.getIndexSystem(self._index_system)
         GeometryAPIClass = getattr(self._mosaicPackageObject, self._geometry_api)
-        RasterAPIClass = getattr(self._mosaicPackageObject, self._raster_api)
 
         self._context = self._mosaicContextClass.build(
-            IndexSystem, GeometryAPIClass(), RasterAPIClass()
+            IndexSystem, GeometryAPIClass()
         )
 
     def invoke_function(self, name: str, *args: Any) -> MosaicColumn:

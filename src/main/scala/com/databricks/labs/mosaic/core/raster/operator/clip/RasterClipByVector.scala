@@ -23,7 +23,7 @@ object RasterClipByVector {
           resultFileName,
           isTemp = true,
           Seq(raster),
-          command = s"gdalwarp -of $outShortName -cutline $shapeFileName -crop_to_cutline -co COMPRESS=PACKBITS"
+          command = s"gdalwarp -wo CUTLINE_ALL_TOUCHED=TRUE -of $outShortName -cutline $shapeFileName -crop_to_cutline -co COMPRESS=PACKBITS"
         )
 
         gdal.Unlink(shapeFileName)
