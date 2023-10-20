@@ -15,9 +15,9 @@ object MosaicGDAL extends Logging {
     private val usrlibsoPath = "/usr/lib/libgdal.so"
     private val usrlibso30Path = "/usr/lib/libgdal.so.30"
     private val usrlibso3003Path = "/usr/lib/libgdal.so.30.0.3"
-    private val libjnisoPath = "/usr/lib/jni/libgdalalljni.so"
-    private val libjniso30Path = "/usr/lib/jni/libgdalalljni.so.30"
-    private val libogdisoPath = "/usr/lib/ogdi/libgdal.so"
+    private val libjnisoPath = "/lib/jni/libgdalalljni.so"
+    private val libjniso30Path = "/lib/jni/libgdalalljni.so.30"
+    private val libogdisoPath = "/lib/ogdi/libgdal.so"
 
     // noinspection ScalaWeakerAccess
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
@@ -92,6 +92,9 @@ object MosaicGDAL extends Logging {
         if (!Files.exists(Paths.get(libjnisoPath))) Files.write(Paths.get(libogdisoPath), libjniso)
         if (!Files.exists(Paths.get(libjniso30Path))) Files.write(Paths.get(libjniso30Path), libjniso30)
         if (!Files.exists(Paths.get(libogdisoPath))) Files.write(Paths.get(libogdisoPath), libogdiso)
+        if (!Files.exists(Paths.get(s"usr/$libjnisoPath"))) Files.write(Paths.get(s"usr/$libogdisoPath"), libjniso)
+        if (!Files.exists(Paths.get(s"usr/$libjniso30Path"))) Files.write(Paths.get(s"usr/$libjniso30Path"), libjniso30)
+        if (!Files.exists(Paths.get(s"usr/$libogdisoPath"))) Files.write(Paths.get(s"usr/$libogdisoPath"), libogdiso)
 
     }
 
