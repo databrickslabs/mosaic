@@ -30,7 +30,6 @@ object MosaicGDAL extends Logging {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 copyInitScript(initScriptPath)
-                copySharedObjects()
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
                 case scala.util.Failure(exception) => logWarning("GDAL environment preparation failed.", exception)
@@ -55,7 +54,6 @@ object MosaicGDAL extends Logging {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 isEnabled = true
-                copySharedObjects()
                 loadSharedObjects()
                 gdal.AllRegister()
                 configureGDAL()
@@ -71,30 +69,6 @@ object MosaicGDAL extends Logging {
                     throw exception
             }
         }
-    }
-
-    private def copySharedObjects(): Unit = {
-        val libjniso = readResourceBytes(s"/gdal/ubuntu/$libjnisoPath")
-        val libjniso30 = readResourceBytes(s"/gdal/ubuntu/$libjniso30Path")
-        val libogdiso = readResourceBytes(s"/gdal/ubuntu/$libogdisoPath")
-        val usrlibso = readResourceBytes(s"/gdal/ubuntu/$usrlibsoPath")
-        val usrlibso30 = readResourceBytes(s"/gdal/ubuntu/$usrlibso30Path")
-        val usrlibso3003 = readResourceBytes(s"/gdal/ubuntu/$usrlibso3003Path")
-
-        if (!Files.exists(Paths.get("/usr/lib"))) Files.createDirectories(Paths.get("/usr/lib"))
-        if (!Files.exists(Paths.get("/usr/lib/jni/"))) Files.createDirectories(Paths.get("/usr/lib/jni"))
-        if (!Files.exists(Paths.get("/usr/lib/ogdi"))) Files.createDirectories(Paths.get("/usr/lib/ogdi"))
-
-        if (!Files.exists(Paths.get(usrlibsoPath))) Files.write(Paths.get(usrlibsoPath), usrlibso)
-        if (!Files.exists(Paths.get(usrlibso30Path))) Files.write(Paths.get(usrlibso30Path), usrlibso30)
-        if (!Files.exists(Paths.get(usrlibso3003Path))) Files.write(Paths.get(usrlibso3003Path), usrlibso3003)
-        if (!Files.exists(Paths.get(libjnisoPath))) Files.write(Paths.get(libjnisoPath), libjniso)
-        if (!Files.exists(Paths.get(libjniso30Path))) Files.write(Paths.get(libjniso30Path), libjniso30)
-        if (!Files.exists(Paths.get(libogdisoPath))) Files.write(Paths.get(libogdisoPath), libogdiso)
-        if (!Files.exists(Paths.get(s"/usr/$libjnisoPath"))) Files.write(Paths.get(s"/usr/$libjnisoPath"), libjniso)
-        if (!Files.exists(Paths.get(s"/usr/$libjniso30Path"))) Files.write(Paths.get(s"/usr/$libjniso30Path"), libjniso30)
-        if (!Files.exists(Paths.get(s"/usr/$libogdisoPath"))) Files.write(Paths.get(s"/usr/$libogdisoPath"), libogdiso)
-
     }
 
     // noinspection ScalaStyle
@@ -119,6 +93,7 @@ object MosaicGDAL extends Logging {
         loadOrNOOP(libogdisoPath)
     }
 
+    //noinspection ScalaStyle
     private def loadOrNOOP(path: String): Unit = {
         try {
             if (Files.exists(Paths.get(path))) System.load(path)
