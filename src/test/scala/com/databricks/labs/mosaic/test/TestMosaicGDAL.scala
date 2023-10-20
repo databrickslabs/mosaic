@@ -6,7 +6,7 @@ import org.apache.spark.sql.SparkSession
 
 import java.io.BufferedInputStream
 import java.nio.file.Files
-import scala.io.{BufferedSource, Source}
+import scala.language.postfixOps
 import scala.sys.process._
 
 

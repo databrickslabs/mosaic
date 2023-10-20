@@ -23,7 +23,7 @@ object MosaicGDAL extends Logging {
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
     var isEnabled = false
 
-    def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "true").toBoolean
+    def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
 
     def prepareEnvironment(spark: SparkSession, initScriptPath: String): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
