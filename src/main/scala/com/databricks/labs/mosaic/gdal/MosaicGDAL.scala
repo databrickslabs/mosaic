@@ -124,6 +124,7 @@ object MosaicGDAL extends Logging {
             if (Files.exists(Paths.get(path))) System.load(path)
         } catch {
             case t: Throwable =>
+                println(t.toString)
                 println(s"Failed to load $path")
                 logWarning(s"Failed to load $path", t)
         }
