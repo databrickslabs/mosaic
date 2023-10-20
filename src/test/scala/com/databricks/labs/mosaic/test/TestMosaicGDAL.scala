@@ -29,6 +29,7 @@ object TestMosaicGDAL extends Logging {
         val tempPath = Files.createTempFile("gdal-ubuntu-install", ".sh")
         Files.write(tempPath, bytes)
 
+        "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/jni/".!!
         s"chmod +x ${tempPath.toAbsolutePath.toString}".!!
         s"sh ${tempPath.toAbsolutePath.toString}".!!
     }
