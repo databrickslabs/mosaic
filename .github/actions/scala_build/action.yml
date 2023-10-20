@@ -15,7 +15,10 @@ runs:
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
-          run: sudo mvn -q clean install
+          run: |
+            sudo apt update
+            sudo apt install heif-gdk-pixbuf libheif1
+            sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash
