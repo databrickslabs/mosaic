@@ -15,6 +15,8 @@ __all__ = [
     "grid_cell_union_agg",
     "grid_cell_intersection_agg",
     "rst_merge_agg",
+    "st_intersection_agg",
+    "st_intersects_agg",
 ]
 
 
@@ -45,8 +47,60 @@ def st_intersection_aggregate(
     )
 
 
+def st_intersection_agg(
+        leftIndex: ColumnOrName, rightIndex: ColumnOrName
+) -> Column:
+    """
+    Computes the intersection of all `leftIndex` : `rightIndex` pairs
+    and unions these to produce a single geometry.
+
+    Parameters
+    ----------
+    leftIndex : Column
+        The index field of the left-hand geometry
+    rightIndex : Column
+        The index field of the right-hand geometry
+
+    Returns
+    -------
+    Column
+        The aggregated intersection geometry.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_intersection_aggregate",
+        pyspark_to_java_column(leftIndex),
+        pyspark_to_java_column(rightIndex),
+    )
+
+
 def st_intersects_aggregate(
     leftIndex: ColumnOrName, rightIndex: ColumnOrName
+) -> Column:
+    """
+    Tests if any `leftIndex` : `rightIndex` pairs intersect.
+
+    Parameters
+    ----------
+    leftIndex : Column
+        The index field of the left-hand geometry
+    rightIndex : Column
+        The index field of the right-hand geometry
+
+    Returns
+    -------
+    Column (BooleanType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_intersects_aggregate",
+        pyspark_to_java_column(leftIndex),
+        pyspark_to_java_column(rightIndex),
+    )
+
+
+def st_intersects_agg(
+        leftIndex: ColumnOrName, rightIndex: ColumnOrName
 ) -> Column:
     """
     Tests if any `leftIndex` : `rightIndex` pairs intersect.

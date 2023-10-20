@@ -304,9 +304,19 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ST_IntersectionAggregate(exprs(0), exprs(1), geometryAPI.name, indexSystem, 0, 0)
         )
         registry.registerFunction(
+            FunctionIdentifier("st_intersection_agg", database),
+            ST_IntersectionAggregate.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_IntersectionAggregate(exprs(0), exprs(1), geometryAPI.name, indexSystem, 0, 0)
+        )
+        registry.registerFunction(
           FunctionIdentifier("st_intersects_aggregate", database),
           ST_IntersectsAggregate.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => ST_IntersectsAggregate(exprs(0), exprs(1), geometryAPI.name)
+        )
+        registry.registerFunction(
+            FunctionIdentifier("st_intersects_agg", database),
+            ST_IntersectsAggregate.registryExpressionInfo(database),
+            (exprs: Seq[Expression]) => ST_IntersectsAggregate(exprs(0), exprs(1), geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("st_union_agg", database),
@@ -747,11 +757,16 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(
               ST_IntersectsAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name).toAggregateExpression(isDistinct = false)
             )
+
+        def st_intersects_agg(leftIndex: Column, rightIndex: Column): Column =
+            st_intersects_aggregate(leftIndex, rightIndex)
         def st_intersection_aggregate(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(
               ST_IntersectionAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem, 0, 0)
                   .toAggregateExpression(isDistinct = false)
             )
+        def st_intersection_agg(leftIndex: Column, rightIndex: Column): Column =
+            st_intersection_aggregate(leftIndex, rightIndex)
         def st_union_agg(geom: Column): Column =
             ColumnAdapter(ST_UnionAgg(geom.expr, geometryAPI.name).toAggregateExpression(isDistinct = false))
         def rst_merge_agg(raster: Column): Column =
@@ -992,7 +1007,7 @@ object MosaicContext extends Logging {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "")
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = spark.conf.getOption("spark.databricks.photon.enabled").getOrElse("false").toBoolean
-        val isTest = spark.conf.getOption("spark.databricks.clusterUsageTags.clusterType").getOrElse("true").toBoolean
+        val isTest = spark.conf.getOption("spark.databricks.clusterUsageTags.clusterType").isEmpty
 
         if (!isML && !isPhoton && !isTest) {
             // Print out the warnings both to the log and to the console
