@@ -75,6 +75,14 @@ object MosaicGDAL extends Logging {
 
     private def copySharedObjects(): Unit = {
 
+        def writeIfNotExists(path: String, bytes: Array[Byte]): Unit = {
+            if (!Files.exists(Paths.get(path))) {
+                val parent = Paths.get(path).getParent
+                if (!Files.exists(parent)) Files.createDirectories(parent)
+                Files.write(Paths.get(path), bytes)
+            }
+        }
+
         val libjniso = readResourceBytes(s"/gdal/ubuntu/$libjnisoPath")
         val libjniso30 = readResourceBytes(s"/gdal/ubuntu/$libjniso30Path")
         val libogdiso = readResourceBytes(s"/gdal/ubuntu/$libogdisoPath")
@@ -86,15 +94,15 @@ object MosaicGDAL extends Logging {
         if (!Files.exists(Paths.get("/usr/lib/jni"))) Files.createDirectories(Paths.get("/usr/lib/jni"))
         if (!Files.exists(Paths.get("/usr/lib/ogdi"))) Files.createDirectories(Paths.get("/usr/lib/ogdi"))
 
-        if (!Files.exists(Paths.get(usrlibsoPath))) Files.write(Paths.get(usrlibsoPath), usrlibso)
-        if (!Files.exists(Paths.get(usrlibso30Path))) Files.write(Paths.get(usrlibso30Path), usrlibso30)
-        if (!Files.exists(Paths.get(usrlibso3003Path))) Files.write(Paths.get(usrlibso3003Path), usrlibso3003)
-        if (!Files.exists(Paths.get(libjnisoPath))) Files.write(Paths.get(libogdisoPath), libjniso)
-        if (!Files.exists(Paths.get(libjniso30Path))) Files.write(Paths.get(libjniso30Path), libjniso30)
-        if (!Files.exists(Paths.get(libogdisoPath))) Files.write(Paths.get(libogdisoPath), libogdiso)
-        if (!Files.exists(Paths.get(s"usr/$libjnisoPath"))) Files.write(Paths.get(s"usr/$libogdisoPath"), libjniso)
-        if (!Files.exists(Paths.get(s"usr/$libjniso30Path"))) Files.write(Paths.get(s"usr/$libjniso30Path"), libjniso30)
-        if (!Files.exists(Paths.get(s"usr/$libogdisoPath"))) Files.write(Paths.get(s"usr/$libogdisoPath"), libogdiso)
+        writeIfNotExists(usrlibsoPath, usrlibso)
+        writeIfNotExists(usrlibso30Path, usrlibso30)
+        writeIfNotExists(usrlibso3003Path, usrlibso3003)
+        writeIfNotExists(libjnisoPath, libjniso)
+        writeIfNotExists(libjniso30Path, libjniso30)
+        writeIfNotExists(libogdisoPath, libogdiso)
+        writeIfNotExists(s"usr/$libjnisoPath", libjniso)
+        writeIfNotExists(s"usr/$libjniso30Path", libjniso30)
+        writeIfNotExists(s"usr/$libogdisoPath", libogdiso)
 
     }
 
