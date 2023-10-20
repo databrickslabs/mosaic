@@ -15,7 +15,9 @@ runs:
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
-          run: sudo mvn -q clean install -Djava.library.path="/usr/local/lib;/usr/java/packages/lib;/usr/lib64;/lib64;/lib;/usr/lib"
+          run: |
+            LD_LIBRARY_PATH=/usr/lib/jni:$LD_LIBRARY_PATH
+            sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash
