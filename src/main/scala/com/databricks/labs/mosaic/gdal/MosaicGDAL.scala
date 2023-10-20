@@ -23,13 +23,14 @@ object MosaicGDAL extends Logging {
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
     var isEnabled = false
 
-    def wasEnabled(spark: SparkSession): Boolean = spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
+    def wasEnabled(spark: SparkSession): Boolean =
+        spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
 
     def prepareEnvironment(spark: SparkSession, initScriptPath: String): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 copyInitScript(initScriptPath)
-                //copySharedObjects()
+                copySharedObjects()
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
                 case scala.util.Failure(exception) => logWarning("GDAL environment preparation failed.", exception)
@@ -54,7 +55,7 @@ object MosaicGDAL extends Logging {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 isEnabled = true
-                //copySharedObjects()
+                copySharedObjects()
                 loadSharedObjects()
                 gdal.AllRegister()
                 configureGDAL()
@@ -120,7 +121,9 @@ object MosaicGDAL extends Logging {
         try {
             if (Files.exists(Paths.get(path))) System.load(path)
         } catch {
-            case t: Throwable => logWarning(s"Failed to load $path", t)
+            case t: Throwable =>
+                println(s"Failed to load $path")
+                logWarning(s"Failed to load $path", t)
         }
     }
 
