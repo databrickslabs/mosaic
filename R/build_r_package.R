@@ -23,6 +23,7 @@ for(repo in names(mirror_status)){
   }
 }
 
+.libPaths(c("/usr/lib/R/site-library", .libPaths()))
 install.packages("pkgbuild", repos=repo)
 install.packages("roxygen2", repos=repo)
 install.packages("sparklyr", repos=repo)
