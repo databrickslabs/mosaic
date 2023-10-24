@@ -37,6 +37,9 @@ runs:
       with:
         path: /usr/lib/R/site-library
         key: r_build-rlibs
+    - name: Test binary download
+      shell: bash
+      run: curl -H "User-Agent: R/4.3.1 R (4.3.1 x86_64-pc-linux-gnu x86_64 linux-gnu)" -I https://packagemanager.posit.co/cran/__linux__/focal/latest/src/contrib/A3_1.0.0.tar.gz
     - name: Build R package
       shell: bash
       run: |

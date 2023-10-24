@@ -1,9 +1,9 @@
 repos = c(
-    CRAN = "https://packagemanager.posit.co/cran/__linux__/focal/latest"
-   ,"https://cran.ma.imperial.ac.uk" = "https://cran.ma.imperial.ac.uk"
+   "https://cran.ma.imperial.ac.uk" = "https://cran.ma.imperial.ac.uk"
   ,"https://www.stats.bris.ac.uk/R" = "https://www.stats.bris.ac.uk/R"
   ,"https://cran.rstudio.com/"  = "https://cran.rstudio.com/" 
 )
+# CRAN = "https://packagemanager.posit.co/cran/__linux__/focal/latest"
 
 options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
 options(download.file.extra = sprintf("--header \"User-Agent: R (%s)\"", paste(getRversion(), R.version["platform"], R.version["arch"], R.version["os"])))
