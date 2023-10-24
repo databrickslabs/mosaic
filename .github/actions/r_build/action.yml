@@ -7,12 +7,21 @@ runs:
       shell: bash
       run: |
         sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev 
-    - name: Download and unpack Spark
+    - name: Create download location for Spark
       shell: bash
       run: |
         sudo mkdir -p /usr/spark-download/raw
         sudo mkdir -p /usr/spark-download/unzipped
         sudo chown -R $USER: /usr/spark-download/
+    - name: Cache Spark download
+      id: cache-spark
+      uses: actions/cache@v3
+      with:
+        path: /usr/spark-download/unzipped
+    - if: ${{ steps.cache-spark.outputs.cache-hit != 'true' }}
+      name: Download and unpack Spark
+      shell: bash
+      run: |
         wget -P /usr/spark-download/raw https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop2.7.tgz 
         tar zxvf /usr/spark-download/raw/spark-3.2.1-bin-hadoop2.7.tgz -C /usr/spark-download/unzipped
 
