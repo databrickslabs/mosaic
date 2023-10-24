@@ -1,5 +1,6 @@
 repos = c(
-   "https://cran.ma.imperial.ac.uk" = "https://cran.ma.imperial.ac.uk"
+    CRAN = "https://packagemanager.posit.co/cran/__linux__/focal/latest"
+   ,"https://cran.ma.imperial.ac.uk" = "https://cran.ma.imperial.ac.uk"
   ,"https://www.stats.bris.ac.uk/R" = "https://www.stats.bris.ac.uk/R"
   ,"https://cran.rstudio.com/"  = "https://cran.rstudio.com/" 
 )
