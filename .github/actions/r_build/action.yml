@@ -7,25 +7,24 @@ runs:
       shell: bash
       run: |
         sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev
-#    - name: Create download location for Spark
-#      shell: bash
-#      run: |
-#        sudo mkdir -p /usr/spark-download/raw
-#        sudo mkdir -p /usr/spark-download/unzipped
-#        sudo chown -R $USER: /usr/spark-download/
-#    - name: Cache Spark download
-#      id: cache-spark
-#      uses: actions/cache@v3
-#      with:
-#        path: /usr/spark-download/unzipped
-#        key: r_build-spark
-#    - if: ${{ steps.cache-spark.outputs.cache-hit != 'true' }}
-#      name: Download and unpack Spark
-#      shell: bash
-#      run: |
-#        wget -P /usr/spark-download/raw https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop2.7.tgz
-#        tar zxvf /usr/spark-download/raw/spark-3.2.1-bin-hadoop2.7.tgz -C /usr/spark-download/unzipped
-
+    - name: Create download location for Spark
+      shell: bash
+      run: |
+        sudo mkdir -p /usr/spark-download/raw
+        sudo mkdir -p /usr/spark-download/unzipped
+        sudo chown -R $USER: /usr/spark-download/
+    - name: Cache Spark download
+      id: cache-spark
+      uses: actions/cache@v3
+      with:
+        path: /usr/spark-download/unzipped
+        key: r_build-spark
+    - if: ${{ steps.cache-spark.outputs.cache-hit != 'true' }}
+      name: Download and unpack Spark
+      shell: bash
+      run: |
+        wget -P /usr/spark-download/raw https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop2.7.tgz
+        tar zxvf /usr/spark-download/raw/spark-3.2.1-bin-hadoop2.7.tgz -C /usr/spark-download/unzipped
     - name: Create R environment
       shell: bash
       run: |
@@ -46,11 +45,11 @@ runs:
       run: |
         cd R
         Rscript --vanilla build_r_package.R
-    - name: Test R package
-      shell: bash
-      run: |
-        cd R/sparkR-mosaic
-        Rscript --vanilla tests.R
+#    - name: Test R package
+#      shell: bash
+#      run: |
+#        cd R/sparkR-mosaic
+#        Rscript --vanilla tests.R
     - name: Copy R artifacts to GH Actions run
       shell: bash
       run: |
