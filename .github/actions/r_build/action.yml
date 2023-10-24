@@ -18,6 +18,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: /usr/spark-download/unzipped
+        key: r_build-spark
     - if: ${{ steps.cache-spark.outputs.cache-hit != 'true' }}
       name: Download and unpack Spark
       shell: bash
