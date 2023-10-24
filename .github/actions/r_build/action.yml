@@ -3,10 +3,10 @@ description: build mosaic R
 runs:
   using: "composite"
   steps:
-#    - name: Setup R build environment
-#      shell: bash
-#      run: |
-#        sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev
+    - name: Setup R build environment
+      shell: bash
+      run: |
+        sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev
 #    - name: Create download location for Spark
 #      shell: bash
 #      run: |
