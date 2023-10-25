@@ -31,6 +31,6 @@ for(repo in names(mirror_status)){
 
 .libPaths(c("/usr/lib/R/site-library", .libPaths()))
 
-install.packages("pkgbuild", repos=repo)
-install.packages("roxygen2", repos=repo)
-install.packages("sparklyr", repos=repo)
+install.packages("pkgbuild", repos="https://packagemanager.posit.co/cran/__linux__/bullseye/latest")
+install.packages("roxygen2", repos="https://packagemanager.posit.co/cran/__linux__/bullseye/latest")
+install.packages("sparklyr", repos="https://packagemanager.posit.co/cran/__linux__/bullseye/latest")

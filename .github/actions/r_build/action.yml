@@ -10,8 +10,8 @@ runs:
     - name: Create download location for Spark
       shell: bash
       run: |
-        sudo mkdir -p /usr/spark-download/raw
         sudo mkdir -p /usr/spark-download/unzipped
+        sudo mkdir -p /usr/spark-download/raw
         sudo chown -R $USER: /usr/spark-download/
     - name: Cache Spark download
       id: cache-spark
