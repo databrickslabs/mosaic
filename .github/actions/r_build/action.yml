@@ -57,11 +57,11 @@ runs:
       run: |
         cd R
         Rscript --vanilla build_r_package.R
-#    - name: Test R package
-#      shell: bash
-#      run: |
-#        cd R/sparkR-mosaic
-#        Rscript --vanilla tests.R
+    - name: Test R package
+      shell: bash
+      run: |
+        cd R/sparkR-mosaic
+        Rscript --vanilla tests.R
     - name: Copy R artifacts to GH Actions run
       shell: bash
       run: |
