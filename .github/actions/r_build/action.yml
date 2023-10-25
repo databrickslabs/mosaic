@@ -36,10 +36,22 @@ runs:
       with:
         path: /usr/lib/R/site-library
         key: r_build-rlibs
-    - name: Test binary download
+    - if: ${{ steps.cache-rlibs.outputs.cache-hit != 'true' }}
+      name: Install R dependencies
       shell: bash
       run: |
-        curl -H "User-Agent: R/4.3.1 R (4.3.1 x86_64-pc-linux-gnu x86_64 linux-gnu)" -I https://packagemanager.posit.co/cran/__linux__/focal/latest/src/contrib/A3_1.0.0.tar.gz
+        cd R
+        Rscript --vanilla install_deps.R
+    - name: Generate R bindings
+      shell: bash
+      run: |
+        cd R
+        Rscript --vanilla generate_R_bindings.R ../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala
+    - name: Build R docs
+      shell: bash
+      run: |
+        cd R
+        Rscript --vanilla generate_docs.R
     - name: Build R package
       shell: bash
       run: |
