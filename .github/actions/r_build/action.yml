@@ -35,26 +35,11 @@ runs:
       with:
         r-version: ${{ matrix.R }}
         use-public-rspm: true
-    - name: Cache R packages download
-      id: cache-rlibs
-      uses: actions/cache@v3
-      with:
-        path: /usr/lib/R/site-library
-        key: r_build-rlibs
-#    - if: ${{ steps.cache-rlibs.outputs.cache-hit != 'true' }}
     - name: Install R dependencies
       shell: bash
       run: |
         cd R
         Rscript --vanilla install_deps.R
-#    - name: Install R dependencies
-#      uses: r-lib/actions/setup-r-dependencies@v2
-#      with:
-#        cache: true
-#        extra-packages: |
-#          any::pkgbuild
-#          any::roxygen2
-#          any::sparklyr
     - name: Generate R bindings
       shell: bash
       run: |
