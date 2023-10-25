@@ -30,7 +30,7 @@ options(repos = c(CRAN = "https://packagemanager.posit.co/cran/__linux__/focal/l
 #   }
 # }
 
-.libPaths(c("/usr/lib/R/site-library", .libPaths()))
+# .libPaths(c("/usr/lib/R/site-library", .libPaths()))
 
 # install.packages("pkgbuild", repos="https://packagemanager.posit.co/cran/__linux__/bullseye/latest")
 # install.packages("roxygen2", repos="https://packagemanager.posit.co/cran/__linux__/bullseye/latest")
