@@ -27,6 +27,6 @@ jobs:
       - name: build python
         uses: ./.github/actions/python_build
       - name: build R
-        uses: ./.github/actions/R_build
+        uses: ./.github/actions/r_build
       - name: upload artefacts
         uses: ./.github/actions/upload_artefacts
