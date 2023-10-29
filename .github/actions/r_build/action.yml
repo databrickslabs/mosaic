@@ -6,23 +6,54 @@ runs:
     - name: Setup R build environment
       shell: bash
       run: |
-        sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev 
-    - name: Download and unpack Spark
+        sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev
+    - name: Create download location for Spark
       shell: bash
       run: |
-        sudo mkdir -p /usr/spark-download/raw
         sudo mkdir -p /usr/spark-download/unzipped
+        sudo mkdir -p /usr/spark-download/raw
         sudo chown -R $USER: /usr/spark-download/
-        wget -P /usr/spark-download/raw https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop2.7.tgz 
+    - name: Cache Spark download
+      id: cache-spark
+      uses: actions/cache@v3
+      with:
+        path: /usr/spark-download/unzipped
+        key: r_build-spark
+    - if: ${{ steps.cache-spark.outputs.cache-hit != 'true' }}
+      name: Download and unpack Spark
+      shell: bash
+      run: |
+        wget -P /usr/spark-download/raw https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop2.7.tgz
         tar zxvf /usr/spark-download/raw/spark-3.2.1-bin-hadoop2.7.tgz -C /usr/spark-download/unzipped
-
-
+    - name: Create R environment
+      shell: bash
+      run: |
+        sudo mkdir -p /usr/lib/R/site-library
+        sudo chown -R $USER: /usr/lib/R/site-library
+    - name: Setup R
+      uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: ${{ matrix.R }}
+        use-public-rspm: true
+    - name: Install R dependencies
+      shell: bash
+      run: |
+        cd R
+        Rscript --vanilla install_deps.R
+    - name: Generate R bindings
+      shell: bash
+      run: |
+        cd R
+        Rscript --vanilla generate_R_bindings.R ../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala
+    - name: Build R docs
+      shell: bash
+      run: |
+        cd R
+        Rscript --vanilla generate_docs.R
     - name: Build R package
       shell: bash
       run: |
         cd R
-        sudo mkdir -p /usr/lib/R/site-library
-        sudo chown -R $USER: /usr/lib/R/site-library
         Rscript --vanilla build_r_package.R
     - name: Test R package
       shell: bash
