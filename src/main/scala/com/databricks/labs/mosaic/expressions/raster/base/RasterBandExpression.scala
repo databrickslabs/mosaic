@@ -61,7 +61,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    def bandTransform(raster: MosaicRasterTile, band: MosaicRasterBandGDAL): Any
+    def bandTransform(raster: => MosaicRasterTile, band: MosaicRasterBandGDAL): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -80,10 +80,11 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       */
     // noinspection DuplicatedCode
     override def nullSafeEval(inputRaster: Any, inputBand: Any): Any = {
+        GDAL.enable()
         val tile = MosaicRasterTile.deserialize(inputRaster.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
         val bandIndex = inputBand.asInstanceOf[Int]
 
-        val band = tile.raster.getBand(bandIndex)
+        val band = tile.getRaster.getBand(bandIndex)
         val result = bandTransform(tile, band)
 
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)

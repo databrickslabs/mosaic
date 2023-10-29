@@ -16,7 +16,7 @@ case class RST_Width(raster: Expression, expressionConfig: MosaicExpressionConfi
       with CodegenFallback {
 
     /** Returns the width of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = tile.raster.xSize
+    override def rasterTransform(tile: => MosaicRasterTile): Any = tile.getRaster.xSize
 
 }
 
@@ -30,7 +30,7 @@ object RST_Width extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |       512
           |  """.stripMargin
 

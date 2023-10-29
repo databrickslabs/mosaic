@@ -12,9 +12,27 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
+/** An object defining the in memory read strategy for the GDAL file format. */
 object ReadInMemory extends ReadStrategy {
 
     // noinspection DuplicatedCode
+    /**
+      * Returns the schema of the GDAL file format.
+      * @note
+      *   Different read strategies can have different schemas.
+      *
+      * @param options
+      *   Options passed to the reader.
+      * @param files
+      *   List of files to read.
+      * @param parentSchema
+      *   Parent schema.
+      * @param sparkSession
+      *   Spark session.
+      *
+      * @return
+      *   Schema of the GDAL file format.
+      */
     override def getSchema(
         options: Map[String, String],
         files: Seq[FileStatus],
@@ -33,6 +51,21 @@ object ReadInMemory extends ReadStrategy {
             .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType), nullable = false))
     }
 
+    /**
+      * Reads the content of the file.
+      * @param status
+      *   File status.
+      * @param fs
+      *   File system.
+      * @param requiredSchema
+      *   Required schema.
+      * @param options
+      *   Options passed to the reader.
+      * @param indexSystem
+      *   Index system.
+      * @return
+      *   Iterator of internal rows.
+      */
     override def read(
         status: FileStatus,
         fs: FileSystem,

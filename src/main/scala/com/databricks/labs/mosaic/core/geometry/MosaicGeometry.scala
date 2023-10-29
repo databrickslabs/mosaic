@@ -155,10 +155,7 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def getSpatialReferenceOSR: SpatialReference = {
         val srID = getSpatialReference
         if (srID == 0) {
-            val wsg84 = new SpatialReference()
-            wsg84.ImportFromEPSG(4326)
-            wsg84.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER)
-            wsg84
+            null
         } else {
             val geomCRS = new SpatialReference()
             geomCRS.ImportFromEPSG(srID)

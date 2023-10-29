@@ -17,10 +17,7 @@ import org.apache.spark.sql.types.{ArrayType, BinaryType, DataType}
 
 import scala.collection.mutable.ArrayBuffer
 
-/**
-  * Returns a set of new rasters with the specified tile size (tileWidth x
-  * tileHeight).
-  */
+/** Merges rasters into a single raster. */
 //noinspection DuplicatedCode
 case class RST_MergeAgg(
     rasterExpr: Expression,
@@ -61,6 +58,7 @@ case class RST_MergeAgg(
         copy(mutableAggBufferOffset = newMutableAggBufferOffset)
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
+        GDAL.enable()
 
         if (buffer.isEmpty) {
             null
@@ -68,21 +66,24 @@ case class RST_MergeAgg(
             buffer.head
         } else {
 
-            // Do do move the expression
-            val tiles = buffer.map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType))
+            // This is a trick to get the rasters sorted by their parent path to ensure more consistent results
+            // when merging rasters with large overlaps
+            val tiles = buffer
+                .map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType))
+                .sortBy(_.getParentPath)
 
             // If merging multiple index rasters, the index value is dropped
-            val idx = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
-            val merged = MergeRasters.merge(tiles.map(_.raster))
+            val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
+            val merged = MergeRasters.merge(tiles.map(_.getRaster)).flushCache()
             // TODO: should parent path be an array?
-            val parentPath = tiles.head.parentPath
-            val driver = tiles.head.driver
+            val parentPath = tiles.head.getParentPath
+            val driver = tiles.head.getDriver
 
-            val result = MosaicRasterTile(idx, merged, parentPath, driver)
+            val result = new MosaicRasterTile(idx, merged, parentPath, driver)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
                 .serialize(BinaryType, expressionConfig.getRasterCheckpoint)
 
-            tiles.foreach(RasterCleaner.dispose)
+            tiles.foreach(RasterCleaner.dispose(_))
             RasterCleaner.dispose(merged)
 
             result
@@ -119,8 +120,8 @@ object RST_MergeAgg {
           "",
           """
             |    Examples:
-            |      > SELECT _FUNC_(rasters);
-            |        raster
+            |      > SELECT _FUNC_(raster_tile);
+            |        {index_id, raster, parent_path, driver}
             |  """.stripMargin,
           "",
           "agg_funcs",

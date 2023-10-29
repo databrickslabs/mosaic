@@ -42,7 +42,6 @@ trait RST_MetadataBehaviors extends QueryTest {
         result.head.getOrElse("TileID", "") shouldBe "51010007"
 
         noException should be thrownBy rst_metadata($"path")
-        noException should be thrownBy rst_metadata("path")
 
     }
 

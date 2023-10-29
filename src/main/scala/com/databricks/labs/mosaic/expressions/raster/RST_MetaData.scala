@@ -16,7 +16,7 @@ case class RST_MetaData(raster: Expression, expressionConfig: MosaicExpressionCo
       with CodegenFallback {
 
     /** Returns the metadata of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = buildMapString(tile.raster.metadata)
+    override def rasterTransform(tile: => MosaicRasterTile): Any = buildMapString(tile.getRaster.metadata)
 
 }
 
@@ -30,7 +30,7 @@ object RST_MetaData extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        {"NC_GLOBAL#acknowledgement":"NOAA Coral Reef Watch Program","NC_GLOBAL#cdm_data_type":"Grid"}
           |  """.stripMargin
 

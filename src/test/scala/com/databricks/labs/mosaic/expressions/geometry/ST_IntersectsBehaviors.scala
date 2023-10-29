@@ -78,6 +78,17 @@ trait ST_IntersectsBehaviors extends QueryTest {
                                   |""".stripMargin)
 
         result2.collect().length should be > 0
+
+        val result3 = spark.sql("""
+                                  |SELECT ST_INTERSECTS_AGG(LEFT_INDEX, RIGHT_INDEX)
+                                  |FROM LEFT
+                                  |INNER JOIN RIGHT ON LEFT_INDEX.INDEX_ID == RIGHT_INDEX.INDEX_ID
+                                  |GROUP BY LEFT_ID, RIGHT_ID
+                                  |""".stripMargin)
+
+        result3.collect().length should be > 0
+
+        noException should be thrownBy st_intersects_agg(lit("POLYGON (1 1, 2 2, 3 3, 1 1)"), lit("POLYGON (1 1, 2 2, 3 3, 1 1)"))
     }
 
     def intersectsAggBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

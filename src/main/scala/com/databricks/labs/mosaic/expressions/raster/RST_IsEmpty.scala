@@ -16,8 +16,8 @@ case class RST_IsEmpty(raster: Expression, expressionConfig: MosaicExpressionCon
       with CodegenFallback {
 
     /** Returns true if the raster is empty. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.raster
+    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+        val raster = tile.getRaster
         (raster.ySize == 0 && raster.xSize == 0) || raster.isEmpty
     }
 
@@ -33,7 +33,7 @@ object RST_IsEmpty extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        false
           |  """.stripMargin
 

@@ -10,6 +10,7 @@ import scala.language.postfixOps
 import scala.util.Try
 
 //noinspection DuplicatedCode
+/** GDAL environment preparation and configuration. */
 object MosaicGDAL extends Logging {
 
     private val usrlibsoPath = "/usr/lib/libgdal.so"
@@ -23,9 +24,11 @@ object MosaicGDAL extends Logging {
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
     var isEnabled = false
 
+    /** Returns true if GDAL is enabled. */
     def wasEnabled(spark: SparkSession): Boolean =
         spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
 
+    /** Prepares the GDAL environment. */
     def prepareEnvironment(spark: SparkSession, initScriptPath: String): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
@@ -37,26 +40,25 @@ object MosaicGDAL extends Logging {
         }
     }
 
+    /** Configures the GDAL environment. */
     def configureGDAL(): Unit = {
         val CPL_TMPDIR = Files.createTempDirectory("mosaic-gdal-tmp").toAbsolutePath.toString
         val GDAL_PAM_PROXY_DIR = Files.createTempDirectory("mosaic-gdal-tmp").toAbsolutePath.toString
+        gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
         gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
         gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)
         gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", GDAL_PAM_PROXY_DIR)
         gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "NO")
-        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
-        gdal.SetConfigOption("GDAL_ENABLE_TIFF_SPLIT", "FALSE")
-        gdal.SetConfigOption("GTIFF_DIRECT_IO", "NO")
-        gdal.SetConfigOption("GTIFF_VIRTUAL_MEM_IO", "NO")
     }
 
+    /** Enables the GDAL environment. */
     def enableGDAL(spark: SparkSession): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 isEnabled = true
                 loadSharedObjects()
-                gdal.AllRegister()
                 configureGDAL()
+                gdal.AllRegister()
                 spark.conf.set(GDAL_ENABLED, "true")
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment enabled successfully.")
@@ -84,6 +86,7 @@ object MosaicGDAL extends Logging {
         w.close()
     }
 
+    /** Loads the shared objects required for GDAL. */
     private def loadSharedObjects(): Unit = {
         loadOrNOOP(usrlibsoPath)
         loadOrNOOP(usrlibso30Path)
@@ -93,7 +96,8 @@ object MosaicGDAL extends Logging {
         loadOrNOOP(libogdisoPath)
     }
 
-    //noinspection ScalaStyle
+    /** Loads the shared object if it exists. */
+    // noinspection ScalaStyle
     private def loadOrNOOP(path: String): Unit = {
         try {
             if (Files.exists(Paths.get(path))) System.load(path)
@@ -105,12 +109,14 @@ object MosaicGDAL extends Logging {
         }
     }
 
+    /** Reads the resource bytes. */
     private def readResourceBytes(name: String): Array[Byte] = {
         val bis = new BufferedInputStream(getClass.getResourceAsStream(name))
         try { Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray }
         finally bis.close()
     }
 
+    /** Reads the resource lines. */
     // noinspection SameParameterValue
     private def readResourceLines(name: String): Array[String] = {
         val bytes = readResourceBytes(name)

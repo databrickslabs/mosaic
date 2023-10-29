@@ -3,8 +3,30 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterBandGDAL, MosaicRasterGDAL}
 
+/**
+  * Base trait for raster grid expressions. It provides the boilerplate code
+  * needed to create a function builder for a given expression. It minimises
+  * amount of code needed to create a new expression.
+  */
 trait RasterGridExpression {
 
+    /**
+      * Transforms a pixel to a cell ID and a value.
+      * @param gt
+      *   The geotransform of the raster.
+      * @param indexSystem
+      *   The index system to be used.
+      * @param resolution
+      *   The resolution of the index system.
+      * @param x
+      *   X coordinate of the pixel.
+      * @param y
+      *   Y coordinate of the pixel.
+      * @param value
+      *   The value of the pixel.
+      * @return
+      *   A tuple containing the cell ID and the value.
+      */
     def pixelTransformer(
         gt: Seq[Double],
         indexSystem: IndexSystem,
@@ -19,8 +41,21 @@ trait RasterGridExpression {
         (cellID, value)
     }
 
+    /**
+      * Transforms a raster to a sequence of maps. Each map contains cell IDs
+      * and values for a given band.
+      * @param raster
+      *   The raster to be transformed.
+      * @param indexSystem
+      *   The index system to be used.
+      * @param resolution
+      *   The resolution of the index system.
+      * @return
+      *   A sequence of maps. Each map contains cell IDs and values for a given
+      *   band.
+      */
     def griddedPixels(
-        raster: MosaicRasterGDAL,
+        raster: => MosaicRasterGDAL,
         indexSystem: IndexSystem,
         resolution: Int
     ): Seq[Map[Long, Seq[Double]]] = {
@@ -36,11 +71,7 @@ trait RasterGridExpression {
                 .groupBy(_._1) // Group by cell ID.
         }
         val transformed = raster.transformBands(bandTransform)
-        transformed.map(
-          band => band.mapValues(
-            values => values.map(_._2)
-          )
-        )
+        transformed.map(band => band.mapValues(values => values.map(_._2)))
     }
 
 }

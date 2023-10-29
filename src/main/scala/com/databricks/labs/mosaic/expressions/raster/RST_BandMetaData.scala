@@ -40,7 +40,7 @@ case class RST_BandMetaData(raster: Expression, band: Expression, expressionConf
       * @return
       *   The band metadata of the band as a map type result.
       */
-    override def bandTransform(raster: MosaicRasterTile, band: MosaicRasterBandGDAL): Any = {
+    override def bandTransform(raster: => MosaicRasterTile, band: MosaicRasterBandGDAL): Any = {
         buildMapString(band.metadata)
     }
 }
@@ -55,7 +55,7 @@ object RST_BandMetaData extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, 1);
+          |      > SELECT _FUNC_(raster_tile, 1);
           |        {"NC_GLOBAL#acknowledgement":"NOAA Coral Reef Watch Program","NC_GLOBAL#cdm_data_type":"Grid"}
           |  """.stripMargin
 

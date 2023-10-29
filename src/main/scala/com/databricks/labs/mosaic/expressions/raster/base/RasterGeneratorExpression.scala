@@ -70,15 +70,16 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       * @return
       *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: MosaicRasterTile): Seq[MosaicRasterTile]
+    def rasterGenerator(raster: => MosaicRasterTile): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
+        GDAL.enable()
         val tile = MosaicRasterTile.deserialize(rasterExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType)
         val generatedRasters = rasterGenerator(tile)
 
         // Writing rasters disposes of the written raster
         val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize())
-        generatedRasters.foreach(RasterCleaner.dispose)
+        generatedRasters.foreach(RasterCleaner.dispose(_))
         RasterCleaner.dispose(tile)
 
         rows.map(row => InternalRow.fromSeq(Seq(row)))

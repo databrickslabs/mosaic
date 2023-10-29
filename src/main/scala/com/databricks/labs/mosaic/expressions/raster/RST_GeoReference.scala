@@ -16,8 +16,8 @@ case class RST_GeoReference(raster: Expression, expressionConfig: MosaicExpressi
       with CodegenFallback {
 
     /** Returns the georeference of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.raster
+    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+        val raster = tile.getRaster
         val geoTransform = raster.getRaster.GetGeoTransform()
         buildMapDouble(
           Map(
@@ -42,7 +42,7 @@ object RST_GeoReference extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, 1);
+          |      > SELECT _FUNC_(raster_tile);
           |        {"upper_left_x": 1.0, "upper_left_y": 1.0, "scale_x": 1.0, "scale_y": 1.0, "skew_x": 1.0, "skew_y": 1.0}
           |  """.stripMargin
 

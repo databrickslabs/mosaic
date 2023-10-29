@@ -21,7 +21,7 @@ case class RST_Subdatasets(raster: Expression, expressionConfig: MosaicExpressio
       with CodegenFallback {
 
     /** Returns the subdatasets of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = buildMapString(tile.raster.subdatasets)
+    override def rasterTransform(tile: => MosaicRasterTile): Any = buildMapString(tile.getRaster.subdatasets)
 
 }
 
@@ -35,7 +35,7 @@ object RST_Subdatasets extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        {"NETCDF:"ct5km_baa-max-7d_v3.1_20220101.nc":bleaching_alert_area":"[1x3600x7200] N/A (8-bit unsigned integer)",
           |        "NETCDF:"ct5km_baa-max-7d_v3.1_20220101.nc":mask":"[1x3600x7200] mask (8-bit unsigned integer)"}
           |  """.stripMargin

@@ -12,12 +12,15 @@ __all__ = [
     "rst_bandmetadata",
     "rst_boundingbox",
     "rst_clip",
+    "rst_combineavg",
     "rst_fromfile",
     "rst_frombands",
     "rst_georeference",
+    "ret_getnodata",
     "rst_getsubdataset",
     "rst_height",
     "rst_isempty",
+    "rst_initnodata",
     "rst_memsize",
     "rst_metadata",
     "rst_merge",
@@ -37,6 +40,7 @@ __all__ = [
     "rst_rotation",
     "rst_scalex",
     "rst_scaley",
+    "rst_setnodata",
     "rst_skewx",
     "rst_skewy",
     "rst_srid",
@@ -121,6 +125,26 @@ def rst_clip(raster: ColumnOrName, geometry: ColumnOrName) -> Column:
     )
 
 
+def rst_combineavg(rasters: ColumnOrName) -> Column:
+    """
+    Combines the rasters into a single raster.
+
+    Parameters
+    ----------
+    rasters : Column (ArrayType(StringType))
+        Raster tiles to combine.
+
+    Returns
+    -------
+    Column (RasterTile)
+        The combined raster tile.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_combineavg", pyspark_to_java_column(rasters)
+    )
+
+
 def rst_georeference(raster: ColumnOrName) -> Column:
     """
     Returns GeoTransform of the raster as a GT array of doubles.
@@ -145,6 +169,28 @@ def rst_georeference(raster: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_georeference", pyspark_to_java_column(raster)
+    )
+
+
+def ret_getnodata(raster: ColumnOrName) -> Column:
+    """
+    Returns the nodata value of the band.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    band : Column (IntegerType)
+        Band index, starts from 1.
+
+    Returns
+    -------
+    Column (DoubleType)
+        The nodata value of the band.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "ret_getnodata", pyspark_to_java_column(raster)
     )
 
 
@@ -188,6 +234,27 @@ def rst_height(raster: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_height", pyspark_to_java_column(raster)
+    )
+
+
+def rst_initnodata(raster: ColumnOrName) -> Column:
+    """
+    Initializes the nodata value of the band.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the raster file.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_initnodata",
+        pyspark_to_java_column(raster)
     )
 
 
@@ -663,6 +730,30 @@ def rst_scaley(raster: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_scaley", pyspark_to_java_column(raster)
+    )
+
+
+def rst_setnodata(raster: ColumnOrName, nodata: ColumnOrName) -> Column:
+    """
+    Sets the nodata value of the band.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    nodata : Column (DoubleType)
+        The nodata value to set.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the raster file.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_setnodata",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(nodata),
     )
 
 

@@ -3,21 +3,23 @@ package com.databricks.labs.mosaic.expressions.raster
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
-import org.apache.spark.sql.types.{DataType, StructField, StructType}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, Literal, NullIntolerant}
+import org.apache.spark.sql.types.{DataType, IntegerType, StructField, StructType}
 import org.apache.spark.unsafe.types.UTF8String
 
 /**
-  * Returns a set of new rasters with the specified tile size (tileWidth x
-  * tileHeight).
+  * The raster for construction of a raster tile. This should be the first
+  * expression in the expression tree for a raster tile.
   */
 case class RST_FromFile(
     rasterPathExpr: Expression,
@@ -31,8 +33,6 @@ case class RST_FromFile(
     GDAL.enable()
 
     override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
-
-    val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 
@@ -48,14 +48,31 @@ case class RST_FromFile(
 
     override def elementSchema: StructType = StructType(Array(StructField("tile", dataType)))
 
+    /**
+      * Loads a raster from a file and subdivides it into tiles of the specified
+      * size (in MB).
+      * @param input
+      *   The input file path.
+      * @return
+      *   The tiles.
+      */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
+        GDAL.enable()
         val path = rasterPathExpr.eval(input).asInstanceOf[UTF8String].toString
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
-        val (raster, tiles) = ReTileOnRead.localSubdivide(path, targetSize)
-        val rows = tiles.map(_.formatCellId(indexSystem).serialize())
-        tiles.foreach(RasterCleaner.dispose)
-        RasterCleaner.dispose(raster)
-        rows.map(row => InternalRow.fromSeq(Seq(row)))
+        if (targetSize <= 0) {
+            val raster = MosaicRasterGDAL.readRaster(path, path)
+            val tile = new MosaicRasterTile(null, raster, path, raster.getDriversShortName)
+            val row = tile.formatCellId(indexSystem).serialize()
+            RasterCleaner.dispose(raster)
+            Seq(InternalRow.fromSeq(Seq(row)))
+        } else {
+            val (raster, tiles) = ReTileOnRead.localSubdivide(path, targetSize)
+            val rows = tiles.map(_.formatCellId(indexSystem).serialize())
+            tiles.foreach(RasterCleaner.dispose(_))
+            RasterCleaner.dispose(raster)
+            rows.map(row => InternalRow.fromSeq(Seq(row)))
+        }
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =
@@ -78,15 +95,16 @@ object RST_FromFile extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b);
-          |        /path/to/raster_tile_1.tif
-          |        /path/to/raster_tile_2.tif
-          |        /path/to/raster_tile_3.tif
+          |      > SELECT _FUNC_(raster_path);
+          |        {index_id, raster, parent_path, driver}
           |        ...
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_FromFile](2, expressionConfig)
+        (children: Seq[Expression]) => {
+            val sizeExpr = if (children.length == 1) new Literal(-1, IntegerType) else children(1)
+            RST_FromFile(children.head, sizeExpr, expressionConfig)
+        }
     }
 
 }

@@ -16,8 +16,8 @@ case class RST_UpperLeftY(raster: Expression, expressionConfig: MosaicExpression
       with CodegenFallback {
 
     /** Returns the upper left y of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        tile.raster.getRaster.GetGeoTransform()(3)
+    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+        tile.getRaster.getRaster.GetGeoTransform()(3)
     }
 
 }
@@ -32,7 +32,7 @@ object RST_UpperLeftY extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |       1.123
           |  """.stripMargin
 

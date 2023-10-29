@@ -16,7 +16,7 @@ case class RST_MemSize(raster: Expression, expressionConfig: MosaicExpressionCon
       with CodegenFallback {
 
     /** Returns the memory size of the raster in bytes. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = tile.raster.getMemSize
+    override def rasterTransform(tile: => MosaicRasterTile): Any = tile.getRaster.getMemSize
 
 }
 
@@ -30,7 +30,7 @@ object RST_MemSize extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        228743
           |  """.stripMargin
 

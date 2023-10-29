@@ -19,6 +19,13 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
 
     def crsID: Int
 
+    /**
+      * Returns the spatial reference of the index system. This is only
+      * available when GDAL is available. For proj4j please use crsID method.
+      *
+      * @return
+      *   SpatialReference
+      */
     def osrSpatialRef: SpatialReference = {
         val sr = new SpatialReference()
         sr.ImportFromEPSG(crsID)

@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster
 
-import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterBandGDAL, MosaicRasterGDAL}
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.should.Matchers._
@@ -15,7 +15,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
           filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
         )
         val testBand = testRaster.getBand(1)
-        testBand.asInstanceOf[MosaicRasterBandGDAL].band
+        testBand.getBand
         testBand.index shouldBe 1
         testBand.units shouldBe ""
         testBand.description shouldBe "Nadir_Reflectance_Band1"

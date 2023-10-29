@@ -11,10 +11,7 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
-/**
-  * Returns a set of new rasters with the specified tile size (tileWidth x
-  * tileHeight).
-  */
+/** The expression for clipping a raster by a vector. */
 case class RST_Clip(
     rastersExpr: Expression,
     geometryExpr: Expression,
@@ -32,25 +29,23 @@ case class RST_Clip(
     val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
 
     /**
-      * The function to be overridden by the extending class. It is called when
-      * the expression is evaluated. It provides the raster and the arguments to
-      * the expression. It abstracts spark serialization from the caller.
+      * Clips a raster by a vector.
       *
       * @param tile
       *   The raster to be used.
       * @param arg1
-      *   The first argument.
+      *   The vector to be used.
       * @return
-      *   A result of the expression.
+      *   The clipped raster.
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
+    override def rasterTransform(tile: => MosaicRasterTile, arg1: Any): Any = {
         val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
         val geomCRS = geometry.getSpatialReferenceOSR
-        MosaicRasterTile(
-          tile.index,
-          RasterClipByVector.clip(tile.raster, geometry, geomCRS, geometryAPI),
-          tile.parentPath,
-          tile.driver
+        new MosaicRasterTile(
+          tile.getIndex,
+          RasterClipByVector.clip(tile.getRaster, geometry, geomCRS, geometryAPI),
+          tile.getParentPath,
+          tile.getDriver
         )
     }
 
@@ -69,10 +64,9 @@ object RST_Clip extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b);
-          |        /path/to/raster_tile_1.tif
-          |        /path/to/raster_tile_2.tif
-          |        /path/to/raster_tile_3.tif
+          |      > SELECT _FUNC_(raster, vector);
+          |        {index_id, clipped_raster, parentPath, driver}
+          |        {index_id, clipped_raster, parentPath, driver}
           |        ...
           |  """.stripMargin
 

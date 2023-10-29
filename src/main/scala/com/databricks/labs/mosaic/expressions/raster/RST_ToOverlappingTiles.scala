@@ -10,24 +10,24 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
 /**
- * Returns a set of new rasters with the specified tile size (tileWidth x
- * tileHeight).
- */
+  * Returns a set of new rasters which are the result of a rolling window over
+  * the input raster.
+  */
 case class RST_ToOverlappingTiles(
-                         rasterExpr: Expression,
-                         tileWidthExpr: Expression,
-                         tileHeightExpr: Expression,
-                         overlapExpr: Expression,
-                         expressionConfig: MosaicExpressionConfig
-                     ) extends RasterGeneratorExpression[RST_ToOverlappingTiles](rasterExpr, expressionConfig)
-    with NullIntolerant
-    with CodegenFallback {
+    rasterExpr: Expression,
+    tileWidthExpr: Expression,
+    tileHeightExpr: Expression,
+    overlapExpr: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends RasterGeneratorExpression[RST_ToOverlappingTiles](rasterExpr, expressionConfig)
+      with NullIntolerant
+      with CodegenFallback {
 
     /**
-     * Returns a set of new rasters with the specified tile size (tileWidth x
-     * tileHeight).
-     */
-    override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
+      * Returns a set of new rasters which are the result of a rolling window
+      * over the input raster.
+      */
+    override def rasterGenerator(tile: => MosaicRasterTile): Seq[MosaicRasterTile] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
         val overlapValue = overlapExpr.eval().asInstanceOf[Int]
@@ -45,16 +45,16 @@ object RST_ToOverlappingTiles extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a set of new rasters with the specified tile size (tileWidth x tileHeight).
+          |_FUNC_(expr1, expr2, expr3, expr4) - Returns a set of new rasters with the specified tile size (tileWidth x tileHeight).
+          |                                     The tiles will overlap by the specified amount.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b);
-          |        /path/to/raster_tile_1.tif
-          |        /path/to/raster_tile_2.tif
-          |        /path/to/raster_tile_3.tif
+          |      > SELECT _FUNC_(raster_tile, 256, 256, 10);
+          |        {index_id, raster_tile, tile_width, tile_height}
+          |        {index_id, raster_tile, tile_width, tile_height}
           |        ...
           |  """.stripMargin
 

@@ -61,7 +61,7 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    def rasterTransform(raster: MosaicRasterTile): Any
+    def rasterTransform(raster: => MosaicRasterTile): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -74,6 +74,7 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       *   The result of the expression.
       */
     override def nullSafeEval(input: Any): Any = {
+        GDAL.enable()
         val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], cellIdDataType)
         val result = rasterTransform(tile)
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)

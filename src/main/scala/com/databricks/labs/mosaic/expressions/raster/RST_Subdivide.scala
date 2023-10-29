@@ -9,10 +9,7 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
-/**
-  * Returns a set of new rasters with the specified tile size (tileWidth x
-  * tileHeight).
-  */
+/** Returns a set of new rasters with the specified tile size (In MB). */
 case class RST_Subdivide(
     rasterExpr: Expression,
     sizeInMB: Expression,
@@ -21,11 +18,8 @@ case class RST_Subdivide(
       with NullIntolerant
       with CodegenFallback {
 
-    /**
-      * Returns a set of new rasters with the specified tile size (tileWidth x
-      * tileHeight). Rasters are disposed in super class.
-      */
-    override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
+    /** Returns a set of new rasters with the specified tile size (In MB). */
+    override def rasterGenerator(tile: => MosaicRasterTile): Seq[MosaicRasterTile] = {
         val targetSize = sizeInMB.eval().asInstanceOf[Int]
         BalancedSubdivision.splitRaster(tile, targetSize)
     }
@@ -41,16 +35,15 @@ object RST_Subdivide extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a set of new rasters with same aspect ratio that are not larger than the threshold memory footprint.
+          |_FUNC_(expr1, expr2) - Returns a set of new rasters with same aspect ratio that are not larger than the threshold memory footprint.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b);
-          |        /path/to/raster_tile_1.tif
-          |        /path/to/raster_tile_2.tif
-          |        /path/to/raster_tile_3.tif
+          |      > SELECT _FUNC_(raster_tile, 256);
+          |        {index_id, raster_tile, tile_width, tile_height}
+          |        {index_id, raster_tile, tile_width, tile_height}
           |        ...
           |  """.stripMargin
 

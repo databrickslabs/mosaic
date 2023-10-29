@@ -7,22 +7,32 @@ import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util._
 
 /** GDAL implementation of the MosaicRasterBand trait. */
-case class MosaicRasterBandGDAL(band: Band, id: Int) {
+class MosaicRasterBandGDAL(band: => Band, id: Int) {
 
+    def getBand: Band = band
+
+    /**
+      * @return
+      *   The band's index.
+      */
     def index: Int = id
 
+    /**
+      * @return
+      *   The band's description.
+      */
     def description: String = coerceNull(Try(band.GetDescription))
 
     /**
-     * @return
-     * Returns the pixels of the raster as a 1D array.
-     */
+      * @return
+      *   Returns the pixels of the raster as a 1D array.
+      */
     def values: Array[Double] = values(0, 0, xSize, ySize)
 
     /**
-     * @return
-     * Returns the pixels of the raster as a 1D array.
-     */
+      * @return
+      *   Returns the pixels of the raster as a 1D array.
+      */
     def maskValues: Array[Double] = maskValues(0, 0, xSize, ySize)
 
     /**
@@ -36,6 +46,10 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
             .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
             .getOrElse(Map.empty[String, String])
 
+    /**
+      * @return
+      *   Returns band's unity type.
+      */
     def units: String = coerceNull(Try(band.GetUnitType))
 
     /**
@@ -47,16 +61,40 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       */
     def coerceNull(tryVal: Try[String]): String = tryVal.filter(_ != null).getOrElse("")
 
+    /**
+      * @return
+      *   Returns the band's data type.
+      */
     def dataType: Int = Try(band.getDataType).getOrElse(0)
 
+    /**
+      * @return
+      *   Returns the band's x size.
+      */
     def xSize: Int = Try(band.GetXSize).getOrElse(0)
 
+    /**
+      * @return
+      *   Returns the band's y size.
+      */
     def ySize: Int = Try(band.GetYSize).getOrElse(0)
 
+    /**
+      * @return
+      *   Returns the band's min pixel value.
+      */
     def minPixelValue: Double = computeMinMax.head
 
+    /**
+      * @return
+      *   Returns the band's max pixel value.
+      */
     def maxPixelValue: Double = computeMinMax.last
 
+    /**
+      * @return
+      *   Returns the band's min and max pixel values.
+      */
     def computeMinMax: Seq[Double] = {
         val minMaxVals = Array.fill[Double](2)(0)
         Try(band.ComputeRasterMinMax(minMaxVals, 0))
@@ -64,6 +102,10 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
             .getOrElse(Seq(Double.NaN, Double.NaN))
     }
 
+    /**
+      * @return
+      *   Returns the band's no data value.
+      */
     def noDataValue: Double = {
         val noDataVal = Array.fill[java.lang.Double](1)(0)
         band.GetNoDataValue(noDataVal)
@@ -95,19 +137,19 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
     }
 
     /**
-     * Get the band's pixels as a 1D array.
-     *
-     * @param xOffset
-     *   The x offset to start reading from.
-     * @param yOffset
-     *   The y offset to start reading from.
-     * @param xSize
-     *   The number of pixels to read in the x direction.
-     * @param ySize
-     *   The number of pixels to read in the y direction.
-     * @return
-     *   A 2D array of pixels from the band.
-     */
+      * Get the band's pixels as a 1D array.
+      *
+      * @param xOffset
+      *   The x offset to start reading from.
+      * @param yOffset
+      *   The y offset to start reading from.
+      * @param xSize
+      *   The number of pixels to read in the x direction.
+      * @param ySize
+      *   The number of pixels to read in the y direction.
+      * @return
+      *   A 2D array of pixels from the band.
+      */
     def maskValues(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
         val flatArray = Array.ofDim[Double](xSize * ySize)
         val maskBand = band.GetMaskBand
@@ -119,6 +161,10 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
         }
     }
 
+    /**
+      * @return
+      *   Returns the band's pixel value with scale and offset applied.
+      */
     def pixelValueToUnitValue(pixelValue: Double): Double = (pixelValue * pixelValueScale) + pixelValueOffset
 
     def pixelValueScale: Double = {
@@ -128,6 +174,10 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
             .getOrElse(0.0)
     }
 
+    /**
+      * @return
+      *   Returns the band's pixel value scale.
+      */
     def pixelValueOffset: Double = {
         val offset = Array.fill[java.lang.Double](1)(0)
         Try(band.GetOffset(offset))
@@ -169,7 +219,16 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
         }
     }
 
+    /**
+      * @return
+      *   Returns the band's mask flags.
+      */
     def maskFlags: Seq[Any] = Seq(band.GetMaskFlags())
 
+    /**
+      * @return
+      *   Returns true if the band is a no data mask.
+      */
     def isNoDataMask: Boolean = band.GetMaskFlags() == gdalconstConstants.GMF_NODATA
+
 }

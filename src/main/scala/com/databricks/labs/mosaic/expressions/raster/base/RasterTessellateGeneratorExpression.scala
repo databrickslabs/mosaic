@@ -68,9 +68,10 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * @return
       *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile]
+    def rasterGenerator(raster: => MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
+        GDAL.enable()
         val tile = MosaicRasterTile
             .deserialize(
               rasterExpr.eval(input).asInstanceOf[InternalRow],
@@ -84,7 +85,7 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
             .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize())))
 
         RasterCleaner.dispose(tile)
-        generatedChips.foreach(chip => RasterCleaner.dispose(chip.raster))
+        generatedChips.foreach(chip => RasterCleaner.dispose(chip.getRaster))
 
         rows.iterator
     }

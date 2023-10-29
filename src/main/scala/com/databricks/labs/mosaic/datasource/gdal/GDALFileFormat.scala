@@ -18,10 +18,22 @@ import java.net.URI
 import java.sql.Timestamp
 import java.util.Locale
 
+/** A file format for reading binary files using GDAL. */
 class GDALFileFormat extends BinaryFileFormat {
 
     import GDALFileFormat._
 
+    /**
+      * Infer schema for the raster file.
+      * @param sparkSession
+      *   Spark session.
+      * @param options
+      *   Reading options.
+      * @param files
+      *   List of files.
+      * @return
+      *   An instance of [[StructType]].
+      */
     override def inferSchema(sparkSession: SparkSession, options: Map[String, String], files: Seq[FileStatus]): Option[StructType] = {
         GDAL.enable()
 
@@ -33,6 +45,19 @@ class GDALFileFormat extends BinaryFileFormat {
         schema
     }
 
+    /**
+      * Prepare write is not supported.
+      * @param sparkSession
+      *   Spark session.
+      * @param job
+      *   Job.
+      * @param options
+      *   Writing options.
+      * @param dataSchema
+      *   Data schema.
+      * @return
+      *   An instance of [[OutputWriterFactory]].
+      */
     override def prepareWrite(
         sparkSession: SparkSession,
         job: Job,
@@ -42,6 +67,18 @@ class GDALFileFormat extends BinaryFileFormat {
         throw new Error("Writing to GDALFileFormat is not supported.")
     }
 
+    /**
+      * Indicates whether the file format is splittable.
+      * @param sparkSession
+      *   Spark session.
+      * @param options
+      *   Reading options.
+      * @param path
+      *   Path.
+      * @return
+      *   True if the file format is splittable, false otherwise. Always false
+      *   for GDAL.
+      */
     override def isSplitable(
         sparkSession: SparkSession,
         options: Map[String, String],
@@ -50,6 +87,26 @@ class GDALFileFormat extends BinaryFileFormat {
 
     override def shortName(): String = GDAL_BINARY_FILE
 
+    /**
+      * Build a reader for the file format.
+      * @param sparkSession
+      *   Spark session.
+      * @param dataSchema
+      *   Data schema.
+      * @param partitionSchema
+      *   Partition schema.
+      * @param requiredSchema
+      *   Required schema.
+      * @param filters
+      *   Filters.
+      * @param options
+      *   Reading options.
+      * @param hadoopConf
+      *   Hadoop configuration.
+      * @return
+      *   A function that takes a [[PartitionedFile]] and returns an iterator of
+      *   [[org.apache.spark.sql.catalyst.InternalRow]].
+      */
     override def buildReader(
         sparkSession: SparkSession,
         dataSchema: StructType,
@@ -69,6 +126,8 @@ class GDALFileFormat extends BinaryFileFormat {
         val filterFuncs = filters.flatMap(createFilterFunction)
         val maxLength = sparkSession.conf.get("spark.sql.sources.binaryFile.maxLength", Int.MaxValue.toString).toInt
 
+        // Identify the reader to use for the file format.
+        // GDAL supports multiple reading strategies.
         val reader = ReadStrategy.getReader(options)
 
         file: PartitionedFile => {
@@ -112,12 +171,28 @@ object GDALFileFormat {
     val SRID = "srid"
     val UUID = "uuid"
 
+    /**
+      * Creates an exception for when the file is too big to read.
+      * @param maxLength
+      *   Maximum length.
+      * @param status
+      *   File status.
+      * @return
+      *   An instance of [[SparkException]].
+      */
     def CantReadBytesException(maxLength: Long, status: FileStatus): SparkException =
         new SparkException(
           s"Can't read binary files bigger than $maxLength bytes. " +
               s"File ${status.getPath} is ${status.getLen} bytes"
         )
 
+    /**
+      * Generates a UUID for the file.
+      * @param status
+      *   File status.
+      * @return
+      *   A UUID.
+      */
     def getUUID(status: FileStatus): Long = {
         val uuid = Murmur3.hash64(
           status.getPath.toString.getBytes("UTF-8") ++
@@ -128,18 +203,46 @@ object GDALFileFormat {
     }
 
     // noinspection UnstableApiUsage
+    /**
+      * Reads the content of the file.
+      * @param fs
+      *   File system.
+      * @param status
+      *   File status.
+      * @return
+      *   An array of bytes.
+      */
     def readContent(fs: FileSystem, status: FileStatus): Array[Byte] = {
         val stream = fs.open(status.getPath)
-        try { ByteStreams.toByteArray(stream) }
-        finally { Closeables.close(stream, true) }
+        try { // noinspection UnstableApiUsage
+            ByteStreams.toByteArray(stream)
+        } finally { // noinspection UnstableApiUsage
+            Closeables.close(stream, true)
+        }
     }
 
+    /**
+      * Indicates whether the file extension is allowed.
+      * @param status
+      *   File status.
+      * @param options
+      *   Reading options.
+      * @return
+      *   True if the file extension is allowed, false otherwise.
+      */
     def isAllowedExtension(status: FileStatus, options: Map[String, String]): Boolean = {
         val allowedExtensions = options.getOrElse("extensions", "*").split(";").map(_.trim.toLowerCase(Locale.ROOT))
         val fileExtension = status.getPath.getName.toLowerCase(Locale.ROOT)
         allowedExtensions.contains("*") || allowedExtensions.exists(fileExtension.endsWith)
     }
 
+    /**
+      * Creates a filter function for the file.
+      * @param filter
+      *   Filter.
+      * @return
+      *   An instance of [[FileStatus]] => [[Boolean]].
+      */
     private def createFilterFunction(filter: Filter): Option[FileStatus => Boolean] = {
         filter match {
             case And(left, right)                                     => (createFilterFunction(left), createFilterFunction(right)) match {

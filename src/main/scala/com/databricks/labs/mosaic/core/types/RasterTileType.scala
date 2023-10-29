@@ -15,6 +15,14 @@ class RasterTileType(fields: Array[StructField]) extends StructType(fields) {
 
 object RasterTileType {
 
+    /**
+      * Creates a new instance of [[RasterTileType]].
+      *
+      * @param idType
+      *   Type of the index ID.
+      * @return
+      *   An instance of [[RasterTileType]].
+      */
     def apply(idType: DataType): RasterTileType = {
         require(Seq(LongType, IntegerType, StringType).contains(idType))
         new RasterTileType(
