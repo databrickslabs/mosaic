@@ -16,8 +16,8 @@ case class RST_SkewY(raster: Expression, expressionConfig: MosaicExpressionConfi
       with CodegenFallback {
 
     /** Returns the skew y of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        tile.raster.getRaster.GetGeoTransform()(4)
+    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+        tile.getRaster.getRaster.GetGeoTransform()(4)
     }
 
 }
@@ -35,7 +35,7 @@ object RST_SkewY extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        1.123
           |  """.stripMargin
 

@@ -68,6 +68,17 @@ trait CellIntersectionAggBehaviors extends MosaicSpatialQueryTest {
 
         res.foreach { case (actual, expected) => actual.equalsTopo(expected) shouldEqual true }
 
+        in_df.createOrReplaceTempView("source")
+
+        noException should be thrownBy spark
+            .sql("""with subquery (
+                   | select grid_cell_intersection_agg(chip) as intersection_chips from source
+                   | group by case_id, chip.index_id
+                   |) select st_aswkt(intersection_chips.wkb) from subquery""".stripMargin)
+            .as[String]
+            .collect()
+            .map(wkt => mc.getGeometryAPI.geometry(wkt, "WKT"))
+
     }
 
     def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {

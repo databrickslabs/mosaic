@@ -24,7 +24,7 @@ case class RST_WorldToRasterCoord(
       * Returns the x and y of the raster by applying GeoTransform as a tuple of
       * Integers. This will ensure projection of the raster is respected.
       */
-    override def rasterTransform(raster: MosaicRasterGDAL, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(raster: => MosaicRasterGDAL, arg1: Any, arg2: Any): Any = {
         val xGeo = arg1.asInstanceOf[Double]
         val yGeo = arg2.asInstanceOf[Double]
         val gt = raster.getRaster.GetGeoTransform()
@@ -40,12 +40,12 @@ object RST_WorldToRasterCoord extends WithExpressionInfo {
 
     override def name: String = "rst_worldtorastercoord"
 
-    override def usage: String = "_FUNC_(expr1) - Returns x and y coordinates (pixel, line) of the pixel."
+    override def usage: String = "_FUNC_(expr1, expr2, expr3) - Returns x and y coordinates (pixel, line) of the pixel."
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile, 1.123, 1.123);
           |       (11, 12)
           |  """.stripMargin
 

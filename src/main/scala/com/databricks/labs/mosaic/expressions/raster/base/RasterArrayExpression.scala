@@ -53,7 +53,7 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       * @return
       *   A result of the expression.
       */
-    def rasterTransform(rasters: Seq[MosaicRasterTile]): Any
+    def rasterTransform(rasters: => Seq[MosaicRasterTile]): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -67,6 +67,7 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       *   The result of the expression.
       */
     override def nullSafeEval(input: Any): Any = {
+        GDAL.enable()
         val rasterDT = rastersExpr.dataType.asInstanceOf[ArrayType].elementType
         val arrayData = input.asInstanceOf[ArrayData]
         val n = arrayData.numElements()
@@ -78,7 +79,7 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
 
         val result = rasterTransform(tiles)
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
-        tiles.foreach(RasterCleaner.dispose)
+        tiles.foreach(RasterCleaner.dispose(_))
         RasterCleaner.dispose(result)
         serialized
     }

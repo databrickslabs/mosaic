@@ -21,8 +21,8 @@ case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionCon
       with CodegenFallback {
 
     /** Returns the summary info the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.raster
+    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+        val raster = tile.getRaster
         val vector = new JVector[String]()
         // For other flags check the way gdalinfo.py script is called, InfoOptions expects a collection of same flags.
         // https://gdal.org/programs/gdalinfo.html
@@ -44,7 +44,7 @@ object RST_Summary extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        {
           |             "description":"byte.tif",
           |             "driverShortName":"GTiff",

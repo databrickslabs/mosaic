@@ -17,8 +17,8 @@ case class RST_PixelWidth(raster: Expression, expressionConfig: MosaicExpression
       with CodegenFallback {
 
     /** Returns the pixel width of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.raster
+    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+        val raster = tile.getRaster
         val scaleX = raster.getRaster.GetGeoTransform()(1)
         val skewY = raster.getRaster.GetGeoTransform()(4)
         // when there is no skew width is scaleX, but we cant assume 0-only skew
@@ -45,7 +45,7 @@ object RST_PixelWidth extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        1.123
           |  """.stripMargin
 

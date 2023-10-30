@@ -19,9 +19,9 @@ case class RST_SRID(raster: Expression, expressionConfig: MosaicExpressionConfig
       with CodegenFallback {
 
     /** Returns the SRID of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
+    override def rasterTransform(tile: => MosaicRasterTile): Any = {
         // Reference: https://gis.stackexchange.com/questions/267321/extracting-epsg-from-a-raster-using-gdal-bindings-in-python
-        val proj = new SpatialReference(tile.raster.getRaster.GetProjection())
+        val proj = new SpatialReference(tile.getRaster.getRaster.GetProjection())
         Try(proj.AutoIdentifyEPSG())
         Try(proj.GetAttrValue("AUTHORITY", 1).toInt).getOrElse(0)
     }
@@ -41,7 +41,7 @@ object RST_SRID extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        4326
           |  """.stripMargin
 

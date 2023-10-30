@@ -26,7 +26,7 @@ case class RST_RasterToWorldCoord(
       * GeoTransform. This ensures the projection of the raster is respected.
       * The output is a WKT point.
       */
-    override def rasterTransform(raster: MosaicRasterGDAL, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(raster: => MosaicRasterGDAL, arg1: Any, arg2: Any): Any = {
         val x = arg1.asInstanceOf[Int]
         val y = arg2.asInstanceOf[Int]
         val gt = raster.getRaster.GetGeoTransform()
@@ -47,13 +47,13 @@ object RST_RasterToWorldCoord extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns the (x, y) pixel in world coordinates using geo transform of the raster.
+          |_FUNC_(expr1, expr2, expr3) - Returns the (x, y) pixel in world coordinates using geo transform of the raster.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b, c);
+          |      > SELECT _FUNC_(raster_tile, x, y);
           |        (11.2, 12.3)
           |  """.stripMargin
 

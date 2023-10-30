@@ -59,7 +59,7 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
       * @return
       *   A result of the expression.
       */
-    def rasterTransform(raster: MosaicRasterTile, arg1: Any): Any
+    def rasterTransform(raster: => MosaicRasterTile, arg1: Any): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -76,8 +76,9 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
       */
     //noinspection DuplicatedCode
     override def nullSafeEval(input: Any, arg1: Any): Any = {
+        GDAL.enable()
         val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
-        val raster = tile.raster
+        val raster = tile.getRaster
         val result = rasterTransform(tile, arg1)
         val serialized = serialize(result, returnsRaster, outputType, expressionConfig)
         RasterCleaner.dispose(raster)

@@ -96,4 +96,9 @@ object PathUtils {
         outPath
     }
 
+    def fromSubdatasetPath(path: String): String = {
+        val _ :: filePath :: _ :: Nil = path.split(":").toList
+        filePath
+    }
+
 }

@@ -16,8 +16,8 @@ case class RST_TryOpen(raster: Expression, expressionConfig: MosaicExpressionCon
       with CodegenFallback {
 
     /** Returns true if the raster can be opened. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        Option(tile.raster.getRaster).isDefined
+    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+        Option(tile.getRaster.getRaster).isDefined
     }
 
 }
@@ -32,7 +32,7 @@ object RST_TryOpen extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        false
           |  """.stripMargin
 

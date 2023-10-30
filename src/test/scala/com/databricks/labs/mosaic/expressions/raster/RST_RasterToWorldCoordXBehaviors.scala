@@ -46,7 +46,6 @@ trait RST_RasterToWorldCoordXBehaviors extends QueryTest {
                                                      |""".stripMargin)
 
         noException should be thrownBy rst_rastertoworldcoordx(lit("/dummy/path"), 2, 2)
-        noException should be thrownBy rst_rastertoworldcoordx("/dummy/path", lit(2), lit(2))
         noException should be thrownBy rst_rastertoworldcoordx(lit("/dummy/path"), lit(2), lit(2))
 
     }

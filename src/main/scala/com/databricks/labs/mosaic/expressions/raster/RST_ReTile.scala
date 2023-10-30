@@ -26,7 +26,7 @@ case class RST_ReTile(
       * Returns a set of new rasters with the specified tile size (tileWidth x
       * tileHeight).
       */
-    override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
+    override def rasterGenerator(tile: => MosaicRasterTile): Seq[MosaicRasterTile] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
         ReTile.reTile(tile, tileWidthValue, tileHeightValue)
@@ -43,16 +43,16 @@ object RST_ReTile extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a set of new rasters with the specified tile size (tileWidth x tileHeight).
+          |_FUNC_(expr1, expr2, expr3) - Returns a set of new rasters with the specified tile size (tileWidth x tileHeight).
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b);
-          |        /path/to/raster_tile_1.tif
-          |        /path/to/raster_tile_2.tif
-          |        /path/to/raster_tile_3.tif
+          |      > SELECT _FUNC_(raster_tile, 256, 256);
+          |        {index_id, raster_tile, tile_width, tile_height}
+          |        {index_id, raster_tile, tile_width, tile_height}
+          |        {index_id, raster_tile, tile_width, tile_height}
           |        ...
           |  """.stripMargin
 

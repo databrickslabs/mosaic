@@ -10,8 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
 /**
-  * Returns a set of new rasters with the specified tile size (tileWidth x
-  * tileHeight).
+  * Returns a set of new rasters which are the result of the tessellation of the
+  * input raster.
   */
 case class RST_Tessellate(
     rasterExpr: Expression,
@@ -22,12 +22,12 @@ case class RST_Tessellate(
       with CodegenFallback {
 
     /**
-      * Returns a set of new rasters with the specified tile size (tileWidth x
-      * tileHeight).
+      * Returns a set of new rasters which are the result of the tessellation of
+      * the input raster.
       */
-    override def rasterGenerator(tile: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile] = {
+    override def rasterGenerator(tile: => MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile] = {
         RasterTessellate.tessellate(
-          tile.raster,
+          tile.getRaster,
           resolution,
           indexSystem,
           geometryAPI
@@ -45,16 +45,15 @@ object RST_Tessellate extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a set of new rasters with the specified resolution within configured grid.
+          |_FUNC_(expr1, expr2) - Returns a set of new rasters with the specified resolution within configured grid.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b);
-          |        /path/to/raster_tile_1.tif
-          |        /path/to/raster_tile_2.tif
-          |        /path/to/raster_tile_3.tif
+          |      > SELECT _FUNC_(raster_tile, 3);
+          |        {index_id, raster_tile, tile_width, tile_height}
+          |        {index_id, raster_tile, tile_width, tile_height}
           |        ...
           |  """.stripMargin
 

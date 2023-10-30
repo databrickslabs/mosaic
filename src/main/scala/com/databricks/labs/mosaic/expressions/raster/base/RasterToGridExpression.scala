@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
@@ -55,9 +56,10 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       * @return
       *   Sequence of (cellId, measure) of each band of the raster.
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
+    override def rasterTransform(tile: => MosaicRasterTile, arg1: Any): Any = {
+        GDAL.enable()
         val resolution = arg1.asInstanceOf[Int]
-        val transformed = griddedPixels(tile.raster, indexSystem, resolution)
+        val transformed = griddedPixels(tile.getRaster, indexSystem, resolution)
         val results = transformed.map(_.mapValues(valuesCombiner))
         RasterCleaner.dispose(tile)
         serialize(results)

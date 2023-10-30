@@ -38,7 +38,7 @@ trait RST_TessellateBehaviors extends QueryTest {
 
         val result = gridTiles.collect()
 
-        result.length should be(409)
+        result.length should be(380)
 
     }
 

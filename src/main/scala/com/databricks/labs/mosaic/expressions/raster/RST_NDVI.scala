@@ -10,10 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.BinaryType
 
-/**
-  * Returns a set of new rasters with the specified tile size (tileWidth x
-  * tileHeight).
-  */
+/** The expression for computing NDVI index. */
 case class RST_NDVI(
     rastersExpr: Expression,
     redIndex: Expression,
@@ -31,20 +28,17 @@ case class RST_NDVI(
       with CodegenFallback {
 
     /**
-      * The function to be overridden by the extending class. It is called when
-      * the expression is evaluated. It provides the raster and the arguments to
-      * the expression. It abstracts spark serialization from the caller.
-      *
+      * Computes NDVI index.
       * @param raster
       *   The raster to be used.
       * @param arg1
-      *   The first argument.
+      *   The red band index.
       * @param arg2
-      *   The second argument.
+      *   The nir band index.
       * @return
-      *   A result of the expression.
+      *   The raster contains NDVI index.
       */
-    override def rasterTransform(raster: MosaicRasterGDAL, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(raster: => MosaicRasterGDAL, arg1: Any, arg2: Any): Any = {
         val redInd = arg1.asInstanceOf[Int]
         val nirInd = arg2.asInstanceOf[Int]
         NDVI.compute(raster, redInd, nirInd)
@@ -59,16 +53,14 @@ object RST_NDVI extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster contains NDVI index computed by bands provided by red_index and nir_index.
+          |_FUNC_(expr1, expr2, expr3) - Returns a raster contains NDVI index computed by bands provided by red_index and nir_index.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b);
-          |        /path/to/raster_tile_1.tif
-          |        /path/to/raster_tile_2.tif
-          |        /path/to/raster_tile_3.tif
+          |      > SELECT _FUNC_(raster_tile, 1, 2);
+          |        {index_id, raster, parent_path, driver}
           |        ...
           |  """.stripMargin
 

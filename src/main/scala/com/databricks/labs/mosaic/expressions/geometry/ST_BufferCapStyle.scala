@@ -38,7 +38,7 @@ case class ST_BufferCapStyle(
 
     override def geometryCodeGen(geometryRef: String, argRef1: String, argRef2: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.bufferCapStyle($argRef1, $argRef2);"""
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.bufferCapStyle($argRef1, $argRef2.toString());"""
         (code, resultRef)
     }
 

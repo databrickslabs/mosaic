@@ -8,15 +8,32 @@ import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
-import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 
+/** An object defining the retiling read strategy for the GDAL file format. */
 object ReTileOnRead extends ReadStrategy {
 
     // noinspection DuplicatedCode
+    /**
+      * Returns the schema of the GDAL file format.
+      * @note
+      *   Different read strategies can have different schemas.
+      *
+      * @param options
+      *   Options passed to the reader.
+      * @param files
+      *   List of files to read.
+      * @param parentSchema
+      *   Parent schema.
+      * @param sparkSession
+      *   Spark session.
+      *
+      * @return
+      *   Schema of the GDAL file format.
+      */
     override def getSchema(
         options: Map[String, String],
         files: Seq[FileStatus],
@@ -37,6 +54,22 @@ object ReTileOnRead extends ReadStrategy {
             .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType), nullable = false))
     }
 
+    /**
+      * Reads the content of the file.
+      * @param status
+      *   File status.
+      * @param fs
+      *   File system.
+      * @param requiredSchema
+      *   Required schema.
+      * @param options
+      *   Options passed to the reader.
+      * @param indexSystem
+      *   Index system.
+      *
+      * @return
+      *   Iterator of internal rows.
+      */
     override def read(
         status: FileStatus,
         fs: FileSystem,
@@ -56,13 +89,13 @@ object ReTileOnRead extends ReadStrategy {
                 case PATH              => status.getPath.toString
                 case MODIFICATION_TIME => status.getModificationTime
                 case UUID              => uuid
-                case X_SIZE            => tile.raster.xSize
-                case Y_SIZE            => tile.raster.ySize
-                case BAND_COUNT        => tile.raster.numBands
-                case METADATA          => tile.raster.metadata
-                case SUBDATASETS       => tile.raster.subdatasets
-                case SRID              => tile.raster.SRID
-                case LENGTH            => tile.raster.getMemSize
+                case X_SIZE            => tile.getRaster.xSize
+                case Y_SIZE            => tile.getRaster.ySize
+                case BAND_COUNT        => tile.getRaster.numBands
+                case METADATA          => tile.getRaster.metadata
+                case SUBDATASETS       => tile.getRaster.subdatasets
+                case SRID              => tile.getRaster.SRID
+                case LENGTH            => tile.getRaster.getMemSize
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
             // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
@@ -75,10 +108,19 @@ object ReTileOnRead extends ReadStrategy {
         rows.iterator
     }
 
+    /**
+      * Subdivides a raster into tiles of a given size.
+      * @param inPath
+      *   Path to the raster.
+      * @param sizeInMB
+      *   Size of the tiles in MB.
+      *
+      * @return
+      *   A tuple of the raster and the tiles.
+      */
     def localSubdivide(inPath: String, sizeInMB: Int): (MosaicRasterGDAL, Seq[MosaicRasterTile]) = {
-        val localCopy = PathUtils.copyToTmp(inPath)
-        val raster = MosaicRasterGDAL.readRaster(localCopy, inPath)
-        val inTile = MosaicRasterTile(null, raster, inPath, raster.getDriversShortName)
+        val raster = MosaicRasterGDAL.readRaster(inPath, inPath)
+        val inTile = new MosaicRasterTile(null, raster, inPath, raster.getDriversShortName)
         val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)
         (raster, tiles)
     }

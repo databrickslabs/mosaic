@@ -11,7 +11,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the world coordinates of the raster (x,y) pixel. */
+/** The expression for extracting the bounding box of a raster. */
 case class RST_BoundingBox(
     raster: Expression,
     expressionConfig: MosaicExpressionConfig
@@ -20,17 +20,16 @@ case class RST_BoundingBox(
       with CodegenFallback {
 
     /**
-      * The function to be overridden by the extending class. It is called when
-      * the expression is evaluated. It provides the raster to the expression.
-      * It abstracts spark serialization from the caller.
+      * Computes the bounding box of the raster. The bbox is returned as a WKB
+      * polygon.
       *
       * @param tile
       *   The raster tile to be used.
       * @return
-      *   The result of the expression.
+      *   The bounding box of the raster as a WKB polygon.
       */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.raster
+    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+        val raster = tile.getRaster
         val gt = raster.getRaster.GetGeoTransform()
         val (originX, originY) = GDAL.toWorldCoord(gt, 0, 0)
         val (endX, endY) = GDAL.toWorldCoord(gt, raster.xSize, raster.ySize)
@@ -63,8 +62,8 @@ object RST_BoundingBox extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b, c);
-          |        (11.2, 12.3)
+          |      > SELECT _FUNC_(raster_tile);
+          |        POLYGON ((-180 -90, -180 90, 180 90, 180 -90, -180 -90))
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {

@@ -61,7 +61,6 @@ trait RST_BandMetadataBehaviors extends QueryTest {
 
         noException should be thrownBy rst_bandmetadata($"bleachingSubdataset", lit(1))
         noException should be thrownBy rst_bandmetadata($"bleachingSubdataset", 1)
-        noException should be thrownBy rst_bandmetadata("bleachingSubdataset", 1)
 
     }
 

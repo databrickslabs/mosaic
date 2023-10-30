@@ -23,10 +23,10 @@ case class RST_GetSubdataset(raster: Expression, subsetName: Expression, express
       with CodegenFallback {
 
     /** Returns the subdatasets of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
+    override def rasterTransform(tile: => MosaicRasterTile, arg1: Any): Any = {
         val subsetName = arg1.asInstanceOf[UTF8String].toString
-        val subdataset = tile.raster.getSubdataset(subsetName)
-        MosaicRasterTile(tile.index, subdataset, tile.parentPath, tile.driver)
+        val subdataset = tile.getRaster.getSubdataset(subsetName)
+        new MosaicRasterTile(tile.getIndex, subdataset, tile.getParentPath, tile.getDriver)
     }
 
 }
@@ -36,13 +36,13 @@ object RST_GetSubdataset extends WithExpressionInfo {
 
     override def name: String = "rst_getsubdataset"
 
-    override def usage: String = "_FUNC_(expr1) - Extracts subdataset raster."
+    override def usage: String = "_FUNC_(expr1, expr2) - Extracts subdataset raster."
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b);
-          |        tile(idx, raster, parent_path, driver)
+          |      > SELECT _FUNC_(raster_tile, 'SUBDATASET_1_NAME');
+          |        {index_id, raster, parent_path, driver}
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {

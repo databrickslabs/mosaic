@@ -10,10 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.BinaryType
 
-/**
-  * Returns a set of new rasters with the specified tile size (tileWidth x
-  * tileHeight).
-  */
+/** The expression for stacking and resampling input bands. */
 case class RST_FromBands(
     bandsExpr: Expression,
     expressionConfig: MosaicExpressionConfig
@@ -27,10 +24,13 @@ case class RST_FromBands(
       with CodegenFallback {
 
     /**
-      * Returns a set of new rasters with the specified tile size (tileWidth x
-      * tileHeight).
+      * Stacks and resamples input bands.
+      * @param rasters
+      *   The rasters to be used.
+      * @return
+      *   The stacked and resampled raster.
       */
-    override def rasterTransform(rasters: Seq[MosaicRasterTile]): Any = MergeBands.merge(rasters.map(_.raster), "bilinear")
+    override def rasterTransform(rasters: => Seq[MosaicRasterTile]): Any = MergeBands.merge(rasters.map(_.getRaster), "bilinear")
 
 }
 
@@ -47,10 +47,9 @@ object RST_FromBands extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b);
-          |        /path/to/raster_1.tif
-          |        /path/to/raster_2.tif
-          |        /path/to/raster_3.tif
+          |      > SELECT _FUNC_(array(band1, band2, band3));
+          |        {index_id, raster, parent_path, driver}
+          |        {index_id, raster, parent_path, driver}
           |        ...
           |  """.stripMargin
 

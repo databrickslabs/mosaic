@@ -16,8 +16,8 @@ case class RST_ScaleY(raster: Expression, expressionConfig: MosaicExpressionConf
       with CodegenFallback {
 
     /** Returns the scale y of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        tile.raster.getRaster.GetGeoTransform()(5)
+    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+        tile.getRaster.getRaster.GetGeoTransform()(5)
     }
 
 }
@@ -35,7 +35,7 @@ object RST_ScaleY extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        1.123
           |  """.stripMargin
 
