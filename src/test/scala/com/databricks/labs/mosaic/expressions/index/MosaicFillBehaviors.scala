@@ -44,6 +44,8 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
             .collect()
 
         boroughs.collect().length shouldEqual mosaics2.length
+
+        noException should be thrownBy mosaicfill(col("wkt"), resolution, lit(true))
     }
 
     def wkbMosaicFill(mosaicContext: MosaicContext): Unit = {

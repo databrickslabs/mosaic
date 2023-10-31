@@ -93,7 +93,7 @@
             <artifactId>h3</artifactId>
             <!--H3 fixed at 3.7.0 until Photon updates the version-->
             <!--suppress MavenPackageUpdate-->
-            <version>3.7.0</version>
+            <version>3.7.3</version>
         </dependency>
         <dependency>
             <groupId>org.locationtech.jts</groupId>
@@ -158,6 +158,27 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.scoverage</groupId>
+                <artifactId>scoverage-maven-plugin</artifactId>
+                <version>1.4.11</version>
+                <executions>
+                    <execution>
+                        <id>scoverage-report</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>check</goal>
+                            <goal>report-only</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <minimumCoverage>${minimum.coverage}</minimumCoverage>
+                    <failOnMinimumCoverage>true</failOnMinimumCoverage>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                    <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
+                </configuration>
+            </plugin>
+            <plugin>
                 <!-- see http://davidb.github.com/scala-maven-plugin -->
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
@@ -185,6 +206,7 @@
                 <configuration>
                     <!-- Tests will be run with scalatest-maven-plugin instead -->
                     <skipTests>true</skipTests>
+                    <argLine>@{argLine} -Djava.library.path=/usr/local/lib;/usr/java/packages/lib;/usr/lib64;/lib64;/lib;/usr/lib</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -226,27 +248,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.scoverage</groupId>
-                <artifactId>scoverage-maven-plugin</artifactId>
-                <version>1.4.11</version>
-                <executions>
-                    <execution>
-                        <id>scoverage-report</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>check</goal>
-                            <goal>report-only</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <minimumCoverage>${minimum.coverage}</minimumCoverage>
-                    <failOnMinimumCoverage>true</failOnMinimumCoverage>
-                    <scalaVersion>${scala.version}</scalaVersion>
-                    <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

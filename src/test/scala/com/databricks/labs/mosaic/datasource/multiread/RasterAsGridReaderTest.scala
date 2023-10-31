@@ -16,8 +16,8 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 
-        val grib = "/binary/netcdf-coral/"
-        val filePath = getClass.getResource(grib).getPath
+        val netcdf = "/binary/netcdf-coral/"
+        val filePath = getClass.getResource(netcdf).getPath
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
@@ -42,7 +42,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
-            .option("fileExtension", "grib")
+            .option("extensions", "grib")
             .option("combiner", "min")
             .option("retile", "true")
             .option("tileSize", "10")

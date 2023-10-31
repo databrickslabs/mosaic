@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.{BNG, H3}
+import org.apache.spark.sql.SparkSession
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
@@ -15,7 +16,7 @@ class IndexSystemIDTest extends AnyFunSuite {
     test("IndexSystemID getIndexSystem from ID") {
         IndexSystemFactory.getIndexSystem(H3.name) shouldEqual H3IndexSystem
         IndexSystemFactory.getIndexSystem(BNG.name) shouldEqual BNGIndexSystem
-        an[Error] should be thrownBy IndexSystemFactory.getIndexSystem(null)
+        an[Throwable] should be thrownBy IndexSystemFactory.getIndexSystem(null: SparkSession)
     }
 
 }

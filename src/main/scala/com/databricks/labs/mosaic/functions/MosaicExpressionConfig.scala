@@ -26,8 +26,6 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
 
     def getIndexSystem: String = configs.getOrElse(MOSAIC_INDEX_SYSTEM, H3.name)
 
-    def getRasterAPI: String = configs.getOrElse(MOSAIC_RASTER_API, GDAL.name)
-
     def getRasterCheckpoint: String = configs.getOrElse(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT)
 
     def getCellIdType: DataType = IndexSystemFactory.getIndexSystem(getIndexSystem).cellIdType
@@ -65,8 +63,8 @@ object MosaicExpressionConfig {
         expressionConfig
             .setGeometryAPI(spark.conf.get(MOSAIC_GEOMETRY_API, JTS.name))
             .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))
-            .setRasterAPI(spark.conf.get(MOSAIC_RASTER_API, GDAL.name))
             .setRasterCheckpoint(spark.conf.get(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT))
+
     }
 
 }

@@ -26,7 +26,10 @@ import scala.util.{Success, Try}
   * @see
   *   [[https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid]]
   */
+//noinspection ScalaWeakerAccess
 object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
+
+    override def crsID: Int = 27700
 
     val name = "BNG"
 
@@ -34,14 +37,14 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       * Quadrant encodings. The order is determined in a way that preserves
       * similarity to space filling curves.
       */
-    val quadrants = Seq("", "SW", "NW", "NE", "SE")
+    val quadrants: Seq[String] = Seq("", "SW", "NW", "NE", "SE")
 
     /**
       * Resolution mappings from string names to integer encodings. Resolutions
       * are uses as integers in any index math so we need to convert sizes to
       * corresponding index resolutions.
       */
-    val resolutionMap =
+    val resolutionMap: Map[String, Int] =
         Map(
           "500km" -> -1,
           "100km" -> 1,
@@ -60,7 +63,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
     /**
       * Mapping from string names to edge sizes expressed in eastings/northings.
       */
-    val sizeMap =
+    val sizeMap: Map[String, Int] =
         Map(
           "500km" -> 500000,
           "100km" -> 100000,
@@ -82,21 +85,22 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       * coverage of this index system having a lookup is more efficient than
       * performing any math transformations between ints and chars.
       */
-    val letterMap =
+    val letterMap: Seq[Seq[String]] =
         Seq(
-          Seq("SV", "SW", "SX", "SY", "SZ", "TV", "TW"),
-          Seq("SQ", "SR", "SS", "ST", "SU", "TQ", "TR"),
-          Seq("SL", "SM", "SN", "SO", "SP", "TL", "TM"),
-          Seq("SF", "SG", "SH", "SJ", "SK", "TF", "TG"),
-          Seq("SA", "SB", "SC", "SD", "SE", "TA", "TB"),
-          Seq("NV", "NW", "NX", "NY", "NZ", "OV", "OW"),
-          Seq("NQ", "NR", "NS", "NT", "NU", "OQ", "OR"),
-          Seq("NL", "NM", "NN", "NO", "NP", "OL", "OM"),
-          Seq("NF", "NG", "NH", "NJ", "NK", "OF", "OG"),
-          Seq("NA", "NB", "NC", "ND", "NE", "OA", "OB"),
-          Seq("HV", "HW", "HX", "HY", "SZ", "JV", "JW"),
-          Seq("HQ", "HR", "HS", "HT", "HU", "JQ", "JR"),
-          Seq("HL", "HM", "HN", "HO", "HP", "JL", "JM")
+          Seq("SV", "SW", "SX", "SY", "SZ", "TV", "TW", "TX"),
+          Seq("SQ", "SR", "SS", "ST", "SU", "TQ", "TR", "TS"),
+          Seq("SL", "SM", "SN", "SO", "SP", "TL", "TM", "TN"),
+          Seq("SF", "SG", "SH", "SJ", "SK", "TF", "TG", "TH"),
+          Seq("SA", "SB", "SC", "SD", "SE", "TA", "TB", "TC"),
+          Seq("NV", "NW", "NX", "NY", "NZ", "OV", "OW", "OX"),
+          Seq("NQ", "NR", "NS", "NT", "NU", "OQ", "OR", "OS"),
+          Seq("NL", "NM", "NN", "NO", "NP", "OL", "OM", "ON"),
+          Seq("NF", "NG", "NH", "NJ", "NK", "OF", "OG", "OH"),
+          Seq("NA", "NB", "NC", "ND", "NE", "OA", "OB", "OC"),
+          Seq("HV", "HW", "HX", "HY", "SZ", "JV", "JW", "JX"),
+          Seq("HQ", "HR", "HS", "HT", "HU", "JQ", "JR", "JS"),
+          Seq("HL", "HM", "HN", "HO", "HP", "JL", "JM", "JN"),
+          Seq("HF", "HG", "HH", "HJ", "HK", "JF", "JG", "JH")
         )
 
     /**
@@ -254,7 +258,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       * @return
       *   Boolean representing validity.
       */
-    def isValid(index: Long): Boolean = {
+    override def isValid(index: Long): Boolean = {
         val digits = indexDigits(index)
         val xLetterIndex = digits.slice(3, 5).mkString.toInt
         val yLetterIndex = digits.slice(1, 3).mkString.toInt
@@ -434,7 +438,9 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
         val p2 = geometryAPI.fromCoords(Seq(x + edgeSize, y))
         val p3 = geometryAPI.fromCoords(Seq(x + edgeSize, y + edgeSize))
         val p4 = geometryAPI.fromCoords(Seq(x, y + edgeSize))
-        geometryAPI.geometry(Seq(p1, p2, p3, p4, p1), POLYGON)
+        val geom = geometryAPI.geometry(Seq(p1, p2, p3, p4, p1), POLYGON)
+        geom.setSpatialReference(this.crsID)
+        geom
     }
 
     /**
@@ -518,7 +524,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
         val digits = indexDigits(index)
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution).asInstanceOf[Double]
-        val area = math.pow((edgeSize / 1000), 2)
+        val area = math.pow(edgeSize / 1000, 2)
         area
     }
 

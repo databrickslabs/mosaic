@@ -1,9 +1,10 @@
 package com.databricks.labs.mosaic.datasource
 
 import com.databricks.labs.mosaic.{H3, JTS}
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
 import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
@@ -80,8 +81,8 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
         noException should be thrownBy OGRFileFormat.enableOGRDrivers(force = true)
 
-        val path = getClass.getResource("/binary/geodb/bridges.gdb.zip").getPath.replace("file:", "")
-        val ds = ogr.Open(s"/vsizip/$path", 0)
+        val path = PathUtils.getCleanPath(getClass.getResource("/binary/geodb/bridges.gdb.zip").getPath, useZipPath = true)
+        val ds = ogr.Open(path, 0)
 
         noException should be thrownBy OGRFileFormat.getLayer(ds, 0, "layer2")
 
@@ -145,7 +146,7 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
     test("OGRFileFormat should handle partial schema: ISSUE 351") {
         assume(System.getProperty("os.name") == "Linux")
 
-        val mc = MosaicContext.build(H3, JTS, GDAL)
+        val mc = MosaicContext.build(H3, JTS)
         import mc.functions._
 
         val issue351 = "/binary/issue351/"

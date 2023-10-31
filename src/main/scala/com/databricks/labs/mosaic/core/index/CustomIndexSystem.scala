@@ -10,7 +10,12 @@ import org.apache.spark.unsafe.types.UTF8String
 import scala.util.{Success, Try}
 
 /** Implements the [[IndexSystem]] for any CRS system. */
+//noinspection ScalaWeakerAccess
 case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Serializable {
+
+    override def crsID: Int = conf.crsID.getOrElse(
+      throw new Error("CRS ID is not defined for this index system")
+    )
 
     val name =
         f"CUSTOM(${conf.boundXMin}, ${conf.boundXMax}, ${conf.boundYMin}, ${conf.boundYMax}, ${conf.cellSplits}, ${conf.rootCellSizeX}, ${conf.rootCellSizeY})"

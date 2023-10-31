@@ -10,12 +10,22 @@ from mosaic.utils.types import ColumnOrName
 
 __all__ = [
     "rst_bandmetadata",
+    "rst_boundingbox",
+    "rst_clip",
+    "rst_combineavg",
+    "rst_fromfile",
+    "rst_frombands",
     "rst_georeference",
+    "ret_getnodata",
+    "rst_getsubdataset",
     "rst_height",
     "rst_isempty",
+    "rst_initnodata",
     "rst_memsize",
     "rst_metadata",
+    "rst_merge",
     "rst_numbands",
+    "rst_ndvi",
     "rst_pixelheight",
     "rst_pixelwidth",
     "rst_rastertogridavg",
@@ -30,17 +40,22 @@ __all__ = [
     "rst_rotation",
     "rst_scalex",
     "rst_scaley",
+    "rst_setnodata",
     "rst_skewx",
     "rst_skewy",
     "rst_srid",
     "rst_subdatasets",
     "rst_summary",
+    "rst_subdivide",
+    "rst_tessellate",
+    "rst_to_overlapping_tiles",
+    "rst_tryopen",
     "rst_upperleftx",
     "rst_upperlefty",
     "rst_width",
     "rst_worldtorastercoord",
     "rst_worldtorastercoordx",
-    "rst_worldtorastercoordy"
+    "rst_worldtorastercoordy",
 ]
 
 
@@ -62,10 +77,73 @@ def rst_bandmetadata(raster: ColumnOrName, band: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_bandmetadata",
-        pyspark_to_java_column(raster),
-        pyspark_to_java_column(band)
+        "rst_bandmetadata", pyspark_to_java_column(raster), pyspark_to_java_column(band)
     )
+
+
+def rst_boundingbox(raster: ColumnOrName) -> Column:
+    """
+    Returns the bounding box of the raster as a WKT polygon.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+
+    Returns
+    -------
+    Column (StringType)
+        A WKT polygon representing the bounding box of the raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_boundingbox", pyspark_to_java_column(raster)
+    )
+
+
+def rst_clip(raster: ColumnOrName, geometry: ColumnOrName) -> Column:
+    """
+    Clips the raster to the given geometry.
+    The result is the path to the clipped raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    geometry : Column (StringType)
+        The geometry to clip the raster to.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the clipped raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_clip", pyspark_to_java_column(raster), pyspark_to_java_column(geometry)
+    )
+
+
+def rst_combineavg(rasters: ColumnOrName) -> Column:
+    """
+    Combines the rasters into a single raster.
+
+    Parameters
+    ----------
+    rasters : Column (ArrayType(StringType))
+        Raster tiles to combine.
+
+    Returns
+    -------
+    Column (RasterTile)
+        The combined raster tile.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_combineavg", pyspark_to_java_column(rasters)
+    )
+
 
 def rst_georeference(raster: ColumnOrName) -> Column:
     """
@@ -90,9 +168,56 @@ def rst_georeference(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_georeference",
-        pyspark_to_java_column(raster)
+        "rst_georeference", pyspark_to_java_column(raster)
     )
+
+
+def ret_getnodata(raster: ColumnOrName) -> Column:
+    """
+    Returns the nodata value of the band.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    band : Column (IntegerType)
+        Band index, starts from 1.
+
+    Returns
+    -------
+    Column (DoubleType)
+        The nodata value of the band.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "ret_getnodata", pyspark_to_java_column(raster)
+    )
+
+
+def rst_getsubdataset(raster: ColumnOrName, subdataset: ColumnOrName) -> Column:
+    """
+    Returns the subdataset of the raster.
+    The subdataset is the path to the subdataset of the raster.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    subdataset : Column (IntegerType)
+        The index of the subdataset to get.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the subdataset.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_getsubdataset",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(subdataset),
+    )
+
 
 def rst_height(raster: ColumnOrName) -> Column:
     """
@@ -108,9 +233,30 @@ def rst_height(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_height",
+        "rst_height", pyspark_to_java_column(raster)
+    )
+
+
+def rst_initnodata(raster: ColumnOrName) -> Column:
+    """
+    Initializes the nodata value of the band.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the raster file.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_initnodata",
         pyspark_to_java_column(raster)
     )
+
 
 def rst_isempty(raster: ColumnOrName) -> Column:
     """
@@ -126,9 +272,9 @@ def rst_isempty(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_isempty",
-        pyspark_to_java_column(raster)
+        "rst_isempty", pyspark_to_java_column(raster)
     )
+
 
 def rst_memsize(raster: ColumnOrName) -> Column:
     """
@@ -144,9 +290,9 @@ def rst_memsize(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_memsize",
-        pyspark_to_java_column(raster)
+        "rst_memsize", pyspark_to_java_column(raster)
     )
+
 
 def rst_metadata(raster: ColumnOrName) -> Column:
     """
@@ -162,9 +308,53 @@ def rst_metadata(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_metadata",
-        pyspark_to_java_column(raster)
+        "rst_metadata", pyspark_to_java_column(raster)
     )
+
+
+def rst_merge(rasters: ColumnOrName) -> Column:
+    """
+    Merges the rasters into a single raster.
+    The result is the path to the merged raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    rasters : Column (ArrayType(StringType))
+        Paths to the rasters to merge.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the merged raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_merge", pyspark_to_java_column(rasters)
+    )
+
+
+def rst_frombands(bands: ColumnOrName) -> Column:
+    """
+    Merges the bands into a single raster.
+    The result is the path to the merged raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    bands : Column (ArrayType(StringType))
+        Paths to the bands to merge.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the merged raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_frombands", pyspark_to_java_column(bands)
+    )
+
 
 def rst_numbands(raster: ColumnOrName) -> Column:
     """
@@ -180,9 +370,38 @@ def rst_numbands(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_numbands",
-        pyspark_to_java_column(raster)
+        "rst_numbands", pyspark_to_java_column(raster)
     )
+
+
+def rst_ndvi(raster: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName) -> Column:
+    """
+    Computes the NDVI of the raster.
+    The result is the path to the NDVI raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    band1 : Column (IntegerType)
+        The first band index.
+    band2 : Column (IntegerType)
+        The second band index.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the NDVI raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_ndvi",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(band1),
+        pyspark_to_java_column(band2),
+    )
+
 
 def rst_pixelheight(raster: ColumnOrName) -> Column:
     """
@@ -198,9 +417,9 @@ def rst_pixelheight(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_pixelheight",
-        pyspark_to_java_column(raster)
+        "rst_pixelheight", pyspark_to_java_column(raster)
     )
+
 
 def rst_pixelwidth(raster: ColumnOrName) -> Column:
     """
@@ -216,9 +435,9 @@ def rst_pixelwidth(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_pixelwidth",
-        pyspark_to_java_column(raster)
+        "rst_pixelwidth", pyspark_to_java_column(raster)
     )
+
 
 def rst_rastertogridavg(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
@@ -241,8 +460,9 @@ def rst_rastertogridavg(raster: ColumnOrName, resolution: ColumnOrName) -> Colum
     return config.mosaic_context.invoke_function(
         "rst_rastertogridavg",
         pyspark_to_java_column(raster),
-        pyspark_to_java_column(resolution)
+        pyspark_to_java_column(resolution),
     )
+
 
 def rst_rastertogridcount(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
@@ -265,8 +485,9 @@ def rst_rastertogridcount(raster: ColumnOrName, resolution: ColumnOrName) -> Col
     return config.mosaic_context.invoke_function(
         "rst_rastertogridcount",
         pyspark_to_java_column(raster),
-        pyspark_to_java_column(resolution)
+        pyspark_to_java_column(resolution),
     )
+
 
 def rst_rastertogridmax(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
@@ -289,8 +510,9 @@ def rst_rastertogridmax(raster: ColumnOrName, resolution: ColumnOrName) -> Colum
     return config.mosaic_context.invoke_function(
         "rst_rastertogridmax",
         pyspark_to_java_column(raster),
-        pyspark_to_java_column(resolution)
+        pyspark_to_java_column(resolution),
     )
+
 
 def rst_rastertogridmedian(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
@@ -313,8 +535,9 @@ def rst_rastertogridmedian(raster: ColumnOrName, resolution: ColumnOrName) -> Co
     return config.mosaic_context.invoke_function(
         "rst_rastertogridmedian",
         pyspark_to_java_column(raster),
-        pyspark_to_java_column(resolution)
+        pyspark_to_java_column(resolution),
     )
+
 
 def rst_rastertogridmin(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
@@ -337,10 +560,13 @@ def rst_rastertogridmin(raster: ColumnOrName, resolution: ColumnOrName) -> Colum
     return config.mosaic_context.invoke_function(
         "rst_rastertogridmin",
         pyspark_to_java_column(raster),
-        pyspark_to_java_column(resolution)
+        pyspark_to_java_column(resolution),
     )
 
-def rst_rastertoworldcoord(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName) -> Column:
+
+def rst_rastertoworldcoord(
+    raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName
+) -> Column:
     """
     Computes the world coordinates of the raster pixel at the given x and y coordinates.
     The result is a WKT point geometry.
@@ -361,10 +587,13 @@ def rst_rastertoworldcoord(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrNam
         "rst_rastertoworldcoord",
         pyspark_to_java_column(raster),
         pyspark_to_java_column(x),
-        pyspark_to_java_column(y)
+        pyspark_to_java_column(y),
     )
 
-def rst_rastertoworldcoordx(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName) -> Column:
+
+def rst_rastertoworldcoordx(
+    raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName
+) -> Column:
     """
     Computes the world coordinates of the raster pixel at the given x and y coordinates.
     The result is the X coordinate of the point after applying the GeoTransform of the raster.
@@ -384,10 +613,13 @@ def rst_rastertoworldcoordx(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrNa
         "rst_rastertoworldcoordx",
         pyspark_to_java_column(raster),
         pyspark_to_java_column(x),
-        pyspark_to_java_column(y)
+        pyspark_to_java_column(y),
     )
 
-def rst_rastertoworldcoordy(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName) -> Column:
+
+def rst_rastertoworldcoordy(
+    raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName
+) -> Column:
     """
     Computes the world coordinates of the raster pixel at the given x and y coordinates.
     The result is the Y coordinate of the point after applying the GeoTransform of the raster.
@@ -407,10 +639,13 @@ def rst_rastertoworldcoordy(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrNa
         "rst_rastertoworldcoordy",
         pyspark_to_java_column(raster),
         pyspark_to_java_column(x),
-        pyspark_to_java_column(y)
+        pyspark_to_java_column(y),
     )
 
-def rst_retile(raster: ColumnOrName, tileWidth: ColumnOrName, tileHeight: ColumnOrName) -> Column:
+
+def rst_retile(
+    raster: ColumnOrName, tileWidth: ColumnOrName, tileHeight: ColumnOrName
+) -> Column:
     """
     Retiles the raster to the given tile size. The result is a collection of new raster files.
     The new rasters are stored in the checkpoint directory.
@@ -432,8 +667,9 @@ def rst_retile(raster: ColumnOrName, tileWidth: ColumnOrName, tileHeight: Column
         "rst_retile",
         pyspark_to_java_column(raster),
         pyspark_to_java_column(tileWidth),
-        pyspark_to_java_column(tileHeight)
+        pyspark_to_java_column(tileHeight),
     )
+
 
 def rst_rotation(raster: ColumnOrName) -> Column:
     """
@@ -453,9 +689,9 @@ def rst_rotation(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_rotation",
-        pyspark_to_java_column(raster)
+        "rst_rotation", pyspark_to_java_column(raster)
     )
+
 
 def rst_scalex(raster: ColumnOrName) -> Column:
     """
@@ -473,9 +709,9 @@ def rst_scalex(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_scalex",
-        pyspark_to_java_column(raster)
+        "rst_scalex", pyspark_to_java_column(raster)
     )
+
 
 def rst_scaley(raster: ColumnOrName) -> Column:
     """
@@ -493,9 +729,33 @@ def rst_scaley(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_scaley",
-        pyspark_to_java_column(raster)
+        "rst_scaley", pyspark_to_java_column(raster)
     )
+
+
+def rst_setnodata(raster: ColumnOrName, nodata: ColumnOrName) -> Column:
+    """
+    Sets the nodata value of the band.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    nodata : Column (DoubleType)
+        The nodata value to set.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the raster file.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_setnodata",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(nodata),
+    )
+
 
 def rst_skewx(raster: ColumnOrName) -> Column:
     """
@@ -513,9 +773,9 @@ def rst_skewx(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_skewx",
-        pyspark_to_java_column(raster)
+        "rst_skewx", pyspark_to_java_column(raster)
     )
+
 
 def rst_skewy(raster: ColumnOrName) -> Column:
     """
@@ -533,9 +793,9 @@ def rst_skewy(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_skewy",
-        pyspark_to_java_column(raster)
+        "rst_skewy", pyspark_to_java_column(raster)
     )
+
 
 def rst_srid(raster: ColumnOrName) -> Column:
     """
@@ -554,9 +814,9 @@ def rst_srid(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_srid",
-        pyspark_to_java_column(raster)
+        "rst_srid", pyspark_to_java_column(raster)
     )
+
 
 def rst_subdatasets(raster: ColumnOrName) -> Column:
     """
@@ -576,9 +836,9 @@ def rst_subdatasets(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_subdatasets",
-        pyspark_to_java_column(raster)
+        "rst_subdatasets", pyspark_to_java_column(raster)
     )
+
 
 def rst_summary(raster: ColumnOrName) -> Column:
     """
@@ -599,9 +859,111 @@ def rst_summary(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_summary",
-        pyspark_to_java_column(raster)
+        "rst_summary", pyspark_to_java_column(raster)
     )
+
+
+def rst_tessellate(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
+    """
+    Clip the raster into raster tiles where each tile is a grid tile for the given resolution.
+    The tile set union forms the original raster.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    resolution : Column (IntegerType)
+        The resolution of the tiles.
+
+    Returns
+    -------
+    Column (RasterTiles)
+        A struct containing the tiles of the raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_tessellate",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(resolution),
+    )
+
+
+def rst_fromfile(raster: ColumnOrName, sizeInMB: ColumnOrName) -> Column:
+    """
+    Tiles the raster into tiles of the given size.
+    :param raster:
+    :param sizeInMB:
+    :return:
+    """
+
+    return config.mosaic_context.invoke_function(
+        "rst_fromfile",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(sizeInMB)
+    )
+
+
+def rst_to_overlapping_tiles(raster: ColumnOrName, width: ColumnOrName, height: ColumnOrName, overlap: ColumnOrName) -> Column:
+    """
+    Tiles the raster into tiles of the given size.
+    :param raster:
+    :param sizeInMB:
+    :return:
+    """
+
+    return config.mosaic_context.invoke_function(
+        "rst_to_overlapping_tiles",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(width),
+        pyspark_to_java_column(height),
+        pyspark_to_java_column(overlap)
+    )
+
+
+def rst_tryopen(raster: ColumnOrName) -> Column:
+    """
+    Tries to open the raster and returns a flag indicating if the raster can be opened.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+
+    Returns
+    -------
+    Column (BooleanType)
+        Whether the raster can be opened.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_tryopen", pyspark_to_java_column(raster)
+    )
+
+
+def rst_subdivide(raster: ColumnOrName, size_in_mb: ColumnOrName) -> Column:
+    """
+    Subdivides the raster into tiles that have to be smaller than the given size in MB.
+    All the tiles have the same aspect ratio as the original raster.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    size_in_mb : Column (IntegerType)
+        The size of the tiles in MB.
+
+    Returns
+    -------
+    Column (RasterTiles)
+        A collection of tiles of the raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_subdivide",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(size_in_mb),
+    )
+
 
 def rst_upperleftx(raster: ColumnOrName) -> Column:
     """
@@ -620,9 +982,9 @@ def rst_upperleftx(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_upperleftx",
-        pyspark_to_java_column(raster)
+        "rst_upperleftx", pyspark_to_java_column(raster)
     )
+
 
 def rst_upperlefty(raster: ColumnOrName) -> Column:
     """
@@ -641,9 +1003,9 @@ def rst_upperlefty(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-       "rst_upperlefty",
-       pyspark_to_java_column(raster)
+        "rst_upperlefty", pyspark_to_java_column(raster)
     )
+
 
 def rst_width(raster: ColumnOrName) -> Column:
     """
@@ -661,11 +1023,13 @@ def rst_width(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-       "rst_width",
-       pyspark_to_java_column(raster)
+        "rst_width", pyspark_to_java_column(raster)
     )
 
-def rst_worldtorastercoord(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName) -> Column:
+
+def rst_worldtorastercoord(
+    raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName
+) -> Column:
     """
     Computes the raster coordinates of the world coordinates.
     The raster coordinates are the pixel coordinates of the raster.
@@ -684,11 +1048,13 @@ def rst_worldtorastercoord(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrNam
 
     """
     return config.mosaic_context.invoke_function(
-       "rst_worldtorastercoord",
-       pyspark_to_java_column(raster)
+        "rst_worldtorastercoord", pyspark_to_java_column(raster)
     )
 
-def rst_worldtorastercoordx(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName) -> Column:
+
+def rst_worldtorastercoordx(
+    raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName
+) -> Column:
     """
     Computes the raster coordinates of the world coordinates.
     The raster coordinates are the pixel coordinates of the raster.
@@ -708,11 +1074,13 @@ def rst_worldtorastercoordx(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrNa
 
     """
     return config.mosaic_context.invoke_function(
-       "rst_worldtorastercoordx",
-       pyspark_to_java_column(raster)
+        "rst_worldtorastercoordx", pyspark_to_java_column(raster)
     )
 
-def rst_worldtorastercoordy(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName) -> Column:
+
+def rst_worldtorastercoordy(
+    raster: ColumnOrName, x: ColumnOrName, y: ColumnOrName
+) -> Column:
     """
     Computes the raster coordinates of the world coordinates.
     The raster coordinates are the pixel coordinates of the raster.
@@ -732,6 +1100,5 @@ def rst_worldtorastercoordy(raster: ColumnOrName, x: ColumnOrName, y: ColumnOrNa
 
     """
     return config.mosaic_context.invoke_function(
-       "rst_worldtorastercoordy",
-       pyspark_to_java_column(raster)
+        "rst_worldtorastercoordy", pyspark_to_java_column(raster)
     )

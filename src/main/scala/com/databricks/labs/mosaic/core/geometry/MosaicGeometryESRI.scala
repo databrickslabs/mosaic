@@ -74,6 +74,9 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def buffer(distance: Double): MosaicGeometryESRI = MosaicGeometryESRI(geom.buffer(distance))
 
+    // This is NOOP in ESRI bindings, JTS provides a different implementation
+    override def bufferCapStyle(distance: Double, capStyle: String): MosaicGeometryESRI = buffer(distance)
+
     override def simplify(tolerance: Double): MosaicGeometryESRI = MosaicGeometryESRI(geom.makeSimple())
 
     override def envelope: MosaicGeometryESRI = MosaicGeometryESRI(geom.envelope())
@@ -218,11 +221,12 @@ object MosaicGeometryESRI extends GeometryReader {
             if (polygons.length == 1) Seq(polygons.head) else if (polygons.length > 1) Seq(polygons.reduce(_ union _)) else Nil
 
         val pieces = multiPoint ++ multiLine ++ multiPolygon
-        val result = if (pieces.length == 1) {
-            pieces.head
-        } else {
-            pieces.reduce(_ union _)
-        }
+        val result =
+            if (pieces.length == 1) {
+                pieces.head
+            } else {
+                pieces.reduce(_ union _)
+            }
         result.setSpatialReference(getSRID(srid))
         result
     }

@@ -68,6 +68,16 @@ trait CellUnionAggBehaviors extends MosaicSpatialQueryTest {
 
         res.foreach { case (actual, expected) => actual.equalsTopo(expected) shouldEqual true }
 
+        in_df.createOrReplaceTempView("source")
+
+        //noException should be thrownBy spark
+            spark.sql("""with subquery (
+                | select grid_cell_union_agg(chip) as union_chip from source
+                | group by case_id, chip.index_id
+                |) select st_aswkt(union_chip.wkb) from subquery""".stripMargin)
+            .as[String]
+            .collect()
+
     }
 
     def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {

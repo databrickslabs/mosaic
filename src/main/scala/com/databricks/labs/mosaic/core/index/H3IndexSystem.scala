@@ -22,6 +22,8 @@ import scala.util.{Success, Try}
   */
 object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
+    override def crsID: Int = 4326
+
     val name = "H3"
 
     // An instance of H3Core to be used for IndexSystem implementation.
@@ -95,8 +97,11 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
 
-        if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
-        else makeSafeGeometry(extended, geometryAPI)
+        val geom =
+            if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
+            else makeSafeGeometry(extended, geometryAPI)
+        geom.setSpatialReference(crsID)
+        geom
     }
 
     /**
@@ -199,8 +204,12 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
 
-        if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
-        else makeSafeGeometry(extended, geometryAPI)
+        val geom =
+            if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
+            else makeSafeGeometry(extended, geometryAPI)
+
+        geom.setSpatialReference(crsID)
+        geom
     }
 
     override def format(id: Long): String = {

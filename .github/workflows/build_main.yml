@@ -16,7 +16,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        python: [ 3.8.10 ]
+        python: [ 3.9 ]
         spark: [ 3.2.1 ]
         R: [ 4.1.2 ]
     steps:
@@ -26,5 +26,7 @@ jobs:
         uses: ./.github/actions/scala_build
       - name: build python
         uses: ./.github/actions/python_build
+      - name: build R
+        uses: ./.github/actions/r_build
       - name: upload artefacts
         uses: ./.github/actions/upload_artefacts

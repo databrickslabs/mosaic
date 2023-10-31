@@ -26,6 +26,17 @@ trait CellAreaBehaviors extends MosaicSpatialQueryTest {
 
         val result = Seq(cellId).toDF("cellId").select(grid_cellarea($"cellId")).collect()
         math.abs(result.head.getDouble(0) - Row(area).getDouble(0)) < 1e-6 shouldEqual true
+
+        Seq(cellId).toDF("cellId").createOrReplaceTempView("cellId")
+
+        val sqlResult = spark
+            .sql("""with subquery (
+                   | select grid_cellarea(cellId) as area from cellId
+                   |) select * from subquery""".stripMargin)
+            .as[Double]
+            .collect()
+
+        math.abs(sqlResult.head - area) < 1e-6 shouldEqual true
     }
 
     def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
