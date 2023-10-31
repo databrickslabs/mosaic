@@ -90,4 +90,27 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         superRaster.cleanUp()
     }
 
+    test("Raster pixel and extent sizes are correct.") {
+        assume(System.getProperty("os.name") == "Linux")
+
+        val testRaster = MosaicRasterGDAL.readRaster(
+          filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
+          filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
+        )
+
+        testRaster.pixelXSize - 463.312716527 < 0.0000001 shouldBe true
+        testRaster.pixelYSize - -463.312716527 < 0.0000001 shouldBe true
+        testRaster.pixelDiagSize - 655.22312733 < 0.0000001 shouldBe true
+
+        testRaster.diagSize - 3394.1125496954 < 0.0000001 shouldBe true
+        testRaster.originX - -8895604.157333 < 0.0000001 shouldBe true
+        testRaster.originY - 2223901.039333 < 0.0000001 shouldBe true
+        testRaster.xMax - -7783653.637667 < 0.0000001 shouldBe true
+        testRaster.yMax - 1111950.519667 < 0.0000001 shouldBe true
+        testRaster.xMin - -8895604.157333 < 0.0000001 shouldBe true
+        testRaster.yMin - 2223901.039333 < 0.0000001 shouldBe true
+
+        testRaster.cleanUp()
+    }
+
 }

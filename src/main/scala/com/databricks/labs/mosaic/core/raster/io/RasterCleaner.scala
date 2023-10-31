@@ -52,19 +52,11 @@ object RasterCleaner {
     def dispose(raster: => Any): Unit = {
         raster match {
             case r: MosaicRasterGDAL  =>
-                try {
                     r.destroy()
                     r.cleanUp()
-                } catch {
-                    case _: Any => ()
-                }
             case rt: MosaicRasterTile =>
-                try {
                     rt.getRaster.destroy()
                     rt.getRaster.cleanUp()
-                } catch {
-                    case _: Any => ()
-                }
             // NOOP for simpler code handling in expressions, removes need for repeated if/else
             case _                    => ()
         }

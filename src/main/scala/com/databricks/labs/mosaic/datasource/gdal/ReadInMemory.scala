@@ -74,7 +74,7 @@ object ReadInMemory extends ReadStrategy {
         indexSystem: IndexSystem
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
-        val driverShortName = MosaicRasterGDAL.indentifyDriver(inPath)
+        val driverShortName = MosaicRasterGDAL.identifyDriver(inPath)
         val contentBytes: Array[Byte] = readContent(fs, status)
         val raster = MosaicRasterGDAL.readRaster(contentBytes, inPath, driverShortName)
         val uuid = getUUID(status)

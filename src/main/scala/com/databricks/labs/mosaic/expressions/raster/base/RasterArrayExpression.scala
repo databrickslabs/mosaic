@@ -79,8 +79,7 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
 
         val result = rasterTransform(tiles)
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
-        tiles.foreach(RasterCleaner.dispose(_))
-        RasterCleaner.dispose(result)
+        tiles.foreach(t => RasterCleaner.dispose(t))
         serialized
     }
 

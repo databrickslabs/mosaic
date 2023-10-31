@@ -89,7 +89,6 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
 
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
         RasterCleaner.dispose(tile)
-        RasterCleaner.dispose(result)
         serialized
     }
 

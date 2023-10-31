@@ -98,9 +98,12 @@ object GDAL {
                 val raster = MosaicRasterGDAL.readRaster(bytes, parentPath, shortDriverName)
                 // If the raster is coming as a byte array, we can't check for zip condition.
                 // We first try to read the raster directly, if it fails, we read it as a zip.
-                Option(raster).getOrElse(
-                  MosaicRasterGDAL.readRaster(bytes, parentPath, shortDriverName)
-                )
+                if (raster == null) {
+                    val zippedPath = s"/vsizip/$parentPath"
+                    MosaicRasterGDAL.readRaster(bytes, zippedPath, shortDriverName)
+                } else {
+                    raster
+                }
         }
     }
 
@@ -116,7 +119,7 @@ object GDAL {
       */
     def writeRasters(generatedRasters: => Seq[MosaicRasterGDAL], checkpointPath: String, rasterDT: DataType): Seq[Any] = {
         generatedRasters.map(raster =>
-            if (Option(raster).isDefined) {
+            if (raster != null) {
                 rasterDT match {
                     case StringType =>
                         val extension = GDAL.getExtension(raster.getDriversShortName)

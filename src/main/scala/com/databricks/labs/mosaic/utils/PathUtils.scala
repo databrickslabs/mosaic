@@ -70,7 +70,7 @@ object PathUtils {
             val inPath = getCleanPath(path, useZipPath = extension == "zip")
 
             val randomID = UUID.randomUUID().toString
-            val tmpDir = Files.createTempDirectory(s"mosaic_$randomID").toFile.getAbsolutePath
+            val tmpDir = Files.createTempDirectory(s"mosaic_local_$randomID").toFile.getAbsolutePath
 
             val outPath = s"$tmpDir/$fileName"
 
@@ -90,7 +90,7 @@ object PathUtils {
 
     def createTmpFilePath(uuid: String, extension: String): String = {
         val randomID = UUID.randomUUID()
-        val tmpDir = Files.createTempDirectory(s"mosaic_$randomID").toFile.getAbsolutePath
+        val tmpDir = Files.createTempDirectory(s"mosaic_tmp_$randomID").toFile.getAbsolutePath
         val outPath = s"$tmpDir/raster_${uuid.replace("-", "_")}.$extension"
         Files.createDirectories(Paths.get(outPath).getParent)
         outPath

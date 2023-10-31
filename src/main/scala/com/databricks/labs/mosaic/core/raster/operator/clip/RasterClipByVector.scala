@@ -36,7 +36,7 @@ object RasterClipByVector {
       *   A clipped raster.
       */
     def clip(raster: => MosaicRasterGDAL, geometry: MosaicGeometry, geomCRS: SpatialReference, geometryAPI: GeometryAPI): MosaicRasterGDAL = {
-        val rasterCRS = raster.getRaster.GetSpatialRef()
+        val rasterCRS = raster.getSpatialReference
         val outShortName = raster.getDriversShortName
         val geomSrcCRS = if (geomCRS  == null ) rasterCRS else geomCRS
 

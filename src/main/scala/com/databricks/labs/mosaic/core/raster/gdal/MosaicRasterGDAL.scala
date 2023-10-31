@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader, RasterWriter}
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
@@ -33,6 +34,17 @@ class MosaicRasterGDAL(
     memSize: Long
 ) extends RasterWriter
       with RasterCleaner {
+
+    def getSpatialReference: SpatialReference = {
+        if (raster != null) {
+            raster.GetSpatialRef
+        } else {
+            val tmp = refresh()
+            val result = tmp.spatialRef
+            dispose(tmp)
+            result
+        }
+    }
 
     // Factory for creating CRS objects
     protected val crsFactory: CRSFactory = new CRSFactory
@@ -339,6 +351,7 @@ class MosaicRasterGDAL(
         val isInMem = path.contains("/vsimem/")
         val isSubdataset = PathUtils.isSubdataset(path)
         val filePath = if (isSubdataset) PathUtils.fromSubdatasetPath(path) else path
+        val pamFilePath = s"$filePath.aux.xml"
         if (isInMem) {
             // Delete the raster from the virtual file system
             // Note that Unlink is not the same as Delete
@@ -347,15 +360,15 @@ class MosaicRasterGDAL(
             Try(gdal.GetDriverByName(driverShortName).Delete(filePath))
             Try(gdal.Unlink(path))
             Try(gdal.Unlink(filePath))
+            Try(gdal.Unlink(pamFilePath))
         }
         if (isTemp) {
-            try {
-                Try(gdal.GetDriverByName(driverShortName).Delete(path))
-                Try(Files.deleteIfExists(Paths.get(path)))
-                Try(Files.deleteIfExists(Paths.get(filePath)))
-            } catch {
-                case _: Throwable => ()
-            }
+            Try(gdal.GetDriverByName(driverShortName).Delete(path))
+            Try(Files.deleteIfExists(Paths.get(path)))
+            Try(Files.deleteIfExists(Paths.get(filePath)))
+            Try(Files.deleteIfExists(Paths.get(pamFilePath)))
+            val tmpParent = Paths.get(path).getParent
+            if (tmpParent != null) Try(Files.deleteIfExists(tmpParent))
         }
     }
 
@@ -397,11 +410,12 @@ class MosaicRasterGDAL(
         if (isInMem) {
             val driver = raster.GetDriver()
             val ds = driver.CreateCopy(path, this.flushCache().getRaster)
-            RasterCleaner.dispose(ds)
+            ds.FlushCache()
+            ds.delete()
         } else {
             Files.copy(Paths.get(getPath), Paths.get(path), StandardCopyOption.REPLACE_EXISTING).toString
         }
-        if (dispose) RasterCleaner.dispose()
+        if (dispose) RasterCleaner.dispose(this)
         path
     }
 
@@ -485,18 +499,6 @@ class MosaicRasterGDAL(
     }
 
     /**
-      * Creates a temporary copy of the raster on disk on the worker node.
-      * @return
-      *   Returns the new raster.
-      */
-    def asTemp: MosaicRasterGDAL = {
-        val temp = PathUtils.createTmpFilePath(uuid.toString, GDAL.getExtension(driverShortName))
-        writeToPath(temp)
-        val ds = openRaster(temp)
-        MosaicRasterGDAL(ds, temp, isTemp = true, parentPath, driverShortName, memSize)
-    }
-
-    /**
       * @param subsetName
       *   The name of the subdataset to get.
       * @return
@@ -550,16 +552,14 @@ object MosaicRasterGDAL extends RasterReader {
       * @return
       *   A string representing the driver short name.
       */
-    def indentifyDriver(parentPath: String): String = {
+    def identifyDriver(parentPath: String): String = {
         val isSubdataset = PathUtils.isSubdataset(parentPath)
         val path = PathUtils.getCleanPath(parentPath, parentPath.endsWith(".zip"))
         val readPath =
             if (isSubdataset) PathUtils.getSubdatasetPath(path)
             else PathUtils.getZipPath(path)
-        val dataset = gdal.Open(readPath, GA_ReadOnly)
-        val driver = dataset.GetDriver()
+        val driver = gdal.IdentifyDriverEx(readPath)
         val driverShortName = driver.getShortName
-        dataset.delete()
         driverShortName
     }
 

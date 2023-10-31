@@ -85,6 +85,7 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
             .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize())))
 
         RasterCleaner.dispose(tile)
+        generatedChips.foreach(chip => RasterCleaner.dispose(chip))
         generatedChips.foreach(chip => RasterCleaner.dispose(chip.getRaster))
 
         rows.iterator

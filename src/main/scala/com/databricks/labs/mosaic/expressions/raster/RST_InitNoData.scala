@@ -48,7 +48,7 @@ case class RST_InitNoData(
         )
         new MosaicRasterTile(
           tile.getIndex,
-          result.flushCache(),
+          result,
           tile.getParentPath,
           tile.getDriver
         )
