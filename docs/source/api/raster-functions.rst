@@ -52,7 +52,7 @@ rst_bandmetadata
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_bandmetadata(col("path"), lit(1)).limit(1).show(false)
+    df.select(rst_bandmetadata(col("path"), lit(1))).limit(1).show(false)
     +------------------------------------------------------------------------------------+
     |rst_bandmetadata(path, 1)                                                           |
     +------------------------------------------------------------------------------------+
@@ -215,7 +215,7 @@ rst_isempty
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
     df.select(mos.rst_isempty('path')).show()
     +--------------------+
-    | rst_height(path)   |
+    | rst_isempty(path)  |
     +--------------------+
     |false               |
     |false               |
@@ -228,7 +228,7 @@ rst_isempty
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
     df.select(rst_isempty(col("path"))).show()
     +--------------------+
-    | rst_height(path)   |
+    | rst_isempty(path)  |
     +--------------------+
     |false               |
     |false               |
@@ -241,7 +241,7 @@ rst_isempty
         OPTIONS (pathGlobFilter "*.nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
     SELECT rst_isempty(path) FROM coral_netcdf
     +--------------------+
-    | rst_height(path)   |
+    | rst_isempty(path)  |
     +--------------------+
     |false               |
     |false               |
@@ -267,7 +267,7 @@ rst_memsize
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
     df.select(mos.rst_memsize('path')).show()
     +--------------------+
-    | rst_height(path)   |
+    | rst_memsize(path)  |
     +--------------------+
     |730260              |
     |730260              |
@@ -280,7 +280,7 @@ rst_memsize
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
     df.select(rst_memsize(col("path"))).show()
     +--------------------+
-    | rst_height(path)   |
+    | rst_memsize(path)  |
     +--------------------+
     |730260              |
     |730260              |
@@ -293,7 +293,7 @@ rst_memsize
         OPTIONS (pathGlobFilter "*.nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
     SELECT rst_memsize(path) FROM coral_netcdf
     +--------------------+
-    | rst_height(path)   |
+    | rst_memsize(path)  |
     +--------------------+
     |730260              |
     |730260              |
@@ -407,7 +407,7 @@ rst_numbands
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_metadata(col("path"))).show()
+    df.select(rst_numbands(col("path"))).show()
     +---------------------+
     | rst_numbands(path)  |
     +---------------------+
@@ -420,7 +420,7 @@ rst_numbands
     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
         USING binaryFile
         OPTIONS (pathGlobFilter "*.nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_metadata(path)
+    SELECT rst_numbands(path)
     +---------------------+
     | rst_numbands(path)  |
     +---------------------+
@@ -555,7 +555,7 @@ rst_rastertogridavg
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertogridavg('path', F.lit(3)).show()
+    df.select(mos.rst_rastertogridavg('path', F.lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertogridavg(path, 3)                                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
@@ -573,7 +573,7 @@ rst_rastertogridavg
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertogridavg(col("path"), lit(3)).show()
+    df.select(rst_rastertogridavg(col("path"), lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertogridavg(path, 3)                                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
@@ -632,7 +632,7 @@ rst_rastertogridcount
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertogridcount('path', F.lit(3)).show()
+    df.select(mos.rst_rastertogridcount('path', F.lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertogridcount(path, 3)                                                                                   |
     +------------------------------------------------------------------------------------------------------------------+
@@ -650,7 +650,7 @@ rst_rastertogridcount
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertogridcount(col("path"), lit(3)).show()
+    df.select(rst_rastertogridcount(col("path"), lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertogridcount(path, 3)                                                                                   |
     +------------------------------------------------------------------------------------------------------------------+
@@ -709,7 +709,7 @@ rst_rastertogridmax
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertogridmax('path', F.lit(3)).show()
+    df.select(mos.rst_rastertogridmax('path', F.lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertogridmax(path, 3)                                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
@@ -727,7 +727,7 @@ rst_rastertogridmax
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertogridmax(col("path"), lit(3)).show()
+    df.select(rst_rastertogridmax(col("path"), lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertogridmax(path, 3)                                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
@@ -786,7 +786,7 @@ rst_rastertogridmedian
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertogridmedian('path', F.lit(3)).show()
+    df.select(mos.rst_rastertogridmedian('path', F.lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertogridmedian(path, 3)                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
@@ -804,7 +804,7 @@ rst_rastertogridmedian
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertogridmedian(col("path"), lit(3)).show()
+    df.select(rst_rastertogridmedian(col("path"), lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertogridmedian(path, 3)                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
@@ -881,7 +881,7 @@ rst_rastertogridmin
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertogridmin(col("path"), lit(3)).show()
+    df.select(rst_rastertogridmin(col("path"), lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertogridmin(path, 3)                                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
@@ -941,7 +941,7 @@ rst_rastertoworldcoord
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertoworldcoord('path', F.lit(3), F.lit(3)).show()
+    df.select(mos.rst_rastertoworldcoord('path', F.lit(3), F.lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertoworldcoord(path, 3, 3)                                                                               |
     +------------------------------------------------------------------------------------------------------------------+
@@ -953,7 +953,7 @@ rst_rastertoworldcoord
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertoworldcoord(col("path"), lit(3), lit(3)).show()
+    df.select(rst_rastertoworldcoord(col("path"), lit(3), lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertoworldcoord(path, 3, 3)                                                                               |
     +------------------------------------------------------------------------------------------------------------------+
@@ -995,7 +995,7 @@ rst_rastertoworldcoordx
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertoworldcoordx('path', F.lit(3), F.lit(3)).show()
+    df.select(mos.rst_rastertoworldcoordx('path', F.lit(3), F.lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertoworldcoordx(path, 3, 3)                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1007,7 +1007,7 @@ rst_rastertoworldcoordx
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertoworldcoordx(col("path"), lit(3), lit(3)).show()
+    df.select(rst_rastertoworldcoordx(col("path"), lit(3), lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertoworldcoordx(path, 3, 3)                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1049,7 +1049,7 @@ rst_rastertoworldcoordy
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertoworldcoordy('path', F.lit(3), F.lit(3)).show()
+    df.select(mos.rst_rastertoworldcoordy('path', F.lit(3), F.lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertoworldcoordy(path, 3, 3)                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1061,7 +1061,7 @@ rst_rastertoworldcoordy
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertoworldcoordy(col("path"), lit(3), lit(3)).show()
+    df.select(rst_rastertoworldcoordy(col("path"), lit(3), lit(3))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rastertoworldcoordy(path, 3, 3)                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1105,7 +1105,7 @@ rst_retile
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_retile('path', F.lit(300), F.lit(300)).show()
+    df.select(mos.rst_retile('path', F.lit(300), F.lit(300))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_retile(path, 300, 300)                                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1118,7 +1118,7 @@ rst_retile
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_retile(col("path"), lit(300), lit(300)).show()
+    df.select(rst_retile(col("path"), lit(300), lit(300))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_retile(path, 300, 300)                                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1159,7 +1159,7 @@ rst_rotation
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rotation('path').show()
+    df.select(mos.rst_rotation('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rotation(path)                                                                                               |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1172,7 +1172,7 @@ rst_rotation
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rotation(col("path")).show()
+    df.select(rst_rotation(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_rotation(path)                                                                                               |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1211,7 +1211,7 @@ rst_scalex
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_scalex('path').show()
+    df.select(mos.rst_scalex('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_scalex(path)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1223,7 +1223,7 @@ rst_scalex
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_scalex(col("path")).show()
+    df.select(rst_scalex(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_scalex(path)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1260,7 +1260,7 @@ rst_scaley
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_scaley('path').show()
+    df.select(mos.rst_scaley('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_scaley(path)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1272,7 +1272,7 @@ rst_scaley
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_scaley(col("path")).show()
+    df.select(rst_scaley(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_scaley(path)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1309,7 +1309,7 @@ rst_skewx
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_skewx('path').show()
+    df.select(mos.rst_skewx('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_skewx(path)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1321,7 +1321,7 @@ rst_skewx
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_skewx(col("path")).show()
+    df.select(rst_skewx(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_skewx(path)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1343,7 +1343,7 @@ rst_skewx
 rst_skewy
 **********************
 
-.. function:: rst_skewx(raster)
+.. function:: rst_skewy(raster)
 
     Computes the skew of the raster in the Y direction.
 
@@ -1358,7 +1358,7 @@ rst_skewy
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_skewy('path').show()
+    df.select(mos.rst_skewy('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_skewy(path)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1370,7 +1370,7 @@ rst_skewy
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_skewy(col("path")).show()
+    df.select(rst_skewy(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_skewy(path)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1408,7 +1408,7 @@ rst_srid
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_srid('path').show()
+    df.select(mos.rst_srid('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_srid(path)                                                                                                   |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1420,7 +1420,7 @@ rst_srid
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_srid(col("path")).show()
+    df.select(rst_srid(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_srid(path)                                                                                                   |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1459,7 +1459,7 @@ rst_subdatasets
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_subdatasets('path').show()
+    df.select(mos.rst_subdatasets('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_subdatasets(path)                                                                                            |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1474,7 +1474,7 @@ rst_subdatasets
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_subdatasets(col("path")).show()
+    df.select(rst_subdatasets(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_subdatasets(path)                                                                                            |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1520,7 +1520,7 @@ rst_summary
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_summary('path').show()
+    df.select(mos.rst_summary('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_summary(path)                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1536,7 +1536,7 @@ rst_summary
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_summary(col("path")).show()
+    df.select(rst_summary(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_summary(path)                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1582,7 +1582,7 @@ rst_upperleftx
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_upperleftx('path').show()
+    df.select(mos.rst_upperleftx('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_upperleftx(path)                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1594,7 +1594,7 @@ rst_upperleftx
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_upperleftx(col("path")).show()
+    df.select(rst_upperleftx(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_upperleftx(path)                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1632,7 +1632,7 @@ rst_upperlefty
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_upperlefty('path').show()
+    df.select(mos.rst_upperlefty('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_upperlefty(path)                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1644,7 +1644,7 @@ rst_upperlefty
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_upperlefty(col("path")).show()
+    df.select(rst_upperlefty(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_upperlefty(path)                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1682,7 +1682,7 @@ rst_width
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_width('path').show()
+    df.select(mos.rst_width('path')).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_width(path)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1694,7 +1694,7 @@ rst_width
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_width(col("path")).show()
+    df.select(rst_width(col("path"))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_width(path)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1738,7 +1738,7 @@ rst_worldtorastercoord
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_worldtorastercoord('path', F.lit(-160.1), F.lit(40.0)).show()
+    df.select(mos.rst_worldtorastercoord('path', F.lit(-160.1), F.lit(40.0))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_worldtorastercoord(path)                                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1750,7 +1750,7 @@ rst_worldtorastercoord
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_worldtorastercoord(col("path"), lit(-160.1), lit(40.0)).show()
+    df.select(rst_worldtorastercoord(col("path"), lit(-160.1), lit(40.0))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_worldtorastercoord(path)                                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1796,7 +1796,7 @@ rst_worldtorastercoordx
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_worldtorastercoord('path', F.lit(-160.1), F.lit(40.0)).show()
+    df.select(mos.rst_worldtorastercoordx('path', F.lit(-160.1), F.lit(40.0))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_worldtorastercoordx(path, -160.1, 40.0)                                                                      |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1808,7 +1808,7 @@ rst_worldtorastercoordx
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_worldtorastercoordx(col("path"), lit(-160.1), lit(40.0)).show()
+    df.select(rst_worldtorastercoordx(col("path"), lit(-160.1), lit(40.0))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_worldtorastercoordx(path, -160.1, 40.0)                                                                      |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1854,7 +1854,7 @@ rst_worldtorastercoordy
 
     df = spark.read.format("binaryFile").option("pathGlobFilter", "*.nc")\
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_worldtorastercoordy('path', F.lit(-160.1), F.lit(40.0)).show()
+    df.select(mos.rst_worldtorastercoordy('path', F.lit(-160.1), F.lit(40.0))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_worldtorastercoordy(path, -160.1, 40.0)                                                                      |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1866,7 +1866,7 @@ rst_worldtorastercoordy
     val df = spark.read
         .format("binaryFile").option("pathGlobFilter", "*.nc")
         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_worldtorastercoordy(col("path"), lit(-160.1), lit(40.0)).show()
+    df.select(rst_worldtorastercoordy(col("path"), lit(-160.1), lit(40.0))).show()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_worldtorastercoordy(path, -160.1, 40.0)                                                                      |
     +------------------------------------------------------------------------------------------------------------------+
