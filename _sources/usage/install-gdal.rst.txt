@@ -24,6 +24,8 @@ Setup GDAL files and scripts
 Mosaic requires GDAL to be installed on the cluster. The easiest way to do this is to use the
 the mos.setup_gdal() function. This function will extract the GDAL files and scripts from the
 mosaic library and place them in the /dbfs/FileStore/geospatial/mosaic/gdal/ directory.
+This call is no longer needed in versions >= 0.3.12. The shared objects are now included in the
+databricks-mosaic-gdal pip installable bundle.
 
 .. code-block:: py
 
@@ -39,7 +41,9 @@ mosaic library and place them in the /dbfs/FileStore/geospatial/mosaic/gdal/ dir
 Configure the init script
 **************************
 After the mos.setup_gdal() function has been run, you will need to configure the cluster to use the
-init script. This can be done by clicking on the "Edit" button on the cluster page and adding
+init script. For versions >= 0.3.12, we are required to use the following init script:
+`here <https://github.com/databrickslabs/mosaic/blob/main/modules/python/gdal_package/databricks-mosaic-gdal/resources/scripts/mosaic-gdal-3.4.3-filetree-init.sh>`__.
+The init script can be set by clicking on the "Edit" button on the cluster page and adding
 the following to the "Advanced Options" section:
 
 .. figure:: ../images/init_script.png

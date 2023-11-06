@@ -105,7 +105,9 @@ in our documentation
 <h3>Setup GDAL files and scripts<a class="headerlink" href="#setup-gdal-files-and-scripts" title="Permalink to this headline"></a></h3>
 <p>Mosaic requires GDAL to be installed on the cluster. The easiest way to do this is to use the
 the mos.setup_gdal() function. This function will extract the GDAL files and scripts from the
-mosaic library and place them in the /dbfs/FileStore/geospatial/mosaic/gdal/ directory.</p>
+mosaic library and place them in the /dbfs/FileStore/geospatial/mosaic/gdal/ directory.
+This call is no longer needed in versions &gt;= 0.3.12. The shared objects are now included in the
+databricks-mosaic-gdal pip installable bundle.</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
 
 <span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
@@ -120,7 +122,9 @@ mosaic library and place them in the /dbfs/FileStore/geospatial/mosaic/gdal/ dir
 <div class="section" id="configure-the-init-script">
 <h3>Configure the init script<a class="headerlink" href="#configure-the-init-script" title="Permalink to this headline"></a></h3>
 <p>After the mos.setup_gdal() function has been run, you will need to configure the cluster to use the
-init script. This can be done by clicking on the “Edit” button on the cluster page and adding
+init script. For versions &gt;= 0.3.12, we are required to use the following init script:
+<a class="reference external" href="https://github.com/databrickslabs/mosaic/blob/main/modules/python/gdal_package/databricks-mosaic-gdal/resources/scripts/mosaic-gdal-3.4.3-filetree-init.sh">here</a>.
+The init script can be set by clicking on the “Edit” button on the cluster page and adding
 the following to the “Advanced Options” section:</p>
 <div class="doc-figure figure align-default" id="id1">
 <img alt="../_images/init_script.png" src="../_images/init_script.png" />
