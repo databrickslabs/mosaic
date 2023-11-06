@@ -34,7 +34,7 @@ object GDAL {
             // https://www.tutorialspoint.com/scala/scala_data_types.htm
             case GDT_UInt16  => Char.MaxValue.toDouble
             case GDT_Int16   => Short.MinValue.toDouble
-            case GDT_UInt32  => 2 * Int.MinValue.toDouble
+            case GDT_UInt32  => 2 * Int.MaxValue.toDouble
             case GDT_Int32   => Int.MinValue.toDouble
             case GDT_Float32 => Float.MinValue.toDouble
             case GDT_Float64 => Double.MinValue
