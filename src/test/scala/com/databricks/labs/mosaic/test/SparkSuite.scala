@@ -10,6 +10,7 @@ trait SparkSuite extends TestSuite with BeforeAndAfterAll {
     var sparkConf: SparkConf =
         new SparkConf(false)
             .set("spark.executor.extraLibraryPath", "/usr/lib/gdal")
+            .set("spark.sql.parquet.compression.codec", "uncompressed")
     @transient private var _sc: SparkContext = _
     @transient private var _spark: SparkSession = _
 

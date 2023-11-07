@@ -84,7 +84,7 @@
         <dependency>
             <groupId>io.delta</groupId>
             <artifactId>delta-core_${scala.compat.version}</artifactId>
-            <version>2.1.0</version>
+            <version>2.4.0</version>
             <scope>provided</scope>
         </dependency>
         <!--geo dependencies-->
@@ -288,7 +288,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.3.2</spark.version>
+                <spark.version>3.4.0</spark.version>
                 <mosaic.version>0.3.12</mosaic.version>
             </properties>
         </profile>

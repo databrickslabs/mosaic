@@ -132,7 +132,7 @@ class GDALFileFormat extends BinaryFileFormat {
 
         file: PartitionedFile => {
             GDAL.enable()
-            val path = new Path(new URI(file.filePath))
+            val path = new Path(new URI(file.filePath.toString()))
             val fs = path.getFileSystem(broadcastedHadoopConf.value.value)
             val status = fs.getFileStatus(path)
 

@@ -457,7 +457,7 @@ object OGRFileFormat extends Serializable {
             val useZipPath = options.getOrElse("vsizip", "false").toBoolean
             val asWKB = options.getOrElse("asWKB", "false").toBoolean
             val path = file.filePath
-            val dataset = getDataSource(driverName, path, useZipPath)
+            val dataset = getDataSource(driverName, path.toString(), useZipPath)
             val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
             val layer = dataset.GetLayerByName(resolvedLayerName)
             layer.ResetReading()

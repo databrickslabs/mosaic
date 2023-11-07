@@ -48,7 +48,8 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
               withSQLConf(
                 SQLConf.ADAPTIVE_EXECUTION_ENABLED.key -> "false",
                 SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "true",
-                SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
+                SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString,
+                "spark.sql.parquet.compression.codec" -> "uncompressed"
               ) {
                   spark.sparkContext.setLogLevel("FATAL")
                   withMosaicContext(geom, is) {
@@ -70,7 +71,8 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
             super.test(testName + s" (no codegen) (${geom.name}, ${is.name})", testTags: _*)(
               withSQLConf(
                 SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
-                SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
+                SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString,
+                "spark.sql.parquet.compression.codec" -> "uncompressed"
               ) {
                   spark.sparkContext.setLogLevel("FATAL")
                   withMosaicContext(geom, is) {
@@ -92,7 +94,8 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                   withSQLConf(
                     SQLConf.ADAPTIVE_EXECUTION_ENABLED.key -> "false",
                     SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "true",
-                    SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
+                    SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString,
+                    "spark.sql.parquet.compression.codec" -> "uncompressed"
                   ) {
                       spark.sparkContext.setLogLevel("FATAL")
                       withMosaicContext(geom, is) {
@@ -114,7 +117,8 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                 super.test(testName + s" (no codegen) (${geom.name}, ${is.name})", testTags: _*)(
                   withSQLConf(
                     SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
-                    SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
+                    SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString,
+                    "spark.sql.parquet.compression.codec" -> "uncompressed"
                   ) {
                       spark.sparkContext.setLogLevel("FATAL")
                       withMosaicContext(geom, is) {

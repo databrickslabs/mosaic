@@ -9,6 +9,7 @@ trait SparkCodeGenSuite extends SparkSuite {
         spark.conf.set(MOSAIC_GDAL_NATIVE, "false")
         spark.conf.set("spark.sql.codegen.factoryMode", "CODEGEN_ONLY")
         spark.conf.set("spark.sql.codegen.fallback", "false")
+        spark.conf.set("spark.sql.parquet.compression.codec", "uncompressed")
     }
 
 }
