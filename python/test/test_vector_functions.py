@@ -6,7 +6,7 @@ from .context import api
 from .utils import MosaicTestCase
 
 
-class TestFunctions(MosaicTestCase):
+class TestVectorFunctions(MosaicTestCase):
     def test_st_point(self):
         expected = [
             "POINT (0 0)",

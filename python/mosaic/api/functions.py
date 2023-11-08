@@ -208,7 +208,9 @@ def st_bufferloop(
     )
 
 
-def st_buffer_cap_style(geom: ColumnOrName, radius: ColumnOrName, cap_style: ColumnOrName) -> Column:
+def st_buffer_cap_style(
+    geom: ColumnOrName, radius: ColumnOrName, cap_style: ColumnOrName
+) -> Column:
     """
     Compute the buffered geometry based on geom and radius.
 
@@ -231,7 +233,7 @@ def st_buffer_cap_style(geom: ColumnOrName, radius: ColumnOrName, cap_style: Col
         "st_buffer_cap_style",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(radius),
-        pyspark_to_java_column(cap_style)
+        pyspark_to_java_column(cap_style),
     )
 
 
