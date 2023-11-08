@@ -12,8 +12,8 @@ import org.apache.spark.sql.types._
 /** Returns true if the raster is empty. */
 case class RST_TryOpen(raster: Expression, expressionConfig: MosaicExpressionConfig)
     extends RasterExpression[RST_TryOpen](raster, BooleanType, returnsRaster = false, expressionConfig)
-      with NullIntolerant
-      with CodegenFallback {
+        with NullIntolerant
+        with CodegenFallback {
 
     /** Returns true if the raster can be opened. */
     override def rasterTransform(tile: => MosaicRasterTile): Any = {

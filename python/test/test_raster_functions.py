@@ -1,4 +1,5 @@
 import random
+import unittest
 
 from pyspark.sql.functions import abs, col, first, lit, sqrt, array
 
@@ -21,56 +22,6 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         self.assertEqual(result.tile["driver"], "GTiff")
 
     def test_raster_scalar_functions(self):
-        __all__ = [
-            "rst_bandmetadata",
-            "rst_boundingbox",
-            "rst_clip",
-            "rst_combineavg",
-            "rst_frombands",
-            "rst_fromfile",
-            "rst_georeference",
-            "rst_getnodata",
-            "rst_getsubdataset",
-            "rst_height",
-            "rst_initnodata",
-            "rst_isempty",
-            "rst_memsize",
-            "rst_merge",
-            "rst_metadata",
-            "rst_ndvi",
-            "rst_numbands",
-            "rst_pixelheight",
-            "rst_pixelwidth",
-            "rst_rastertogridavg",
-            "rst_rastertogridcount",
-            "rst_rastertogridmax",
-            "rst_rastertogridmedian",
-            "rst_rastertogridmin",
-            "rst_rastertoworldcoordx",
-            "rst_rastertoworldcoordy",
-            "rst_rastertoworldcoord",
-            "rst_retile",
-            "rst_rotation",
-            "rst_scalex",
-            "rst_scaley",
-            "rst_setnodata",
-            "rst_skewx",
-            "rst_skewy",
-            "rst_srid",
-            "rst_subdatasets",
-            "rst_subdivide",
-            "rst_summary",
-            "rst_tessellate",
-            "rst_to_overlapping_tiles",
-            "rst_tryopen",
-            "rst_upperleftx",
-            "rst_upperlefty",
-            "rst_width",
-            "rst_worldtorastercoordx",
-            "rst_worldtorastercoordy",
-            "rst_worldtorastercoord",
-        ]
-
         result = (
             self.generate_singleband_raster_df()
             .withColumn("rst_bandmetadata", api.rst_bandmetadata("tile", lit(1)))
@@ -96,7 +47,84 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn("rst_merge", api.rst_merge(array("tile", "tile")))
             .withColumn("rst_metadata", api.rst_metadata("tile"))
             .withColumn("rst_ndvi", api.rst_ndvi("tile", lit(1), lit(1)))
+            .withColumn("rst_numbands", api.rst_numbands("tile"))
+            .withColumn("rst_pixelheight", api.rst_pixelheight("tile"))
+            .withColumn("rst_pixelwidth", api.rst_pixelwidth("tile"))
+            .withColumn("rst_rastertogridavg", api.rst_rastertogridavg("tile", lit(9)))
+            .withColumn(
+                "rst_rastertogridcount", api.rst_rastertogridcount("tile", lit(9))
+            )
+            .withColumn("rst_rastertogridmax", api.rst_rastertogridmax("tile", lit(9)))
+            .withColumn(
+                "rst_rastertogridmedian", api.rst_rastertogridmedian("tile", lit(9))
+            )
+            .withColumn("rst_rastertogridmin", api.rst_rastertogridmin("tile", lit(9)))
+            .withColumn(
+                "rst_rastertoworldcoordx",
+                api.rst_rastertoworldcoordx("tile", lit(1200), lit(1200)),
+            )
+            .withColumn(
+                "rst_rastertoworldcoordy",
+                api.rst_rastertoworldcoordy("tile", lit(1200), lit(1200)),
+            )
+            .withColumn(
+                "rst_rastertoworldcoord",
+                api.rst_rastertoworldcoord("tile", lit(1200), lit(1200)),
+            )
+            .withColumn("rst_rotation", api.rst_rotation("tile"))
+            .withColumn("rst_scalex", api.rst_scalex("tile"))
+            .withColumn("rst_scaley", api.rst_scaley("tile"))
+            .withColumn("rst_srid", api.rst_srid("tile"))
+            .withColumn("rst_summary", api.rst_summary("tile"))
+            # .withColumn("rst_tryopen", api.rst_tryopen(col("path"))) # needs an issue
+            .withColumn("rst_upperleftx", api.rst_upperleftx("tile"))
+            .withColumn("rst_upperlefty", api.rst_upperlefty("tile"))
+            .withColumn("rst_width", api.rst_width("tile"))
+            .withColumn(
+                "rst_worldtorastercoordx",
+                api.rst_worldtorastercoordx("tile", lit(.0), lit(.0)),
+            )
+            .withColumn(
+                "rst_worldtorastercoordy",
+                api.rst_worldtorastercoordy("tile", lit(.0), lit(.0)),
+            )
+            .withColumn(
+                "rst_worldtorastercoord",
+                api.rst_worldtorastercoord("tile", lit(.0), lit(.0)),
+            )
+        )
+        result.write.format("noop").mode("overwrite").save()
+        self.assertEqual(result.count(), 1)
+
+    def test_raster_flatmap_functions(self):
+
+        retile_result = (
+            self.generate_singleband_raster_df()
+            .withColumn("rst_retile", api.rst_retile("tile", lit(1200), lit(1200)))
+        )
+        retile_result.write.format("noop").mode("overwrite").save()
+        self.assertEqual(retile_result.count(), 4)
+
+        subdivide_result = (
+            self.generate_singleband_raster_df()
+            .withColumn("rst_subdivide", api.rst_subdivide("tile", lit(1)))
+        )
+        subdivide_result.write.format("noop").mode("overwrite").save()
+        self.assertEqual(retile_result.count(), 4)
+
+        #TODO: reproject into WGS84
+        tessellate_result = (
+            self.generate_singleband_raster_df()
+            .withColumn("rst_tessellate", api.rst_tessellate("tile", lit(3)))
         )
 
-        result.write.format("noop").mode("overwrite").save()
-        # result.select("rst_subdatasets").show(truncate=False)
+        tessellate_result.write.format("noop").mode("overwrite").save()
+        self.assertEqual(tessellate_result.count(), 55)
+
+        overlap_result = (
+            self.generate_singleband_raster_df()
+            .withColumn("rst_to_overlapping_tiles", api.rst_to_overlapping_tiles("tile", lit(200), lit(200), lit(10)))
+        )
+
+        overlap_result.write.format("noop").mode("overwrite").save()
+        self.assertEqual(overlap_result.count(), 86)

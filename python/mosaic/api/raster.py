@@ -1050,7 +1050,10 @@ def rst_worldtorastercoord(
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_worldtorastercoord", pyspark_to_java_column(raster)
+        "rst_worldtorastercoord",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(x),
+        pyspark_to_java_column(y),
     )
 
 
@@ -1076,7 +1079,10 @@ def rst_worldtorastercoordx(
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_worldtorastercoordx", pyspark_to_java_column(raster)
+        "rst_worldtorastercoordx",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(x),
+        pyspark_to_java_column(y),
     )
 
 
@@ -1102,5 +1108,8 @@ def rst_worldtorastercoordy(
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_worldtorastercoordy", pyspark_to_java_column(raster)
+        "rst_worldtorastercoordy",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(x),
+        pyspark_to_java_column(y),
     )
