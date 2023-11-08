@@ -75,12 +75,15 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             self.generate_singleband_raster_df()
             .withColumn("rst_bandmetadata", api.rst_bandmetadata("tile", lit(1)))
             .withColumn("rst_boundingbox", api.rst_boundingbox("tile"))
-            .withColumn("rst_boundingbox", api.st_buffer("rst_boundingbox", lit(-0.001)))
-            .withColumn("rst_clip", api.rst_clip("tile", "rst_boundingbox"))
-            .withColumn("rst_combineavg", api.rst_combineavg(array(col("tile"), col("rst_clip"))))
             .withColumn(
-                "rst_frombands", api.rst_frombands(array("tile", "tile"))
+                "rst_boundingbox", api.st_buffer("rst_boundingbox", lit(-0.001))
             )
+            .withColumn("rst_clip", api.rst_clip("tile", "rst_boundingbox"))
+            .withColumn(
+                "rst_combineavg",
+                api.rst_combineavg(array(col("tile"), col("rst_clip"))),
+            )
+            .withColumn("rst_frombands", api.rst_frombands(array("tile", "tile")))
             .withColumn("tile_from_file", api.rst_fromfile("path", lit(-1)))
             .withColumn("rst_georeference", api.rst_georeference("tile"))
             .withColumn("rst_getnodata", api.rst_getnodata("tile"))
@@ -93,7 +96,6 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn("rst_merge", api.rst_merge(array("tile", "tile")))
             .withColumn("rst_metadata", api.rst_metadata("tile"))
             .withColumn("rst_ndvi", api.rst_ndvi("tile", lit(1), lit(1)))
-
         )
 
         result.write.format("noop").mode("overwrite").save()
