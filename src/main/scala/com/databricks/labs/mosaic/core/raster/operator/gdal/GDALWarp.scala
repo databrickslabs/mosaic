@@ -31,15 +31,14 @@ object GDALWarp {
         // TODO: Figure out multiple parents, should this be an array?
         // Format will always be the same as the first raster
         val size = Files.size(Paths.get(outputPath))
-        val mosaicRaster = MosaicRasterGDAL(
+        MosaicRasterGDAL(
           result,
           outputPath,
           isTemp,
           rasters.head.getParentPath,
           rasters.head.getDriversShortName,
           size
-        )
-        mosaicRaster.flushCache()
+        ).flushCache()
     }
 
 }

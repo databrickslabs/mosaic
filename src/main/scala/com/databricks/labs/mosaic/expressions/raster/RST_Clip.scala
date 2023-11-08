@@ -41,9 +41,10 @@ case class RST_Clip(
     override def rasterTransform(tile: => MosaicRasterTile, arg1: Any): Any = {
         val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
         val geomCRS = geometry.getSpatialReferenceOSR
+        val clipped = RasterClipByVector.clip(tile.getRaster, geometry, geomCRS, geometryAPI)
         new MosaicRasterTile(
           tile.getIndex,
-          RasterClipByVector.clip(tile.getRaster, geometry, geomCRS, geometryAPI),
+          clipped,
           tile.getParentPath,
           tile.getDriver
         )

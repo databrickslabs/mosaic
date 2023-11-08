@@ -65,12 +65,12 @@ case class RST_FromFile(
             val tile = new MosaicRasterTile(null, raster, path, raster.getDriversShortName)
             val row = tile.formatCellId(indexSystem).serialize()
             RasterCleaner.dispose(raster)
+            RasterCleaner.dispose(tile)
             Seq(InternalRow.fromSeq(Seq(row)))
         } else {
-            val (raster, tiles) = ReTileOnRead.localSubdivide(path, targetSize)
+            val tiles = ReTileOnRead.localSubdivide(path, targetSize)
             val rows = tiles.map(_.formatCellId(indexSystem).serialize())
             tiles.foreach(RasterCleaner.dispose(_))
-            RasterCleaner.dispose(raster)
             rows.map(row => InternalRow.fromSeq(Seq(row)))
         }
     }

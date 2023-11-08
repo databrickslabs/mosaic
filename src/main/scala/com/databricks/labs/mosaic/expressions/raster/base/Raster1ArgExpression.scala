@@ -78,11 +78,10 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
     override def nullSafeEval(input: Any, arg1: Any): Any = {
         GDAL.enable()
         val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
-        val raster = tile.getRaster
         val result = rasterTransform(tile, arg1)
         val serialized = serialize(result, returnsRaster, outputType, expressionConfig)
-        RasterCleaner.dispose(raster)
-        RasterCleaner.dispose(result)
+        // passed by name makes things re-evaluated
+        RasterCleaner.dispose(tile)
         serialized
     }
 

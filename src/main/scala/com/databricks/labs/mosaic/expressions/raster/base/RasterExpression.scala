@@ -79,7 +79,6 @@ abstract class RasterExpression[T <: Expression: ClassTag](
         val result = rasterTransform(tile)
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
         RasterCleaner.dispose(tile)
-        RasterCleaner.dispose(result)
         serialized
     }
 

@@ -79,7 +79,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
 
         // Writing rasters disposes of the written raster
         val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize())
-        generatedRasters.foreach(RasterCleaner.dispose(_))
+        generatedRasters.foreach(gr => RasterCleaner.dispose(gr))
         RasterCleaner.dispose(tile)
 
         rows.map(row => InternalRow.fromSeq(Seq(row)))

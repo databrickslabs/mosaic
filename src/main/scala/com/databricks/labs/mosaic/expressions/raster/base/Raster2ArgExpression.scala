@@ -90,8 +90,7 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
         val raster = tile.getRaster
         val result = rasterTransform(raster, arg1, arg2)
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
-        RasterCleaner.dispose(raster)
-        RasterCleaner.dispose(result)
+        RasterCleaner.dispose(tile)
         serialized
     }
 
