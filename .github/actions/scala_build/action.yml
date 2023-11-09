@@ -19,6 +19,8 @@ runs:
         - name: Add packaged GDAL dependencies
           shell: bash
           run : |
+            which python
+            python -m site
             pip install databricks-mosaic-gdal==${{ matrix.gdal }}
             sudo tar -xf /home/runner/.local/lib/python${{ matrix.python }}/site-packages/databricks-mosaic-gdal/resources/gdal-${{ matrix.gdal }}-filetree.tar.xz -C /
             sudo tar -xhf /home/runner/.local/lib/python${{ matrix.python }}/site-packages/databricks-mosaic-gdal/resources/gdal-${{ matrix.gdal }}-symlinks.tar.xz -C /
