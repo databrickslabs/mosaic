@@ -11,7 +11,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        python: [ 3.9 ]
+        python: [ 3.9.5 ]
         numpy: [ 1.21.5 ]
         gdal: [ 3.4.3 ]
         spark: [ 3.2.1 ]
