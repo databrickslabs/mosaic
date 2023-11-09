@@ -3,8 +3,8 @@ name: build_R
 on:
   push:
     branches:
-      - 'r/*'
-      - 'R/*'
+      - 'r/**'
+      - 'R/**'
 
 jobs:
   build:

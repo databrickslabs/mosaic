@@ -3,7 +3,7 @@ name: build_python
 on:
   push:
     branches:
-      - "python/*"
+      - "python/**"
 
 jobs:
   build:
