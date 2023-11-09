@@ -1,3 +1,4 @@
+import logging
 import random
 import unittest
 
@@ -124,3 +125,33 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         overlap_result.write.format("noop").mode("overwrite").save()
         self.assertEqual(overlap_result.count(), 86)
+
+    def test_raster_aggregator_functions(self):
+        collection = (
+            self.generate_singleband_raster_df()
+            .withColumn("extent", api.st_astext(api.rst_boundingbox("tile")))
+            .withColumn(
+                "rst_to_overlapping_tiles",
+                api.rst_to_overlapping_tiles("tile", lit(200), lit(200), lit(10)),
+            )
+        )
+
+        merge_result = (
+            collection.groupBy("path")
+            .agg(api.rst_merge_agg("tile").alias("tile"))
+            .withColumn("extent", api.st_astext(api.rst_boundingbox("tile")))
+        )
+
+        self.assertEqual(merge_result.count(), 1)
+        self.assertEqual(collection.first()["extent"], merge_result.first()["extent"])
+
+        combine_avg_result = (
+            collection.groupBy("path")
+            .agg(api.rst_combineavg_agg("tile").alias("tile"))
+            .withColumn("extent", api.st_astext(api.rst_boundingbox("tile")))
+        )
+
+        self.assertEqual(combine_avg_result.count(), 1)
+        self.assertEqual(
+            collection.first()["extent"], combine_avg_result.first()["extent"]
+        )
