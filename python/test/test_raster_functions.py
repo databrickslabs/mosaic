@@ -82,48 +82,44 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn("rst_width", api.rst_width("tile"))
             .withColumn(
                 "rst_worldtorastercoordx",
-                api.rst_worldtorastercoordx("tile", lit(.0), lit(.0)),
+                api.rst_worldtorastercoordx("tile", lit(0.0), lit(0.0)),
             )
             .withColumn(
                 "rst_worldtorastercoordy",
-                api.rst_worldtorastercoordy("tile", lit(.0), lit(.0)),
+                api.rst_worldtorastercoordy("tile", lit(0.0), lit(0.0)),
             )
             .withColumn(
                 "rst_worldtorastercoord",
-                api.rst_worldtorastercoord("tile", lit(.0), lit(.0)),
+                api.rst_worldtorastercoord("tile", lit(0.0), lit(0.0)),
             )
         )
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
 
     def test_raster_flatmap_functions(self):
-
-        retile_result = (
-            self.generate_singleband_raster_df()
-            .withColumn("rst_retile", api.rst_retile("tile", lit(1200), lit(1200)))
+        retile_result = self.generate_singleband_raster_df().withColumn(
+            "rst_retile", api.rst_retile("tile", lit(1200), lit(1200))
         )
         retile_result.write.format("noop").mode("overwrite").save()
         self.assertEqual(retile_result.count(), 4)
 
-        subdivide_result = (
-            self.generate_singleband_raster_df()
-            .withColumn("rst_subdivide", api.rst_subdivide("tile", lit(1)))
+        subdivide_result = self.generate_singleband_raster_df().withColumn(
+            "rst_subdivide", api.rst_subdivide("tile", lit(1))
         )
         subdivide_result.write.format("noop").mode("overwrite").save()
         self.assertEqual(retile_result.count(), 4)
 
-        #TODO: reproject into WGS84
-        tessellate_result = (
-            self.generate_singleband_raster_df()
-            .withColumn("rst_tessellate", api.rst_tessellate("tile", lit(3)))
+        # TODO: reproject into WGS84
+        tessellate_result = self.generate_singleband_raster_df().withColumn(
+            "rst_tessellate", api.rst_tessellate("tile", lit(3))
         )
 
         tessellate_result.write.format("noop").mode("overwrite").save()
         self.assertEqual(tessellate_result.count(), 55)
 
-        overlap_result = (
-            self.generate_singleband_raster_df()
-            .withColumn("rst_to_overlapping_tiles", api.rst_to_overlapping_tiles("tile", lit(200), lit(200), lit(10)))
+        overlap_result = self.generate_singleband_raster_df().withColumn(
+            "rst_to_overlapping_tiles",
+            api.rst_to_overlapping_tiles("tile", lit(200), lit(200), lit(10)),
         )
 
         overlap_result.write.format("noop").mode("overwrite").save()
