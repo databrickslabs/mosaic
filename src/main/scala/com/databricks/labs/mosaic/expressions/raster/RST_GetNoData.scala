@@ -7,6 +7,7 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{ArrayType, DoubleType}
 
 /** The expression for extracting the no data value of a raster. */
@@ -31,7 +32,7 @@ case class RST_GetNoData(
       *   The no data value of the raster.
       */
     override def rasterTransform(tile: => MosaicRasterTile): Any = {
-        tile.getRaster.getBands.map(_.noDataValue)
+        ArrayData.toArrayData(tile.getRaster.getBands.map(_.noDataValue))
     }
 
 }

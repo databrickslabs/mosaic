@@ -18,7 +18,6 @@ __all__ = [
     "st_convexhull",
     "st_buffer",
     "st_bufferloop",
-    "st_buffer_cap_style",
     "st_dump",
     "st_envelope",
     "st_srid",
@@ -205,33 +204,6 @@ def st_bufferloop(
         pyspark_to_java_column(geom),
         pyspark_to_java_column(inner_radius),
         pyspark_to_java_column(outer_radius),
-    )
-
-
-def st_buffer_cap_style(geom: ColumnOrName, radius: ColumnOrName, cap_style: ColumnOrName) -> Column:
-    """
-    Compute the buffered geometry based on geom and radius.
-
-    Parameters
-    ----------
-    geom : Column
-        The input geometry
-    radius : Column
-        The radius of buffering
-    cap_style : Column
-        The cap style of the buffer
-
-    Returns
-    -------
-    Column
-        A geometry
-
-    """
-    return config.mosaic_context.invoke_function(
-        "st_buffer_cap_style",
-        pyspark_to_java_column(geom),
-        pyspark_to_java_column(radius),
-        pyspark_to_java_column(cap_style)
     )
 
 

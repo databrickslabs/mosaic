@@ -21,10 +21,13 @@ object NDVI {
       *   MosaicRasterGDAL with NDVI computed.
       */
     def compute(raster: => MosaicRasterGDAL, redIndex: Int, nirIndex: Int): MosaicRasterGDAL = {
-        val ndviPath = PathUtils.createTmpFilePath(raster.uuid.toString, GDAL.getExtension(raster.getDriversShortName))
+        val tmpPath = PathUtils.createTmpFilePath(raster.uuid.toString, GDAL.getExtension(raster.getDriversShortName))
+        raster.writeToPath(tmpPath)
+        val tmpRaster = MosaicRasterGDAL(tmpPath, isTemp=true, raster.getParentPath, raster.getDriversShortName, raster.getMemSize)
+        val ndviPath = PathUtils.createTmpFilePath(raster.uuid.toString + "NDVI", GDAL.getExtension(raster.getDriversShortName))
         // noinspection ScalaStyle
         val gdalCalcCommand =
-            s"""gdal_calc -A ${raster.getPath} --A_band=$redIndex -B ${raster.getPath} --B_band=$nirIndex --outfile=$ndviPath --calc="(B-A)/(B+A)""""
+            s"""gdal_calc -A ${tmpRaster.getPath} --A_band=$redIndex -B ${tmpRaster.getPath} --B_band=$nirIndex --outfile=$ndviPath --calc="(B-A)/(B+A)""""
 
         GDALCalc.executeCalc(gdalCalcCommand, ndviPath)
     }

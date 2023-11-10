@@ -3,8 +3,8 @@ name: build_R
 on:
   push:
     branches:
-      - 'r/*'
-      - 'R/*'
+      - 'r/**'
+      - 'R/**'
 
 jobs:
   build:
@@ -13,8 +13,10 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        python: [ 3.9 ]
-        spark: [ 3.2.1 ]
+        python: [ 3.9.5 ]
+        numpy: [ 1.21.5 ]
+        gdal: [ 3.4.3 ]
+        spark: [ 3.3.2 ]
         R: [ 4.1.2 ]
     steps:
       - name: checkout code

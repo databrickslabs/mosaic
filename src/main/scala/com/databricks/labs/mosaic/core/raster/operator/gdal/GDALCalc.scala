@@ -21,7 +21,7 @@ object GDALCalc {
         require(gdalCalcCommand.startsWith("gdal_calc"), "Not a valid GDAL Calc command.")
         import sys.process._
         val toRun = gdalCalcCommand.replace("gdal_calc", gdal_calc)
-        s"sudo python3 $toRun".!!
+        s"python3 $toRun".!!
         val result = GDAL.raster(resultPath, resultPath)
         result
     }

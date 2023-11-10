@@ -48,9 +48,7 @@ def st_intersection_aggregate(
     )
 
 
-def st_intersection_agg(
-        leftIndex: ColumnOrName, rightIndex: ColumnOrName
-) -> Column:
+def st_intersection_agg(leftIndex: ColumnOrName, rightIndex: ColumnOrName) -> Column:
     """
     Computes the intersection of all `leftIndex` : `rightIndex` pairs
     and unions these to produce a single geometry.
@@ -100,9 +98,7 @@ def st_intersects_aggregate(
     )
 
 
-def st_intersects_agg(
-        leftIndex: ColumnOrName, rightIndex: ColumnOrName
-) -> Column:
+def st_intersects_agg(leftIndex: ColumnOrName, rightIndex: ColumnOrName) -> Column:
     """
     Tests if any `leftIndex` : `rightIndex` pairs intersect.
 
