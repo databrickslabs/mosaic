@@ -5,7 +5,6 @@ library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
 
 
 library(pkgbuild)
-library(sparklyr)
 
 
 
