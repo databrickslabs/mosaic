@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.types.{ArrayType, DataType}
 
 import scala.reflect.ClassTag
@@ -25,22 +25,28 @@ import scala.reflect.ClassTag
   * @tparam T
   *   The type of the extending class.
   */
-abstract class RasterArrayExpression[T <: Expression: ClassTag](
+abstract class RasterArray2ArgExpression[T <: Expression: ClassTag](
     rastersExpr: Expression,
+    arg1Expr: Expression,
+    arg2Expr: Expression,
     outputType: DataType,
     returnsRaster: Boolean,
     expressionConfig: MosaicExpressionConfig
-) extends UnaryExpression
+) extends TernaryExpression
       with NullIntolerant
       with Serializable
       with RasterExpressionSerialization {
 
     GDAL.enable()
 
-    override def child: Expression = rastersExpr
-
     /** Output Data Type */
     override def dataType: DataType = if (returnsRaster) rastersExpr.dataType.asInstanceOf[ArrayType].elementType else outputType
+
+    override def first: Expression = rastersExpr
+
+    override def second: Expression = arg1Expr
+
+    override def third: Expression = arg2Expr
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -48,10 +54,14 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       * It abstracts spark serialization from the caller.
       * @param rasters
       *   The sequence of rasters to be used.
+      * @param arg1
+      *   The first argument to the expression.
+      * @param arg2
+      *   The second argument to the expression.
       * @return
       *   A result of the expression.
       */
-    def rasterTransform(rasters: Seq[MosaicRasterTile]): Any
+    def rasterTransform(rasters: Seq[MosaicRasterTile], arg1: Any, arg2: Any): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -65,19 +75,21 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    override def nullSafeEval(input: Any): Any = {
+    override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
         GDAL.enable()
         val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
-        val result = rasterTransform(tiles)
+        val result = rasterTransform(tiles, arg1, arg2)
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
         tiles.foreach(t => RasterCleaner.dispose(t))
         serialized
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 1, expressionConfig)
+    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 3, expressionConfig)
 
-    override def withNewChildInternal(
-        newFirst: Expression
-    ): Expression = makeCopy(Array(newFirst))
+    override def withNewChildrenInternal(
+        newFirst: Expression,
+        newSecond: Expression,
+        newThird: Expression
+    ): Expression = makeCopy(Array(newFirst, newSecond, newThird))
 
 }

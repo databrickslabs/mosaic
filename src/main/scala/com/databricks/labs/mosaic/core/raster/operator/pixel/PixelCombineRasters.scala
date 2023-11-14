@@ -30,12 +30,13 @@ object PixelCombineRasters {
           rasters,
           command = s"gdalbuildvrt -resolution highest"
         )
+        vrtRaster.destroy()
 
         addPixelFunction(vrtPath, pythonFunc, pythonFuncName)
 
         val result = GDALTranslate.executeTranslate(
           rasterPath,
-          vrtRaster,
+          vrtRaster.refresh(),
           command = s"gdal_translate -r bilinear -of $outShortName -co COMPRESS=DEFLATE"
         )
 

@@ -8,24 +8,6 @@ import java.nio.file.{Files, Paths}
 
 object PathUtils {
 
-    def getFormatExtension(rawPath: String): String = {
-        val path: String = resolvePath(rawPath)
-        val fileName = path.split("/").last
-        val extension = fileName.split("\\.").last
-        extension
-    }
-
-    private def resolvePath(rawPath: String): String = {
-        val path =
-            if (isSubdataset(rawPath)) {
-                val _ :: filePath :: _ :: Nil = rawPath.split(":").toList
-                filePath
-            } else {
-                rawPath
-            }
-        path
-    }
-
     def getCleanPath(path: String): String = {
         val cleanPath = path.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
         if (cleanPath.endsWith(".zip") || cleanPath.contains(".zip:")) {

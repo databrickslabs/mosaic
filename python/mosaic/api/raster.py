@@ -13,6 +13,7 @@ __all__ = [
     "rst_boundingbox",
     "rst_clip",
     "rst_combineavg",
+    "rst_derivedband",
     "rst_frombands",
     "rst_fromfile",
     "rst_georeference",
@@ -142,6 +143,34 @@ def rst_combineavg(rasters: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_combineavg", pyspark_to_java_column(rasters)
+    )
+
+
+def rst_derivedband(raster: ColumnOrName, pythonFunc: ColumnOrName, funcName: ColumnOrName) -> Column:
+    """
+    Creates a new band by applying the given python function to the input rasters.
+    The result is a raster tile.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    pythonFunc : Column (StringType)
+        The python function to apply to the bands.
+    funcName : Column (StringType)
+        The name of the function.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the new raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_derivedband",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(pythonFunc),
+        pyspark_to_java_column(funcName),
     )
 
 
