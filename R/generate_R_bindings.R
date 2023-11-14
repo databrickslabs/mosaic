@@ -146,10 +146,11 @@ get_function_names <- function(scala_file_path){
 ############################################################
 sort_methods_by_argcount <- function(methods) {
   # Split the strings by colon and calculate the number of colons
-  argcount <- sapply(strsplit(methods, ":"), function(x) length(x) - 1)
+  method_names <- sapply(strsplit(methods, "\\("), function(x) x[1])
+  argcount <- sapply(strsplit(methods, ","), function(x) length(x) - 1)
   
   # Use the order function to sort first alphabetically and then by the number of colons
-  order_indices <- order(methods, argcount)
+  order_indices <- order(method_names, argcount)
   
   # Return the sorted list
   methods_sorted <- methods[order_indices]
@@ -224,8 +225,8 @@ main <- function(scala_file_path){
   # supplementary files
   sparkr_supplementary_files <- c("sparklyr-mosaic/enableMosaic.R", "sparklyr-mosaic/sparkFunctions.R")
   copy_supplementary_file(sparkr_supplementary_files, "sparklyr-mosaic/sparklyrMosaic/R/")
-  
 }
+
 
 args <- commandArgs(trailingOnly = T)
 if (length(args) !=  1){
