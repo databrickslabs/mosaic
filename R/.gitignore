@@ -1,2 +1,3 @@
 **/.Rhistory
 **/*.tar.gz
+/sparklyr-mosaic/metastore_db/
