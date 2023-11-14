@@ -63,6 +63,9 @@ build_method<-function(input){
     else if(x[2] == 'Double'){
       x[2] <- "numeric"
     }
+    else if(x[2] == 'Boolean') {
+      x[2] <- "logical"
+    }
     x
   }
   # convert scala type to R types
