@@ -64,7 +64,7 @@ runs:
       shell: bash
       run: |
         cd R/sparklyr-mosaic
-        Rscript --vanilla sparklyr-mosaic-tests.R
+        Rscript --vanilla tests.R
     - name: Copy R artifacts to GH Actions run
       shell: bash
       run: |
