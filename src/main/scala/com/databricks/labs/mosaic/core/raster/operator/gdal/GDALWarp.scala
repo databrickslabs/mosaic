@@ -13,8 +13,6 @@ object GDALWarp {
       *
       * @param outputPath
       *   The output path of the warped file.
-      * @param isTemp
-      *   Whether the output is a temp file.
       * @param rasters
       *   The rasters to warp.
       * @param command
@@ -22,7 +20,7 @@ object GDALWarp {
       * @return
       *   A MosaicRaster object.
       */
-    def executeWarp(outputPath: String, isTemp: Boolean, rasters: => Seq[MosaicRasterGDAL], command: String): MosaicRasterGDAL = {
+    def executeWarp(outputPath: String, rasters: Seq[MosaicRasterGDAL], command: String): MosaicRasterGDAL = {
         require(command.startsWith("gdalwarp"), "Not a valid GDAL Warp command.")
         // Test: gdal.ParseCommandLine(command)
         val warpOptionsVec = OperatorOptions.parseOptions(command)
@@ -34,7 +32,6 @@ object GDALWarp {
         MosaicRasterGDAL(
           result,
           outputPath,
-          isTemp,
           rasters.head.getParentPath,
           rasters.head.getDriversShortName,
           size

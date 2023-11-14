@@ -16,7 +16,7 @@ case class RST_MetaData(raster: Expression, expressionConfig: MosaicExpressionCo
       with CodegenFallback {
 
     /** Returns the metadata of the raster. */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = buildMapString(tile.getRaster.metadata)
+    override def rasterTransform(tile: MosaicRasterTile): Any = buildMapString(tile.getRaster.metadata)
 
 }
 

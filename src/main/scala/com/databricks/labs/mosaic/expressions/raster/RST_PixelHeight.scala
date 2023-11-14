@@ -17,7 +17,7 @@ case class RST_PixelHeight(raster: Expression, expressionConfig: MosaicExpressio
       with CodegenFallback {
 
     /** Returns the pixel height of the raster. */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
         val raster = tile.getRaster
         val scaleY = raster.getRaster.GetGeoTransform()(5)
         val skewX = raster.getRaster.GetGeoTransform()(2)

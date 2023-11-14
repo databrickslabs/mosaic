@@ -28,7 +28,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
 
         val boroughs: DataFrame = getBoroughs(mc)
 
-        val tempLocation = Files.createTempDirectory("mosaic").toAbsolutePath.toString
+        val tempLocation = MosaicContext.tmpDir
         spark.sparkContext.setCheckpointDir(tempLocation)
         spark.sparkContext.setLogLevel("ERROR")
 
@@ -93,7 +93,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
 
         val boroughs: DataFrame = getBoroughs(mc)
 
-        val tempLocation = Files.createTempDirectory("mosaic").toAbsolutePath.toString
+        val tempLocation = MosaicContext.tmpDir
         spark.sparkContext.setCheckpointDir(tempLocation)
         spark.sparkContext.setLogLevel("ERROR")
 

@@ -1,7 +1,10 @@
 package com.databricks.labs.mosaic.utils
 
+import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.functions.MosaicContext
+
 import java.nio.file.{Files, Paths}
-import java.util.UUID
 
 object PathUtils {
 
@@ -23,9 +26,9 @@ object PathUtils {
         path
     }
 
-    def getCleanPath(path: String, useZipPath: Boolean): String = {
+    def getCleanPath(path: String): String = {
         val cleanPath = path.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
-        if (useZipPath && cleanPath.endsWith(".zip")) {
+        if (cleanPath.endsWith(".zip") || cleanPath.contains(".zip:")) {
             getZipPath(cleanPath)
         } else {
             cleanPath
@@ -34,10 +37,6 @@ object PathUtils {
 
     def isSubdataset(path: String): Boolean = {
         path.split(":").length == 3
-    }
-
-    def isInMemory(path: String): Boolean = {
-        path.startsWith("/vsimem/") || path.contains("/vsimem/")
     }
 
     def getSubdatasetPath(path: String): String = {
@@ -60,37 +59,9 @@ object PathUtils {
         readPath
     }
 
-    def copyToTmp(rawPath: String): String = {
-        try {
-            val path: String = resolvePath(rawPath)
-
-            val fileName = path.split("/").last
-            val extension = getFormatExtension(path)
-
-            val inPath = getCleanPath(path, useZipPath = extension == "zip")
-
-            val randomID = UUID.randomUUID().toString
-            val tmpDir = Files.createTempDirectory(s"mosaic_local_$randomID").toFile.getAbsolutePath
-
-            val outPath = s"$tmpDir/$fileName"
-
-            Files.createDirectories(Paths.get(tmpDir))
-            Files.copy(Paths.get(inPath), Paths.get(outPath))
-
-            if (isSubdataset(rawPath)) {
-                val format :: _ :: subdataset :: Nil = rawPath.split(":").toList
-                getSubdatasetPath(s"$format:$outPath:$subdataset")
-            } else {
-                outPath
-            }
-        } catch {
-            case _: Throwable => rawPath
-        }
-    }
-
-    def createTmpFilePath(uuid: String, extension: String): String = {
-        val randomID = UUID.randomUUID()
-        val tmpDir = Files.createTempDirectory(s"mosaic_tmp_$randomID").toFile.getAbsolutePath
+    def createTmpFilePath(extension: String): String = {
+        val tmpDir = MosaicContext.tmpDir
+        val uuid = java.util.UUID.randomUUID.toString
         val outPath = s"$tmpDir/raster_${uuid.replace("-", "_")}.$extension"
         Files.createDirectories(Paths.get(outPath).getParent)
         outPath
@@ -98,7 +69,20 @@ object PathUtils {
 
     def fromSubdatasetPath(path: String): String = {
         val _ :: filePath :: _ :: Nil = path.split(":").toList
-        filePath
+        var result = filePath
+        if (filePath.startsWith("\"")) result = result.drop(1)
+        if (filePath.endsWith("\"")) result = result.dropRight(1)
+        result
+    }
+
+    def copyToTmp(inPath: String): String = {
+        val cleanPath = getCleanPath(inPath)
+        val copyFromPath = inPath.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
+        val driver = MosaicRasterGDAL.identifyDriver(cleanPath)
+        val extension = if (inPath.endsWith(".zip")) "zip" else GDAL.getExtension(driver)
+        val tmpPath = createTmpFilePath(extension)
+        Files.copy(Paths.get(copyFromPath), Paths.get(tmpPath))
+        tmpPath
     }
 
 }

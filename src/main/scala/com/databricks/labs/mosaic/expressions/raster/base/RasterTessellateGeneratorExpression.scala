@@ -68,7 +68,7 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * @return
       *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: => MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile]
+    def rasterGenerator(raster: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable()

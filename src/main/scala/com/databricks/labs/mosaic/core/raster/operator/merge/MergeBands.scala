@@ -18,23 +18,20 @@ object MergeBands {
       * @return
       *   A MosaicRaster object.
       */
-    def merge(rasters: => Seq[MosaicRasterGDAL], resampling: String): MosaicRasterGDAL = {
-        val rasterUUID = java.util.UUID.randomUUID.toString
+    def merge(rasters: Seq[MosaicRasterGDAL], resampling: String): MosaicRasterGDAL = {
         val outShortName = rasters.head.getRaster.GetDriver.getShortName
 
-        val vrtPath = PathUtils.createTmpFilePath(rasterUUID, "vrt")
-        val rasterPath = PathUtils.createTmpFilePath(rasterUUID, "tif")
+        val vrtPath = PathUtils.createTmpFilePath("vrt")
+        val rasterPath = PathUtils.createTmpFilePath("tif")
 
         val vrtRaster = GDALBuildVRT.executeVRT(
           vrtPath,
-          isTemp = true,
           rasters,
           command = s"gdalbuildvrt -separate -resolution highest"
         )
 
         val result = GDALTranslate.executeTranslate(
           rasterPath,
-          isTemp = true,
           vrtRaster,
           command = s"gdal_translate -r $resampling -of $outShortName -co COMPRESS=DEFLATE"
         )
@@ -57,23 +54,20 @@ object MergeBands {
       * @return
       *   A MosaicRaster object.
       */
-    def merge(rasters: => Seq[MosaicRasterGDAL], pixel: (Double, Double), resampling: String): MosaicRasterGDAL = {
-        val rasterUUID = java.util.UUID.randomUUID.toString
+    def merge(rasters: Seq[MosaicRasterGDAL], pixel: (Double, Double), resampling: String): MosaicRasterGDAL = {
         val outShortName = rasters.head.getRaster.GetDriver.getShortName
 
-        val vrtPath = PathUtils.createTmpFilePath(rasterUUID, "vrt")
-        val rasterPath = PathUtils.createTmpFilePath(rasterUUID, "tif")
+        val vrtPath = PathUtils.createTmpFilePath("vrt")
+        val rasterPath = PathUtils.createTmpFilePath("tif")
 
         val vrtRaster = GDALBuildVRT.executeVRT(
           vrtPath,
-          isTemp = true,
           rasters,
           command = s"gdalbuildvrt -separate -resolution user -tr ${pixel._1} ${pixel._2}"
         )
 
         val result = GDALTranslate.executeTranslate(
           rasterPath,
-          isTemp = true,
           vrtRaster,
           command = s"gdalwarp -r $resampling -of $outShortName -co COMPRESS=DEFLATE -overwrite"
         )

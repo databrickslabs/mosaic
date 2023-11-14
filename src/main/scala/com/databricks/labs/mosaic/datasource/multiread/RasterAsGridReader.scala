@@ -19,12 +19,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     private val mc = MosaicContext.context()
     import mc.functions._
 
-    val vsizipPathColF: Column => Column =
-        (path: Column) =>
-            when(
-              path.endsWith(".zip"),
-              concat(lit("/vsizip/"), path)
-            ).otherwise(path)
+    def getNPartitions(config: Map[String, String]): Int = {
+        val shufflePartitions = sparkSession.conf.get("spark.sql.shuffle.partitions")
+        val nPartitions = config.getOrElse("nPartitions", shufflePartitions).toInt
+        nPartitions
+    }
 
     override def load(path: String): DataFrame = load(Seq(path): _*)
 
@@ -32,12 +31,14 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         val config = getConfig
         val resolution = config("resolution").toInt
+        val nPartitions = getNPartitions(config)
 
         val pathsDf = sparkSession.read
             .format("gdal")
             .option("extensions", config("extensions"))
             .option("raster_storage", "in-memory")
             .load(paths: _*)
+            .repartition(nPartitions)
 
         val rasterToGridCombiner = getRasterToGridFunc(config("combiner"))
 
@@ -61,6 +62,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
               col("band_id"),
               explode(col("grid_measures")).alias("grid_measures")
             )
+            .repartition(nPartitions)
             .select(
               col("band_id"),
               col("grid_measures").getItem("cellID").alias("cell_id"),
@@ -87,12 +89,15 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     private def retileRaster(rasterDf: DataFrame, config: Map[String, String]) = {
         val retile = config("retile").toBoolean
         val tileSize = config("tileSize").toInt
+        val nPartitions = getNPartitions(config)
 
         if (retile) {
-            rasterDf.withColumn(
-              "tile",
-              rst_retile(col("tile"), lit(tileSize), lit(tileSize))
-            )
+            rasterDf
+                .withColumn(
+                  "tile",
+                  rst_retile(col("tile"), lit(tileSize), lit(tileSize))
+                )
+                .repartition(nPartitions)
         } else {
             rasterDf
         }
@@ -141,6 +146,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       */
     private def kRingResample(rasterDf: DataFrame, config: Map[String, String]) = {
         val k = config("kRingInterpolate").toInt
+        val nPartitions = getNPartitions(config)
 
         def weighted_sum(measureCol: String, weightCol: String) = {
             sum(col(measureCol) * col(weightCol)) / sum(col(weightCol))
@@ -150,6 +156,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             rasterDf
                 .withColumn("origin_cell_id", col("cell_id"))
                 .withColumn("cell_id", explode(grid_cellkring(col("origin_cell_id"), k)))
+                .repartition(nPartitions)
                 .withColumn("weight", lit(k + 1) - grid_distance(col("origin_cell_id"), col("cell_id")))
                 .groupBy("band_id", "cell_id")
                 .agg(weighted_sum("measure", "weight"))

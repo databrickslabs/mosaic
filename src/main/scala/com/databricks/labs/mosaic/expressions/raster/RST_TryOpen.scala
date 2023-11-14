@@ -16,7 +16,7 @@ case class RST_TryOpen(raster: Expression, expressionConfig: MosaicExpressionCon
         with CodegenFallback {
 
     /** Returns true if the raster can be opened. */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
         Option(tile.getRaster.getRaster).isDefined
     }
 

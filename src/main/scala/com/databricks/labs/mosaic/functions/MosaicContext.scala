@@ -21,6 +21,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{LongType, StringType}
 
+import java.nio.file.Files
 import scala.reflect.runtime.universe
 
 //noinspection DuplicatedCode
@@ -946,6 +947,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 // scalastyle:on line.size.limit
 
 object MosaicContext extends Logging {
+
+    val tmpDir: String = Files.createTempDirectory("mosaic").toAbsolutePath.toString
 
     private var instance: Option[MosaicContext] = None
 

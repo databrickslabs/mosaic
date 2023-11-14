@@ -13,8 +13,6 @@ object GDALTranslate {
       *
       * @param outputPath
       *   The output path of the translated file.
-      * @param isTemp
-      *   Whether the output is a temp file.
       * @param raster
       *   The raster to translate.
       * @param command
@@ -22,13 +20,13 @@ object GDALTranslate {
       * @return
       *   A MosaicRaster object.
       */
-    def executeTranslate(outputPath: String, isTemp: Boolean, raster: => MosaicRasterGDAL, command: String): MosaicRasterGDAL = {
+    def executeTranslate(outputPath: String, raster: MosaicRasterGDAL, command: String): MosaicRasterGDAL = {
         require(command.startsWith("gdal_translate"), "Not a valid GDAL Translate command.")
         val translateOptionsVec = OperatorOptions.parseOptions(command)
         val translateOptions = new TranslateOptions(translateOptionsVec)
         val result = gdal.Translate(outputPath, raster.getRaster, translateOptions)
         val size = Files.size(Paths.get(outputPath))
-        MosaicRasterGDAL(result, outputPath, isTemp, raster.getParentPath, raster.getDriversShortName, size).flushCache()
+        MosaicRasterGDAL(result, outputPath, raster.getParentPath, raster.getDriversShortName, size).flushCache()
     }
 
 }

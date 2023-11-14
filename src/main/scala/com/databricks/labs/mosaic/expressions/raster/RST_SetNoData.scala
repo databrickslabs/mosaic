@@ -36,17 +36,16 @@ case class RST_SetNoData(
       * @return
       *   The raster with the specified no data values.
       */
-    override def rasterTransform(tile: => MosaicRasterTile, arg1: Any): Any = {
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         val noDataValues = tile.getRaster.getBands.map(_.noDataValue).mkString(" ")
         val dstNoDataValues = (arg1 match {
             case doubles: Array[Double] => doubles
             case d: Double              => Array.fill[Double](tile.getRaster.numBands)(d)
             case _                      => throw new IllegalArgumentException("No data values must be an array of doubles or a double")
         }).mkString(" ")
-        val resultPath = PathUtils.createTmpFilePath(tile.getRaster.uuid.toString, GDAL.getExtension(tile.getDriver))
+        val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(tile.getDriver))
         val result = GDALWarp.executeWarp(
           resultPath,
-          isTemp = true,
           Seq(tile.getRaster),
           command = s"""gdalwarp -of ${tile.getDriver} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
         )

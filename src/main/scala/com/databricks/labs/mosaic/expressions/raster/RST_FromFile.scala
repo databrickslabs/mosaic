@@ -10,12 +10,15 @@ import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, Literal, NullIntolerant}
 import org.apache.spark.sql.types.{DataType, IntegerType, StructField, StructType}
 import org.apache.spark.unsafe.types.UTF8String
+
+import java.nio.file.{Files, Paths, StandardCopyOption}
 
 /**
   * The raster for construction of a raster tile. This should be the first
@@ -59,18 +62,24 @@ case class RST_FromFile(
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable()
         val path = rasterPathExpr.eval(input).asInstanceOf[UTF8String].toString
+        val driver = MosaicRasterGDAL.identifyDriver(path)
+        val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
+        val readPath = PathUtils.getCleanPath(path)
+        Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         if (targetSize <= 0) {
-            val raster = MosaicRasterGDAL.readRaster(path, path)
+            val raster = MosaicRasterGDAL.readRaster(tmpPath, path)
             val tile = new MosaicRasterTile(null, raster, path, raster.getDriversShortName)
             val row = tile.formatCellId(indexSystem).serialize()
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
+            Files.deleteIfExists(Paths.get(tmpPath))
             Seq(InternalRow.fromSeq(Seq(row)))
         } else {
-            val tiles = ReTileOnRead.localSubdivide(path, targetSize)
+            val tiles = ReTileOnRead.localSubdivide(tmpPath, path, targetSize)
             val rows = tiles.map(_.formatCellId(indexSystem).serialize())
             tiles.foreach(RasterCleaner.dispose(_))
+            Files.deleteIfExists(Paths.get(tmpPath))
             rows.map(row => InternalRow.fromSeq(Seq(row)))
         }
     }
