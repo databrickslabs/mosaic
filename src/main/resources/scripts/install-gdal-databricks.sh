@@ -1,28 +1,39 @@
 #!/bin/bash
-#
-# File: mosaic-gdal-3.4.3-filetree-init.sh
-# Author: Michael Johns
-# Modified: 2023-07-23
-#
-# !!! FOR DBR 11.x and 12.x ONLY [Ubuntu 20.04] !!!
-# !!! NOT for DBR 13.x           [Ubuntu 22.04] !!!
-#
-#  1. script is using custom tarballs for offline / self-contained install of GDAL
-#  2. This will unpack files directly into the filetree across cluster nodes (vs run apt install)
-#
-# -- install databricks-mosaic-gdal on cluster
-# - use version 3.4.3 (exactly) from pypi.org
-pip install databricks-mosaic-gdal==3.4.3
+# -- 
+# This is for Ubuntu 22.04 (Jammy)
+# - Corresponds to DBR 13+
+# - Jammy offers GDAL 3.4.1
+# Author: Michael Johns | mjohns@databricks.com
+# Last Modified: 13 NOV, 2023
 
-# -- find the install dir
-# - if this were run in a notebook would use $VIRTUAL_ENV
-# - since it is init script it lands in $DATABRICKS_ROOT_VIRTUALENV_ENV
-GDAL_RESOURCE_DIR=$(find $DATABRICKS_ROOT_VIRTUALENV_ENV -name "databricks-mosaic-gdal")
+GDAL_VERSION=3.4.1
 
-# -- untar files to root
-# - from databricks-mosaic-gdal install dir
-tar -xf $GDAL_RESOURCE_DIR/resources/gdal-3.4.3-filetree.tar.xz --skip-old-files -C /
+# -- refresh package info
+#  - ensue updates and backports are available
+apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-backports main universe multiverse restricted"
+apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-updates main universe multiverse restricted"
+apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-security main multiverse restricted universe"
+apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main multiverse restricted universe"
+apt-get update -y
 
-# -- untar symlinks to root
-# - from databricks-mosaic-gdal install dir
-tar -xhf $GDAL_RESOURCE_DIR/resources/gdal-3.4.3-symlinks.tar.xz --skip-old-files -C /
+# -- install GDAL
+apt-get install -y gdal-bin libgdal-dev
+
+# -- install GDAL python bindings (from PyPI) for version installed
+#  - see requirements at https://pypi.org/project/pdal/2.3.0/
+#  - make sure GDAL version matches
+apt-get install -y python3-gdal
+
+pip install --upgrade pip
+
+# - being explicit
+# - vs $(gdalinfo --version | grep -Po '(?<=GDAL )[^;]+' | cut -d, -f1)
+pip install GDAL==$GDAL_VERSION
+
+# -- add pre-build JNI shared object to the path
+#  - these are coming from Mosaic
+#  - For shared access clusters "/usr/lib/jni" is not a path
+#    in System.getProperty("java.library.path"),
+#    so let's use "/usr/lib"
+wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so
+wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so.30
