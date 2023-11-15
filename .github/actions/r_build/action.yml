@@ -50,11 +50,15 @@ runs:
       run: |
         cd R
         Rscript --vanilla generate_docs.R
+      env:
+        SPARK_HOME: /usr/spark-download/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
     - name: Build R package
       shell: bash
       run: |
         cd R
         Rscript --vanilla build_r_package.R
+      env:
+        SPARK_HOME: /usr/spark-download/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
     - name: Test SparkR package
       shell: bash
       run: |
