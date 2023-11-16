@@ -17,9 +17,10 @@ object MosaicGDAL extends Logging {
     private val usrlibsoPath = "/usr/lib/libgdal.so"
     private val usrlibso30Path = "/usr/lib/libgdal.so.30"
     private val usrlibso3003Path = "/usr/lib/libgdal.so.30.0.3"
-    private val libjnisoPath = "/lib/jni/libgdalalljni.so"
-    private val libjniso30Path = "/lib/jni/libgdalalljni.so.30"
-    private val libogdisoPath = "/lib/ogdi/libgdal.so"
+    private val libjnisoPath = "/usr/lib/libgdalalljni.so"
+    private val libjniso30Path = "/usr/lib/libgdalalljni.so.30"
+    private val libjniso3003Path = "/usr/lib/libgdalalljni.so.30.0.3"
+    private val libogdisoPath = "/usr/lib/ogdi/4.1/libgdal.so"
 
     // noinspection ScalaWeakerAccess
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
@@ -29,14 +30,27 @@ object MosaicGDAL extends Logging {
     def wasEnabled(spark: SparkSession): Boolean =
         spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
 
-    /** Prepares the GDAL environment. */
-    def prepareEnvironment(spark: SparkSession, initScriptPath: String): Unit = {
+    /** Prepares the GDAL environment. 
+        This will copy the init script as well as shared object files into
+        `toFuseDir`, e.g. `/Volumes/..`, `/Workspace/..`, `/dbfs/..`
+        NOTES: 
+          [1] If you are trying to setup for Volume using JVM write, you must:
+              (a) be on a Shared Access cluster
+              (b) have already added Mosaic JAR(s) to the Unity Catalog allowlist
+              (c) have already setup the /Volumes path within a catalog and schema
+          [2] The Mosaic python call `setup_gdal` has more default permissions to write to Volumes
+    */
+    def prepareEnvironment(spark: SparkSession, toFuseDir: String): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
-                copyInitScript(initScriptPath)
+                copyInitScript(toFuseDir)
+                copyJNISharedObjects(toFuseDir)
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
-                case scala.util.Failure(exception) => logWarning("GDAL environment preparation failed.", exception)
+                case scala.util.Failure(exception) => 
+                    if (toFuseDir.toString.startsWith("/Volumes"))
+                        logWarning("Note: Python `setup_gdal` has more default permissions for `/Volumes`.")
+                    logWarning("GDAL environment preparation failed", exception)
             }
         }
     }
@@ -79,16 +93,28 @@ object MosaicGDAL extends Logging {
     }
 
     // noinspection ScalaStyle
-    private def copyInitScript(path: String): Unit = {
-        val destPath = Paths.get(path)
+    private def copyInitScript(toFuseDir: String): Unit = {
+        val destPath = Paths.get(toFuseDir)
         if (!Files.exists(destPath)) Files.createDirectories(destPath)
 
-        val w = new PrintWriter(new File(s"$path/mosaic-gdal-init.sh"))
-        val scriptLines = readResourceLines("/scripts/install-gdal-databricks.sh")
+        val w = new PrintWriter(new File(s"$toFuseDir/mosaic-gdal-init.sh"))
+        val scriptLines = readResourceLines("/scripts/install-gdal-fuse.sh")
         scriptLines
-            .map { x => if (x.contains("__DEFAULT_JNI_PATH__")) x.replace("__DEFAULT_JNI_PATH__", path) else x }
+            .map { x => if (x.contains("__FUSE_DIR__")) x.replace("__FUSE_DIR__", toFuseDir) else x }
             .foreach(x => w.println(x))
         w.close()
+    }
+
+    // noinspection ScalaStyle
+    private def copyJNISharedObjects(toFuseDir: String): Unit = {
+        val destPath = Paths.get(toFuseDir)
+        if (!Files.exists(destPath)) Files.createDirectories(destPath)
+
+        // these are around 3MB each, 
+        // should be ok to write bytes directly (vs streamed)
+        Files.write(Paths.get(destPath.toString,"libgdalalljni.so"), readResourceBytes("/gdal/ubuntu/libgdalalljni.so"))
+        Files.write(Paths.get(destPath.toString,"libgdalalljni.so.30"), readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30"))
+        Files.write(Paths.get(destPath.toString,"libgdalalljni.so.30.0.3"), readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30.0.3"))
     }
 
     /** Loads the shared objects required for GDAL. */
@@ -98,6 +124,7 @@ object MosaicGDAL extends Logging {
         loadOrNOOP(usrlibso3003Path)
         loadOrNOOP(libjnisoPath)
         loadOrNOOP(libjniso30Path)
+        loadOrNOOP(libjniso3003Path)
         loadOrNOOP(libogdisoPath)
     }
 
