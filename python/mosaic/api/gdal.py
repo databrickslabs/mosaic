@@ -1,38 +1,81 @@
 from pyspark.sql import SparkSession
 from typing import Any
+import shutil
 import subprocess
+import tempfile
 
 __all__ = ["setup_gdal", "enable_gdal"]
 
 
 def setup_gdal(
     spark: SparkSession,
-    init_script_path: str = "/dbfs/FileStore/geospatial/mosaic/gdal/",
+    to_fuse_dir: str = '/dbfs/FileStore/geospatial/mosaic/gdal/jammy',
+    jni_so_files: bool = False
 ) -> None:
     """
     Prepare GDAL init script and shared objects required for GDAL to run on spark.
     This function will generate the init script that will install GDAL on each worker node.
-    After the setup_gdal is run, a cluster restart is required.
-
+    After the setup_gdal is run, the init script must be added to the cluster; also,
+    a cluster restart is required. 
+    
+    Notes:
+      (a) `to_fuse_dir` can be one of `/Volumes/..`, `/Workspace/..`, `/dbfs/..`
+      (b) Volume paths are the recommended FUSE mount for Databricks in DBR 13.3+ 
+      (c) If using Volumes, recommend pre-staging via `jni_so_files` = True
+      (d) Python has more default ability to read/write Volumes over Java
+      (e) The init script will be named ''
+    
     Parameters
     ----------
     spark : pyspark.sql.SparkSession
             The active SparkSession.
-    init_script_path : str
-            Path to write out the init script for GDAL installation.
+    to_fuse_dir : str
+            Path to write out the init script for GDAL installation;
+            default is '/dbfs/FileStore/geospatial/mosaic/gdal/jammy'
+    jni_so_files : bool
+            Whether to also write out GDAL JNI shared object files;
+            default is False
 
     Returns
     -------
 
     """
+    # this is the output from the scala configuration
+    out_init_script_filename = 'mosaic-gdal-init.sh'
+    
+    # - for volumes, java copy to local dir first
+    to_dir = to_fuse_dir
+    if to_fuse_dir.startswith('/Volumes/'):
+        d = tempfile.TemporaryDirectory(dir = '/tmp')
+        to_dir = d.name
+
+    # - execute with java
     mosaicGDALObject = getattr(
         spark.sparkContext._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
     )
-    mosaicGDALObject.prepareEnvironment(spark._jsparkSession, init_script_path)
+    mosaicGDALObject.prepareEnvironment(spark._jsparkSession, toFuseDir=to_dir, jniSoFiles=jni_so_files)
+    
+    # - for volumes
+    #   replace the FUSE_DIR path in the init script and 
+    #   copy to the specified volume
+    if to_fuse_dir.startswith('/Volumes/'):
+        # [1a] read existing local init script and replace local path
+        with open(f'{to_dir}/{out_init_script_filename}', 'r') as i_file:
+            filedata = i_file.read().replace(to_dir, to_fuse_dir)
+
+        # [1b] write the local init script out again 
+        with open(f'{to_dir}/{out_init_script_filename}', 'w') as i_file:
+            i_file.write(filedata)
+        
+        # [2] copy
+        shutil.copytree(to_dir, to_fuse_dir) 
+
+    # - echo status
     print("GDAL setup complete.\n")
-    print(f"Init script stored in: {init_script_path}.\n")
+    print(f"Init script configured and stored as: '{to_fuse_dir}/{out_init_script_filename}'.\n")
+    (jni_so_files == True) and print(f"... JNI Shared Objects also copied under '{to_fuse_dir}'.")
     print(
-        "Please restart the cluster with the generated init script to complete the setup.\n"
+        "Please add the init script to your cluster and restart to complete the setup.\n"
     )
 
 
@@ -69,6 +112,6 @@ def enable_gdal(spark: SparkSession) -> None:
             "Please run setup_gdal() to generate the init script for install GDAL install.\n"
         )
         print(
-            "After the init script is generated, please restart the cluster with the init script to complete the setup.\n"
+            "After the init script is generated, please add the init script to your cluster and restart to complete the setup.\n"
         )
         print("Error: " + str(e))
