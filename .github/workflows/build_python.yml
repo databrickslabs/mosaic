@@ -12,11 +12,11 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        python: [ 3.9.5 ]
+        python: [ 3.10.12 ]
         numpy: [ 1.21.5 ]
         gdal: [ 3.4.1 ]
         spark: [ 3.4.0 ]
-        R: [ 4.1.2 ]
+        R: [ 4.2.2 ]
     steps:
       - name: checkout code
         uses: actions/checkout@v2
