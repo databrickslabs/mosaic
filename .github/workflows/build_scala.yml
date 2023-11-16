@@ -6,14 +6,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
         python: [ 3.9.5 ]
         numpy: [ 1.21.5 ]
-        gdal: [ 3.4.3 ]
+        gdal: [ 3.4.1 ]
         spark: [ 3.3.2 ]
         R: [ 4.1.2 ]
     steps:
