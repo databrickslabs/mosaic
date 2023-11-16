@@ -23,7 +23,8 @@ def setup_gdal(
       (b) Volume paths are the recommended FUSE mount for Databricks in DBR 13.3+ 
       (c) If using Volumes, recommend pre-staging via `jni_so_files` = True
       (d) Python has more default ability to read/write Volumes over Java
-      (e) The init script will be named ''
+      (e) The init script generated will be named 'mosaic-gdal-init.sh'
+      (f) `FUSE_DIR=<to_fuse_dir>` will be set in the init script itself
     
     Parameters
     ----------
@@ -50,10 +51,12 @@ def setup_gdal(
         to_dir = d.name
 
     # - execute with java
+    #   passing either local or fuse dir as `to_dir`
+    #   passing True | False for also copying JNI so files
     mosaicGDALObject = getattr(
         spark.sparkContext._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
     )
-    mosaicGDALObject.prepareEnvironment(spark._jsparkSession, toFuseDir=to_dir, jniSoFiles=jni_so_files)
+    mosaicGDALObject.prepareEnvironment(spark._jsparkSession, to_dir, jni_so_files)
     
     # - for volumes
     #   replace the FUSE_DIR path in the init script and 
@@ -67,7 +70,8 @@ def setup_gdal(
         with open(f'{to_dir}/{out_init_script_filename}', 'w') as i_file:
             i_file.write(filedata)
         
-        # [2] copy
+        # [2] copy from local to fuse dir
+        #     this will include shared objects, if specified
         shutil.copytree(to_dir, to_fuse_dir) 
 
     # - echo status
@@ -94,9 +98,6 @@ def enable_gdal(spark: SparkSession) -> None:
     """
     try:
         sc = spark.sparkContext
-        mosaicContextClass = getattr(
-            sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
-        )
         mosaicGDALObject = getattr(
             sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
         )
