@@ -31,8 +31,9 @@ object MosaicGDAL extends Logging {
         spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
 
     /** Prepares the GDAL environment. 
-        This will copy the init script as well as shared object files into
-        `toFuseDir`, e.g. `/Volumes/..`, `/Workspace/..`, `/dbfs/..`
+        This will copy the init script as well as optionally copy shared object files into
+        `toFuseDir`, e.g. `/Volumes/..`, `/Workspace/..`, `/dbfs/..`, 
+        defaults to "/dbfs/FileStore/geospatial/mosaic/gdal/jammy"
         NOTES: 
           [1] If you are trying to setup for Volume using JVM write, you must:
               (a) be on a Shared Access cluster
@@ -40,11 +41,16 @@ object MosaicGDAL extends Logging {
               (c) have already setup the /Volumes path within a catalog and schema
           [2] The Mosaic python call `setup_gdal` has more default permissions to write to Volumes
     */
-    def prepareEnvironment(spark: SparkSession, toFuseDir: String): Unit = {
+    def prepareEnvironment(
+        spark: SparkSession, 
+        toFuseDir: String = "/dbfs/FileStore/geospatial/mosaic/gdal/jammy", 
+        jniSoFiles: Boolean = false
+    ): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 copyInitScript(toFuseDir)
-                copyJNISharedObjects(toFuseDir)
+                if (jniSofiles)
+                    copyJNISharedObjects(toFuseDir)
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
                 case scala.util.Failure(exception) => 
