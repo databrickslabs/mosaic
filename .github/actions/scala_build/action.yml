@@ -19,10 +19,18 @@ runs:
         - name: Add packaged GDAL dependencies
           shell: bash
           run : |
-            sudo apt-get update && sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7 
-            pip install databricks-mosaic-gdal==${{ matrix.gdal }}
-            sudo tar -xf /opt/hostedtoolcache/Python/${{ matrix.python }}/x64/lib/python3.9/site-packages/databricks-mosaic-gdal/resources/gdal-${{ matrix.gdal }}-filetree.tar.xz -C /
-            sudo tar -xhf /opt/hostedtoolcache/Python/${{ matrix.python }}/x64/lib/python3.9/site-packages/databricks-mosaic-gdal/resources/gdal-${{ matrix.gdal }}-symlinks.tar.xz -C /
+            apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-backports main universe multiverse restricted"
+            apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-updates main universe multiverse restricted"
+            apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-security main multiverse restricted universe"
+            apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main multiverse restricted universe"
+            apt-get update -y
+            apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
+            apt-get install -y gdal-bin libgdal-dev python3-gdal
+            pip install --upgrade pip
+            pip install GDAL==${{ matrix.gdal }}
+            wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so
+            wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so.30
+            #wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so.30.0.3
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
