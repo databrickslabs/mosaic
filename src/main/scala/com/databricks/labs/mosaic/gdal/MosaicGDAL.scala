@@ -48,7 +48,7 @@ object MosaicGDAL extends Logging {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 copyInitScript(toFuseDir)
-                if (jniSofiles)
+                if (jniSoFiles)
                     copyJNISharedObjects(toFuseDir)
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
