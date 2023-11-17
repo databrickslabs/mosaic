@@ -17,4 +17,4 @@ class TestGDALInstall(SparkTestCase):
         self.assertEqual(installer_result, 0)
 
         gdalinfo_result = installer.test_gdalinfo()
-        self.assertEqual(gdalinfo_result, "GDAL 3.4.3, released 2022/04/22\n")
+        self.assertEqual(gdalinfo_result, "GDAL 3.4.1, released 2021/12/27\n")
