@@ -19,7 +19,7 @@ sudo apt-get update -y
 
  # - install numpy first
 pip install --upgrade pip
-pip install 'numpy>=$NUMPY_VERSION'
+pip install "numpy>=$NUMPY_VERSION"
 
 # - install natives
 sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
