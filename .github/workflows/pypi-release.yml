@@ -9,8 +9,8 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python: [3.9]
-        spark: [3.2.1]
+        python: [3.10.12]
+        spark: [3.3.2]
     steps:
       - name: checkout code
         uses: actions/checkout@v2
