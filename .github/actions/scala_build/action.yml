@@ -29,7 +29,7 @@ runs:
             pip install --upgrade pip
             pip install 'numpy>=${{ matrix.numpy }}'
             # - install natives
-            sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
+            sudo apt-get install -y r-cran-roxygen2 unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
             sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
             # - install gdal with numpy
             pip install --no-cache-dir --force-reinstall 'GDAL[numpy]==${{ matrix.gdal }}'
