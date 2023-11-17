@@ -30,46 +30,6 @@ object MosaicGDAL extends Logging {
     def wasEnabled(spark: SparkSession): Boolean =
         spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
 
-    /** Prepares the GDAL environment. 
-        This will copy the init script as well as optionally copy shared object files into
-        `toFuseDir`, e.g. `/Volumes/..`, `/Workspace/..`, `/dbfs/..`. It has an additional argument,
-        called `jniSoFiles` to indicate whether to copy shared objects to the path as well.
-        NOTES: 
-          [1] If you are trying to setup for Volume using JVM write, you must:
-              (a) be on a Shared Access cluster
-              (b) have already added Mosaic JAR(s) to the Unity Catalog allowlist
-              (c) have already setup the /Volumes path within a catalog and schema
-          [2] The Mosaic python call `setup_gdal` has more default permissions to write to Volumes
-    */
-    def prepareEnvironment(spark: SparkSession, toFuseDir: String, jniSoFiles: Boolean): Unit = {
-        if (!wasEnabled(spark) && !isEnabled) {
-            Try {
-                if (jniSoFiles){
-                    // suitable for Volume based init script
-                    copyInitScript(toFuseDir, "install-gdal-fuse.sh", "install-gdal-fuse.sh")
-                    copyJNISharedObjects(toFuseDir)
-                } else {
-                    // preserves non-Volume based init script option
-                    copyInitScript(toFuseDir, "install-gdal-databricks.sh", "mosaic-gdal-init.sh")
-                }
-            } match {
-                case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
-                case scala.util.Failure(exception) => 
-                    if (toFuseDir.toString.startsWith("/Volumes")) {
-                        logWarning("Note: Python `setup_gdal` has more default permissions for `/Volumes`.")
-                    }
-                    logWarning("GDAL environment preparation failed", exception)
-            }
-        }
-    }
-    
-    /** Prepares the GDAL environment with copy `jniSoFiles=false`.
-        This call is not suitable for Volume based init scripts.
-     */
-    def prepareEnvironment(spark: SparkSession, toFuseDir: String): Unit = {
-        prepareEnvironment(spark, toFuseDir, false)
-    }
-
     /** Configures the GDAL environment. */
     def configureGDAL(mosaicConfig: MosaicExpressionConfig): Unit = {
         val CPL_TMPDIR = MosaicContext.tmpDir
@@ -105,31 +65,6 @@ object MosaicGDAL extends Logging {
                     throw exception
             }
         }
-    }
-
-    // noinspection ScalaStyle
-    private def copyInitScript(toFuseDir: String, inScriptName: String, outScriptName: String): Unit = {
-        val destPath = Paths.get(toFuseDir)
-        if (!Files.exists(destPath)) Files.createDirectories(destPath)
-
-        val scriptLines = readResourceLines(s"/scripts/$inScriptName")
-        val w = new PrintWriter(new File(s"$toFuseDir/$outScriptName"))
-        scriptLines
-            .map { x => if (x.contains("__FUSE_DIR__")) x.replace("__FUSE_DIR__", toFuseDir) else x }
-            .foreach(x => w.println(x))
-        w.close()
-    }
-
-    // noinspection ScalaStyle
-    private def copyJNISharedObjects(toFuseDir: String): Unit = {
-        val destPath = Paths.get(toFuseDir)
-        if (!Files.exists(destPath)) Files.createDirectories(destPath)
-
-        // these are around 3MB each, 
-        // should be ok to write bytes directly (vs streamed)
-        Files.write(Paths.get(destPath.toString,"libgdalalljni.so"), readResourceBytes("/gdal/ubuntu/libgdalalljni.so"))
-        Files.write(Paths.get(destPath.toString,"libgdalalljni.so.30"), readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30"))
-        Files.write(Paths.get(destPath.toString,"libgdalalljni.so.30.0.3"), readResourceBytes("/gdal/ubuntu/libgdalalljni.so.30.0.3"))
     }
 
     /** Loads the shared objects required for GDAL. */
@@ -170,5 +105,4 @@ object MosaicGDAL extends Logging {
         val lines = new String(bytes).split("\n")
         lines
     }
-
 }
