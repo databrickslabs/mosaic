@@ -54,17 +54,19 @@ object MosaicGDAL extends Logging {
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
                 case scala.util.Failure(exception) => 
-                    if (toFuseDir.toString.startsWith("/Volumes"))
+                    if (toFuseDir.toString.startsWith("/Volumes")) {
                         logWarning("Note: Python `setup_gdal` has more default permissions for `/Volumes`.")
+                    }
                     logWarning("GDAL environment preparation failed", exception)
             }
         }
     }
+    
     /** Prepares the GDAL environment with copy `jniSoFiles=false`.
         This call is not suitable for Volume based init scripts.
      */
-    def prepareEnvironment(spark: SparkSession, toFuseDir): Unit = {
-        prepareEnvironment(spark,toFuseDir,false)
+    def prepareEnvironment(spark: SparkSession, toFuseDir: String): Unit = {
+        prepareEnvironment(spark, toFuseDir, false)
     }
 
     /** Configures the GDAL environment. */
