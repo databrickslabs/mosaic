@@ -32,8 +32,8 @@ object MosaicGDAL extends Logging {
 
     /** Prepares the GDAL environment. 
         This will copy the init script as well as optionally copy shared object files into
-        `toFuseDir`, e.g. `/Volumes/..`, `/Workspace/..`, `/dbfs/..`, 
-        defaults to "/dbfs/FileStore/geospatial/mosaic/gdal/jammy"
+        `toFuseDir`, e.g. `/Volumes/..`, `/Workspace/..`, `/dbfs/..`. It has an additional argument,
+        called `jniSoFiles` to indicate whether to copy shared objects to the path as well.
         NOTES: 
           [1] If you are trying to setup for Volume using JVM write, you must:
               (a) be on a Shared Access cluster
@@ -41,16 +41,17 @@ object MosaicGDAL extends Logging {
               (c) have already setup the /Volumes path within a catalog and schema
           [2] The Mosaic python call `setup_gdal` has more default permissions to write to Volumes
     */
-    def prepareEnvironment(
-        spark: SparkSession, 
-        toFuseDir: String = "/dbfs/FileStore/geospatial/mosaic/gdal/jammy", 
-        jniSoFiles: Boolean = false
-    ): Unit = {
+    def prepareEnvironment(spark: SparkSession, toFuseDir: String, jniSoFiles: Boolean): Unit = {
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
-                copyInitScript(toFuseDir)
-                if (jniSoFiles)
+                if (jniSoFiles){
+                    // suitable for Volume based init script
+                    copyInitScript(toFuseDir, "install-gdal-fuse.sh", "install-gdal-fuse.sh")
                     copyJNISharedObjects(toFuseDir)
+                } else {
+                    // preserves non-Volume based init script option
+                    copyInitScript(toFuseDir, "install-gdal-databricks.sh", "mosaic-gdal-init.sh")
+                }
             } match {
                 case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
                 case scala.util.Failure(exception) => 
@@ -59,6 +60,12 @@ object MosaicGDAL extends Logging {
                     logWarning("GDAL environment preparation failed", exception)
             }
         }
+    }
+    /** Prepares the GDAL environment with copy `jniSoFiles=false`.
+        This call is not suitable for Volume based init scripts.
+     */
+    def prepareEnvironment(spark: SparkSession, toFuseDir): Unit = {
+        prepareEnvironment(spark,toFuseDir,false)
     }
 
     /** Configures the GDAL environment. */
@@ -99,12 +106,12 @@ object MosaicGDAL extends Logging {
     }
 
     // noinspection ScalaStyle
-    private def copyInitScript(toFuseDir: String): Unit = {
+    private def copyInitScript(toFuseDir: String, inScriptName: String, outScriptName: String): Unit = {
         val destPath = Paths.get(toFuseDir)
         if (!Files.exists(destPath)) Files.createDirectories(destPath)
 
-        val w = new PrintWriter(new File(s"$toFuseDir/mosaic-gdal-init.sh"))
-        val scriptLines = readResourceLines("/scripts/install-gdal-fuse.sh")
+        val scriptLines = readResourceLines(s"/scripts/$inScriptName")
+        val w = new PrintWriter(new File(s"$toFuseDir/$outScriptName"))
         scriptLines
             .map { x => if (x.contains("__FUSE_DIR__")) x.replace("__FUSE_DIR__", toFuseDir) else x }
             .foreach(x => w.println(x))
