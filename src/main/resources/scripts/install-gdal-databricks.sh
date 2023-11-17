@@ -25,9 +25,9 @@ apt-get install -y python3-gdal
 pip install --upgrade pip
 
 # - being explicit with pip
-pip install GDAL==$GDAL_VERSION
+pip install GDAL[numpy]==$GDAL_VERSION
 
 # - add pre-build JNI shared object to the path
 wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so
 wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so.30
-wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so.30.0.3
+#wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so.30.0.3
