@@ -6,11 +6,54 @@ import tempfile
 
 __all__ = ["setup_gdal", "enable_gdal"]
 
+def setup_fuse_gdal(
+    spark: SparkSession,
+    to_fuse_dir: str,
+    with_gdal: bool,
+    with_ubuntugis: bool = False
+) -> None:
+    """
+    [1] Copies Mosaic JAR (with dependencies) into `to_fuse_dir`
+        - version will match the current mosaic version executing the command,
+          assuming it is a released version
+        - this doesn't involve a script unless `with_gdal=True`
+    [2] if `with_gdal=True`
+        - configures script that is a variation of what setup_gdal does with some differences
+        - configures to load shared objects from fuse dir (vs wget)
+        - configures to pip install databricks-mosaic==$MOSAIC_VERSION (since JAR is also being pre-staged for this version
+    [3] if `with_ubuntugis=True` (assumes `with_gdal=True`)   
+        - configures script to use the GDAL version provided by ubuntugis
+        - default is False
+    Notes:
+      (a) `to_fuse_dir` can be one of `/Volumes/..`, `/Workspace/..`, `/dbfs/..`
+      (b) Volume paths are the recommended FUSE mount for Databricks in DBR 13.3+ 
+      (c) If using Volumes, there are more admin actions that a Unity Catalog admin
+          needs to be take to add the generated script and JAR to the Unity Catalog 
+          allowlist, essential steps for Shared Cluster and Java access!
+      (e) The init script generated will be named 'mosaic-gdal-init.sh'
+      (f) `FUSE_DIR` within the script will be set to the passed value 
 
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+            The active SparkSession.
+    to_fuse_dir : str
+            Path to write out the resource(s) for GDAL installation
+    with_gdal : bool
+            Whether to also configure a script for GDAL and pre-stage GDAL JNI shared object files
+    with_ubuntugis : bool
+            Whether to use ubuntugis ppa for GDAL instead of built-in;
+            default is False
+
+    Returns
+    -------
+    """
+    print("TODO")
+
+     
 def setup_gdal(
     spark: SparkSession,
-    to_fuse_dir: str = '/dbfs/FileStore/geospatial/mosaic/gdal/jammy',
-    jni_so_files: bool = False
+    to_fuse_dir: str = '/dbfs/FileStore/geospatial/mosaic/gdal/jammy'
 ) -> None:
     """
     Prepare GDAL init script and shared objects required for GDAL to run on spark.
@@ -19,12 +62,11 @@ def setup_gdal(
     a cluster restart is required. 
     
     Notes:
-      (a) `to_fuse_dir` can be one of `/Volumes/..`, `/Workspace/..`, `/dbfs/..`
-      (b) Volume paths are the recommended FUSE mount for Databricks in DBR 13.3+ 
-      (c) If using Volumes, recommend pre-staging via `jni_so_files` = True
-      (d) Python has more default ability to read/write Volumes over Java
-      (e) The init script generated will be named 'mosaic-gdal-init.sh'
-      (f) `FUSE_DIR=<to_fuse_dir>` will be set in the init script itself
+      (a) This is very close in behavior to Mosaic < 0.4 series (prior to DBR 13)
+      (b) `to_fuse_dir` can be one of `/Volumes/..`, `/Workspace/..`, `/dbfs/..`;
+           however, you should use `setup_fuse_install()` for Volume based installs
+      (c) The init script generated will be named 'mosaic-gdal-init.sh'
+      (d) `FUSE_DIR=<to_fuse_dir>` will be set in the init script itself
     
     Parameters
     ----------
@@ -33,9 +75,6 @@ def setup_gdal(
     to_fuse_dir : str
             Path to write out the init script for GDAL installation;
             default is '/dbfs/FileStore/geospatial/mosaic/gdal/jammy'
-    jni_so_files : bool
-            Whether to also write out GDAL JNI shared object files;
-            default is False
 
     Returns
     -------
