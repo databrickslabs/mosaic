@@ -2,7 +2,6 @@ from .utils import SparkTestCase, GDALInstaller
 
 
 class TestGDALInstall(SparkTestCase):
-    @unittest.skip("temporarily disable for [WIP] development on setup_gdal with Volumes")
     def test_setup_gdal(self):
         installer = GDALInstaller(self.spark)
         try:
