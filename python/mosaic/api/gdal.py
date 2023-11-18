@@ -6,22 +6,28 @@ import tempfile
 
 __all__ = ["setup_gdal", "enable_gdal"]
 
-def setup_fuse_gdal(
-    spark: SparkSession,
-    to_fuse_dir: str,
-    with_gdal: bool,
-    with_ubuntugis: bool = False
+def setup_fuse_install(
+    spark: SparkSession, to_fuse_dir: str, with_mosaic_pip: bool, with_gdal: bool, 
+    with_ubuntugis: bool = False, script_name: str = 'mosaic-fuse-init.sh', 
+    override_mosaic_version: str = None, skip_jar_copy: bool = False
 ) -> None:
     """
-    [1] Copies Mosaic JAR (with dependencies) into `to_fuse_dir`
-        - version will match the current mosaic version executing the command,
-          assuming it is a released version
-        - this doesn't involve a script unless `with_gdal=True`
-    [2] if `with_gdal=True`
+    [1] Copies Mosaic "fat" JAR (with dependencies) into `to_fuse_dir`
+        - by default, version will match the current mosaic version executing the command,
+          assuming it is a released version; if `override_mosaic_version` is a single value, 
+          versus a range, that value will be used instead
+        - this doesn't involve a script unless `with_mosaic_pip=True` or `with_gdal=True`
+        - if `skip_jar_copy=True`, then the JAR is not copied
+    [2] if `with_mosaic_pip=True`
+        - configures script that configures to pip install databricks-mosaic==$MOSAIC_VERSION 
+          or to `override_mosaic_version`
+        - this is useful (1) to "pin" to a specific mosaic version, especially if using the
+           JAR that is also being pre-staged for this version and (2) to consolidate all mosaic
+           setup into a script and avoid needing to `%pip install databricks-mosaic` in each session
+    [3] if `with_gdal=True`
         - configures script that is a variation of what setup_gdal does with some differences
         - configures to load shared objects from fuse dir (vs wget)
-        - configures to pip install databricks-mosaic==$MOSAIC_VERSION (since JAR is also being pre-staged for this version
-    [3] if `with_ubuntugis=True` (assumes `with_gdal=True`)   
+    [4] if `with_ubuntugis=True` (assumes `with_gdal=True`)   
         - configures script to use the GDAL version provided by ubuntugis
         - default is False
     Notes:
@@ -30,20 +36,32 @@ def setup_fuse_gdal(
       (c) If using Volumes, there are more admin actions that a Unity Catalog admin
           needs to be take to add the generated script and JAR to the Unity Catalog 
           allowlist, essential steps for Shared Cluster and Java access!
-      (e) The init script generated will be named 'mosaic-gdal-init.sh'
-      (f) `FUSE_DIR` within the script will be set to the passed value 
+      (d) `FUSE_DIR` within the script will be set to the passed value 
 
     Parameters
     ----------
     spark : pyspark.sql.SparkSession
             The active SparkSession.
     to_fuse_dir : str
-            Path to write out the resource(s) for GDAL installation
+            Path to write out the resource(s) for GDAL installation.
+    with_mosaic_pip : bool
+            Whether to configure a script that pip installs databricks-mosaic, 
+            fixed to the current version.
     with_gdal : bool
-            Whether to also configure a script for GDAL and pre-stage GDAL JNI shared object files
+            Whether to also configure a script for GDAL and pre-stage GDAL JNI shared object files.
     with_ubuntugis : bool
             Whether to use ubuntugis ppa for GDAL instead of built-in;
-            default is False
+            default is False.
+    script_name : str
+            name of the script to be written;
+            default is 'mosaic-fuse-init.sh'.
+    override_mosaic_version: str
+            String value to use to override the mosaic version to install,
+            e.g. '0.4.0' or '<0.5,>=0.4';
+            default is None.
+    skip_jar_copy: bool
+            Whether to skip copying the Mosaic JAR;
+            default is False.
 
     Returns
     -------
@@ -52,8 +70,9 @@ def setup_fuse_gdal(
 
      
 def setup_gdal(
-    spark: SparkSession,
-    to_fuse_dir: str = '/dbfs/FileStore/geospatial/mosaic/gdal/jammy'
+    spark: SparkSession, to_fuse_dir: str = '/dbfs/FileStore/geospatial/mosaic/gdal/jammy',
+    with_mosaic_pip: bool, with_ubuntugis: bool = False, script_name: str = 'mosaic-gdal-init.sh',
+    override_mosaic_version: str = None
 ) -> None:
     """
     Prepare GDAL init script and shared objects required for GDAL to run on spark.
@@ -62,11 +81,12 @@ def setup_gdal(
     a cluster restart is required. 
     
     Notes:
-      (a) This is very close in behavior to Mosaic < 0.4 series (prior to DBR 13)
+      (a) This is close in behavior to Mosaic < 0.4 series (prior to DBR 13), with new options
+          to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1)
       (b) `to_fuse_dir` can be one of `/Volumes/..`, `/Workspace/..`, `/dbfs/..`;
            however, you should use `setup_fuse_install()` for Volume based installs
-      (c) The init script generated will be named 'mosaic-gdal-init.sh'
-      (d) `FUSE_DIR=<to_fuse_dir>` will be set in the init script itself
+      (c) The init script generated will be named value of `script_name`, 
+          default: 'mosaic-gdal-init.sh'
     
     Parameters
     ----------
@@ -74,7 +94,20 @@ def setup_gdal(
             The active SparkSession.
     to_fuse_dir : str
             Path to write out the init script for GDAL installation;
-            default is '/dbfs/FileStore/geospatial/mosaic/gdal/jammy'
+            default is '/dbfs/FileStore/geospatial/mosaic/gdal/jammy'.
+    with_mosaic_pip : bool
+            Whether to configure a script that pip installs databricks-mosaic, 
+            fixed to the current version.
+     with_ubuntugis : bool
+            Whether to use ubuntugis ppa for GDAL instead of built-in;
+            default is False.
+    script_name : str
+            name of the script to be written;
+            default is 'mosaic-gdal-init.sh'.
+    override_mosaic_version: str
+            String value to use to override the mosaic version to install,
+            e.g. '0.4.0' or '<0.5,>=0.4';
+            default is None.
 
     Returns
     -------
