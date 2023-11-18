@@ -1,10 +1,18 @@
 from pyspark.sql import SparkSession
 from typing import Any
-import shutil
+import os
+import requests
 import subprocess
-import tempfile
 
 __all__ = ["setup_gdal", "enable_gdal"]
+
+# TODO: CHANGE URL AFTER PR ACCEPTED
+GITHUB_SCRIPT_URL = 'https://raw.githubusercontent.com/mjohns-databricks/mosaic/gdal-jammy-1/scripts/mosaic-gdal-init.sh'
+SCRIPT_FUSE_DIR_TOKEN= 'FUSE_DIR=__FUSE_DIR__'
+SCRIPT_MOSAIC_VERSION_TOKEN = 'MOSAIC_VERSION=__MOSAIC_VERSION__'
+SCRIPT_WITH_MOSAIC_TOKEN = 'WITH_MOSAIC=0'
+SCRIPT_WITH_UBUNTUGIS_TOKEN ='WITH_UBUNTUGIS=0' 
+SCRIPT_WITH_FUSE_SO_TOKEN = 'WITH_FUSE_SO=0'
 
 def setup_fuse_install(
     spark: SparkSession, to_fuse_dir: str, with_mosaic_pip: bool, with_gdal: bool, 
@@ -70,8 +78,8 @@ def setup_fuse_install(
 
      
 def setup_gdal(
-    spark: SparkSession, to_fuse_dir: str = '/dbfs/FileStore/geospatial/mosaic/gdal/jammy',
-    with_mosaic_pip: bool, with_ubuntugis: bool = False, script_name: str = 'mosaic-gdal-init.sh',
+    to_fuse_dir: str = '/dbfs/FileStore/geospatial/mosaic/gdal/jammy',
+    with_mosaic_pip: bool = False, with_ubuntugis: bool = False, script_name: str = 'mosaic-gdal-init.sh',
     override_mosaic_version: str = None
 ) -> None:
     """
@@ -90,14 +98,12 @@ def setup_gdal(
     
     Parameters
     ----------
-    spark : pyspark.sql.SparkSession
-            The active SparkSession.
     to_fuse_dir : str
             Path to write out the init script for GDAL installation;
             default is '/dbfs/FileStore/geospatial/mosaic/gdal/jammy'.
     with_mosaic_pip : bool
             Whether to configure a script that pip installs databricks-mosaic, 
-            fixed to the current version.
+            fixed to the current version; default is False.
      with_ubuntugis : bool
             Whether to use ubuntugis ppa for GDAL instead of built-in;
             default is False.
@@ -113,43 +119,46 @@ def setup_gdal(
     -------
 
     """
-    # this is the output from the scala configuration
-    out_init_script_filename = 'mosaic-gdal-init.sh'
+    # - generate fuse dir path
+    os.makedirs(to_fuse_dir, exist_ok=True)
     
-    # - for volumes, java copy to local dir first
-    to_dir = to_fuse_dir
-    if to_fuse_dir.startswith('/Volumes/'):
-        d = tempfile.TemporaryDirectory(dir = '/tmp')
-        to_dir = d.name
+    # - start with the unconfigured script
+    script = requests.get(GITHUB_SCRIPT_URL, allow_redirects=True).content
 
-    # - execute with java
-    #   passing either local or fuse dir as `to_dir`
-    #   passing True | False for also copying JNI so files
-    mosaicGDALObject = getattr(
-        spark.sparkContext._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
+    # - set the fuse dir
+    script = script.replace(
+        SCRIPT_FUSE_DIR_TOKEN, SCRIPT_FUSE_DIR_TOKEN.replace('__FUSE_DIR__', to_fuse_dir)
     )
-    mosaicGDALObject.prepareEnvironment(spark._jsparkSession, to_dir, jni_so_files)
-    
-    # - for volumes
-    #   replace the FUSE_DIR path in the init script and 
-    #   copy to the specified volume
-    if to_fuse_dir.startswith('/Volumes/'):
-        # [1a] read existing local init script and replace local path
-        with open(f'{to_dir}/{out_init_script_filename}', 'r') as i_file:
-            filedata = i_file.read().replace(to_dir, to_fuse_dir)
+    # - set the mosaic version
+    if override_mosaic_version is not None:
+        script = script.replace(
+            SCRIPT_MOSAIC_VERSION_TOKEN, 
+            SCRIPT_MOSAIC_VERSION_TOKEN.replace(
+                '__MOSAIC_VERSION__', override_mosaic_version)
+            )
+    #else:
+        # TODO: SET SCRIPT_MOSAIC_VERSION_TOKEN from current version
+        # TODO: ALTER SCRIPT TO PULL FROM TAG VERSION FOR SO FILES VS MAIN
 
-        # [1b] write the local init script out again 
-        with open(f'{to_dir}/{out_init_script_filename}', 'w') as i_file:
-            i_file.write(filedata)
+    # - are we configuring for mosaic pip?
+    if with_mosaic_pip:
+        script = script.replace(
+            SCRIPT_WITH_MOSAIC_TOKEN, SCRIPT_WITH_MOSAIC_TOKEN.replace('0','1')
+        )    
         
-        # [2] copy from local to fuse dir
-        #     this will include shared objects, if specified
-        shutil.copytree(to_dir, to_fuse_dir) 
-
+    # - are we configuring for ubuntugis?
+    if with_ubuntugis:
+        script = script.replace(
+            SCRIPT_WITH_UBUNTUGIS_TOKEN, SCRIPT_WITH_UBUNTUGIS_TOKEN.replace('0','1')
+        )
+     
+    # - write the configured init script
+    with open(f'{to_fuse_dir}/{script_name}', 'w') as file:
+        file.write(script)
+        
     # - echo status
     print("GDAL setup complete.\n")
-    print(f"Init script configured and stored as: '{to_fuse_dir}/{out_init_script_filename}'.\n")
-    (jni_so_files == True) and print(f"... JNI Shared Objects also copied under '{to_fuse_dir}'.")
+    print(f"Init script configured and stored as: '{to_fuse_dir}/{script_name}'.\n")
     print(
         "Please add the init script to your cluster and restart to complete the setup.\n"
     )
