@@ -17,6 +17,7 @@
 # - can also be manually specified
 FUSE_DIR=__FUSE_DIR__
 MOSAIC_VERSION=__MOSAIC_VERSION__
+MOSAIC_PIP_VERSION=__MOSAIC_PIP_VERSION__
 
 # CONDITIONAL LOGIC
 WITH_MOSAIC=0    # <- pip install mosaic?
@@ -60,6 +61,7 @@ then
 else
   # copy from github
   # - !!! TODO: MODIFY PATH ONCE PR MERGES !!! 
+  # - THIS WILL USE MOSAIC_VERSION
   sudo wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so
   sudo wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so.30
   #sudo wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so.30.0.3
@@ -68,5 +70,5 @@ fi
 # - optional: install Mosaic
 if [ $WITH_MOSAIC == 1 ]
 then
-  pip install databricks-mosaic==$MOSAIC_VERSION
+  pip install databricks-mosaic==$MOSAIC_PIP_VERSION
 fi
