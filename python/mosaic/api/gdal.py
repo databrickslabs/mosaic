@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from typing import Any
 import os
+import pkg_resources
 import requests
 import subprocess
 
@@ -10,6 +11,7 @@ __all__ = ["setup_gdal", "enable_gdal"]
 GITHUB_SCRIPT_URL = 'https://raw.githubusercontent.com/mjohns-databricks/mosaic/gdal-jammy-1/scripts/mosaic-gdal-init.sh'
 SCRIPT_FUSE_DIR_TOKEN= 'FUSE_DIR=__FUSE_DIR__'
 SCRIPT_MOSAIC_VERSION_TOKEN = 'MOSAIC_VERSION=__MOSAIC_VERSION__'
+SCRIPT_MOSAIC_PIP_VERSION_TOKEN = 'MOSAIC_PIP_VERSION=__MOSAIC_PIP_VERSION__'
 SCRIPT_WITH_MOSAIC_TOKEN = 'WITH_MOSAIC=0'
 SCRIPT_WITH_UBUNTUGIS_TOKEN ='WITH_UBUNTUGIS=0' 
 SCRIPT_WITH_FUSE_SO_TOKEN = 'WITH_FUSE_SO=0'
@@ -65,7 +67,7 @@ def setup_fuse_install(
             default is 'mosaic-fuse-init.sh'.
     override_mosaic_version: str
             String value to use to override the mosaic version to install,
-            e.g. '0.4.0' or '<0.5,>=0.4';
+            e.g. '==0.4.0' or '<0.5,>=0.4';
             default is None.
     skip_jar_copy: bool
             Whether to skip copying the Mosaic JAR;
@@ -112,13 +114,21 @@ def setup_gdal(
             default is 'mosaic-gdal-init.sh'.
     override_mosaic_version: str
             String value to use to override the mosaic version to install,
-            e.g. '0.4.0' or '<0.5,>=0.4';
+            e.g. '==0.4.0' or '<0.5,>=0.4';
             default is None.
 
     Returns
     -------
 
     """
+    # - current mosaic version
+    mosaic_version = None
+    try:
+        mosaic_version = pkg_resources.get_distribution("databricks-mosaic").version
+    except Exception:
+        print(f"... could not parse current mosaic version, won't specify version")
+        pass
+    
     # - generate fuse dir path
     os.makedirs(to_fuse_dir, exist_ok=True)
     
@@ -129,16 +139,25 @@ def setup_gdal(
     script = script.replace(
         SCRIPT_FUSE_DIR_TOKEN, SCRIPT_FUSE_DIR_TOKEN.replace('__FUSE_DIR__', to_fuse_dir)
     )
-    # - set the mosaic version
+    # - set the mosaic version for pip
     if override_mosaic_version is not None:
         script = script.replace(
-            SCRIPT_MOSAIC_VERSION_TOKEN, 
-            SCRIPT_MOSAIC_VERSION_TOKEN.replace(
-                '__MOSAIC_VERSION__', override_mosaic_version)
+            SCRIPT_MOSAIC_PIP_VERSION_TOKEN, 
+            SCRIPT_MOSAIC_PIP_VERSION_TOKEN.replace(
+                '__MOSAIC_PIP_VERSION__', override_mosaic_version)
             )
-    #else:
-        # TODO: SET SCRIPT_MOSAIC_VERSION_TOKEN from current version
-        # TODO: ALTER SCRIPT TO PULL FROM TAG VERSION FOR SO FILES VS MAIN
+    elif mosaic_version is not None:
+        script = script.replace(
+            SCRIPT_MOSAIC_PIP_VERSION_TOKEN, 
+            SCRIPT_MOSAIC_PIP_VERSION_TOKEN.replace(
+                '__MOSAIC_PIP_VERSION__', mosaic_version)
+            )
+    else:
+       script = script.replace(
+            SCRIPT_MOSAIC_PIP_VERSION_TOKEN, 
+            SCRIPT_MOSAIC_PIP_VERSION_TOKEN.replace(
+                '__MOSAIC_PIP_VERSION__', '')
+            )
 
     # - are we configuring for mosaic pip?
     if with_mosaic_pip:
