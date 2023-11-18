@@ -70,5 +70,5 @@ fi
 # - optional: install Mosaic
 if [ $WITH_MOSAIC == 1 ]
 then
-  pip install databricks-mosaic==$MOSAIC_PIP_VERSION
+  pip install "databricks-mosaic$MOSAIC_PIP_VERSION"
 fi
