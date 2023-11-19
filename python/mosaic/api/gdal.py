@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pyspark.sql import SparkSession
 from typing import Any
 import os
@@ -7,19 +8,160 @@ import subprocess
 
 __all__ = ["setup_gdal", "enable_gdal"]
 
-# TODO: CHANGE URL AFTER PR ACCEPTED
-GITHUB_SCRIPT_URL = 'https://raw.githubusercontent.com/mjohns-databricks/mosaic/gdal-jammy-1/scripts/mosaic-gdal-init.sh'
-SCRIPT_FUSE_DIR_TOKEN= 'FUSE_DIR=__FUSE_DIR__'
-SCRIPT_MOSAIC_VERSION_TOKEN = 'MOSAIC_VERSION=__MOSAIC_VERSION__'
-SCRIPT_MOSAIC_PIP_VERSION_TOKEN = 'MOSAIC_PIP_VERSION=__MOSAIC_PIP_VERSION__'
-SCRIPT_WITH_MOSAIC_TOKEN = 'WITH_MOSAIC=0'
-SCRIPT_WITH_UBUNTUGIS_TOKEN ='WITH_UBUNTUGIS=0' 
-SCRIPT_WITH_FUSE_SO_TOKEN = 'WITH_FUSE_SO=0'
+def get_install_mosaic_version() -> str:
+    """
+    Currently installed version of mosaic.
 
+    Returns
+    -------
+    Installed version of package 'databricks-mosaic' if available;
+    otherwise, None
+    """
+    try:
+        return pkg_resources.get_distribution("databricks-mosaic").version
+    except Exception:
+        pass
+    return None
+
+@dataclass
+class SetupMgr:
+    """
+    Defaults mirror setup_gdal.
+    """
+    to_fuse_dir: str,
+    script_in_name: str = 'mosaic-gdal-init.sh',
+    script_out_name: str = 'mosaic-gdal-init.sh',
+    with_mosaic_pip: bool = False, 
+    with_gdal: bool = True,
+    with_ubuntugis: bool = False, 
+    script_name: str = 'mosaic-gdal-init.sh',
+    override_mosaic_version: str = None,
+    jar_copy: bool = False,
+    so_copy: bool = False
+
+    def configure() -> None:
+        """
+        Handle various config options.
+        - if `with_mosaic_pip` or `with_gdal` or `with_ubuntugis`,
+          script will be configured and written.
+        """
+        # - set the mosaic and github versions
+        #   will be used in downloading resources
+        #   may be used in pip install 
+        mosaic_version = get_install_mosaic_version()
+        github_version = mosaic_version # <- valid or None
+        if (
+                override_mosaic_version is not None and 
+                set(override_mosaic_version).issubset(set('=0123456789.'))
+        ):
+            github_version = override_mosaic_version.replace('=','') 
+        elif mosaic_version is None:
+            github_version = 'main'
+
+        # - generate fuse dir path
+        os.makedirs(to_fuse_dir, exist_ok=True)
+
+        with_script = with_mosaic_pip or with_gdal or with_ubuntugis
+        script_out_path = f'{to_fuse_dir}/{script_out_name}'
+        if with_script:
+            # TODOS AFTER PR ACCEPTED: 
+            # [1] CHANGE URL TO ACTUAL MOSAIC (not 'mjohns-databricks'):
+            #     'https://raw.githubusercontent.com/databrickslabs/mosaic'
+            # [2] USE f'{GITHUB_CONTENT_URL_BASE}/{github_version}' (not 'gdal-jammy-1')
+            GITHUB_URL_CONTENT_BASE = 'https://raw.githubusercontent.com/mjohns-databricks/mosaic'
+            GITHUB_CONTENT_TAG_URL = f'{GITHUB_CONTENT_URL_BASE}/gdal-jammy-1'
+            
+            # - start with the unconfigured script
+            script_url = f'{GITHUB_CONTENT_TAG_URL}/scripts/{script_in_name}')
+            script = requests.get(script_url, allow_redirects=True).content
+            
+            # - tokens used in script
+            SCRIPT_FUSE_DIR_TOKEN= 'FUSE_DIR=__FUSE_DIR__'
+            SCRIPT_GITHUB_VERSION_TOKEN = 'GITHUB_VERSION=__GITHUB_VERSION__'
+            SCRIPT_MOSAIC_PIP_VERSION_TOKEN = 'MOSAIC_PIP_VERSION=__MOSAIC_PIP_VERSION__'
+            SCRIPT_WITH_MOSAIC_TOKEN = 'WITH_MOSAIC=0'
+            SCRIPT_WITH_UBUNTUGIS_TOKEN ='WITH_UBUNTUGIS=0' 
+            SCRIPT_WITH_FUSE_SO_TOKEN = 'WITH_FUSE_SO=0'
+
+            # - set the github version in the script
+            #   this will be used to download so files
+            script = script.replace(
+                SCRIPT_GITHUB_VERSION_TOKEN, SCRIPT_GITHUB_VERSION_TOKEN.replace(
+                    '__GITHUB_VERSION__', github_version)
+            ) 
+    
+            # - set the fuse dir
+            script = script.replace(
+                SCRIPT_FUSE_DIR_TOKEN, SCRIPT_FUSE_DIR_TOKEN.replace('__FUSE_DIR__', to_fuse_dir)
+            )
+    
+            # - are we configuring for mosaic pip?
+            if with_mosaic_pip:
+                script = script.replace(
+                    SCRIPT_WITH_MOSAIC_TOKEN, SCRIPT_WITH_MOSAIC_TOKEN.replace('0','1')
+                )    
+         
+            # - are we configuring for ubuntugis?
+            if with_ubuntugis:
+                script = script.replace(
+                    SCRIPT_WITH_UBUNTUGIS_TOKEN, SCRIPT_WITH_UBUNTUGIS_TOKEN.replace('0','1')
+                )
+    
+            # - set the mosaic version for pip
+            pip_str=''
+            if override_mosaic_version is not None:
+                pip_str = f'=={override_mosaic_version}'
+                if any(c in override_mosaic_version for c in ['=','<','<']):
+                    pip_str = override_mosaic_version   
+            elif mosaic_version is not None:
+                pip_str = f'=={mosaic_version}'
+            script = script.replace(
+                SCRIPT_MOSAIC_PIP_VERSION_TOKEN, 
+                SCRIPT_MOSAIC_PIP_VERSION_TOKEN.replace(
+                    '__MOSAIC_PIP_VERSION__', pip_str)
+            )
+            
+            # - write the configured init script
+            with open(script_out_path, 'w') as file:
+                file.write(script)
+                
+        # --- end of script config ---
+
+        with_resources = jar_copy or so_copy:
+        if with_resources:
+            GITHUB_RELEASE_URL_BASE = 'https://github.com/databrickslabs/mosaic/releases'
+            resource_version = github_version
+            if github_version is None:
+                latest = str(requests.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
+                resource_version = latest.split("/tag/v_")[1].split('"')[0]
+            GITHUB_RELEASE_URL = f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}'
+                
+            # - handle jar copy
+            if jar_copy:
+                jar_url = f'{GITHUB_RELEASE_URL}/mosaic-{resource_version}-jar-with-dependencies.jar')
+                #jar_request = requests.get(jar_url, allow_redirects=True)
+                print("TODO: DOWNLOAD (BYTES) TO FUSE")
+            
+            # - handle so copy
+            if so_copy:
+                print("TODO")
+
+        # - echo status
+        print("GDAL setup complete.\n")
+        with_resources and (
+          print(f"- Resource(s) copied to '{to_fuse_dir}'")
+        )
+        with_script and (
+          print(f"- Init script configured and stored as '{script_out_path}':")
+          print("\tadd to your cluster and restart, more at ", end='')
+          print("https://docs.databricks.com/en/init-scripts/cluster-scoped.html")
+        )  
+        print("\n")
+    
 def setup_fuse_install(
-    spark: SparkSession, to_fuse_dir: str, with_mosaic_pip: bool, with_gdal: bool, 
-    with_ubuntugis: bool = False, script_name: str = 'mosaic-fuse-init.sh', 
-    override_mosaic_version: str = None, skip_jar_copy: bool = False
+    to_fuse_dir: str, with_mosaic_pip: bool, with_gdal: bool, 
+    with_ubuntugis: bool = False, script_out_name: str = 'mosaic-fuse-init.sh', 
+    override_mosaic_version: str = None, jar_copy: bool = True, so_copy: bool = True
 ) -> None:
     """
     [1] Copies Mosaic "fat" JAR (with dependencies) into `to_fuse_dir`
@@ -27,7 +169,7 @@ def setup_fuse_install(
           assuming it is a released version; if `override_mosaic_version` is a single value, 
           versus a range, that value will be used instead
         - this doesn't involve a script unless `with_mosaic_pip=True` or `with_gdal=True`
-        - if `skip_jar_copy=True`, then the JAR is not copied
+        - if `jar_copy=False`, then the JAR is not copied
     [2] if `with_mosaic_pip=True`
         - configures script that configures to pip install databricks-mosaic==$MOSAIC_VERSION 
           or to `override_mosaic_version`
@@ -50,8 +192,6 @@ def setup_fuse_install(
 
     Parameters
     ----------
-    spark : pyspark.sql.SparkSession
-            The active SparkSession.
     to_fuse_dir : str
             Path to write out the resource(s) for GDAL installation.
     with_mosaic_pip : bool
@@ -62,26 +202,37 @@ def setup_fuse_install(
     with_ubuntugis : bool
             Whether to use ubuntugis ppa for GDAL instead of built-in;
             default is False.
-    script_name : str
+    script_out_name : str
             name of the script to be written;
             default is 'mosaic-fuse-init.sh'.
     override_mosaic_version: str
             String value to use to override the mosaic version to install,
             e.g. '==0.4.0' or '<0.5,>=0.4';
             default is None.
-    skip_jar_copy: bool
-            Whether to skip copying the Mosaic JAR;
-            default is False.
+    jar_copy: bool
+            Whether to copy the Mosaic JAR;
+            default is True.
 
     Returns
     -------
     """
-    print("TODO")
+    setup_mgr = SetupMgr(
+        to_fuse_dir,
+        with_mosaic_pip = with_mosaic_pip, 
+        with_gdal = with_gdal,
+        with_ubuntugis = with_ubuntugis, 
+        script_out_name = script_out_name,
+        override_mosaic_version = override_mosaic_version,
+        jar_copy = jar_copy, 
+        so_copy = so_copy
+    )
+    setup_mgr.configure()
 
      
 def setup_gdal(
     to_fuse_dir: str = '/dbfs/FileStore/geospatial/mosaic/gdal/jammy',
-    with_mosaic_pip: bool = False, with_ubuntugis: bool = False, script_name: str = 'mosaic-gdal-init.sh',
+    with_mosaic_pip: bool = False, with_ubuntugis: bool = False, 
+    script_out_name: str = 'mosaic-gdal-init.sh',
     override_mosaic_version: str = None
 ) -> None:
     """
@@ -95,8 +246,6 @@ def setup_gdal(
           to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1)
       (b) `to_fuse_dir` can be one of `/Volumes/..`, `/Workspace/..`, `/dbfs/..`;
            however, you should use `setup_fuse_install()` for Volume based installs
-      (c) The init script generated will be named value of `script_name`, 
-          default: 'mosaic-gdal-init.sh'
     
     Parameters
     ----------
@@ -109,7 +258,7 @@ def setup_gdal(
      with_ubuntugis : bool
             Whether to use ubuntugis ppa for GDAL instead of built-in;
             default is False.
-    script_name : str
+    script_out_name : str
             name of the script to be written;
             default is 'mosaic-gdal-init.sh'.
     override_mosaic_version: str
@@ -119,68 +268,15 @@ def setup_gdal(
 
     Returns
     -------
-
-    """
-    # - current mosaic version
-    mosaic_version = None
-    try:
-        mosaic_version = pkg_resources.get_distribution("databricks-mosaic").version
-    except Exception:
-        print(f"... could not parse current mosaic version, won't specify version")
-        pass
-    
-    # - generate fuse dir path
-    os.makedirs(to_fuse_dir, exist_ok=True)
-    
-    # - start with the unconfigured script
-    script = requests.get(GITHUB_SCRIPT_URL, allow_redirects=True).content
-
-    # - set the fuse dir
-    script = script.replace(
-        SCRIPT_FUSE_DIR_TOKEN, SCRIPT_FUSE_DIR_TOKEN.replace('__FUSE_DIR__', to_fuse_dir)
+    """    
+    setup_mgr = SetupMgr(
+        to_fuse_dir,
+        with_mosaic_pip = with_mosaic_pip, 
+        with_ubuntugis = with_ubuntugis, 
+        script_out_name = script_out_name,
+        override_mosaic_version = override_mosaic_version,
     )
-    # - set the mosaic version for pip
-    if override_mosaic_version is not None:
-        script = script.replace(
-            SCRIPT_MOSAIC_PIP_VERSION_TOKEN, 
-            SCRIPT_MOSAIC_PIP_VERSION_TOKEN.replace(
-                '__MOSAIC_PIP_VERSION__', override_mosaic_version)
-            )
-    elif mosaic_version is not None:
-        script = script.replace(
-            SCRIPT_MOSAIC_PIP_VERSION_TOKEN, 
-            SCRIPT_MOSAIC_PIP_VERSION_TOKEN.replace(
-                '__MOSAIC_PIP_VERSION__', mosaic_version)
-            )
-    else:
-       script = script.replace(
-            SCRIPT_MOSAIC_PIP_VERSION_TOKEN, 
-            SCRIPT_MOSAIC_PIP_VERSION_TOKEN.replace(
-                '__MOSAIC_PIP_VERSION__', '')
-            )
-
-    # - are we configuring for mosaic pip?
-    if with_mosaic_pip:
-        script = script.replace(
-            SCRIPT_WITH_MOSAIC_TOKEN, SCRIPT_WITH_MOSAIC_TOKEN.replace('0','1')
-        )    
-        
-    # - are we configuring for ubuntugis?
-    if with_ubuntugis:
-        script = script.replace(
-            SCRIPT_WITH_UBUNTUGIS_TOKEN, SCRIPT_WITH_UBUNTUGIS_TOKEN.replace('0','1')
-        )
-     
-    # - write the configured init script
-    with open(f'{to_fuse_dir}/{script_name}', 'w') as file:
-        file.write(script)
-        
-    # - echo status
-    print("GDAL setup complete.\n")
-    print(f"Init script configured and stored as: '{to_fuse_dir}/{script_name}'.\n")
-    print(
-        "Please add the init script to your cluster and restart to complete the setup.\n"
-    )
+    setup_mgr.configure()
 
 
 def enable_gdal(spark: SparkSession) -> None:
