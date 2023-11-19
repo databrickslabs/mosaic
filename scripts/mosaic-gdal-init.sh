@@ -11,12 +11,12 @@
 #     - setup_gdal(...)
 # [4] this script has conditional logic based on variables
 # Author: Michael Johns | mjohns@databricks.com
-# Last Modified: 17 NOV, 2023
+# Last Modified: 19 NOV, 2023
 
 # TEMPLATE-BASED REPLACEMENT
 # - can also be manually specified
 FUSE_DIR=__FUSE_DIR__
-MOSAIC_VERSION=__MOSAIC_VERSION__
+GITHUB_VERSION=__GITHUB_VERSION__
 MOSAIC_PIP_VERSION=__MOSAIC_PIP_VERSION__
 
 # CONDITIONAL LOGIC
@@ -61,7 +61,7 @@ then
 else
   # copy from github
   # - !!! TODO: MODIFY PATH ONCE PR MERGES !!! 
-  # - THIS WILL USE MOSAIC_VERSION
+  # - THIS WILL USE GITHUB_VERSION
   sudo wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so
   sudo wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so.30
   #sudo wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/src/main/resources/gdal/ubuntu/libgdalalljni.so.30.0.3
