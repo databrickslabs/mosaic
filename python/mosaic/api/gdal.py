@@ -4,6 +4,7 @@ from typing import Any
 import os
 import pkg_resources
 import requests
+import shutil
 import subprocess
 
 __all__ = ["setup_gdal", "enable_gdal"]
@@ -37,7 +38,7 @@ class SetupMgr:
     script_name: str = 'mosaic-gdal-init.sh',
     override_mosaic_version: str = None,
     jar_copy: bool = False,
-    so_copy: bool = False
+    jni_so_copy: bool = False
 
     def configure() -> None:
         """
@@ -58,18 +59,19 @@ class SetupMgr:
         elif mosaic_version is None:
             github_version = 'main'
 
+        # TODOS AFTER PR MERGED: 
+        # [1] CHANGE URL TO ACTUAL MOSAIC (not 'mjohns-databricks'):
+        #     'https://raw.githubusercontent.com/databrickslabs/mosaic'
+        # [2] USE f'{GITHUB_CONTENT_URL_BASE}/{github_version}' (not 'gdal-jammy-1')
+        GITHUB_CONTENT_URL_BASE = 'https://raw.githubusercontent.com/mjohns-databricks/mosaic'
+        GITHUB_CONTENT_TAG_URL = f'{GITHUB_CONTENT_URL_BASE}/gdal-jammy-1'
+
         # - generate fuse dir path
         os.makedirs(to_fuse_dir, exist_ok=True)
 
-        with_script = with_mosaic_pip or with_gdal or with_ubuntugis
+        with_script = with_mosaic_pip or with_gdal
         script_out_path = f'{to_fuse_dir}/{script_out_name}'
         if with_script:
-            # TODOS AFTER PR ACCEPTED: 
-            # [1] CHANGE URL TO ACTUAL MOSAIC (not 'mjohns-databricks'):
-            #     'https://raw.githubusercontent.com/databrickslabs/mosaic'
-            # [2] USE f'{GITHUB_CONTENT_URL_BASE}/{github_version}' (not 'gdal-jammy-1')
-            GITHUB_URL_CONTENT_BASE = 'https://raw.githubusercontent.com/mjohns-databricks/mosaic'
-            GITHUB_CONTENT_TAG_URL = f'{GITHUB_CONTENT_URL_BASE}/gdal-jammy-1'
             
             # - start with the unconfigured script
             script_url = f'{GITHUB_CONTENT_TAG_URL}/scripts/{script_in_name}')
@@ -80,6 +82,7 @@ class SetupMgr:
             SCRIPT_GITHUB_VERSION_TOKEN = 'GITHUB_VERSION=__GITHUB_VERSION__'
             SCRIPT_MOSAIC_PIP_VERSION_TOKEN = 'MOSAIC_PIP_VERSION=__MOSAIC_PIP_VERSION__'
             SCRIPT_WITH_MOSAIC_TOKEN = 'WITH_MOSAIC=0'
+            SCRIPT_WITH_GDAL_TOKEN = 'WITH_GDAL=0'
             SCRIPT_WITH_UBUNTUGIS_TOKEN ='WITH_UBUNTUGIS=0' 
             SCRIPT_WITH_FUSE_SO_TOKEN = 'WITH_FUSE_SO=0'
 
@@ -99,8 +102,14 @@ class SetupMgr:
             if with_mosaic_pip:
                 script = script.replace(
                     SCRIPT_WITH_MOSAIC_TOKEN, SCRIPT_WITH_MOSAIC_TOKEN.replace('0','1')
-                )    
-         
+                )
+            
+            # - are we configuring for gdal?
+            if with_gdal:
+                script = script.replace(
+                    SCRIPT_WITH_GDAL_TOKEN, SCRIPT_WITH_GDAL_TOKEN.replace('0','1')
+                )
+            
             # - are we configuring for ubuntugis?
             if with_ubuntugis:
                 script = script.replace(
@@ -127,24 +136,31 @@ class SetupMgr:
                 
         # --- end of script config ---
 
-        with_resources = jar_copy or so_copy:
-        if with_resources:
-            GITHUB_RELEASE_URL_BASE = 'https://github.com/databrickslabs/mosaic/releases'
-            resource_version = github_version
-            if github_version is None:
-                latest = str(requests.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
-                resource_version = latest.split("/tag/v_")[1].split('"')[0]
-            GITHUB_RELEASE_URL = f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}'
-                
+        with_resources = jar_copy or jni_so_copy:
+        if with_resources:        
             # - handle jar copy
             if jar_copy:
-                jar_url = f'{GITHUB_RELEASE_URL}/mosaic-{resource_version}-jar-with-dependencies.jar')
-                #jar_request = requests.get(jar_url, allow_redirects=True)
-                print("TODO: DOWNLOAD (BYTES) TO FUSE")
+                # url and version details
+                GITHUB_RELEASE_URL_BASE = 'https://github.com/databrickslabs/mosaic/releases'
+                resource_version = github_version
+                if github_version is None:
+                    latest = str(requests.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
+                    resource_version = latest.split("/tag/v_")[1].split('"')[0]
+                
+                # download jar
+                jar_filename = f'mosaic-{resource_version}-jar-with-dependencies.jar'
+                jar_url = f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}')
+                jar_request = requests.get(jar_url, allow_redirects=True, stream=True)
+                with open(f'{to_fuse_dir}/{jar_file}', 'wb') as jar_file:
+                    shutil.copyfileobj(jar_request.raw, jar_file)
             
             # - handle so copy
-            if so_copy:
-                print("TODO")
+            if jni_so_copy:
+                for so_filename in ['libgdalalljni.so', 'libgdalalljni.so.30', 'libgdalalljni.so.30.0.3']:
+                    so_url = f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}')
+                    so_request = requests.get(so_url, allow_redirects=True, stream=True)
+                    with open(f'{to_fuse_dir}/{so_filename}', 'wb') as so_file:
+                        shutil.copyfileobj(so_request.raw, so_file)
 
         # - echo status
         print("GDAL setup complete.\n")
@@ -171,8 +187,8 @@ def setup_fuse_install(
         - this doesn't involve a script unless `with_mosaic_pip=True` or `with_gdal=True`
         - if `jar_copy=False`, then the JAR is not copied
     [2] if `with_mosaic_pip=True`
-        - configures script that configures to pip install databricks-mosaic==$MOSAIC_VERSION 
-          or to `override_mosaic_version`
+        - By default, configures script to pip install databricks-mosaic using current mosaic 
+          version executing the command or to `override_mosaic_version`
         - this is useful (1) to "pin" to a specific mosaic version, especially if using the
            JAR that is also being pre-staged for this version and (2) to consolidate all mosaic
            setup into a script and avoid needing to `%pip install databricks-mosaic` in each session
@@ -187,8 +203,7 @@ def setup_fuse_install(
       (b) Volume paths are the recommended FUSE mount for Databricks in DBR 13.3+ 
       (c) If using Volumes, there are more admin actions that a Unity Catalog admin
           needs to be take to add the generated script and JAR to the Unity Catalog 
-          allowlist, essential steps for Shared Cluster and Java access!
-      (d) `FUSE_DIR` within the script will be set to the passed value 
+          allowlist, essential steps for Shared Cluster and Java access! 
 
     Parameters
     ----------
@@ -212,7 +227,9 @@ def setup_fuse_install(
     jar_copy: bool
             Whether to copy the Mosaic JAR;
             default is True.
-
+    jni_so_copy: bool
+            Whether to copy the GDAL JNI shared objects;
+            default is True.
     Returns
     -------
     """
@@ -224,7 +241,7 @@ def setup_fuse_install(
         script_out_name = script_out_name,
         override_mosaic_version = override_mosaic_version,
         jar_copy = jar_copy, 
-        so_copy = so_copy
+        jni_so_copy = jni_so_copy
     )
     setup_mgr.configure()
 
@@ -281,7 +298,8 @@ def setup_gdal(
 
 def enable_gdal(spark: SparkSession) -> None:
     """
-    Enable GDAL at runtime on a cluster with GDAL installed using the init script generated by setup_gdal() call.
+    Enable GDAL at runtime on a cluster with GDAL installed using init script, 
+    e.g.  generated by setup_gdal() or setup_fuse_install() call.
 
     Parameters
     ----------
@@ -306,9 +324,9 @@ def enable_gdal(spark: SparkSession) -> None:
             "GDAL not enabled. Mosaic with GDAL requires that GDAL be installed on the cluster.\n"
         )
         print(
-            "Please run setup_gdal() to generate the init script for install GDAL install.\n"
+            "You can run setup_gdal() or setup_fuse_install() to generate the init script for install GDAL install.\n"
         )
         print(
-            "After the init script is generated, please add the init script to your cluster and restart to complete the setup.\n"
+            "After the init script is generated, you need to add the init script to your cluster and restart to complete the setup.\n"
         )
         print("Error: " + str(e))
