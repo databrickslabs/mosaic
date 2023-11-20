@@ -112,6 +112,12 @@ class SetupMgr:
                 script = script.replace(
                     SCRIPT_WITH_UBUNTUGIS_TOKEN, SCRIPT_WITH_UBUNTUGIS_TOKEN.replace('0','1')
                 )
+
+            # - are we configuring for jni so copy?
+            if self.jni_so_copy:
+                script = script.replace(
+                    SCRIPT_WITH_FUSE_SO_TOKEN, SCRIPT_WITH_FUSE_SO_TOKEN.replace('0','1')
+                )
     
             # - set the mosaic version for pip
             pip_str=''
