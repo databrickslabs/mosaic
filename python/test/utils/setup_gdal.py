@@ -7,16 +7,15 @@ from test.context import api
 
 
 class GDALInstaller:
-    def __init__(self, spark):
+    def __init__(self):
         self._site_packages = working_set.find(Requirement("keplergl")).location
         self._temp_dir = tempfile.TemporaryDirectory()
-        self.spark = spark
 
     def __del__(self):
         self._temp_dir.cleanup()
 
     def copy_objects(self):
-        api.setup_gdal(self.spark, self._temp_dir.name)
+        api.setup_gdal(self._temp_dir.name)
 
     def run_init_script(self):
         gdal_install_script_target = os.path.join(
