@@ -3,7 +3,7 @@ from .utils import SparkTestCase, GDALInstaller
 
 class TestGDALInstall(SparkTestCase):
     def test_setup_gdal(self):
-        installer = GDALInstaller(self.spark)
+        installer = GDALInstaller()
         try:
             installer.copy_objects()
         except Exception:
