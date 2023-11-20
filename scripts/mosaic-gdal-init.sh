@@ -29,7 +29,7 @@ WITH_FUSE_SO=0   # <- use fuse dir shared objects (vs wget)
 # - may be changed by conditional logic
 GDAL_VERSION=3.4.1           # <- matches Jammy (default)
 NUMPY_VERSION=1.26.2         # <- for GDAL
-SCIPY_VERSION='<1.12,>=1.11' # <- adjust for numpy
+SCIPY_VERSION='<1.12,>=1.11' # <- adjusted for numpy
 
 # - optional: install Mosaic
 if [ $WITH_MOSAIC == 1 ]
