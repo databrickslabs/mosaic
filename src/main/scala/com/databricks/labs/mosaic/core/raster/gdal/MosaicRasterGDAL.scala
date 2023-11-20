@@ -317,6 +317,12 @@ class MosaicRasterGDAL(
 
         if (json.contains("STATISTICS_VALID_PERCENT")) {
             json("STATISTICS_VALID_PERCENT").asInstanceOf[Double] == 0.0
+        } else if (json.contains("bands") && json("bands").asInstanceOf[List[Any]].nonEmpty) {
+            !json("bands")
+                .asInstanceOf[List[Map[String, Any]]]
+                .flatMap(i => i("metadata").asInstanceOf[Map[String, Any]].values)
+                .asInstanceOf[List[Map[String, Any]]]
+                .exists(m => m.getOrElse("STATISTICS_VALID_PERCENT", "0").toString.toDouble > 0.0)
         } else if (subdatasets.nonEmpty) {
             false
         } else {
