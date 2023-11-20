@@ -24,7 +24,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         session.sparkContext.setLogLevel("FATAL")
         Try {
             val tempPath = Files.createTempDirectory("mosaic-gdal")
-            MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString)
+            // prepareEnvironment no longer exists
+            // - only have python calls now
+            //MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString)
             MosaicGDAL.enableGDAL(session)
         }
         session
