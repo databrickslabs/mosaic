@@ -11,7 +11,7 @@
 #     - setup_gdal(...)
 # [4] this script has conditional logic based on variables
 # Author: Michael Johns | mjohns@databricks.com
-# Last Modified: 19 NOV, 2023
+# Last Modified: 20 NOV, 2023
 
 # TEMPLATE-BASED REPLACEMENT
 # - can also be manually specified
@@ -27,8 +27,9 @@ WITH_FUSE_SO=0   # <- use fuse dir shared objects (vs wget)
 
 # SPECIFIED VERSIONS 
 # - may be changed by conditional logic
-GDAL_VERSION=3.4.1   # <- matches Jammy (default)
-NUMPY_VERSION=1.21.5 # <- matches DBR 13.3
+GDAL_VERSION=3.4.1           # <- matches Jammy (default)
+NUMPY_VERSION=1.26.2         # <- for GDAL
+SCIPY_VERSION='<1.12,>=1.11' # <- adjust for numpy
 
 # - optional: install Mosaic
 if [ $WITH_MOSAIC == 1 ]
@@ -53,8 +54,9 @@ then
 
   # - install numpy first
   pip install --upgrade pip
-  pip install "numpy>=$NUMPY_VERSION"
-
+  pip install --no-cache-dir --force-reinstall numpy==$NUMPY_VERSION
+  pip install --no-cache-dir --force-reinstall "scipy$SCIPY_VERSION"
+  
   # - install natives
   sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
 
