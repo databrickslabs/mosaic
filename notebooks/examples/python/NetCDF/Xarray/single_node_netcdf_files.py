@@ -23,7 +23,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install netCDF4 xarray nc-time-axis cartopy
+# MAGIC %pip install netCDF4 xarray nc-time-axis cartopy --quiet
 
 # COMMAND ----------
 
@@ -155,7 +155,8 @@ ds['time'] = ds_times
 # COMMAND ----------
 
 pdf = ds.to_dataframe().reset_index() # <- pandas
-pdf
+print(f'rows? {pdf.shape[0]:,}, cols? {pdf.shape[1]}')
+pdf.head()
 
 # COMMAND ----------
 
@@ -177,7 +178,7 @@ df = (
     #.distinct() # <- not needed
 )
 print(f"count? {df.count():,}")
-df.display()
+df.limit(10).display()
 
 # COMMAND ----------
 
