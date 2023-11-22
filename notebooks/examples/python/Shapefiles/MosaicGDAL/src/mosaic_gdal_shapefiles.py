@@ -10,7 +10,7 @@
 # MAGIC 1. Table - `<catalog>.<schema>.ga_address_block`
 # MAGIC
 # MAGIC ---   
-# MAGIC __Last Update: 22 NOV 2023 [Mosaic 0.3.12]__
+# MAGIC __Last Update:__ 22 NOV 2023 [Mosaic 0.3.12]
 
 # COMMAND ----------
 
