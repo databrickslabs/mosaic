@@ -30,7 +30,7 @@ case class RST_FromBands(
       * @return
       *   The stacked and resampled raster.
       */
-    override def rasterTransform(rasters: => Seq[MosaicRasterTile]): Any = {
+    override def rasterTransform(rasters: Seq[MosaicRasterTile]): Any = {
         val raster = MergeBands.merge(rasters.map(_.getRaster), "bilinear")
         new MosaicRasterTile(rasters.head.getIndex, raster, rasters.head.getParentPath, rasters.head.getDriver)
     }

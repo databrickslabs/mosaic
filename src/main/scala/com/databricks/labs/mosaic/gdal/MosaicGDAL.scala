@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.gdal
 
+import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
@@ -42,8 +43,8 @@ object MosaicGDAL extends Logging {
 
     /** Configures the GDAL environment. */
     def configureGDAL(): Unit = {
-        val CPL_TMPDIR = Files.createTempDirectory("mosaic-gdal-tmp").toAbsolutePath.toString
-        val GDAL_PAM_PROXY_DIR = Files.createTempDirectory("mosaic-gdal-tmp").toAbsolutePath.toString
+        val CPL_TMPDIR = MosaicContext.tmpDir
+        val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir
         gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
         gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
         gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)

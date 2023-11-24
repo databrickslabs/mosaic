@@ -5,9 +5,7 @@ import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{ArrayType, DataType}
 
 import scala.reflect.ClassTag
@@ -53,30 +51,23 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       * @return
       *   A result of the expression.
       */
-    def rasterTransform(rasters: => Seq[MosaicRasterTile]): Any
+    def rasterTransform(rasters: Seq[MosaicRasterTile]): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
       * the raster from the path. It handles the clean up of the raster before
       * returning the results.
       * @param input
-      *   The input to the expression. It is an array containing paths to raster
-      *   files or byte arrays containing the raster files contents.
+      *   The InternalRow of the expression. It contains an array containing
+      *   raster tiles. It may be used for other argument expressions so it is
+      *   passed to rasterTransform.
       *
       * @return
       *   The result of the expression.
       */
     override def nullSafeEval(input: Any): Any = {
         GDAL.enable()
-        val rasterDT = rastersExpr.dataType.asInstanceOf[ArrayType].elementType
-        val arrayData = input.asInstanceOf[ArrayData]
-        val n = arrayData.numElements()
-        val tiles = (0 until n)
-            .map(i =>
-                MosaicRasterTile
-                    .deserialize(arrayData.get(i, rasterDT).asInstanceOf[InternalRow], expressionConfig.getCellIdType)
-            )
-
+        val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
         val result = rasterTransform(tiles)
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
         tiles.foreach(t => RasterCleaner.dispose(t))

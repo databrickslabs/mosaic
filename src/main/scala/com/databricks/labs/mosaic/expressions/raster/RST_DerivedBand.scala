@@ -1,21 +1,26 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.operator.merge.MergeRasters
+import com.databricks.labs.mosaic.core.raster.operator.pixel.PixelCombineRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
-import com.databricks.labs.mosaic.expressions.raster.base.RasterArrayExpression
+import com.databricks.labs.mosaic.expressions.raster.base.RasterArray2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.unsafe.types.UTF8String
 
-/** Returns a raster that is a result of merging an array of rasters. */
-case class RST_Merge(
+/** Expression for combining rasters using average of pixels. */
+case class RST_DerivedBand(
     rastersExpr: Expression,
+    pythonFuncExpr: Expression,
+    funcNameExpr: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends RasterArrayExpression[RST_Merge](
+) extends RasterArray2ArgExpression[RST_DerivedBand](
       rastersExpr,
+      pythonFuncExpr,
+      funcNameExpr,
       RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
@@ -23,19 +28,15 @@ case class RST_Merge(
       with NullIntolerant
       with CodegenFallback {
 
-    /**
-      * Merges an array of rasters.
-      * @param tiles
-      *   The rasters to be used.
-      * @return
-      *   The merged raster.
-      */
-    override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
+    /** Combines the rasters using average of pixels. */
+    override def rasterTransform(tiles: Seq[MosaicRasterTile], arg1: Any, arg2: Any): Any = {
+        val pythonFunc = arg1.asInstanceOf[UTF8String].toString
+        val funcName = arg2.asInstanceOf[UTF8String].toString
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-        val raster = MergeRasters.merge(tiles.map(_.getRaster))
+        val result = PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
         new MosaicRasterTile(
           index,
-          raster,
+          result,
           tiles.head.getParentPath,
           tiles.head.getDriver
         )
@@ -44,26 +45,32 @@ case class RST_Merge(
 }
 
 /** Expression info required for the expression registration for spark SQL. */
-object RST_Merge extends WithExpressionInfo {
+object RST_DerivedBand extends WithExpressionInfo {
 
-    override def name: String = "rst_merge"
+    override def name: String = "rst_derived_band"
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster that is a result of merging an array of rasters.
+          |_FUNC_(expr1) - Returns a raster that is a result of combining an array of rasters using provided python function.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(array(raster_tile_1, raster_tile_2, raster_tile_3));
+          |      > SELECT _FUNC_(
+          |             array(raster_tile_1, raster_tile_2, raster_tile_3),
+          |             'def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize, raster_ysize, buf_radius, gt, **kwargs):
+          |                 out_ar[:] = np.sum(in_ar, axis=0) / len(in_ar)
+          |             ',
+          |             'average'
+          |       );
           |        {index_id, raster, parent_path, driver}
           |        {index_id, raster, parent_path, driver}
           |        ...
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Merge](1, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_DerivedBand](3, expressionConfig)
     }
 
 }

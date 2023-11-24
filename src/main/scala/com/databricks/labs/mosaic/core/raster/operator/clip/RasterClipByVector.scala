@@ -35,18 +35,17 @@ object RasterClipByVector {
       * @return
       *   A clipped raster.
       */
-    def clip(raster: => MosaicRasterGDAL, geometry: MosaicGeometry, geomCRS: SpatialReference, geometryAPI: GeometryAPI): MosaicRasterGDAL = {
+    def clip(raster: MosaicRasterGDAL, geometry: MosaicGeometry, geomCRS: SpatialReference, geometryAPI: GeometryAPI): MosaicRasterGDAL = {
         val rasterCRS = raster.getSpatialReference
         val outShortName = raster.getDriversShortName
         val geomSrcCRS = if (geomCRS  == null ) rasterCRS else geomCRS
 
-        val resultFileName = PathUtils.createTmpFilePath(raster.uuid.toString, GDAL.getExtension(outShortName))
+        val resultFileName = PathUtils.createTmpFilePath(GDAL.getExtension(outShortName))
 
         val shapeFileName = VectorClipper.generateClipper(geometry, geomSrcCRS, rasterCRS, geometryAPI)
 
         val result = GDALWarp.executeWarp(
           resultFileName,
-          isTemp = true,
           Seq(raster),
           command = s"gdalwarp -wo CUTLINE_ALL_TOUCHED=TRUE -of $outShortName -cutline $shapeFileName -crop_to_cutline -co COMPRESS=DEFLATE -dstalpha"
         )

@@ -40,7 +40,7 @@ case class RST_BandMetaData(raster: Expression, band: Expression, expressionConf
       * @return
       *   The band metadata of the band as a map type result.
       */
-    override def bandTransform(raster: => MosaicRasterTile, band: MosaicRasterBandGDAL): Any = {
+    override def bandTransform(raster: MosaicRasterTile, band: MosaicRasterBandGDAL): Any = {
         buildMapString(band.metadata)
     }
 }

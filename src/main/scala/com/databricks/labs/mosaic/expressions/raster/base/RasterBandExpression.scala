@@ -61,7 +61,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    def bandTransform(raster: => MosaicRasterTile, band: MosaicRasterBandGDAL): Any
+    def bandTransform(raster: MosaicRasterTile, band: MosaicRasterBandGDAL): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads

@@ -38,7 +38,7 @@ case class RST_NDVI(
       * @return
       *   The raster contains NDVI index.
       */
-    override def rasterTransform(tile: => MosaicRasterTile, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
         val redInd = arg1.asInstanceOf[Int]
         val nirInd = arg2.asInstanceOf[Int]
         val result = NDVI.compute(tile.getRaster, redInd, nirInd)

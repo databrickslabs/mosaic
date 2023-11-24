@@ -23,7 +23,7 @@ import org.apache.spark.unsafe.types.UTF8String
   */
 class MosaicRasterTile(
     index: Either[Long, String],
-    raster: => MosaicRasterGDAL,
+    raster: MosaicRasterGDAL,
     parentPath: String,
     driver: String,
     seqNo: Option[Int] = None

@@ -21,7 +21,7 @@ case class RST_Subdatasets(raster: Expression, expressionConfig: MosaicExpressio
       with CodegenFallback {
 
     /** Returns the subdatasets of the raster. */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = buildMapString(tile.getRaster.subdatasets)
+    override def rasterTransform(tile: MosaicRasterTile): Any = buildMapString(tile.getRaster.subdatasets)
 
 }
 

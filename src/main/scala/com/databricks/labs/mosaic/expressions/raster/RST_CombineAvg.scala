@@ -24,7 +24,7 @@ case class RST_CombineAvg(
       with CodegenFallback {
 
     /** Combines the rasters using average of pixels. */
-    override def rasterTransform(tiles: => Seq[MosaicRasterTile]): Any = {
+    override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
         new MosaicRasterTile(
           index,

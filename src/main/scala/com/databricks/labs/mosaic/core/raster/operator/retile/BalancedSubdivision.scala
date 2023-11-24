@@ -19,7 +19,7 @@ object BalancedSubdivision {
       * @return
       *   The number of splits.
       */
-    def getNumSplits(raster: => MosaicRasterGDAL, destSize: Int): Int = {
+    def getNumSplits(raster: MosaicRasterGDAL, destSize: Int): Int = {
         val size = raster.getMemSize
         val n = size.toDouble / (destSize * 1000 * 1000)
         val nInt = Math.ceil(n).toInt
@@ -76,7 +76,7 @@ object BalancedSubdivision {
       *   A sequence of MosaicRaster objects.
       */
     def splitRaster(
-        tile: => MosaicRasterTile,
+        tile: MosaicRasterTile,
         sizeInMb: Int
     ): Seq[MosaicRasterTile] = {
         val numSplits = getNumSplits(tile.getRaster, sizeInMb)

@@ -16,7 +16,7 @@ case class RST_SkewX(raster: Expression, expressionConfig: MosaicExpressionConfi
       with CodegenFallback {
 
     /** Returns the skew x of the raster. */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
         tile.getRaster.getRaster.GetGeoTransform()(2)
     }
 

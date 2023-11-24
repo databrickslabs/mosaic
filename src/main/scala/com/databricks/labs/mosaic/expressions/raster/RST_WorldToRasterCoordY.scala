@@ -25,7 +25,7 @@ case class RST_WorldToRasterCoordY(
       * Returns the y coordinate of the raster by applying GeoTransform. This
       * will ensure projection of the raster is respected.
       */
-    override def rasterTransform(tile: => MosaicRasterTile, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
         val xGeo = arg1.asInstanceOf[Double]
         val gt = tile.getRaster.getRaster.GetGeoTransform()
         GDAL.fromWorldCoord(gt, xGeo, 0)._2

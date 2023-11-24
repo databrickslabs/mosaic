@@ -28,7 +28,7 @@ object OverlappingTiles {
       *   A sequence of MosaicRasterTile objects.
       */
     def reTile(
-        tile: => MosaicRasterTile,
+        tile: MosaicRasterTile,
         tileWidth: Int,
         tileHeight: Int,
         overlapPercentage: Int
@@ -46,14 +46,12 @@ object OverlappingTiles {
                 val width = Math.min(tileWidth, xSize - i)
                 val height = Math.min(tileHeight, ySize - j)
 
-                val uuid = java.util.UUID.randomUUID.toString
                 val fileExtension = GDAL.getExtension(tile.getDriver)
-                val rasterPath = PathUtils.createTmpFilePath(uuid, fileExtension)
+                val rasterPath = PathUtils.createTmpFilePath(fileExtension)
                 val shortName = raster.getRaster.GetDriver.getShortName
 
                 val result = GDALTranslate.executeTranslate(
                   rasterPath,
-                  isTemp = true,
                   raster,
                   command = s"gdal_translate -of $shortName -srcwin $xOff $yOff $width $height"
                 )

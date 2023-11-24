@@ -27,7 +27,7 @@ object RasterTessellate {
       * @return
       *   A sequence of MosaicRasterTile objects.
       */
-    def tessellate(raster: => MosaicRasterGDAL, resolution: Int, indexSystem: IndexSystem, geometryAPI: GeometryAPI): Seq[MosaicRasterTile] = {
+    def tessellate(raster: MosaicRasterGDAL, resolution: Int, indexSystem: IndexSystem, geometryAPI: GeometryAPI): Seq[MosaicRasterTile] = {
         val indexSR = indexSystem.osrSpatialRef
         val bbox = raster.bbox(geometryAPI, indexSR)
         val cells = Mosaic.mosaicFill(bbox, resolution, keepCoreGeom = false, indexSystem, geometryAPI)

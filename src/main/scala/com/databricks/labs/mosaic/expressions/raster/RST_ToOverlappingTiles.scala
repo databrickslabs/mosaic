@@ -27,7 +27,7 @@ case class RST_ToOverlappingTiles(
       * Returns a set of new rasters which are the result of a rolling window
       * over the input raster.
       */
-    override def rasterGenerator(tile: => MosaicRasterTile): Seq[MosaicRasterTile] = {
+    override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
         val overlapValue = overlapExpr.eval().asInstanceOf[Int]

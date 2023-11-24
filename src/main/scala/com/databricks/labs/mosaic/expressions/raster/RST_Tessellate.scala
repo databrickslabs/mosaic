@@ -25,7 +25,7 @@ case class RST_Tessellate(
       * Returns a set of new rasters which are the result of the tessellation of
       * the input raster.
       */
-    override def rasterGenerator(tile: => MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile] = {
+    override def rasterGenerator(tile: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile] = {
         RasterTessellate.tessellate(
           tile.getRaster,
           resolution,

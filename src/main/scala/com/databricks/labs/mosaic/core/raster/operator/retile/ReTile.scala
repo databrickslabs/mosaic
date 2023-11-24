@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
-import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
+import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.utils.PathUtils
 
@@ -22,7 +22,7 @@ object ReTile {
       *   A sequence of MosaicRasterTile objects.
       */
     def reTile(
-        tile: => MosaicRasterTile,
+        tile: MosaicRasterTile,
         tileWidth: Int,
         tileHeight: Int
     ): Seq[MosaicRasterTile] = {
@@ -37,14 +37,12 @@ object ReTile {
             val xOffset = if (xMin + tileWidth + 1 > xR) xR - xMin else tileWidth + 1
             val yOffset = if (yMin + tileHeight + 1 > yR) yR - yMin else tileHeight + 1
 
-            val rasterUUID = java.util.UUID.randomUUID.toString
             val fileExtension = raster.getRasterFileExtension
-            val rasterPath = PathUtils.createTmpFilePath(rasterUUID, fileExtension)
+            val rasterPath = PathUtils.createTmpFilePath(fileExtension)
             val shortDriver = raster.getDriversShortName
 
             val result = GDALTranslate.executeTranslate(
               rasterPath,
-              isTemp = true,
               raster,
               command = s"gdal_translate -of $shortDriver -srcwin $xMin $yMin $xOffset $yOffset -co COMPRESS=DEFLATE"
             )
