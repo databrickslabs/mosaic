@@ -32,7 +32,7 @@ case class RST_FromBands(
       */
     override def rasterTransform(rasters: Seq[MosaicRasterTile]): Any = {
         val raster = MergeBands.merge(rasters.map(_.getRaster), "bilinear")
-        new MosaicRasterTile(rasters.head.getIndex, raster, rasters.head.getParentPath, rasters.head.getDriver)
+        rasters.head.copy(raster = raster)
     }
 
 }

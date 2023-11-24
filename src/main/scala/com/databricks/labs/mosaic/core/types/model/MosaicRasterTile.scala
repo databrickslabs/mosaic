@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.types.{BinaryType, DataType, IntegerType, LongType, StringType}
+import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
 /**
@@ -117,7 +117,6 @@ class MosaicRasterTile(
         val parentPathUTF8 = UTF8String.fromString(parentPath)
         val driverUTF8 = UTF8String.fromString(driver)
         val encodedRaster = encodeRaster(rasterDataType, checkpointLocation)
-
         if (Option(index).isDefined) {
             if (index.isLeft) InternalRow.fromSeq(
               Seq(index.left.get, encodedRaster, parentPathUTF8, driverUTF8, seqNo.orNull)

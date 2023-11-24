@@ -69,7 +69,7 @@ case class RST_FromFile(
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         if (targetSize <= 0) {
             val raster = MosaicRasterGDAL.readRaster(tmpPath, path)
-            val tile = new MosaicRasterTile(null, raster, path, raster.getDriversShortName)
+            val tile = MosaicRasterTile(null, raster, path, raster.getDriversShortName)
             val row = tile.formatCellId(indexSystem).serialize()
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)

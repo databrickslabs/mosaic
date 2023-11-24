@@ -42,12 +42,7 @@ case class RST_Clip(
         val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
         val geomCRS = geometry.getSpatialReferenceOSR
         val clipped = RasterClipByVector.clip(tile.getRaster, geometry, geomCRS, geometryAPI)
-        new MosaicRasterTile(
-          tile.getIndex,
-          clipped,
-          tile.getParentPath,
-          tile.getDriver
-        )
+        tile.copy(raster = clipped)
     }
 
 }

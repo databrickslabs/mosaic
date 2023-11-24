@@ -49,12 +49,7 @@ case class RST_SetNoData(
           Seq(tile.getRaster),
           command = s"""gdalwarp -of ${tile.getDriver} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
         )
-        new MosaicRasterTile(
-          tile.getIndex,
-          result,
-          tile.getParentPath,
-          tile.getDriver
-        )
+        tile.copy(raster = result)
     }
 
 }

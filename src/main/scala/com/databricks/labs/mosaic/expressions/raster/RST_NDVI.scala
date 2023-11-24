@@ -42,7 +42,7 @@ case class RST_NDVI(
         val redInd = arg1.asInstanceOf[Int]
         val nirInd = arg2.asInstanceOf[Int]
         val result = NDVI.compute(tile.getRaster, redInd, nirInd)
-        new MosaicRasterTile(tile.getIndex, result, tile.getParentPath, tile.getDriver)
+        tile.copy(raster = result)
     }
 
 }
