@@ -7,7 +7,7 @@ import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util._
 
 /** GDAL implementation of the MosaicRasterBand trait. */
-class MosaicRasterBandGDAL(band: Band, id: Int) {
+case class MosaicRasterBandGDAL(band: Band, id: Int) {
 
     def getBand: Band = band
 

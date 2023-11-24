@@ -26,7 +26,7 @@ object GDALTranslate {
         val translateOptions = new TranslateOptions(translateOptionsVec)
         val result = gdal.Translate(outputPath, raster.getRaster, translateOptions)
         val size = Files.size(Paths.get(outputPath))
-        MosaicRasterGDAL(result, outputPath, raster.getParentPath, raster.getDriversShortName, size).flushCache()
+        raster.copy(raster = result, path = outputPath, memSize = size).flushCache()
     }
 
 }

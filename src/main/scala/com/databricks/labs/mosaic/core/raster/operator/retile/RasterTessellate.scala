@@ -38,13 +38,12 @@ object RasterTessellate {
                 val cellID = cell.cellIdAsLong(indexSystem)
                 val isValidCell = indexSystem.isValid(cellID)
                 if (!isValidCell) {
-                    (false, new MosaicRasterTile(cell.index, null, "", ""))
+                    (false, MosaicRasterTile(cell.index, null, "", ""))
                 } else {
                     val cellRaster = tmpRaster.getRasterForCell(cellID, indexSystem, geometryAPI)
                     val isValidRaster = cellRaster.getBandStats.values.map(_("mean")).sum > 0 && !cellRaster.isEmpty
                     (
-                      isValidRaster,
-                      new MosaicRasterTile(cell.index, cellRaster, raster.getParentPath, raster.getDriversShortName)
+                      isValidRaster, MosaicRasterTile(cell.index, cellRaster, raster.getParentPath, raster.getDriversShortName)
                     )
                 }
             })

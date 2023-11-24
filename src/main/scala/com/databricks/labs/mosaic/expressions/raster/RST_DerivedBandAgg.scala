@@ -88,7 +88,7 @@ case class RST_DerivedBandAgg(
             val parentPath = tiles.head.getParentPath
             val driver = tiles.head.getDriver
 
-            val result = new MosaicRasterTile(idx, combined, parentPath, driver)
+            val result = MosaicRasterTile(idx, combined, parentPath, driver)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
                 .serialize(BinaryType, expressionConfig.getRasterCheckpoint)
 
