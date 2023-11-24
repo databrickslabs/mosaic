@@ -161,14 +161,18 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             self.spark.read.format("gdal")
             .option("raster.read.strategy", "in-memory")
             .load(
-                "test/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20251130.nc"
+                "test/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
             )
             .select(api.rst_separatebands("tile").alias("tile"))
             .repartition(self.spark.sparkContext.defaultParallelism)
         ).cache()
 
-        self.assertEqual(df.count(), 1826)
+        self.assertEqual(df.count(), 31)
 
-        grid_tiles = df.select(api.rst_tessellate("tile", lit(3)).alias("tile"))
+        grid_tiles = (
+            df
+            .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
+            .select(api.rst_tessellate("tile", lit(3)).alias("tile"))
+        )
 
-        self.assertEqual(grid_tiles.count(), 55)
+        self.assertEqual(grid_tiles.count(), 4495)

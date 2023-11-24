@@ -22,7 +22,7 @@ class RST_SetSRIDTest extends QueryTest with SharedSparkSessionGDAL with RST_Set
 
     // These tests are not index system nor geometry API specific.
     // Only testing one pairing is sufficient.
-    test("Testing RST_SRID with manual GDAL registration (H3, JTS).") {
+    test("Testing RST_SetSRID with manual GDAL registration (H3, JTS).") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
             setSRIDBehavior(H3IndexSystem, JTS)

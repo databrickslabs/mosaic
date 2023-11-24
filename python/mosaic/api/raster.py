@@ -42,6 +42,7 @@ __all__ = [
     "rst_scalex",
     "rst_scaley",
     "rst_separatebands",
+    "rst_setsrid",
     "rst_setnodata",
     "rst_skewx",
     "rst_skewy",
@@ -845,6 +846,29 @@ def rst_skewy(raster: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_skewy", pyspark_to_java_column(raster)
+    )
+
+
+def rst_setsrid(raster: ColumnOrName, srid: ColumnOrName) -> Column:
+    """
+    Sets the SRID of the raster.
+    The SRID is the EPSG code of the raster.
+
+    Parameters
+    ----------
+    raster : Column (MosaicRasterTile)
+        The raster file.
+    srid : Column (IntegerType)
+        EPSG authority code for the file's projection.
+    Returns
+    -------
+    Column (MosaicRasterTile)
+        The updated raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_setsrid", pyspark_to_java_column(raster),
+        pyspark_to_java_column(srid)
     )
 
 

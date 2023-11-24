@@ -36,7 +36,10 @@ trait RST_SetSRIDBehaviors extends QueryTest {
             .withColumn("result", rst_setsrid($"tile", lit(4326)))
             .select("result")
 
-        val result = df.collect().length
+        val result = df
+            .where(rst_srid($"result") === lit(4326))
+            .collect
+            .length
 
         result > 0 shouldBe true
 
