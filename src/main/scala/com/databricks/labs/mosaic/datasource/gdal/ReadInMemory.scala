@@ -93,7 +93,7 @@ object ReadInMemory extends ReadStrategy {
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
         val rasterTileSer = InternalRow.fromSeq(
-          Seq(null, contentBytes, UTF8String.fromString(inPath), UTF8String.fromString(driverShortName))
+          Seq(null, contentBytes, UTF8String.fromString(inPath), UTF8String.fromString(driverShortName), null)
         )
         val row = Utils.createRow(
           fields ++ Seq(rasterTileSer)

@@ -40,6 +40,7 @@ __all__ = [
     "rst_rotation",
     "rst_scalex",
     "rst_scaley",
+    "rst_separatebands",
     "rst_setnodata",
     "rst_skewx",
     "rst_skewy",
@@ -729,6 +730,28 @@ def rst_scaley(raster: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_scaley", pyspark_to_java_column(raster)
+    )
+
+
+def rst_separatebands(raster: ColumnOrName) -> Column:
+    """
+    Returns a set of new single-band rasters, one for each band in the input raster.
+    Result set is automatically exploded.
+
+    Parameters
+    ----------
+    raster : Column (MosaicTile)
+        Raster tile column
+
+    Returns
+    -------
+    Column (MosaicTile)
+        The single-band raster tiles, exploded.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_separatebands",
+        pyspark_to_java_column(raster),
     )
 
 

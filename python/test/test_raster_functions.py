@@ -155,3 +155,20 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         self.assertEqual(
             collection.first()["extent"], combine_avg_result.first()["extent"]
         )
+
+    def test_netcdf(self):
+        df = (
+            self.spark.read.format("gdal")
+            .option("raster.read.strategy", "in-memory")
+            .load(
+                "test/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20251130.nc"
+            )
+            .select(api.rst_separatebands("tile").alias("tile"))
+            .repartition(self.spark.sparkContext.defaultParallelism)
+        ).cache()
+
+        self.assertEqual(df.count(), 1826)
+
+        grid_tiles = df.select(api.rst_tessellate("tile", lit(3)).alias("tile"))
+
+        self.assertEqual(grid_tiles.count(), 55)

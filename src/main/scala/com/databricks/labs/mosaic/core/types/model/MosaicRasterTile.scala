@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
+import org.apache.spark.sql.types.{BinaryType, DataType, IntegerType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
 /**
@@ -18,12 +18,15 @@ import org.apache.spark.unsafe.types.UTF8String
   *   Parent path of the raster.
   * @param driver
   *   Driver used to read the raster.
+  * @param seqNo
+  * Sequence number of the raster, used if this is a single band extracted from a multi-band raster.
   */
 class MosaicRasterTile(
     index: Either[Long, String],
     raster: => MosaicRasterGDAL,
     parentPath: String,
-    driver: String
+    driver: String,
+    seqNo: Option[Int] = None
 ) {
 
     def getIndex: Either[Long, String] = index
@@ -59,13 +62,15 @@ class MosaicRasterTile(
                   index = Left(indexSystem.parse(value)),
                   raster = raster,
                   parentPath = parentPath,
-                  driver = driver
+                  driver = driver,
+                  seqNo = seqNo
                 )
             case (_: StringType, Left(value)) => new MosaicRasterTile(
                   index = Right(indexSystem.format(value)),
                   raster = raster,
                   parentPath = parentPath,
-                  driver = driver
+                  driver = driver,
+                  seqNo = seqNo
                 )
             case _                            => throw new IllegalArgumentException("Invalid cell id data type")
         }
@@ -112,15 +117,16 @@ class MosaicRasterTile(
         val parentPathUTF8 = UTF8String.fromString(parentPath)
         val driverUTF8 = UTF8String.fromString(driver)
         val encodedRaster = encodeRaster(rasterDataType, checkpointLocation)
+
         if (Option(index).isDefined) {
             if (index.isLeft) InternalRow.fromSeq(
-              Seq(index.left.get, encodedRaster, parentPathUTF8, driverUTF8)
+              Seq(index.left.get, encodedRaster, parentPathUTF8, driverUTF8, seqNo.orNull)
             )
             else InternalRow.fromSeq(
-              Seq(UTF8String.fromString(index.right.get), encodedRaster, parentPathUTF8, driverUTF8)
+              Seq(UTF8String.fromString(index.right.get), encodedRaster, parentPathUTF8, driverUTF8, seqNo.orNull)
             )
         } else {
-            InternalRow.fromSeq(Seq(null, encodedRaster, parentPathUTF8, driverUTF8))
+            InternalRow.fromSeq(Seq(null, encodedRaster, parentPathUTF8, driverUTF8, seqNo.orNull))
         }
 
     }
@@ -158,16 +164,17 @@ object MosaicRasterTile {
         val rasterBytes = row.get(1, BinaryType)
         val parentPath = row.get(2, StringType).toString
         val driver = row.get(3, StringType).toString
+        val seqNo = row.getInt(4)
         val raster = GDAL.readRaster(rasterBytes, parentPath, driver, BinaryType)
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {
             if (index.isInstanceOf[Long]) {
-                new MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, parentPath, driver)
+                new MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, parentPath, driver, Some(seqNo))
             } else {
-                new MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, parentPath, driver)
+                new MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, parentPath, driver, Some(seqNo))
             }
         } else {
-            new MosaicRasterTile(null, raster, parentPath, driver)
+            new MosaicRasterTile(null, raster, parentPath, driver, Some(seqNo))
         }
 
     }

@@ -37,7 +37,7 @@ class MosaicRasterGDAL(
 
     def getSpatialReference: SpatialReference = {
         if (raster != null) {
-            raster.GetSpatialRef
+            spatialRef
         } else {
             val tmp = refresh()
             val result = tmp.spatialRef
@@ -50,9 +50,9 @@ class MosaicRasterGDAL(
     protected val crsFactory: CRSFactory = new CRSFactory
 
     // Only use this with GDAL rasters
-    private val wsg84 = new osr.SpatialReference()
-    wsg84.ImportFromEPSG(4326)
-    wsg84.SetAxisMappingStrategy(osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
+    private val wgs84 = new osr.SpatialReference()
+    wgs84.ImportFromEPSG(4326)
+    wgs84.SetAxisMappingStrategy(osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
 
     /**
       * @return
@@ -187,6 +187,25 @@ class MosaicRasterGDAL(
             .toInt
     }
 
+
+    /**
+      * @return
+      *   Sets the raster's SRID. This is the EPSG code of the raster's CRS.
+      */
+    def setSRID(srid: Int): MosaicRasterGDAL = {
+        // TODO implement method to set SRID
+        val srs = new osr.SpatialReference()
+        srs.ImportFromEPSG(srid)
+        raster.SetSpatialRef(srs)
+        val driver = raster.GetDriver()
+        val newPath = PathUtils.createTmpFilePath(UUID.randomUUID().toString, GDAL.getExtension(driverShortName))
+        driver.CreateCopy(newPath, raster)
+        dispose(this)
+        MosaicRasterGDAL(newPath, isTemp = true, parentPath, driverShortName, -1)
+    }
+
+
+
     /**
       * @return
       *   Returns the raster's proj4 string.
@@ -261,7 +280,7 @@ class MosaicRasterGDAL(
       * @return
       *   Returns the raster's spatial reference.
       */
-    def spatialRef: SpatialReference = raster.GetSpatialRef()
+    def spatialRef: SpatialReference = Option(raster.GetSpatialRef()).getOrElse(wgs84)
 
     /**
       * Applies a function to each band of the raster.
@@ -276,7 +295,7 @@ class MosaicRasterGDAL(
       * @return
       *   Returns MosaicGeometry representing bounding box of the raster.
       */
-    def bbox(geometryAPI: GeometryAPI, destCRS: SpatialReference = wsg84): MosaicGeometry = {
+    def bbox(geometryAPI: GeometryAPI, destCRS: SpatialReference = wgs84): MosaicGeometry = {
         val gt = getGeoTransform
 
         val sourceCRS = spatialRef

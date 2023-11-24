@@ -48,7 +48,7 @@ object MosaicGDAL extends Logging {
         gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
         gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)
         gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", GDAL_PAM_PROXY_DIR)
-        gdal.SetConfigOption("GDAL_PAM_ENABLED", "NO")
+        gdal.SetConfigOption("GDAL_PAM_ENABLED", "YES")
         gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "NO")
     }
 

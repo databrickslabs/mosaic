@@ -159,3 +159,4 @@ spark-warehouse
 .DS_Store
 .Rproj.user
 docker/.m2/
+/python/test/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20251130.nc
