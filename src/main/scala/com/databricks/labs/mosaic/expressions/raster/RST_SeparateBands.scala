@@ -22,7 +22,7 @@ case class RST_SeparateBands(
     /**
       * Returns a set of new single-band rasters, one for each band in the input raster.
       */
-    override def rasterGenerator(tile: => MosaicRasterTile): Seq[MosaicRasterTile] = {
+    override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
         SeparateBands.separate(tile)
     }
 

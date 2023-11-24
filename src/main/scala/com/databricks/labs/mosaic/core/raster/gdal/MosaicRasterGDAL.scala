@@ -194,10 +194,10 @@ class MosaicRasterGDAL(
         srs.ImportFromEPSG(srid)
         raster.SetSpatialRef(srs)
         val driver = raster.GetDriver()
-        val newPath = PathUtils.createTmpFilePath(UUID.randomUUID().toString, GDAL.getExtension(driverShortName))
+        val newPath = PathUtils.createTmpFilePath(GDAL.getExtension(driverShortName))
         driver.CreateCopy(newPath, raster)
         dispose(this)
-        MosaicRasterGDAL(newPath, isTemp = true, parentPath, driverShortName, -1)
+        MosaicRasterGDAL(newPath, parentPath, driverShortName, -1)
     }
 
 

@@ -21,14 +21,12 @@ object SeparateBands {
     ): Seq[MosaicRasterTile] = {
         val raster = tile.getRaster
         val tiles = for (i <- 0 until raster.numBands) yield {
-            val rasterUUID = java.util.UUID.randomUUID.toString
             val fileExtension = raster.getRasterFileExtension
-            val rasterPath = PathUtils.createTmpFilePath(rasterUUID, fileExtension)
+            val rasterPath = PathUtils.createTmpFilePath(fileExtension)
             val shortDriver = raster.getDriversShortName
 
             val result = GDALTranslate.executeTranslate(
               rasterPath,
-              isTemp = true,
               raster,
               command = s"gdal_translate -of $shortDriver -b ${i + 1} -co COMPRESS=DEFLATE"
             )
