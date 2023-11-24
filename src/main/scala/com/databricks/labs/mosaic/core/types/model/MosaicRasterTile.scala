@@ -21,7 +21,7 @@ import org.apache.spark.unsafe.types.UTF8String
   * @param seqNo
   * Sequence number of the raster, used if this is a single band extracted from a multi-band raster.
   */
-class MosaicRasterTile(
+case class MosaicRasterTile(
     index: Either[Long, String],
     raster: MosaicRasterGDAL,
     parentPath: String,

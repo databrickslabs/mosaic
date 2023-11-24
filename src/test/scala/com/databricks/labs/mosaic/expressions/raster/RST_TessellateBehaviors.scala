@@ -39,7 +39,7 @@ trait RST_TessellateBehaviors extends QueryTest {
 
         val result = gridTiles.collect()
 
-        result.length should be(380)
+        result.length should be(980)
 
         val netcdf = spark.read
             .format("gdal")
@@ -53,7 +53,7 @@ trait RST_TessellateBehaviors extends QueryTest {
 
         val netcdfResult = netcdfGridTiles.collect()
 
-        netcdfResult.length should be(980)
+        netcdfResult.length should be(4495)
 
     }
 

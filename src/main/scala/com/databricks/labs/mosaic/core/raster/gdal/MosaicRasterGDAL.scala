@@ -189,15 +189,15 @@ case class MosaicRasterGDAL(
       *   Sets the raster's SRID. This is the EPSG code of the raster's CRS.
       */
     def setSRID(srid: Int): MosaicRasterGDAL = {
-        // TODO implement method to set SRID
         val srs = new osr.SpatialReference()
         srs.ImportFromEPSG(srid)
         raster.SetSpatialRef(srs)
         val driver = raster.GetDriver()
         val newPath = PathUtils.createTmpFilePath(GDAL.getExtension(driverShortName))
         driver.CreateCopy(newPath, raster)
+        val newRaster = MosaicRasterGDAL.openRaster(newPath, Some(driverShortName))
         dispose(this)
-        MosaicRasterGDAL(newPath, parentPath, driverShortName, -1)
+        MosaicRasterGDAL(newRaster, newPath, parentPath, driverShortName, -1)
     }
 
 

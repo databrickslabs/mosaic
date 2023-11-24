@@ -41,13 +41,7 @@ case class RST_SetSRID(
       */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         val referenced = tile.getRaster.setSRID(arg1.asInstanceOf[Int])
-        RasterCleaner.dispose(tile.getRaster)
-        new MosaicRasterTile(
-          tile.getIndex,
-            referenced,
-          tile.getParentPath,
-          tile.getDriver
-        )
+        tile.copy(raster = referenced)
     }
 
 }
