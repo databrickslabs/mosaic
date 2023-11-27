@@ -212,7 +212,9 @@ def rst_combineavg_agg(raster: ColumnOrName) -> Column:
     )
 
 
-def rst_derivedband_agg(raster: ColumnOrName, pythonFunc: ColumnOrName, funcName: ColumnOrName) -> Column:
+def rst_derivedband_agg(
+    raster: ColumnOrName, pythonFunc: ColumnOrName, funcName: ColumnOrName
+) -> Column:
     """
     Returns the raster representing the aggregation of rasters using provided python function.
 
@@ -228,5 +230,8 @@ def rst_derivedband_agg(raster: ColumnOrName, pythonFunc: ColumnOrName, funcName
         The resulting raster.
     """
     return config.mosaic_context.invoke_function(
-        "rst_derivedband_agg", pyspark_to_java_column(raster), pyspark_to_java_column(pythonFunc), pyspark_to_java_column(funcName)
+        "rst_derivedband_agg",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(pythonFunc),
+        pyspark_to_java_column(funcName),
     )

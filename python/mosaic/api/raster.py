@@ -148,7 +148,9 @@ def rst_combineavg(rasters: ColumnOrName) -> Column:
     )
 
 
-def rst_derivedband(raster: ColumnOrName, pythonFunc: ColumnOrName, funcName: ColumnOrName) -> Column:
+def rst_derivedband(
+    raster: ColumnOrName, pythonFunc: ColumnOrName, funcName: ColumnOrName
+) -> Column:
     """
     Creates a new band by applying the given python function to the input rasters.
     The result is a raster tile.
@@ -867,8 +869,7 @@ def rst_setsrid(raster: ColumnOrName, srid: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_setsrid", pyspark_to_java_column(raster),
-        pyspark_to_java_column(srid)
+        "rst_setsrid", pyspark_to_java_column(raster), pyspark_to_java_column(srid)
     )
 
 

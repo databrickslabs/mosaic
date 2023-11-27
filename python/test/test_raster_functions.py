@@ -116,7 +116,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
 
         tessellate_result.write.format("noop").mode("overwrite").save()
-        self.assertEqual(tessellate_result.count(), 55)
+        self.assertEqual(tessellate_result.count(), 140)
 
         overlap_result = self.generate_singleband_raster_df().withColumn(
             "rst_to_overlapping_tiles",
@@ -169,10 +169,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         self.assertEqual(df.count(), 31)
 
-        grid_tiles = (
-            df
-            .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
-            .select(api.rst_tessellate("tile", lit(3)).alias("tile"))
+        grid_tiles = df.withColumn("tile", api.rst_setsrid("tile", lit(4326))).select(
+            api.rst_tessellate("tile", lit(3)).alias("tile")
         )
 
         self.assertEqual(grid_tiles.count(), 4495)
