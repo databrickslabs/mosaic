@@ -1,6 +1,4 @@
-spark_location <- "/usr/spark-download/unzipped/spark-3.2.1-bin-hadoop2.7"
-Sys.setenv(SPARK_HOME = spark_location)
-
+spark_location <- Sys.getenv("SPARK_HOME")
 library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
 library(roxygen2)
 

@@ -8,14 +8,14 @@ library(methods)
 
 parser <- function(x){
   #split on left bracket to get name
-  splitted = strsplit(x, "(", fixed=T)[[1]]
+  splitted <- strsplit(x, "(", fixed=T)[[1]]
   # extract function name
-  function_name = splitted[1]
+  function_name <- splitted[1]
   # remove the trailing bracket
-  args = gsub( ")", '',splitted[2], fixed=T)
-  args = strsplit(args, ", ", fixed=T)[[1]]
-  args = lapply(args, function(x){strsplit(x, ": ", fixed=T)}[[1]])
-  output = list(
+  args <- gsub( ")", '',splitted[2], fixed=T)
+  args <- strsplit(args, ", ", fixed=T)[[1]]
+  args <- lapply(args, function(x){strsplit(x, ": ", fixed=T)}[[1]])
+  output <- list(
     "function_name" = function_name
     ,"args"=args
   )
@@ -24,8 +24,8 @@ parser <- function(x){
 
 ############################################################
 build_generic <- function(input){
-  function_name = input$function_name
-  args = lapply(input$args, function(x){x[1]})
+  function_name <- input$function_name
+  args <- lapply(input$args, function(x){x[1]})
   paste0(
     '#\' @rdname ', function_name, ' 
     setGeneric(
@@ -35,21 +35,9 @@ build_generic <- function(input){
                   ')
 }
 
-
-build_generic2 <- function(input){
-  function_name = input$function_name
-  args = lapply(input$args, function(x){x[1]})
-  paste0(
-    '#\' @rdname ', function_name, ' 
-    setGeneric(
-        name="',function_name,'"
-            ,def=function(',paste0(args, collapse=','), ')  {standardGeneric("',function_name, '")}
-              )
-                  ')
-}
 ############################################################
 build_column_specifiers <- function(input){
-  args = lapply(input$args, function(x){x[1]})
+  args <- lapply(input$args, function(x){x[1]})
   build_column_specifier <- function(arg){ 
     return(paste0(arg, '@jc'))
   }
@@ -62,29 +50,32 @@ build_column_specifiers <- function(input){
 }
 ############################################################
 build_method<-function(input){
-  function_name = input$function_name
-  arg_names = lapply(input$args, function(x){c(x[1])})
+  function_name <- input$function_name
+  arg_names <- lapply(input$args, function(x){c(x[1])})
   #this handles converting non-Column arguments to their R equivalents
   argument_parser <- function(x){
     if(x[2] == 'Int'){
-      x[2] = "numeric"
+      x[2] <- "numeric"
     }
     else if(x[2] == 'String'){
-      x[2] = "character"
+      x[2] <- "character"
     }
     else if(x[2] == 'Double'){
-      x[2] = "numeric"
+      x[2] <- "numeric"
+    }
+    else if(x[2] == 'Boolean') {
+      x[2] <- "logical"
     }
     x
   }
   # convert scala type to R types
-  args = lapply(input$args, argument_parser)
+  args <- lapply(input$args, argument_parser)
   # take a copy for building the docs
-  param_args = args
+  param_args <- args
   # wrap the strings in speech marks
-  args = lapply(args, function(x){c(x[1], paste0("'", x[2], "'"))})
+  args <- lapply(args, function(x){c(x[1], paste0("'", x[2], "'"))})
   # collapse down to a single string
-  args = lapply(args, function(x){paste0(x,  collapse= ' = ')})
+  args <- lapply(args, function(x){paste0(x,  collapse= ' = ')})
   column_specifiers <- build_column_specifiers(input)
   docstring <- paste0(
     c(paste0(c("#'", function_name), collapse=" "),
@@ -116,48 +107,62 @@ build_method<-function(input){
 ############################################################
 get_function_names <- function(scala_file_path){
   #scala_file_path = "~/Documents/mosaic/src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala"
-  scala_file_object = file(scala_file_path)
+  scala_file_object <- file(scala_file_path)
   
-  scala_file = readLines(scala_file_object)
+  scala_file <- readLines(scala_file_object)
   closeAllConnections()
   # find where the methods start
-  start_string = "    object functions extends Serializable {"
-  start_index = grep(start_string, scala_file, fixed=T) + 1
+  start_string <- "    object functions extends Serializable {"
+  start_index <- grep(start_string, scala_file, fixed=T) + 1
   # find the methods end - will be the next curly bracket
   # need to find where the matching end brace for the start string is located.
   # counter starts at 1 as the start string includes the opening brace
-  brace_counter = 1
+  brace_counter <- 1
 
   for(i in start_index : length(scala_file)){
     # split the string into characters - returns a list so unlist it
     line_characters <- unlist(strsplit(scala_file[i], ''))
     # count the number of brace opens
-    n_opens = sum(grepl("{", line_characters, fixed=T))
+    n_opens <- sum(grepl("{", line_characters, fixed=T))
     # count the number of brace closes
-    n_closes = sum(grepl("}", line_characters, fixed=T))
+    n_closes <- sum(grepl("}", line_characters, fixed=T))
     # update the counter
     brace_counter <- brace_counter + n_opens - n_closes
     if (brace_counter == 0) break
 
   }
-  methods_to_bind = scala_file[start_index:i]
+  methods_to_bind <- scala_file[start_index:i]
   # remove any line that doesn't start with def
-  def_mask = grepl('\\s+def .*', methods_to_bind)
-  methods_to_bind = methods_to_bind[def_mask]
+  def_mask <- grepl('\\s+def .*', methods_to_bind)
+  methods_to_bind <- methods_to_bind[def_mask]
   # parse the string to get just the function_name(input:type...) pattern
-  methods_to_bind = unlist(lapply(methods_to_bind, function(x){
+  methods_to_bind <- unlist(lapply(methods_to_bind, function(x){
     substr(x
            , regexpr("def ", x, fixed=T)[1]+4 # get the starting point to account for whitespace
            , regexpr("): ", x, fixed=T)[1] # get the end point of where the return is.
     )
   }
   ))
-  sort(methods_to_bind, T)
+  sort_methods_by_argcount(methods_to_bind)
+}
+
+############################################################
+sort_methods_by_argcount <- function(methods) {
+  # Split the strings by colon and calculate the number of colons
+  method_names <- sapply(strsplit(methods, "\\("), function(x) x[1])
+  argcount <- sapply(strsplit(methods, ","), function(x) length(x) - 1)
+  
+  # Use the order function to sort first alphabetically and then by the number of colons
+  order_indices <- order(method_names, argcount)
+  
+  # Return the sorted list
+  methods_sorted <- methods[order_indices]
+  return(methods_sorted)
 }
 
 ############################################################
 build_sparklyr_mosaic_function <- function(input){
-  function_name = input$function_name
+  function_name <- input$function_name
   paste0(
     
     "#' ", function_name, "\n\n",
@@ -191,7 +196,7 @@ main <- function(scala_file_path){
   ##########################
   ##########################
   # build sparkr functions
-  function_data = get_function_names(scala_file_path)
+  function_data <- get_function_names(scala_file_path)
   parsed <- lapply(function_data, parser)
   
 
@@ -223,8 +228,8 @@ main <- function(scala_file_path){
   # supplementary files
   sparkr_supplementary_files <- c("sparklyr-mosaic/enableMosaic.R", "sparklyr-mosaic/sparkFunctions.R")
   copy_supplementary_file(sparkr_supplementary_files, "sparklyr-mosaic/sparklyrMosaic/R/")
-  
 }
+
 
 args <- commandArgs(trailingOnly = T)
 if (length(args) !=  1){
