@@ -1,28 +1,65 @@
 # Databricks notebook source
 # MAGIC %md ## Line Aggregation
 # MAGIC
-# MAGIC Instead of the point-to-point evaluation, we will instead be aggregating into lines and comparing as such.
+# MAGIC > Instead of the point-to-point evaluation, we will instead be aggregating into lines and comparing as such.
+# MAGIC
+# MAGIC ---
+# MAGIC __Last Updated:__ 27 NOV 2023 [Mosaic 0.3.12]
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks_mosaic
+# MAGIC %md ## Setup
 
 # COMMAND ----------
 
-from pyspark.sql.functions import *
+# MAGIC %pip install "databricks-mosaic<0.4,>=0.3" --quiet # <- Mosaic 0.3 series
+# MAGIC # %pip install "databricks-mosaic<0.5,>=0.4" --quiet # <- Mosaic 0.4 series (as available)
+
+# COMMAND ----------
+
+# -- configure AQE for more compute heavy operations
+#  - choose option-1 or option-2 below, essential for REPARTITION!
+# spark.conf.set("spark.databricks.optimizer.adaptive.enabled", False) # <- option-1: turn off completely for full control
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", False) # <- option-2: just tweak partition management
+spark.conf.set("spark.sql.shuffle.partitions", 1_024)                  # <-- default is 200
+
+# -- import databricks + spark functions
+from pyspark.databricks.sql import functions as dbf
+from pyspark.sql import functions as F
+from pyspark.sql.functions import col, udf
+from pyspark.sql.types import *
+
+# -- setup mosaic
 import mosaic as mos
 
-spark.conf.set("spark.databricks.labs.mosaic.geometry.api", "JTS")
-spark.conf.set("spark.databricks.labs.mosaic.index.system", "H3")
 mos.enable_mosaic(spark, dbutils)
+# mos.enable_gdal(spark) # <- not needed for this example
+
+# --other imports
+import warnings
+
+warnings.simplefilter("ignore")
 
 # COMMAND ----------
 
-cargos_indexed = spark.read.table("ship2ship.cargos_indexed").repartition(
-    sc.defaultParallelism * 20
-)
-display(cargos_indexed)
-cargos_indexed.count()
+# MAGIC %md __Configure Database__
+# MAGIC
+# MAGIC > Adjust this to settings from the Data Prep notebook.
+
+# COMMAND ----------
+
+catalog_name = "mjohns"
+db_name = "ship2ship"
+
+sql(f"use catalog {catalog_name}")
+sql(f"use schema {db_name}")
+
+# COMMAND ----------
+
+cargos_indexed = spark.read.table("cargos_indexed")
+        
+print(f"count? {cargos_indexed.count():,}")
+cargos_indexed.limit(5).display() # <- limiting for ipynb only
 
 # COMMAND ----------
 
@@ -37,33 +74,35 @@ cargos_indexed.count()
 
 # COMMAND ----------
 
+spark.catalog.clearCache()                       # <- cache is useful for dev (avoid recompute)
 lines = (
-    cargos_indexed.repartition(sc.defaultParallelism * 20)
-    .groupBy("mmsi", window("BaseDateTime", "15 minutes"))
-    # We link the points to their respective timestamps in the aggregation
-    .agg(collect_list(struct(col("point_geom"), col("BaseDateTime"))).alias("coords"))
-    # And then sort our array of points by the timestamp to form a trajectory
-    .withColumn(
-        "coords",
-        expr(
-            """
-        array_sort(coords, (left, right) -> 
-            case 
-            when left.BaseDateTime < right.BaseDateTime then -1 
-            when left.BaseDateTime > right.BaseDateTime then 1 
-            else 0 
-            end
-        )"""
+    cargos_indexed
+        .repartition(sc.defaultParallelism * 20) # <- repartition is important!
+        .groupBy("mmsi", F.window("BaseDateTime", "15 minutes"))
+            # We link the points to their respective timestamps in the aggregation
+            .agg(F.collect_list(F.struct(col("point_geom"), col("BaseDateTime"))).alias("coords"))
+        # And then sort our array of points by the timestamp to form a trajectory
+        .withColumn(
+            "coords",
+            F.expr(
+                """
+                array_sort(coords, (left, right) -> 
+                    case 
+                        when left.BaseDateTime < right.BaseDateTime then -1 
+                        when left.BaseDateTime > right.BaseDateTime then 1 
+                    else 0 
+                end
+            )"""
         ),
     )
     .withColumn("line", mos.st_makeline(col("coords.point_geom")))
     .cache()
 )
+print(f"count? {lines.count():,}")
 
 # COMMAND ----------
 
-# DBTITLE 1,Note here that this decreases the total number of rows across which we are running our comparisons.
-lines.count()
+# MAGIC %md _Note here that this decreases the total number of rows across which we are running our comparisons._
 
 # COMMAND ----------
 
@@ -86,20 +125,19 @@ def get_buffer(line, buffer=buffer):
         double: buffer size in degrees
     """
     np = mos.st_numpoints(line)
-    max_np = lines.select(max(np)).collect()[0][0]
-    return lit(max_np) * lit(buffer) / np
+    max_np = lines.select(F.max(np)).collect()[0][0]
+    return F.lit(max_np) * F.lit(buffer) / np
 
 
 cargo_movement = (
     lines.withColumn("buffer_r", get_buffer("line"))
     .withColumn("buffer_geom", mos.st_buffer("line", col("buffer_r")))
     .withColumn("buffer", mos.st_astext("buffer_geom"))
-    .withColumn("ix", mos.grid_tessellateexplode("buffer_geom", lit(9)))
+    .withColumn("ix", mos.grid_tessellateexplode("buffer_geom", F.lit(9)))
 )
 
-(cargo_movement.createOrReplaceTempView("ship_path"))
-
-display(spark.read.table("ship_path"))
+cargo_movement.createOrReplaceTempView("ship_path") # <- create a temp view
+spark.read.table("ship_path").limit(1).display()    # <- limiting for ipynb only
 
 # COMMAND ----------
 
@@ -107,7 +145,10 @@ to_plot = spark.read.table("ship_path").select("buffer").limit(3_000).distinct()
 
 # COMMAND ----------
 
-# DBTITLE 1,Example Buffer Paths
+# MAGIC %md _Example buffer paths_
+
+# COMMAND ----------
+
 # MAGIC %%mosaic_kepler
 # MAGIC to_plot "buffer" "geometry" 3_000
 
@@ -154,17 +195,20 @@ candidates_lines = (
 (
     candidates_lines.write.mode("overwrite")
     .option("overwriteSchema", "true")
-    .saveAsTable("ship2ship.overlap_candidates_lines")
+    .saveAsTable("overlap_candidates_lines")
 )
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM ship2ship.overlap_candidates_lines;
+# MAGIC SELECT * FROM overlap_candidates_lines LIMIT 1
 
 # COMMAND ----------
 
-# DBTITLE 1,We can show the most common locations for overlaps happening, as well some example ship paths during those overlaps.
+# MAGIC %md _We can show the most common locations for overlaps happening, as well some example ship paths during those overlaps._
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE TEMPORARY VIEW agg_overlap AS
 # MAGIC SELECT index AS ix, count(*) AS count, FIRST(line_1) AS line_1, FIRST(line_2) AS line_2
@@ -185,8 +229,8 @@ candidates_lines = (
 
 # COMMAND ----------
 
-harbours_h3 = spark.read.table("ship2ship.harbours_h3")
-candidates = spark.read.table("ship2ship.overlap_candidates_lines")
+harbours_h3 = spark.read.table("harbours_h3")
+candidates = spark.read.table("overlap_candidates_lines")
 
 # COMMAND ----------
 
@@ -195,7 +239,7 @@ matches = (
         harbours_h3, how="leftanti", on=candidates["index"] == harbours_h3["h3"]
     )
     .groupBy("vessel_1", "vessel_2")
-    .agg(first("line_1").alias("line_1"), first("line_2").alias("line_2"))
+    .agg(F.first("line_1").alias("line_1"), F.first("line_2").alias("line_2"))
 )
 
 # COMMAND ----------
@@ -203,15 +247,15 @@ matches = (
 (
     matches.write.mode("overwrite")
     .option("overwriteSchema", "true")
-    .saveAsTable("ship2ship.overlap_candidates_lines_filtered")
+    .saveAsTable("overlap_candidates_lines_filtered")
 )
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT COUNT(*) FROM ship2ship.overlap_candidates_lines_filtered;
+# MAGIC SELECT format_number(COUNT(1),0) FROM overlap_candidates_lines_filtered;
 
 # COMMAND ----------
 
 # MAGIC %%mosaic_kepler
-# MAGIC ship2ship.overlap_candidates_lines_filtered "line_1" "geometry" 2_000
+# MAGIC overlap_candidates_lines_filtered "line_1" "geometry" 2_000
