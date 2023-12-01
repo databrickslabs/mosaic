@@ -334,7 +334,7 @@ The output raster will have the same coordinate reference system as the input ra
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-3-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-3-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-3-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-3-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-3-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-3-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-3-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-3-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-3-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
            <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral&quot;</span><span class="p">)</span>\
            <span class="o">.</span><span class="n">groupBy</span><span class="p">()</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">))</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_combineavg</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -357,21 +357,21 @@ The output raster will have the same coordinate reference system as the input ra
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf</dt><dd><p>USING gdal
-OPTIONS (extension “nc”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral”)</p>
-</dd>
-<dt>WITH grouped as (</dt><dd><p>SELECT collect_list(tile) as tile FROM coral_netcdf</p>
-</dd>
-</dl>
-<p>)
+</div><div aria-labelledby="tab-3-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+     USING gdal
+     OPTIONS (extension &quot;nc&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;)
+WITH grouped as (
+    SELECT collect_list(tile) as tile FROM coral_netcdf
+)
 SELECT rst_combineavg(tile) FROM grouped LIMIT 1
-+—————————————————————————————————————-+
++----------------------------------------------------------------------------------------------------------------+
 | rst_combineavg(tile)                                                                                           |
-+—————————————————————————————————————-+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” } |
-+—————————————————————————————————————-+</p>
++----------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;NetCDF&quot; } |
++----------------------------------------------------------------------------------------------------------------+
+</pre></div>
 </div>
+</div></div>
 </div>
 <div class="section" id="rst-combineavgagg">
 <h3>rst_combineavgagg<a class="headerlink" href="#rst-combineavgagg" title="Permalink to this headline"></a></h3>
@@ -399,7 +399,7 @@ The output raster will have the same coordinate reference system as the input ra
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-4-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-4-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-4-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-4-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-4-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-4-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-4-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-4-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-4-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
            <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral&quot;</span><span class="p">)</span>\
 <span class="n">df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">()</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_combineavgagg</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
@@ -420,20 +420,20 @@ The output raster will have the same coordinate reference system as the input ra
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf</dt><dd><p>USING gdal
-OPTIONS (extension “nc”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral”)</p>
-</dd>
-</dl>
-<p>SELECT rst_combineavgagg(tile)
+</div><div aria-labelledby="tab-4-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+     USING gdal
+     OPTIONS (extension &quot;nc&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;)
+SELECT rst_combineavgagg(tile)
 FROM coral_netcdf
 GROUP BY 1
-+—————————————————————————————————————-+
++----------------------------------------------------------------------------------------------------------------+
 | rst_combineavgagg(tile)                                                                                        |
-+—————————————————————————————————————-+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” } |
-+—————————————————————————————————————-+</p>
++----------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;NetCDF&quot; } |
++----------------------------------------------------------------------------------------------------------------+
+</pre></div>
 </div>
+</div></div>
 </div>
 <div class="section" id="rst-frombands">
 <h3>rst_frombands<a class="headerlink" href="#rst-frombands" title="Permalink to this headline"></a></h3>
@@ -461,7 +461,7 @@ The output raster will have the same coordinate reference system as the input ra
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-5-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-5-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-5-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-5-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-5-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-5-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-5-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-5-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-5-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-5-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-5-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-5-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-5-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-5-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
            <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral&quot;</span><span class="p">)</span>\
            <span class="o">.</span><span class="n">groupBy</span><span class="p">()</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">))</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_frombands</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -484,21 +484,21 @@ The output raster will have the same coordinate reference system as the input ra
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf</dt><dd><p>USING gdal
-OPTIONS (extension “nc”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral”)</p>
-</dd>
-<dt>WITH grouped as (</dt><dd><p>SELECT collect_list(tile) as tile FROM coral_netcdf</p>
-</dd>
-</dl>
-<p>)
+</div><div aria-labelledby="tab-5-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-5-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+    USING gdal
+    OPTIONS (extension &quot;nc&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;)
+WITH grouped as (
+    SELECT collect_list(tile) as tile FROM coral_netcdf
+)
 SELECT rst_frombands(tile) FROM grouped LIMIT 1
-+—————————————————————————————————————-+
++----------------------------------------------------------------------------------------------------------------+
 | rst_frombands(tile)                                                                                            |
-+—————————————————————————————————————-+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” } |
-+—————————————————————————————————————-+</p>
++----------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;NetCDF&quot; } |
++----------------------------------------------------------------------------------------------------------------+
+</pre></div>
 </div>
+</div></div>
 </div>
 <div class="section" id="rst-fromfile">
 <h3>rst_fromfile<a class="headerlink" href="#rst-fromfile" title="Permalink to this headline"></a></h3>
@@ -528,7 +528,7 @@ If the size_in_Mb &lt; 0 the raster wont be split into tiles.</p>
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-6-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-6-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-6-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-6-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-6-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-6-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-6-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-6-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-6-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-6-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-6-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-6-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-6-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-6-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span>\
            <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_fromfile</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
@@ -549,16 +549,16 @@ If the size_in_Mb &lt; 0 the raster wont be split into tiles.</p>
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf</dt><dd><p>USING binaryFile
-OPTIONS (path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral”)</p>
-</dd>
-</dl>
-<p>SELECT rst_fromfile(path) FROM coral_netcdf LIMIT 1
-+—————————————————————————————————————-+
-| rst_fromfile(path)                                                                                             |
-+—————————————————————————————————————-+</p>
+</div><div aria-labelledby="tab-6-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-6-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">coral_netcdf</span>
+<span class="w">     </span><span class="k">USING</span><span class="w"> </span><span class="n">binaryFile</span>
+<span class="w">     </span><span class="k">OPTIONS</span><span class="w"> </span><span class="p">(</span><span class="n">path</span><span class="w"> </span><span class="ss">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;</span><span class="p">)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">rst_fromfile</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">coral_netcdf</span><span class="w"> </span><span class="k">LIMIT</span><span class="w"> </span><span class="mi">1</span>
+<span class="o">+</span><span class="c1">----------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="n">rst_fromfile</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="w">                                                                                             </span><span class="o">|</span>
+<span class="o">+</span><span class="c1">----------------------------------------------------------------------------------------------------------------+</span>
+</pre></div>
 </div>
+</div></div>
 </div>
 <div class="section" id="rst-georeference">
 <h3>rst_georeference<a class="headerlink" href="#rst-georeference" title="Permalink to this headline"></a></h3>
@@ -824,7 +824,7 @@ The default nodata value for DoubleType is Double.MinValue (-1.7976931348623157E
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-11-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-11-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-11-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-11-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-11-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-11-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-11-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-11-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-11-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-11-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-11-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-11-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-11-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-11-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
      <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_initnodata</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
@@ -845,18 +845,18 @@ The default nodata value for DoubleType is Double.MinValue (-1.7976931348623157E
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf</dt><dd><p>USING gdal
-OPTIONS (extensions “nc”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral”)</p>
-</dd>
-</dl>
-<p>SELECT rst_initnodata(path) FROM coral_netcdf LIMIT 1
-+—————————————————————————————————————-+
+</div><div aria-labelledby="tab-11-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-11-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+      USING gdal
+      OPTIONS (extensions &quot;nc&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;)
+SELECT rst_initnodata(path) FROM coral_netcdf LIMIT 1
++----------------------------------------------------------------------------------------------------------------+
 | rst_initnodata(path)                                                                                        |
-+—————————————————————————————————————-+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” } |
-+—————————————————————————————————————-+</p>
++----------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;NetCDF&quot; } |
++----------------------------------------------------------------------------------------------------------------+
+</pre></div>
 </div>
+</div></div>
 </div>
 <div class="section" id="rst-isempty">
 <h3>rst_isempty<a class="headerlink" href="#rst-isempty" title="Permalink to this headline"></a></h3>
@@ -999,7 +999,7 @@ The output raster will have the same coordinate reference system as the input ra
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-14-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-14-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-14-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-14-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-14-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-14-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-14-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-14-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-14-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-14-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-14-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-14-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-14-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-14-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
            <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral&quot;</span><span class="p">)</span>\
            <span class="o">.</span><span class="n">groupBy</span><span class="p">()</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">collect_list</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">))</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_merge</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -1022,21 +1022,21 @@ The output raster will have the same coordinate reference system as the input ra
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf</dt><dd><p>USING gdal
-OPTIONS (extension “nc”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral”)</p>
-</dd>
-<dt>WITH grouped as (</dt><dd><p>SELECT collect_list(tile) as tile FROM coral_netcdf</p>
-</dd>
-</dl>
-<p>)
+</div><div aria-labelledby="tab-14-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-14-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+    USING gdal
+    OPTIONS (extension &quot;nc&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;)
+WITH grouped as (
+    SELECT collect_list(tile) as tile FROM coral_netcdf
+)
 SELECT rst_merge(tile) FROM grouped LIMIT 1
-+—————————————————————————————————————-+
++----------------------------------------------------------------------------------------------------------------+
 | rst_merge(tile)                                                                                                |
-+—————————————————————————————————————-+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” } |
-+—————————————————————————————————————-+</p>
++----------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;NetCDF&quot; } |
++----------------------------------------------------------------------------------------------------------------+
+</pre></div>
 </div>
+</div></div>
 </div>
 <div class="section" id="rst-mergeagg">
 <h3>rst_mergeagg<a class="headerlink" href="#rst-mergeagg" title="Permalink to this headline"></a></h3>
@@ -1070,7 +1070,7 @@ The output raster will have the same coordinate reference system as the input ra
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-15-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-15-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-15-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-15-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-15-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-15-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-15-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-15-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-15-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-15-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-15-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-15-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-15-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-15-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
            <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_mergeagg</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
@@ -1091,18 +1091,18 @@ The output raster will have the same coordinate reference system as the input ra
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf</dt><dd><p>USING gdal
-OPTIONS (extension “nc”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral”)</p>
-</dd>
-</dl>
-<p>SELECT rst_mergeagg(tile) FROM coral_netcdf LIMIT 1
-+—————————————————————————————————————-+
+</div><div aria-labelledby="tab-15-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-15-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+    USING gdal
+    OPTIONS (extension &quot;nc&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;)
+SELECT rst_mergeagg(tile) FROM coral_netcdf LIMIT 1
++----------------------------------------------------------------------------------------------------------------+
 | rst_mergeagg(tile)                                                                                             |
-+—————————————————————————————————————-+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” } |
-+—————————————————————————————————————-+</p>
++----------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;NetCDF&quot; } |
++----------------------------------------------------------------------------------------------------------------+
+</pre></div>
 </div>
+</div></div>
 </div>
 <div class="section" id="rst-metadata">
 <h3>rst_metadata<a class="headerlink" href="#rst-metadata" title="Permalink to this headline"></a></h3>
@@ -1213,39 +1213,39 @@ The output raster will have the same coordinate reference system as the input ra
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"></div><dl class="simple">
-<dt>df = spark.read.format(“binaryFile”).option(“extensions”, “nc”)</dt><dd><p>.load(“dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral”)</p>
-</dd>
-</dl>
-<p>df.select(mos.rst_ndvi(“path”, 1, 2)).limit(1).display()
-+—————————————————————————————————————-+
-| rst_ndvi(path, 1, 2)                                                                                           |
-+—————————————————————————————————————-+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” } |
-+—————————————————————————————————————-+</p>
-<dl class="simple">
-<dt>val df = spark.read</dt><dd><p>.format(“binaryFile”).option(“extensions”, “nc”)
-.load(“dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral”)</p>
-</dd>
-</dl>
-<p>df.select(rst_ndvi(col(“path”), lit(1), lit(2))).limit(1).show(false)
-+—————————————————————————————————————-+
-| rst_ndvi(path, 1, 2)                                                                                           |
-+—————————————————————————————————————-+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” } |
-+—————————————————————————————————————-+</p>
-<dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf</dt><dd><p>USING gdal
-OPTIONS (extensions “nc”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral”)</p>
-</dd>
-</dl>
-<p>SELECT rst_ndvi(path, 1, 2) FROM coral_netcdf LIMIT 1
-+—————————————————————————————————————-+
-| rst_ndvi(path, 1, 2)                                                                                           |
-+—————————————————————————————————————-+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” } |
-+—————————————————————————————————————-+</p>
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-17-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-17-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-17-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-17-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-17-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-17-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-17-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-17-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;nc&quot;</span><span class="p">)</span>\
+    <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_ndvi</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+<span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">rst_ndvi</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>                                                                                           <span class="o">|</span>
+<span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="p">{</span><span class="n">index_id</span><span class="p">:</span> <span class="mi">593308294097928191</span><span class="p">,</span> <span class="n">raster</span><span class="p">:</span> <span class="p">[</span><span class="mi">00</span> <span class="mi">01</span> <span class="mi">10</span> <span class="o">...</span> <span class="mi">00</span><span class="p">],</span> <span class="n">parentPath</span><span class="p">:</span> <span class="s2">&quot;dbfs:/path_to_file&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="p">:</span> <span class="s2">&quot;NetCDF&quot;</span> <span class="p">}</span> <span class="o">|</span>
+<span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
+</pre></div>
 </div>
+</div><div aria-labelledby="tab-17-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-17-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spark</span><span class="p">.</span><span class="n">read</span>
+<span class="w">    </span><span class="p">.</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;binaryFile&quot;</span><span class="p">).</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;extensions&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;nc&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;</span><span class="p">)</span>
+<span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">rst_ndvi</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;path&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">2</span><span class="p">))).</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="n">rst_ndvi</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">                                                                                           </span><span class="o">|</span>
+<span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="n">index_id</span><span class="p">:</span><span class="w"> </span><span class="mi">593308294097928191</span><span class="p">,</span><span class="w"> </span><span class="n">raster</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">00</span><span class="w"> </span><span class="mi">01</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="mi">00</span><span class="p">],</span><span class="w"> </span><span class="n">parentPath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;dbfs:/path_to_file&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">driver</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;NetCDF&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">|</span>
+<span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-17-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-17-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+    USING gdal
+    OPTIONS (extensions &quot;nc&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral&quot;)
+SELECT rst_ndvi(path, 1, 2) FROM coral_netcdf LIMIT 1
++----------------------------------------------------------------------------------------------------------------+
+| rst_ndvi(path, 1, 2)                                                                                           |
++----------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;NetCDF&quot; } |
++----------------------------------------------------------------------------------------------------------------+
+</pre></div>
+</div>
+</div></div>
 </div>
 <div class="section" id="rst-numbands">
 <h3>rst_numbands<a class="headerlink" href="#rst-numbands" title="Permalink to this headline"></a></h3>
@@ -2247,7 +2247,7 @@ If an array of values is passed, the nodata value is set for each band of the ra
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-33-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-33-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-33-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-33-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-33-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-33-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;tif&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-33-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-33-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-33-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-33-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-33-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-33-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-33-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-33-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;tif&quot;</span><span class="p">)</span>\
      <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_setnodata</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
@@ -2270,19 +2270,19 @@ If an array of values is passed, the nodata value is set for each band of the ra
 <span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_tif</dt><dd><p>USING gdal
-OPTIONS (extensions “tif”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif”)</p>
-</dd>
-</dl>
-<p>SELECT rst_setnodata(path, 0)
-+——————————————————————————————————————+
+</div><div aria-labelledby="tab-33-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-33-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_tif
+    USING gdal
+    OPTIONS (extensions &quot;tif&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;)
+SELECT rst_setnodata(path, 0)
++------------------------------------------------------------------------------------------------------------------+
 | rst_setnodata(path, 0)                                                                                           |
-+——————————————————————————————————————+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-| {index_id: 593308294097928192, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-+——————————————————————————————————————+</p>
++------------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;GTiff&quot; }    |
+| {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;GTiff&quot; }    |
++------------------------------------------------------------------------------------------------------------------+
+</pre></div>
 </div>
+</div></div>
 </div>
 <div class="section" id="rst-skewx">
 <h3>rst_skewx<a class="headerlink" href="#rst-skewx" title="Permalink to this headline"></a></h3>
@@ -2539,7 +2539,7 @@ The result set is automatically exploded.</p>
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-38-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-38-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-38-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-38-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-38-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-38-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;tif&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-38-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-38-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-38-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-38-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-38-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-38-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-38-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-38-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;tif&quot;</span><span class="p">)</span>\
      <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_subdivide</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
@@ -2562,19 +2562,19 @@ The result set is automatically exploded.</p>
 <span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_tif</dt><dd><p>USING gdal
-OPTIONS (extensions “tif”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif”)</p>
-</dd>
-</dl>
-<p>SELECT rst_subdivide(path, 10)
-+——————————————————————————————————————+
+</div><div aria-labelledby="tab-38-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-38-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_tif
+    USING gdal
+    OPTIONS (extensions &quot;tif&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;)
+SELECT rst_subdivide(path, 10)
++------------------------------------------------------------------------------------------------------------------+
 | rst_subdivide(path, 10)                                                                                          |
-+——————————————————————————————————————+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-| {index_id: 593308294097928192, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-+——————————————————————————————————————+</p>
++------------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;GTiff&quot; }    |
+| {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;GTiff&quot; }    |
++------------------------------------------------------------------------------------------------------------------+
+</pre></div>
 </div>
+</div></div>
 </div>
 <div class="section" id="rst-summary">
 <h3>rst_summary<a class="headerlink" href="#rst-summary" title="Permalink to this headline"></a></h3>
@@ -2667,7 +2667,7 @@ The output tiles have same number of bands as the input rasters.</p>
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-40-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-40-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button></div><div aria-labelledby="tab-40-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-40-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;tif&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-40-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-40-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-40-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-40-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-40-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-40-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-40-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-40-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;tif&quot;</span><span class="p">)</span>\
      <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_tessellate</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
@@ -2678,31 +2678,31 @@ The output tiles have same number of bands as the input rasters.</p>
 <span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>val df = spark.read</dt><dd><p>.format(“binaryFile”).option(“extensions”, “tif”)
-.load(“dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif”)</p>
-</dd>
-</dl>
-<p>df.select(rst_tessellate(col(“path”), lit(10)).show()
-+——————————————————————————————————————+
-| rst_tessellate(path, 10)                                                                                         |
-+——————————————————————————————————————+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-| {index_id: 593308294097928192, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-+——————————————————————————————————————+</p>
-<dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_tif</dt><dd><p>USING gdal
-OPTIONS (extensions “tif”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif”)</p>
-</dd>
-</dl>
-<p>SELECT rst_tessellate(path, 10)
-+——————————————————————————————————————+
-| rst_tessellate(path, 10)                                                                                         |
-+——————————————————————————————————————+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-| {index_id: 593308294097928192, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-+——————————————————————————————————————+</p>
+</div><div aria-labelledby="tab-40-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-40-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spark</span><span class="p">.</span><span class="n">read</span>
+<span class="w">    </span><span class="p">.</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;binaryFile&quot;</span><span class="p">).</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;extensions&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tif&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;</span><span class="p">)</span>
+<span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">rst_tessellate</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;path&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">)).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="n">rst_tessellate</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w">                                                                                         </span><span class="o">|</span>
+<span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="n">index_id</span><span class="p">:</span><span class="w"> </span><span class="mi">593308294097928191</span><span class="p">,</span><span class="w"> </span><span class="n">raster</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">00</span><span class="w"> </span><span class="mi">01</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="mi">00</span><span class="p">],</span><span class="w"> </span><span class="n">parentPath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;dbfs:/path_to_file&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">driver</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;GTiff&quot;</span><span class="w"> </span><span class="p">}</span><span class="w">    </span><span class="o">|</span>
+<span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="n">index_id</span><span class="p">:</span><span class="w"> </span><span class="mi">593308294097928192</span><span class="p">,</span><span class="w"> </span><span class="n">raster</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">00</span><span class="w"> </span><span class="mi">01</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="mi">00</span><span class="p">],</span><span class="w"> </span><span class="n">parentPath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;dbfs:/path_to_file&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">driver</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;GTiff&quot;</span><span class="w"> </span><span class="p">}</span><span class="w">    </span><span class="o">|</span>
+<span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
+</pre></div>
 </div>
+</div><div aria-labelledby="tab-40-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-40-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_tif
+    USING gdal
+    OPTIONS (extensions &quot;tif&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;)
+SELECT rst_tessellate(path, 10)
++------------------------------------------------------------------------------------------------------------------+
+| rst_tessellate(path, 10)                                                                                         |
++------------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;GTiff&quot; }    |
+| {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;GTiff&quot; }    |
++------------------------------------------------------------------------------------------------------------------+
+</pre></div>
+</div>
+</div></div>
 </div>
 <div class="section" id="rst-tooverlappingtiles">
 <h3>rst_tooverlappingtiles<a class="headerlink" href="#rst-tooverlappingtiles" title="Permalink to this headline"></a></h3>
@@ -2730,7 +2730,7 @@ The output tiles have same number of bands as the input rasters.</p>
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-41-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-41-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button></div><div aria-labelledby="tab-41-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-41-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;tif&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-41-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-41-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-41-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-41-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-41-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-41-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-41-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-41-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;tif&quot;</span><span class="p">)</span>\
      <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_tooverlappingtiles</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
@@ -2741,31 +2741,31 @@ The output tiles have same number of bands as the input rasters.</p>
 <span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>val df = spark.read</dt><dd><p>.format(“binaryFile”).option(“extensions”, “tif”)
-.load(“dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif</p>
-</dd>
-</dl>
-<p>df.select(rst_tooverlappingtiles(col(“path”), lit(10), lit(10), lit(10)).show()
-+——————————————————————————————————————+
+</div><div aria-labelledby="tab-41-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-41-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span>val df = spark.read
+    .format(&quot;binaryFile&quot;).option(&quot;extensions&quot;, &quot;tif&quot;)
+    .load(&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif
+df.select(rst_tooverlappingtiles(col(&quot;path&quot;), lit(10), lit(10), lit(10)).show()
++------------------------------------------------------------------------------------------------------------------+
 | rst_tooverlappingtiles(path, 10, 10, 10)                                                                         |
-+——————————————————————————————————————+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-| {index_id: 593308294097928192, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-+——————————————————————————————————————+</p>
-<dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_tif</dt><dd><p>USING gdal
-OPTIONS (extensions “tif”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif”)</p>
-</dd>
-</dl>
-<p>SELECT rst_tooverlappingtiles(path, 10, 10, 10)
-+——————————————————————————————————————+
-| rst_tooverlappingtiles(path, 10, 10, 10)                                                                         |
-+——————————————————————————————————————+
-| {index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-| {index_id: 593308294097928192, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “GTiff” }    |
-+——————————————————————————————————————+</p>
++------------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;GTiff&quot; }    |
+| {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;GTiff&quot; }    |
++------------------------------------------------------------------------------------------------------------------+
+</pre></div>
 </div>
+</div><div aria-labelledby="tab-41-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-41-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>CREATE TABLE IF NOT EXISTS TABLE coral_tif
+    USING gdal
+    OPTIONS (extensions &quot;tif&quot;, path &quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;)
+SELECT rst_tooverlappingtiles(path, 10, 10, 10)
++------------------------------------------------------------------------------------------------------------------+
+| rst_tooverlappingtiles(path, 10, 10, 10)                                                                         |
++------------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;GTiff&quot; }    |
+| {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;GTiff&quot; }    |
++------------------------------------------------------------------------------------------------------------------+
+</pre></div>
+</div>
+</div></div>
 </div>
 <div class="section" id="rst-tryopen">
 <h3>rst_tryopen<a class="headerlink" href="#rst-tryopen" title="Permalink to this headline"></a></h3>
@@ -2786,7 +2786,7 @@ OPTIONS (extensions “tif”, path “dbfs:/FileStore/geospatial/mosaic/sample_
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-42-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-42-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button></div><div aria-labelledby="tab-42-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-42-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;tif&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-42-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-42-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-42-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-42-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-42-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-42-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-42-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-42-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;binaryFile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;tif&quot;</span><span class="p">)</span>\
      <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">rst_tryopen</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
@@ -2796,29 +2796,29 @@ OPTIONS (extensions “tif”, path “dbfs:/FileStore/geospatial/mosaic/sample_
 <span class="o">+------------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div><dl class="simple">
-<dt>val df = spark.read</dt><dd><p>.format(“binaryFile”).option(“extensions”, “tif”)
-.load(“dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif</p>
-</dd>
-</dl>
-<p>df.select(rst_tryopen(col(“path”)).show()
-+——————————————————————————————————————+
+</div><div aria-labelledby="tab-42-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-42-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span>val df = spark.read
+    .format(&quot;binaryFile&quot;).option(&quot;extensions&quot;, &quot;tif&quot;)
+    .load(&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif
+df.select(rst_tryopen(col(&quot;path&quot;)).show()
++------------------------------------------------------------------------------------------------------------------+
 | rst_tryopen(path)                                                                                                |
-+——————————————————————————————————————+
++------------------------------------------------------------------------------------------------------------------+
 | true                                                                                                             |
-+——————————————————————————————————————+</p>
-<dl class="simple">
-<dt>CREATE TABLE IF NOT EXISTS TABLE coral_tif</dt><dd><p>USING gdal
-OPTIONS (extensions “tif”, path “dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif”)</p>
-</dd>
-</dl>
-<p>SELECT rst_tryopen(path)
-+——————————————————————————————————————+
-| rst_tryopen(path)                                                                                                |
-+——————————————————————————————————————+
-| true                                                                                                             |
-+——————————————————————————————————————+</p>
++------------------------------------------------------------------------------------------------------------------+
+</pre></div>
 </div>
+</div><div aria-labelledby="tab-42-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-42-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">coral_tif</span>
+<span class="w">    </span><span class="k">USING</span><span class="w"> </span><span class="n">gdal</span>
+<span class="w">    </span><span class="k">OPTIONS</span><span class="w"> </span><span class="p">(</span><span class="n">extensions</span><span class="w"> </span><span class="ss">&quot;tif&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="ss">&quot;dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif&quot;</span><span class="p">)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">rst_tryopen</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="o">+</span><span class="c1">------------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="n">rst_tryopen</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="w">                                                                                                </span><span class="o">|</span>
+<span class="o">+</span><span class="c1">------------------------------------------------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="k">true</span><span class="w">                                                                                                             </span><span class="o">|</span>
+<span class="o">+</span><span class="c1">------------------------------------------------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
 </div>
 <div class="section" id="rst-upperleftx">
 <h3>rst_upperleftx<a class="headerlink" href="#rst-upperleftx" title="Permalink to this headline"></a></h3>
