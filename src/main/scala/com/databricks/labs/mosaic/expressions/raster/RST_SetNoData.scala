@@ -11,6 +11,7 @@ import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.util.ArrayData
 
 /** Returns a raster with the specified no data values. */
 case class RST_SetNoData(
@@ -39,9 +40,11 @@ case class RST_SetNoData(
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         val noDataValues = tile.getRaster.getBands.map(_.noDataValue).mkString(" ")
         val dstNoDataValues = (arg1 match {
-            case doubles: Array[Double] => doubles
             case d: Double              => Array.fill[Double](tile.getRaster.numBands)(d)
-            case _                      => throw new IllegalArgumentException("No data values must be an array of doubles or a double")
+            case i: Int                 => Array.fill[Double](tile.getRaster.numBands)(i.toDouble)
+            case l: Long                => Array.fill[Double](tile.getRaster.numBands)(l.toDouble)
+            case arrayData: ArrayData   => arrayData.array.map(_.toString.toDouble) // Trick to convert SQL decimal to double
+            case _                      => throw new IllegalArgumentException("No data values must be an array of numerical or a numerical value.")
         }).mkString(" ")
         val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(tile.getDriver))
         val result = GDALWarp.executeWarp(
@@ -57,7 +60,7 @@ case class RST_SetNoData(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_SetNoData extends WithExpressionInfo {
 
-    override def name: String = "rst_set_no_data"
+    override def name: String = "rst_setnodata"
 
     override def usage: String =
         """

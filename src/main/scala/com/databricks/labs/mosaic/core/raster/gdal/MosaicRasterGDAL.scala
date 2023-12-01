@@ -473,7 +473,11 @@ case class MosaicRasterGDAL(
             .getOrElse(Map.empty[String, String])
             .values
             .find(_.toUpperCase(Locale.ROOT).endsWith(subsetName.toUpperCase(Locale.ROOT)))
-            .getOrElse(throw new Exception(s"Subdataset $subsetName not found"))
+            .getOrElse(throw new Exception(s"""
+                                              |Subdataset $subsetName not found!
+                                              |Available subdatasets:
+                                              |     ${subdatasets.keys.filterNot(_.startsWith("SUBDATASET_")).mkString(", ")}
+                        """.stripMargin))
         val ds = openRaster(path)
         // Avoid costly IO to compute MEM size here
         // It will be available when the raster is serialized for next operation

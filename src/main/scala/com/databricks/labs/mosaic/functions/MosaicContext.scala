@@ -269,6 +269,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_Merge](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_MetaData](expressionConfig)
+        mosaicRegistry.registerExpression[RST_MapAlgebra](expressionConfig)
         mosaicRegistry.registerExpression[RST_NDVI](expressionConfig)
         mosaicRegistry.registerExpression[RST_NumBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_PixelWidth](expressionConfig)
@@ -650,6 +651,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_frombands(bandsArray: Column): Column = ColumnAdapter(RST_FromBands(bandsArray.expr, expressionConfig))
         def rst_merge(rasterArray: Column): Column = ColumnAdapter(RST_Merge(rasterArray.expr, expressionConfig))
         def rst_metadata(raster: Column): Column = ColumnAdapter(RST_MetaData(raster.expr, expressionConfig))
+        def rst_mapalgebra(rasterArray: Column, jsonSpec: Column): Column =
+            ColumnAdapter(RST_MapAlgebra(rasterArray.expr, jsonSpec.expr, expressionConfig))
         def rst_ndvi(raster: Column, band1: Column, band2: Column): Column =
             ColumnAdapter(RST_NDVI(raster.expr, band1.expr, band2.expr, expressionConfig))
         def rst_ndvi(raster: Column, band1: Int, band2: Int): Column =

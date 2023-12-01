@@ -65,8 +65,6 @@ case class RST_CombineAvgAgg(
 
         if (buffer.isEmpty) {
             null
-        } else if (buffer.size == 1) {
-            buffer.head
         } else {
 
             // Do do move the expression

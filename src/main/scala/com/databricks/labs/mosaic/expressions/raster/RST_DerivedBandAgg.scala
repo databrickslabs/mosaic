@@ -71,7 +71,7 @@ case class RST_DerivedBandAgg(
 
         if (buffer.isEmpty) {
             null
-        } else if (buffer.size == 1) {
+        } else {
 
             // This works for Literals only
             val pythonFunc = pythonFuncExpr.eval(null).asInstanceOf[UTF8String].toString

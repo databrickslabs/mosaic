@@ -28,6 +28,13 @@ object GDALWarp {
         val result = gdal.Warp(outputPath, rasters.map(_.getRaster).toArray, warpOptions)
         // TODO: Figure out multiple parents, should this be an array?
         // Format will always be the same as the first raster
+        if (result == null) {
+            throw new Exception(s"""
+                                   |Warp failed.
+                                   |Command: $command
+                                   |Error: ${gdal.GetLastErrorMsg}
+                                   |""".stripMargin)
+        }
         val size = Files.size(Paths.get(outputPath))
         rasters.head
             .copy(

@@ -47,7 +47,7 @@ case class RST_DerivedBand(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_DerivedBand extends WithExpressionInfo {
 
-    override def name: String = "rst_derived_band"
+    override def name: String = "rst_derivedband"
 
     override def usage: String =
         """

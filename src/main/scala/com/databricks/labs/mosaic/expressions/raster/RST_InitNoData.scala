@@ -53,7 +53,7 @@ case class RST_InitNoData(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_InitNoData extends WithExpressionInfo {
 
-    override def name: String = "rst_init_no_data"
+    override def name: String = "rst_initnodata"
 
     override def usage: String =
         """
