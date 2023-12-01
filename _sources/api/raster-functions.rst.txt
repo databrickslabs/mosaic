@@ -1237,7 +1237,7 @@ rst_rastertogridavg
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -1314,7 +1314,7 @@ rst_rastertogridcount
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -1391,7 +1391,7 @@ rst_rastertogridmax
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -1468,7 +1468,7 @@ rst_rastertogridmedian
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -1545,7 +1545,7 @@ rst_rastertogridmin
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
