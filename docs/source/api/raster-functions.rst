@@ -246,18 +246,18 @@ rst_combineavg
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-         USING gdal
-         OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    WITH grouped as (
-        SELECT collect_list(tile) as tile FROM coral_netcdf
-    )
-    SELECT rst_combineavg(tile) FROM grouped LIMIT 1
-    +----------------------------------------------------------------------------------------------------------------+
-    | rst_combineavg(tile)                                                                                           |
-    +----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-    +----------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+          USING gdal
+          OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     WITH grouped as (
+         SELECT collect_list(tile) as tile FROM coral_netcdf
+     )
+     SELECT rst_combineavg(tile) FROM grouped LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_combineavg(tile)                                                                                           |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
 rst_combineavgagg
 *****************
@@ -305,17 +305,17 @@ rst_combineavgagg
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-         USING gdal
-         OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_combineavgagg(tile)
-    FROM coral_netcdf
-    GROUP BY 1
-    +----------------------------------------------------------------------------------------------------------------+
-    | rst_combineavgagg(tile)                                                                                        |
-    +----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-    +----------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+          USING gdal
+          OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     SELECT rst_combineavgagg(tile)
+     FROM coral_netcdf
+     GROUP BY 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_combineavgagg(tile)                                                                                        |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
 rst_frombands
 **************
@@ -365,18 +365,18 @@ rst_frombands
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    WITH grouped as (
-        SELECT collect_list(tile) as tile FROM coral_netcdf
-    )
-    SELECT rst_frombands(tile) FROM grouped LIMIT 1
-    +----------------------------------------------------------------------------------------------------------------+
-    | rst_frombands(tile)                                                                                            |
-    +----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-    +----------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+         USING gdal
+         OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     WITH grouped as (
+         SELECT collect_list(tile) as tile FROM coral_netcdf
+     )
+     SELECT rst_frombands(tile) FROM grouped LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_frombands(tile)                                                                                            |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
 rst_fromfile
 ************
@@ -425,13 +425,13 @@ rst_fromfile
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-         USING binaryFile
-         OPTIONS (path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_fromfile(path) FROM coral_netcdf LIMIT 1
-    +----------------------------------------------------------------------------------------------------------------+
-    | rst_fromfile(path)                                                                                             |
-    +----------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+          USING binaryFile
+          OPTIONS (path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     SELECT rst_fromfile(path) FROM coral_netcdf LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_fromfile(path)                                                                                             |
+     +----------------------------------------------------------------------------------------------------------------+
 
 rst_georeference
 ****************
@@ -694,15 +694,15 @@ rst_initnodata
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-          USING gdal
-          OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_initnodata(path) FROM coral_netcdf LIMIT 1
-    +----------------------------------------------------------------------------------------------------------------+
-    | rst_initnodata(path)                                                                                        |
-    +----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-    +----------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+           USING gdal
+           OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     SELECT rst_initnodata(path) FROM coral_netcdf LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_initnodata(path)                                                                                        |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
 rst_isempty
 *************
@@ -859,18 +859,18 @@ rst_merge
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    WITH grouped as (
-        SELECT collect_list(tile) as tile FROM coral_netcdf
-    )
-    SELECT rst_merge(tile) FROM grouped LIMIT 1
-    +----------------------------------------------------------------------------------------------------------------+
-    | rst_merge(tile)                                                                                                |
-    +----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-    +----------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+         USING gdal
+         OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     WITH grouped as (
+         SELECT collect_list(tile) as tile FROM coral_netcdf
+     )
+     SELECT rst_merge(tile) FROM grouped LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_merge(tile)                                                                                                |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
 rst_mergeagg
 ************
@@ -924,15 +924,15 @@ rst_mergeagg
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_mergeagg(tile) FROM coral_netcdf LIMIT 1
-    +----------------------------------------------------------------------------------------------------------------+
-    | rst_mergeagg(tile)                                                                                             |
-    +----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-    +----------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+         USING gdal
+         OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     SELECT rst_mergeagg(tile) FROM coral_netcdf LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_mergeagg(tile)                                                                                             |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
 rst_metadata
 *************
@@ -1036,38 +1036,38 @@ rst_ndvi
 .. tabs::
     .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_ndvi("path", 1, 2)).limit(1).display()
-    +----------------------------------------------------------------------------------------------------------------+
-    | rst_ndvi(path, 1, 2)                                                                                           |
-    +----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-    +----------------------------------------------------------------------------------------------------------------+
+     df = spark.read.format("binaryFile").option("extensions", "nc")\
+         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     df.select(mos.rst_ndvi("path", 1, 2)).limit(1).display()
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_ndvi(path, 1, 2)                                                                                           |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_ndvi(col("path"), lit(1), lit(2))).limit(1).show(false)
-    +----------------------------------------------------------------------------------------------------------------+
-    | rst_ndvi(path, 1, 2)                                                                                           |
-    +----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-    +----------------------------------------------------------------------------------------------------------------+
+     val df = spark.read
+         .format("binaryFile").option("extensions", "nc")
+         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     df.select(rst_ndvi(col("path"), lit(1), lit(2))).limit(1).show(false)
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_ndvi(path, 1, 2)                                                                                           |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_ndvi(path, 1, 2) FROM coral_netcdf LIMIT 1
-    +----------------------------------------------------------------------------------------------------------------+
-    | rst_ndvi(path, 1, 2)                                                                                           |
-    +----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-    +----------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+         USING gdal
+         OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     SELECT rst_ndvi(path, 1, 2) FROM coral_netcdf LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_ndvi(path, 1, 2)                                                                                           |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
 rst_numbands
 *************
@@ -1237,7 +1237,7 @@ rst_rastertogridavg
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -1314,7 +1314,7 @@ rst_rastertogridcount
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -1391,7 +1391,7 @@ rst_rastertogridmax
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -1468,7 +1468,7 @@ rst_rastertogridmedian
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -1545,7 +1545,7 @@ rst_rastertogridmin
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
-    :param raster: A resolution of the grid index system.
+    :param resolution: A resolution of the grid index system.
     :type col: Column (IntegerType)
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
@@ -2031,16 +2031,16 @@ rst_setnodata
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_tif
-        USING gdal
-        OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-    SELECT rst_setnodata(path, 0)
-    +------------------------------------------------------------------------------------------------------------------+
-    | rst_setnodata(path, 0)                                                                                           |
-    +------------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    +------------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_tif
+         USING gdal
+         OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
+     SELECT rst_setnodata(path, 0)
+     +------------------------------------------------------------------------------------------------------------------+
+     | rst_setnodata(path, 0)                                                                                           |
+     +------------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     +------------------------------------------------------------------------------------------------------------------+
 
 rst_skewx
 **********************
@@ -2300,16 +2300,16 @@ rst_subdivide
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_tif
-        USING gdal
-        OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-    SELECT rst_subdivide(path, 10)
-    +------------------------------------------------------------------------------------------------------------------+
-    | rst_subdivide(path, 10)                                                                                          |
-    +------------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    +------------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_tif
+         USING gdal
+         OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
+     SELECT rst_subdivide(path, 10)
+     +------------------------------------------------------------------------------------------------------------------+
+     | rst_subdivide(path, 10)                                                                                          |
+     +------------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     +------------------------------------------------------------------------------------------------------------------+
 
 rst_summary
 **********************
@@ -2407,29 +2407,29 @@ rst_tessellate
 
     .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "tif")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-    df.select(rst_tessellate(col("path"), lit(10))).show()
-    +------------------------------------------------------------------------------------------------------------------+
-    | rst_tessellate(path, 10)                                                                                         |
-    +------------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    +------------------------------------------------------------------------------------------------------------------+
+     val df = spark.read
+         .format("binaryFile").option("extensions", "tif")
+         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
+     df.select(rst_tessellate(col("path"), lit(10))).show()
+     +------------------------------------------------------------------------------------------------------------------+
+     | rst_tessellate(path, 10)                                                                                         |
+     +------------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_tif
-        USING gdal
-        OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-    SELECT rst_tessellate(path, 10)
-    +------------------------------------------------------------------------------------------------------------------+
-    | rst_tessellate(path, 10)                                                                                         |
-    +------------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    +------------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_tif
+         USING gdal
+         OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
+     SELECT rst_tessellate(path, 10)
+     +------------------------------------------------------------------------------------------------------------------+
+     | rst_tessellate(path, 10)                                                                                         |
+     +------------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     +------------------------------------------------------------------------------------------------------------------+
 
 rst_tooverlappingtiles
 **********************
@@ -2469,29 +2469,29 @@ rst_tooverlappingtiles
 
     .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "tif")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif
-    df.select(rst_tooverlappingtiles(col("path"), lit(10), lit(10), lit(10))).show()
-    +------------------------------------------------------------------------------------------------------------------+
-    | rst_tooverlappingtiles(path, 10, 10, 10)                                                                         |
-    +------------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    +------------------------------------------------------------------------------------------------------------------+
+     val df = spark.read
+         .format("binaryFile").option("extensions", "tif")
+         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif
+     df.select(rst_tooverlappingtiles(col("path"), lit(10), lit(10), lit(10))).show()
+     +------------------------------------------------------------------------------------------------------------------+
+     | rst_tooverlappingtiles(path, 10, 10, 10)                                                                         |
+     +------------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_tif
-        USING gdal
-        OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-    SELECT rst_tooverlappingtiles(path, 10, 10, 10)
-    +------------------------------------------------------------------------------------------------------------------+
-    | rst_tooverlappingtiles(path, 10, 10, 10)                                                                         |
-    +------------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-    +------------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_tif
+         USING gdal
+         OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
+     SELECT rst_tooverlappingtiles(path, 10, 10, 10)
+     +------------------------------------------------------------------------------------------------------------------+
+     | rst_tooverlappingtiles(path, 10, 10, 10)                                                                         |
+     +------------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     +------------------------------------------------------------------------------------------------------------------+
 
 rst_tryopen
 **********************
@@ -2520,27 +2520,27 @@ rst_tryopen
 
     .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "tif")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-    df.select(rst_tryopen(col("path"))).show()
-    +------------------------------------------------------------------------------------------------------------------+
-    | rst_tryopen(path)                                                                                                |
-    +------------------------------------------------------------------------------------------------------------------+
-    | true                                                                                                             |
-    +------------------------------------------------------------------------------------------------------------------+
+     val df = spark.read
+         .format("binaryFile").option("extensions", "tif")
+         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif
+     df.select(rst_tryopen(col("path"))).show()
+     +------------------------------------------------------------------------------------------------------------------+
+     | rst_tryopen(path)                                                                                                |
+     +------------------------------------------------------------------------------------------------------------------+
+     | true                                                                                                             |
+     +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_tif
-        USING gdal
-        OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-    SELECT rst_tryopen(path)
-    +------------------------------------------------------------------------------------------------------------------+
-    | rst_tryopen(path)                                                                                                |
-    +------------------------------------------------------------------------------------------------------------------+
-    | true                                                                                                             |
-    +------------------------------------------------------------------------------------------------------------------+
+     CREATE TABLE IF NOT EXISTS TABLE coral_tif
+         USING gdal
+         OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
+     SELECT rst_tryopen(path)
+     +------------------------------------------------------------------------------------------------------------------+
+     | rst_tryopen(path)                                                                                                |
+     +------------------------------------------------------------------------------------------------------------------+
+     | true                                                                                                             |
+     +------------------------------------------------------------------------------------------------------------------+
 
 rst_upperleftx
 **********************
