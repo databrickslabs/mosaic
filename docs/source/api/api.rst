@@ -12,4 +12,3 @@ API Documentation
    spatial-indexing
    spatial-predicates
    spatial-aggregations
-   raster-functions

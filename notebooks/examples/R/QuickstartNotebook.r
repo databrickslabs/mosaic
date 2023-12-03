@@ -24,14 +24,18 @@ print(paste0("The raw data is stored in ", raw_path))
 
 # COMMAND ----------
 
-dbutils.fs.ls('dbfs:/databricks/mosaic/sparkrMosaic_0.3.4.tar.gz')
-
+mosaic_lib <- dbutils.fs.ls('dbfs:/databricks/mosaic/sparkrMosaic_0.3.4.tar.gz')
+lib_path <- sapply(mosaic_lib, function(obj) obj$path)
+lib_path <- lapply(lib_path, function(path) gsub('dbfs:/ml', '/dbfs/ml', path))
+lib_path
+                   
 # COMMAND ----------
 
 
 library(tidyverse)
 library(SparkR)
-sparkr_mosaic_package_path = '/dbfs/databricks/mosaic/sparkrMosaic_0.3.4.tar.gz'
+sparkr_mosaic_package_path = '/dbfs/databricks/mosaic/sparkrMosaic_0.3.4.tar.gz' # extract from above cell
+# sparkr_mosaic_package_path = lib_path                   
 install.packages(sparkr_mosaic_package_path, repos=NULL)
 library(sparkrMosaic)
 sparkrMosaic::enableMosaic()

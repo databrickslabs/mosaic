@@ -5,8 +5,16 @@
 
 .. image:: images/mosaic_logo.png
    :alt: mosaic
+<<<<<<< HEAD
+   :align: left
+|
+.. image:: https://badge.fury.io/py/databricks-mosaic.svg
+   :target: https://badge.fury.io/py/databricks-mosaic
+   :alt: PyPI Version
+=======
    :class: mosaic-logo
 
+>>>>>>> databrickslabs-main
 
 .. container:: package_health
 
