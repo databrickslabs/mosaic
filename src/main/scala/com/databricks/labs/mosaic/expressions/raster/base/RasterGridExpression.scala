@@ -55,7 +55,7 @@ trait RasterGridExpression {
       *   band.
       */
     def griddedPixels(
-        raster: => MosaicRasterGDAL,
+        raster: MosaicRasterGDAL,
         indexSystem: IndexSystem,
         resolution: Int
     ): Seq[Map[Long, Seq[Double]]] = {

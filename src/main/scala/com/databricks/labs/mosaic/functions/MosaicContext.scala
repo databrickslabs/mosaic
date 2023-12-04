@@ -21,6 +21,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{LongType, StringType}
 
+import java.nio.file.Files
 import scala.reflect.runtime.universe
 
 //noinspection DuplicatedCode
@@ -257,6 +258,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_BoundingBox](expressionConfig)
         mosaicRegistry.registerExpression[RST_Clip](expressionConfig)
         mosaicRegistry.registerExpression[RST_CombineAvg](expressionConfig)
+        mosaicRegistry.registerExpression[RST_DerivedBand](expressionConfig)
         mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
         mosaicRegistry.registerExpression[RST_GetNoData](expressionConfig)
         mosaicRegistry.registerExpression[RST_GetSubdataset](expressionConfig)
@@ -267,6 +269,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_Merge](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_MetaData](expressionConfig)
+        mosaicRegistry.registerExpression[RST_MapAlgebra](expressionConfig)
         mosaicRegistry.registerExpression[RST_NDVI](expressionConfig)
         mosaicRegistry.registerExpression[RST_NumBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_PixelWidth](expressionConfig)
@@ -336,6 +339,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           FunctionIdentifier("rst_combineavg_agg", database),
           RST_CombineAvgAgg.registryExpressionInfo(database),
           (exprs: Seq[Expression]) => RST_CombineAvgAgg(exprs(0), expressionConfig)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("rst_derivedband_agg", database),
+          RST_DerivedBandAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => RST_DerivedBandAgg(exprs(0), exprs(1), exprs(2), expressionConfig)
         )
 
         /** IndexSystem and GeometryAPI Specific methods */
@@ -628,6 +636,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_boundingbox(raster: Column): Column = ColumnAdapter(RST_BoundingBox(raster.expr, expressionConfig))
         def rst_clip(raster: Column, geometry: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, expressionConfig))
         def rst_combineavg(rasterArray: Column): Column = ColumnAdapter(RST_CombineAvg(rasterArray.expr, expressionConfig))
+        def rst_derivedband(raster: Column, pythonFunc: Column, funcName: Column): Column =
+            ColumnAdapter(RST_DerivedBand(raster.expr, pythonFunc.expr, funcName.expr, expressionConfig))
         def rst_georeference(raster: Column): Column = ColumnAdapter(RST_GeoReference(raster.expr, expressionConfig))
         def rst_getnodata(raster: Column): Column = ColumnAdapter(RST_GetNoData(raster.expr, expressionConfig))
         def rst_getsubdataset(raster: Column, subdatasetName: Column): Column =
@@ -641,6 +651,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_frombands(bandsArray: Column): Column = ColumnAdapter(RST_FromBands(bandsArray.expr, expressionConfig))
         def rst_merge(rasterArray: Column): Column = ColumnAdapter(RST_Merge(rasterArray.expr, expressionConfig))
         def rst_metadata(raster: Column): Column = ColumnAdapter(RST_MetaData(raster.expr, expressionConfig))
+        def rst_mapalgebra(rasterArray: Column, jsonSpec: Column): Column =
+            ColumnAdapter(RST_MapAlgebra(rasterArray.expr, jsonSpec.expr, expressionConfig))
         def rst_ndvi(raster: Column, band1: Column, band2: Column): Column =
             ColumnAdapter(RST_NDVI(raster.expr, band1.expr, band2.expr, expressionConfig))
         def rst_ndvi(raster: Column, band1: Int, band2: Int): Column =
@@ -738,6 +750,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_MergeAgg(raster.expr, expressionConfig).toAggregateExpression(isDistinct = false))
         def rst_combineavg_agg(raster: Column): Column =
             ColumnAdapter(RST_CombineAvgAgg(raster.expr, expressionConfig).toAggregateExpression(isDistinct = false))
+        def rst_derivedband_agg(raster: Column, pythonFunc: Column, funcName: Column): Column =
+            ColumnAdapter(
+              RST_DerivedBandAgg(raster.expr, pythonFunc.expr, funcName.expr, expressionConfig).toAggregateExpression(isDistinct = false)
+            )
 
         /** IndexSystem Specific */
 
@@ -946,6 +962,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 // scalastyle:on line.size.limit
 
 object MosaicContext extends Logging {
+
+    val tmpDir: String = Files.createTempDirectory("mosaic").toAbsolutePath.toString
 
     private var instance: Option[MosaicContext] = None
 

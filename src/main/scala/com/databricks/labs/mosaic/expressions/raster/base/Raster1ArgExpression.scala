@@ -59,7 +59,7 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
       * @return
       *   A result of the expression.
       */
-    def rasterTransform(raster: => MosaicRasterTile, arg1: Any): Any
+    def rasterTransform(raster: MosaicRasterTile, arg1: Any): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads

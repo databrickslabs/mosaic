@@ -9,6 +9,8 @@ import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.gdal
 import org.gdal.gdalconst.gdalconstConstants._
 
+import java.util.UUID
+
 /**
   * GDAL Raster API. It uses [[MosaicRasterGDAL]] as the
   * [[com.databricks.labs.mosaic.core.raster.io.RasterReader]].
@@ -66,8 +68,9 @@ object GDAL {
     def getExtension(driverShortName: String): String = {
         val driver = gdal.GetDriverByName(driverShortName)
         val result = driver.GetMetadataItem("DMD_EXTENSION")
+        val toReturn = if (result == null) FormatLookup.formats(driverShortName) else result
         driver.delete()
-        result
+        toReturn
     }
 
     /**
@@ -84,7 +87,7 @@ object GDAL {
       *   Returns a Raster object.
       */
     def readRaster(
-        inputRaster: => Any,
+        inputRaster: Any,
         parentPath: String,
         shortDriverName: String,
         inputDT: DataType
@@ -117,13 +120,14 @@ object GDAL {
       * @return
       *   Returns the paths of the written rasters.
       */
-    def writeRasters(generatedRasters: => Seq[MosaicRasterGDAL], checkpointPath: String, rasterDT: DataType): Seq[Any] = {
+    def writeRasters(generatedRasters: Seq[MosaicRasterGDAL], checkpointPath: String, rasterDT: DataType): Seq[Any] = {
         generatedRasters.map(raster =>
             if (raster != null) {
                 rasterDT match {
                     case StringType =>
+                        val uuid = UUID.randomUUID().toString
                         val extension = GDAL.getExtension(raster.getDriversShortName)
-                        val writePath = s"$checkpointPath/${raster.uuid}.$extension"
+                        val writePath = s"$checkpointPath/$uuid.$extension"
                         val outPath = raster.writeToPath(writePath)
                         RasterCleaner.dispose(raster)
                         UTF8String.fromString(outPath)
@@ -159,7 +163,7 @@ object GDAL {
       * @return
       *   Returns a Raster object.
       */
-    def raster(content: => Array[Byte], parentPath: String, driverShortName: String): MosaicRasterGDAL =
+    def raster(content: Array[Byte], parentPath: String, driverShortName: String): MosaicRasterGDAL =
         MosaicRasterGDAL.readRaster(content, parentPath, driverShortName)
 
     /**

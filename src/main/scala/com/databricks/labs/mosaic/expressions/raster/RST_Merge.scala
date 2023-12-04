@@ -30,15 +30,10 @@ case class RST_Merge(
       * @return
       *   The merged raster.
       */
-    override def rasterTransform(tiles: => Seq[MosaicRasterTile]): Any = {
+    override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
         val raster = MergeRasters.merge(tiles.map(_.getRaster))
-        new MosaicRasterTile(
-          index,
-          raster,
-          tiles.head.getParentPath,
-          tiles.head.getDriver
-        )
+        tiles.head.copy(raster = raster, index = index)
     }
 
 }

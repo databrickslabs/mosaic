@@ -31,7 +31,7 @@ case class RST_GetNoData(
       * @return
       *   The no data value of the raster.
       */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
         ArrayData.toArrayData(tile.getRaster.getBands.map(_.noDataValue))
     }
 
@@ -40,7 +40,7 @@ case class RST_GetNoData(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_GetNoData extends WithExpressionInfo {
 
-    override def name: String = "rst_get_no_data"
+    override def name: String = "rst_getnodata"
 
     override def usage: String =
         """

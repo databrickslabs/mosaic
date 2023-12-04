@@ -19,9 +19,9 @@ import org.apache.spark.unsafe.types.UTF8String
   * @param driver
   *   Driver used to read the raster.
   */
-class MosaicRasterTile(
+case class MosaicRasterTile(
     index: Either[Long, String],
-    raster: => MosaicRasterGDAL,
+    raster: MosaicRasterGDAL,
     parentPath: String,
     driver: String
 ) {
@@ -55,13 +55,13 @@ class MosaicRasterTile(
         (indexSystem.getCellIdDataType, index) match {
             case (_: LongType, Left(_))       => this
             case (_: StringType, Right(_))    => this
-            case (_: LongType, Right(value))  => new MosaicRasterTile(
+            case (_: LongType, Right(value))  => MosaicRasterTile(
                   index = Left(indexSystem.parse(value)),
                   raster = raster,
                   parentPath = parentPath,
                   driver = driver
                 )
-            case (_: StringType, Left(value)) => new MosaicRasterTile(
+            case (_: StringType, Left(value)) => MosaicRasterTile(
                   index = Right(indexSystem.format(value)),
                   raster = raster,
                   parentPath = parentPath,
@@ -162,12 +162,12 @@ object MosaicRasterTile {
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {
             if (index.isInstanceOf[Long]) {
-                new MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, parentPath, driver)
+                MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, parentPath, driver)
             } else {
-                new MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, parentPath, driver)
+                MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, parentPath, driver)
             }
         } else {
-            new MosaicRasterTile(null, raster, parentPath, driver)
+            MosaicRasterTile(null, raster, parentPath, driver)
         }
 
     }

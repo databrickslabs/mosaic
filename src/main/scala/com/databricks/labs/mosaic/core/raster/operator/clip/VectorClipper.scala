@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.core.raster.operator.clip
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.gdal.gdal.gdal
 import org.gdal.ogr.ogrConstants.OFTInteger
 import org.gdal.ogr.{DataSource, Feature, ogr}
@@ -21,8 +22,7 @@ object VectorClipper {
       *   The shapefile name.
       */
     private def getShapefileName: String = {
-        val uuid = java.util.UUID.randomUUID()
-        val shapeFileName = s"/vsimem/${uuid.toString}.shp"
+        val shapeFileName = PathUtils.createTmpFilePath(".shp")
         shapeFileName
     }
 

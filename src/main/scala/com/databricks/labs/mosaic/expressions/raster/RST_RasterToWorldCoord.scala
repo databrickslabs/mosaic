@@ -27,7 +27,7 @@ case class RST_RasterToWorldCoord(
       * GeoTransform. This ensures the projection of the raster is respected.
       * The output is a WKT point.
       */
-    override def rasterTransform(tile: => MosaicRasterTile, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
         val x = arg1.asInstanceOf[Int]
         val y = arg2.asInstanceOf[Int]
         val gt = tile.getRaster.getRaster.GetGeoTransform()

@@ -16,7 +16,7 @@ case class RST_MemSize(raster: Expression, expressionConfig: MosaicExpressionCon
       with CodegenFallback {
 
     /** Returns the memory size of the raster in bytes. */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = tile.getRaster.getMemSize
+    override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.getMemSize
 
 }
 

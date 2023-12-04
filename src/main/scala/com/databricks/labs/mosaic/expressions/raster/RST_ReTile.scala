@@ -26,7 +26,7 @@ case class RST_ReTile(
       * Returns a set of new rasters with the specified tile size (tileWidth x
       * tileHeight).
       */
-    override def rasterGenerator(tile: => MosaicRasterTile): Seq[MosaicRasterTile] = {
+    override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
         ReTile.reTile(tile, tileWidthValue, tileHeightValue)

@@ -30,7 +30,7 @@ object RasterCleaner {
       * @param ds
       *   The dataset to destroy.
       */
-    def destroy(ds: => Dataset): Unit = {
+    def destroy(ds: Dataset): Unit = {
         if (ds != null) {
             try {
                 ds.FlushCache()
@@ -49,7 +49,7 @@ object RasterCleaner {
       * @param raster
       *   The raster to destroy and clean up.
       */
-    def dispose(raster: => Any): Unit = {
+    def dispose(raster: Any): Unit = {
         raster match {
             case r: MosaicRasterGDAL  =>
                     r.destroy()

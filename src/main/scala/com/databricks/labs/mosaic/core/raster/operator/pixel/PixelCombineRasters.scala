@@ -19,26 +19,24 @@ object PixelCombineRasters {
       * @return
       *   A MosaicRaster object.
       */
-    def combine(rasters: => Seq[MosaicRasterGDAL], pythonFunc: String, pythonFuncName: String): MosaicRasterGDAL = {
-        val rasterUUID = java.util.UUID.randomUUID.toString
+    def combine(rasters: Seq[MosaicRasterGDAL], pythonFunc: String, pythonFuncName: String): MosaicRasterGDAL = {
         val outShortName = rasters.head.getRaster.GetDriver.getShortName
 
-        val vrtPath = PathUtils.createTmpFilePath(rasterUUID, "vrt")
-        val rasterPath = PathUtils.createTmpFilePath(rasterUUID, "tif")
+        val vrtPath = PathUtils.createTmpFilePath("vrt")
+        val rasterPath = PathUtils.createTmpFilePath("tif")
 
         val vrtRaster = GDALBuildVRT.executeVRT(
           vrtPath,
-          isTemp = true,
           rasters,
           command = s"gdalbuildvrt -resolution highest"
         )
+        vrtRaster.destroy()
 
         addPixelFunction(vrtPath, pythonFunc, pythonFuncName)
 
         val result = GDALTranslate.executeTranslate(
           rasterPath,
-          isTemp = true,
-          vrtRaster,
+          vrtRaster.refresh(),
           command = s"gdal_translate -r bilinear -of $outShortName -co COMPRESS=DEFLATE"
         )
 

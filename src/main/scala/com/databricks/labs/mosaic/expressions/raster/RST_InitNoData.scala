@@ -33,25 +33,19 @@ case class RST_InitNoData(
       * @return
       *   The raster with initialized no data values.
       */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
         val noDataValues = tile.getRaster.getBands.map(_.noDataValue).mkString(" ")
         val dstNoDataValues = tile.getRaster.getBands
             .map(_.getBand.getDataType)
             .map(GDAL.getNoDataConstant)
             .mkString(" ")
-        val resultPath = PathUtils.createTmpFilePath(tile.getRaster.uuid.toString, GDAL.getExtension(tile.getDriver))
+        val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(tile.getDriver))
         val result = GDALWarp.executeWarp(
           resultPath,
-          isTemp = true,
           Seq(tile.getRaster),
           command = s"""gdalwarp -of ${tile.getDriver} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
         )
-        new MosaicRasterTile(
-          tile.getIndex,
-          result,
-          tile.getParentPath,
-          tile.getDriver
-        )
+        tile.copy(raster = result)
     }
 
 }
@@ -59,7 +53,7 @@ case class RST_InitNoData(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_InitNoData extends WithExpressionInfo {
 
-    override def name: String = "rst_init_no_data"
+    override def name: String = "rst_initnodata"
 
     override def usage: String =
         """

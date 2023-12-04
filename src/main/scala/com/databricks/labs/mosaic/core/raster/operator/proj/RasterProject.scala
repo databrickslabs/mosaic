@@ -25,10 +25,10 @@ object RasterProject {
       * @return
       *   A projected raster.
       */
-    def project(raster: => MosaicRasterGDAL, destCRS: SpatialReference): MosaicRasterGDAL = {
+    def project(raster: MosaicRasterGDAL, destCRS: SpatialReference): MosaicRasterGDAL = {
         val outShortName = raster.getDriversShortName
 
-        val resultFileName = PathUtils.createTmpFilePath(raster.uuid.toString, GDAL.getExtension(outShortName))
+        val resultFileName = PathUtils.createTmpFilePath(GDAL.getExtension(outShortName))
 
         // Note that Null is the right value here
         val authName = destCRS.GetAuthorityName(null)
@@ -36,7 +36,6 @@ object RasterProject {
 
         val result = GDALWarp.executeWarp(
           resultFileName,
-          isTemp = true,
           Seq(raster),
           command = s"gdalwarp -of $outShortName -t_srs $authName:$authCode -r cubic -overwrite -co COMPRESS=DEFLATE"
         )

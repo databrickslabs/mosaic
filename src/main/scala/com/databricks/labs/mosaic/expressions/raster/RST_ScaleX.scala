@@ -16,7 +16,7 @@ case class RST_ScaleX(raster: Expression, expressionConfig: MosaicExpressionConf
       with CodegenFallback {
 
     /** Returns the scale x of the raster. */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
         tile.getRaster.getRaster.GetGeoTransform()(1)
     }
 

@@ -18,7 +18,7 @@ object CombineAVG {
       * @return
       *   A new raster with average of input rasters.
       */
-    def compute(rasters: => Seq[MosaicRasterGDAL]): MosaicRasterGDAL = {
+    def compute(rasters: Seq[MosaicRasterGDAL]): MosaicRasterGDAL = {
 
         val pythonFunc = """
                            |import numpy as np

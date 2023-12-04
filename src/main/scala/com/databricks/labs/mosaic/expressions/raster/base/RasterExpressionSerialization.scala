@@ -28,7 +28,7 @@ trait RasterExpressionSerialization {
       *   The serialized result of the expression.
       */
     def serialize(
-        data: => Any,
+        data: Any,
         returnsRaster: Boolean,
         outputDataType: DataType,
         expressionConfig: MosaicExpressionConfig
