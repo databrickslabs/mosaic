@@ -20,7 +20,7 @@ runs:
           shell: bash
           run : |
             sudo apt-get update && sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7 
-            pip install databricks-mosaic-gdal==${{ matrix.gdal }}
+            pip install databricks-mosaic-gdal==${{ matrix.gdal }} gdal==${{ matrix.gdal }} numpy==${{ matrix.numpy }}
             sudo tar -xf /opt/hostedtoolcache/Python/${{ matrix.python }}/x64/lib/python3.9/site-packages/databricks-mosaic-gdal/resources/gdal-${{ matrix.gdal }}-filetree.tar.xz -C /
             sudo tar -xhf /opt/hostedtoolcache/Python/${{ matrix.python }}/x64/lib/python3.9/site-packages/databricks-mosaic-gdal/resources/gdal-${{ matrix.gdal }}-symlinks.tar.xz -C /
         - name: Test and build the scala JAR - skip tests is false
