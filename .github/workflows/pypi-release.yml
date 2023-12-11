@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         python: [3.9]
-        spark: [3.2.1]
+        spark: [3.4.0]
     steps:
       - name: checkout code
         uses: actions/checkout@v2
