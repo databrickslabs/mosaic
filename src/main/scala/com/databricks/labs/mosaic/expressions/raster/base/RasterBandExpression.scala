@@ -41,8 +41,6 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       with Serializable
       with RasterExpressionSerialization {
 
-    GDAL.enable()
-
     override def left: Expression = rasterExpr
 
     override def right: Expression = bandExpr
@@ -80,7 +78,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
       */
     // noinspection DuplicatedCode
     override def nullSafeEval(inputRaster: Any, inputBand: Any): Any = {
-        GDAL.enable()
+        GDAL.enable(expressionConfig)
         val tile = MosaicRasterTile.deserialize(inputRaster.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
         val bandIndex = inputBand.asInstanceOf[Int]
 

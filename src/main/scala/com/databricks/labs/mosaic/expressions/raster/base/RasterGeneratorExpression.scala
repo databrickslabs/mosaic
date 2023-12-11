@@ -38,8 +38,6 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
-    GDAL.enable()
-
     override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
@@ -73,14 +71,14 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
     def rasterGenerator(raster: MosaicRasterTile): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        GDAL.enable()
-        val tile = MosaicRasterTile.deserialize(rasterExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType)
-        val generatedRasters = rasterGenerator(tile)
+        GDAL.enable(expressionConfig)
+        val generatedRasters =
+            rasterGenerator(MosaicRasterTile.deserialize(rasterExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType))
 
         // Writing rasters disposes of the written raster
         val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize())
         generatedRasters.foreach(gr => RasterCleaner.dispose(gr))
-        RasterCleaner.dispose(tile)
+        GDAL.dropDrivers()
 
         rows.map(row => InternalRow.fromSeq(Seq(row)))
     }

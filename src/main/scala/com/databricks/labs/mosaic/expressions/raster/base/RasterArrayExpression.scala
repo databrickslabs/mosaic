@@ -35,8 +35,6 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       with Serializable
       with RasterExpressionSerialization {
 
-    GDAL.enable()
-
     override def child: Expression = rastersExpr
 
     /** Output Data Type */
@@ -66,12 +64,13 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       *   The result of the expression.
       */
     override def nullSafeEval(input: Any): Any = {
-        GDAL.enable()
-        val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
-        val result = rasterTransform(tiles)
-        val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
-        tiles.foreach(t => RasterCleaner.dispose(t))
-        serialized
+        GDAL.enable(expressionConfig)
+        serialize(
+          rasterTransform(RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)),
+          returnsRaster,
+          dataType,
+          expressionConfig
+        )
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 1, expressionConfig)

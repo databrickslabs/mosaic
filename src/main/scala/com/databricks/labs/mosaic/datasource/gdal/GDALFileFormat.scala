@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import com.google.common.io.{ByteStreams, Closeables}
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.hadoop.mapreduce.Job
@@ -35,7 +36,7 @@ class GDALFileFormat extends BinaryFileFormat {
       *   An instance of [[StructType]].
       */
     override def inferSchema(sparkSession: SparkSession, options: Map[String, String], files: Seq[FileStatus]): Option[StructType] = {
-        GDAL.enable()
+        GDAL.enable(sparkSession)
 
         val reader = ReadStrategy.getReader(options)
         val schema = super
@@ -116,27 +117,25 @@ class GDALFileFormat extends BinaryFileFormat {
         options: Map[String, String],
         hadoopConf: org.apache.hadoop.conf.Configuration
     ): PartitionedFile => Iterator[org.apache.spark.sql.catalyst.InternalRow] = {
-        GDAL.enable()
+        GDAL.enable(sparkSession)
 
         val indexSystem = IndexSystemFactory.getIndexSystem(sparkSession)
+        val expressionConfig = MosaicExpressionConfig(sparkSession)
 
         val supportedExtensions = options.getOrElse("extensions", "*").split(";").map(_.trim.toLowerCase(Locale.ROOT))
 
         val broadcastedHadoopConf = sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
         val filterFuncs = filters.flatMap(createFilterFunction)
-        val maxLength = sparkSession.conf.get("spark.sql.sources.binaryFile.maxLength", Int.MaxValue.toString).toInt
 
         // Identify the reader to use for the file format.
         // GDAL supports multiple reading strategies.
         val reader = ReadStrategy.getReader(options)
 
         file: PartitionedFile => {
-            GDAL.enable()
+            GDAL.enable(expressionConfig)
             val path = new Path(new URI(file.filePath))
             val fs = path.getFileSystem(broadcastedHadoopConf.value.value)
             val status = fs.getFileStatus(path)
-
-            if (status.getLen > maxLength) throw CantReadBytesException(maxLength, status)
 
             if (supportedExtensions.contains("*") || supportedExtensions.exists(status.getPath.getName.toLowerCase(Locale.ROOT).endsWith)) {
                 if (filterFuncs.forall(_.apply(status)) && isAllowedExtension(status, options)) {

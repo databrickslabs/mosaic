@@ -40,19 +40,21 @@ case class RST_SetNoData(
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         val noDataValues = tile.getRaster.getBands.map(_.noDataValue).mkString(" ")
         val dstNoDataValues = (arg1 match {
-            case d: Double              => Array.fill[Double](tile.getRaster.numBands)(d)
-            case i: Int                 => Array.fill[Double](tile.getRaster.numBands)(i.toDouble)
-            case l: Long                => Array.fill[Double](tile.getRaster.numBands)(l.toDouble)
-            case arrayData: ArrayData   => arrayData.array.map(_.toString.toDouble) // Trick to convert SQL decimal to double
-            case _                      => throw new IllegalArgumentException("No data values must be an array of numerical or a numerical value.")
+            case d: Double            => Array.fill[Double](tile.getRaster.numBands)(d)
+            case i: Int               => Array.fill[Double](tile.getRaster.numBands)(i.toDouble)
+            case l: Long              => Array.fill[Double](tile.getRaster.numBands)(l.toDouble)
+            case arrayData: ArrayData => arrayData.array.map(_.toString.toDouble) // Trick to convert SQL decimal to double
+            case _ => throw new IllegalArgumentException("No data values must be an array of numerical or a numerical value.")
         }).mkString(" ")
         val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(tile.getDriver))
-        val result = GDALWarp.executeWarp(
-          resultPath,
-          Seq(tile.getRaster),
-          command = s"""gdalwarp -of ${tile.getDriver} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
+        val cmd = s"""gdalwarp -of ${tile.getDriver} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
+        tile.copy(
+          raster = GDALWarp.executeWarp(
+            resultPath,
+            Seq(tile.getRaster),
+            command = cmd
+          )
         )
-        tile.copy(raster = result)
     }
 
 }

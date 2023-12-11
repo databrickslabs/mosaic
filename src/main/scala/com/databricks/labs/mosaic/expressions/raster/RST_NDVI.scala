@@ -29,7 +29,7 @@ case class RST_NDVI(
 
     /**
       * Computes NDVI index.
-      * @param raster
+      * @param tile
       *   The raster to be used.
       * @param arg1
       *   The red band index.
@@ -41,8 +41,7 @@ case class RST_NDVI(
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
         val redInd = arg1.asInstanceOf[Int]
         val nirInd = arg2.asInstanceOf[Int]
-        val result = NDVI.compute(tile.getRaster, redInd, nirInd)
-        tile.copy(raster = result)
+        tile.copy(raster = NDVI.compute(tile.getRaster, redInd, nirInd))
     }
 
 }

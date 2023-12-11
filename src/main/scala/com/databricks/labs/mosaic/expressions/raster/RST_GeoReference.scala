@@ -17,8 +17,7 @@ case class RST_GeoReference(raster: Expression, expressionConfig: MosaicExpressi
 
     /** Returns the georeference of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster
-        val geoTransform = raster.getRaster.GetGeoTransform()
+        val geoTransform = tile.getRaster.getRaster.GetGeoTransform()
         buildMapDouble(
           Map(
             "upperLeftX" -> geoTransform(0),

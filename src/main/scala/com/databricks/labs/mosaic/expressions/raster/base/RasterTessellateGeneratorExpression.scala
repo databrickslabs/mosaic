@@ -40,8 +40,6 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
-    GDAL.enable()
-
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
     val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
@@ -71,23 +69,25 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
     def rasterGenerator(raster: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        GDAL.enable()
-        val tile = MosaicRasterTile
-            .deserialize(
-              rasterExpr.eval(input).asInstanceOf[InternalRow],
-              indexSystem.getCellIdDataType
-            )
+        GDAL.enable(expressionConfig)
+
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
-        val generatedChips = rasterGenerator(tile, inResolution)
+        val generatedChips = rasterGenerator(
+          MosaicRasterTile
+              .deserialize(
+                rasterExpr.eval(input).asInstanceOf[InternalRow],
+                indexSystem.getCellIdDataType
+              ),
+          inResolution
+        )
             .map(chip => chip.formatCellId(indexSystem))
 
         val rows = generatedChips
             .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize())))
 
-        RasterCleaner.dispose(tile)
         generatedChips.foreach(chip => RasterCleaner.dispose(chip))
         generatedChips.foreach(chip => RasterCleaner.dispose(chip.getRaster))
-
+        GDAL.dropDrivers()
         rows.iterator
     }
 

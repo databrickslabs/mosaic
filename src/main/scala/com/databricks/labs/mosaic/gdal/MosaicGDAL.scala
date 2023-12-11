@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.gdal
 
-import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
@@ -42,7 +42,7 @@ object MosaicGDAL extends Logging {
     }
 
     /** Configures the GDAL environment. */
-    def configureGDAL(): Unit = {
+    def configureGDAL(mosaicConfig: MosaicExpressionConfig): Unit = {
         val CPL_TMPDIR = MosaicContext.tmpDir
         val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir
         gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
@@ -51,6 +51,10 @@ object MosaicGDAL extends Logging {
         gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", GDAL_PAM_PROXY_DIR)
         gdal.SetConfigOption("GDAL_PAM_ENABLED", "NO")
         gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "NO")
+        gdal.SetConfigOption("GDAL_CACHEMAX", "64")
+        gdal.SetConfigOption("CPL_LOG", s"$CPL_TMPDIR/gdal.log")
+        gdal.SetConfigOption("CPL_DEBUG", "ON")
+        mosaicConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
     }
 
     /** Enables the GDAL environment. */
@@ -59,7 +63,8 @@ object MosaicGDAL extends Logging {
             Try {
                 isEnabled = true
                 loadSharedObjects()
-                configureGDAL()
+                val expressionConfig = MosaicExpressionConfig(spark)
+                configureGDAL(expressionConfig)
                 gdal.AllRegister()
                 spark.conf.set(GDAL_ENABLED, "true")
             } match {

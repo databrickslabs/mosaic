@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
@@ -18,14 +17,13 @@ case class RST_PixelWidth(raster: Expression, expressionConfig: MosaicExpression
 
     /** Returns the pixel width of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster
-        val scaleX = raster.getRaster.GetGeoTransform()(1)
-        val skewY = raster.getRaster.GetGeoTransform()(4)
+        val gt = tile.getRaster.getGeoTransform
+        val scaleX = gt(1)
+        val skewY = gt(4)
         // when there is no skew width is scaleX, but we cant assume 0-only skew
         // skew is not to be confused with rotation
         // TODO check if this is correct
         val result = math.sqrt(scaleX * scaleX + skewY * skewY)
-        RasterCleaner.dispose(raster)
         result
     }
 
