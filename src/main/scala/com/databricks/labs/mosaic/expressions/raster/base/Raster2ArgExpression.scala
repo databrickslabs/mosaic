@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
@@ -66,7 +65,7 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
       * @return
       *   A result of the expression.
       */
-    def rasterTransform(raster: => MosaicRasterGDAL, arg1: Any, arg2: Any): Any
+    def rasterTransform(raster: MosaicRasterTile, arg1: Any, arg2: Any): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -87,9 +86,9 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
     override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
         GDAL.enable()
         val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
-        val raster = tile.getRaster
-        val result = rasterTransform(raster, arg1, arg2)
-        val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
+        val result = rasterTransform(tile, arg1, arg2)
+        val serialized = serialize(result, returnsRaster, outputType, expressionConfig)
+        // passed by name makes things re-evaluated
         RasterCleaner.dispose(tile)
         serialized
     }

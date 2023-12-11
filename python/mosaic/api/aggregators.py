@@ -16,6 +16,7 @@ __all__ = [
     "grid_cell_intersection_agg",
     "rst_merge_agg",
     "rst_combineavg_agg",
+    "rst_derivedband_agg",
     "st_intersection_agg",
     "st_intersects_agg",
 ]
@@ -48,9 +49,7 @@ def st_intersection_aggregate(
     )
 
 
-def st_intersection_agg(
-        leftIndex: ColumnOrName, rightIndex: ColumnOrName
-) -> Column:
+def st_intersection_agg(leftIndex: ColumnOrName, rightIndex: ColumnOrName) -> Column:
     """
     Computes the intersection of all `leftIndex` : `rightIndex` pairs
     and unions these to produce a single geometry.
@@ -100,9 +99,7 @@ def st_intersects_aggregate(
     )
 
 
-def st_intersects_agg(
-        leftIndex: ColumnOrName, rightIndex: ColumnOrName
-) -> Column:
+def st_intersects_agg(leftIndex: ColumnOrName, rightIndex: ColumnOrName) -> Column:
     """
     Tests if any `leftIndex` : `rightIndex` pairs intersect.
 
@@ -212,4 +209,24 @@ def rst_combineavg_agg(raster: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_combineavg_agg", pyspark_to_java_column(raster)
+    )
+
+
+def rst_derivedband_agg(raster: ColumnOrName, pythonFunc: ColumnOrName, funcName: ColumnOrName) -> Column:
+    """
+    Returns the raster representing the aggregation of rasters using provided python function.
+
+    Parameters
+    ----------
+    raster: Column
+    pythonFunc: Column
+    funcName: Column
+
+    Returns
+    -------
+    Column
+        The resulting raster.
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_derivedband_agg", pyspark_to_java_column(raster), pyspark_to_java_column(pythonFunc), pyspark_to_java_column(funcName)
     )

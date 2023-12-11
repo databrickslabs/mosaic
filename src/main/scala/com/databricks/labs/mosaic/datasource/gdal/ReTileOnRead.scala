@@ -8,10 +8,13 @@ import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
+
+import java.nio.file.{Files, Paths}
 
 /** An object defining the retiling read strategy for the GDAL file format. */
 object ReTileOnRead extends ReadStrategy {
@@ -81,7 +84,8 @@ object ReTileOnRead extends ReadStrategy {
         val uuid = getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
 
-        val tiles = localSubdivide(inPath, sizeInMB)
+        val tmpPath = PathUtils.copyToTmp(inPath)
+        val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
 
         val rows = tiles.map(tile => {
             val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
@@ -104,6 +108,8 @@ object ReTileOnRead extends ReadStrategy {
             row
         })
 
+        Files.deleteIfExists(Paths.get(tmpPath))
+
         rows.iterator
     }
 
@@ -117,9 +123,10 @@ object ReTileOnRead extends ReadStrategy {
       * @return
       *   A tuple of the raster and the tiles.
       */
-    def localSubdivide(inPath: String, sizeInMB: Int): Seq[MosaicRasterTile] = {
-        val raster = MosaicRasterGDAL.readRaster(inPath, inPath)
-        val inTile = new MosaicRasterTile(null, raster, inPath, raster.getDriversShortName)
+    def localSubdivide(inPath: String, parentPath: String, sizeInMB: Int): Seq[MosaicRasterTile] = {
+        val cleanPath = PathUtils.getCleanPath(inPath)
+        val raster = MosaicRasterGDAL.readRaster(cleanPath, parentPath)
+        val inTile = new MosaicRasterTile(null, raster, parentPath, raster.getDriversShortName)
         val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)
         RasterCleaner.dispose(raster)
         RasterCleaner.dispose(inTile)

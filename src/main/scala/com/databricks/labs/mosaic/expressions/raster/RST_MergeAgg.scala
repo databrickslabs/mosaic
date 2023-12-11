@@ -79,7 +79,7 @@ case class RST_MergeAgg(
             val parentPath = tiles.head.getParentPath
             val driver = tiles.head.getDriver
 
-            val result = new MosaicRasterTile(idx, merged, parentPath, driver)
+            val result = MosaicRasterTile(idx, merged, parentPath, driver)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
                 .serialize(BinaryType, expressionConfig.getRasterCheckpoint)
 

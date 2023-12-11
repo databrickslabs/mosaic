@@ -56,7 +56,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       * @return
       *   Sequence of (cellId, measure) of each band of the raster.
       */
-    override def rasterTransform(tile: => MosaicRasterTile, arg1: Any): Any = {
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         GDAL.enable()
         val resolution = arg1.asInstanceOf[Int]
         val transformed = griddedPixels(tile.getRaster, indexSystem, resolution)

@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.operator.merge.MergeBands
+import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterArrayExpression
@@ -8,7 +9,6 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
-import org.apache.spark.sql.types.BinaryType
 
 /** The expression for stacking and resampling input bands. */
 case class RST_FromBands(
@@ -16,7 +16,7 @@ case class RST_FromBands(
     expressionConfig: MosaicExpressionConfig
 ) extends RasterArrayExpression[RST_FromBands](
       bandsExpr,
-      BinaryType,
+    RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
@@ -30,7 +30,10 @@ case class RST_FromBands(
       * @return
       *   The stacked and resampled raster.
       */
-    override def rasterTransform(rasters: => Seq[MosaicRasterTile]): Any = MergeBands.merge(rasters.map(_.getRaster), "bilinear")
+    override def rasterTransform(rasters: Seq[MosaicRasterTile]): Any = {
+        val raster = MergeBands.merge(rasters.map(_.getRaster), "bilinear")
+        rasters.head.copy(raster = raster)
+    }
 
 }
 

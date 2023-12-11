@@ -21,8 +21,8 @@ GDAL_RESOURCE_DIR=$(find $DATABRICKS_ROOT_VIRTUALENV_ENV -name "databricks-mosai
 
 # -- untar files to root
 # - from databricks-mosaic-gdal install dir
-tar -xf $GDAL_RESOURCE_DIR/resources/gdal-3.4.3-filetree.tar.xz -C /
+tar -xf $GDAL_RESOURCE_DIR/resources/gdal-3.4.3-filetree.tar.xz --skip-old-files -C /
 
 # -- untar symlinks to root
 # - from databricks-mosaic-gdal install dir
-tar -xhf $GDAL_RESOURCE_DIR/resources/gdal-3.4.3-symlinks.tar.xz -C /
+tar -xhf $GDAL_RESOURCE_DIR/resources/gdal-3.4.3-symlinks.tar.xz --skip-old-files -C /

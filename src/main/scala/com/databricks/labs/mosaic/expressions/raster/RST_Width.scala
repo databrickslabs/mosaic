@@ -16,7 +16,7 @@ case class RST_Width(raster: Expression, expressionConfig: MosaicExpressionConfi
       with CodegenFallback {
 
     /** Returns the width of the raster. */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = tile.getRaster.xSize
+    override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.xSize
 
 }
 

@@ -366,8 +366,8 @@ object OGRFileFormat extends Serializable {
       * @return
       *   the data source
       */
-    def getDataSource(driverName: String, path: String, useZipPath: Boolean): org.gdal.ogr.DataSource = {
-        val cleanPath = PathUtils.getCleanPath(path, useZipPath)
+    def getDataSource(driverName: String, path: String): org.gdal.ogr.DataSource = {
+        val cleanPath = PathUtils.getCleanPath(path)
         // 0 is for no update driver
         if (driverName.nonEmpty) {
             ogr.GetDriverByName(driverName).Open(cleanPath, 0)
@@ -398,10 +398,9 @@ object OGRFileFormat extends Serializable {
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val layerName = options.getOrElse("layerName", "")
         val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
-        val useZipPath = options.getOrElse("vsizip", "false").toBoolean
         val asWKB = options.getOrElse("asWKB", "false").toBoolean
 
-        val dataset = getDataSource(driverName, path, useZipPath)
+        val dataset = getDataSource(driverName, path)
         val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
         val layer = dataset.GetLayer(resolvedLayerName)
         layer.ResetReading()
@@ -454,10 +453,9 @@ object OGRFileFormat extends Serializable {
 
             val layerN = options.getOrElse("layerNumber", "0").toInt
             val layerName = options.getOrElse("layerName", "")
-            val useZipPath = options.getOrElse("vsizip", "false").toBoolean
             val asWKB = options.getOrElse("asWKB", "false").toBoolean
             val path = file.filePath
-            val dataset = getDataSource(driverName, path.toString(), useZipPath)
+            val dataset = getDataSource(driverName, path.toString())
             val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
             val layer = dataset.GetLayerByName(resolvedLayerName)
             layer.ResetReading()

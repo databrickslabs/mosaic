@@ -70,7 +70,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       * @return
       *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: => MosaicRasterTile): Seq[MosaicRasterTile]
+    def rasterGenerator(raster: MosaicRasterTile): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable()

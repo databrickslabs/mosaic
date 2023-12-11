@@ -13,29 +13,30 @@ __all__ = [
     "rst_boundingbox",
     "rst_clip",
     "rst_combineavg",
-    "rst_fromfile",
+    "rst_derivedband",
     "rst_frombands",
+    "rst_fromfile",
     "rst_georeference",
-    "ret_getnodata",
+    "rst_getnodata",
     "rst_getsubdataset",
     "rst_height",
-    "rst_isempty",
     "rst_initnodata",
+    "rst_isempty",
     "rst_memsize",
-    "rst_metadata",
     "rst_merge",
-    "rst_numbands",
+    "rst_metadata",
     "rst_ndvi",
+    "rst_numbands",
     "rst_pixelheight",
     "rst_pixelwidth",
     "rst_rastertogridavg",
     "rst_rastertogridcount",
     "rst_rastertogridmax",
-    "rst_rastertogridmin",
     "rst_rastertogridmedian",
-    "rst_rastertoworldcoord",
+    "rst_rastertogridmin",
     "rst_rastertoworldcoordx",
     "rst_rastertoworldcoordy",
+    "rst_rastertoworldcoord",
     "rst_retile",
     "rst_rotation",
     "rst_scalex",
@@ -45,17 +46,17 @@ __all__ = [
     "rst_skewy",
     "rst_srid",
     "rst_subdatasets",
-    "rst_summary",
     "rst_subdivide",
+    "rst_summary",
     "rst_tessellate",
     "rst_to_overlapping_tiles",
     "rst_tryopen",
     "rst_upperleftx",
     "rst_upperlefty",
     "rst_width",
-    "rst_worldtorastercoord",
     "rst_worldtorastercoordx",
     "rst_worldtorastercoordy",
+    "rst_worldtorastercoord",
 ]
 
 
@@ -145,6 +146,34 @@ def rst_combineavg(rasters: ColumnOrName) -> Column:
     )
 
 
+def rst_derivedband(raster: ColumnOrName, pythonFunc: ColumnOrName, funcName: ColumnOrName) -> Column:
+    """
+    Creates a new band by applying the given python function to the input rasters.
+    The result is a raster tile.
+
+    Parameters
+    ----------
+    raster : Column (StringType)
+        Path to the raster file.
+    pythonFunc : Column (StringType)
+        The python function to apply to the bands.
+    funcName : Column (StringType)
+        The name of the function.
+
+    Returns
+    -------
+    Column (StringType)
+        The path to the new raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_derivedband",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(pythonFunc),
+        pyspark_to_java_column(funcName),
+    )
+
+
 def rst_georeference(raster: ColumnOrName) -> Column:
     """
     Returns GeoTransform of the raster as a GT array of doubles.
@@ -172,7 +201,7 @@ def rst_georeference(raster: ColumnOrName) -> Column:
     )
 
 
-def ret_getnodata(raster: ColumnOrName) -> Column:
+def rst_getnodata(raster: ColumnOrName) -> Column:
     """
     Returns the nodata value of the band.
 
@@ -190,7 +219,7 @@ def ret_getnodata(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "ret_getnodata", pyspark_to_java_column(raster)
+        "rst_getnodata", pyspark_to_java_column(raster)
     )
 
 
@@ -253,8 +282,7 @@ def rst_initnodata(raster: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_initnodata",
-        pyspark_to_java_column(raster)
+        "rst_initnodata", pyspark_to_java_column(raster)
     )
 
 
@@ -897,13 +925,16 @@ def rst_fromfile(raster: ColumnOrName, sizeInMB: ColumnOrName) -> Column:
     """
 
     return config.mosaic_context.invoke_function(
-        "rst_fromfile",
-        pyspark_to_java_column(raster),
-        pyspark_to_java_column(sizeInMB)
+        "rst_fromfile", pyspark_to_java_column(raster), pyspark_to_java_column(sizeInMB)
     )
 
 
-def rst_to_overlapping_tiles(raster: ColumnOrName, width: ColumnOrName, height: ColumnOrName, overlap: ColumnOrName) -> Column:
+def rst_to_overlapping_tiles(
+    raster: ColumnOrName,
+    width: ColumnOrName,
+    height: ColumnOrName,
+    overlap: ColumnOrName,
+) -> Column:
     """
     Tiles the raster into tiles of the given size.
     :param raster:
@@ -916,7 +947,7 @@ def rst_to_overlapping_tiles(raster: ColumnOrName, width: ColumnOrName, height: 
         pyspark_to_java_column(raster),
         pyspark_to_java_column(width),
         pyspark_to_java_column(height),
-        pyspark_to_java_column(overlap)
+        pyspark_to_java_column(overlap),
     )
 
 
@@ -1048,7 +1079,10 @@ def rst_worldtorastercoord(
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_worldtorastercoord", pyspark_to_java_column(raster)
+        "rst_worldtorastercoord",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(x),
+        pyspark_to_java_column(y),
     )
 
 
@@ -1074,7 +1108,10 @@ def rst_worldtorastercoordx(
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_worldtorastercoordx", pyspark_to_java_column(raster)
+        "rst_worldtorastercoordx",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(x),
+        pyspark_to_java_column(y),
     )
 
 
@@ -1100,5 +1137,8 @@ def rst_worldtorastercoordy(
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_worldtorastercoordy", pyspark_to_java_column(raster)
+        "rst_worldtorastercoordy",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(x),
+        pyspark_to_java_column(y),
     )

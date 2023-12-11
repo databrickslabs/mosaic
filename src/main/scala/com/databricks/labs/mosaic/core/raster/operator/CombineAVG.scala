@@ -18,21 +18,19 @@ object CombineAVG {
       * @return
       *   A new raster with average of input rasters.
       */
-    def compute(rasters: => Seq[MosaicRasterGDAL]): MosaicRasterGDAL = {
+    def compute(rasters: Seq[MosaicRasterGDAL]): MosaicRasterGDAL = {
+
         val pythonFunc = """
                            |import numpy as np
                            |import sys
                            |
-                           |def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize,raster_ysize, buf_radius, gt, **kwargs):
-                           |    div = np.zeros(in_ar[0].shape)
-                           |    for i in range(len(in_ar)):
-                           |        div += (in_ar[i] != 0)
-                           |    div[div == 0] = 1
-                           |
-                           |    y = np.sum(in_ar, axis = 0, dtype = 'float64')
-                           |    y = y / div
-                           |
-                           |    np.clip(y,0, sys.float_info.max, out = out_ar)
+                           |def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize, raster_ysize, buf_radius, gt, **kwargs):
+                           |    stacked_array = np.array(in_ar)
+                           |    pixel_sum = np.sum(stacked_array, axis=0)
+                           |    div = np.sum(stacked_array > 0, axis=0)
+                           |    div = np.where(div==0, 1, div)
+                           |    np.divide(pixel_sum, div, out=out_ar, casting='unsafe')
+                           |    np.clip(out_ar, stacked_array.min(), stacked_array.max(), out=out_ar)
                            |""".stripMargin
         PixelCombineRasters.combine(rasters, pythonFunc, "average")
     }

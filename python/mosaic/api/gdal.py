@@ -25,14 +25,11 @@ def setup_gdal(
     -------
 
     """
-    sc = spark.sparkContext
-    mosaicContextClass = getattr(
-        sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
+    mosaicGDALObject = getattr(
+        spark.sparkContext._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
     )
-    mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
     mosaicGDALObject.prepareEnvironment(spark._jsparkSession, init_script_path)
     print("GDAL setup complete.\n")
-    print(f"Shared objects (*.so) stored in: {shared_objects_path}.\n")
     print(f"Init script stored in: {init_script_path}.\n")
     print(
         "Please restart the cluster with the generated init script to complete the setup.\n"

@@ -28,7 +28,7 @@ case class RST_BoundingBox(
       * @return
       *   The bounding box of the raster as a WKB polygon.
       */
-    override def rasterTransform(tile: => MosaicRasterTile): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
         val raster = tile.getRaster
         val gt = raster.getRaster.GetGeoTransform()
         val (originX, originY) = GDAL.toWorldCoord(gt, 0, 0)

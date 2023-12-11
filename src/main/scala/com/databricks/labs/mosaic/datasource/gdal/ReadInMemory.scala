@@ -6,6 +6,7 @@ import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow

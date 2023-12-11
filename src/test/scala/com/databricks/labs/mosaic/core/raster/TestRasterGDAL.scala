@@ -46,7 +46,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         noException should be thrownBy testRaster.spatialRef
         an[Exception] should be thrownBy testRaster.getBand(-1)
         an[Exception] should be thrownBy testRaster.getBand(Int.MaxValue)
-        testRaster.cleanUp()
+
+        testRaster.getRaster.delete()
     }
 
     test("Read raster metadata from a GRIdded Binary file.") {
@@ -62,7 +63,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.proj4String shouldBe "+proj=longlat +R=6371229 +no_defs"
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-0.375, -0.375, 10.125, 10.125)
-        testRaster.cleanUp()
+
+        testRaster.getRaster.delete()
     }
 
     test("Read raster metadata from a NetCDF file.") {
@@ -86,16 +88,16 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-180.00000610436345, -89.99999847369712, 180.00000610436345, 89.99999847369712)
 
-        testRaster.cleanUp()
-        superRaster.cleanUp()
+        testRaster.getRaster.delete()
+        superRaster.getRaster.delete()
     }
 
     test("Raster pixel and extent sizes are correct.") {
         assume(System.getProperty("os.name") == "Linux")
 
         val testRaster = MosaicRasterGDAL.readRaster(
-          filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
-          filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
+            filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
+            filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
         )
 
         testRaster.pixelXSize - 463.312716527 < 0.0000001 shouldBe true
@@ -110,7 +112,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.xMin - -8895604.157333 < 0.0000001 shouldBe true
         testRaster.yMin - 2223901.039333 < 0.0000001 shouldBe true
 
-        testRaster.cleanUp()
+        testRaster.getRaster.delete()
     }
 
 }

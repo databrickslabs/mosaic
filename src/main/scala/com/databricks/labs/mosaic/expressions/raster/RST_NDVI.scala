@@ -1,14 +1,14 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.NDVI
+import com.databricks.labs.mosaic.core.types.RasterTileType
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
-import org.apache.spark.sql.types.BinaryType
 
 /** The expression for computing NDVI index. */
 case class RST_NDVI(
@@ -20,7 +20,7 @@ case class RST_NDVI(
       rastersExpr,
       redIndex,
       nirIndex,
-      BinaryType,
+    RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
@@ -38,10 +38,11 @@ case class RST_NDVI(
       * @return
       *   The raster contains NDVI index.
       */
-    override def rasterTransform(raster: => MosaicRasterGDAL, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
         val redInd = arg1.asInstanceOf[Int]
         val nirInd = arg2.asInstanceOf[Int]
-        NDVI.compute(raster, redInd, nirInd)
+        val result = NDVI.compute(tile.getRaster, redInd, nirInd)
+        tile.copy(raster = result)
     }
 
 }

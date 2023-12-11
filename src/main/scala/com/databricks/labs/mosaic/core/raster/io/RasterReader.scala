@@ -42,7 +42,7 @@ trait RasterReader extends Logging {
       * @return
       *   A MosaicRaster object.
       */
-    def readRaster(contentBytes: => Array[Byte], parentPath: String, driverShortName: String): MosaicRasterGDAL
+    def readRaster(contentBytes: Array[Byte], parentPath: String, driverShortName: String): MosaicRasterGDAL
 
     /**
       * Reads a raster band from a file system path. Reads a subdataset band if
