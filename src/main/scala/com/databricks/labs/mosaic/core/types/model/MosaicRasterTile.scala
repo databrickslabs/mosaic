@@ -26,6 +26,8 @@ case class MosaicRasterTile(
     driver: String
 ) {
 
+    def getScaleX: Double = raster.getGeoTransform(1)
+
     def getIndex: Either[Long, String] = index
 
     def getParentPath: String = parentPath

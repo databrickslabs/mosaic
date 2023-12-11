@@ -41,8 +41,6 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
       with Serializable
       with RasterExpressionSerialization {
 
-    GDAL.enable()
-
     override def first: Expression = rasterExpr
 
     override def second: Expression = arg1Expr
@@ -82,15 +80,16 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    //noinspection DuplicatedCode
+    // noinspection DuplicatedCode
     override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
-        GDAL.enable()
-        val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
-        val result = rasterTransform(tile, arg1, arg2)
-        val serialized = serialize(result, returnsRaster, outputType, expressionConfig)
-        // passed by name makes things re-evaluated
-        RasterCleaner.dispose(tile)
-        serialized
+        GDAL.enable(expressionConfig)
+        val row = input.asInstanceOf[InternalRow]
+        serialize(
+          rasterTransform(MosaicRasterTile.deserialize(row, expressionConfig.getCellIdType), arg1, arg2),
+          returnsRaster,
+          outputType,
+          expressionConfig
+        )
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 3, expressionConfig)

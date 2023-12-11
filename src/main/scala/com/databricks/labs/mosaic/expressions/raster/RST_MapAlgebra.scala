@@ -42,11 +42,10 @@ case class RST_MapAlgebra(
         val extension = GDAL.getExtension(tiles.head.getDriver)
         val resultPath = PathUtils.createTmpFilePath(extension)
         val command = parseSpec(jsonSpec, resultPath, tiles)
-        val result = GDALCalc.executeCalc(command, resultPath)
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
         MosaicRasterTile(
           index,
-          result,
+          GDALCalc.executeCalc(command, resultPath),
           resultPath,
           tiles.head.getDriver
         )
