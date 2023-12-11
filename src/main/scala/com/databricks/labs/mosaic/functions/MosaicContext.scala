@@ -998,16 +998,16 @@ object MosaicContext extends Logging {
 
         val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt
         if (
-          (dbrMajor < 13 && mosaicVersion > "0.3.12") ||
-          (dbrMajor > 12 && mosaicVersion <= "0.3.12")
+          (dbrMajor < 13 && mosaicVersion >= "0.4.0") ||
+          (dbrMajor > 12 && mosaicVersion < "0.4.0")
         ) {
             logWarning("DEPRECATION WARNING: Mosaic v0.3.12 is the last version to support Databricks Runtime 12.x and below.")
-            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.12.")
+            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.13.")
             logWarning(
-              "DEPRECATION WARNING: Please upgrade your cluster to Databricks Runtime 13.x or above for Mosaic versions above 0.3.12."
+              "DEPRECATION WARNING: Please upgrade your cluster to Databricks Runtime 13.x or above for Mosaic versions above 0.3.13."
             )
-            println("DEPRECATION WARNING: Mosaic v0.3.12 is the last version to support Databricks Runtime 12.x and below.")
-            println("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.12.")
+            println("DEPRECATION WARNING: Mosaic v0.3.13 is the last version to support Databricks Runtime 12.x and below.")
+            println("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.13.")
             println("DEPRECATION WARNING: Please upgrade your cluster to Databricks Runtime 13.x or above for Mosaic 0.4.x versions.")
         }
 
