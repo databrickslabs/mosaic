@@ -965,6 +965,8 @@ object MosaicContext extends Logging {
 
     val tmpDir: String = Files.createTempDirectory("mosaic").toAbsolutePath.toString
 
+    val mosaicVersion: String = "0.3.12"
+
     private var instance: Option[MosaicContext] = None
 
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {
@@ -993,6 +995,21 @@ object MosaicContext extends Logging {
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = spark.conf.getOption("spark.databricks.photon.enabled").getOrElse("false").toBoolean
         val isTest = spark.conf.getOption("spark.databricks.clusterUsageTags.clusterType").isEmpty
+
+        val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt
+        if (
+          (dbrMajor < 13 && mosaicVersion > "0.3.12") ||
+          (dbrMajor > 12 && mosaicVersion <= "0.3.12")
+        ) {
+            logWarning("DEPRECATION WARNING: Mosaic v0.3.12 is the last version to support Databricks Runtime 12.x and below.")
+            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.12.")
+            logWarning(
+              "DEPRECATION WARNING: Please upgrade your cluster to Databricks Runtime 13.x or above for Mosaic versions above 0.3.12."
+            )
+            println("DEPRECATION WARNING: Mosaic v0.3.12 is the last version to support Databricks Runtime 12.x and below.")
+            println("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.12.")
+            println("DEPRECATION WARNING: Please upgrade your cluster to Databricks Runtime 13.x or above for Mosaic 0.4.x versions.")
+        }
 
         if (!isML && !isPhoton && !isTest) {
             // Print out the warnings both to the log and to the console
