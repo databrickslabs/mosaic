@@ -9,14 +9,6 @@ import scala.util._
 /** GDAL implementation of the MosaicRasterBand trait. */
 case class MosaicRasterBandGDAL(band: Band, id: Int) {
 
-    def nonEmpty: Boolean = {
-        if (xSize == 0 || ySize == 0) false
-        else {
-            val minMax = computeMinMax
-            minMax.head != 0 || minMax.last != 0
-        }
-    }
-
     def getBand: Band = band
 
     /**
