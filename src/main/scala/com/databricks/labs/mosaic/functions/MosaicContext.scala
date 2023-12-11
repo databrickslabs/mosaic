@@ -991,7 +991,7 @@ object MosaicContext extends Logging {
 
     // noinspection ScalaStyle,ScalaWeakerAccess
     def checkDBR(spark: SparkSession): Boolean = {
-        val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "")
+        val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "0")
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = spark.conf.getOption("spark.databricks.photon.enabled").getOrElse("false").toBoolean
         val isTest = spark.conf.getOption("spark.databricks.clusterUsageTags.clusterType").isEmpty
