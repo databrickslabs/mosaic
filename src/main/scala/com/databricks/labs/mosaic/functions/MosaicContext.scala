@@ -1001,14 +1001,19 @@ object MosaicContext extends Logging {
           (dbrMajor < 13 && mosaicVersion >= "0.4.0") ||
           (dbrMajor > 12 && mosaicVersion < "0.4.0")
         ) {
-            logWarning("DEPRECATION WARNING: Mosaic v0.3.12 is the last version to support Databricks Runtime 12.x and below.")
-            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.13.")
-            logWarning(
-              "DEPRECATION WARNING: Please upgrade your cluster to Databricks Runtime 13.x or above for Mosaic versions above 0.3.13."
+            logError("DEPRECATION ERROR: Mosaic v0.3.12 is the last version to support Databricks Runtime 12.x and below.")
+            logError("DEPRECATION ERROR: Mosaic will stop working on this cluster after v0.3.13.")
+            logError(
+              "DEPRECATION ERROR: Please upgrade your cluster to Databricks Runtime 13.x or above for Mosaic versions above 0.3.13."
             )
-            println("DEPRECATION WARNING: Mosaic v0.3.13 is the last version to support Databricks Runtime 12.x and below.")
-            println("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.13.")
-            println("DEPRECATION WARNING: Please upgrade your cluster to Databricks Runtime 13.x or above for Mosaic 0.4.x versions.")
+            logError("DEPRECATION ERROR: Please specify `%pip install 'databrick-mosaic<0.4,>=0.3' for DBR < 13")
+            logError("DEPRECATION ERROR: Please specify `%pip install 'databrick-mosaic>=0.4' for DBR >= 13")
+            println("DEPRECATION ERROR: Mosaic v0.3.13 is the last version to support Databricks Runtime 12.x and below.")
+            println("DEPRECATION ERROR: Mosaic will stop working on this cluster after v0.3.13.")
+            println("DEPRECATION ERROR: Please upgrade your cluster to Databricks Runtime 13.x or above for Mosaic 0.4.x versions.")
+            println("DEPRECATION ERROR: Please specify `%pip install 'databrick-mosaic<0.4,>=0.3' for DBR < 13")
+            println("DEPRECATION ERROR: Please specify `%pip install 'databrick-mosaic>=0.4' for DBR >= 13")
+            throw new Exception("Mosaic is not supported on the selected Databricks Runtime")
         }
 
         if (!isML && !isPhoton && !isTest) {
