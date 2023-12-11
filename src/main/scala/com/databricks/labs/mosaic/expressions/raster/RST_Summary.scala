@@ -1,27 +1,28 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.gdal.gdal.gdal.GDALInfo
 import org.gdal.gdal.InfoOptions
+import org.gdal.gdal.gdal.GDALInfo
 
 import java.util.{Vector => JVector}
 
 /** Returns the summary info the raster. */
-case class RST_Summary(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Summary](path, StringType, expressionConfig: MosaicExpressionConfig)
+case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_Summary](raster, StringType, returnsRaster = false, expressionConfig: MosaicExpressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /** Returns the summary info the raster. */
-    override def rasterTransform(raster: MosaicRaster): Any = {
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        val raster = tile.getRaster
         val vector = new JVector[String]()
         // For other flags check the way gdalinfo.py script is called, InfoOptions expects a collection of same flags.
         // https://gdal.org/programs/gdalinfo.html
@@ -43,7 +44,7 @@ object RST_Summary extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        {
           |             "description":"byte.tif",
           |             "driverShortName":"GTiff",

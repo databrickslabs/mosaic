@@ -243,4 +243,9 @@ class TestBNGIndexSystem extends AnyFunSuite {
         an[Exception] should be thrownBy BNGIndexSystem.polyfill(null, 0, None)
     }
 
+    test("Issue 354: KRing should work near the edge of the grid") {
+        val kring = BNGIndexSystem.kRing("TM99", 1)
+        kring should contain theSameElementsAs Seq("TM99", "TM88", "TM98", "TN08", "TN09", "TH00", "TG90", "TG80", "TM89")
+    }
+
 }

@@ -1,5 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
+import java.nio.file.Files
+
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
@@ -139,6 +141,31 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy mc.functions.point_index_geom(lit(""), 5)
         noException should be thrownBy mc.functions.point_index_lonlat(lit(1), lit(1), lit(5))
         noException should be thrownBy mc.functions.point_index_lonlat(lit(1), lit(1), 5)
+    }
+
+    def issue_383(mosaicContext: MosaicContext): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        val mc = mosaicContext
+        mc.register(spark)
+        import mc.functions._
+
+        val resolution = 5
+        val name = "issue_383"
+        val boroughs: DataFrame = getBoroughs(mc)
+
+        val df = boroughs
+            .withColumn("geom", st_geomfromwkt(col("wkt")))
+
+        val dbDir = Files.createTempDirectory(name)
+        spark.sql(s"DROP DATABASE IF EXISTS ${name} CASCADE")
+        spark.sql(s"CREATE DATABASE IF NOT EXISTS ${name} LOCATION '${dbDir}'")
+        df.write.saveAsTable(s"${name}.${name}")
+
+        val df2 = spark
+            .sql(s"SELECT * FROM ${name}.${name}")
+            .select(grid_pointascellid(col("geom"), lit(resolution)))
+
+        df.collect().length shouldEqual df2.collect().length
     }
 
 }

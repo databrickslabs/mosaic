@@ -1,23 +1,23 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /** Returns the rotation angle of the raster. */
-case class RST_Rotation(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Rotation](path, DoubleType, expressionConfig)
+case class RST_Rotation(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_Rotation](raster, DoubleType, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /** Returns the rotation angle of the raster. */
-    override def rasterTransform(raster: MosaicRaster): Any = {
-        val gt = raster.getRaster.GetGeoTransform()
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        val gt = tile.getRaster.getRaster.GetGeoTransform()
         // arctan of y_skew and x_scale
         math.atan(gt(4) / gt(1))
     }
@@ -37,7 +37,7 @@ object RST_Rotation extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        11.2
           |  """.stripMargin
 

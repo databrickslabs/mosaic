@@ -26,12 +26,14 @@ case class MosaicChip(isCore: Boolean, index: Either[Long, String], geom: Mosaic
     def isEmpty: Boolean = !isCore & Option(geom).forall(_.isEmpty)
 
     /**
-     * Formats the index ID as the data type supplied by the index system.
-     *
-     * @param indexSystem Index system to use for formatting.
-     *
-     * @return MosaicChip with formatted index ID.
-     */
+      * Formats the index ID as the data type supplied by the index system.
+      *
+      * @param indexSystem
+      *   Index system to use for formatting.
+      *
+      * @return
+      *   MosaicChip with formatted index ID.
+      */
     def formatCellId(indexSystem: IndexSystem): MosaicChip = {
         (indexSystem.getCellIdDataType, index) match {
             case (_: LongType, Left(value))    => this
@@ -42,15 +44,17 @@ case class MosaicChip(isCore: Boolean, index: Either[Long, String], geom: Mosaic
         }
     }
 
-    def cellIdAsLong(indexSystem: IndexSystem): Long = index match {
-        case Left(value) => value
-        case _           => indexSystem.parse(index.right.get)
-    }
+    def cellIdAsLong(indexSystem: IndexSystem): Long =
+        index match {
+            case Left(value) => value
+            case _           => indexSystem.parse(index.right.get)
+        }
 
-    def cellIdAsStr(indexSystem: IndexSystem): String = index match {
-        case Right(value) => value
-        case _            => indexSystem.format(index.left.get)
-    }
+    def cellIdAsStr(indexSystem: IndexSystem): String =
+        index match {
+            case Right(value) => value
+            case _            => indexSystem.format(index.left.get)
+        }
 
     /**
       * Serialise to spark internal representation.
@@ -70,5 +74,10 @@ case class MosaicChip(isCore: Boolean, index: Either[Long, String], geom: Mosaic
       *   An instance of [[Array]] of [[Byte]] representing WKB.
       */
     private def encodeGeom: Array[Byte] = Option(geom).map(_.toWKB).orNull
+
+    def indexAsLong(indexSystem: IndexSystem): Long = {
+        if (index.isLeft) index.left.get
+        else indexSystem.formatCellId(index.right.get, LongType).asInstanceOf[Long]
+    }
 
 }

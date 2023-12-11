@@ -1,3 +1,37 @@
+## v0.3.12
+- Make JTS default Geometry Provider
+- Add raster tile functions.
+- Expand the support for raster manipulation.
+- Add abstractions for running distributed gdal_translate, gdalwarp, gdalcalc, etc.
+- Add RST_BoundingBox, RST_Clip, RST_CombineAvg, RST_CombineAvgAgg, RST_FromBands, RST_FromFile, RST_GetNoData,
+  RST_InitNoData, RST_Merge, RST_MergeAgg, RST_NDVI, RST_ReTile, RST_SetNoData, RST_Subdivide
+- Add RST_Tessellate that generates H3 tiles from rasters.
+- Add RST_ToOverlappingTiles that generates tiles with overlapping areas from rasters.
+- Add GDAL generic format reader.
+
+## v0.3.11
+- Update the CONTRIBUTING.md to follow the standard process.
+- Fix for issue 383: grid_pointascellid fails with a Java type error when run on an already instantiated point.
+- Bump maven-assembly-plugin from 3.5.0 to 3.6.0.
+- Fix the cluster side init script generation.
+- Fixed photon check for DBR warnings.
+- Bump maven-surefire-plugin from 3.0.0 to 3.1.0.
+- Fix the bug described in issue 360: incomplete coverage from grid_geometrykring and grid_tessellate.
+- Add default value for script location path to init script.
+
+## v0.3.10
+- Fixed k-ring logic for BNG grid close to the edge of the grid
+- Fixed deprecated st_centroid2D expression
+- Documentation improvements
+- Fix handling null geometry fields for OGRFileFormat reader
+- Added warning for future DBR environment support
+- Added support for GeometryCollection
+- Fix intersection operations with ESRI geometry APIs
+- Fixed custom grid issues for grids not multiple of the root size resolution
+- Fixed python binding for rst_georeference
+- Fixed ESRI create polygon with correct path order with ESRI APIs
+- Fixed automatic SQL registration with GDAL
+
 ## v0.3.9
 - Fixed k-ring interpolation on raster data read
 

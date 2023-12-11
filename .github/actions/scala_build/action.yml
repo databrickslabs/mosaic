@@ -12,6 +12,19 @@ runs:
           with:
             java-version: '8'
             distribution: 'zulu'
+        - name: Configure python interpreter
+          uses: actions/setup-python@v2
+          with:
+            python-version: ${{ matrix.python }}
+        - name: Add packaged GDAL dependencies
+          shell: bash
+          run : |
+            sudo apt-get update && sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7 
+            pip install databricks-mosaic-gdal==${{ matrix.gdal }}
+            sudo tar -xf /opt/hostedtoolcache/Python/${{ matrix.python }}/x64/lib/python3.9/site-packages/databricks-mosaic-gdal/resources/gdal-${{ matrix.gdal }}-filetree.tar.xz -C /
+            sudo tar -xhf /opt/hostedtoolcache/Python/${{ matrix.python }}/x64/lib/python3.9/site-packages/databricks-mosaic-gdal/resources/gdal-${{ matrix.gdal }}-symlinks.tar.xz -C /
+            pip install numpy==${{ matrix.numpy }}
+            pip install gdal==${{ matrix.gdal }}
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
@@ -19,8 +32,9 @@ runs:
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash
-          run: sudo mvn -q clean install -DskipTests
+          run: sudo mvn -q clean install -DskipTests -Dscoverage.skip
         - name: Publish test coverage
+          if: inputs.skip_tests == 'false'
           uses: codecov/codecov-action@v1
         - name: Copy Scala artifacts to GH Actions run
           shell: bash

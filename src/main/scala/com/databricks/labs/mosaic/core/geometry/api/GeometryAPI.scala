@@ -1,10 +1,12 @@
 package com.databricks.labs.mosaic.core.geometry.api
 
+import com.databricks.labs.mosaic.MOSAIC_GEOMETRY_API
 import com.databricks.labs.mosaic.codegen.format._
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point._
 import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum}
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -14,6 +16,16 @@ import java.util.Locale
 abstract class GeometryAPI(
     reader: GeometryReader
 ) extends Serializable {
+
+    def createBbox(xMin: Double, yMin: Double, xMax: Double, yMax: Double): MosaicGeometry = {
+        val p1 = fromGeoCoord(Coordinates(xMin, yMin))
+        val p2 = fromGeoCoord(Coordinates(xMin, yMax))
+        val p3 = fromGeoCoord(Coordinates(xMax, yMax))
+        val p4 = fromGeoCoord(Coordinates(xMax, yMin))
+        val p5 = fromGeoCoord(Coordinates(xMin, yMin))
+        geometry(Seq(p1, p2, p3, p4, p5), GeometryTypeEnum.POLYGON)
+    }
+
 
     def name: String
 
@@ -109,5 +121,10 @@ object GeometryAPI extends Serializable {
             case "ESRI" => ESRI
             case _      => throw new Error(s"Unsupported API name: $name.")
         }
+
+    def apply(sparkSession: SparkSession): GeometryAPI = {
+        val apiName = sparkSession.conf.get(MOSAIC_GEOMETRY_API, "JTS")
+        apply(apiName)
+    }
 
 }

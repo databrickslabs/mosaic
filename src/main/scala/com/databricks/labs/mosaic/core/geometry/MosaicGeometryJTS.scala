@@ -15,6 +15,7 @@ import org.locationtech.jts.geom.{Geometry, GeometryCollection, GeometryFactory}
 import org.locationtech.jts.geom.util.AffineTransformation
 import org.locationtech.jts.io._
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
+import org.locationtech.jts.operation.buffer.{BufferOp, BufferParameters}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
 
 import java.util
@@ -59,6 +60,20 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def buffer(distance: Double): MosaicGeometryJTS = {
         val buffered = geom.buffer(distance)
+        buffered.setSRID(geom.getSRID)
+        MosaicGeometryJTS(buffered)
+    }
+
+    override def bufferCapStyle(distance: Double, capStyle: String): MosaicGeometryJTS = {
+        val capStyleConst = capStyle match {
+            case "round"  => BufferParameters.CAP_ROUND
+            case "flat"   => BufferParameters.CAP_FLAT
+            case "square" => BufferParameters.CAP_SQUARE
+            case _        => BufferParameters.CAP_ROUND
+        }
+        val gBuf = new BufferOp(geom)
+        gBuf.setEndCapStyle(capStyleConst)
+        val buffered = gBuf.getResultGeometry(distance)
         buffered.setSRID(geom.getSRID)
         MosaicGeometryJTS(buffered)
     }
@@ -194,7 +209,7 @@ object MosaicGeometryJTS extends GeometryReader {
 
     override def fromWKT(wkt: String): MosaicGeometryJTS = MosaicGeometryJTS(new WKTReader().read(wkt))
 
-    //noinspection DuplicatedCode
+    // noinspection DuplicatedCode
     def compactCollection(geometries: Seq[Geometry], srid: Int): Geometry = {
         def appendGeometries(geometries: util.ArrayList[Geometry], toAppend: Seq[Geometry]): Unit = {
             if (toAppend.length == 1 && !toAppend.head.isEmpty) {

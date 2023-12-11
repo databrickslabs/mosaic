@@ -37,7 +37,7 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     - `spark.databricks.labs.mosaic.jar.location`
        Explicitly specify the path to the Mosaic JAR.
        (Optional and not required at all in a standard Databricks environment).
-    - `spark.databricks.labs.mosaic.geometry.api`: 'ESRI' (default) or 'JTS'
+    - `spark.databricks.labs.mosaic.geometry.api`: 'JTS' (default) or 'ESRI'
        Explicitly specify the underlying geometry library to use for spatial operations. (Optional)
     - `spark.databricks.labs.mosaic.index.system`: 'H3' (default)
        Explicitly specify the index system to use for optimized spatial joins. (Optional)
@@ -56,10 +56,15 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
 
     isSupported = config.mosaic_context._context.checkDBR(spark._jsparkSession)
     if not isSupported:
-        print("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime. \n")
-        print("DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.4.0+. \n")
-        print("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits). \n")
-
+        print(
+            "DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime. \n"
+        )
+        print(
+            "DEPRECATION WARNING: Mosaic will stop working on this cluster from version v0.4.0+. \n"
+        )
+        print(
+            "Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits). \n"
+        )
 
     # Not yet added to the pyspark API
     with warnings.catch_warnings():

@@ -22,7 +22,7 @@ copyright = '2022, Databricks Inc'
 author = 'Stuart Lynn, Milos Colic, Erni Durdevic, Robert Whiffin, Timo Roest'
 
 # The full version, including alpha/beta/rc tags
-release = "v0.3.9"
+release = "v0.3.12"
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,7 +31,6 @@ release = "v0.3.9"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx_material",
     "nbsphinx",
     "sphinx_tabs.tabs",
     "sphinx.ext.githubpages",
@@ -59,7 +58,7 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_material'
+html_theme = 'renku'
 
 # Material theme options (see theme.conf for more information)
 html_theme_options = {

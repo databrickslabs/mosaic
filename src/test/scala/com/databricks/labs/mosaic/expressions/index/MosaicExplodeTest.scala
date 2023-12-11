@@ -15,5 +15,7 @@ class MosaicExplodeTest extends MosaicSpatialQueryTest with SharedSparkSession w
     testAllNoCodegen("MosaicExplode Line decompose first point on boundary") { lineDecomposeFirstPointOnBoundary }
     testAllNoCodegen("MosaicExplode column function signatures") { columnFunctionSignatures }
     testAllNoCodegen("MosaicExplode auxiliary methods") { auxiliaryMethods }
+    testAllNoCodegen("MosaicExplode Line cases identified by issue 360") { issue360 }
+    testAllNoCodegen("MosaicExplode Should properly handle polygons that are a union of cells") { issue382 }
 
 }

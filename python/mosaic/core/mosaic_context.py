@@ -7,7 +7,6 @@ from pyspark.sql.column import Column as MosaicColumn
 
 
 class MosaicContext:
-
     _context = None
     _geometry_api: str
     _index_system: str
@@ -23,15 +22,19 @@ class MosaicContext:
         )
         self._mosaicPackageRef = getattr(sc._jvm.com.databricks.labs.mosaic, "package$")
         self._mosaicPackageObject = getattr(self._mosaicPackageRef, "MODULE$")
-        self._mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
-        self._indexSystemFactory = getattr(sc._jvm.com.databricks.labs.mosaic.core.index, "IndexSystemFactory")
+        self._mosaicGDALObject = getattr(
+            sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
+        )
+        self._indexSystemFactory = getattr(
+            sc._jvm.com.databricks.labs.mosaic.core.index, "IndexSystemFactory"
+        )
 
         try:
             self._geometry_api = spark.conf.get(
                 "spark.databricks.labs.mosaic.geometry.api"
             )
         except Py4JJavaError as e:
-            self._geometry_api = "ESRI"
+            self._geometry_api = "JTS"
 
         try:
             self._index_system = spark.conf.get(
@@ -41,19 +44,14 @@ class MosaicContext:
             self._index_system = "H3"
 
         try:
-            self._raster_api = spark.conf.get(
-                "spark.databricks.labs.mosaic.raster.api"
-            )
+            self._raster_api = spark.conf.get("spark.databricks.labs.mosaic.raster.api")
         except Py4JJavaError as e:
             self._raster_api = "GDAL"
 
         IndexSystem = self._indexSystemFactory.getIndexSystem(self._index_system)
         GeometryAPIClass = getattr(self._mosaicPackageObject, self._geometry_api)
-        RasterAPIClass   = getattr(self._mosaicPackageObject, self._raster_api)
 
-        self._context = self._mosaicContextClass.build(
-            IndexSystem, GeometryAPIClass(), RasterAPIClass()
-        )
+        self._context = self._mosaicContextClass.build(IndexSystem, GeometryAPIClass())
 
     def invoke_function(self, name: str, *args: Any) -> MosaicColumn:
         func = getattr(self._context.functions(), name)

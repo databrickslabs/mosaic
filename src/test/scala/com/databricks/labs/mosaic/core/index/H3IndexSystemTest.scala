@@ -1,15 +1,20 @@
 package com.databricks.labs.mosaic.core.index
 
-import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
+import com.databricks.labs.mosaic.core.geometry.api.{ESRI, GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.geometry.{MosaicGeometryESRI, MosaicGeometryJTS}
+import com.databricks.labs.mosaic.core.index.H3IndexSystem.indexToGeometry
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING, MULTIPOINT, MULTIPOLYGON, POINT, POLYGON}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
+import com.uber.h3core.H3Core
 import org.apache.spark.sql.types.{BooleanType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
+import org.scalactic.Tolerance
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
-class H3IndexSystemTest extends AnyFunSuite {
+import scala.jdk.CollectionConverters.collectionAsScalaIterableConverter
+
+class H3IndexSystemTest extends AnyFunSuite with Tolerance {
 
     test("H3IndexSystem auxiliary methods") {
         val indexRes = H3IndexSystem.pointToIndex(10, 10, 10)
@@ -129,4 +134,32 @@ class H3IndexSystemTest extends AnyFunSuite {
         H3IndexSystem.coerceChipGeometry(geomsWKTs4.map(MosaicGeometryESRI.fromWKT)).isEmpty shouldBe true
     }
 
+    test("indexToGeometry should return valid and correct geometries") {
+        val h3: H3Core = H3Core.newInstance()
+
+        val esriGeomAPI: GeometryAPI = GeometryAPI("ESRI")
+        val jtsGeomAPI: GeometryAPI = GeometryAPI("JTS")
+        val apis = Seq(esriGeomAPI, jtsGeomAPI)
+
+        val baseCells = h3.getRes0Indexes.asScala.toList
+        val lvl1Cells = baseCells.flatMap(h3.h3ToChildren(_, 1).asScala)
+        val testCells = Seq(baseCells, lvl1Cells)
+
+        val baseCellsStr = baseCells.map(h3.h3ToString(_))
+        val lvl1CellsStr = lvl1Cells.map(h3.h3ToString(_))
+        val testCellsStr = Seq(baseCellsStr, lvl1CellsStr)
+
+        apis.foreach(api => {
+            testCells.foreach(cells => {
+                val geoms = cells.map(indexToGeometry(_, api))
+                geoms.foreach(geom => geom.isValid shouldBe true)
+                geoms.foldLeft(0.0)((acc, geom) => acc + geom.getArea) shouldBe ((180.0 * 360.0) +- 0.0001)
+            })
+            testCellsStr.foreach(cells => {
+                val geoms = cells.map(indexToGeometry(_, api))
+                geoms.foreach(geom => geom.isValid shouldBe true)
+                geoms.foldLeft(0.0)((acc, geom) => acc + geom.getArea) shouldBe ((180.0 * 360.0) +- 0.0001)
+            })
+        })
+    }
 }

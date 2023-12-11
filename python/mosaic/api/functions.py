@@ -48,13 +48,7 @@ __all__ = [
     "st_zmax",
     "st_x",
     "st_y",
-
-    "rst_bandmetadata",
-    "rst_metadata",
-    "rst_subdatasets",
-
     "flatten_polygons",
-
     "grid_boundaryaswkb",
     "grid_boundary",
     "grid_longlatascellid",
@@ -73,14 +67,12 @@ __all__ = [
     "grid_geometrykloop",
     "grid_geometrykringexplode",
     "grid_geometrykloopexplode",
-
     "point_index_geom",
     "point_index_lonlat",
     "index_geometry",
     "polyfill",
     "mosaic_explode",
     "mosaicfill",
-
 ]
 
 
@@ -183,7 +175,9 @@ def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
     )
 
 
-def st_bufferloop(geom: ColumnOrName, inner_radius: ColumnOrName, outer_radius: ColumnOrName) -> Column:
+def st_bufferloop(
+    geom: ColumnOrName, inner_radius: ColumnOrName, outer_radius: ColumnOrName
+) -> Column:
     """
     Compute the buffered geometry loop (hollow ring) based on geom and provided radius-es.
     The result geometry is a polygon/multipolygon with a hole in the center.
@@ -209,7 +203,7 @@ def st_bufferloop(geom: ColumnOrName, inner_radius: ColumnOrName, outer_radius: 
         "st_bufferloop",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(inner_radius),
-        pyspark_to_java_column(outer_radius)
+        pyspark_to_java_column(outer_radius),
     )
 
 
@@ -309,7 +303,7 @@ def st_transform(geom: ColumnOrName, srid: ColumnOrName) -> Column:
 
 
 def st_hasvalidcoordinates(
-        geom: ColumnOrName, crs: ColumnOrName, which: ColumnOrName
+    geom: ColumnOrName, crs: ColumnOrName, which: ColumnOrName
 ) -> Column:
     """
     Checks if all points in geometry are valid with respect to crs bounds.
@@ -487,7 +481,7 @@ def st_isvalid(geom: ColumnOrName) -> Column:
     Notes
     -----
     Validity assertions will be dependent on the chosen geometry API.
-    The assertions used in the ESRI geometry API (the default) follow the definitions in
+    The assertions used in the ESRI geometry API (JTS is the default) follow the definitions in
     the “Simple feature access - Part 1” document (OGC 06-103r4) for each geometry type.
 
     """
@@ -516,7 +510,10 @@ def st_distance(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
         pyspark_to_java_column(geom2),
     )
 
-def st_haversine(lat1: ColumnOrName, lng1: ColumnOrName, lat2: ColumnOrName, lng2: ColumnOrName) -> Column:
+
+def st_haversine(
+    lat1: ColumnOrName, lng1: ColumnOrName, lat2: ColumnOrName, lng2: ColumnOrName
+) -> Column:
     """
     Compute the haversine distance in kilometers between two latitude/longitude pairs.
 
@@ -556,9 +553,7 @@ def st_difference(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
         The difference geometry.
     """
     return config.mosaic_context.invoke_function(
-        "st_difference",
-        pyspark_to_java_column(geom1),
-        pyspark_to_java_column(geom2)
+        "st_difference", pyspark_to_java_column(geom1), pyspark_to_java_column(geom2)
     )
 
 
@@ -647,7 +642,9 @@ def st_union(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
         The union geometry.
     """
     return config.mosaic_context.invoke_function(
-        "st_union", pyspark_to_java_column(left_geom), pyspark_to_java_column(right_geom)
+        "st_union",
+        pyspark_to_java_column(left_geom),
+        pyspark_to_java_column(right_geom),
     )
 
 
@@ -669,7 +666,9 @@ def st_unaryunion(geom: ColumnOrName) -> Column:
     )
 
 
-def st_updatesrid(geom: ColumnOrName, srcSRID: ColumnOrName, destSRID: ColumnOrName) -> Column:
+def st_updatesrid(
+    geom: ColumnOrName, srcSRID: ColumnOrName, destSRID: ColumnOrName
+) -> Column:
     """
     Updates the SRID of the input geometry `geom` from `srcSRID` to `destSRID`.
 
@@ -690,7 +689,10 @@ def st_updatesrid(geom: ColumnOrName, srcSRID: ColumnOrName, destSRID: ColumnOrN
         Geometry with updated SRID
     """
     return config.mosaic_context.invoke_function(
-        "st_updatesrid", pyspark_to_java_column(geom), pyspark_to_java_column(srcSRID), pyspark_to_java_column(destSRID)
+        "st_updatesrid",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(srcSRID),
+        pyspark_to_java_column(destSRID),
     )
 
 
@@ -707,9 +709,7 @@ def st_x(geom: ColumnOrName) -> Column:
     Column (DoubleType)
 
     """
-    return config.mosaic_context.invoke_function(
-        "st_x", pyspark_to_java_column(geom)
-    )
+    return config.mosaic_context.invoke_function("st_x", pyspark_to_java_column(geom))
 
 
 def st_y(geom: ColumnOrName) -> Column:
@@ -725,9 +725,7 @@ def st_y(geom: ColumnOrName) -> Column:
     Column (DoubleType)
 
     """
-    return config.mosaic_context.invoke_function(
-        "st_y", pyspark_to_java_column(geom)
-    )
+    return config.mosaic_context.invoke_function("st_y", pyspark_to_java_column(geom))
 
 
 def st_geometrytype(geom: ColumnOrName) -> Column:
@@ -856,87 +854,6 @@ def st_zmax(geom: ColumnOrName) -> Column:
     )
 
 
-def rst_metadata(raster: ColumnOrName, path: Any = "") -> Column:
-    """
-    Extracts metadata from a raster row.
-
-    Parameters
-    ----------
-    raster : ColumnOrName
-        The input raster column.
-    path : ColumnOrName
-        The path of the metadata within the raster row.
-
-    Returns
-    -------
-    Column
-        A map column containing the metadata.
-
-    """
-    if type(path) == str:
-        path = lit(path)
-    return config.mosaic_context.invoke_function(
-        "rst_metadata",
-        pyspark_to_java_column(raster),
-        pyspark_to_java_column(path)
-    )
-
-
-def rst_subdatasets(raster: ColumnOrName, path: Any = "") -> Column:
-    """
-    Extracts subdatasets from a raster row.
-
-    Parameters
-    ----------
-    raster : ColumnOrName
-        The input raster column.
-    path : ColumnOrName
-        The path of subdatasets within the raster row.
-
-    Returns
-    -------
-    Column
-        A map column containing the subdatasets.
-
-    """
-    if type(path) == str:
-        path = lit(path)
-    return config.mosaic_context.invoke_function(
-        "rst_subdatasets",
-        pyspark_to_java_column(raster),
-        pyspark_to_java_column(path)
-    )
-
-
-def rst_bandmetadata(raster: ColumnOrName, band: ColumnOrName, path: Any = "") -> Column:
-    """
-    Extracts band metadata from a raster row.
-
-    Parameters
-    ----------
-    raster : ColumnOrName
-        The input raster column.
-    band : ColumnOrName
-        The band index.
-    path : ColumnOrName
-        The path of the metadata within the raster row and the band.
-
-    Returns
-    -------
-    Column
-        A map column containing the metadata.
-
-    """
-    if type(path) == str:
-        path = lit(path)
-    return config.mosaic_context.invoke_function(
-        "rst_bandmetadata",
-        pyspark_to_java_column(raster),
-        pyspark_to_java_column(band),
-        pyspark_to_java_column(path)
-    )
-
-
 def flatten_polygons(geom: ColumnOrName) -> Column:
     """
     Explodes a multi-geometry into one row per constituent geometry.
@@ -975,6 +892,7 @@ def grid_boundaryaswkb(index_id: ColumnOrName) -> Column:
         "grid_boundaryaswkb", pyspark_to_java_column(index_id)
     )
 
+
 def grid_cellarea(index_id: ColumnOrName) -> Column:
     """
     Returns the area of the grid cell in km^2.
@@ -990,8 +908,7 @@ def grid_cellarea(index_id: ColumnOrName) -> Column:
         The area of the grid cell in km^2
     """
     return config.mosaic_context.invoke_function(
-        "grid_cellarea",
-        pyspark_to_java_column(index_id)
+        "grid_cellarea", pyspark_to_java_column(index_id)
     )
 
 
@@ -1014,12 +931,12 @@ def grid_boundary(index_id: ColumnOrName, format_name: ColumnOrName) -> Column:
     return config.mosaic_context.invoke_function(
         "grid_boundary",
         pyspark_to_java_column(index_id),
-        pyspark_to_java_column(format_name)
+        pyspark_to_java_column(format_name),
     )
 
 
 def grid_longlatascellid(
-        lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
+    lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
 ) -> Column:
     """
     Returns the grid's cell ID associated with the input `lng` and `lat` coordinates at a given grid `resolution`.
@@ -1087,7 +1004,7 @@ def grid_polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
 
 
 def grid_tessellate(
-        geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
     Generates:
@@ -1122,7 +1039,7 @@ def grid_tessellate(
 
 
 def grid_tessellateexplode(
-        geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
     Generates:
@@ -1154,9 +1071,8 @@ def grid_tessellateexplode(
         pyspark_to_java_column(keep_core_geometries),
     )
 
-def grid_cell_intersection(
-        left_chip: ColumnOrName, right_chip: ColumnOrName
-) -> Column:
+
+def grid_cell_intersection(left_chip: ColumnOrName, right_chip: ColumnOrName) -> Column:
     """
     Returns the chip representing the intersection of two chips based on the same grid cell.
 
@@ -1176,9 +1092,8 @@ def grid_cell_intersection(
         pyspark_to_java_column(right_chip),
     )
 
-def grid_cell_union(
-        left_chip: ColumnOrName, right_chip: ColumnOrName
-) -> Column:
+
+def grid_cell_union(left_chip: ColumnOrName, right_chip: ColumnOrName) -> Column:
     """
     Returns the chip representing the union of two chips based on the same grid cell.
 
@@ -1199,9 +1114,7 @@ def grid_cell_union(
     )
 
 
-def grid_cellkring(
-        cellid: ColumnOrName, k: ColumnOrName
-) -> Column:
+def grid_cellkring(cellid: ColumnOrName, k: ColumnOrName) -> Column:
     """
     Returns the k-ring of cells around the input cell ID.
 
@@ -1222,9 +1135,7 @@ def grid_cellkring(
     )
 
 
-def grid_cellkloop(
-        cellid: ColumnOrName, k: ColumnOrName
-) -> Column:
+def grid_cellkloop(cellid: ColumnOrName, k: ColumnOrName) -> Column:
     """
     Returns the k loop (hollow ring) of cells around the input cell ID.
 
@@ -1245,9 +1156,7 @@ def grid_cellkloop(
     )
 
 
-def grid_cellkringexplode(
-        cellid: ColumnOrName, k: ColumnOrName
-) -> Column:
+def grid_cellkringexplode(cellid: ColumnOrName, k: ColumnOrName) -> Column:
     """
     Returns the exploded k-ring of cells around the input cell ID.
 
@@ -1268,9 +1177,7 @@ def grid_cellkringexplode(
     )
 
 
-def grid_cellkloopexplode(
-        cellid: ColumnOrName, k: ColumnOrName
-) -> Column:
+def grid_cellkloopexplode(cellid: ColumnOrName, k: ColumnOrName) -> Column:
     """
     Returns the exploded k loop (hollow ring) of cells around the input cell ID.
 
@@ -1292,7 +1199,7 @@ def grid_cellkloopexplode(
 
 
 def grid_geometrykring(
-        geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the k-ring of cells around the input geometry.
@@ -1317,7 +1224,7 @@ def grid_geometrykring(
 
 
 def grid_geometrykloop(
-        geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the k loop (hollow ring) of cells around the input geometry.
@@ -1342,7 +1249,7 @@ def grid_geometrykloop(
 
 
 def grid_geometrykringexplode(
-        geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the exploded k-ring of cells around the input geometry.
@@ -1367,7 +1274,7 @@ def grid_geometrykringexplode(
 
 
 def grid_geometrykloopexplode(
-        geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the exploded k loop (hollow ring) of cells around the input geometry.
@@ -1414,7 +1321,7 @@ def point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
 
 
 def point_index_lonlat(
-        lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
+    lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
 ) -> Column:
     """
     [Deprecated] alias for `grid_longlatascellid`
@@ -1471,7 +1378,7 @@ def polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
 
 
 def mosaic_explode(
-        geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
     [Deprecated] alias for `grid_tessellateexplode`
@@ -1506,7 +1413,7 @@ def mosaic_explode(
 
 
 def mosaicfill(
-        geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
     [Deprecated] alias for `grid_tessellate`

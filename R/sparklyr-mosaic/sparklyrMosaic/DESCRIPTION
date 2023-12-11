@@ -1,6 +1,6 @@
 Package: sparklyrMosaic
 Title: sparklyr bindings for Databricks Mosaic
-Version: 0.3.9
+Version: 0.3.12
 Authors@R: 
     person("Robert", "Whiffin", , "robert.whiffin@databricks.com", role = c("aut", "cre")
            )
@@ -8,7 +8,7 @@ Description: This package extends sparklyr to bring the Databricks Mosaic for ge
 License: Databricks
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 Collate: 
     'enableMosaic.R'
     'sparkFunctions.R'

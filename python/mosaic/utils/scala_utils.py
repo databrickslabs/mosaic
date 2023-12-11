@@ -1,4 +1,3 @@
-
 def scala_map_to_dict(scala_map):
     result = dict()
     for i in range(0, scala_map.size()):

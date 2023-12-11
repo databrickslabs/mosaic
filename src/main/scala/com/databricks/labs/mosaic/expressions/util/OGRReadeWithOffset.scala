@@ -21,7 +21,6 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
     val layerNumber: Int = config("layerNumber").toInt
     val layerName: String = config("layerName")
     val chunkSize: Int = config("chunkSize").toInt
-    val vsizip: Boolean = config("vsizip").toBoolean
     val asWKB: Boolean = config("asWKB").toBoolean
 
     override def collectionType: DataType = schema
@@ -35,7 +34,7 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
         val chunkIndex = chunkIndexExpr.eval(input).asInstanceOf[Int]
         OGRFileFormat.enableOGRDrivers()
 
-        val ds = OGRFileFormat.getDataSource(driverName, path, vsizip)
+        val ds = OGRFileFormat.getDataSource(driverName, path)
         val layer = OGRFileFormat.getLayer(ds, layerNumber, layerName)
 
         val start = chunkIndex * chunkSize

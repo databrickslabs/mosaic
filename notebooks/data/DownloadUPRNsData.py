@@ -62,7 +62,7 @@ display(dbutils.fs.ls(f"{raw_uprns_path}/data/"))
 
 # COMMAND ----------
 
-df = spark.read.option("header", "true").option("inferSchema" , "true").csv(f"{raw_uprns_path}/data/osopenuprn_202209.csv")
+df = spark.read.option("header", "true").option("inferSchema" , "true").csv(f"{raw_uprns_path}/data/osopenuprn_202304.csv")
 df.display()
 
 # COMMAND ----------

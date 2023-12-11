@@ -21,20 +21,20 @@ st_intersects_aggregate
 .. tabs::
    .. code-tab:: py
 
-    >>> left_df = (
-          spark.createDataFrame([{'geom': 'POLYGON ((0 0, 0 3, 3 3, 3 0))'}])
-          .select(grid_tessellateexplode(col("geom"), lit(1)).alias("left_index"))
-        )
-    >>> right_df = (
-          spark.createDataFrame([{'geom': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
-          .select(grid_tessellateexplode(col("geom"), lit(1)).alias("right_index"))
-        )
-    >>> (
-          left_df
-          .join(right_df, col("left_index.index_id") == col("right_index.index_id"))
-          .groupBy()
-          .agg(st_intersects_aggregate(col("left_index"), col("right_index")))
-        ).show(1, False)
+    left_df = (
+        spark.createDataFrame([{'geom': 'POLYGON ((0 0, 0 3, 3 3, 3 0))'}])
+            .select(grid_tessellateexplode(col("geom"), lit(1)).alias("left_index"))
+    )
+    right_df = (
+        spark.createDataFrame([{'geom': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
+            .select(grid_tessellateexplode(col("geom"), lit(1)).alias("right_index"))
+    )
+    (
+        left_df
+            .join(right_df, col("left_index.index_id") == col("right_index.index_id"))
+            .groupBy()
+            .agg(st_intersects_aggregate(col("left_index"), col("right_index")))
+    ).show(1, False)
     +------------------------------------------------+
     |st_intersects_aggregate(left_index, right_index)|
     +------------------------------------------------+
@@ -43,15 +43,15 @@ st_intersects_aggregate
 
    .. code-tab:: scala
 
-    >>> val leftDf = List("POLYGON ((0 0, 0 3, 3 3, 3 0))").toDF("geom")
-            .select(grid_tessellateexplode($"geom", lit(1)).alias("left_index"))
-    >>> val rightDf = List("POLYGON ((2 2, 2 4, 4 4, 4 2))").toDF("geom")
-            .select(grid_tessellateexplode($"geom", lit(1)).alias("right_index"))
-    >>> leftDf
-            .join(rightDf, $"left_index.index_id" === $"right_index.index_id")
-            .groupBy()
-            .agg(st_intersects_aggregate($"left_index", $"right_index"))
-            .show(false)
+    val leftDf = List("POLYGON ((0 0, 0 3, 3 3, 3 0))").toDF("geom")
+        .select(grid_tessellateexplode($"geom", lit(1)).alias("left_index"))
+    val rightDf = List("POLYGON ((2 2, 2 4, 4 4, 4 2))").toDF("geom")
+        .select(grid_tessellateexplode($"geom", lit(1)).alias("right_index"))
+    leftDf
+        .join(rightDf, $"left_index.index_id" === $"right_index.index_id")
+        .groupBy()
+        .agg(st_intersects_aggregate($"left_index", $"right_index"))
+        .show(false)
     +------------------------------------------------+
     |st_intersects_aggregate(left_index, right_index)|
     +------------------------------------------------+
@@ -60,10 +60,10 @@ st_intersects_aggregate
 
    .. code-tab:: sql
 
-    >>> WITH l AS (SELECT grid_tessellateexplode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
+    WITH l AS (SELECT grid_tessellateexplode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
         r AS (SELECT grid_tessellateexplode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
-        SELECT st_intersects_aggregate(l.left_index, r.right_index)
-        FROM l INNER JOIN r on l.left_index.index_id = r.right_index.index_id
+    SELECT st_intersects_aggregate(l.left_index, r.right_index)
+    FROM l INNER JOIN r on l.left_index.index_id = r.right_index.index_id
     +------------------------------------------------+
     |st_intersects_aggregate(left_index, right_index)|
     +------------------------------------------------+
@@ -72,20 +72,20 @@ st_intersects_aggregate
 
    .. code-tab:: r R
 
-    >>> df.l <- select(
-          createDataFrame(data.frame(geom = "POLYGON ((0 0, 0 3, 3 3, 3 0))")),
-          alias(grid_tessellateexplode(column("geom"), lit(1L)), "left_index")
-        )
-    >>> df.r <- select(
-          createDataFrame(data.frame(geom = "POLYGON ((2 2, 2 4, 4 4, 4 2))")),
-          alias(grid_tessellateexplode(column("geom"), lit(1L)), "right_index")
-        )
-    >>> showDF(
-          select(
+    df.l <- select(
+        createDataFrame(data.frame(geom = "POLYGON ((0 0, 0 3, 3 3, 3 0))")),
+        alias(grid_tessellateexplode(column("geom"), lit(1L)), "left_index")
+    )
+    df.r <- select(
+        createDataFrame(data.frame(geom = "POLYGON ((2 2, 2 4, 4 4, 4 2))")),
+        alias(grid_tessellateexplode(column("geom"), lit(1L)), "right_index")
+    )
+    showDF(
+        select(
             join(df.l, df.r, df.l$left_index.index_id == df.r$right_index.index_id),
             st_intersects_aggregate(column("left_index"), column("right_index"))
-          ), truncate=F
-        )
+        ), truncate=F
+    )
     +------------------------------------------------+
     |st_intersects_aggregate(left_index, right_index)|
     +------------------------------------------------+
@@ -111,20 +111,20 @@ st_intersection_aggregate
 .. tabs::
    .. code-tab:: py
 
-    >>> left_df = (
-          spark.createDataFrame([{'geom': 'POLYGON ((0 0, 0 3, 3 3, 3 0))'}])
-          .select(grid_tessellateexplode(col("geom"), lit(1)).alias("left_index"))
-        )
-    >>> right_df = (
-          spark.createDataFrame([{'geom': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
-          .select(grid_tessellateexplode(col("geom"), lit(1)).alias("right_index"))
-        )
-    >>> (
-          left_df
-          .join(right_df, col("left_index.index_id") == col("right_index.index_id"))
-          .groupBy()
-          .agg(st_astext(st_intersection_aggregate(col("left_index"), col("right_index"))))
-        ).show(1, False)
+    left_df = (
+        spark.createDataFrame([{'geom': 'POLYGON ((0 0, 0 3, 3 3, 3 0))'}])
+            .select(grid_tessellateexplode(col("geom"), lit(1)).alias("left_index"))
+    )
+    right_df = (
+        spark.createDataFrame([{'geom': 'POLYGON ((2 2, 2 4, 4 4, 4 2))'}])
+            .select(grid_tessellateexplode(col("geom"), lit(1)).alias("right_index"))
+    )
+    (
+        left_df
+            .join(right_df, col("left_index.index_id") == col("right_index.index_id"))
+            .groupBy()
+            .agg(st_astext(st_intersection_aggregate(col("left_index"), col("right_index"))))
+    ).show(1, False)
     +--------------------------------------------------------------+
     |convert_to(st_intersection_aggregate(left_index, right_index))|
     +--------------------------------------------------------------+
@@ -133,15 +133,15 @@ st_intersection_aggregate
 
    .. code-tab:: scala
 
-    >>> val leftDf = List("POLYGON ((0 0, 0 3, 3 3, 3 0))").toDF("geom")
-            .select(grid_tessellateexplode($"geom", lit(1)).alias("left_index"))
-    >>> val rightDf = List("POLYGON ((2 2, 2 4, 4 4, 4 2))").toDF("geom")
-            .select(grid_tessellateexplode($"geom", lit(1)).alias("right_index"))
-    >>> leftDf
-            .join(rightDf, $"left_index.index_id" === $"right_index.index_id")
-            .groupBy()
-            .agg(st_astext(st_intersection_aggregate($"left_index", $"right_index")))
-            .show(false)
+    val leftDf = List("POLYGON ((0 0, 0 3, 3 3, 3 0))").toDF("geom")
+        .select(grid_tessellateexplode($"geom", lit(1)).alias("left_index"))
+    val rightDf = List("POLYGON ((2 2, 2 4, 4 4, 4 2))").toDF("geom")
+        .select(grid_tessellateexplode($"geom", lit(1)).alias("right_index"))
+    leftDf
+        .join(rightDf, $"left_index.index_id" === $"right_index.index_id")
+        .groupBy()
+        .agg(st_astext(st_intersection_aggregate($"left_index", $"right_index")))
+        .show(false)
     +--------------------------------------------------------------+
     |convert_to(st_intersection_aggregate(left_index, right_index))|
     +--------------------------------------------------------------+
@@ -150,10 +150,10 @@ st_intersection_aggregate
 
    .. code-tab:: sql
 
-    >>> WITH l AS (SELECT grid_tessellateexplode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
+    WITH l AS (SELECT grid_tessellateexplode("POLYGON ((0 0, 0 3, 3 3, 3 0))", 1) AS left_index),
         r AS (SELECT grid_tessellateexplode("POLYGON ((2 2, 2 4, 4 4, 4 2))", 1) AS right_index)
-        SELECT st_astext(st_intersection_aggregate(l.left_index, r.right_index))
-        FROM l INNER JOIN r on l.left_index.index_id = r.right_index.index_id
+    SELECT st_astext(st_intersection_aggregate(l.left_index, r.right_index))
+    FROM l INNER JOIN r on l.left_index.index_id = r.right_index.index_id
     +--------------------------------------------------------------+
     |convert_to(st_intersection_aggregate(left_index, right_index))|
     +--------------------------------------------------------------+
@@ -162,20 +162,20 @@ st_intersection_aggregate
 
    .. code-tab:: r R
 
-    >>> df.l <- select(
-          createDataFrame(data.frame(geom = "POLYGON ((0 0, 0 3, 3 3, 3 0))")),
-          alias(grid_tessellateexplode(column("geom"), lit(1L)), "left_index")
-        )
-    >>> df.r <- select(
-          createDataFrame(data.frame(geom = "POLYGON ((2 2, 2 4, 4 4, 4 2))")),
-          alias(grid_tessellateexplode(column("geom"), lit(1L)), "right_index")
-        )
-    >>> showDF(
-          select(
+    df.l <- select(
+        createDataFrame(data.frame(geom = "POLYGON ((0 0, 0 3, 3 3, 3 0))")),
+        alias(grid_tessellateexplode(column("geom"), lit(1L)), "left_index")
+    )
+    df.r <- select(
+        createDataFrame(data.frame(geom = "POLYGON ((2 2, 2 4, 4 4, 4 2))")),
+        alias(grid_tessellateexplode(column("geom"), lit(1L)), "right_index")
+    )
+    showDF(
+        select(
             join(df.l, df.r, df.l$left_index.index_id == df.r$right_index.index_id),
             st_astext(st_intersection_aggregate(column("left_index"), column("right_index")))
-          ), truncate=F
-        )
+        ), truncate=F
+    )
     +--------------------------------------------------------------+
     |convert_to(st_intersection_aggregate(left_index, right_index))|
     +--------------------------------------------------------------+
@@ -199,8 +199,8 @@ st_union_agg
    .. code-tab:: py
 
 
-    >>> df = spark.createDataFrame([{'geom': 'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'}, {'geom': 'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'}])
-    >>> df.select(st_astext(st_union_agg(col('geom')))).show()
+    df = spark.createDataFrame([{'geom': 'POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'}, {'geom': 'POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))'}])
+    df.select(st_astext(st_union_agg(col('geom')))).show()
     +-------------------------------------------------------------------------+
     | st_union_agg(geom)                                                      |
     +-------------------------------------------------------------------------+
@@ -209,8 +209,8 @@ st_union_agg
 
    .. code-tab:: scala
 
-    >>> val df = List("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").toDF("geom")
-    >>> df.select(st_astext(st_union_agg(col('geom')))).show()
+    val df = List("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))", "POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").toDF("geom")
+    df.select(st_astext(st_union_agg(col('geom')))).show()
     +-------------------------------------------------------------------------+
     | st_union_agg(geom)                                                      |
     +-------------------------------------------------------------------------+
@@ -219,8 +219,8 @@ st_union_agg
 
    .. code-tab:: sql
 
-    >>> WITH geoms ('geom') AS (VALUES ('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'), ('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'))
-        SELECT st_astext(st_union_agg(geoms));
+    WITH geoms ('geom') AS (VALUES ('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'), ('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'))
+    SELECT st_astext(st_union_agg(geoms));
     +-------------------------------------------------------------------------+
     | st_union_agg(geom)                                                      |
     +-------------------------------------------------------------------------+
@@ -229,8 +229,8 @@ st_union_agg
 
    .. code-tab:: r R
 
-    >>> df.geom <- select(createDataFrame(data.frame(geom = c('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'), ('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'))))
-    >>> showDF(select(st_astext(st_union_agg(column("geom")))), truncate=F)
+    df.geom <- select(createDataFrame(data.frame(geom = c('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'), ('POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))'))))
+    showDF(select(st_astext(st_union_agg(column("geom")))), truncate=F)
     +-------------------------------------------------------------------------+
     | st_union_agg(geom)                                                      |
     +-------------------------------------------------------------------------+
@@ -254,8 +254,8 @@ grid_cell_intersection_agg
    .. code-tab:: py
 
 
-    >>> df = df.withColumn("chip", grid_tessellateexplode(...))
-    >>> df.groupBy("chip.index_id").agg(grid_cell_intersection_agg("chip").alias("agg_chip")).limit(1).show()
+    df = df.withColumn("chip", grid_tessellateexplode(...))
+    df.groupBy("chip.index_id").agg(grid_cell_intersection_agg("chip").alias("agg_chip")).limit(1).show()
     +--------------------------------------------------------+
     | agg_chip                                               |
     +--------------------------------------------------------+
@@ -264,8 +264,8 @@ grid_cell_intersection_agg
 
    .. code-tab:: scala
 
-    >>> val df = other_df.withColumn("chip", grid_tessellateexplode(...))
-    >>> df.groupBy("chip.index_id").agg(grid_cell_intersection_agg("chip").alias("agg_chip")).limit(1).show()
+    val df = other_df.withColumn("chip", grid_tessellateexplode(...))
+    df.groupBy("chip.index_id").agg(grid_cell_intersection_agg("chip").alias("agg_chip")).limit(1).show()
     +--------------------------------------------------------+
     | agg_chip                                               |
     +--------------------------------------------------------+
@@ -274,8 +274,8 @@ grid_cell_intersection_agg
 
    .. code-tab:: sql
 
-    >>> WITH chips AS (SELECT grid_tessellateexplode(wkt) AS "chip" FROM ...)
-        SELECT grid_cell_intersection_agg(chips) AS agg_chip FROM chips GROUP BY chips.index_id;
+    WITH chips AS (SELECT grid_tessellateexplode(wkt) AS "chip" FROM ...)
+    SELECT grid_cell_intersection_agg(chips) AS agg_chip FROM chips GROUP BY chips.index_id;
     +--------------------------------------------------------+
     | agg_chip                                               |
     +--------------------------------------------------------+
@@ -284,7 +284,7 @@ grid_cell_intersection_agg
 
    .. code-tab:: r R
 
-    >>> showDF(select(grid_cell_intersection_agg(column("chip"))), truncate=F)
+    showDF(select(grid_cell_intersection_agg(column("chip"))), truncate=F)
     +--------------------------------------------------------+
     | agg_chip                                               |
     +--------------------------------------------------------+
@@ -308,8 +308,8 @@ grid_cell_union_agg
    .. code-tab:: py
 
 
-    >>> df = df.withColumn("chip", grid_tessellateexplode(...))
-    >>> df.groupBy("chip.index_id").agg(grid_cell_union_agg("chip").alias("agg_chip")).limit(1).show()
+    df = df.withColumn("chip", grid_tessellateexplode(...))
+    df.groupBy("chip.index_id").agg(grid_cell_union_agg("chip").alias("agg_chip")).limit(1).show()
     +--------------------------------------------------------+
     | agg_chip                                               |
     +--------------------------------------------------------+
@@ -318,8 +318,8 @@ grid_cell_union_agg
 
    .. code-tab:: scala
 
-    >>> val df = other_df.withColumn("chip", grid_tessellateexplode(...))
-    >>> df.groupBy("chip.index_id").agg(grid_cell_union_agg("chip").alias("agg_chip")).limit(1).show()
+    val df = other_df.withColumn("chip", grid_tessellateexplode(...))
+    df.groupBy("chip.index_id").agg(grid_cell_union_agg("chip").alias("agg_chip")).limit(1).show()
     +--------------------------------------------------------+
     | agg_chip                                               |
     +--------------------------------------------------------+
@@ -328,8 +328,8 @@ grid_cell_union_agg
 
    .. code-tab:: sql
 
-    >>> WITH chips AS (SELECT grid_tessellateexplode(wkt) AS "chip" FROM ...)
-        SELECT grid_cell_union_agg(chips) AS agg_chip FROM chips GROUP BY chips.index_id;
+    WITH chips AS (SELECT grid_tessellateexplode(wkt) AS "chip" FROM ...)
+    SELECT grid_cell_union_agg(chips) AS agg_chip FROM chips GROUP BY chips.index_id;
     +--------------------------------------------------------+
     | agg_chip                                               |
     +--------------------------------------------------------+
@@ -338,7 +338,7 @@ grid_cell_union_agg
 
    .. code-tab:: r R
 
-    >>> showDF(select(grid_cell_union_agg(column("chip"))), truncate=F)
+    showDF(select(grid_cell_union_agg(column("chip"))), truncate=F)
     +--------------------------------------------------------+
     | agg_chip                                               |
     +--------------------------------------------------------+

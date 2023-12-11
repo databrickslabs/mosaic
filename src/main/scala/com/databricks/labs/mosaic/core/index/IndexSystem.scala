@@ -6,12 +6,32 @@ import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnu
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+import org.gdal.osr.SpatialReference
 
 /**
   * Defines the API that all index systems need to respect for Mosaic to support
   * them.
   */
 abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
+
+    // Passthrough if not redefined
+    def isValid(cellID: Long): Boolean = true
+
+    def crsID: Int
+
+    /**
+      * Returns the spatial reference of the index system. This is only
+      * available when GDAL is available. For proj4j please use crsID method.
+      *
+      * @return
+      *   SpatialReference
+      */
+    def osrSpatialRef: SpatialReference = {
+        val sr = new SpatialReference()
+        sr.ImportFromEPSG(crsID)
+        sr.SetAxisMappingStrategy(org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
+        sr
+    }
 
     def distance(cellId: Long, cellId2: Long): Long
 
@@ -160,7 +180,7 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
         val intersections = for (index <- borderIndices) yield {
             val indexGeom = indexToGeometry(index, geometryAPI)
             val intersect = geometry.intersection(indexGeom)
-            val coerced = coerceChipGeometry(intersect, index, geometryAPI)
+            val coerced = coerceChipGeometry(intersect, indexGeom, geometry)
             val isCore = coerced.equals(indexGeom)
 
             val chipGeom = if (!isCore || keepCoreGeom) coerced else null
@@ -276,12 +296,13 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
 
     def area(index: String): Double = area(parse(index))
 
-    def coerceChipGeometry(geom: MosaicGeometry, cell: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
+    def coerceChipGeometry(geom: MosaicGeometry, indexGeom: MosaicGeometry, originGeom: MosaicGeometry): MosaicGeometry = {
         val geomType = GeometryTypeEnum.fromString(geom.getGeometryType)
-        if (geomType == GEOMETRYCOLLECTION) {
+        val originGeomType = GeometryTypeEnum.fromString(originGeom.getGeometryType)
+        if (geomType == GEOMETRYCOLLECTION || geomType != originGeomType) {
             // This case can occur if partial geometry is a geometry collection
             // or if the intersection includes a part of the boundary of the cell
-            geom.difference(indexToGeometry(cell, geometryAPI).getBoundary)
+            geom.difference(indexGeom.getBoundary)
         } else {
             geom
         }

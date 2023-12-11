@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.raster
 
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.should.Matchers._
@@ -9,9 +10,12 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
     test("Read band metadata and pixel data from GeoTIFF file.") {
         assume(System.getProperty("os.name") == "Linux")
 
-        val testRaster = MosaicRasterGDAL.readRaster(filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"))
+        val testRaster = MosaicRasterGDAL.readRaster(
+          filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
+          filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
+        )
         val testBand = testRaster.getBand(1)
-        testBand.asInstanceOf[MosaicRasterBandGDAL].band
+        testBand.getBand
         testBand.index shouldBe 1
         testBand.units shouldBe ""
         testBand.description shouldBe "Nadir_Reflectance_Band1"
@@ -26,13 +30,14 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         val testValues = testBand.values(1000, 1000, 100, 50)
         testValues.length shouldBe 5000
 
-        testRaster.cleanUp()
+        testRaster.getRaster.delete()
     }
 
     test("Read band metadata and pixel data from a GRIdded Binary file.") {
         assume(System.getProperty("os.name") == "Linux")
 
         val testRaster = MosaicRasterGDAL.readRaster(
+          filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grib"),
           filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grib")
         )
         val testBand = testRaster.getBand(1)
@@ -44,15 +49,21 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         val testValues = testBand.values(1, 1, 4, 5)
         testValues.length shouldBe 20
 
-        testRaster.cleanUp()
+        testRaster.getRaster.delete()
     }
 
     test("Read band metadata and pixel data from a NetCDF file.") {
         assume(System.getProperty("os.name") == "Linux")
 
-        val superRaster = MosaicRasterGDAL.readRaster(filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"))
+        val superRaster = MosaicRasterGDAL.readRaster(
+          filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"),
+          filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
+        )
         val subdatasetPath = superRaster.subdatasets("bleaching_alert_area")
-        val testRaster = MosaicRasterGDAL.readRaster(subdatasetPath)
+        val testRaster = MosaicRasterGDAL.readRaster(
+          subdatasetPath,
+          subdatasetPath
+        )
 
         val testBand = testRaster.getBand(1)
         testBand.dataType shouldBe 1
@@ -63,8 +74,8 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         noException should be thrownBy testBand.values
         testValues.length shouldBe 1000
 
-        testRaster.cleanUp()
-        superRaster.cleanUp()
+        testRaster.getRaster.delete()
+        superRaster.getRaster.delete()
     }
 
 }

@@ -4,8 +4,27 @@ Installation guide
 
 Supported platforms
 ###################
-In order to use Mosaic, you must have access to a Databricks cluster running
-Databricks Runtime 10.0 or higher (11.2 with photon or later is recommended).
+
+.. warning::
+    From versions after 0.3.x, Mosaic will require either
+     * Databricks Runtime 11.2+ with Photon enabled
+     * Databricks Runtime for ML 11.2+
+    
+    Mosaic 0.3 series does not support DBR 13 (coming soon); 
+    also, DBR 10 is no longer supported in Mosaic. 
+
+We recommend using Databricks Runtime versions 11.3 LTS or 12.2 LTS with Photon enabled; 
+this will leverage the Databricks H3 expressions when using H3 grid system.  
+As of the 0.3.11 release, Mosaic issues the following warning when initialized on a cluster
+that is neither Photon Runtime nor Databricks Runtime ML [`ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`__ | `AWS <https://docs.databricks.com/runtime/index.html>`__ | `GCP <https://docs.gcp.databricks.com/runtime/index.html>`__]:
+
+    DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime. Mosaic will stop working on this cluster after v0.3.x. Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).
+
+If you are receiving this warning in v0.3.11+, you will want to begin to plan for a supported runtime.
+The reason we are making this change is that we are streamlining Mosaic
+internals to be more aligned with future product APIs which are powered by Photon. Along this direction 
+of change, Mosaic will be standardizing to JTS as its default and supported Vector Geometry Provider.
+
 If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
 `here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
@@ -55,22 +74,22 @@ The mechanism for enabling the Mosaic functions varies by language:
 .. tabs::
    .. code-tab:: py
 
-    >>> from mosaic import enable_mosaic
-    >>> enable_mosaic(spark, dbutils)
+    from mosaic import enable_mosaic
+    enable_mosaic(spark, dbutils)
 
    .. code-tab:: scala
 
-    >>> import com.databricks.labs.mosaic.functions.MosaicContext
-    >>> import com.databricks.labs.mosaic.H3
-    >>> import com.databricks.labs.mosaic.ESRI
-    >>>
-    >>> val mosaicContext = MosaicContext.build(H3, ESRI)
-    >>> import mosaicContext.functions._
+    import com.databricks.labs.mosaic.functions.MosaicContext
+    import com.databricks.labs.mosaic.H3
+    import com.databricks.labs.mosaic.JTS
+
+    val mosaicContext = MosaicContext.build(H3, JTS)
+    import mosaicContext.functions._
 
    .. code-tab:: r R
 
-    >>> library(sparkrMosaic)
-    >>> enableMosaic()
+    library(sparkrMosaic)
+    enableMosaic()
 
 
 SQL usage
@@ -82,8 +101,8 @@ register the Mosaic SQL functions in your SparkSession from a Scala notebook cel
 
     import com.databricks.labs.mosaic.functions.MosaicContext
     import com.databricks.labs.mosaic.H3
-    import com.databricks.labs.mosaic.ESRI
+    import com.databricks.labs.mosaic.JTS
 
-    val mosaicContext = MosaicContext.build(H3, ESRI)
+    val mosaicContext = MosaicContext.build(H3, JTS)
     mosaicContext.register(spark)
 

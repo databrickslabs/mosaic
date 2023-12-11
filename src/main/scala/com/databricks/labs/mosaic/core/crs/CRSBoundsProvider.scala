@@ -1,8 +1,9 @@
 package com.databricks.labs.mosaic.core.crs
 
 import java.io.InputStream
-
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+
+import scala.io.Codec
 
 /**
   * CRSBoundsProvider provides APIs to get bounds extreme points based on CRS
@@ -67,7 +68,7 @@ object CRSBoundsProvider {
       */
     def apply(geometryAPI: GeometryAPI): CRSBoundsProvider = {
         val stream: InputStream = getClass.getResourceAsStream("/CRSBounds.csv")
-        val lines: List[String] = scala.io.Source.fromInputStream(stream).getLines.toList.drop(1)
+        val lines: List[String] = scala.io.Source.fromInputStream(stream)(Codec.UTF8).getLines.toList.drop(1)
         val lookupItems = lines
             .drop(1)
             .map(line => {

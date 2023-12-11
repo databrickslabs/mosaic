@@ -16,6 +16,8 @@ trait GridDistanceBehaviors extends MosaicSpatialQueryTest {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         import mc.functions._
+        val sc = spark
+        import sc.implicits._
         mc.register(spark)
 
         val resolution = 4
@@ -40,6 +42,18 @@ trait GridDistanceBehaviors extends MosaicSpatialQueryTest {
             )
 
         cellPairs.where(col("grid_distance") =!= 0).count() shouldEqual cellPairs.count()
+
+        boroughs.createOrReplaceTempView("boroughs")
+
+        val sqlResult = spark
+            .sql("""with subquery (
+                   | select grid_distance(grid_pointascellid(st_centroid(wkt), 4), grid_pointascellid(st_centroid(wkt), 4)) as dist from boroughs
+                   |) select * from subquery""".stripMargin)
+            .as[Long]
+            .collect()
+
+        sqlResult.foreach(_ shouldEqual 0)
+
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
@@ -50,7 +64,6 @@ trait GridDistanceBehaviors extends MosaicSpatialQueryTest {
         mc.register(spark)
 
         val wkt = mocks.getWKTRowsDf(mc.getIndexSystem).limit(1).select("wkt").as[String].collect().head
-        val k = 4
 
         val gridDistanceExpr = GridDistance(
           mc.functions.grid_pointascellid(mc.functions.st_centroid(lit(wkt)), lit(4)).expr,
