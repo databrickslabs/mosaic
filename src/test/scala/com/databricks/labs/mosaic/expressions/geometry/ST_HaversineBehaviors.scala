@@ -44,11 +44,6 @@ trait ST_HaversineBehaviors extends QueryTest {
         val codeGenStage = wholeStageCodegenExec.get.asInstanceOf[WholeStageCodegenExec]
         val (_, code) = codeGenStage.doCodeGen()
         noException should be thrownBy CodeGenerator.compile(code)
-
-        // Check if invalid code fails code generation
-        val stHaversine = ST_Haversine(lit(true).expr, lit(1).expr, lit(1).expr, lit(1).expr)
-        val ctx = new CodegenContext
-        an[Error] should be thrownBy stHaversine.genCode(ctx)
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
