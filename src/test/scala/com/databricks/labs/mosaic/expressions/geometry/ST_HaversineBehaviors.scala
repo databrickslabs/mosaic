@@ -3,13 +3,12 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext}
+import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.execution.WholeStageCodegenExec
-import org.apache.spark.sql.{QueryTest, Row}
 import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.{QueryTest, Row}
 import org.scalatest.matchers.must.Matchers.{be, noException}
-import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 trait ST_HaversineBehaviors extends QueryTest {
 
@@ -27,9 +26,7 @@ trait ST_HaversineBehaviors extends QueryTest {
     def haversineCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
-        val sc = spark
         import mc.functions._
-        import sc.implicits._
         mc.register(spark)
 
         val result = spark.range(1).select(st_haversine(lit(0.0), lit(90.0), lit(0.0), lit(0.0)))

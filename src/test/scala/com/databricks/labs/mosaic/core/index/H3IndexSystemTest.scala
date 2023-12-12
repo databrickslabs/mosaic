@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
-import com.databricks.labs.mosaic.core.geometry.{MosaicGeometryESRI, MosaicGeometryJTS}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometryJTS
 import com.databricks.labs.mosaic.core.index.H3IndexSystem.indexToGeometry
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING, MULTIPOINT, MULTIPOLYGON, POINT, POLYGON}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
@@ -27,9 +27,7 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
 
     test("H3IndexSystem polyfill signatures") {
         val geomJTS = MosaicGeometryJTS.fromWKT("POLYGON((1 2, 2 2, 2 1, 1 1, 1 2))")
-        val geomESRI = MosaicGeometryESRI.fromWKT("POLYGON((1 2, 2 2, 2 1, 1 1, 1 2))")
         noException shouldBe thrownBy { H3IndexSystem.polyfill(geomJTS, 10) }
-        noException shouldBe thrownBy { H3IndexSystem.polyfill(geomESRI, 10) }
         noException shouldBe thrownBy { H3IndexSystem.polyfill(geomJTS, 10, Some(JTS)) }
     }
 
@@ -109,35 +107,21 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
             .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
             .forall(Seq(POLYGON, MULTIPOLYGON).contains(_)) shouldBe true
         H3IndexSystem
-            .coerceChipGeometry(geomsWKTs1.map(MosaicGeometryESRI.fromWKT))
-            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
-            .forall(Seq(POLYGON, MULTIPOLYGON).contains(_)) shouldBe true
-        H3IndexSystem
             .coerceChipGeometry(geomsWKTs2.map(MosaicGeometryJTS.fromWKT))
-            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
-            .forall(Seq(LINESTRING, MULTILINESTRING).contains(_)) shouldBe true
-        H3IndexSystem
-            .coerceChipGeometry(geomsWKTs2.map(MosaicGeometryESRI.fromWKT))
             .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
             .forall(Seq(LINESTRING, MULTILINESTRING).contains(_)) shouldBe true
         H3IndexSystem
             .coerceChipGeometry(geomsWKTs3.map(MosaicGeometryJTS.fromWKT))
             .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
             .forall(Seq(POINT, MULTIPOINT).contains(_)) shouldBe true
-        H3IndexSystem
-            .coerceChipGeometry(geomsWKTs3.map(MosaicGeometryESRI.fromWKT))
-            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
-            .forall(Seq(POINT, MULTIPOINT).contains(_)) shouldBe true
         H3IndexSystem.coerceChipGeometry(geomsWKTs4.map(MosaicGeometryJTS.fromWKT)).isEmpty shouldBe true
-        H3IndexSystem.coerceChipGeometry(geomsWKTs4.map(MosaicGeometryESRI.fromWKT)).isEmpty shouldBe true
     }
 
     test("indexToGeometry should return valid and correct geometries") {
         val h3: H3Core = H3Core.newInstance()
 
-        val esriGeomAPI: GeometryAPI = GeometryAPI("ESRI")
         val jtsGeomAPI: GeometryAPI = GeometryAPI("JTS")
-        val apis = Seq(esriGeomAPI, jtsGeomAPI)
+        val apis = Seq(jtsGeomAPI)
 
         val baseCells = h3.getRes0Indexes.asScala.toList
         val lvl1Cells = baseCells.flatMap(h3.h3ToChildren(_, 1).asScala)
