@@ -53,7 +53,7 @@ Next we will define a function that will plot a given raster file.
     import rasterio
     from rasterio.io import MemoryFile
     from io import BytesIO
-    from pyspark.sql.functions import pandas_udf, PandasUDFType
+    from pyspark.sql.functions import udf
 
     def plot_raster(raster):
         fig, ax = pyplot.subplots(1, figsize=(12, 12))
@@ -106,7 +106,7 @@ Next we will define a function that will compute band statistics for a given ras
     import rasterio
     from rasterio.io import MemoryFile
     from io import BytesIO
-    from pyspark.sql.functions import pandas_udf, PandasUDFType
+    from pyspark.sql.functions import udf
 
     @udf("double")
     def compute_band_mean(raster):
@@ -162,7 +162,7 @@ Next we will define a function that will compute NDVI for a given raster file.
     import rasterio
     from rasterio.io import MemoryFile
     from io import BytesIO
-    from pyspark.sql.functions import pandas_udf, PandasUDFType
+    from pyspark.sql.functions import udf
 
     @udf("binary")
     def compute_ndvi(raster, nir_band, red_band):
@@ -210,3 +210,65 @@ Finally we will apply the function to the DataFrame.
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
 
 
+
+UDF example for writing raster files to disk
+#############################################
+
+In this example we will show how to write a raster file to disk using Rasterio Python API.
+This is an examples showing how to materialize a raster binary object as a raster file on disk.
+The format of the output file should match the driver format of the binary object.
+
+Firstly we will create a spark DataFrame from a directory of raster files.
+
+.. code-block:: python
+
+    df = spark.read.format("gdal").load("dbfs:/path/to/raster/files").repartition(400)
+    df.show()
+    +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
+    |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
+    +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
+    | dbfs:/FileStore/geospatial/odin/alaska/B02/-424495268.tif | 1970-01-20T15:49:53.135+0000 | 211660514 | 7836235824828840960 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
+    | dbfs:/FileStore/geospatial/odin/alaska/B02/-524425268.tif | 1970-01-20T15:49:53.135+0000 | 212060218 | 7836235824828840961 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097927192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
+    | dbfs:/FileStore/geospatial/odin/alaska/B02/1241323268.tif | 1970-01-20T15:49:53.135+0000 | 211660897 | 7836235824828840962 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097929991, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
+    | ...                                                       | ...                          | ...       | ...                 | ...   | ...   | ...       | ...                  | ...         | ...   | ...                                                                                                           |
+    +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
+
+
+Next we will define a function that will write a given raster file to disk.
+
+.. code-block:: python
+
+    import numpy as np
+    import rasterio
+    from rasterio.io import MemoryFile
+    from io import BytesIO
+    from pyspark.sql.functions import udf
+    from pathlib import Path
+
+    @udf("string")
+    def write_raster(raster, file_id, parent_dir):
+      with MemoryFile(BytesIO(raster)) as memfile:
+        with memfile.open() as dataset:
+          Path(outputpath).mkdir(parents=True, exist_ok=True)
+          extension = dataset.driver.lower()
+          path = f"{parent_dir}/{file_id}.{extension}"
+          # If you want to write the raster to a different format
+          # you can update the profile here. Note that the extension
+          # should match the driver format
+          with rasterio.open(path, "w", **dataset.profile) as dst:
+            dst.write(dataset.read())
+          return path
+
+Finally we will apply the function to the DataFrame.
+
+.. code-block:: python
+
+    df.select(write_raster("tile.raster", "uuid", lit("dbfs:/path/to/output/dir"))).show()
+    +-------------------------------------+
+    | write_raster(raster, output, output)|
+    +-------------------------------------+
+    | dbfs:/path/to/output/dir/1234.tif   |
+    | dbfs:/path/to/output/dir/4545.tif   |
+    | dbfs:/path/to/output/dir/3215.tif   |
+    | ...                                 |
+    +-------------------------------------+
