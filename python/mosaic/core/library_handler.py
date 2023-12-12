@@ -81,11 +81,23 @@ class MosaicLibraryHandler:
         converters = self.sc._jvm.scala.collection.JavaConverters
 
         JarURI = JavaURI.create("file:" + self._jar_path)
-        lib = JavaJarId(
-            JarURI,
-            ManagedLibraryId.defaultOrganization(),
-            NoVersionModule.simpleString(),
-        )
+        try:
+            lib = JavaJarId(
+                JarURI,
+                ManagedLibraryId.defaultOrganization(),
+                NoVersionModule.simpleString(),
+            )
+        except:
+            # This will fix the exception when running on Databricks Runtime 13.x+
+            optionClass = getattr(spark._sc._jvm.scala, "Option$")
+            optionModule = getattr(optionClass, "MODULE$")
+            lib = JavaJarId(
+                JarURI,
+                ManagedLibraryId.defaultOrganization(),
+                NoVersionModule.simpleString(),
+                optionModule.apply(None),
+                optionModule.apply(None),
+            )
         libSeq = converters.asScalaBufferConverter((lib,)).asScala().toSeq()
 
         context = DatabricksILoop.getSharedDriverContextIfExists().get()

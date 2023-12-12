@@ -990,7 +990,7 @@ object MosaicContext extends Logging {
     def reset(): Unit = instance = None
 
     // noinspection ScalaStyle,ScalaWeakerAccess
-    def checkDBR(spark: SparkSession): Unit = {
+    def checkDBR(spark: SparkSession): Boolean = {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "0")
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = spark.conf.getOption("spark.databricks.photon.enabled").getOrElse("false").toBoolean
@@ -1018,7 +1018,9 @@ object MosaicContext extends Logging {
                          |  Mosaic will stop working on this cluster after v0.3.x.""".stripMargin
             logWarning(msg)
             println(msg)
-
+            false
+        } else {
+            true
         }
     }
 
