@@ -250,7 +250,9 @@ Next we will define a function that will write a given raster file to disk.
       with MemoryFile(BytesIO(raster)) as memfile:
         with memfile.open() as dataset:
           Path(outputpath).mkdir(parents=True, exist_ok=True)
-          extension = dataset.driver.lower()
+          extensions_map = rasterio.drivers.raster_driver_extensions()
+          driver_map = {v: k for k, v in extensions_map.items()}
+          extension = driver_map[dataset.driver]
           path = f"{parent_dir}/{file_id}.{extension}"
           # If you want to write the raster to a different format
           # you can update the profile here. Note that the extension
