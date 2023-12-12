@@ -1,3 +1,11 @@
+## v0.3.13
+- R bindings generation fixed and improved.
+- Remove usage of /vsimem/ drivers for GDAL due to memory leaks.
+- Add support for MapAlgebra expressions via RST_MapAlgebra.
+- Add support for custom combine python functions via RST_DerivedBand.
+- Improve test coverage.
+- Allow for GDAL configuration via spark config (use 'spark.databricks.labs.mosaic.gdal.' prefix).
+
 ## v0.3.12
 - Make JTS default Geometry Provider
 - Add raster tile functions.
