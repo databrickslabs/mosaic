@@ -1007,7 +1007,7 @@ object MosaicContext extends Logging {
 
             logError(msg)
             println(msg)
-            throw new Error(msg)
+            throw new Exception(msg)
         }
 
         if (!isML && !isPhoton && !isTest) {
