@@ -1,12 +1,13 @@
 package com.databricks.labs.mosaic.expressions.geometry.base
 
 import com.databricks.labs.mosaic.core.types._
-import com.databricks.labs.mosaic.sql.MosaicSQLExceptions
 import org.apache.spark.sql.types._
+
+import scala.collection.immutable
 
 trait RequiresCRS {
 
-    val encodings = List("COORDS", "GEOJSON")
+    val encodings: immutable.Seq[String] = List("COORDS", "GEOJSON")
 
     def getEncoding(dataType: DataType): String =
         dataType match {
@@ -21,7 +22,11 @@ trait RequiresCRS {
     def checkEncoding(dataType: DataType): Unit = {
         val inputTypeEncoding = getEncoding(dataType)
         if (!encodings.contains(inputTypeEncoding)) {
-            throw MosaicSQLExceptions.GeometryEncodingNotSupported(encodings, inputTypeEncoding)
+            throw new Exception(
+              s"""
+                 |Input type encoding $inputTypeEncoding is not supported!
+                 |Supported encodings are: ${encodings.mkString(", ")}""".stripMargin
+            )
         }
     }
 
