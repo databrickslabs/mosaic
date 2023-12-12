@@ -252,7 +252,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "1-x")
         spark.conf.set("spark.databricks.photon.enabled", "false")
         spark.conf.set("spark.databricks.clusterUsageTags.clusterType", "1-x")
-        MosaicContext.checkDBR(spark) should be(false)
+        noException should be thrownBy MosaicContext.checkDBR(spark)
     }
 
     def throwError(): Unit = {
