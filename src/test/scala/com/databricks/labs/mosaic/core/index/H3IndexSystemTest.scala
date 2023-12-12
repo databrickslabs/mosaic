@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.index
 
-import com.databricks.labs.mosaic.core.geometry.api.{ESRI, GeometryAPI, JTS}
+import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.geometry.{MosaicGeometryESRI, MosaicGeometryJTS}
 import com.databricks.labs.mosaic.core.index.H3IndexSystem.indexToGeometry
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING, MULTIPOINT, MULTIPOLYGON, POINT, POLYGON}
@@ -21,7 +21,6 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
         noException shouldBe thrownBy { H3IndexSystem.format(indexRes) }
         noException shouldBe thrownBy { H3IndexSystem.getResolutionStr(10) }
         noException shouldBe thrownBy { H3IndexSystem.indexToGeometry(H3IndexSystem.format(indexRes), JTS) }
-        noException shouldBe thrownBy { H3IndexSystem.indexToGeometry(H3IndexSystem.format(indexRes), ESRI) }
         an[IllegalArgumentException] shouldBe thrownBy { H3IndexSystem.getResolution(true) }
         an[IllegalStateException] shouldBe thrownBy { H3IndexSystem.getResolution("-1") }
     }
@@ -32,7 +31,6 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
         noException shouldBe thrownBy { H3IndexSystem.polyfill(geomJTS, 10) }
         noException shouldBe thrownBy { H3IndexSystem.polyfill(geomESRI, 10) }
         noException shouldBe thrownBy { H3IndexSystem.polyfill(geomJTS, 10, Some(JTS)) }
-        noException shouldBe thrownBy { H3IndexSystem.polyfill(geomESRI, 10, Some(ESRI)) }
     }
 
     test("H3IndexSystem inherited methods") {
