@@ -118,7 +118,6 @@ object GeometryAPI extends Serializable {
     def apply(name: String): GeometryAPI =
         name match {
             case "JTS"  => JTS
-            case "ESRI" => ESRI
             case _      => throw new Error(s"Unsupported API name: $name.")
         }
 
