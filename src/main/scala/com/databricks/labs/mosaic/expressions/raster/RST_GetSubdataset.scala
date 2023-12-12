@@ -25,8 +25,7 @@ case class RST_GetSubdataset(raster: Expression, subsetName: Expression, express
     /** Returns the subdatasets of the raster. */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         val subsetName = arg1.asInstanceOf[UTF8String].toString
-        val subdataset = tile.getRaster.getSubdataset(subsetName)
-        tile.copy(raster = subdataset)
+        tile.copy(raster = tile.getRaster.getSubdataset(subsetName))
     }
 
 }

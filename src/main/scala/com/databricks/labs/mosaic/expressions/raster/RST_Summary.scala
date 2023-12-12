@@ -22,13 +22,12 @@ case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionCon
 
     /** Returns the summary info the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster
         val vector = new JVector[String]()
         // For other flags check the way gdalinfo.py script is called, InfoOptions expects a collection of same flags.
         // https://gdal.org/programs/gdalinfo.html
         vector.add("-json")
         val infoOptions = new InfoOptions(vector)
-        val gdalInfo = GDALInfo(raster.getRaster, infoOptions)
+        val gdalInfo = GDALInfo(tile.getRaster.getRaster, infoOptions)
         UTF8String.fromString(gdalInfo)
     }
 

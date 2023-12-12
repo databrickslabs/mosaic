@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
@@ -18,14 +17,13 @@ case class RST_PixelHeight(raster: Expression, expressionConfig: MosaicExpressio
 
     /** Returns the pixel height of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster
-        val scaleY = raster.getRaster.GetGeoTransform()(5)
-        val skewX = raster.getRaster.GetGeoTransform()(2)
+        val gt = tile.getRaster.getGeoTransform
+        val scaleY = gt(5)
+        val skewX = gt(2)
         // when there is no skew the height is scaleY, but we cant assume 0-only skew
         // skew is not to be confused with rotation
         // TODO - check if this is correct
         val result = math.sqrt(scaleY * scaleY + skewX * skewX)
-        RasterCleaner.dispose(raster)
         result
     }
 

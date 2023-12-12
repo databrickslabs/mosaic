@@ -33,8 +33,6 @@ case class RST_FromFile(
       with NullIntolerant
       with CodegenFallback {
 
-    GDAL.enable()
-
     override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
 
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
@@ -60,26 +58,31 @@ case class RST_FromFile(
       *   The tiles.
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        GDAL.enable()
+        GDAL.enable(expressionConfig)
         val path = rasterPathExpr.eval(input).asInstanceOf[UTF8String].toString
-        val driver = MosaicRasterGDAL.identifyDriver(path)
-        val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
         val readPath = PathUtils.getCleanPath(path)
-        Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
+        val driver = MosaicRasterGDAL.identifyDriver(path)
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
-        if (targetSize <= 0) {
-            val raster = MosaicRasterGDAL.readRaster(tmpPath, path)
-            val tile = MosaicRasterTile(null, raster, path, raster.getDriversShortName)
+        if (targetSize <= 0 && Files.size(Paths.get(readPath)) <= Integer.MAX_VALUE) {
+            var raster = MosaicRasterGDAL.readRaster(readPath, path)
+            var tile = MosaicRasterTile(null, raster, path, raster.getDriversShortName)
             val row = tile.formatCellId(indexSystem).serialize()
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
-            Files.deleteIfExists(Paths.get(tmpPath))
+            raster = null
+            tile = null
             Seq(InternalRow.fromSeq(Seq(row)))
         } else {
-            val tiles = ReTileOnRead.localSubdivide(tmpPath, path, targetSize)
+            // If target size is <0 and we are here that means the file is too big to fit in memory
+            // We split to tiles of size 64MB
+            val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
+            Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
+            val size = if (targetSize <= 0) 64 else targetSize
+            var tiles = ReTileOnRead.localSubdivide(tmpPath, path, size)
             val rows = tiles.map(_.formatCellId(indexSystem).serialize())
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(tmpPath))
+            tiles = null
             rows.map(row => InternalRow.fromSeq(Seq(row)))
         }
     }

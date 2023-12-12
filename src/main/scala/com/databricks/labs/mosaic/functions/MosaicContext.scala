@@ -965,6 +965,8 @@ object MosaicContext extends Logging {
 
     val tmpDir: String = Files.createTempDirectory("mosaic").toAbsolutePath.toString
 
+    val mosaicVersion: String = "0.3.13"
+
     private var instance: Option[MosaicContext] = None
 
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {
@@ -988,23 +990,35 @@ object MosaicContext extends Logging {
     def reset(): Unit = instance = None
 
     // noinspection ScalaStyle,ScalaWeakerAccess
-    def checkDBR(spark: SparkSession): Boolean = {
-        val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "")
+    def checkDBR(spark: SparkSession): Unit = {
+        val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "0")
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = spark.conf.getOption("spark.databricks.photon.enabled").getOrElse("false").toBoolean
         val isTest = spark.conf.getOption("spark.databricks.clusterUsageTags.clusterType").isEmpty
 
+        val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt
+        if (
+          (dbrMajor < 13 && mosaicVersion >= "0.4.0") ||
+          (dbrMajor > 12 && mosaicVersion < "0.4.0")
+        ) {
+            val msg = """|DEPRECATION ERROR:
+                         |    Mosaic v0.3.x series only supports Databricks Runtime 12 and below.
+                         |    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.""".stripMargin
+
+            logError(msg)
+            println(msg)
+            throw new Exception(msg)
+        }
+
         if (!isML && !isPhoton && !isTest) {
-            // Print out the warnings both to the log and to the console
-            logWarning("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
-            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.x.")
-            logWarning("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).")
-            println("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
-            println("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.x.")
-            println("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).")
-            false
-        } else {
-            true
+            val msg = """|DEPRECATION WARNING: 
+                         |  Please use a Databricks:
+                         |      - Photon-enabled Runtime for performance benefits
+                         |      - Runtime ML for spatial AI benefits
+                         |  Mosaic will stop working on this cluster after v0.3.x.""".stripMargin
+            logWarning(msg)
+            println(msg)
+
         }
     }
 

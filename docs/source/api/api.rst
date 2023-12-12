@@ -13,3 +13,4 @@ API Documentation
    spatial-predicates
    spatial-aggregations
    raster-functions
+   rasterio-udfs

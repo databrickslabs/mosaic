@@ -93,7 +93,7 @@
             <artifactId>h3</artifactId>
             <!--H3 fixed at 3.7.0 until Photon updates the version-->
             <!--suppress MavenPackageUpdate-->
-            <version>3.7.3</version>
+            <version>3.7.0</version>
         </dependency>
         <dependency>
             <groupId>org.locationtech.jts</groupId>
@@ -278,7 +278,7 @@
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
                 <spark.version>3.4.0</spark.version>
-                <mosaic.version>0.3.12</mosaic.version>
+                <mosaic.version>0.3.13</mosaic.version>
             </properties>
         </profile>
     </profiles>
