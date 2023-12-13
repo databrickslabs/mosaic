@@ -87,7 +87,6 @@ class MosaicLibraryHandler:
             # This will fix the exception when running on Databricks Runtime 13.x+
             optionClass = getattr(self.sc._jvm.scala, "Option$")
             optionModule = getattr(optionClass, "MODULE$")
-            print("Aaaa")
             lib = JavaJarId(
                 JarURI,
                 ManagedLibraryId.defaultOrganization(),
@@ -96,7 +95,6 @@ class MosaicLibraryHandler:
                 optionModule.apply(None),
             )
         except:
-            print("aaaa")
             lib = JavaJarId(
                 JarURI,
                 ManagedLibraryId.defaultOrganization(),
