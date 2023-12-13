@@ -90,7 +90,7 @@ class MosaicLibraryHandler:
             )
         else:
             # This will fix the exception when running on Databricks Runtime 13.x+
-            optionClass = getattr(spark._sc._jvm.scala, "Option$")
+            optionClass = getattr(self.sc._jvm.scala, "Option$")
             optionModule = getattr(optionClass, "MODULE$")
             lib = JavaJarId(
                 JarURI,
