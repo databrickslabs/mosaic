@@ -14,4 +14,6 @@ trait GeometryWriter {
 
     def toHEX: String
 
+    def toEWKT: String
+
 }

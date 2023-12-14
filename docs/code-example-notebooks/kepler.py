@@ -74,6 +74,9 @@ neighbourhoods = (
   
     # WKB representation
     .withColumn("geom_wkb", mos.st_aswkb(col("geom_internal")))
+
+    # WKT representation
+    .withColumn("geom_ewkt", mos.st_asewkt(col("geom_internal")))
   
    # Limit to only 1 shape
    .limit(1)

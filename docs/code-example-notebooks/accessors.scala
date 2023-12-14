@@ -105,3 +105,30 @@ df.select(st_astext(st_point($"lon", $"lat")).alias("wkt")).show()
 // MAGIC %r
 // MAGIC df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
 // MAGIC showDF(select(df, alias(st_aswkt(st_point(column("lon"), column("lat"))), "wkt")), truncate=F)
+
+// COMMAND ----------
+
+// MAGIC %md
+// MAGIC ### st_asewkt
+
+// COMMAND ----------
+
+// MAGIC %python
+// MAGIC df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+// MAGIC df.select(st_asewkt(st_point('lon', 'lat')).alias('ewkt')).show()
+
+// COMMAND ----------
+
+val df = List((30.0, 10.0)).toDF("lon", "lat")
+df.select(st_asewkt(st_point($"lon", $"lat")).alias("ewkt")).show()
+
+// COMMAND ----------
+
+// MAGIC %sql
+// MAGIC SELECT st_asewkt(st_point(30D, 10D)) AS ewkt
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+// MAGIC showDF(select(df, alias(st_asewkt(st_point(column("lon"), column("lat"))), "ewkt")), truncate=F)

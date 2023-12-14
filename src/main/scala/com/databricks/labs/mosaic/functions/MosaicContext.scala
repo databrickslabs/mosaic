@@ -203,6 +203,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => ConvertTo(AsJSON(exprs(0)), "coords", geometryAPI.name, Some("st_geomfromgeojson"))
         )
         registry.registerFunction(
+            FunctionIdentifier("st_geomfromewkt", database),
+            ConvertTo.registryExpressionInfo(database, "st_geomfromewkt"),
+            (exprs: Seq[Expression]) => ConvertTo(exprs(0), "coords", geometryAPI.name, Some("st_geomfromewkt"))
+        )
+        registry.registerFunction(
           FunctionIdentifier("convert_to_hex", database),
           ConvertTo.registryExpressionInfo(database, "convert_to_hex"),
           (exprs: Seq[Expression]) => ConvertTo(exprs(0), "hex", geometryAPI.name, Some("convert_to_hex"))
@@ -496,6 +501,12 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
           (exprs: Seq[Expression]) => TrySql(exprs(0))
         )
 
+        registry.registerFunction(
+            FunctionIdentifier("st_asewkt", database),
+            ConvertTo.registryExpressionInfo(database, "st_aeswkt"),
+            (exprs: Seq[Expression]) => ConvertTo(exprs(0), "ewkt", geometryAPI.name, Some("st_asewkt"))
+        )
+
         /** Legacy API Specific aliases */
         aliasFunction(registry, "index_geometry", database, "grid_boundaryaswkb", database)
         aliasFunction(registry, "mosaic_explode", database, "grid_tessellateexplode", database)
@@ -612,6 +623,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ConvertTo(inGeom.expr, "coords", geometryAPI.name, Some("st_geomfromwkb")))
         def st_geomfromgeojson(inGeom: Column): Column =
             ColumnAdapter(ConvertTo(AsJSON(inGeom.expr), "coords", geometryAPI.name, Some("st_geomfromgeojson")))
+        def st_geomfromewkt(inGeom: Column): Column =
+            ColumnAdapter(ConvertTo(inGeom.expr, "coords", geometryAPI.name, Some("st_geomfromewkt")))
         def st_makeline(points: Column): Column = ColumnAdapter(ST_MakeLine(points.expr, geometryAPI.name))
         def st_makepolygon(boundaryRing: Column): Column = ColumnAdapter(ST_MakePolygon(boundaryRing.expr, array().expr))
         def st_makepolygon(boundaryRing: Column, holeRingArray: Column): Column =
@@ -623,6 +636,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_astext(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt", geometryAPI.name, Some("st_astext")))
         def st_aswkb(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb", geometryAPI.name, Some("st_aswkb")))
         def st_aswkt(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkt", geometryAPI.name, Some("st_aswkt")))
+        def st_asewkt(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "ewkt", geometryAPI.name, Some("st_asewkt")))
 
         /** Spatial predicates */
         def st_contains(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Contains(geom1.expr, geom2.expr, expressionConfig))

@@ -35,6 +35,7 @@ abstract class GeometryAPI(
             case "HEX"     => reader.fromHEX(input.asInstanceOf[String])
             case "WKB"     => reader.fromWKB(input.asInstanceOf[Array[Byte]])
             case "GEOJSON" => reader.fromJSON(input.asInstanceOf[String])
+            case "EWKT"     => reader.fromEWKT(input.asInstanceOf[String])
             case "COORDS"  => throw new Error(s"$typeName not supported.")
             case _         => throw new Error(s"$typeName not supported.")
         }
@@ -55,7 +56,7 @@ abstract class GeometryAPI(
     def geometry(inputData: InternalRow, dataType: DataType): MosaicGeometry = {
         dataType match {
             case _: BinaryType           => reader.fromWKB(inputData.getBinary(0))
-            case _: StringType           => reader.fromWKT(inputData.getString(0))
+            case _: StringType           => val s = inputData.getString(0); if (s.matches("SRID=\\d*;.*")) reader.fromEWKT(s) else reader.fromWKT(s)
             case _: HexType              => reader.fromHEX(inputData.get(0, HexType).asInstanceOf[InternalRow].getString(0))
             case _: JSONType             => reader.fromJSON(inputData.get(0, JSONType).asInstanceOf[InternalRow].getString(0))
             case _: InternalGeometryType => reader.fromInternal(inputData.get(0, InternalGeometryType).asInstanceOf[InternalRow])
@@ -76,7 +77,7 @@ abstract class GeometryAPI(
     def geometry(inputData: Any, dataType: DataType): MosaicGeometry =
         dataType match {
             case _: BinaryType           => reader.fromWKB(inputData.asInstanceOf[Array[Byte]])
-            case _: StringType           => reader.fromWKT(inputData.asInstanceOf[UTF8String].toString)
+            case _: StringType           => val s = inputData.asInstanceOf[UTF8String].toString; if (s.matches("SRID=\\d*;.*")) reader.fromEWKT(s) else reader.fromWKT(s)
             case _: HexType              => reader.fromHEX(inputData.asInstanceOf[InternalRow].getString(0))
             case _: JSONType             => reader.fromJSON(inputData.asInstanceOf[InternalRow].getString(0))
             case _: InternalGeometryType => reader.fromInternal(inputData.asInstanceOf[InternalRow])
@@ -95,6 +96,7 @@ abstract class GeometryAPI(
             case "JSONOBJECT" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
             case "GEOJSON"    => UTF8String.fromString(geometry.toJSON)
             case "COORDS"     => geometry.toInternal.serialize
+            case "EWKT"       => UTF8String.fromString(geometry.toEWKT)
             case _            => throw new Error(s"$dataFormatName not supported.")
         }
     }

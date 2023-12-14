@@ -192,6 +192,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def toWKB: Array[Byte] = new WKBWriter().write(geom)
 
+    override def toEWKT: String = s"SRID=${getSpatialReference};${toWKT}"
+
     override def numPoints: Int = geom.getNumPoints
 
     override def getSpatialReference: Int = geom.getSRID
@@ -291,5 +293,13 @@ object MosaicGeometryJTS extends GeometryReader {
             case MULTILINESTRING    => MosaicMultiLineStringJTS
             case GEOMETRYCOLLECTION => MosaicGeometryCollectionJTS
         }
+
+    override def fromEWKT(ewkt: String): MosaicGeometryJTS = {
+        val pat = "SRID=(\\d*);(.*)".r
+        val pat(srid, wkt) = ewkt
+        val res = MosaicGeometryJTS(new WKTReader().read(wkt))
+        res.setSpatialReference(srid.toInt)
+        res
+    }
 
 }

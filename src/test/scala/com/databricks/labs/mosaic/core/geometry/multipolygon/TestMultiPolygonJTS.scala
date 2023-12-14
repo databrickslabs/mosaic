@@ -32,10 +32,12 @@ class TestMultiPolygonJTS extends AnyFlatSpec {
         noException should be thrownBy MosaicMultiPolygonJTS.fromHEX(multiPolygon.toHEX)
         noException should be thrownBy MosaicMultiPolygonJTS.fromJSON(multiPolygon.toJSON)
         noException should be thrownBy MosaicMultiPolygonJTS.fromInternal(multiPolygon.toInternal.serialize.asInstanceOf[InternalRow])
+        noException should be thrownBy MosaicMultiPolygonJTS.fromEWKT(multiPolygon.toEWKT)
         multiPolygon.equals(MosaicMultiPolygonJTS.fromWKB(multiPolygon.toWKB)) shouldBe true
         multiPolygon.equals(MosaicMultiPolygonJTS.fromHEX(multiPolygon.toHEX)) shouldBe true
         multiPolygon.equals(MosaicMultiPolygonJTS.fromJSON(multiPolygon.toJSON)) shouldBe true
         multiPolygon.equals(MosaicMultiPolygonJTS.fromInternal(multiPolygon.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
+        multiPolygon.equals(MosaicMultiPolygonJTS.fromEWKT(multiPolygon.toEWKT)) shouldBe true
     }
 
     "MosaicMultiPolygonJTS" should "be instantiable from a Seq of MosaicPolygonJTS" in {
@@ -103,7 +105,7 @@ class TestMultiPolygonJTS extends AnyFlatSpec {
         results should contain only true
     }
 
-    "MosaicPolygonJTS" should "maintain SRID across operations" in {
+    "MosaicMultiPolygonJTS" should "maintain SRID across operations" in {
         val srid = 32632
         val multiPolygon = MosaicMultiPolygonJTS
             .fromWKT(
@@ -138,4 +140,15 @@ class TestMultiPolygonJTS extends AnyFlatSpec {
         multiPolygon.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
     }
 
+    "MosaicMultiPolygonJTS" should "maintain SRID after EWKT conversion" in {
+        val srid = 32632
+        val wkt = "MULTIPOLYGON (((40 40, 20 45, 45 30, 40 40)), ((20 35, 10 30, 10 10, 30 5, 45 20, 20 35), (30 20, 20 15, 20 25, 30 20)))"
+        val expectedEWKT = s"SRID=${srid};${wkt}"
+        val multiPolygon = MosaicMultiPolygonJTS.fromWKT(wkt).asInstanceOf[MosaicMultiPolygonJTS]
+        multiPolygon.setSpatialReference(srid)
+
+        val ewkt = multiPolygon.toEWKT
+        ewkt.equals(expectedEWKT) shouldBe true
+        MosaicMultiPolygonJTS.fromEWKT(ewkt).equals(multiPolygon) shouldBe true
+    }
 }

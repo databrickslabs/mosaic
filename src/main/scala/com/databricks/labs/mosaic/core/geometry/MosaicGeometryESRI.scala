@@ -167,6 +167,8 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
 
     override def toWKB: Array[Byte] = geom.asBinary().array()
 
+    override def toEWKT: String = s"SRID=${getSpatialReference};${toWKT}"
+
     override def getSpatialReference: Int = if (geom.esriSR == null) 0 else geom.getEsriSpatialReference.getID
 
     override def setSpatialReference(srid: Int): Unit = {
@@ -270,6 +272,14 @@ object MosaicGeometryESRI extends GeometryReader {
     override def fromInternal(row: InternalRow): MosaicGeometryESRI = {
         val typeId = row.getInt(0)
         reader(typeId).fromInternal(row).asInstanceOf[MosaicGeometryESRI]
+    }
+
+    override def fromEWKT(ewkt: String): MosaicGeometryESRI = {
+        val pat = "SRID=(\\d*);(.*)".r
+        val pat(srid, wkt) = ewkt
+        val res = MosaicGeometryESRI(OGCGeometry.fromText(wkt))
+        res.setSpatialReference(srid.toInt)
+        res
     }
 
 }

@@ -19,4 +19,5 @@ trait GeometryReader {
 
     def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value): MosaicGeometry
 
+    def fromEWKT(ewkt: String): MosaicGeometry
 }

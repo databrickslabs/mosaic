@@ -49,6 +49,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         def getFunc(name: String): registry.FunctionBuilder = registry.lookupFunctionBuilder(FunctionIdentifier(name)).get
 
         val pointWkt = Literal("POINT (1 1 1)")
+        val pointEwkt = Literal("SRID=4326;POINT (1 1 1)")
         val pointsWkt = array(lit("POINT (1 1)"), lit("POINT (1 2)"), lit("POINT (2 3)")).expr
         val polygonPointsWkt = array(lit("POINT (1 1)"), lit("POINT (1 2)"), lit("POINT (2 3)"), lit("POINT (1 1)")).expr
         val holePointsWkt = array(lit("POINT (1.1 1.1)"), lit("POINT (1.1 1.9)"), lit("POINT (1.1 1.1)")).expr
@@ -91,6 +92,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy getFunc("st_geomfromwkt").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_geomfromwkb").apply(Seq(st_aswkb(multiPolygon).expr))
         noException should be thrownBy getFunc("st_geomfromgeojson").apply(Seq(st_asgeojson(multiPolygon).expr))
+        noException should be thrownBy getFunc("st_geomfromewkt").apply(Seq(pointEwkt))
         noException should be thrownBy getFunc("convert_to_hex").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("convert_to_wkt").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("convert_to_wkb").apply(Seq(multiPolygon.expr))
@@ -101,6 +103,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy getFunc("st_aswkb").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_asbinary").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_asgeojson").apply(Seq(multiPolygon.expr))
+        noException should be thrownBy getFunc("st_asewkt").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_length").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_perimeter").apply(Seq(multiPolygon.expr))
         noException should be thrownBy getFunc("st_distance").apply(Seq(multiPolygon.expr, pointWkt))
