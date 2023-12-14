@@ -1,5 +1,7 @@
 ## v0.3.14
 - Fixes for Warning and Error messages on mosaic_enable call.
+- Performance improvements for raster functions.
+- Fix support for GDAL configuration via spark config (use 'spark.databricks.labs.mosaic.gdal.' prefix).
 
 ## v0.3.13
 - R bindings generation fixed and improved.

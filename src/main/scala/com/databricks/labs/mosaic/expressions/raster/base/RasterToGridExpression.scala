@@ -62,9 +62,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
         val transformed = griddedPixels(tile.getRaster, indexSystem, resolution)
         val results = transformed.map(_.mapValues(valuesCombiner))
         RasterCleaner.dispose(tile)
-        val res = serialize(results)
-        GDAL.dropDrivers()
-        res
+        serialize(results)
     }
 
     /**

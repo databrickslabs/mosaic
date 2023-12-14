@@ -19,14 +19,6 @@ import java.util.UUID
   */
 object GDAL {
 
-    def dropDrivers(): Unit = {
-        val n = gdal.GetDriverCount()
-        for (i <- 0 until n) {
-            val driver = gdal.GetDriver(i)
-            driver.delete()
-        }
-    }
-
     /**
       * Returns the no data value for the given GDAL data type. For non-numeric
       * data types, it returns 0.0. For numeric data types, it returns the
