@@ -510,7 +510,6 @@ object MosaicRasterGDAL extends RasterReader {
             case Some(driverShortName) =>
                 val drivers = new JVector[String]()
                 drivers.add(driverShortName)
-                gdal.GetDriverByName(driverShortName).Register()
                 gdal.OpenEx(path, GA_ReadOnly, drivers)
             case None                  => gdal.Open(path, GA_ReadOnly)
         }

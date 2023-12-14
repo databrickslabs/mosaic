@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -74,12 +75,11 @@ abstract class RasterArray2ArgExpression[T <: Expression: ClassTag](
       */
     override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
         GDAL.enable(expressionConfig)
-        serialize(
-          rasterTransform(RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig), arg1, arg2),
-          returnsRaster,
-          dataType,
-          expressionConfig
-        )
+        val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
+        val result = rasterTransform(tiles, arg1, arg2)
+        val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
+        tiles.foreach(t => RasterCleaner.dispose(t))
+        serialized
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 3, expressionConfig)
