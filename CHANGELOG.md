@@ -1,3 +1,6 @@
+## v0.3.14
+- Fixes for Warning and Error messages on mosaic_enable call.
+
 ## v0.3.13
 - R bindings generation fixed and improved.
 - Remove usage of /vsimem/ drivers for GDAL due to memory leaks.
