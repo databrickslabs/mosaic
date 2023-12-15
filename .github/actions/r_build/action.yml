@@ -64,11 +64,15 @@ runs:
       run: |
         cd R/sparkR-mosaic
         Rscript --vanilla tests.R
+      env:
+        SPARK_HOME: /usr/spark-download-${{ matrix.spark }}/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
     - name: Test sparklyr package
       shell: bash
       run: |
         cd R/sparklyr-mosaic
         Rscript --vanilla tests.R
+      env:
+        SPARK_HOME: /usr/spark-download-${{ matrix.spark }}/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
     - name: Copy R artifacts to GH Actions run
       shell: bash
       run: |
