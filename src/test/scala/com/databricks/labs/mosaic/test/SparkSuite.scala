@@ -9,7 +9,7 @@ trait SparkSuite extends TestSuite with BeforeAndAfterAll {
 
     var sparkConf: SparkConf =
         new SparkConf(false)
-            .set("spark.executor.extraLibraryPath", "/usr/local/lib/gdal")
+            .set("spark.executor.extraLibraryPath", "/usr/lib/gdal")
     @transient private var _sc: SparkContext = _
     @transient private var _spark: SparkSession = _
 

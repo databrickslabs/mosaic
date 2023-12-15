@@ -1,15 +1,15 @@
 package com.databricks.labs.mosaic.functions
 
-import com.databricks.labs.mosaic.{H3, _}
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.test._
+import com.databricks.labs.mosaic._
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.catalog.CatalogDatabase
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, Literal}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{BinaryType, LongType, StringType}
+import org.apache.spark.sql.types.{LongType, StringType}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
@@ -33,7 +33,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         MosaicContext.indexSystem match {
             case BNGIndexSystem => mc.getIndexSystem.getCellIdDataType shouldEqual StringType
             case H3IndexSystem  => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
-            case _ => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
+            case _              => mc.getIndexSystem.getCellIdDataType shouldEqual LongType
         }
         an[Error] should be thrownBy mc.setCellIdDataType("binary")
     }
@@ -58,12 +58,12 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         val gridCellLong = indexSystem match {
             case BNGIndexSystem => lit(1050138790).expr
             case H3IndexSystem  => lit(623060282076758015L).expr
-            case _  => lit(0L).expr
+            case _              => lit(0L).expr
         }
         val gridCellStr = indexSystem match {
             case BNGIndexSystem => lit("TQ388791").expr
             case H3IndexSystem  => lit("8a58e0682d6ffff").expr
-            case _  => lit("0").expr
+            case _              => lit("0").expr
         }
 
         noException should be thrownBy getFunc("as_hex").apply(Seq(pointWkt))
@@ -212,9 +212,9 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
           functionBuilder
         )
         registry.registerFunction(
-            FunctionIdentifier("h3_distance", None),
-            new ExpressionInfo("product", "h3_distance"),
-            functionBuilder
+          FunctionIdentifier("h3_distance", None),
+          new ExpressionInfo("product", "h3_distance"),
+          functionBuilder
         )
 
         mc.register(spark)
@@ -246,6 +246,19 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         val mc = h3MosaicContext
         val method = mc.getProductMethod("sample_increment")
         method.apply(1).asInstanceOf[Int] shouldBe 2
+    }
+
+    def printWarnings(): Unit = {
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "1-x")
+        spark.conf.set("spark.databricks.photon.enabled", "false")
+        spark.conf.set("spark.databricks.clusterUsageTags.clusterType", "1-x")
+        noException should be thrownBy MosaicContext.checkDBR(spark)
+    }
+
+    def throwError(): Unit = {
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "14-x")
+        spark.conf.set("spark.databricks.clusterUsageTags.clusterType", "14-x")
+        an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
     }
 
 }

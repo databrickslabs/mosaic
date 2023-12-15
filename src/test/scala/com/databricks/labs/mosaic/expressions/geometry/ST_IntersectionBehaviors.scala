@@ -128,6 +128,41 @@ trait ST_IntersectionBehaviors extends QueryTest {
 
         (results.select("area").as[Double].collect().head -
             indexPolygon1.union(indexChip1).union(indexPolygon2).union(indexChip2).getArea) should be < 10e-8
+
+        left.createOrReplaceTempView("left")
+        right.createOrReplaceTempView("right")
+
+        val sqlResults = spark.sql(
+          """
+            |SELECT
+            |  left_row_id,
+            |  ST_Area(ST_Intersection_Aggregate(left_index, right_index)) AS area
+            |FROM left
+            |JOIN right
+            |ON left_index.index_id = right_index.index_id
+            |GROUP BY left_row_id
+            |""".stripMargin
+        )
+
+        (sqlResults.select("area").as[Double].collect().head -
+            indexPolygon1.union(indexChip1).union(indexPolygon2).union(indexChip2).getArea) should be < 10e-8
+
+        val sqlResults2 = spark.sql(
+          """
+            |SELECT
+            |  left_row_id,
+            |  ST_Area(ST_Intersection_Agg(left_index, right_index)) AS area
+            |FROM left
+            |JOIN right
+            |ON left_index.index_id = right_index.index_id
+            |GROUP BY left_row_id
+            |""".stripMargin
+        )
+
+        (sqlResults2.select("area").as[Double].collect().head -
+            indexPolygon1.union(indexChip1).union(indexPolygon2).union(indexChip2).getArea) should be < 10e-8
+
+        noException should be thrownBy st_intersection_agg(lit("POLYGON (1 1, 2 2, 3 3, 1 1)"), lit("POLYGON (1 1, 2 2, 3 3, 1 1)"))
     }
 
     def selfIntersectionBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {

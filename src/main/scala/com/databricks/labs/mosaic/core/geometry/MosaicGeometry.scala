@@ -1,8 +1,12 @@
 package com.databricks.labs.mosaic.core.geometry
 
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
+import org.gdal.ogr.ogr
+import org.gdal.osr.SpatialReference
+import org.gdal.osr.osrConstants._
 import org.locationtech.proj4j._
 
 import java.util.Locale
@@ -53,6 +57,8 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def buffer(distance: Double): MosaicGeometry
 
+    def bufferCapStyle(distance: Double, capStyle: String): MosaicGeometry
+
     def simplify(tolerance: Double): MosaicGeometry
 
     def intersection(other: MosaicGeometry): MosaicGeometry
@@ -60,6 +66,16 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def intersects(other: MosaicGeometry): Boolean
 
     def envelope: MosaicGeometry
+
+    def extent: (Double, Double, Double, Double) = {
+        val env = envelope
+        (
+          env.minMaxCoord("X", "MIN"),
+          env.minMaxCoord("Y", "MIN"),
+          env.minMaxCoord("X", "MAX"),
+          env.minMaxCoord("Y", "MAX")
+        )
+    }
 
     def union(other: MosaicGeometry): MosaicGeometry
 
@@ -99,6 +115,15 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def transformCRSXY(sridTo: Int): MosaicGeometry
 
+    def osrTransformCRS(srcSR: SpatialReference, destSR: SpatialReference, geometryAPI: GeometryAPI): MosaicGeometry = {
+        if (srcSR.IsSame(destSR) == 1) return this
+        val ogcGeometry = ogr.CreateGeometryFromWkb(this.toWKB)
+        ogcGeometry.AssignSpatialReference(srcSR)
+        ogcGeometry.TransformTo(destSR)
+        val mosaicGeometry = geometryAPI.geometry(ogcGeometry.ExportToWkb, "WKB")
+        mosaicGeometry
+    }
+
     def transformCRSXY(sridTo: Int, sridFrom: Int): MosaicGeometry = {
         transformCRSXY(sridTo, Some(sridFrom))
     }
@@ -128,6 +153,18 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def getSpatialReference: Int
 
     def setSpatialReference(srid: Int): Unit
+
+    def getSpatialReferenceOSR: SpatialReference = {
+        val srID = getSpatialReference
+        if (srID == 0) {
+            null
+        } else {
+            val geomCRS = new SpatialReference()
+            geomCRS.ImportFromEPSG(srID)
+            geomCRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER)
+            geomCRS
+        }
+    }
 
     def hasValidCoords(crsBoundsProvider: CRSBoundsProvider, crsCode: String, which: String): Boolean = {
         val crsCodeIn = crsCode.split(":")

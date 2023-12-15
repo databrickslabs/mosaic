@@ -2,12 +2,14 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.{MosaicRaster, MosaicRasterBand}
+import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
-import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.DataType
 
 import scala.reflect.ClassTag
@@ -20,8 +22,9 @@ import scala.reflect.ClassTag
   * Mosaic. All cells are projected to spatial coordinates and then to grid
   * index system. The pixels are grouped by cell ids and then combined to form a
   * grid -> value/measure collection per band of the raster.
-  * @param pathExpr
-  *   The expression for the raster path.
+  * @param rasterExpr
+  *   The raster expression. It can be a path to a raster file or a byte array
+  *   containing the raster file content.
   * @param measureType
   *   The output type of the result.
   * @param expressionConfig
@@ -30,11 +33,12 @@ import scala.reflect.ClassTag
   *   The type of the extending class.
   */
 abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
-    pathExpr: Expression,
+    rasterExpr: Expression,
     resolution: Expression,
     measureType: DataType,
     expressionConfig: MosaicExpressionConfig
-) extends Raster1ArgExpression[T](pathExpr, resolution, RasterToGridType(expressionConfig.getCellIdType, measureType), expressionConfig)
+) extends Raster1ArgExpression[T](rasterExpr, resolution, RasterToGridType(expressionConfig.getCellIdType, measureType), returnsRaster = false, expressionConfig)
+      with RasterGridExpression
       with NullIntolerant
       with Serializable {
 
@@ -47,32 +51,22 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       * result is a Sequence of (cellId, measure) of each band of the raster. It
       * applies the values combiner on the measures of each cell. For no
       * combine, use the identity function.
-      * @param raster
+      * @param tile
       *   The raster to be used.
       * @return
       *   Sequence of (cellId, measure) of each band of the raster.
       */
-    override def rasterTransform(raster: MosaicRaster, arg1: Any): Any = {
-        val gt = raster.getRaster.GetGeoTransform()
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
+        GDAL.enable(expressionConfig)
         val resolution = arg1.asInstanceOf[Int]
-        val bandTransform = (band: MosaicRasterBand) => {
-            val results = band.transformValues[(Long, Double)](pixelTransformer(gt, resolution), (0L, -1.0))
-            results
-                // Filter out default cells. We don't want to return them since they are masked in original raster.
-                // We use 0L as a dummy cell ID for default cells.
-                .map(row => row.filter(_._1 != 0L))
-                .filterNot(_.isEmpty)
-                .flatten
-                .groupBy(_._1) // Group by cell ID.
-                .mapValues(values => valuesCombiner(values.map(_._2))) // Apply combiner that is overridden in subclasses.
-        }
-        val transformed = raster.transformBands(bandTransform)
-
-        serialize(transformed)
+        val transformed = griddedPixels(tile.getRaster, indexSystem, resolution)
+        val results = transformed.map(_.mapValues(valuesCombiner))
+        RasterCleaner.dispose(tile)
+        serialize(results)
     }
 
     /**
-      * The method to be overriden to specify how the pixel values are combined
+      * The method to be overridden to specify how the pixel values are combined
       * within a cell.
       * @param values
       *   The values to be combined.
@@ -80,16 +74,6 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       *   The combined value/values.
       */
     def valuesCombiner(values: Seq[Double]): P
-
-    private def pixelTransformer(gt: Seq[Double], resolution: Int)(x: Int, y: Int, value: Double): (Long, Double) = {
-        val offset = 0.5 // This centers the point to the pixel centroid
-        val xOffset = offset + x
-        val yOffset = offset + y
-        val xGeo = gt(0) + xOffset * gt(1) + yOffset * gt(2)
-        val yGeo = gt(3) + xOffset * gt(4) + yOffset * gt(5)
-        val cellID = indexSystem.pointToIndex(xGeo, yGeo, resolution)
-        (cellID, value)
-    }
 
     /**
       * Serializes the result of the raster transform to the desired output

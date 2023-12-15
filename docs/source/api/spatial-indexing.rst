@@ -50,8 +50,8 @@ grid_longlatascellid
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-    >>> df.select(grid_longlatascellid('lon', 'lat', lit(10))).show(1, False)
+    df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+    df.select(grid_longlatascellid('lon', 'lat', lit(10))).show(1, False)
     +----------------------------------+
     |grid_longlatascellid(lon, lat, 10)|
     +----------------------------------+
@@ -60,8 +60,8 @@ grid_longlatascellid
 
    .. code-tab:: scala
 
-    >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
-    >>> df.select(grid_longlatascellid(col("lon"), col("lat"), lit(10))).show()
+    val df = List((30.0, 10.0)).toDF("lon", "lat")
+    df.select(grid_longlatascellid(col("lon"), col("lat"), lit(10))).show()
     +----------------------------------+
     |grid_longlatascellid(lon, lat, 10)|
     +----------------------------------+
@@ -70,7 +70,7 @@ grid_longlatascellid
 
    .. code-tab:: sql
 
-    >>> SELECT grid_longlatascellid(30d, 10d, 10)
+    SELECT grid_longlatascellid(30d, 10d, 10)
     +----------------------------------+
     |grid_longlatascellid(lon, lat, 10)|
     +----------------------------------+
@@ -79,8 +79,8 @@ grid_longlatascellid
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
-    >>> showDF(select(df, grid_longlatascellid(column("lon"), column("lat"), lit(10L))), truncate=F)
+    df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    showDF(select(df, grid_longlatascellid(column("lon"), column("lat"), lit(10L))), truncate=F)
     +----------------------------------+
     |grid_longlatascellid(lon, lat, 10)|
     +----------------------------------+
@@ -128,8 +128,8 @@ grid_pointascellid
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
-    >>> df.select(grid_pointascellid(st_point('lon', 'lat'), lit(10))).show(1, False)
+    df = spark.createDataFrame([{'lon': 30., 'lat': 10.}])
+    df.select(grid_pointascellid(st_point('lon', 'lat'), lit(10))).show(1, False)
     +------------------------------------------+
     |grid_pointascellid(st_point(lon, lat), 10)|
     +------------------------------------------+
@@ -138,8 +138,8 @@ grid_pointascellid
 
    .. code-tab:: scala
 
-    >>> val df = List((30.0, 10.0)).toDF("lon", "lat")
-    >>> df.select(grid_pointascellid(st_point(col("lon"), col("lat")), lit(10))).show()
+    val df = List((30.0, 10.0)).toDF("lon", "lat")
+    df.select(grid_pointascellid(st_point(col("lon"), col("lat")), lit(10))).show()
     +------------------------------------------+
     |grid_pointascellid(st_point(lon, lat), 10)|
     +------------------------------------------+
@@ -148,7 +148,7 @@ grid_pointascellid
 
    .. code-tab:: sql
 
-    >>> SELECT grid_pointascellid(st_point(30d, 10d), 10)
+    SELECT grid_pointascellid(st_point(30d, 10d), 10)
     +------------------------------------------+
     |grid_pointascellid(st_point(lon, lat), 10)|
     +------------------------------------------+
@@ -157,8 +157,8 @@ grid_pointascellid
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
-    >>> showDF(select(df, grid_pointascellid(st_point(column("lon"), column("lat")), lit(10L))), truncate=F)
+    df <- createDataFrame(data.frame(lon = 30.0, lat = 10.0))
+    showDF(select(df, grid_pointascellid(st_point(column("lon"), column("lat")), lit(10L))), truncate=F)
     +------------------------------------------+
     |grid_pointascellid(st_point(lon, lat), 10)|
     +------------------------------------------+
@@ -210,10 +210,10 @@ grid_polyfill
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{
+    df = spark.createDataFrame([{
         'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'
         }])
-    >>> df.select(grid_polyfill('wkt', lit(0))).show(1, False)
+    df.select(grid_polyfill('wkt', lit(0))).show(1, False)
     +------------------------------------------------------------+
     |grid_polyfill(wkt, 0)                                       |
     +------------------------------------------------------------+
@@ -222,8 +222,8 @@ grid_polyfill
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-    >>> df.select(grid_polyfill(col("wkt"), lit(0))).show(false)
+    val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
+    df.select(grid_polyfill(col("wkt"), lit(0))).show(false)
     +------------------------------------------------------------+
     |grid_polyfill(wkt, 0)                                       |
     +------------------------------------------------------------+
@@ -232,7 +232,7 @@ grid_polyfill
 
    .. code-tab:: sql
 
-    >>> SELECT grid_polyfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
+    SELECT grid_polyfill("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
     +------------------------------------------------------------+
     |grid_polyfill(wkt, 0)                                       |
     +------------------------------------------------------------+
@@ -241,8 +241,8 @@ grid_polyfill
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
-    >>> showDF(select(df, grid_polyfill(column("wkt"), lit(0L))), truncate=F)
+    df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+    showDF(select(df, grid_polyfill(column("wkt"), lit(0L))), truncate=F)
     +------------------------------------------------------------+
     |grid_polyfill(wkt, 0)                                       |
     +------------------------------------------------------------+
@@ -287,8 +287,8 @@ grid_boundaryaswkb
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'cellid': 613177664827555839}])
-    >>> df.select(grid_boundaryaswkb("cellid").show(1, False)
+    df = spark.createDataFrame([{'cellid': 613177664827555839}])
+    df.select(grid_boundaryaswkb("cellid").show(1, False)
     +--------------------------+
     |grid_boundaryaswkb(cellid)|
     +--------------------------+
@@ -297,8 +297,8 @@ grid_boundaryaswkb
 
    .. code-tab:: scala
 
-    >>> val df = List((613177664827555839)).toDF("cellid")
-    >>> df.select(grid_boundaryaswkb(col("cellid")).show()
+    val df = List((613177664827555839)).toDF("cellid")
+    df.select(grid_boundaryaswkb(col("cellid")).show()
     +--------------------------+
     |grid_boundaryaswkb(cellid)|
     +--------------------------+
@@ -307,7 +307,7 @@ grid_boundaryaswkb
 
    .. code-tab:: sql
 
-    >>> SELECT grid_boundaryaswkb(613177664827555839)
+    SELECT grid_boundaryaswkb(613177664827555839)
     +--------------------------+
     |grid_boundaryaswkb(cellid)|
     +--------------------------+
@@ -316,8 +316,8 @@ grid_boundaryaswkb
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(cellid = 613177664827555839))
-    >>> showDF(select(df, grid_boundaryaswkb(column("cellid")), truncate=F)
+    df <- createDataFrame(data.frame(cellid = 613177664827555839))
+    showDF(select(df, grid_boundaryaswkb(column("cellid")), truncate=F)
     +--------------------------+
     |grid_boundaryaswkb(cellid)|
     +--------------------------+
@@ -343,8 +343,8 @@ grid_boundary
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'cellid': 613177664827555839}])
-    >>> df.select(grid_boundary("cellid", "WKT").show(1, False)
+    df = spark.createDataFrame([{'cellid': 613177664827555839}])
+    df.select(grid_boundary("cellid", "WKT").show(1, False)
     +--------------------------+
     |grid_boundary(cellid, WKT)|
     +--------------------------+
@@ -353,8 +353,8 @@ grid_boundary
 
    .. code-tab:: scala
 
-    >>> val df = List((613177664827555839)).toDF("cellid")
-    >>> df.select(grid_boundary(col("cellid"), lit("WKT").show()
+    val df = List((613177664827555839)).toDF("cellid")
+    df.select(grid_boundary(col("cellid"), lit("WKT").show()
     +--------------------------+
     |grid_boundary(cellid, WKT)|
     +--------------------------+
@@ -363,7 +363,7 @@ grid_boundary
 
    .. code-tab:: sql
 
-    >>> SELECT grid_boundary(613177664827555839, "WKT")
+    SELECT grid_boundary(613177664827555839, "WKT")
     +--------------------------+
     |grid_boundary(cellid, WKT)|
     +--------------------------+
@@ -372,8 +372,8 @@ grid_boundary
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(cellid = 613177664827555839))
-    >>> showDF(select(df, grid_boundary(column("cellid"), lit("WKT")), truncate=F)
+    df <- createDataFrame(data.frame(cellid = 613177664827555839))
+    showDF(select(df, grid_boundary(column("cellid"), lit("WKT")), truncate=F)
     +--------------------------+
     |grid_boundary(cellid, WKT)|
     +--------------------------+
@@ -415,8 +415,8 @@ grid_tessellate
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
-    >>> df.select(grid_tessellate('wkt', lit(0))).printSchema()
+    df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
+    df.select(grid_tessellate('wkt', lit(0))).printSchema()
     root
      |-- grid_tessellate(wkt, 0): mosaic (nullable = true)
      |    |-- chips: array (nullable = true)
@@ -426,7 +426,7 @@ grid_tessellate
      |    |    |    |-- wkb: binary (nullable = true)
 
 
-    >>> df.select(grid_tessellate('wkt', lit(0))).show()
+    df.select(grid_tessellate('wkt', lit(0))).show()
     +-----------------------+
     |grid_tessellate(wkt, 0)|
     +-----------------------+
@@ -435,8 +435,8 @@ grid_tessellate
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-    >>> df.select(grid_tessellate(col("wkt"), lit(0))).printSchema
+    val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
+    df.select(grid_tessellate(col("wkt"), lit(0))).printSchema
     root
      |-- grid_tessellate(wkt, 0): mosaic (nullable = true)
      |    |-- chips: array (nullable = true)
@@ -445,7 +445,7 @@ grid_tessellate
      |    |    |    |-- index_id: long (nullable = true)
      |    |    |    |-- wkb: binary (nullable = true)
 
-    >>> df.select(grid_tessellate(col("wkt"), lit(0))).show()
+    df.select(grid_tessellate(col("wkt"), lit(0))).show()
     +-----------------------+
     |grid_tessellate(wkt, 0)|
     +-----------------------+
@@ -454,7 +454,7 @@ grid_tessellate
 
    .. code-tab:: sql
 
-    >>> SELECT grid_tessellate("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
+    SELECT grid_tessellate("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
     +-----------------------+
     |grid_tessellate(wkt, 0)|
     +-----------------------+
@@ -463,8 +463,8 @@ grid_tessellate
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
-    >>> schema(select(df, grid_tessellate(column("wkt"), lit(0L))))
+    df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+    schema(select(df, grid_tessellate(column("wkt"), lit(0L))))
     root
      |-- grid_tessellate(wkt, 0): mosaic (nullable = true)
      |    |-- chips: array (nullable = true)
@@ -472,7 +472,7 @@ grid_tessellate
      |    |    |    |-- is_core: boolean (nullable = true)
      |    |    |    |-- index_id: long (nullable = true)
      |    |    |    |-- wkb: binary (nullable = true)
-    >>> showDF(select(df, grid_tessellate(column("wkt"), lit(0L))))
+    showDF(select(df, grid_tessellate(column("wkt"), lit(0L))))
     +-----------------------+
     |grid_tessellate(wkt, 0)|
     +-----------------------+
@@ -537,8 +537,8 @@ grid_tessellateexplode
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
-    >>> df.select(grid_tessellateexplode('wkt', lit(0))).show()
+    df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'}])
+    df.select(grid_tessellateexplode('wkt', lit(0))).show()
     +-----------------------------------------------+
     |is_core|          index_id|                 wkb|
     +-------+------------------+--------------------+
@@ -554,8 +554,8 @@ grid_tessellateexplode
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
-    >>> df.select(grid_tessellateexplode(col("wkt"), lit(0))).show()
+    val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("wkt")
+    df.select(grid_tessellateexplode(col("wkt"), lit(0))).show()
     +-----------------------------------------------+
     |is_core|          index_id|                 wkb|
     +-------+------------------+--------------------+
@@ -571,7 +571,7 @@ grid_tessellateexplode
 
    .. code-tab:: sql
 
-    >>> SELECT grid_tessellateexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
+    SELECT grid_tessellateexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 0)
     +-----------------------------------------------+
     |is_core|          index_id|                 wkb|
     +-------+------------------+--------------------+
@@ -587,8 +587,8 @@ grid_tessellateexplode
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
-    >>> showDF(select(df, grid_tessellateexplode(column("wkt"), lit(0L))))
+    df <- createDataFrame(data.frame(wkt = 'MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))'))
+    showDF(select(df, grid_tessellateexplode(column("wkt"), lit(0L))))
     +-----------------------------------------------+
     |is_core|          index_id|                 wkb|
     +-------+------------------+--------------------+
@@ -640,8 +640,8 @@ grid_cellarea
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
-    >>> df.withColumn(grid_cellarea('grid_cellid').alias("area")).show()
+    df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    df.withColumn(grid_cellarea('grid_cellid').alias("area")).show()
     +------------------------------------+
     |         grid_cellid|           area|
     +--------------------+---------------+
@@ -650,8 +650,8 @@ grid_cellarea
 
    .. code-tab:: scala
 
-    >>> val df = List((613177664827555839)).toDF("grid_cellid")
-    >>> df.select(grid_cellarea('grid_cellid').alias("area")).show()
+    val df = List((613177664827555839)).toDF("grid_cellid")
+    df.select(grid_cellarea('grid_cellid').alias("area")).show()
     +------------------------------------+
     |         grid_cellid|           area|
     +--------------------+---------------+
@@ -660,7 +660,7 @@ grid_cellarea
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cellarea(613177664827555839)
+    SELECT grid_cellarea(613177664827555839)
     +------------------------------------+
     |         grid_cellid|           area|
     +--------------------+---------------+
@@ -669,8 +669,8 @@ grid_cellarea
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
-    >>> showDF(select(df, grid_cellarea(column("grid_cellid"))))
+    df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    showDF(select(df, grid_cellarea(column("grid_cellid"))))
     +------------------------------------+
     |         grid_cellid|           area|
     +--------------------+---------------+
@@ -698,8 +698,8 @@ grid_cellkring
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
-    >>> df.select(grid_cellkring('grid_cellid', lit(2)).alias("kring")).show()
+    df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    df.select(grid_cellkring('grid_cellid', lit(2)).alias("kring")).show()
     +-------------------------------------------------------------------+
     |         grid_cellid|                                         kring|
     +--------------------+----------------------------------------------+
@@ -708,8 +708,8 @@ grid_cellkring
 
    .. code-tab:: scala
 
-    >>> val df = List((613177664827555839)).toDF("grid_cellid")
-    >>> df.select(grid_cellkring('grid_cellid', lit(2)).alias("kring")).show()
+    val df = List((613177664827555839)).toDF("grid_cellid")
+    df.select(grid_cellkring('grid_cellid', lit(2)).alias("kring")).show()
     +-------------------------------------------------------------------+
     |         grid_cellid|                                         kring|
     +--------------------+----------------------------------------------+
@@ -718,7 +718,7 @@ grid_cellkring
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cellkring(613177664827555839, 2)
+    SELECT grid_cellkring(613177664827555839, 2)
     +-------------------------------------------------------------------+
     |         grid_cellid|                                         kring|
     +--------------------+----------------------------------------------+
@@ -727,8 +727,8 @@ grid_cellkring
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
-    >>> showDF(select(df, grid_cellkring(column("grid_cellid"), lit(2L))))
+    df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    showDF(select(df, grid_cellkring(column("grid_cellid"), lit(2L))))
     +-------------------------------------------------------------------+
     |         grid_cellid|                                         kring|
     +--------------------+----------------------------------------------+
@@ -776,8 +776,8 @@ grid_cellkringexplode
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
-    >>> df.select(grid_cellkringexplode('grid_cellid', lit(2)).alias("kring")).show()
+    df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    df.select(grid_cellkringexplode('grid_cellid', lit(2)).alias("kring")).show()
     +------------------+
     |             kring|
     +------------------+
@@ -791,8 +791,8 @@ grid_cellkringexplode
 
    .. code-tab:: scala
 
-    >>> val df = List((613177664827555839)).toDF("grid_cellid")
-    >>> df.select(grid_cellkringexplode('grid_cellid', lit(2)).alias("kring")).show()
+    val df = List((613177664827555839)).toDF("grid_cellid")
+    df.select(grid_cellkringexplode('grid_cellid', lit(2)).alias("kring")).show()
     +------------------+
     |             kring|
     +------------------+
@@ -805,7 +805,7 @@ grid_cellkringexplode
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cellkringexplode(613177664827555839, 2)
+    SELECT grid_cellkringexplode(613177664827555839, 2)
     +------------------+
     |             kring|
     +------------------+
@@ -818,8 +818,8 @@ grid_cellkringexplode
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
-    >>> showDF(select(df, grid_cellkringexplode(column("grid_cellid"), lit(2L))))
+    df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    showDF(select(df, grid_cellkringexplode(column("grid_cellid"), lit(2L))))
     +------------------+
     |             kring|
     +------------------+
@@ -870,8 +870,8 @@ grid_cell_intersection
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{"chip": {"is_core": False, "index_id": 590418571381702655, "wkb": ...}})])
-    >>> df.select(grid_cell_intersection("chip", "chip").alias("intersection")).show()
+    df = spark.createDataFrame([{"chip": {"is_core": False, "index_id": 590418571381702655, "wkb": ...}})])
+    df.select(grid_cell_intersection("chip", "chip").alias("intersection")).show()
     ---------------------------------------------------------+
     |                                           intersection |
     +--------------------------------------------------------+
@@ -880,8 +880,8 @@ grid_cell_intersection
 
    .. code-tab:: scala
 
-    >>> val df = List((...)).toDF("chip")
-    >>> df.select(grid_cell_intersection("chip", "chip").alias("intersection")).show()
+    val df = List((...)).toDF("chip")
+    df.select(grid_cell_intersection("chip", "chip").alias("intersection")).show()
     ---------------------------------------------------------+
     |                                           intersection |
     +--------------------------------------------------------+
@@ -890,7 +890,7 @@ grid_cell_intersection
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cell_intersection({"is_core": False, "index_id": 590418571381702655, "wkb": ...})
+    SELECT grid_cell_intersection({"is_core": False, "index_id": 590418571381702655, "wkb": ...})
     ---------------------------------------------------------+
     |                                           intersection |
     +--------------------------------------------------------+
@@ -899,8 +899,8 @@ grid_cell_intersection
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(...))
-    >>> showDF(select(df, grid_cell_intersection(column("chip"))))
+    df <- createDataFrame(data.frame(...))
+    showDF(select(df, grid_cell_intersection(column("chip"))))
     ---------------------------------------------------------+
     |                                           intersection |
     +--------------------------------------------------------+
@@ -925,8 +925,8 @@ grid_cell_union
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{"chip": {"is_core": False, "index_id": 590418571381702655, "wkb": ...}})])
-    >>> df.select(grid_cell_union("chip", "chip").alias("union")).show()
+    df = spark.createDataFrame([{"chip": {"is_core": False, "index_id": 590418571381702655, "wkb": ...}})])
+    df.select(grid_cell_union("chip", "chip").alias("union")).show()
     ---------------------------------------------------------+
     |                                           union        |
     +--------------------------------------------------------+
@@ -935,8 +935,8 @@ grid_cell_union
 
    .. code-tab:: scala
 
-    >>> val df = List((...)).toDF("chip")
-    >>> df.select(grid_cell_union("chip", "chip").alias("union")).show()
+    val df = List((...)).toDF("chip")
+    df.select(grid_cell_union("chip", "chip").alias("union")).show()
     ---------------------------------------------------------+
     |                                           union        |
     +--------------------------------------------------------+
@@ -945,7 +945,7 @@ grid_cell_union
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cell_union({"is_core": False, "index_id": 590418571381702655, "wkb": ...})
+    SELECT grid_cell_union({"is_core": False, "index_id": 590418571381702655, "wkb": ...})
     ---------------------------------------------------------+
     |                                           union        |
     +--------------------------------------------------------+
@@ -954,8 +954,8 @@ grid_cell_union
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(...))
-    >>> showDF(select(df, grid_cell_union(column("chip"))))
+    df <- createDataFrame(data.frame(...))
+    showDF(select(df, grid_cell_union(column("chip"))))
     ---------------------------------------------------------+
     |                                           union        |
     +--------------------------------------------------------+
@@ -981,8 +981,8 @@ grid_cellkloop
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
-    >>> df.select(grid_cellkloop('grid_cellid', lit(2)).alias("kloop")).show()
+    df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    df.select(grid_cellkloop('grid_cellid', lit(2)).alias("kloop")).show()
     +-------------------------------------------------------------------+
     |         grid_cellid|                                         kloop|
     +--------------------+----------------------------------------------+
@@ -991,8 +991,8 @@ grid_cellkloop
 
    .. code-tab:: scala
 
-    >>> val df = List((613177664827555839)).toDF("grid_cellid")
-    >>> df.select(grid_cellkloop('grid_cellid', lit(2)).alias("kloop")).show()
+    val df = List((613177664827555839)).toDF("grid_cellid")
+    df.select(grid_cellkloop('grid_cellid', lit(2)).alias("kloop")).show()
     +-------------------------------------------------------------------+
     |         grid_cellid|                                         kloop|
     +--------------------+----------------------------------------------+
@@ -1001,7 +1001,7 @@ grid_cellkloop
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cellkloop(613177664827555839, 2)
+    SELECT grid_cellkloop(613177664827555839, 2)
     +-------------------------------------------------------------------+
     |         grid_cellid|                                         kloop|
     +--------------------+----------------------------------------------+
@@ -1010,8 +1010,8 @@ grid_cellkloop
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
-    >>> showDF(select(df, grid_cellkloop(column("grid_cellid"), lit(2L))))
+    df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    showDF(select(df, grid_cellkloop(column("grid_cellid"), lit(2L))))
     +-------------------------------------------------------------------+
     |         grid_cellid|                                         kloop|
     +--------------------+----------------------------------------------+
@@ -1059,8 +1059,8 @@ grid_cellkloopexplode
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
-    >>> df.select(grid_cellkloopexplode('grid_cellid', lit(2)).alias("kloop")).show()
+    df = spark.createDataFrame([{'grid_cellid': 613177664827555839}])
+    df.select(grid_cellkloopexplode('grid_cellid', lit(2)).alias("kloop")).show()
     +------------------+
     |             kloop|
     +------------------+
@@ -1074,8 +1074,8 @@ grid_cellkloopexplode
 
    .. code-tab:: scala
 
-    >>> val df = List((613177664827555839)).toDF("grid_cellid")
-    >>> df.select(grid_cellkloopexplode('grid_cellid', lit(2)).alias("kloop")).show()
+    val df = List((613177664827555839)).toDF("grid_cellid")
+    df.select(grid_cellkloopexplode('grid_cellid', lit(2)).alias("kloop")).show()
     +------------------+
     |             kloop|
     +------------------+
@@ -1088,7 +1088,7 @@ grid_cellkloopexplode
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cellkloopexplode(613177664827555839, 2)
+    SELECT grid_cellkloopexplode(613177664827555839, 2)
     +------------------+
     |             kloop|
     +------------------+
@@ -1101,8 +1101,8 @@ grid_cellkloopexplode
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
-    >>> showDF(select(df, grid_cellkloopexplode(column("grid_cellid"), lit(2L))))
+    df <- createDataFrame(data.frame(grid_cellid = 613177664827555839))
+    showDF(select(df, grid_cellkloopexplode(column("grid_cellid"), lit(2L))))
     +------------------+
     |             kloop|
     +------------------+
@@ -1157,8 +1157,8 @@ grid_geometrykring
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
-    >>> df.select(grid_geometrykring('geometry', lit(8), lit(1)).alias("kring")).show()
+    df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
+    df.select(grid_geometrykring('geometry', lit(8), lit(1)).alias("kring")).show()
     +-------------------------------------------------------------------+
     |            geometry|                                         kring|
     +--------------------+----------------------------------------------+
@@ -1167,8 +1167,8 @@ grid_geometrykring
 
    .. code-tab:: scala
 
-    >>> val df = List((613177664827555839)).toDF("geometry")
-    >>> df.select(grid_geometrykring('geometry', lit(8), lit(1)).alias("kring")).show()
+    val df = List((613177664827555839)).toDF("geometry")
+    df.select(grid_geometrykring('geometry', lit(8), lit(1)).alias("kring")).show()
     +-------------------------------------------------------------------+
     |            geometry|                                         kring|
     +--------------------+----------------------------------------------+
@@ -1177,7 +1177,7 @@ grid_geometrykring
 
    .. code-tab:: sql
 
-    >>> SELECT grid_geometrykring('MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))', 8, 1)
+    SELECT grid_geometrykring('MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))', 8, 1)
     +-------------------------------------------------------------------+
     |            geometry|                                         kring|
     +--------------------+----------------------------------------------+
@@ -1186,8 +1186,8 @@ grid_geometrykring
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(geometry = 613177664827555839))
-    >>> showDF(select(df, grid_geometrykring('geometry', lit(8L), lit(1L))))
+    df <- createDataFrame(data.frame(geometry = 613177664827555839))
+    showDF(select(df, grid_geometrykring('geometry', lit(8L), lit(1L))))
     +-------------------------------------------------------------------+
     |            geometry|                                         kring|
     +--------------------+----------------------------------------------+
@@ -1237,8 +1237,8 @@ grid_geometrykringexplode
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
-    >>> df.select(grid_geometrykringexplode('geometry', lit(8), lit(2)).alias("kring")).show()
+    df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
+    df.select(grid_geometrykringexplode('geometry', lit(8), lit(2)).alias("kring")).show()
     +------------------+
     |             kring|
     +------------------+
@@ -1252,8 +1252,8 @@ grid_geometrykringexplode
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
-    >>> df.select(grid_geometrykringexplode('geometry', lit(8), lit(2)).alias("kring")).show()
+    val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
+    df.select(grid_geometrykringexplode('geometry', lit(8), lit(2)).alias("kring")).show()
     +------------------+
     |             kring|
     +------------------+
@@ -1266,7 +1266,7 @@ grid_geometrykringexplode
 
    .. code-tab:: sql
 
-    >>> SELECT grid_geometrykringexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 8, 2)
+    SELECT grid_geometrykringexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 8, 2)
     +------------------+
     |             kring|
     +------------------+
@@ -1279,8 +1279,8 @@ grid_geometrykringexplode
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
-    >>> showDF(select(df, grid_cellkringexplode(column("geometry"), lit(8L), lit(2L))))
+    df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+    showDF(select(df, grid_cellkringexplode(column("geometry"), lit(8L), lit(2L))))
     +------------------+
     |             kring|
     +------------------+
@@ -1334,8 +1334,8 @@ grid_geometrykloop
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
-    >>> df.select(grid_geometrykloop('geometry', lit(2)).alias("kloop")).show()
+    df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
+    df.select(grid_geometrykloop('geometry', lit(2)).alias("kloop")).show()
     +-------------------------------------------------------------------+
     |            geometry|                                         kloop|
     +--------------------+----------------------------------------------+
@@ -1344,8 +1344,8 @@ grid_geometrykloop
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
-    >>> df.select(grid_cellkloop('geometry', lit(2)).alias("kloop")).show()
+    val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
+    df.select(grid_cellkloop('geometry', lit(2)).alias("kloop")).show()
     +-------------------------------------------------------------------+
     |            geometry|                                         kloop|
     +--------------------+----------------------------------------------+
@@ -1354,7 +1354,7 @@ grid_geometrykloop
 
    .. code-tab:: sql
 
-    >>> SELECT grid_cellkloop("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 2)
+    SELECT grid_cellkloop("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 2)
     +-------------------------------------------------------------------+
     |            geometry|                                         kloop|
     +--------------------+----------------------------------------------+
@@ -1363,8 +1363,8 @@ grid_geometrykloop
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
-    >>> showDF(select(df, grid_cellkloop(column("geometry"), lit(2L))))
+    df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+    showDF(select(df, grid_cellkloop(column("geometry"), lit(2L))))
     +-------------------------------------------------------------------+
     |            geometry|                                         kloop|
     +--------------------+----------------------------------------------+
@@ -1414,8 +1414,8 @@ grid_geometrykloopexplode
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
-    >>> df.select(grid_geometrykloopexplode('geometry', lit(8), lit(2)).alias("kloop")).show()
+    df = spark.createDataFrame([{'geometry': "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"}])
+    df.select(grid_geometrykloopexplode('geometry', lit(8), lit(2)).alias("kloop")).show()
     +------------------+
     |             kloop|
     +------------------+
@@ -1429,8 +1429,8 @@ grid_geometrykloopexplode
 
    .. code-tab:: scala
 
-    >>> val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
-    >>> df.select(grid_geometrykloopexplode('geometry', lit(8), lit(2)).alias("kloop")).show()
+    val df = List(("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))")).toDF("geometry")
+    df.select(grid_geometrykloopexplode('geometry', lit(8), lit(2)).alias("kloop")).show()
     +------------------+
     |             kloop|
     +------------------+
@@ -1443,7 +1443,7 @@ grid_geometrykloopexplode
 
    .. code-tab:: sql
 
-    >>> SELECT grid_geometrykloopexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 8, 2)
+    SELECT grid_geometrykloopexplode("MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))", 8, 2)
     +------------------+
     |             kloop|
     +------------------+
@@ -1456,8 +1456,8 @@ grid_geometrykloopexplode
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
-    >>> showDF(select(df, grid_geometrykloopexplode(column("geometry"), lit(8L), lit(2L))))
+    df <- createDataFrame(data.frame(geometry = "MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)), ((15 5, 40 10, 10 20, 5 10, 15 5)))"))
+    showDF(select(df, grid_geometrykloopexplode(column("geometry"), lit(8L), lit(2L))))
     +------------------+
     |             kloop|
     +------------------+

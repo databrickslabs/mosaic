@@ -37,8 +37,8 @@ class MosaicFrame(DataFrame):
         """
 
     def get_optimal_resolution_str(
-            self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None
-        ) -> str:
+        self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None
+    ) -> str:
         """
         Analyzes the geometries in the currently selected geometry column and proposes an optimal
         grid-index resolution.
@@ -74,7 +74,6 @@ class MosaicFrame(DataFrame):
             )
             return self._mosaicFrame.analyzer().getOptimalResolutionStr(sampleStrategy)
         return self._mosaicFrame.analyzer().getOptimalResolutionStr()
-
 
     def get_optimal_resolution(
         self, sample_rows: Optional[int] = None, sample_fraction: Optional[float] = None

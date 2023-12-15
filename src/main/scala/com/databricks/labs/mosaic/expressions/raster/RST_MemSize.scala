@@ -1,22 +1,22 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /** Returns the memory size of the raster in bytes. */
-case class RST_MemSize(path: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_MemSize](path, LongType, expressionConfig)
+case class RST_MemSize(raster: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_MemSize](raster, LongType, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /** Returns the memory size of the raster in bytes. */
-    override def rasterTransform(raster: MosaicRaster): Any = raster.getMemSize
+    override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.getMemSize
 
 }
 
@@ -30,7 +30,7 @@ object RST_MemSize extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile);
           |        228743
           |  """.stripMargin
 

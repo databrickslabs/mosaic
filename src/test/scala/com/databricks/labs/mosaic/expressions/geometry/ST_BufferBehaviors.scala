@@ -50,6 +50,9 @@ trait ST_BufferBehaviors extends QueryTest {
             .collect()
 
         sqlResult.zip(expected).foreach { case (l, r) => math.abs(l - r) should be < 1e-8 }
+
+        mocks.getWKTRowsDf().select(st_buffer_cap_style($"wkt", lit(1), lit("round"))).collect()
+        mocks.getWKTRowsDf().select(st_buffer_cap_style($"wkt", 1, "round")).collect()
     }
 
     def bufferCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {

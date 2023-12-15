@@ -119,12 +119,12 @@
         <dependency>
             <groupId>org.locationtech.proj4j</groupId>
             <artifactId>proj4j-epsg</artifactId>
-            <version>1.2.2</version>
+            <version>1.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.locationtech.proj4j</groupId>
             <artifactId>proj4j</artifactId>
-            <version>1.2.2</version>
+            <version>1.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.gdal</groupId>
@@ -158,6 +158,27 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.scoverage</groupId>
+                <artifactId>scoverage-maven-plugin</artifactId>
+                <version>1.4.11</version>
+                <executions>
+                    <execution>
+                        <id>scoverage-report</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>check</goal>
+                            <goal>report-only</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <minimumCoverage>${minimum.coverage}</minimumCoverage>
+                    <failOnMinimumCoverage>true</failOnMinimumCoverage>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                    <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
+                </configuration>
+            </plugin>
+            <plugin>
                 <!-- see http://davidb.github.com/scala-maven-plugin -->
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
@@ -181,10 +202,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.2.2</version>
                 <configuration>
                     <!-- Tests will be run with scalatest-maven-plugin instead -->
                     <skipTests>true</skipTests>
+                    <argLine>@{argLine} -Djava.library.path=/usr/local/lib;/usr/java/packages/lib;/usr/lib64;/lib64;/lib;/usr/lib</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -228,27 +250,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.scoverage</groupId>
-                <artifactId>scoverage-maven-plugin</artifactId>
-                <version>1.4.11</version>
-                <executions>
-                    <execution>
-                        <id>scoverage-report</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>check</goal>
-                            <goal>report-only</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <minimumCoverage>${minimum.coverage}</minimumCoverage>
-                    <failOnMinimumCoverage>true</failOnMinimumCoverage>
-                    <scalaVersion>${scala.version}</scalaVersion>
-                    <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.0.2</version>
@@ -288,7 +289,7 @@
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
                 <spark.version>3.3.2</spark.version>
-                <mosaic.version>0.3.11</mosaic.version>
+                <mosaic.version>0.3.14</mosaic.version>
             </properties>
         </profile>
     </profiles>

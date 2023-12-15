@@ -10,3 +10,4 @@ sql_context: SQLContext
 display_handler: DisplayHandler
 ipython_hook: InteractiveShell
 notebook_utils = None
+default_gdal_init_script_path: str = "/dbfs/FileStore/geospatial/mosaic/gdal/"

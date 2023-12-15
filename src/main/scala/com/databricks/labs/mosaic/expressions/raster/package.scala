@@ -21,8 +21,8 @@ package object raster {
       *   The measure type of the resulting pixel value.
       *
       * @return
-      *   The datatype to be used for serialization of the result of
-      *   [[RasterToGridExpression]].
+      * The datatype to be used for serialization of the result of
+      * [[com.databricks.labs.mosaic.expressions.raster.base.RasterToGridExpression]].
       */
     def RasterToGridType(cellIDType: DataType, measureType: DataType): DataType = {
         ArrayType(

@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core
 
-import com.databricks.labs.mosaic.{ESRI, JTS}
+import com.databricks.labs.mosaic.{ESRI, H3, JTS}
 import com.databricks.labs.mosaic.core.index._
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers.be
@@ -63,6 +63,23 @@ class TestMosaic extends AnyFunSuite {
 
         math.abs(chipArea - expectedArea) should be < 1e-8
 
+    }
+
+    test("MosaicFill should not return empty set for bounding box.") {
+        val wkt = "POLYGON ((-0.0011265364650581968 -127.48832860406948, " +
+            "-0.0010988881177292488 -127.48832851537821, -0.0010984513060565016 -127.4883092423591," +
+            " -0.0011272500508798704 -127.48830933794375, -0.0011265364650581968 -127.48832860406948))"
+        val wkt2 = "POLYGON (( -127.48832860406948 -0.0011265364650581968, " +
+            "-127.48832851537821 -0.0010988881177292488, -127.4883092423591 -0.0010984513060565016," +
+            " -127.48830933794375 -0.0011272500508798704, -127.48832860406948 -0.0011265364650581968))"
+
+        val bbox = JTS.geometry(wkt2, "WKT")
+
+        val cells = Mosaic
+            .mosaicFill(bbox, 6, keepCoreGeom = false, H3, JTS)
+            .map(_.indexAsLong(H3))
+
+        cells.length should be > 0
     }
 
 }

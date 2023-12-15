@@ -11,7 +11,9 @@ runs:
       shell: bash
       run: |
         cd python
-        pip install build wheel pyspark==${{ matrix.spark }}
+        pip install build wheel pyspark==${{ matrix.spark }} numpy==${{ matrix.numpy }}
+        pip install numpy==${{ matrix.numpy }}
+        pip install --no-build-isolation --no-cache-dir --force-reinstall gdal==${{ matrix.gdal }}
         pip install .
     - name: Test and build python package
       shell: bash

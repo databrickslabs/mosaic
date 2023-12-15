@@ -14,7 +14,8 @@ class MosaicDataFrameReader:
         """
         self.spark = SparkSession.builder.getOrCreate()
         self.reader = getattr(
-            self.spark._jvm.com.databricks.labs.mosaic.datasource.multiread, "MosaicDataFrameReader"
+            self.spark._jvm.com.databricks.labs.mosaic.datasource.multiread,
+            "MosaicDataFrameReader",
         )(self.spark._jsparkSession)
 
     def format(self, format):

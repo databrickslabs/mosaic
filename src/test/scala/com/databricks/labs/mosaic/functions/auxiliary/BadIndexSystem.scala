@@ -10,6 +10,8 @@ import org.apache.spark.sql.types.{ArrayType, BinaryType, BooleanType, DataType}
 // Used for testing only
 object BadIndexSystem extends IndexSystem(BooleanType) {
 
+    override def crsID: Int = throw new UnsupportedOperationException
+
     val name = "BadIndexSystem"
 
     override def getResolutionStr(resolution: Int): String = throw new UnsupportedOperationException

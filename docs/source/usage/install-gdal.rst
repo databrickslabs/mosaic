@@ -24,27 +24,32 @@ Setup GDAL files and scripts
 Mosaic requires GDAL to be installed on the cluster. The easiest way to do this is to use the
 the mos.setup_gdal() function. This function will extract the GDAL files and scripts from the
 mosaic library and place them in the /dbfs/FileStore/geospatial/mosaic/gdal/ directory.
+This call is no longer needed in versions >= 0.3.12. The shared objects are now included in the
+databricks-mosaic-gdal pip installable bundle.
 
 .. code-block:: py
 
-    >>> import mosaic as mos
-    >>> mos.enable_mosaic(spark, dbutils)
-    >>> mos.setup_gdal(spark)
+    import mosaic as mos
+
+    mos.enable_mosaic(spark, dbutils)
+    mos.setup_gdal(spark)
     GDAL setup complete.
     Shared objects (*.so) stored in: /dbfs/FileStore/geospatial/mosaic/gdal/.
     Init script stored in: /dbfs/FileStore/geospatial/mosaic/gdal/.
     Please restart the cluster with the generated init script to complete the setup.
 
-Configure the intit script
+Configure the init script
 **************************
-Afthe mos.setup_gdal() function has been run, you will need to configure the cluster to use the
-init script. This can be done by clicking on the "Edit" button on the cluster page and adding
+After the mos.setup_gdal() function has been run, you will need to configure the cluster to use the
+init script. For versions >= 0.3.12, we are required to use the following init script:
+`here <https://github.com/databrickslabs/mosaic/blob/main/modules/python/gdal_package/databricks-mosaic-gdal/resources/scripts/mosaic-gdal-3.4.3-filetree-init.sh>`__.
+The init script can be set by clicking on the "Edit" button on the cluster page and adding
 the following to the "Advanced Options" section:
 
 .. figure:: ../images/init_script.png
    :figclass: doc-figure
 
-   Fig 1. Intit script configuration
+   Fig 1. Init script configuration
 
 Enable GDAL for a notebook
 ***********************************
@@ -53,8 +58,9 @@ code at the top of the notebook:
 
 .. code-block:: py
 
-    >>> import mosaic as mos
-    >>> mos.enable_mosaic(spark, dbutils)
-    >>> mos.enable_gdal(spark)
+    import mosaic as mos
+
+    mos.enable_mosaic(spark, dbutils)
+    mos.enable_gdal(spark)
     GDAL enabled.
     GDAL 3.4.3, released 2022/04/22

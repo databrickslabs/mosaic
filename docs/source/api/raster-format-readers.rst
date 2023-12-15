@@ -20,7 +20,7 @@ Mosaic provides spark readers for the following raster formats:
     * XPM using .xpm file extension - https://gdal.org/drivers/raster/xpm.html
     * GRIB using .grb file extension - https://gdal.org/drivers/raster/grib.html
     * Zarr using .zarr file extension - https://gdal.org/drivers/raster/zarr.html
-Other formats supported by GDAL will be added in future releases.
+Other formats are supported if supported by GDAL available drivers.
 
 Mosaic provides two flavors of the readers:
     * spark.read.format("gdal") for reading 1 file per spark task
@@ -32,7 +32,7 @@ spark.read.format("gdal")
 A base Spark SQL data source for reading GDAL raster data sources.
 It reads metadata of the raster and exposes the direct paths for the raster files.
 The output of the reader is a DataFrame with the following columns:
-    * path - path to the raster file on dbfs (StringType)
+    * tile - loaded raster tile (RasterTileType)
     * ySize - height of the raster in pixels (IntegerType)
     * xSize - width of the raster in pixels (IntegerType)
     * bandCount - number of bands in the raster (IntegerType)
@@ -55,27 +55,27 @@ The output of the reader is a DataFrame with the following columns:
 .. tabs::
     .. code-tab:: py
 
-        >>> df = spark.read.format("gdal")\
+        df = spark.read.format("gdal")\
             .option("driverName", "GTiff")\
             .load("dbfs:/path/to/raster.tif")
-        >>> df.show()
-        +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
-        |                path|ySize|xSize|bandCount|            metadata|         subdatasets|srid|            proj4Str|
-        +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
-        |dbfs:/path/to/ra...|  100|  100|        1|{AREA_OR_POINT=Po...|                null| 4326|+proj=longlat +da...|
-        +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
+        df.show()
+        +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
+        |                                                                                                           tile| ySize| xSize| bandCount|             metadata|         subdatasets| srid|              proj4Str|
+        +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
+        | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |  100 |  100 |        1 | {AREA_OR_POINT=Po...|                null| 4326|  +proj=longlat +da...|
+        +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
 
     .. code-tab:: scala
 
-        >>> val df = spark.read.format("gdal")
+        val df = spark.read.format("gdal")
             .option("driverName", "GTiff")
             .load("dbfs:/path/to/raster.tif")
-        >>> df.show()
-        +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
-        |                path|ySize|xSize|bandCount|            metadata|         subdatasets|srid|            proj4Str|
-        +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
-        |dbfs:/path/to/ra...|  100|  100|        1|{AREA_OR_POINT=Po...|                null| 4326|+proj=longlat +da...|
-        +--------------------+-----+-----+---------+--------------------+--------------------+----+--------------------+
+        df.show()
+        +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
+        |                                                                                                           tile| ySize| xSize| bandCount|             metadata|         subdatasets| srid|              proj4Str|
+        +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
+        | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |  100 |  100 |        1 | {AREA_OR_POINT=Po...|                null| 4326|  +proj=longlat +da...|
+        +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
 
 .. warning::
     Issue 350: https://github.com/databrickslabs/mosaic/issues/350
@@ -119,7 +119,7 @@ The reader supports the following options:
 .. tabs::
     .. code-tab:: py
 
-        >>> df = mos.read().format("raster_to_grid")\
+        df = mos.read().format("raster_to_grid")\
             .option("fileExtension", "*.tif")\
             .option("resolution", "8")\
             .option("combiner", "mean")\
@@ -127,7 +127,7 @@ The reader supports the following options:
             .option("tileSize", "1000")\
             .option("kRingInterpolate", "2")\
             .load("dbfs:/path/to/raster.tif")
-        >>> df.show()
+        df.show()
         +--------+--------+------------------+
         |band_id |cell_id |cell_value        |
         +--------+--------+------------------+
@@ -139,7 +139,7 @@ The reader supports the following options:
 
     .. code-tab:: scala
 
-        >>> val df = MosaicContext.read.format("raster_to_grid")
+        val df = MosaicContext.read.format("raster_to_grid")
             .option("fileExtension", "*.tif")
             .option("resolution", "8")
             .option("combiner", "mean")
@@ -147,7 +147,7 @@ The reader supports the following options:
             .option("tileSize", "1000")
             .option("kRingInterpolate", "2")
             .load("dbfs:/path/to/raster.tif")
-        >>> df.show()
+        df.show()
         +--------+--------+------------------+
         |band_id |cell_id |cell_value        |
         +--------+--------+------------------+

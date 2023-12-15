@@ -9,8 +9,11 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python: [3.8.10]
-        spark: [3.2.1]
+        python: [ 3.9.5 ]
+        numpy: [ 1.21.5 ]
+        gdal: [ 3.4.3 ]
+        spark: [ 3.3.2 ]
+        R: [ 4.1.2 ]
     steps:
       - name: checkout code
         uses: actions/checkout@v2

@@ -8,7 +8,6 @@ import mosaic
 
 
 class SparkTestCase(unittest.TestCase):
-
     spark = None
     library_location = None
 
@@ -24,7 +23,7 @@ class SparkTestCase(unittest.TestCase):
             .getOrCreate()
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
-        cls.spark.sparkContext.setLogLevel("warn")
+        cls.spark.sparkContext.setLogLevel("WARN")
 
     @classmethod
     def tearDownClass(cls) -> None:

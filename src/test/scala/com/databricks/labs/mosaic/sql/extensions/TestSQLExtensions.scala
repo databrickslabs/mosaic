@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.sql.extensions
 import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
-import com.databricks.labs.mosaic.core.raster.api.RasterAPI.GDAL
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.SparkSuite
 import org.apache.spark.SparkConf
@@ -19,7 +19,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set(MOSAIC_RASTER_API, "GDAL")
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQL")
         var spark = withConf(conf)
-        it should behave like sqlRegister(MosaicContext.build(H3IndexSystem, JTS, GDAL), spark)
+        it should behave like sqlRegister(MosaicContext.build(H3IndexSystem, JTS), spark)
 
         conf = new SparkConf(false)
             .set(MOSAIC_INDEX_SYSTEM, "H3")
@@ -27,7 +27,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set(MOSAIC_RASTER_API, "GDAL")
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQL")
         spark = withConf(conf)
-        it should behave like sqlRegister(MosaicContext.build(H3IndexSystem, ESRI, GDAL), spark)
+        it should behave like sqlRegister(MosaicContext.build(H3IndexSystem, ESRI), spark)
 
         conf = new SparkConf(false)
             .set(MOSAIC_INDEX_SYSTEM, "BNG")
@@ -35,7 +35,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set(MOSAIC_RASTER_API, "GDAL")
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQL")
         spark = withConf(conf)
-        it should behave like sqlRegister(MosaicContext.build(BNGIndexSystem, JTS, GDAL), spark)
+        it should behave like sqlRegister(MosaicContext.build(BNGIndexSystem, JTS), spark)
 
         conf = new SparkConf(false)
             .set(MOSAIC_INDEX_SYSTEM, "BNG")
@@ -43,7 +43,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set(MOSAIC_RASTER_API, "GDAL")
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQL")
         spark = withConf(conf)
-        it should behave like sqlRegister(MosaicContext.build(BNGIndexSystem, ESRI, GDAL), spark)
+        it should behave like sqlRegister(MosaicContext.build(BNGIndexSystem, ESRI), spark)
 
         conf = new SparkConf(false)
             .set(MOSAIC_INDEX_SYSTEM, "DummyIndex")
@@ -58,7 +58,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
         conf = new SparkConf(false)
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQLDefault")
         spark = withConf(conf)
-        it should behave like sqlRegister(MosaicContext.build(H3IndexSystem, ESRI, GDAL), spark)
+        it should behave like sqlRegister(MosaicContext.build(H3IndexSystem, ESRI), spark)
 
     }
 
@@ -69,7 +69,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicGDAL")
             .set(MOSAIC_GDAL_NATIVE, "true")
         val spark = withConf(conf)
-        it should behave like mosaicGDAL(MosaicContext.build(H3IndexSystem, ESRI, GDAL), spark)
+        it should behave like mosaicGDAL(MosaicContext.build(H3IndexSystem, ESRI), spark)
 
     }
 

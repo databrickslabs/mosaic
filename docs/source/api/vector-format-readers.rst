@@ -71,12 +71,12 @@ The reader supports the following options:
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.read.format("ogr")\
+    df = spark.read.format("ogr")\
         .option("driverName", "GeoJSON")\
         .option("layerName", "points")\
         .option("asWKB", "false")\
         .load("file:///tmp/points.geojson")
-    >>> df.show()
+    df.show()
     +--------------------+-------+-----+-----------------+-----------+
     |             field_1|field_2| ... |           geom_1|geom_1_srid|
     +--------------------+-------+-----+-----------------+-----------+
@@ -87,11 +87,11 @@ The reader supports the following options:
 
    .. code-tab:: scala
 
-    >>> val df = spark.read.format("ogr")
+    val df = spark.read.format("ogr")
         .option("layerName", "points")
         .option("asWKB", "false")
         .load("file:///tmp/points.geojson")
-    >>> df.show()
+    df.show()
     +--------------------+-------+-----+-----------------+-----------+
     |             field_1|field_2| ... |           geom_1|geom_1_srid|
     +--------------------+-------+-----+-----------------+-----------+
@@ -135,12 +135,12 @@ The reader supports the following options:
 .. tabs::
    .. code-tab:: py
 
-    >>> df = mos.read().format("multi_read_ogr")\
+    df = mos.read().format("multi_read_ogr")\
         .option("driverName", "GeoJSON")\
         .option("layerName", "points")\
         .option("asWKB", "false")\
         .load("file:///tmp/points.geojson")
-    >>> df.show()
+    df.show()
     +--------------------+-------+-----+-----------------+-----------+
     |             field_1|field_2| ... |           geom_1|geom_1_srid|
     +--------------------+-------+-----+-----------------+-----------+
@@ -151,11 +151,11 @@ The reader supports the following options:
 
    .. code-tab:: scala
 
-    >>> val df = MosaicContext.read.format("multi_read_ogr")
+    val df = MosaicContext.read.format("multi_read_ogr")
         .option("layerName", "points")
         .option("asWKB", "false")
         .load("file:///tmp/points.geojson")
-    >>> df.show()
+    df.show()
     +--------------------+-------+-----+-----------------+-----------+
     |             field_1|field_2| ... |           geom_1|geom_1_srid|
     +--------------------+-------+-----+-----------------+-----------+
@@ -188,11 +188,11 @@ The reader supports the following options:
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.read.format("geo_db")\
+    df = spark.read.format("geo_db")\
         .option("layerName", "points")\
         .option("asWKB", "false")\
         .load("file:///tmp/points.geodb")
-    >>> df.show()
+    df.show()
     +--------------------+-------+-----+-----------------+-----------+
     |             field_1|field_2| ... |           geom_1|geom_1_srid|
     +--------------------+-------+-----+-----------------+-----------+
@@ -203,11 +203,11 @@ The reader supports the following options:
 
    .. code-tab:: scala
 
-    >>> val df = spark.read.format("geo_db")
+    val df = spark.read.format("geo_db")
         .option("layerName", "points")
         .option("asWKB", "false")
         .load("file:///tmp/points.geodb")
-    >>> df.show()
+    df.show()
     +--------------------+-------+-----+-----------------+-----------+
     |             field_1|field_2| ... |           geom_1|geom_1_srid|
     +--------------------+-------+-----+-----------------+-----------+
@@ -240,11 +240,11 @@ The reader supports the following options:
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.read.format("shapefile")\
+    df = spark.read.format("shapefile")\
         .option("layerName", "points")\
         .option("asWKB", "false")\
         .load("file:///tmp/points.shp")
-    >>> df.show()
+    df.show()
     +--------------------+-------+-----+-----------------+-----------+
     |             field_1|field_2| ... |           geom_1|geom_1_srid|
     +--------------------+-------+-----+-----------------+-----------+
@@ -255,11 +255,11 @@ The reader supports the following options:
 
    .. code-tab:: scala
 
-    >>> val df = spark.read.format("shapefile")
+    val df = spark.read.format("shapefile")
         .option("layerName", "points")
         .option("asWKB", "false")
         .load("file:///tmp/points.shp")
-    >>> df.show()
+    df.show()
     +--------------------+-------+-----+-----------------+-----------+
     |             field_1|field_2| ... |           geom_1|geom_1_srid|
     +--------------------+-------+-----+-----------------+-----------+
