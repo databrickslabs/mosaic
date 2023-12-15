@@ -7,7 +7,10 @@ on:
     - feature/new_docs
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python: [ 3.9.5 ]
     steps:
     - name: install pandoc
       run: sudo apt-get install pandoc
