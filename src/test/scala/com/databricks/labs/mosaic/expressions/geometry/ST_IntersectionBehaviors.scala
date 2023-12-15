@@ -65,7 +65,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             .withColumn("agg_area", st_area(col("agg_intersection")))
             .withColumn("flat_intersection", st_intersection(col("left_wkt"), col("right_wkt")))
             .withColumn("flat_area", st_area(col("flat_intersection")))
-            .withColumn("comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)) // ESRI Spatial tolerance
+            .withColumn("comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)) // Spatial tolerance
 
         result.select("comparison").collect().map(_.getBoolean(0)).forall(identity) shouldBe true
     }
@@ -206,7 +206,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             .withColumn("agg_area", st_area(col("agg_intersection")))
             .withColumn("flat_intersection", st_intersection(col("left_wkt"), col("right_wkt")))
             .withColumn("flat_area", st_area(col("flat_intersection")))
-            .withColumn("comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)) // ESRI Spatial tolerance
+            .withColumn("comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)) // Spatial tolerance
 
         result.select("comparison").collect().map(_.getBoolean(0)).forall(identity) shouldBe true
     }

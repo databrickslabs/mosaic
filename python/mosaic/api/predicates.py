@@ -25,10 +25,6 @@ def st_intersects(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
     -------
     Column (BooleanType)
 
-    Notes
-    -----
-    Intersection logic will be dependent on the chosen geometry API (ESRI or JTS).
-
     """
     return config.mosaic_context.invoke_function(
         "st_intersects",

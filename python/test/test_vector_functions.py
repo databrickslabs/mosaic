@@ -190,7 +190,7 @@ class TestVectorFunctions(MosaicTestCase):
             .withColumn(
                 "comparison_intersection",
                 abs(col("agg_area") - col("flat_area")) <= lit(1e-8),
-            )  # ESRI Spatial tolerance
+            )  # Spatial tolerance
         )
 
         self.assertTrue(

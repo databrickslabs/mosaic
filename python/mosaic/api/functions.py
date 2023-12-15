@@ -481,8 +481,6 @@ def st_isvalid(geom: ColumnOrName) -> Column:
     Notes
     -----
     Validity assertions will be dependent on the chosen geometry API.
-    The assertions used in the ESRI geometry API (JTS is the default) follow the definitions in
-    the “Simple feature access - Part 1” document (OGC 06-103r4) for each geometry type.
 
     """
     return config.mosaic_context.invoke_function(
@@ -574,7 +572,7 @@ def st_intersection(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column
     Notes
     -----
     The resulting geometry could give different results depending on the chosen
-    geometry API (ESRI or JTS), especially for polygons that are invalid based on
+    geometry API (JTS), especially for polygons that are invalid based on
     the chosen geometry API.
 
     """
@@ -618,9 +616,6 @@ def st_simplify(geom: ColumnOrName, tolerance: ColumnOrName) -> Column:
     Column
         The simplified geometry.
 
-    Notes
-    -----
-    The tolerance will be ignored by the ESRI geometry API.
     """
     return config.mosaic_context.invoke_function(
         "st_simplify", pyspark_to_java_column(geom), pyspark_to_java_column(tolerance)
