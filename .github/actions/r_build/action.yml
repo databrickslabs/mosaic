@@ -17,14 +17,14 @@ runs:
       id: cache-spark
       uses: actions/cache@v3
       with:
-        path: /usr/spark-download/unzipped
+        path: /usr/spark-download-{{ matrix.spark }}/unzipped
         key: r_build-spark
     - if: ${{ steps.cache-spark.outputs.cache-hit != 'true' }}
       name: Download and unpack Spark
       shell: bash
       run: |
         wget -P /usr/spark-download/raw https://archive.apache.org/dist/spark/spark-${{ matrix.spark }}/spark-${{ matrix.spark }}-bin-hadoop3.tgz
-        tar zxvf /usr/spark-download/raw/spark-${{ matrix.spark }}-bin-hadoop3.tgz -C /usr/spark-download/unzipped
+        tar zxvf /usr/spark-download-{{ matrix.spark }}/raw/spark-${{ matrix.spark }}-bin-hadoop3.tgz -C /usr/spark-download/unzipped
     - name: Create R environment
       shell: bash
       run: |
@@ -51,14 +51,14 @@ runs:
         cd R
         Rscript --vanilla generate_docs.R
       env:
-        SPARK_HOME: /usr/spark-download/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
+        SPARK_HOME: /usr/spark-download-{{ matrix.spark }}/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
     - name: Build R package
       shell: bash
       run: |
         cd R
         Rscript --vanilla build_r_package.R
       env:
-        SPARK_HOME: /usr/spark-download/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
+        SPARK_HOME: /usr/spark-download-{{ matrix.spark }}/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
     - name: Test SparkR package
       shell: bash
       run: |
