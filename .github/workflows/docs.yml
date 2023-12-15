@@ -7,10 +7,15 @@ on:
     - feature/new_docs
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python: [ 3.9.5 ]
     steps:
     - name: install pandoc
-      run: sudo apt-get install pandoc
+      run: |
+        sudo apt-get install pandoc
+        sudo apt-get install --reinstall python3-pkg-resources
     - uses: actions/setup-python@v2
     - uses: actions/checkout@v2
       with:
