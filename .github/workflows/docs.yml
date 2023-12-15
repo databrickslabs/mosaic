@@ -15,7 +15,7 @@ jobs:
     - name: install pandoc
       run: |
         sudo apt-get install pandoc
-        sudo apt-get install --reinstall python-pkg-resources
+        sudo apt-get install --reinstall python3-pkg-resources
     - uses: actions/setup-python@v2
     - uses: actions/checkout@v2
       with:

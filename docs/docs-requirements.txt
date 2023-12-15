@@ -1,3 +1,4 @@
+setuptools==68.1.2
 Sphinx==4.4.0
 sphinx-material==0.0.35
 nbsphinx==0.8.8
