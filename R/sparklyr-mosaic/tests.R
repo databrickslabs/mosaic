@@ -10,7 +10,7 @@ install.packages("sparklyr", repos="")
 library(sparklyr)
 
 spark_home_set("/usr/spark-download/unzipped/spark-3.4.0-bin-hadoop3")
-install.packages("sparklyrMosaic_0.3.13.tar.gz", repos = NULL)
+install.packages("sparklyrMosaic_0.3.14.tar.gz", repos = NULL)
 library(sparklyrMosaic)
 
 # find the mosaic jar in staging

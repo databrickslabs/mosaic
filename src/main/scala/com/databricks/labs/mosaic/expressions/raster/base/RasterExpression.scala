@@ -69,12 +69,11 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       */
     override def nullSafeEval(input: Any): Any = {
         GDAL.enable(expressionConfig)
-        serialize(
-          rasterTransform(MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], cellIdDataType)),
-          returnsRaster,
-          dataType,
-          expressionConfig
-        )
+        val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], cellIdDataType)
+        val result = rasterTransform(tile)
+        val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
+        RasterCleaner.dispose(tile)
+        serialized
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 1, expressionConfig)

@@ -71,23 +71,22 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
 
+        val tile = MosaicRasterTile
+            .deserialize(
+              rasterExpr.eval(input).asInstanceOf[InternalRow],
+              indexSystem.getCellIdDataType
+            )
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
-        val generatedChips = rasterGenerator(
-          MosaicRasterTile
-              .deserialize(
-                rasterExpr.eval(input).asInstanceOf[InternalRow],
-                indexSystem.getCellIdDataType
-              ),
-          inResolution
-        )
+        val generatedChips = rasterGenerator(tile, inResolution)
             .map(chip => chip.formatCellId(indexSystem))
 
         val rows = generatedChips
             .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize())))
 
+        RasterCleaner.dispose(tile)
         generatedChips.foreach(chip => RasterCleaner.dispose(chip))
         generatedChips.foreach(chip => RasterCleaner.dispose(chip.getRaster))
-        GDAL.dropDrivers()
+
         rows.iterator
     }
 
