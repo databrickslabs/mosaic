@@ -1,7 +1,6 @@
 library(testthat)
 
-spark_location <- "/usr/spark-download/unzipped/spark-3.4.0-bin-hadoop3"
-Sys.setenv(SPARK_HOME = spark_location)
+spark_location <- Sys.getenv("SPARK_HOME")
 library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
 .libPaths(c(file.path(spark_location, "R", "lib"), .libPaths()))
 
