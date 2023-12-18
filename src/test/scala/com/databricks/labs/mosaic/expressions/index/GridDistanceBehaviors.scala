@@ -80,6 +80,7 @@ trait GridDistanceBehaviors extends MosaicSpatialQueryTest {
 
         noException should be thrownBy mc.functions.grid_distance(lit(1L), lit(1L))
         noException should be thrownBy gridDistanceExpr.makeCopy(gridDistanceExpr.children.toArray)
+        noException should be thrownBy gridDistanceExpr.prettyName
     }
 
 }

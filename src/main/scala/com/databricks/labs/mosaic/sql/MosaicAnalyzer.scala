@@ -64,10 +64,6 @@ case class MosaicAnalyzer(analyzerMosaicFrame: DataFrame) {
 
         val meanIndexAreas = for (i <- mosaicContext.getIndexSystem.resolutions) yield (i, getMeanIndexArea(geometryColumn, sampleStrategy, i))
 
-        if (percentiles.anyNull) {
-            throw new Exception("Null values found in percentiles")
-        }
-
         val indexAreaRows = meanIndexAreas
             .map({ case (resolution, indexArea) =>
                 Row(
