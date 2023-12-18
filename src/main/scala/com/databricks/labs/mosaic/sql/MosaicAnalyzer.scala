@@ -7,7 +7,7 @@ import org.apache.spark.sql.types._
 
 import scala.util._
 
-class MosaicAnalyzer(analyzerMosaicFrame: DataFrame) {
+case class MosaicAnalyzer(analyzerMosaicFrame: DataFrame) {
 
     val defaultSampleFraction = 0.01
 
@@ -127,10 +127,7 @@ class MosaicAnalyzer(analyzerMosaicFrame: DataFrame) {
               )
             )
 
-        Try(meanIndexAreaDf.as[Double].collect.head) match {
-            case Success(result) => result
-            case Failure(_)      => throw new Exception("Unable to calculate mean index area")
-        }
+        Try(meanIndexAreaDf.as[Double].collect.head).toOption.getOrElse(0.0)
     }
 
     def getOptimalResolution(geometryColumn: String, sampleRows: Int): Int = {
