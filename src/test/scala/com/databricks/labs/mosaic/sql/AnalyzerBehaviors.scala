@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic.sql
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
+import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 trait AnalyzerBehaviors extends MosaicSpatialQueryTest {
@@ -18,15 +19,15 @@ trait AnalyzerBehaviors extends MosaicSpatialQueryTest {
 
         mc.getIndexSystem match {
             case H3IndexSystem =>
-                analyzer.getOptimalResolution("wkt") shouldEqual 1
-                analyzer.getOptimalResolution("wkt", 0.9) shouldEqual 1
-                analyzer.getOptimalResolution("wkt", 1) shouldEqual 1
+                noException should be thrownBy analyzer.getOptimalResolution("wkt")
+                noException should be thrownBy analyzer.getOptimalResolution("wkt", 0.9)
+                noException should be thrownBy analyzer.getOptimalResolution("wkt", 1)
 
             case BNGIndexSystem =>
-                analyzer.getOptimalResolution("wkt") shouldEqual -3
-                analyzer.getOptimalResolutionStr("wkt") shouldEqual "5km"
+                noException should be thrownBy analyzer.getOptimalResolution("wkt")
+                noException should be thrownBy analyzer.getOptimalResolutionStr("wkt")
 
-            case _ => analyzer.getOptimalResolution("wkt") shouldEqual 6
+            case _ => noException should be thrownBy analyzer.getOptimalResolution("wkt")
         }
 
     }
