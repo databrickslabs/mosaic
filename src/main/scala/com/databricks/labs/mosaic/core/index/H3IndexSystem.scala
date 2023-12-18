@@ -22,7 +22,7 @@ import scala.util.{Success, Try}
 object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
     // An instance of H3Core to be used for IndexSystem implementation.
-    @transient val h3: H3Core = H3Core.newInstance()
+    @transient private val h3: H3Core = H3Core.newInstance()
 
     /**
       * H3 resolution can only be an Int value between 0 and 15.

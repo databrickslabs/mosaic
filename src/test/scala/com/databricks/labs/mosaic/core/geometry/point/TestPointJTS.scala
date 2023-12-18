@@ -27,6 +27,23 @@ class TestPointJTS extends AnyFlatSpec {
         point.numPoints shouldEqual 1
     }
 
+    "MosaicPointJTS" should "be instantiable from a Seq of MosaicPointJTS" in {
+        val lineStringReference = MosaicPointJTS.fromWKT("POINT (1 1)")
+        val pointsSeq = Seq("POINT (1 1)")
+          .map(MosaicPointJTS.fromWKT)
+          .map(_.asInstanceOf[MosaicPointJTS])
+        val lineStringTest = MosaicPointJTS.fromSeq(pointsSeq)
+        lineStringReference.equals(lineStringTest) shouldBe true
+    }
+
+    "MosaicPointJTS" should "not fail for empty Seq" in {
+        val expected = MosaicPointJTS.fromWKT(
+            "POINT EMPTY"
+        )
+        val actual = MosaicPointJTS.fromSeq(Seq())
+        expected.equals(actual) shouldBe true
+    }
+
     "MosaicPointJTS" should "read all supported formats" in {
         val point = MosaicPointJTS.fromWKT("POINT(1 1)")
         noException should be thrownBy MosaicPointJTS.fromWKB(point.toWKB)

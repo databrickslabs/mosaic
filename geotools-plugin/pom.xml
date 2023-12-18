@@ -5,10 +5,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.databricks.geotools</groupId>
-  <artifactId>databricks-gt_0.0.2</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
+  <artifactId>databricks-gt_0.0.5</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
 
-  <name>databricks-gt_0.0.2</name>
+  <name>databricks-gt_0.0.5</name>
   <url>http://www.databricks.com</url>
 
   <properties>

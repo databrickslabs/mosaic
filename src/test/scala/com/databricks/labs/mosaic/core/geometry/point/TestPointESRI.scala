@@ -27,6 +27,23 @@ class TestPointESRI extends AnyFlatSpec {
         point.numPoints shouldEqual 1
     }
 
+    "MosaicPointESRI" should "be instantiable from a Seq of MosaicPointESRI" in {
+        val expected = MosaicPointESRI.fromWKT("POINT (1 1)")
+        val pointsSeq = Seq("POINT (1 1)")
+          .map(MosaicPointESRI.fromWKT)
+          .map(_.asInstanceOf[MosaicPointESRI])
+        val actual = MosaicPointESRI.fromSeq(pointsSeq)
+        expected.equals(actual) shouldBe true
+    }
+
+    "MosaicPointESRI" should "not fail for empty Seq" in {
+        val expected = MosaicPointESRI.fromWKT(
+            "POINT EMPTY"
+        )
+        val actual = MosaicPointESRI.fromSeq(Seq())
+        expected.equals(actual) shouldBe true
+    }
+
     "MosaicPointESRI" should "read all supported formats" in {
         val point = MosaicPointESRI.fromWKT("POINT(1 1)")
         noException should be thrownBy MosaicPointESRI.fromWKB(point.toWKB)

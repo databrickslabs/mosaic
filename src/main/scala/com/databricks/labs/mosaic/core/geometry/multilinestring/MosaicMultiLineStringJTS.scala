@@ -55,6 +55,11 @@ object MosaicMultiLineStringJTS extends GeometryReader {
         geomType: GeometryTypeEnum.Value = MULTILINESTRING
     ): MosaicMultiLineStringJTS = {
         val gf = new GeometryFactory()
+
+        if (geomSeq.isEmpty) {
+            // For empty sequence return an empty geometry with default Spatial Reference
+            return MosaicMultiLineStringJTS(gf.createMultiLineString())
+        }
         val spatialReference = geomSeq.head.getSpatialReference
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case LINESTRING                    =>
