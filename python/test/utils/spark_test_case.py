@@ -18,7 +18,7 @@ class SparkTestCase(unittest.TestCase):
             cls.library_location = f"{mosaic.__path__[0]}/lib/mosaic-{version('databricks-mosaic')}-SNAPSHOT-jar-with-dependencies.jar"
 
         cls.spark = (
-            SparkSession.builder.master("local")
+            SparkSession.builder.master("local[*]")
             .config("spark.jars", cls.library_location)
             .getOrCreate()
         )

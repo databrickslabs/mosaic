@@ -52,7 +52,10 @@ object RasterClipByVector {
 
         VectorClipper.cleanUpClipper(shapeFileName)
 
-        result
+        result.numBands match {
+            case 0 => throw new Exception("Output raster has no valid bands.")
+            case _ => result
+        }
     }
 
 }

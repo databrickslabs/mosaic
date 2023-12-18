@@ -231,4 +231,14 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       */
     def isNoDataMask: Boolean = band.GetMaskFlags() == gdalconstConstants.GMF_NODATA
 
+    /**
+      * @return
+      *   Returns true if the band is empty.
+      */
+    def isEmpty: Boolean = {
+        val minMaxVals = Array.fill[Double](2)(0)
+        band.ComputeRasterMinMax(minMaxVals, 0)
+        minMaxVals.head == minMaxVals.last && minMaxVals.head == noDataValue
+    }
+
 }

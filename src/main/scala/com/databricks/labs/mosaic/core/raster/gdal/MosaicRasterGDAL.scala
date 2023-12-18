@@ -19,7 +19,7 @@ import org.locationtech.proj4j.CRSFactory
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.util.{Locale, Vector => JVector}
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /** GDAL implementation of the MosaicRaster trait. */
 //noinspection DuplicatedCode
@@ -233,7 +233,13 @@ case class MosaicRasterGDAL(
       * @return
       *   Returns the raster's number of bands.
       */
-    def numBands: Int = raster.GetRasterCount()
+    def numBands: Int = {
+        val bandCount = Try(raster.GetRasterCount())
+        bandCount match {
+            case Success(value) => value
+            case Failure(_)     => 0
+        }
+    }
 
     // noinspection ZeroIndexToHead
     /**
@@ -319,30 +325,9 @@ case class MosaicRasterGDAL(
       *   compute since it requires reading the raster and computing statistics.
       */
     def isEmpty: Boolean = {
-        import org.json4s._
-        import org.json4s.jackson.JsonMethods._
-        implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
-
-        val vector = new JVector[String]()
-        vector.add("-stats")
-        vector.add("-json")
-        val infoOptions = new InfoOptions(vector)
-        val gdalInfo = GDALInfo(raster, infoOptions)
-        val json = parse(gdalInfo).extract[Map[String, Any]]
-
-        if (json.contains("STATISTICS_VALID_PERCENT")) {
-            json("STATISTICS_VALID_PERCENT").asInstanceOf[Double] == 0.0
-        } else if (json.contains("bands") && json("bands").asInstanceOf[List[Any]].nonEmpty) {
-            !json("bands")
-                .asInstanceOf[List[Map[String, Any]]]
-                .flatMap(i => i("metadata").asInstanceOf[Map[String, Any]].values)
-                .asInstanceOf[List[Map[String, Any]]]
-                .exists(m => m.getOrElse("STATISTICS_VALID_PERCENT", "0").toString.toDouble > 0.0)
-        } else if (subdatasets.nonEmpty) {
-            false
-        } else {
-            getBandStats.values.map(_.getOrElse("mean", 0.0)).forall(_ == 0.0)
-        }
+        val bands = getBands
+        if (bands.isEmpty) return true
+        bands.takeWhile(_.isEmpty).nonEmpty
     }
 
     /**

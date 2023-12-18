@@ -4,7 +4,7 @@ import unittest
 
 from pyspark.sql.functions import abs, col, first, lit, sqrt, array
 
-from .context import api
+from .context import api, readers
 from .utils import MosaicTestCaseWithGDAL
 
 
@@ -157,6 +157,23 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
 
     def test_netcdf(self):
+
+        region_keys = ["NAME", "STATE", "BOROUGH", "BLOCK", "TRACT"]
+
+        census_df = (
+            readers.read()
+            .format("multi_read_ogr")
+            .option("vsizip", "true")
+            .option("chunkSize", "20")
+            .load("test/data/Blocks2020.zip")
+            .select(*region_keys, "geom_0", "geom_0_srid")
+            .dropDuplicates()
+            .withColumn("geom_0", api.st_simplify("geom_0", lit(0.001)))
+            .withColumn("geom_0", api.st_updatesrid("geom_0", col("geom_0_srid"),lit(4326)))
+            .withColumn("chip", api.grid_tessellateexplode("geom_0", lit(5)))
+            .select(*region_keys, "chip.*")
+        )
+
         df = (
             self.spark.read.format("gdal")
             .option("raster.read.strategy", "in-memory")
@@ -169,8 +186,37 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         self.assertEqual(df.count(), 31)
 
-        grid_tiles = df.withColumn("tile", api.rst_setsrid("tile", lit(4326))).select(
-            api.rst_tessellate("tile", lit(3)).alias("tile")
+        # grid_tiles = (
+        #     df
+        #     .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
+        #     .select(api.rst_tessellate("tile", lit(3)).alias("tile"))
+        # )
+        #
+        # self.assertEqual(grid_tiles.count(), 4495)
+
+        prh_bands_geog = (
+            df
+            .select(api.rst_setsrid("tile", lit(4326)).alias("tile"))
+            .withColumn("timestep", col("tile.seqNo"))
         )
 
-        self.assertEqual(grid_tiles.count(), 4495)
+        prh_bands_indexed = (
+            prh_bands_geog
+            .withColumn("tile", api.rst_tessellate("tile", lit(5)))
+            .where(~api.rst_isempty("tile"))
+        ).cache()
+
+        print(prh_bands_indexed.count())
+
+        # prh_bands_indexed.write.format("noop").mode("overwrite").save()
+
+        # clipped_precipitation = (
+        #     prh_bands_indexed.alias("var")
+        #     .join(census_df.alias("aoi"), how="inner", on=col("var.tile.index_id")==col("aoi.index_id"))
+        #     .withColumn("band", api.rst_clip("band", "gj_geom"))
+        #     # .where(~api.rst_isempty("band"))
+        # )
+        #
+        # clipped_precipitation.write.format("noop").mode("overwrite").save()
+
+
