@@ -37,7 +37,7 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
     - `spark.databricks.labs.mosaic.jar.location`
        Explicitly specify the path to the Mosaic JAR.
        (Optional and not required at all in a standard Databricks environment).
-    - `spark.databricks.labs.mosaic.geometry.api`: 'JTS' (default) or 'ESRI'
+    - `spark.databricks.labs.mosaic.geometry.api`: 'JTS'
        Explicitly specify the underlying geometry library to use for spatial operations. (Optional)
     - `spark.databricks.labs.mosaic.index.system`: 'H3' (default)
        Explicitly specify the index system to use for optimized spatial joins. (Optional)

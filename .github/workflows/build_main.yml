@@ -19,7 +19,7 @@ jobs:
         python: [ 3.9.5 ]
         numpy: [ 1.21.5 ]
         gdal: [ 3.4.3 ]
-        spark: [ 3.3.2 ]
+        spark: [ 3.4.0 ]
         R: [ 4.1.2 ]
     steps:
       - name: checkout code

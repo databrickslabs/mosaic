@@ -455,7 +455,7 @@ object OGRFileFormat extends Serializable {
             val layerName = options.getOrElse("layerName", "")
             val asWKB = options.getOrElse("asWKB", "false").toBoolean
             val path = file.filePath
-            val dataset = getDataSource(driverName, path)
+            val dataset = getDataSource(driverName, path.toString())
             val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
             val layer = dataset.GetLayerByName(resolvedLayerName)
             layer.ResetReading()

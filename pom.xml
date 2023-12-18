@@ -84,7 +84,7 @@
         <dependency>
             <groupId>io.delta</groupId>
             <artifactId>delta-core_${scala.compat.version}</artifactId>
-            <version>2.1.0</version>
+            <version>2.4.0</version>
             <scope>provided</scope>
         </dependency>
         <!--geo dependencies-->
@@ -104,17 +104,6 @@
             <groupId>org.locationtech.jts.io</groupId>
             <artifactId>jts-io-common</artifactId>
             <version>1.19.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.esri.geometry</groupId>
-            <artifactId>esri-geometry-api</artifactId>
-            <version>2.2.4</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.locationtech.proj4j</groupId>
@@ -288,7 +277,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.3.2</spark.version>
+                <spark.version>3.4.0</spark.version>
                 <mosaic.version>0.3.14</mosaic.version>
             </properties>
         </profile>

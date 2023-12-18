@@ -36,13 +36,6 @@ object GeometryTypeEnum extends Enumeration {
             .find(_.id == id)
             .getOrElse(throw new Error(s"Invalid value for geometry type id: $id."))
 
-    def groupOf(enumerator: GeometryTypeEnum.Value): GeometryTypeEnum.Value =
-        enumerator match {
-            case g if pointGeometries.contains(g)      => this.POINT
-            case g if linestringGeometries.contains(g) => this.LINESTRING
-            case g if polygonGeometries.contains(g)    => this.POLYGON
-        }
-
     def isFlat(enumerator: GeometryTypeEnum.Value): Boolean =
         enumerator match {
             case g if singleGeometries.contains(g)   => true
