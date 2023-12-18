@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spatial aggregation functions &mdash; Mosaic</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/fonts.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/tabs.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Raster functions" href="raster-functions.html" />
+    <link rel="prev" title="Spatial predicates" href="spatial-predicates.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Mosaic
+            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="vector-format-readers.html">Vector Format Readers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="raster-format-readers.html">Raster Format Readers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry-constructors.html">Geometry constructors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry-accessors.html">Geometry accessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spatial-functions.html">Spatial functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spatial-indexing.html">Spatial grid indexing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spatial-predicates.html">Spatial predicates</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Spatial aggregation functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="raster-functions.html">Raster functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rasterio-udfs.html">Rasterio UDFs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models/models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../literature/videos.html">Mosaic Videos and Talks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mosaic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">API Documentation</a></li>
+      <li class="breadcrumb-item active">Spatial aggregation functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/spatial-aggregations.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="spatial-aggregation-functions">
+<h1>Spatial aggregation functions<a class="headerlink" href="#spatial-aggregation-functions" title="Permalink to this headline"></a></h1>
+<div class="section" id="st-intersects-aggregate">
+<h2>st_intersects_aggregate<a class="headerlink" href="#st-intersects-aggregate" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_intersects_aggregate">
+<span class="sig-name descname"><span class="pre">st_intersects_aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">leftIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rightIndex</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_intersects_aggregate" title="Permalink to this definition"></a></dt>
+<dd><p>Returns <cite>true</cite> if any of the <cite>leftIndex</cite> and <cite>rightIndex</cite> pairs intersect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>leftIndex</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>rightIndex</strong> (<em>Column</em>) – Geometry</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-0-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-0-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">left_df</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;geom&#39;</span><span class="p">:</span> <span class="s1">&#39;POLYGON ((0 0, 0 3, 3 3, 3 0))&#39;</span><span class="p">}])</span>
+        <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;geom&quot;</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;left_index&quot;</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="n">right_df</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;geom&#39;</span><span class="p">:</span> <span class="s1">&#39;POLYGON ((2 2, 2 4, 4 4, 4 2))&#39;</span><span class="p">}])</span>
+        <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;geom&quot;</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;right_index&quot;</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">left_df</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">right_df</span><span class="p">,</span> <span class="n">col</span><span class="p">(</span><span class="s2">&quot;left_index.index_id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">col</span><span class="p">(</span><span class="s2">&quot;right_index.index_id&quot;</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">groupBy</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">st_intersects_aggregate</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;left_index&quot;</span><span class="p">),</span> <span class="n">col</span><span class="p">(</span><span class="s2">&quot;right_index&quot;</span><span class="p">)))</span>
+<span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="o">+------------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_intersects_aggregate</span><span class="p">(</span><span class="n">left_index</span><span class="p">,</span> <span class="n">right_index</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+------------------------------------------------+</span>
+<span class="o">|</span><span class="n">true</span>                                            <span class="o">|</span>
+<span class="o">+------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-0-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">leftDf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">(</span><span class="s">&quot;POLYGON ((0 0, 0 3, 3 3, 3 0))&quot;</span><span class="p">).</span><span class="n">toDF</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="n">$</span><span class="s">&quot;geom&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;left_index&quot;</span><span class="p">))</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">rightDf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">(</span><span class="s">&quot;POLYGON ((2 2, 2 4, 4 4, 4 2))&quot;</span><span class="p">).</span><span class="n">toDF</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="n">$</span><span class="s">&quot;geom&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;right_index&quot;</span><span class="p">))</span>
+<span class="n">leftDf</span>
+<span class="w">    </span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">rightDf</span><span class="p">,</span><span class="w"> </span><span class="n">$</span><span class="s">&quot;left_index.index_id&quot;</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="n">$</span><span class="s">&quot;right_index.index_id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">groupBy</span><span class="p">()</span>
+<span class="w">    </span><span class="p">.</span><span class="n">agg</span><span class="p">(</span><span class="n">st_intersects_aggregate</span><span class="p">(</span><span class="n">$</span><span class="s">&quot;left_index&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">$</span><span class="s">&quot;right_index&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<span class="o">+------------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_intersects_aggregate</span><span class="p">(</span><span class="n">left_index</span><span class="p">,</span><span class="w"> </span><span class="n">right_index</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+------------------------------------------------+</span>
+<span class="o">|</span><span class="kc">true</span><span class="w">                                            </span><span class="o">|</span>
+<span class="o">+------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-0-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="ss">&quot;POLYGON ((0 0, 0 3, 3 3, 3 0))&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">left_index</span><span class="p">),</span>
+<span class="w">    </span><span class="n">r</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="ss">&quot;POLYGON ((2 2, 2 4, 4 4, 4 2))&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">right_index</span><span class="p">)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">st_intersects_aggregate</span><span class="p">(</span><span class="n">l</span><span class="p">.</span><span class="n">left_index</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">right_index</span><span class="p">)</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="k">INNER</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">l</span><span class="p">.</span><span class="n">left_index</span><span class="p">.</span><span class="n">index_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">right_index</span><span class="p">.</span><span class="n">index_id</span>
+<span class="o">+</span><span class="c1">------------------------------------------------+</span>
+<span class="o">|</span><span class="n">st_intersects_aggregate</span><span class="p">(</span><span class="n">left_index</span><span class="p">,</span><span class="w"> </span><span class="n">right_index</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+</span><span class="c1">------------------------------------------------+</span>
+<span class="o">|</span><span class="k">true</span><span class="w">                                            </span><span class="o">|</span>
+<span class="o">+</span><span class="c1">------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-0-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-0-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">df.l</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">select</span><span class="p">(</span>
+<span class="w">    </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">geom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;POLYGON ((0 0, 0 3, 3 3, 3 0))&quot;</span><span class="p">)),</span>
+<span class="w">    </span><span class="nf">alias</span><span class="p">(</span><span class="nf">grid_tessellateexplode</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">),</span><span class="w"> </span><span class="nf">lit</span><span class="p">(</span><span class="m">1L</span><span class="p">)),</span><span class="w"> </span><span class="s">&quot;left_index&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">df.r</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">select</span><span class="p">(</span>
+<span class="w">    </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">geom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;POLYGON ((2 2, 2 4, 4 4, 4 2))&quot;</span><span class="p">)),</span>
+<span class="w">    </span><span class="nf">alias</span><span class="p">(</span><span class="nf">grid_tessellateexplode</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">),</span><span class="w"> </span><span class="nf">lit</span><span class="p">(</span><span class="m">1L</span><span class="p">)),</span><span class="w"> </span><span class="s">&quot;right_index&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="nf">showDF</span><span class="p">(</span>
+<span class="w">    </span><span class="nf">select</span><span class="p">(</span>
+<span class="w">        </span><span class="nf">join</span><span class="p">(</span><span class="n">df.l</span><span class="p">,</span><span class="w"> </span><span class="n">df.r</span><span class="p">,</span><span class="w"> </span><span class="n">df.l</span><span class="o">$</span><span class="n">left_index.index_id</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">df.r</span><span class="o">$</span><span class="n">right_index.index_id</span><span class="p">),</span>
+<span class="w">        </span><span class="nf">st_intersects_aggregate</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;left_index&quot;</span><span class="p">),</span><span class="w"> </span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;right_index&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="p">),</span><span class="w"> </span><span class="n">truncate</span><span class="o">=</span><span class="bp">F</span>
+<span class="p">)</span>
+<span class="o">+------------------------------------------------+</span>
+<span class="o">|</span><span class="nf">st_intersects_aggregate</span><span class="p">(</span><span class="n">left_index</span><span class="p">,</span><span class="w"> </span><span class="n">right_index</span><span class="p">)</span><span class="o">|</span>
+<span class="o">+------------------------------------------------+</span>
+<span class="o">|</span><span class="n">true</span><span class="w">                                            </span><span class="o">|</span>
+<span class="o">+------------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
+</div>
+<div class="section" id="st-intersection-aggregate">
+<h2>st_intersection_aggregate<a class="headerlink" href="#st-intersection-aggregate" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_intersection_aggregate">
+<span class="sig-name descname"><span class="pre">st_intersection_aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">leftIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rightIndex</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_intersection_aggregate" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the intersections of <cite>leftIndex</cite> and <cite>rightIndex</cite> and returns the union of these intersections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>leftIndex</strong> (<em>Column</em>) – Geometry</p></li>
+<li><p><strong>rightIndex</strong> (<em>Column</em>) – Geometry</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-1-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-1-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-1-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">left_df</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;geom&#39;</span><span class="p">:</span> <span class="s1">&#39;POLYGON ((0 0, 0 3, 3 3, 3 0))&#39;</span><span class="p">}])</span>
+        <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;geom&quot;</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;left_index&quot;</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="n">right_df</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;geom&#39;</span><span class="p">:</span> <span class="s1">&#39;POLYGON ((2 2, 2 4, 4 4, 4 2))&#39;</span><span class="p">}])</span>
+        <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;geom&quot;</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;right_index&quot;</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="p">(</span>
+    <span class="n">left_df</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">right_df</span><span class="p">,</span> <span class="n">col</span><span class="p">(</span><span class="s2">&quot;left_index.index_id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">col</span><span class="p">(</span><span class="s2">&quot;right_index.index_id&quot;</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">groupBy</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">st_astext</span><span class="p">(</span><span class="n">st_intersection_aggregate</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;left_index&quot;</span><span class="p">),</span> <span class="n">col</span><span class="p">(</span><span class="s2">&quot;right_index&quot;</span><span class="p">))))</span>
+<span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="o">+--------------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">convert_to</span><span class="p">(</span><span class="n">st_intersection_aggregate</span><span class="p">(</span><span class="n">left_index</span><span class="p">,</span> <span class="n">right_index</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">POLYGON</span> <span class="p">((</span><span class="mi">2</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span> <span class="mi">2</span><span class="p">))</span>                           <span class="o">|</span>
+<span class="o">+--------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">leftDf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">(</span><span class="s">&quot;POLYGON ((0 0, 0 3, 3 3, 3 0))&quot;</span><span class="p">).</span><span class="n">toDF</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="n">$</span><span class="s">&quot;geom&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;left_index&quot;</span><span class="p">))</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">rightDf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">(</span><span class="s">&quot;POLYGON ((2 2, 2 4, 4 4, 4 2))&quot;</span><span class="p">).</span><span class="n">toDF</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="n">$</span><span class="s">&quot;geom&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">1</span><span class="p">)).</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;right_index&quot;</span><span class="p">))</span>
+<span class="n">leftDf</span>
+<span class="w">    </span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">rightDf</span><span class="p">,</span><span class="w"> </span><span class="n">$</span><span class="s">&quot;left_index.index_id&quot;</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="n">$</span><span class="s">&quot;right_index.index_id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">groupBy</span><span class="p">()</span>
+<span class="w">    </span><span class="p">.</span><span class="n">agg</span><span class="p">(</span><span class="n">st_astext</span><span class="p">(</span><span class="n">st_intersection_aggregate</span><span class="p">(</span><span class="n">$</span><span class="s">&quot;left_index&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">$</span><span class="s">&quot;right_index&quot;</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">.</span><span class="n">show</span><span class="p">(</span><span class="kc">false</span><span class="p">)</span>
+<span class="o">+--------------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">convert_to</span><span class="p">(</span><span class="n">st_intersection_aggregate</span><span class="p">(</span><span class="n">left_index</span><span class="p">,</span><span class="w"> </span><span class="n">right_index</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------------+</span>
+<span class="o">|</span><span class="nc">POLYGON</span><span class="w"> </span><span class="p">((</span><span class="mi">2</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w">                           </span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="ss">&quot;POLYGON ((0 0, 0 3, 3 3, 3 0))&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">left_index</span><span class="p">),</span>
+<span class="w">    </span><span class="n">r</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span><span class="k">SELECT</span><span class="w"> </span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="ss">&quot;POLYGON ((2 2, 2 4, 4 4, 4 2))&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">right_index</span><span class="p">)</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">st_astext</span><span class="p">(</span><span class="n">st_intersection_aggregate</span><span class="p">(</span><span class="n">l</span><span class="p">.</span><span class="n">left_index</span><span class="p">,</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">right_index</span><span class="p">))</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="k">INNER</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">l</span><span class="p">.</span><span class="n">left_index</span><span class="p">.</span><span class="n">index_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">right_index</span><span class="p">.</span><span class="n">index_id</span>
+<span class="o">+</span><span class="c1">--------------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">convert_to</span><span class="p">(</span><span class="n">st_intersection_aggregate</span><span class="p">(</span><span class="n">left_index</span><span class="p">,</span><span class="w"> </span><span class="n">right_index</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">POLYGON</span><span class="w"> </span><span class="p">((</span><span class="mi">2</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w">                           </span><span class="o">|</span>
+<span class="o">+</span><span class="c1">--------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">df.l</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">select</span><span class="p">(</span>
+<span class="w">    </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">geom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;POLYGON ((0 0, 0 3, 3 3, 3 0))&quot;</span><span class="p">)),</span>
+<span class="w">    </span><span class="nf">alias</span><span class="p">(</span><span class="nf">grid_tessellateexplode</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">),</span><span class="w"> </span><span class="nf">lit</span><span class="p">(</span><span class="m">1L</span><span class="p">)),</span><span class="w"> </span><span class="s">&quot;left_index&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">df.r</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">select</span><span class="p">(</span>
+<span class="w">    </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">geom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;POLYGON ((2 2, 2 4, 4 4, 4 2))&quot;</span><span class="p">)),</span>
+<span class="w">    </span><span class="nf">alias</span><span class="p">(</span><span class="nf">grid_tessellateexplode</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">),</span><span class="w"> </span><span class="nf">lit</span><span class="p">(</span><span class="m">1L</span><span class="p">)),</span><span class="w"> </span><span class="s">&quot;right_index&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="nf">showDF</span><span class="p">(</span>
+<span class="w">    </span><span class="nf">select</span><span class="p">(</span>
+<span class="w">        </span><span class="nf">join</span><span class="p">(</span><span class="n">df.l</span><span class="p">,</span><span class="w"> </span><span class="n">df.r</span><span class="p">,</span><span class="w"> </span><span class="n">df.l</span><span class="o">$</span><span class="n">left_index.index_id</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">df.r</span><span class="o">$</span><span class="n">right_index.index_id</span><span class="p">),</span>
+<span class="w">        </span><span class="nf">st_astext</span><span class="p">(</span><span class="nf">st_intersection_aggregate</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;left_index&quot;</span><span class="p">),</span><span class="w"> </span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;right_index&quot;</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">),</span><span class="w"> </span><span class="n">truncate</span><span class="o">=</span><span class="bp">F</span>
+<span class="p">)</span>
+<span class="o">+--------------------------------------------------------------+</span>
+<span class="o">|</span><span class="nf">convert_to</span><span class="p">(</span><span class="nf">st_intersection_aggregate</span><span class="p">(</span><span class="n">left_index</span><span class="p">,</span><span class="w"> </span><span class="n">right_index</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------------+</span>
+<span class="o">|</span><span class="nf">POLYGON </span><span class="p">((</span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="p">))</span><span class="w">                           </span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
+</div>
+<div class="section" id="st-union-agg">
+<h2>st_union_agg<a class="headerlink" href="#st-union-agg" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_union_agg">
+<span class="sig-name descname"><span class="pre">st_union_agg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_union_agg" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the union of the input geometries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>geom</strong> (<em>Column</em>) – Geometry</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-2-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-2-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-2-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-2-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-2-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-2-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-2-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;geom&#39;</span><span class="p">:</span> <span class="s1">&#39;POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;geom&#39;</span><span class="p">:</span> <span class="s1">&#39;POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))&#39;</span><span class="p">}])</span>
+<span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_astext</span><span class="p">(</span><span class="n">st_union_agg</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;geom&#39;</span><span class="p">))))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+-------------------------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">st_union_agg</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span>                                                      <span class="o">|</span>
+<span class="o">+-------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">POLYGON</span> <span class="p">((</span><span class="mi">20</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">20</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">15</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">15</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">25</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">20</span> <span class="mi">15</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+-------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-2-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span>val df = List(&quot;POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))&quot;, &quot;POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))&quot;).toDF(&quot;geom&quot;)
+df.select(st_astext(st_union_agg(col(&#39;geom&#39;)))).show()
++-------------------------------------------------------------------------+
+| st_union_agg(geom)                                                      |
++-------------------------------------------------------------------------+
+|POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
++-------------------------------------------------------------------------+
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-2-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">WITH</span><span class="w"> </span><span class="n">geoms</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;geom&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))&#39;</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))&#39;</span><span class="p">))</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="n">st_astext</span><span class="p">(</span><span class="n">st_union_agg</span><span class="p">(</span><span class="n">geoms</span><span class="p">));</span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="n">st_union_agg</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span><span class="w">                                                      </span><span class="o">|</span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="n">POLYGON</span><span class="w"> </span><span class="p">((</span><span class="mi">20</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="mi">25</span><span class="p">,</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="mi">15</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="mi">15</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+</span><span class="c1">-------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-2-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-2-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">df.geom</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">select</span><span class="p">(</span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">geom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s">&#39;POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))&#39;</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="s">&#39;POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))&#39;</span><span class="p">))))</span>
+<span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="nf">st_astext</span><span class="p">(</span><span class="nf">st_union_agg</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">)))),</span><span class="w"> </span><span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
+<span class="o">+-------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="nf">st_union_agg</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span><span class="w">                                                      </span><span class="o">|</span>
+<span class="o">+-------------------------------------------------------------------------+</span>
+<span class="o">|</span><span class="nf">POLYGON </span><span class="p">((</span><span class="m">20</span><span class="w"> </span><span class="m">15</span><span class="p">,</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">20</span><span class="p">,</span><span class="w"> </span><span class="m">15</span><span class="w"> </span><span class="m">20</span><span class="p">,</span><span class="w"> </span><span class="m">15</span><span class="w"> </span><span class="m">25</span><span class="p">,</span><span class="w"> </span><span class="m">25</span><span class="w"> </span><span class="m">25</span><span class="p">,</span><span class="w"> </span><span class="m">25</span><span class="w"> </span><span class="m">15</span><span class="p">,</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">15</span><span class="p">))</span><span class="o">|</span>
+<span class="o">+-------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
+</div>
+<div class="section" id="grid-cell-intersection-agg">
+<h2>grid_cell_intersection_agg<a class="headerlink" href="#grid-cell-intersection-agg" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="grid_cell_intersection_agg">
+<span class="sig-name descname"><span class="pre">grid_cell_intersection_agg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chips</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cell_intersection_agg" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the chip representing the intersection of the input chips.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>chips</strong> (<em>Column</em>) – Chips</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-3-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-3-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-3-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-3-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-3-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-3-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-3-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;chip&quot;</span><span class="p">,</span> <span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+<span class="n">df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s2">&quot;chip.index_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">grid_cell_intersection_agg</span><span class="p">(</span><span class="s2">&quot;chip&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;agg_chip&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">agg_chip</span>                                               <span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span><span class="p">{</span><span class="n">is_core</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span> <span class="n">index_id</span><span class="p">:</span> <span class="mi">590418571381702655</span><span class="p">,</span> <span class="n">wkb</span><span class="p">:</span> <span class="o">...</span><span class="p">}</span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-3-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">other_df</span><span class="p">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&quot;chip&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">grid_tessellateexplode</span><span class="p">(...))</span>
+<span class="n">df</span><span class="p">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&quot;chip.index_id&quot;</span><span class="p">).</span><span class="n">agg</span><span class="p">(</span><span class="n">grid_cell_intersection_agg</span><span class="p">(</span><span class="s">&quot;chip&quot;</span><span class="p">).</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;agg_chip&quot;</span><span class="p">)).</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="n">agg_chip</span><span class="w">                                               </span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span><span class="p">{</span><span class="n">is_core</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="n">index_id</span><span class="p">:</span><span class="w"> </span><span class="mi">590418571381702655</span><span class="p">,</span><span class="w"> </span><span class="n">wkb</span><span class="p">:</span><span class="w"> </span><span class="p">...}</span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-3-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>WITH chips AS (SELECT grid_tessellateexplode(wkt) AS &quot;chip&quot; FROM ...)
+SELECT grid_cell_intersection_agg(chips) AS agg_chip FROM chips GROUP BY chips.index_id;
++--------------------------------------------------------+
+| agg_chip                                               |
++--------------------------------------------------------+
+|{is_core: false, index_id: 590418571381702655, wkb: ...}|
++--------------------------------------------------------+
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-3-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-3-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="nf">grid_cell_intersection_agg</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;chip&quot;</span><span class="p">))),</span><span class="w"> </span><span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="n">agg_chip</span><span class="w">                                               </span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span><span class="p">{</span><span class="n">is_core</span><span class="o">:</span><span class="w"> </span><span class="n">false</span><span class="p">,</span><span class="w"> </span><span class="n">index_id</span><span class="o">:</span><span class="w"> </span><span class="m">590418571381702655</span><span class="p">,</span><span class="w"> </span><span class="n">wkb</span><span class="o">:</span><span class="w"> </span><span class="kc">...</span><span class="p">}</span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
+</div>
+<div class="section" id="grid-cell-union-agg">
+<h2>grid_cell_union_agg<a class="headerlink" href="#grid-cell-union-agg" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="grid_cell_union_agg">
+<span class="sig-name descname"><span class="pre">grid_cell_union_agg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chips</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cell_union_agg" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the chip representing the union of the input chips.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>chips</strong> (<em>Column</em>) – Chips</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Column</p>
+</dd>
+<dt class="field-odd">Example</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-4-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-4-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-4-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-4-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-4-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-4-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;chip&quot;</span><span class="p">,</span> <span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+<span class="n">df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s2">&quot;chip.index_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">grid_cell_union_agg</span><span class="p">(</span><span class="s2">&quot;chip&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;agg_chip&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span> <span class="n">agg_chip</span>                                               <span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span><span class="p">{</span><span class="n">is_core</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span> <span class="n">index_id</span><span class="p">:</span> <span class="mi">590418571381702655</span><span class="p">,</span> <span class="n">wkb</span><span class="p">:</span> <span class="o">...</span><span class="p">}</span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">other_df</span><span class="p">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&quot;chip&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">grid_tessellateexplode</span><span class="p">(...))</span>
+<span class="n">df</span><span class="p">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s">&quot;chip.index_id&quot;</span><span class="p">).</span><span class="n">agg</span><span class="p">(</span><span class="n">grid_cell_union_agg</span><span class="p">(</span><span class="s">&quot;chip&quot;</span><span class="p">).</span><span class="n">alias</span><span class="p">(</span><span class="s">&quot;agg_chip&quot;</span><span class="p">)).</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="n">agg_chip</span><span class="w">                                               </span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span><span class="p">{</span><span class="n">is_core</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="n">index_id</span><span class="p">:</span><span class="w"> </span><span class="mi">590418571381702655</span><span class="p">,</span><span class="w"> </span><span class="n">wkb</span><span class="p">:</span><span class="w"> </span><span class="p">...}</span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>WITH chips AS (SELECT grid_tessellateexplode(wkt) AS &quot;chip&quot; FROM ...)
+SELECT grid_cell_union_agg(chips) AS agg_chip FROM chips GROUP BY chips.index_id;
++--------------------------------------------------------+
+| agg_chip                                               |
++--------------------------------------------------------+
+|{is_core: false, index_id: 590418571381702655, wkb: ...}|
++--------------------------------------------------------+
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="nf">grid_cell_union_agg</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;chip&quot;</span><span class="p">))),</span><span class="w"> </span><span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span><span class="w"> </span><span class="n">agg_chip</span><span class="w">                                               </span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+<span class="o">|</span><span class="p">{</span><span class="n">is_core</span><span class="o">:</span><span class="w"> </span><span class="n">false</span><span class="p">,</span><span class="w"> </span><span class="n">index_id</span><span class="o">:</span><span class="w"> </span><span class="m">590418571381702655</span><span class="p">,</span><span class="w"> </span><span class="n">wkb</span><span class="o">:</span><span class="w"> </span><span class="kc">...</span><span class="p">}</span><span class="o">|</span>
+<span class="o">+--------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div></div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="spatial-predicates.html" class="btn btn-neutral float-left" title="Spatial predicates" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="raster-functions.html" class="btn btn-neutral float-right" title="Raster functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Databricks Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
