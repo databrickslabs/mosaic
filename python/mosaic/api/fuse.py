@@ -29,7 +29,7 @@ class SetupMgr:
     """
     to_fuse_dir: str
     script_in_name: str = 'mosaic-gdal-init.sh'
-    script_out_name: str = 'mosaic-gdal-init.sh'
+    script_out_name: str = 'mosaic-fuse-init.sh'
     with_mosaic_pip: bool = False
     with_gdal: bool = True
     with_ubuntugis: bool = False 
@@ -56,12 +56,10 @@ class SetupMgr:
         elif mosaic_version is None:
             github_version = 'main'
 
-        # TODOS AFTER PR MERGED: 
-        # [1] CHANGE URL TO ACTUAL MOSAIC (not 'mjohns-databricks'):
-        #     'https://raw.githubusercontent.com/databrickslabs/mosaic'
-        # [2] USE f'{GITHUB_CONTENT_URL_BASE}/{github_version}' (not 'gdal-jammy-1')
-        GITHUB_CONTENT_URL_BASE = 'https://raw.githubusercontent.com/mjohns-databricks/mosaic'
-        GITHUB_CONTENT_TAG_URL = f'{GITHUB_CONTENT_URL_BASE}/gdal-jammy-1'
+        GITHUB_CONTENT_URL_BASE = 'https://raw.githubusercontent.com/databrickslabs/mosaic'
+        GITHUB_CONTENT_TAG_URL = f'{GITHUB_CONTENT_URL_BASE}/v_{github_version}'
+        if github_version == 'main':
+            GITHUB_CONTENT_TAG_URL = f'{GITHUB_CONTENT_URL_BASE}/{github_version}'
 
         # - generate fuse dir path
         os.makedirs(self.to_fuse_dir, exist_ok=True)
@@ -145,7 +143,7 @@ class SetupMgr:
                 # url and version details
                 GITHUB_RELEASE_URL_BASE = 'https://github.com/databrickslabs/mosaic/releases'
                 resource_version = github_version
-                if github_version is None:
+                if github_version == 'main':
                     latest = str(requests.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
                     resource_version = latest.split("/tag/v_")[1].split('"')[0]
                 
