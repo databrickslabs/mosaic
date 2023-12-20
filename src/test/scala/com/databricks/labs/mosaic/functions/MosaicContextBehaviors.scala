@@ -249,6 +249,8 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
     }
 
     def throwErrors(): Unit = {
+        spark.conf.set("spark.databricks.clusterUsageTags.clusterId", "my-cluster")
+
         spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-x")
         an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
 
@@ -261,15 +263,17 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "12-x")
         an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
 
-         spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "12-photon-x")
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "12-photon-x")
         an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
     }
 
      def noErrors(): Unit = {
-        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-photon-x")
+        spark.conf.set("spark.databricks.clusterUsageTags.clusterId", "my-cluster")
+        
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-ml-x")
         noException should be thrownBy MosaicContext.checkDBR(spark)
 
-        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-ml-x")
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-photon-x")
         noException should be thrownBy MosaicContext.checkDBR(spark)
     }
 

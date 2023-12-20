@@ -14,6 +14,8 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
     override def sparkConf: SparkConf = {
         super.sparkConf
             .set(MOSAIC_GDAL_NATIVE, "true")
+        super.sparkConf
+            set(MOSAIC_TEST, "true")
     }
 
     override def createSparkSession: TestSparkSession = {
@@ -30,6 +32,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     override def beforeEach(): Unit = {
         super.beforeEach()
+        this.spark.conf = super.sparkConf
         MosaicGDAL.enableGDAL(this.spark)
         gdal.AllRegister()
     }

@@ -996,10 +996,13 @@ object MosaicContext extends Logging {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "0")
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = sparkVersion.contains("-photon-")
-        val isTest = !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags."))
+        val isTest = (
+            !spark.conf.getAll.keySet.contains("spark.databricks.clusterUsageTags.clusterId") &&
+            spark.conf.get(MOSAIC_TEST, "false").toBoolean == true
+        )
 
         val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt
-        if (dbrMajor != 13) {
+        if (dbrMajor != 13 && !isTest) {
             val msg = """|DEPRECATION ERROR:
                          |    Mosaic v0.4.x series only supports Databricks Runtime 13.
                          |    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.""".stripMargin

@@ -17,7 +17,6 @@ class MosaicContextTest extends MosaicSpatialQueryTest with SharedSparkSession w
     test("MosaicContext lookup correct sql functions") { sqlFunctionLookup() }
     test("MosaicContext should use databricks h3") { callDatabricksH3() }
     test("MosaicContext should correctly reflect functions") { reflectedMethods() }
-    test("MosaicContext should throw errors") { throwErrors() }
-    test("MosaicContext should not throw errors") { noErrors() }
-
+    test("MosaicContext should throw error for wrong DBRs") { throwErrors() }
+    test("MosaicContext should not throw error for correct DBRs") { noErrors() }
 }
