@@ -994,15 +994,15 @@ object MosaicContext extends Logging {
     // noinspection ScalaStyle,ScalaWeakerAccess
     def checkDBR(spark: SparkSession): Boolean = {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "0")
+        val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt
+
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = sparkVersion.contains("-photon-")
         val isTest = (
-            (spark.conf.get(MOSAIC_TEST, "false").toBoolean == true &&
-            spark.conf.get(MOSAIC_TEST_DBR, "false").toBoolean == false) ||
-            (System.getProperty(MOSAIC_TEST, "false").toBoolean == true)
+            dbrMajor == 0  
+            && !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags.")) 
         )
         
-        val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt
         if (dbrMajor != 13 && !isTest) {
             val msg = """|DEPRECATION ERROR:
                          |    Mosaic v0.4.x series only supports Databricks Runtime 13.
