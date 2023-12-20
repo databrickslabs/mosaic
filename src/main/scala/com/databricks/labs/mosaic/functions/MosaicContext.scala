@@ -996,10 +996,7 @@ object MosaicContext extends Logging {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "0")
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = sparkVersion.contains("-photon-")
-        val isTest = (
-            !spark.conf.getAll.keySet.contains("spark.databricks.clusterUsageTags.clusterId") &&
-            spark.conf.get(MOSAIC_TEST, "false").toBoolean == true
-        )
+        val isTest = spark.conf.get(MOSAIC_TEST, "false").toBoolean == true
 
         val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt
         if (dbrMajor != 13 && !isTest) {

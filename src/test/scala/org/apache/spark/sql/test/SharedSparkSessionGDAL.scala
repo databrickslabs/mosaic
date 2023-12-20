@@ -32,7 +32,6 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     override def beforeEach(): Unit = {
         super.beforeEach()
-        this.spark.conf = super.sparkConf
         MosaicGDAL.enableGDAL(this.spark)
         gdal.AllRegister()
     }
