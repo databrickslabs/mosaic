@@ -6,14 +6,14 @@ on:
 jobs:
   build-n-publish:
     name: Build project and publish to TestPyPI
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python: [ 3.9.5 ]
+        python: [ 3.10.12 ]
         numpy: [ 1.21.5 ]
-        gdal: [ 3.4.3 ]
-        spark: [ 3.3.2 ]
-        R: [ 4.1.2 ]
+        gdal: [ 3.4.1 ]
+        spark: [ 3.4.0 ]
+        R: [ 4.2.2 ]
     steps:
       - name: checkout code
         uses: actions/checkout@v2
@@ -27,4 +27,3 @@ jobs:
           user: __token__
           password: ${{ secrets.LABS_PYPI_TOKEN }}
           packages_dir: python/dist/
-
