@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.MOSAIC_TEST
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
@@ -9,6 +10,8 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_MetadataBehaviors extends QueryTest {
 
     def metadataBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark

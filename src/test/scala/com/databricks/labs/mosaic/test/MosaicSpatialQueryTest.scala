@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.test
 
+import com.databricks.labs.mosaic.{MOSAIC_TEST}
 import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
@@ -179,6 +180,8 @@ trait MosaicHelper extends BeforeAndAfterEach { self: Suite =>
 
     /** Constructs the MosaicContext from its parts and calls `f`. */
     protected def withMosaicContext(geometry: GeometryAPI, indexSystem: IndexSystem)(f: MosaicContext => Unit): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc: MosaicContext = MosaicContext.build(indexSystem, geometry)
         f(mc)
 

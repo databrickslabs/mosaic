@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
+import com.databricks.labs.mosaic.MOSAIC_TEST
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
@@ -20,8 +21,10 @@ trait ST_TransformBehaviors extends QueryTest {
     val geomFactory = new GeometryFactory()
 
     def reprojectGeometries(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        val sc = spark
+        spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val sc = spark
         import mc.functions._
         import sc.implicits._
         mc.register(spark)
@@ -116,6 +119,7 @@ trait ST_TransformBehaviors extends QueryTest {
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 

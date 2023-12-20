@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
+import com.databricks.labs.mosaic.MOSAIC_TEST
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
@@ -21,6 +22,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
 
     def intersectionBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -72,6 +74,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
 
     def intersectionAggBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
@@ -167,6 +170,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
 
     def selfIntersectionBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -213,6 +217,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
 
     def intersectionCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
@@ -239,6 +244,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 

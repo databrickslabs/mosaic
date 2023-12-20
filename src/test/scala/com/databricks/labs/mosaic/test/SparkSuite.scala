@@ -1,14 +1,15 @@
 package com.databricks.labs.mosaic.test
 
+import com.databricks.labs.mosaic.MOSAIC_TEST
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
-
 import org.apache.spark.sql._
 
 trait SparkSuite extends TestSuite with BeforeAndAfterAll {
 
     var sparkConf: SparkConf =
         new SparkConf(false)
+            .set(MOSAIC_TEST, "true")
             .set("spark.executor.extraLibraryPath", "/usr/lib/gdal")
             .set("spark.sql.parquet.compression.codec", "uncompressed")
     @transient private var _sc: SparkContext = _

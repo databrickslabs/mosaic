@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
+import com.databricks.labs.mosaic.MOSAIC_TEST
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
@@ -17,6 +18,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
 
     def flattenWKBPolygon(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -67,6 +69,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
 
     def flattenWKTPolygon(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -117,6 +120,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
 
     def flattenCOORDSPolygon(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -178,6 +182,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
 
     def flattenHEXPolygon(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -239,6 +244,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
 
     def failDataTypeCheck(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -257,6 +263,7 @@ trait FlattenPolygonsBehaviors extends QueryTest {
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)

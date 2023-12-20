@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.datasource
 
+import com.databricks.labs.mosaic.MOSAIC_TEST
 import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.utils.PathUtils
@@ -144,7 +145,8 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
     test("OGRFileFormat should handle partial schema: ISSUE 351") {
         assume(System.getProperty("os.name") == "Linux")
-
+        spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(H3, JTS)
         import mc.functions._
 

@@ -1,8 +1,8 @@
 package com.databricks.labs.mosaic.functions
 
+import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.test._
-import com.databricks.labs.mosaic._
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -269,7 +269,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
 
      def noErrors(): Unit = {
         spark.conf.set(MOSAIC_TEST_DBR, "true")
-        
+
         spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-ml-x")
         noException should be thrownBy MosaicContext.checkDBR(spark)
 

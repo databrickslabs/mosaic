@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
+import com.databricks.labs.mosaic.MOSAIC_TEST
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
@@ -13,6 +14,8 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 trait ST_HaversineBehaviors extends QueryTest {
 
     def haversineBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -25,6 +28,7 @@ trait ST_HaversineBehaviors extends QueryTest {
 
     def haversineCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -45,6 +49,7 @@ trait ST_HaversineBehaviors extends QueryTest {
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
+        spark.conf.set(MOSAIC_TEST, "true")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
