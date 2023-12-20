@@ -1,4 +1,8 @@
-## v0.3.14
+## v0.4.0 [DBR 13.3 LTS]
+- First release for DBR 13.3 LTS which is Ubuntu Jammy and Spark 3.4.1. Not backwards compatible, meaning it will not run on prior DBRs; requires either a Photon DBR or a ML Runtime (Standard DBR not allowed).
+- New `setup_fuse_install` function to meet various requirements arising with Unity Catalog + Shared Access clusters; removed the scala equivalent function, making artifact setup and install python-first for scala and Spark SQL. 
+- 
+## v0.3.14 [DBR < 13]
 - Fixes for Warning and Error messages on mosaic_enable call.
 - Performance improvements for raster functions.
 - Fix support for GDAL configuration via spark config (use 'spark.databricks.labs.mosaic.gdal.' prefix).

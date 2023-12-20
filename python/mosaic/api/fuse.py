@@ -56,10 +56,10 @@ class SetupMgr:
         elif mosaic_version is None:
             github_version = 'main'
 
-        GITHUB_CONTENT_URL_BASE = 'https://raw.githubusercontent.com/databrickslabs/mosaic'
+        GITHUB_CONTENT_URL_BASE = 'https://github.com/databrickslabs/mosaic/raw'
         GITHUB_CONTENT_TAG_URL = f'{GITHUB_CONTENT_URL_BASE}/v_{github_version}'
         if github_version == 'main':
-            GITHUB_CONTENT_TAG_URL = f'{GITHUB_CONTENT_URL_BASE}/{github_version}'
+            GITHUB_CONTENT_TAG_URL = f'{GITHUB_CONTENT_URL_BASE}/main'
 
         # - generate fuse dir path
         os.makedirs(self.to_fuse_dir, exist_ok=True)
