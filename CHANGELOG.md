@@ -1,7 +1,8 @@
 ## v0.4.0 [DBR 13.3 LTS]
-- First release for DBR 13.3 LTS which is Ubuntu Jammy and Spark 3.4.1. Not backwards compatible, meaning it will not run on prior DBRs; requires either a Photon DBR or a ML Runtime (Standard DBR not allowed).
+- First release for DBR 13.3 LTS which is Ubuntu Jammy and Spark 3.4.1. Not backwards compatible, meaning it will not run on prior DBRs; requires either a Photon DBR or a ML Runtime (__Standard, non-Photon DBR no longer allowed__).
 - New `setup_fuse_install` function to meet various requirements arising with Unity Catalog + Shared Access clusters; removed the scala equivalent function, making artifact setup and install python-first for scala and Spark SQL. 
-- 
+- Removed OSS ESRI Geometry API for 0.4 series, JTS now the only vector provider.
+
 ## v0.3.14 [DBR < 13]
 - Fixes for Warning and Error messages on mosaic_enable call.
 - Performance improvements for raster functions.

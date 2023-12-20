@@ -1004,7 +1004,7 @@ object MosaicContext extends Logging {
           (dbrMajor > 12 && mosaicVersion < "0.4.0")
         ) {
             val msg = """|DEPRECATION ERROR:
-                         |    Mosaic v0.3.x series only supports Databricks Runtime 12 and below.
+                         |    Mosaic v0.4.x series only supports Databricks Runtime 13.
                          |    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.""".stripMargin
 
             logError(msg)
@@ -1013,17 +1013,16 @@ object MosaicContext extends Logging {
         }
 
         if (!isML && !isPhoton && !isTest) {
-            val msg = """|DEPRECATION WARNING: 
+            val msg = """|DEPRECATION ERROR: 
                          |  Please use a Databricks:
                          |      - Photon-enabled Runtime for performance benefits
                          |      - Runtime ML for spatial AI benefits
-                         |  Mosaic will stop working on this cluster after v0.3.x.""".stripMargin
-            logWarning(msg)
+                         |  Mosaic 0.4.x series restricts executing this cluster.""".stripMargin
+            logError(msg)
             println(msg)
-            false
-        } else {
-            true
-        }
+            throw new Exception(msg)
+        } 
+        true
     }
 
 }
