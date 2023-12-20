@@ -997,8 +997,9 @@ object MosaicContext extends Logging {
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = sparkVersion.contains("-photon-")
         val isTest = (
-            spark.conf.get(MOSAIC_TEST, "false").toBoolean == true &&
-            spark.conf.get(MOSAIC_TEST_DBR, "false").toBoolean == false
+            (spark.conf.get(MOSAIC_TEST, "false").toBoolean == true &&
+            spark.conf.get(MOSAIC_TEST_DBR, "false").toBoolean == false) ||
+            (System.getProperty(MOSAIC_TEST, "false").toBoolean == true)
         )
         
         val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt

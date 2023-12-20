@@ -38,8 +38,7 @@ object MosaicRegistryBehaviors extends MockFactory {
         ix.name _ when () returns H3.name
         val gapi = stub[GeometryAPI]
         gapi.name _ when () returns JTS.name
-        spark.sparkContext.setLogLevel("FATAL")
-        spark.conf.set(MOSAIC_TEST, "true")
+        System.setProperty(MOSAIC_TEST, "true")
         MosaicContext.build(ix, gapi)
     }
 
