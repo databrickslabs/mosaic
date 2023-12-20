@@ -56,14 +56,8 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
 
     isSupported = config.mosaic_context._context.checkDBR(spark._jsparkSession)
     if not isSupported:
-        print(
-            """
-            DEPRECATION WARNING: 
-                Please use a Databricks:
-                    - Photon-enabled Runtime for performance benefits
-                    - Runtime ML for spatial AI benefits
-                Mosaic will stop working on this cluster after v0.3.x."""
-        )
+        # unexpected - checkDBR returns true or throws exception
+        print("""WARNING: checkDBR returned False.""")
 
     # Not yet added to the pyspark API
     with warnings.catch_warnings():

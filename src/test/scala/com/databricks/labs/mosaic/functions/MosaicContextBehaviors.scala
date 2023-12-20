@@ -248,17 +248,29 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         method.apply(1).asInstanceOf[Int] shouldBe 2
     }
 
-    def printWarnings(): Unit = {
-        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "1-x")
-        spark.conf.set("spark.databricks.photon.enabled", "false")
-        spark.conf.set("spark.databricks.clusterUsageTags.clusterType", "1-x")
-        noException should be thrownBy MosaicContext.checkDBR(spark)
+    def throwErrors(): Unit = {
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-x")
+        an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
+
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "14-x")
+        an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
+
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "14-photon-x")
+        an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
+
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "12-x")
+        an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
+
+         spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "12-photon-x")
+        an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
     }
 
-    def throwError(): Unit = {
-        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "14-x")
-        spark.conf.set("spark.databricks.clusterUsageTags.clusterType", "14-x")
-        an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
+     def noErrors(): Unit = {
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-photon-x")
+        noException should be thrownBy MosaicContext.checkDBR(spark)
+
+        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-ml-x")
+        noException should be thrownBy MosaicContext.checkDBR(spark)
     }
 
 }
