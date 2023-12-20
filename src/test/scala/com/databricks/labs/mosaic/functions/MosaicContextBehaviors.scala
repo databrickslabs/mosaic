@@ -249,8 +249,6 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
     }
 
     def throwErrors(): Unit = {
-        spark.conf.set(MOSAIC_TEST_DBR, "true")
-
         spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-x")
         an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
 
@@ -268,8 +266,6 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
     }
 
      def noErrors(): Unit = {
-        spark.conf.set(MOSAIC_TEST_DBR, "true")
-
         spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "13-ml-x")
         noException should be thrownBy MosaicContext.checkDBR(spark)
 

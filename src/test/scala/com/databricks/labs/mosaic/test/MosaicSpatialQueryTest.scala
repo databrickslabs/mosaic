@@ -180,7 +180,6 @@ trait MosaicHelper extends BeforeAndAfterEach { self: Suite =>
 
     /** Constructs the MosaicContext from its parts and calls `f`. */
     protected def withMosaicContext(geometry: GeometryAPI, indexSystem: IndexSystem)(f: MosaicContext => Unit): Unit = {
-        System.setProperty(MOSAIC_TEST, "true")
         val mc: MosaicContext = MosaicContext.build(indexSystem, geometry)
         f(mc)
 
