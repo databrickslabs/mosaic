@@ -4,8 +4,6 @@ import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.catalyst.InternalRow
-
 class TestMultiPolygonJTS extends AnyFlatSpec {
 
     "MosaicMultiPolygonJTS" should "return Nil for holes and hole points calls." in {
@@ -31,11 +29,9 @@ class TestMultiPolygonJTS extends AnyFlatSpec {
         noException should be thrownBy MosaicMultiPolygonJTS.fromWKB(multiPolygon.toWKB)
         noException should be thrownBy MosaicMultiPolygonJTS.fromHEX(multiPolygon.toHEX)
         noException should be thrownBy MosaicMultiPolygonJTS.fromJSON(multiPolygon.toJSON)
-        noException should be thrownBy MosaicMultiPolygonJTS.fromInternal(multiPolygon.toInternal.serialize.asInstanceOf[InternalRow])
         multiPolygon.equals(MosaicMultiPolygonJTS.fromWKB(multiPolygon.toWKB)) shouldBe true
         multiPolygon.equals(MosaicMultiPolygonJTS.fromHEX(multiPolygon.toHEX)) shouldBe true
         multiPolygon.equals(MosaicMultiPolygonJTS.fromJSON(multiPolygon.toJSON)) shouldBe true
-        multiPolygon.equals(MosaicMultiPolygonJTS.fromInternal(multiPolygon.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
     }
 
     "MosaicMultiPolygonJTS" should "be instantiable from a Seq of MosaicPolygonJTS" in {

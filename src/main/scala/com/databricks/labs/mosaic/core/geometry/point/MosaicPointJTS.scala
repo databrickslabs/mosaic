@@ -4,7 +4,6 @@ import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.labs.mosaic.core.types.model.{Coordinates, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
-import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
 
 class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicPoint {
@@ -25,11 +24,6 @@ class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicP
     override def getY: Double = point.getY
 
     override def getZ: Double = point.getCoordinate.z
-
-    override def toInternal: InternalGeometry = {
-        val shell = Array(InternalCoord(point.getCoordinate))
-        new InternalGeometry(POINT.id, getSpatialReference, Array(shell), Array(Array(Array())))
-    }
 
     override def getBoundary: MosaicGeometryJTS = {
         val geom = point.getBoundary
@@ -71,21 +65,12 @@ object MosaicPointJTS extends GeometryReader {
     def apply(coords: Seq[Double]): MosaicPointJTS = {
         val gf = new GeometryFactory()
         if (coords.length == 3) {
-            val point = gf.createPoint(new Coordinate(coords(0), coords(1), coords(2)))
+            val point = gf.createPoint(new Coordinate(coords.head, coords(1), coords(2)))
             new MosaicPointJTS(point)
         } else {
-            val point = gf.createPoint(new Coordinate(coords(0), coords(1)))
+            val point = gf.createPoint(new Coordinate(coords.head, coords(1)))
             new MosaicPointJTS(point)
         }
-    }
-
-    override def fromInternal(row: InternalRow): MosaicGeometryJTS = {
-        val gf = new GeometryFactory()
-        val internalGeom = InternalGeometry(row)
-        val coordinate = internalGeom.boundaries.head.head
-        val point = gf.createPoint(coordinate.toCoordinate)
-        point.setSRID(internalGeom.srid)
-        new MosaicPointJTS(point)
     }
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POINT): MosaicPointJTS = {

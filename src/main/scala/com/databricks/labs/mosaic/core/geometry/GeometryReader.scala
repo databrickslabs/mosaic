@@ -1,13 +1,10 @@
 package com.databricks.labs.mosaic.core.geometry
 
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
-import org.apache.spark.sql.catalyst.InternalRow
 
 trait GeometryReader {
 
     val defaultSpatialReferenceId: Int = 4326
-
-    def fromInternal(row: InternalRow): MosaicGeometry
 
     def fromWKB(wkb: Array[Byte]): MosaicGeometry
 

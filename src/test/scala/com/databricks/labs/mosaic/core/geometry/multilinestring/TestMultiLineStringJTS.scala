@@ -5,8 +5,6 @@ import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.catalyst.InternalRow
-
 //noinspection ScalaRedundantCast
 class TestMultiLineStringJTS extends AnyFlatSpec {
 
@@ -33,13 +31,9 @@ class TestMultiLineStringJTS extends AnyFlatSpec {
         noException should be thrownBy MosaicMultiLineStringJTS.fromWKB(multiLineString.toWKB)
         noException should be thrownBy MosaicMultiLineStringJTS.fromHEX(multiLineString.toHEX)
         noException should be thrownBy MosaicMultiLineStringJTS.fromJSON(multiLineString.toJSON)
-        noException should be thrownBy MosaicMultiLineStringJTS.fromInternal(multiLineString.toInternal.serialize.asInstanceOf[InternalRow])
         multiLineString.equals(MosaicMultiLineStringJTS.fromWKB(multiLineString.toWKB)) shouldBe true
         multiLineString.equals(MosaicMultiLineStringJTS.fromHEX(multiLineString.toHEX)) shouldBe true
         multiLineString.equals(MosaicMultiLineStringJTS.fromJSON(multiLineString.toJSON)) shouldBe true
-        multiLineString.equals(
-          MosaicMultiLineStringJTS.fromInternal(multiLineString.toInternal.serialize.asInstanceOf[InternalRow])
-        ) shouldBe true
     }
 
     "MosaicMultiLineStringJTS" should "be instantiable from a Seq of MosaicLineStringJTS" in {

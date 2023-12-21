@@ -5,8 +5,6 @@ import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.catalyst.InternalRow
-
 //noinspection ScalaRedundantCast
 class TestMultiPointJTS extends AnyFlatSpec {
 
@@ -35,11 +33,9 @@ class TestMultiPointJTS extends AnyFlatSpec {
         noException should be thrownBy MosaicMultiPointJTS.fromWKB(multiPoint.toWKB)
         noException should be thrownBy MosaicMultiPointJTS.fromHEX(multiPoint.toHEX)
         noException should be thrownBy MosaicMultiPointJTS.fromJSON(multiPoint.toJSON)
-        noException should be thrownBy MosaicMultiPointJTS.fromInternal(multiPoint.toInternal.serialize.asInstanceOf[InternalRow])
         multiPoint.equals(MosaicMultiPointJTS.fromWKB(multiPoint.toWKB)) shouldBe true
         multiPoint.equals(MosaicMultiPointJTS.fromHEX(multiPoint.toHEX)) shouldBe true
         multiPoint.equals(MosaicMultiPointJTS.fromJSON(multiPoint.toJSON)) shouldBe true
-        multiPoint.equals(MosaicMultiPointJTS.fromInternal(multiPoint.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
     }
 
     "MosaicMultiPointJTS" should "be instantiable from a Seq of MosaicPointJTS" in {

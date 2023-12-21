@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.index._
-import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.adapters.Column
@@ -35,13 +34,11 @@ trait IndexGeometryBehaviors extends MosaicSpatialQueryTest {
         IndexGeometry(gridCellStr, lit("WKT").expr, indexSystem, geometryAPIName).dataType shouldEqual StringType
         IndexGeometry(gridCellStr, lit("WKB").expr, indexSystem, geometryAPIName).dataType shouldEqual BinaryType
         IndexGeometry(gridCellStr, lit("GEOJSON").expr, indexSystem, geometryAPIName).dataType shouldEqual StringType
-        IndexGeometry(gridCellStr, lit("COORDS").expr, indexSystem, geometryAPIName).dataType shouldEqual InternalGeometryType
         an[Error] should be thrownBy IndexGeometry(gridCellStr, lit("BAD FORMAT").expr, indexSystem, geometryAPIName).dataType
 
         IndexGeometry(gridCellLong, lit("WKT").expr, indexSystem, geometryAPIName).dataType shouldEqual StringType
         IndexGeometry(gridCellLong, lit("WKB").expr, indexSystem, geometryAPIName).dataType shouldEqual BinaryType
         IndexGeometry(gridCellLong, lit("GEOJSON").expr, indexSystem, geometryAPIName).dataType shouldEqual StringType
-        IndexGeometry(gridCellLong, lit("COORDS").expr, indexSystem, geometryAPIName).dataType shouldEqual InternalGeometryType
         an[Error] should be thrownBy IndexGeometry(gridCellLong, lit("BAD FORMAT").expr, indexSystem, geometryAPIName).dataType
 
         val longIDGeom = IndexGeometry(gridCellLong, lit("WKT").expr, indexSystem, geometryAPIName)

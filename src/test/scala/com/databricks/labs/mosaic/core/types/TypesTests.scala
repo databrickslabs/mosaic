@@ -13,7 +13,6 @@ class TypesTests extends AnyFunSuite {
     test("TypeNames should be like expected") {
         assert(HexType.simpleString == "HEX")
         assert(JSONType.simpleString == "GEOJSON")
-        assert(InternalGeometryType.simpleString == "COORDS")
         assert(ChipType(LongType).simpleString == "CHIP")
         assert(ChipType(IntegerType).simpleString == "CHIP")
         assert(ChipType(StringType).simpleString == "CHIP")

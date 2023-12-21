@@ -5,17 +5,9 @@ import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
-import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
 
 class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with MosaicPolygon {
-
-    override def toInternal: InternalGeometry = {
-        val boundary = polygon.getBoundary
-        val shell = boundary.getGeometryN(0).getCoordinates.map(InternalCoord(_))
-        val holes = for (i <- 1 until boundary.getNumGeometries) yield boundary.getGeometryN(i).getCoordinates.map(InternalCoord(_))
-        new InternalGeometry(POLYGON.id, getSpatialReference, Array(shell), Array(holes.toArray))
-    }
 
     override def getBoundary: MosaicGeometryJTS = {
         val boundaryRing = polygon.getBoundary
@@ -67,11 +59,6 @@ object MosaicPolygonJTS extends GeometryReader {
 
     def getPoints(linearRing: LinearRing): Seq[MosaicPointJTS] = {
         linearRing.getCoordinates.map(MosaicPointJTS(_, linearRing.getSRID))
-    }
-
-    override def fromInternal(row: InternalRow): MosaicGeometryJTS = {
-        val internalGeom = InternalGeometry(row)
-        fromRings(internalGeom.boundaries.head, internalGeom.holes.head, internalGeom.srid)
     }
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = POLYGON): MosaicPolygonJTS = {

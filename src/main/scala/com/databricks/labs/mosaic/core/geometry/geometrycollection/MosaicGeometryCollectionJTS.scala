@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
@@ -15,35 +15,6 @@ import java.util
 class MosaicGeometryCollectionJTS(geomCollection: GeometryCollection)
     extends MosaicGeometryJTS(geomCollection)
       with MosaicGeometryCollection {
-
-    override def toInternal: InternalGeometry = {
-        val n = geomCollection.getNumGeometries
-        val geoms = for (i <- 0 until n) yield MosaicGeometryJTS(geomCollection.getGeometryN(i))
-        val flattened = geoms
-            .flatMap { g =>
-                // By convention internal representation forces flattening of MULTI geometries
-                GeometryTypeEnum.fromString(g.getGeometryType) match {
-                    case MULTIPOLYGON    => g.flatten
-                    case MULTILINESTRING => g.flatten
-                    case MULTIPOINT      => g.flatten
-                    case _               => Seq(g)
-                }
-            }
-            .map {
-                case p: MosaicPolygonJTS    => p.toInternal
-                case l: MosaicLineStringJTS =>
-                    val shell = l.toInternal.boundaries.head
-                    // By convention linestrings are polygons with no shells and one hole
-                    new InternalGeometry(POLYGON.id, l.getSpatialReference, Array(Array.empty), Array(Array(shell)))
-                case p: MosaicPointJTS      =>
-                    val shell = p.toInternal.boundaries.head
-                    // By convention points are polygons with no shells and one hole with one point
-                    new InternalGeometry(POLYGON.id, p.getSpatialReference, Array(Array.empty), Array(Array(shell)))
-            }
-        val boundaries = flattened.map(_.boundaries.head).toArray
-        val holes = flattened.flatMap(_.holes).toArray
-        new InternalGeometry(GEOMETRYCOLLECTION.id, getSpatialReference, boundaries, holes)
-    }
 
     override def getBoundary: MosaicGeometryJTS = boundary
 
@@ -133,49 +104,6 @@ class MosaicGeometryCollectionJTS(geomCollection: GeometryCollection)
 }
 
 object MosaicGeometryCollectionJTS extends GeometryReader {
-
-    override def fromInternal(row: InternalRow): MosaicGeometryJTS = {
-        val gf = new GeometryFactory()
-        val internalGeom = InternalGeometry(row)
-
-        val rings = internalGeom.boundaries.zip(internalGeom.holes)
-
-        val multipolygon = rings
-            .filter(_._1.nonEmpty)
-            .map { case (boundaryRing, holesRings) => MosaicPolygonJTS.fromRings(boundaryRing, holesRings, internalGeom.srid) }
-            .reduceOption(_ union _)
-
-        val multilinestring = rings
-            .filter(r => r._1.isEmpty && r._2.nonEmpty && r._2.head.length > 1)
-            .map { case (_, holesRings) =>
-                val linestring = MosaicLineStringJTS.fromSeq(holesRings.head.map(ic => {
-                    val point = MosaicPointJTS.apply(ic.coords)
-                    point.setSpatialReference(internalGeom.srid)
-                    point
-                }))
-                linestring.setSpatialReference(internalGeom.srid)
-                linestring.asInstanceOf[MosaicGeometryJTS]
-            }
-            .reduceOption(_ union _)
-
-        val multipoint = rings
-            .filter(r => r._1.isEmpty && r._2.nonEmpty && r._2.head.length == 1)
-            .map { case (_, holesRings) =>
-                val point = MosaicPointJTS.apply(holesRings.head.head.coords)
-                point.setSpatialReference(internalGeom.srid)
-                point.asInstanceOf[MosaicGeometryJTS]
-            }
-            .reduceOption(_ union _)
-
-        val geometries = new util.ArrayList[Geometry]()
-        multipoint.map(g => geometries.add(g.getGeom))
-        multilinestring.map(g => geometries.add(g.getGeom))
-        multipolygon.map(g => geometries.add(g.getGeom))
-
-        val geometry = gf.buildGeometry(geometries)
-
-        MosaicGeometryCollectionJTS(geometry)
-    }
 
     override def fromSeq[T <: MosaicGeometry](
         geomSeq: Seq[T],

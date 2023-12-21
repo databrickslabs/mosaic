@@ -42,6 +42,10 @@ abstract class GeometryAPI(
 
     def geometry(points: Seq[MosaicPoint], geomType: GeometryTypeEnum.Value): MosaicGeometry = reader.fromSeq(points, geomType)
 
+    def polygon(shells: Seq[Seq[MosaicPoint]], holes: Seq[Seq[Seq[MosaicPoint]]]): MosaicGeometry
+
+    def polygon(shells: Seq[Seq[MosaicPoint]], holes: Seq[Seq[Seq[MosaicPoint]]], srid: Int): MosaicGeometry
+
     /**
       * Constructs an instance of [[MosaicGeometry]] based on an instance of
       * spark internal data.
@@ -58,7 +62,6 @@ abstract class GeometryAPI(
             case _: StringType           => reader.fromWKT(inputData.getString(0))
             case _: HexType              => reader.fromHEX(inputData.get(0, HexType).asInstanceOf[InternalRow].getString(0))
             case _: JSONType             => reader.fromJSON(inputData.get(0, JSONType).asInstanceOf[InternalRow].getString(0))
-            case _: InternalGeometryType => reader.fromInternal(inputData.get(0, InternalGeometryType).asInstanceOf[InternalRow])
             case _                       => throw new Error(s"$dataType not supported.")
         }
     }
@@ -79,7 +82,6 @@ abstract class GeometryAPI(
             case _: StringType           => reader.fromWKT(inputData.asInstanceOf[UTF8String].toString)
             case _: HexType              => reader.fromHEX(inputData.asInstanceOf[InternalRow].getString(0))
             case _: JSONType             => reader.fromJSON(inputData.asInstanceOf[InternalRow].getString(0))
-            case _: InternalGeometryType => reader.fromInternal(inputData.asInstanceOf[InternalRow])
             case _                       => throw new Error(s"$dataType not supported.")
         }
 
@@ -94,7 +96,6 @@ abstract class GeometryAPI(
             case "HEX"        => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
             case "JSONOBJECT" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
             case "GEOJSON"    => UTF8String.fromString(geometry.toJSON)
-            case "COORDS"     => geometry.toInternal.serialize
             case _            => throw new Error(s"$dataFormatName not supported.")
         }
     }

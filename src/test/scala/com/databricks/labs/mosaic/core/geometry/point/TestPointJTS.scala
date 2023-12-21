@@ -4,8 +4,6 @@ import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.catalyst.InternalRow
-
 class TestPointJTS extends AnyFlatSpec {
 
     "MosaicPointJTS" should "return Nil for holes and hole points calls." in {
@@ -49,11 +47,9 @@ class TestPointJTS extends AnyFlatSpec {
         noException should be thrownBy MosaicPointJTS.fromWKB(point.toWKB)
         noException should be thrownBy MosaicPointJTS.fromHEX(point.toHEX)
         noException should be thrownBy MosaicPointJTS.fromJSON(point.toJSON)
-        noException should be thrownBy MosaicPointJTS.fromInternal(point.toInternal.serialize.asInstanceOf[InternalRow])
         point.equals(MosaicPointJTS.fromWKB(point.toWKB)) shouldBe true
         point.equals(MosaicPointJTS.fromHEX(point.toHEX)) shouldBe true
         point.equals(MosaicPointJTS.fromJSON(point.toJSON)) shouldBe true
-        point.equals(MosaicPointJTS.fromInternal(point.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
     }
 
     "MosaicPointJTS" should "maintain SRID across operations" in {

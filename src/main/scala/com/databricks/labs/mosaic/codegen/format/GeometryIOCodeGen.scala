@@ -14,8 +14,6 @@ trait GeometryIOCodeGen {
 
     def fromHex(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)
 
-    def fromInternal(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)
-
     def toWKT(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)
 
     def toWKB(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)
@@ -25,7 +23,5 @@ trait GeometryIOCodeGen {
     def toGeoJSON(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)
 
     def toHEX(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)
-
-    def toInternal(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String)
 
 }

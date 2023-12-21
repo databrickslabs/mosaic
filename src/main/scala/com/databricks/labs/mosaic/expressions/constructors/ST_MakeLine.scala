@@ -1,13 +1,11 @@
 package com.databricks.labs.mosaic.expressions.constructors
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.InternalGeometryType
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.LINESTRING
-
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo, UnaryExpression}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{ArrayType, DataType}
 
@@ -19,7 +17,7 @@ import org.apache.spark.sql.types.{ArrayType, DataType}
   """,
   since = "1.0"
 )
-case class ST_MakeLine(geoms: Expression, geometryAPIName: String) extends UnaryExpression with CodegenFallback {
+case class ST_MakeLine(geoms: Expression, expressionConfig: MosaicExpressionConfig) extends UnaryExpression with CodegenFallback {
 
     override def child: Expression = geoms
 
@@ -36,32 +34,22 @@ case class ST_MakeLine(geoms: Expression, geometryAPIName: String) extends Unary
             if (anyNull) {
                 null
             } else {
-                val geometryAPI = GeometryAPI(geometryAPIName)
+                val geometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
                 val geomArray = evaluated.asInstanceOf[ArrayData].toObjectArray(dataType)
                 val geomPieces = geomArray.map(geometryAPI.geometry(_, dataType))
-                val internalGeoms = geomPieces
-                    .map(geometryAPI.serialize(_, InternalGeometryType))
-                    .map(geom => InternalGeometry(geom.asInstanceOf[InternalRow]))
-                val outputGeom = internalGeoms.reduce(reduceGeoms)
-                val result = geometryAPI.geometry(outputGeom.serialize, InternalGeometryType)
-                geometryAPI.serialize(result, dataType)
+                // Note: order of input geoms matters for this function
+                val points = geomPieces.flatMap(_.getShellPoints.flatten)
+                val resultGeom = geometryAPI.geometry(points, GeometryTypeEnum.LINESTRING)
+                geometryAPI.serialize(resultGeom, dataType)
             }
         }
     }
 
     override def dataType: DataType = geoms.dataType.asInstanceOf[ArrayType].elementType
 
-    def reduceGeoms(leftGeom: InternalGeometry, rightGeom: InternalGeometry): InternalGeometry =
-        new InternalGeometry(
-          GeometryTypeEnum.LINESTRING.id,
-          leftGeom.srid,
-          Array(leftGeom.boundaries.flatMap(_.toList) ++ rightGeom.boundaries.flatMap(_.toList)),
-          Array(Array())
-        )
-
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(1).map(_.asInstanceOf[Expression])
-        val res = ST_MakeLine(asArray.head, geometryAPIName)
+        val res = ST_MakeLine(asArray.head, expressionConfig)
         res.copyTagsFrom(this)
         res
     }

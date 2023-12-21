@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.core.geometry.linestring
 
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
-import org.apache.spark.sql.catalyst.InternalRow
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -31,11 +30,9 @@ class TestLineStringJTS extends AnyFlatSpec {
         noException should be thrownBy MosaicLineStringJTS.fromWKB(lineString.toWKB)
         noException should be thrownBy MosaicLineStringJTS.fromHEX(lineString.toHEX)
         noException should be thrownBy MosaicLineStringJTS.fromJSON(lineString.toJSON)
-        noException should be thrownBy MosaicLineStringJTS.fromInternal(lineString.toInternal.serialize.asInstanceOf[InternalRow])
         lineString.equals(MosaicLineStringJTS.fromWKB(lineString.toWKB)) shouldBe true
         lineString.equals(MosaicLineStringJTS.fromHEX(lineString.toHEX)) shouldBe true
         lineString.equals(MosaicLineStringJTS.fromJSON(lineString.toJSON)) shouldBe true
-        lineString.equals(MosaicLineStringJTS.fromInternal(lineString.toInternal.serialize.asInstanceOf[InternalRow])) shouldBe true
     }
 
     "MosaicLineStringJTS" should "be instantiable from a Seq of MosaicPointJTS" in {

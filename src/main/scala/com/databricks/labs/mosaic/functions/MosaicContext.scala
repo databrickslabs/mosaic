@@ -117,20 +117,20 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         registry.registerFunction(
           FunctionIdentifier("st_point", database),
           ST_Point.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_Point(exprs(0), exprs(1))
+          (exprs: Seq[Expression]) => ST_Point(exprs(0), exprs(1), expressionConfig)
         )
         registry.registerFunction(
           FunctionIdentifier("st_makeline", database),
           ST_MakeLine.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_MakeLine(exprs(0), geometryAPI.name)
+          (exprs: Seq[Expression]) => ST_MakeLine(exprs(0), expressionConfig)
         )
         registry.registerFunction(
           FunctionIdentifier("st_polygon", database),
           ST_MakePolygon.registryExpressionInfo(database),
           (exprs: Seq[Expression]) =>
               exprs match {
-                  case e if e.length == 1 => ST_MakePolygon(e.head, array().expr)
-                  case e if e.length == 2 => ST_MakePolygon(e.head, e.last)
+                  case e if e.length == 1 => ST_MakePolygon(e.head, array().expr, expressionConfig)
+                  case e if e.length == 2 => ST_MakePolygon(e.head, e.last, expressionConfig)
                   case _                  => throw new Error("Wrong number of arguments.")
               }
         )
@@ -607,17 +607,18 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ConvertTo(inGeom.expr, outDataType, geometryAPI.name, Some("convert_to")))
 
         /** Geometry constructors */
-        def st_point(xVal: Column, yVal: Column): Column = ColumnAdapter(ST_Point(xVal.expr, yVal.expr))
+        def st_point(xVal: Column, yVal: Column): Column = ColumnAdapter(ST_Point(xVal.expr, yVal.expr, expressionConfig))
         def st_geomfromwkt(inGeom: Column): Column =
             ColumnAdapter(ConvertTo(inGeom.expr, "coords", geometryAPI.name, Some("st_geomfromwkt")))
         def st_geomfromwkb(inGeom: Column): Column =
             ColumnAdapter(ConvertTo(inGeom.expr, "coords", geometryAPI.name, Some("st_geomfromwkb")))
         def st_geomfromgeojson(inGeom: Column): Column =
             ColumnAdapter(ConvertTo(AsJSON(inGeom.expr), "coords", geometryAPI.name, Some("st_geomfromgeojson")))
-        def st_makeline(points: Column): Column = ColumnAdapter(ST_MakeLine(points.expr, geometryAPI.name))
-        def st_makepolygon(boundaryRing: Column): Column = ColumnAdapter(ST_MakePolygon(boundaryRing.expr, array().expr))
+        def st_makeline(points: Column): Column = ColumnAdapter(ST_MakeLine(points.expr, expressionConfig))
+        def st_makepolygon(boundaryRing: Column): Column =
+            ColumnAdapter(ST_MakePolygon(boundaryRing.expr, array().expr, expressionConfig))
         def st_makepolygon(boundaryRing: Column, holeRingArray: Column): Column =
-            ColumnAdapter(ST_MakePolygon(boundaryRing.expr, holeRingArray.expr))
+            ColumnAdapter(ST_MakePolygon(boundaryRing.expr, holeRingArray.expr, expressionConfig))
 
         /** Geometry accessors */
         def st_asbinary(geom: Column): Column = ColumnAdapter(ConvertTo(geom.expr, "wkb", geometryAPI.name, Some("st_asbinary")))

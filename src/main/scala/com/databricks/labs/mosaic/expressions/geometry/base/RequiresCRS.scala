@@ -15,7 +15,6 @@ trait RequiresCRS {
             case BinaryType           => "WKB"
             case HexType              => "HEX"
             case JSONType             => "GEOJSON"
-            case InternalGeometryType => "COORDS"
             case _                    => throw new Error("Format not supported!")
         }
 

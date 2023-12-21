@@ -3,32 +3,11 @@ package com.databricks.labs.mosaic.core.geometry.geometrycollection
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometryJTS
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
-import org.apache.spark.sql.catalyst.InternalRow
 import org.scalactic.Tolerance.convertNumericToPlusOrMinusWrapper
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper, noException}
 
 class TestGeometryCollectionJTS extends AnyFunSuite {
-
-    test("MosaicGeometryCollectionJTS should serialise and deserialize to/from Internal") {
-
-        val geomCollection = MosaicGeometryCollectionJTS.fromWKT(
-          "GEOMETRYCOLLECTION (POINT (5 1), LINESTRING (6 1, 6 2, 6 3), POLYGON ((7 0, 7 1, 8 1, 8 0, 7 0))," +
-              " MULTIPOLYGON (((0 0, 0 1, 1 1, 1 0, 0 0)), ((1 1, 1 2, 2 2, 2 1, 1 1)))" +
-              ", MULTILINESTRING ((3 1, 4 2, 5 3), (4 4, 5 5, 6 6))" +
-              ", MULTIPOINT (9 1, 9 2, 9 3))" +
-              ")"
-        )
-
-        val internal = geomCollection.toInternal
-
-        val deserialized = MosaicGeometryCollectionJTS.fromInternal(internal.serialize.asInstanceOf[InternalRow])
-
-        val expected = geomCollection.asInstanceOf[MosaicGeometryCollectionJTS].asSeq.flatMap(_.flatten).reduce(_ union _)
-
-        deserialized.equals(expected) shouldBe true
-
-    }
 
     test("MosaicGeometryCollectionJTS should support type conversions") {
         val geometryCollection = MosaicGeometryCollectionJTS.fromWKT(

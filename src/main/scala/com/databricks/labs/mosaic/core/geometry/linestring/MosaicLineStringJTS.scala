@@ -2,19 +2,13 @@ package com.databricks.labs.mosaic.core.geometry.linestring
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
-import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
-import org.apache.spark.sql.catalyst.InternalRow
+import com.databricks.labs.mosaic.core.types.model._
 import org.locationtech.jts.geom._
 
 class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(lineString) with MosaicLineString {
 
     override def getShellPoints: Seq[Seq[MosaicPointJTS]] = Seq(MosaicLineStringJTS.getPoints(lineString))
-
-    override def toInternal: InternalGeometry = {
-        val shell = lineString.getCoordinates.map(InternalCoord(_))
-        new InternalGeometry(LINESTRING.id, getSpatialReference, Array(shell), Array(Array(Array())))
-    }
 
     override def getBoundary: MosaicGeometryJTS = {
         val geom = lineString.getBoundary
@@ -46,14 +40,6 @@ object MosaicLineStringJTS extends GeometryReader {
             point.setSRID(lineString.getSRID)
             new MosaicPointJTS(point)
         }
-    }
-
-    override def fromInternal(row: InternalRow): MosaicLineStringJTS = {
-        val internalGeom = InternalGeometry(row)
-        val gf = new GeometryFactory()
-        val lineString = gf.createLineString(internalGeom.boundaries.head.map(_.toCoordinate))
-        lineString.setSRID(internalGeom.srid)
-        MosaicLineStringJTS(lineString)
     }
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = LINESTRING): MosaicLineStringJTS = {

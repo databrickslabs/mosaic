@@ -1,8 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.types.InternalGeometryType
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -31,7 +30,6 @@ case class IndexGeometry(indexID: Expression, format: Expression, indexSystem: I
             case "WKT"     => StringType
             case "WKB"     => BinaryType
             case "GEOJSON" => StringType
-            case "COORDS"  => InternalGeometryType
             case _         => throw new Error(s"Format name can only be 'WKT', 'WKB', 'GEOJSON' or 'COORDS', but $formatName was provided.")
         }
     }

@@ -1,13 +1,11 @@
 package com.databricks.labs.mosaic.expressions.constructors
 
-import com.databricks.labs.mosaic.core.types.InternalGeometryType
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
-
-import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, ExpressionInfo, NullIntolerant}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, ExpressionInfo, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
-import org.apache.spark.sql.types.DataType
+import org.apache.spark.sql.types.{ArrayType, BinaryType, DataType}
 
 @ExpressionDescription(
   usage = "_FUNC_(expr1, expr2) - Creates a new Polygon geometry from: " +
@@ -19,7 +17,7 @@ import org.apache.spark.sql.types.DataType
   """,
   since = "1.0"
 )
-case class ST_MakePolygon(boundaryRing: Expression, holeRingArray: Expression)
+case class ST_MakePolygon(boundaryRing: Expression, holeRingArray: Expression, expressionConfig: MosaicExpressionConfig)
     extends BinaryExpression
       with NullIntolerant
       with CodegenFallback {
@@ -28,23 +26,24 @@ case class ST_MakePolygon(boundaryRing: Expression, holeRingArray: Expression)
 
     override def right: Expression = holeRingArray
 
-    override def dataType: DataType = InternalGeometryType
+    override def dataType: DataType = BinaryType
 
     override def nullSafeEval(input1: Any, input2: Any): Any = {
-        val ringGeom = InternalGeometry(input1.asInstanceOf[InternalRow])
+        val geometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
+        val ringGeom = geometryAPI.geometry(input1, left.dataType)
+        val holesDatatype = right.dataType.asInstanceOf[ArrayType].elementType
         val holeGeoms = input2
             .asInstanceOf[ArrayData]
-            .toObjectArray(InternalGeometryType)
-            .map(g => InternalGeometry(g.asInstanceOf[InternalRow]))
+            .toObjectArray(holesDatatype)
+            .map(geometryAPI.geometry(_, holesDatatype))
 
-        val polygon =
-            new InternalGeometry(GeometryTypeEnum.POLYGON.id, ringGeom.srid, ringGeom.boundaries, Array(holeGeoms.map(_.boundaries.head)))
-        polygon.serialize
+        val resultPolygon = geometryAPI.polygon(ringGeom.getShellPoints, holeGeoms.map(_.getShellPoints))
+        geometryAPI.serialize(resultPolygon, dataType)
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val asArray = newArgs.take(2).map(_.asInstanceOf[Expression])
-        val res = ST_MakePolygon(asArray(0), asArray(1))
+        val res = ST_MakePolygon(asArray(0), asArray(1), expressionConfig)
         res.copyTagsFrom(this)
         res
     }

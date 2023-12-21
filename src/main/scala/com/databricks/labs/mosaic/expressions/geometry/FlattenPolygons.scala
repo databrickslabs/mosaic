@@ -78,7 +78,6 @@ object FlattenPolygons {
             case _: StringType           => TypeCheckResult.TypeCheckSuccess
             case _: HexType              => TypeCheckResult.TypeCheckSuccess
             case _: JSONType             => TypeCheckResult.TypeCheckSuccess
-            case _: InternalGeometryType => TypeCheckResult.TypeCheckSuccess
             case _                       => TypeCheckResult.TypeCheckFailure(
                   "input to function explode should be array or map type, " +
                       s"not ${child.dataType.catalogString}"
@@ -102,7 +101,6 @@ object FlattenPolygons {
             case _: StringType           => StructType(Seq(StructField("element", StringType)))
             case _: HexType              => StructType(Seq(StructField("element", HexType)))
             case _: JSONType             => StructType(Seq(StructField("element", JSONType)))
-            case _: InternalGeometryType => StructType(Seq(StructField("element", InternalGeometryType)))
             case _                       => throw new Error(s"Data type not supported: ${child.dataType}.")
         }
 

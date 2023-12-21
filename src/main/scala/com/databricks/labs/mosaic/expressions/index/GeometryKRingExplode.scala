@@ -1,13 +1,13 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
 import com.databricks.labs.mosaic.core.Mosaic
-import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo}
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.types.HexType
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo}
 import org.apache.spark.sql.types._
 
 case class GeometryKRingExplode(geom: Expression, resolution: Expression, k: Expression, indexSystem: IndexSystem, geometryAPIName: String)
@@ -25,7 +25,7 @@ case class GeometryKRingExplode(geom: Expression, resolution: Expression, k: Exp
 
     // noinspection DuplicatedCode
     override def checkInputDataTypes(): TypeCheckResult = {
-        if (!Seq(BinaryType, StringType, HexType, InternalGeometryType).contains(geom.dataType)) {
+        if (!Seq(BinaryType, StringType, HexType).contains(geom.dataType)) {
             TypeCheckResult.TypeCheckFailure("Unsupported geom type.")
         } else if (!Seq(IntegerType, StringType).contains(resolution.dataType)) {
             TypeCheckResult.TypeCheckFailure("Unsupported resolution type.")

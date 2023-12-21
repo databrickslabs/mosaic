@@ -11,7 +11,6 @@ object GeometryFormat {
             case StringType           => "WKT"
             case HexType              => "HEX"
             case JSONType             => "JSONOBJECT"
-            case InternalGeometryType => "COORDS"
             case _                    => throw new Error(s"Unsupported data type ${outputDataType.typeName}.")
         }
     }

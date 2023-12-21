@@ -1,11 +1,11 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
 import com.databricks.labs.mosaic.core.Mosaic
-import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.types.HexType
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
@@ -25,7 +25,7 @@ case class GeometryKLoop(
     // noinspection DuplicatedCode
     override def inputTypes: Seq[DataType] = {
         if (
-          !Seq(BinaryType, StringType, HexType, InternalGeometryType).contains(first.dataType) ||
+          !Seq(BinaryType, StringType, HexType).contains(first.dataType) ||
           !Seq(IntegerType, StringType).contains(second.dataType) ||
           third.dataType != IntegerType
         ) {

@@ -1,15 +1,12 @@
 package com.databricks.labs.mosaic.codegen.format
 
-import com.databricks.labs.mosaic.core.geometry.MosaicGeometryJTS
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.InternalGeometryType
+import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext}
+import org.apache.spark.sql.types.{BinaryType, StringType}
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.io._
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
-
-import org.apache.spark.sql.catalyst.expressions.GenericInternalRow
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
-import org.apache.spark.sql.types.{BinaryType, StringType}
 
 object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
 
@@ -61,20 +58,6 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
              |$tmpHolder = null;
              |""".stripMargin,
           inputGeom
-        )
-    }
-
-    // noinspection DuplicatedCode
-    override def fromInternal(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
-        val geometryClass = classOf[Geometry].getName
-        val geometry = ctx.freshName("geometry")
-        val mosaicGeometryClass = classOf[MosaicGeometryJTS].getName
-
-        (
-          s"""
-             |$geometryClass $geometry = (($mosaicGeometryClass)$mosaicGeometryClass.fromInternal($eval)).getGeom();
-             |""".stripMargin,
-          geometry
         )
     }
 
@@ -155,18 +138,6 @@ object MosaicGeometryIOCodeGenJTS extends GeometryIOCodeGen {
         (
           s"""
              |$javaStringType $outputGeom = $javaStringType.fromString(new $geoJsonWriterClass().write($eval));
-             |""".stripMargin,
-          outputGeom
-        )
-    }
-
-    override def toInternal(ctx: CodegenContext, eval: String, geometryAPI: GeometryAPI): (String, String) = {
-        val outputGeom = ctx.freshName("outputGeom")
-        val mosaicGeometryClass = classOf[MosaicGeometryJTS].getName
-        val internalGeometryJavaType = CodeGenerator.javaType(InternalGeometryType)
-        (
-          s"""
-             |$internalGeometryJavaType $outputGeom = (InternalRow)($mosaicGeometryClass.apply($eval).toInternal().serialize());
              |""".stripMargin,
           outputGeom
         )

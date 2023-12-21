@@ -5,16 +5,9 @@ import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOINT, POINT}
-import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
 
 class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(multiPoint) with MosaicMultiPoint {
-
-    // noinspection DuplicatedCode
-    override def toInternal: InternalGeometry = {
-        val points = asSeq.map(_.coord).map(InternalCoord(_))
-        new InternalGeometry(MULTIPOINT.id, getSpatialReference, Array(points.toArray), Array(Array(Array())))
-    }
 
     override def asSeq: Seq[MosaicPointJTS] = {
         for (i <- 0 until multiPoint.getNumPoints) yield {
@@ -45,18 +38,6 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
 }
 
 object MosaicMultiPointJTS extends GeometryReader {
-
-    // noinspection ZeroIndexToHead
-    override def fromInternal(row: InternalRow): MosaicMultiPointJTS = {
-        val gf = new GeometryFactory()
-        val internalGeom = InternalGeometry(row)
-        require(internalGeom.typeId == MULTIPOINT.id)
-
-        val points = internalGeom.boundaries.head.map(p => gf.createPoint(p.toCoordinate))
-        val multiPoint = gf.createMultiPoint(points)
-        multiPoint.setSRID(internalGeom.srid)
-        new MosaicMultiPointJTS(multiPoint)
-    }
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value = MULTIPOINT): MosaicMultiPointJTS = {
         val gf = new GeometryFactory()

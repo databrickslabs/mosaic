@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.codegen.format
 
 import com.databricks.labs.mosaic.core.geometry.api.JTS
-import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType, JSONType}
+import com.databricks.labs.mosaic.core.types.{HexType, JSONType}
 import org.apache.spark.sql.catalyst.expressions.codegen._
 import org.apache.spark.sql.types._
 import org.scalatest.flatspec.AnyFlatSpec
@@ -37,7 +37,6 @@ class ConvertToCodeGenTest extends AnyFlatSpec {
         noException should be thrownBy ConvertToCodeGen.readGeometryCode(ctx, eval, StringType, JTS)
         noException should be thrownBy ConvertToCodeGen.readGeometryCode(ctx, eval, HexType, JTS)
         noException should be thrownBy ConvertToCodeGen.readGeometryCode(ctx, eval, JSONType, JTS)
-        noException should be thrownBy ConvertToCodeGen.readGeometryCode(ctx, eval, InternalGeometryType, JTS)
     }
 
     "ConvertToCodeGen" should "generate write code for all formats" in {
@@ -47,7 +46,6 @@ class ConvertToCodeGenTest extends AnyFlatSpec {
         noException should be thrownBy ConvertToCodeGen.writeGeometryCode(ctx, eval, StringType, JTS)
         noException should be thrownBy ConvertToCodeGen.writeGeometryCode(ctx, eval, HexType, JTS)
         noException should be thrownBy ConvertToCodeGen.writeGeometryCode(ctx, eval, JSONType, JTS)
-        noException should be thrownBy ConvertToCodeGen.writeGeometryCode(ctx, eval, InternalGeometryType, JTS)
     }
 
 }

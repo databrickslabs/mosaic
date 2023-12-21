@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
+import com.databricks.labs.mosaic.core.types.HexType
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
 import org.apache.spark.sql.{AnalysisException, QueryTest}
@@ -10,7 +10,6 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.locationtech.jts.io.{WKBReader, WKTReader}
 import org.scalatest.matchers.should.Matchers._
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.{col, lit}
 
 trait FlattenPolygonsBehaviors extends QueryTest {
@@ -275,13 +274,11 @@ trait FlattenPolygonsBehaviors extends QueryTest {
         wktFlatten.elementSchema.head.dataType shouldEqual StringType
         wkbFlatten.elementSchema.head.dataType shouldEqual BinaryType
         hexFlatten.elementSchema.head.dataType shouldEqual HexType
-        coordsFlatten.elementSchema.head.dataType shouldEqual InternalGeometryType
         an [Error] should be thrownBy structFlatten.elementSchema
 
         wktFlatten.collectionType shouldEqual StringType
         wkbFlatten.collectionType shouldEqual BinaryType
         hexFlatten.collectionType shouldEqual HexType
-        coordsFlatten.collectionType shouldEqual InternalGeometryType
 
         wktFlatten.position shouldEqual false
         wkbFlatten.position shouldEqual false

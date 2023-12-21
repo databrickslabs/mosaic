@@ -1,8 +1,8 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
+import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.types.HexType
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -28,7 +28,7 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystem: Index
     // noinspection DuplicatedCode
     override def inputTypes: Seq[DataType] = {
         if (
-          !Seq(BinaryType, StringType, HexType, InternalGeometryType).contains(geom.dataType) ||
+          !Seq(BinaryType, StringType, HexType).contains(geom.dataType) ||
           !Seq(IntegerType, StringType).contains(resolution.dataType)
         ) {
             throw new Error(s"Not supported data type: (${geom.dataType}, ${resolution.dataType}.")

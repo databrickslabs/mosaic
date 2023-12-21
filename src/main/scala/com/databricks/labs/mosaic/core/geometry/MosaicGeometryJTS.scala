@@ -10,7 +10,6 @@ import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.esotericsoftware.kryo.Kryo
-import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom.{Geometry, GeometryCollection, GeometryFactory}
 import org.locationtech.jts.geom.util.AffineTransformation
 import org.locationtech.jts.io._
@@ -276,11 +275,6 @@ object MosaicGeometryJTS extends GeometryReader {
 
     override def fromSeq[T <: MosaicGeometry](geomSeq: Seq[T], geomType: GeometryTypeEnum.Value): MosaicGeometryJTS = {
         reader(geomType.id).fromSeq(geomSeq, geomType).asInstanceOf[MosaicGeometryJTS]
-    }
-
-    override def fromInternal(row: InternalRow): MosaicGeometryJTS = {
-        val typeId = row.getInt(0)
-        reader(typeId).fromInternal(row).asInstanceOf[MosaicGeometryJTS]
     }
 
     def reader(geomTypeId: Int): GeometryReader =
