@@ -66,10 +66,10 @@ then
   # - add pre-build JNI shared object to the path
   if [ $WITH_FUSE_SO == 1 ]
   then
-    # copy from fuse dir
-    sudo cp $FUSE_DIR/libgdalalljni.so /usr/lib
-    sudo cp $FUSE_DIR/libgdalalljni.so.30 /usr/lib
-    sudo cp $FUSE_DIR/libgdalalljni.so.30.0.3 /usr/lib
+    # copy from fuse dir with no-clobber
+    sudo cp -n $FUSE_DIR/libgdalalljni.so /usr/lib
+    sudo cp -n $FUSE_DIR/libgdalalljni.so.30 /usr/lib
+    sudo cp -n $FUSE_DIR/libgdalalljni.so.30.0.3 /usr/lib
   else
     # copy from github
     GITHUB_REPO_PATH=databrickslabs/mosaic/raw/main/resources/gdal/jammy
