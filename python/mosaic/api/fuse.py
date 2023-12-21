@@ -48,6 +48,9 @@ class SetupMgr:
         #   may be used in pip install 
         mosaic_version = get_install_mosaic_version()
         github_version = mosaic_version # <- valid or None
+        pip_str = ''
+        release_version = None
+
         if (
                 self.override_mosaic_version is not None and 
                 set(self.override_mosaic_version).issubset(set('=0123456789.'))
@@ -124,7 +127,6 @@ class SetupMgr:
                 )
     
             # - set the mosaic version for pip
-            pip_str=''
             if (
                 self.override_mosaic_version is not None and
                 not self.override_mosaic_version == 'main'
@@ -149,7 +151,6 @@ class SetupMgr:
         # --- end of script config ---
 
         with_resources = self.jar_copy or self.jni_so_copy
-        release_version = None
         if with_resources:   
             # - handle jar copy
             if self.jar_copy:
@@ -162,13 +163,21 @@ class SetupMgr:
                 # download jar
                 jar_filename = f'mosaic-{resource_version}-jar-with-dependencies.jar'
                 jar_url = f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}'
-                subprocess.run(['sudo', 'wget', '-P', self.to_fuse_dir, jar_url])         
+                jar_result = subprocess.run(
+                    ['sudo', 'wget', '-P', self.to_fuse_dir, jar_url],
+                    stdout=subprocess.DEVNULL
+                )
+                print(f"jar '{jar_url}' download done... returncode? {jar_result.returncode}")  # <- wait for return       
             
             # - handle so copy
             if self.jni_so_copy:
                 for so_filename in ['libgdalalljni.so', 'libgdalalljni.so.30', 'libgdalalljni.so.30.0.3']:
                     so_url = f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}'
-                    subprocess.run(['sudo', 'wget', '-P', self.to_fuse_dir, so_url])
+                    so_result = subprocess.run(
+                        ['sudo', 'wget', '-P', self.to_fuse_dir, so_url], 
+                        stdout=subprocess.DEVNULL
+                    )
+                    print(f"so '{so_url}' download done... returncode {so_result.returncode}") # <- wait for return
 
         # - echo status
         print(f"::: Install setup complete :::")

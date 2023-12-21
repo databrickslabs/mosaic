@@ -28,10 +28,9 @@ class GDALInstaller:
         os.chmod(gdal_install_script_target, mode=0x744)
         result = subprocess.run(
             [gdal_install_script_target],
-            stdout=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
             env=dict(os.environ, DATABRICKS_ROOT_VIRTUALENV_ENV=self._site_packages),
         )
-        print(result.stdout.decode())
         return result.returncode
     
     def list_files(self):
