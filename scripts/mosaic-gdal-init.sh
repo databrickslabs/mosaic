@@ -67,9 +67,9 @@ then
   if [ $WITH_FUSE_SO == 1 ]
   then
     # copy from fuse dir
-    cp $FUSE_DIR/libgdalalljni.so /usr/lib
-    cp $FUSE_DIR/libgdalalljni.so.30 /usr/lib
-    cp $FUSE_DIR/libgdalalljni.so.30.0.3 /usr/lib
+    sudo cp $FUSE_DIR/libgdalalljni.so /usr/lib
+    sudo cp $FUSE_DIR/libgdalalljni.so.30 /usr/lib
+    sudo cp $FUSE_DIR/libgdalalljni.so.30.0.3 /usr/lib
   else
     # copy from github
     GITHUB_REPO_PATH=databrickslabs/mosaic/raw/main/resources/gdal/jammy
