@@ -68,7 +68,9 @@ class SetupMgr:
         script_out_path = f'{self.to_fuse_dir}/{self.script_out_name}'
         if with_script:
             # - start with the unconfigured script
-            script_url = f'{GITHUB_CONTENT_TAG_URL}/scripts/{self.script_in_name}'
+            # TODO: MODIFY AFTER PR MERGE
+            # script_url = f'{GITHUB_CONTENT_TAG_URL}/scripts/{self.script_in_name}'
+            script_url = f'https://github.com/mjohns-databricks/mosaic/raw/gdal-jammy-3/scripts/{self.script_in_name}'
             script = requests.get(script_url, allow_redirects=True).text
             
             # - tokens used in script
