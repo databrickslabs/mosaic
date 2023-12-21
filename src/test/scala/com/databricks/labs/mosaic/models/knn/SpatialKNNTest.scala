@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.models.knn
 
-import com.databricks.labs.mosaic.MOSAIC_TEST
 import com.databricks.labs.mosaic.core.geometry.api.JTS
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
@@ -18,7 +17,6 @@ class SpatialKNNTest extends AnyFlatSpec with SpatialKNNBehaviors with SparkSuit
             .set(MOSAIC_INDEX_SYSTEM, "H3")
             .set(MOSAIC_GEOMETRY_API, "JTS")
             .set(MOSAIC_RASTER_API, "GDAL")
-            .set(MOSAIC_TEST, "true")
             .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
             .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
             .set("spark.sql.parquet.compression.codec", "uncompressed")
@@ -30,7 +28,6 @@ class SpatialKNNTest extends AnyFlatSpec with SpatialKNNBehaviors with SparkSuit
             .set(MOSAIC_INDEX_SYSTEM, "BNG")
             .set(MOSAIC_GEOMETRY_API, "JTS")
             .set(MOSAIC_RASTER_API, "GDAL")
-            .set(MOSAIC_TEST, "true")
             .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
             .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
             .set("spark.sql.parquet.compression.codec", "uncompressed")

@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.datasource.multiread
 
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.{JTS, MOSAIC_TEST}
+import com.databricks.labs.mosaic.JTS
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
@@ -15,7 +15,6 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
     test("Read netcdf with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
         spark.sparkContext.setLogLevel("FATAL")
-        spark.conf.set(MOSAIC_TEST, "true")
         MosaicContext.build(H3IndexSystem, JTS)
 
         val netcdf = "/binary/netcdf-coral/"
@@ -38,7 +37,6 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
     test("Read grib with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
         spark.sparkContext.setLogLevel("FATAL")
-        spark.conf.set(MOSAIC_TEST, "true")
         MosaicContext.build(H3IndexSystem, JTS)
 
         val grib = "/binary/grib-cams/"
@@ -60,7 +58,6 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
     test("Read tif with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
         spark.sparkContext.setLogLevel("FATAL")
-        spark.conf.set(MOSAIC_TEST, "true")
         MosaicContext.build(H3IndexSystem, JTS)
 
         val tif = "/modis/"
@@ -80,7 +77,6 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
     test("Read zarr with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
         spark.sparkContext.setLogLevel("FATAL")
-        spark.conf.set(MOSAIC_TEST, "true")
         MosaicContext.build(H3IndexSystem, JTS)
 
         val zarr = "/binary/zarr-example/"
