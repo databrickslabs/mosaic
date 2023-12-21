@@ -5,8 +5,6 @@ from pkg_resources import working_set, Requirement
 
 from test.context import api
 
-FUSE_INIT_SCRIPT_FILENAME = "mosaic-fuse-init.sh"
-
 class FuseInstaller:
     def __init__(
         self, with_mosaic_pip, with_gdal,
@@ -18,6 +16,7 @@ class FuseInstaller:
         self.with_gdal = with_gdal
         self.jar_copy = jar_copy
         self.jni_so_copy = jni_so_copy
+        self.FUSE_INIT_SCRIPT_FILENAME = "mosaic-fuse-init.sh"
 
     def __del__(self):
         self._temp_dir.cleanup()
@@ -29,12 +28,12 @@ class FuseInstaller:
             self.with_gdal,
             self.jar_copy,
             self.jni_so_copy, 
-            script_out_name=FUSE_INIT_SCRIPT_FILENAME
+            script_out_name=self.FUSE_INIT_SCRIPT_FILENAME
         )
 
     def run_init_script(self):
         fuse_install_script_target = os.path.join(
-            self._temp_dir.name, FUSE_INIT_SCRIPT_FILENAME
+            self._temp_dir.name, self.FUSE_INIT_SCRIPT_FILENAME
         )
         os.chmod(fuse_install_script_target, mode=0x744)
         result = subprocess.run(
