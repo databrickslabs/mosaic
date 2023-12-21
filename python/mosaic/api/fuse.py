@@ -53,6 +53,11 @@ class SetupMgr:
                 set(self.override_mosaic_version).issubset(set('=0123456789.'))
         ):
             github_version = self.override_mosaic_version.replace('=','') 
+        elif (
+            self.override_mosaic_version is not None and
+            self.override_mosaic_version == 'main'
+        ):
+            github_version = 'main'
         elif mosaic_version is None:
             github_version = 'main'
 
@@ -74,7 +79,7 @@ class SetupMgr:
             script = requests.get(script_url, allow_redirects=True).text
             
             # - tokens used in script
-            SCRIPT_FUSE_DIR_TOKEN= "FUSE_DIR='__FUSE_DIR__'"                               # <- ' added
+            SCRIPT_FUSE_DIR_TOKEN= "FUSE_DIR='__FUSE_DIR__'"                                # <- ' added
             SCRIPT_GITHUB_VERSION_TOKEN = 'GITHUB_VERSION=__GITHUB_VERSION__'
             SCRIPT_MOSAIC_PIP_VERSION_TOKEN = "MOSAIC_PIP_VERSION='__MOSAIC_PIP_VERSION__'" # <- ' added
             SCRIPT_WITH_MOSAIC_TOKEN = 'WITH_MOSAIC=0'
@@ -120,16 +125,21 @@ class SetupMgr:
     
             # - set the mosaic version for pip
             pip_str=''
-            if self.override_mosaic_version is not None:
+            if (
+                self.override_mosaic_version is not None and
+                not self.override_mosaic_version == 'main'
+            ):
                 pip_str = f'=={self.override_mosaic_version}'
-                if any(c in self.override_mosaic_version for c in ['=','<','<']):
-                    pip_str = self.override_mosaic_version   
+                if any(c in self.override_mosaic_version for c in ['=','>','<']):
+                    pip_str = f"""{self.override_mosaic_version.replace("'","").replace('"','')}"""
+                else:
+                    pip_str = f"=={self.override_mosaic_version}"
             elif mosaic_version is not None:
-                pip_str = f'=={mosaic_version}'
+                pip_str = f"=={mosaic_version}"
             script = script.replace(
                 SCRIPT_MOSAIC_PIP_VERSION_TOKEN, 
                 SCRIPT_MOSAIC_PIP_VERSION_TOKEN.replace(
-                    '__MOSAIC_PIP_VERSION__', pip_str)
+                    "__MOSAIC_PIP_VERSION__", pip_str)
             )
             
             # - write the configured init script
@@ -139,6 +149,7 @@ class SetupMgr:
         # --- end of script config ---
 
         with_resources = self.jar_copy or self.jni_so_copy
+        release_version = None
         if with_resources:   
             # - handle jar copy
             if self.jar_copy:
@@ -162,7 +173,8 @@ class SetupMgr:
         # - echo status
         print(f"::: Install setup complete :::")
         print(f"- Settings: 'with_mosaic_pip'? {self.with_mosaic_pip}, 'with_gdal'? {self.with_gdal}, 'with_ubuntugis'? {self.with_ubuntugis}")
-        print(f"            'override_mosaic_version'? {self.override_mosaic_version}, 'jar_copy'? {self.jar_copy}, 'jni_so_copy'? {self.jni_so_copy}")
+        print(f"            'jar_copy'? {self.jar_copy}, 'jni_so_copy'? {self.jni_so_copy}, 'override_mosaic_version'? {self.override_mosaic_version}")
+        print(f"- Derived:  'mosaic_version'? {mosaic_version}, 'github_version'? {github_version}, 'release_version'? {release_version}, 'pip_str'? {pip_str}")
         print(f"- Fuse Dir: '{self.to_fuse_dir}'")
         if with_script:
           print(f"- Init Script: configured and stored at '{self.script_out_name}'; ", end='')

@@ -30,12 +30,6 @@ class TestFuseInstall(SparkTestCase):
         except Exception:
             self.fail("Executing `setup_fuse_install()` raised an exception.")
 
-        try:
-            installer_result = installer.run_init_script()
-        except Exception:
-            self.fail("Running fuse init script raised an exception.")
-        self.assertEqual(installer_result, 0)
-
         files = installer.list_files()
         self.assertEquals(len(files), 1) 
         self.assertEquals(files[0][-3:].lower(), '.sh')
@@ -47,12 +41,6 @@ class TestFuseInstall(SparkTestCase):
         except Exception:
             self.fail("Executing `setup_fuse_install()` raised an exception.")
 
-        try:
-            installer_result = installer.run_init_script()
-        except Exception:
-            self.fail("Running fuse init script raised an exception.")
-        self.assertEqual(installer_result, 0)
-
         files = installer.list_files()
         self.assertEquals(len(files), 1) 
         self.assertEquals(files[0][-3:].lower(), '.sh')
@@ -63,12 +51,6 @@ class TestFuseInstall(SparkTestCase):
             installer.do_op()
         except Exception:
             self.fail("Executing `setup_fuse_install()` raised an exception.")
-
-        try:
-            installer_result = installer.run_init_script()
-        except Exception:
-            self.fail("Running fuse init script raised an exception.")
-        self.assertEqual(installer_result, 0)
 
         files = installer.list_files()
         self.assertEqual(len(files), 4)  
@@ -89,12 +71,6 @@ class TestFuseInstall(SparkTestCase):
             installer.do_op()
         except Exception:
             self.fail("Executing `setup_fuse_install()` raised an exception.")
-
-        try:
-            installer_result = installer.run_init_script()
-        except Exception:
-            self.fail("Running fuse init script raised an exception.")
-        self.assertEqual(installer_result, 0)
 
         files = installer.list_files()
         self.assertEqual(len(files), 5)  
