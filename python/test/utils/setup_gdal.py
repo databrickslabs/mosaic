@@ -15,7 +15,11 @@ class GDALInstaller:
         self._temp_dir.cleanup()
 
     def copy_objects(self):
-        api.setup_gdal(self._temp_dir.name, script_out_name=self.GDAL_INIT_SCRIPT_FILENAME)
+        api.setup_gdal(
+            self._temp_dir.name, 
+            override_mosaic_version="main",
+            script_out_name=self.GDAL_INIT_SCRIPT_FILENAME
+        )
 
     def run_init_script(self):
         gdal_install_script_target = os.path.join(

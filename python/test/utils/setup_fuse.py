@@ -28,6 +28,7 @@ class FuseInstaller:
             self.with_gdal,
             jar_copy=self.jar_copy,
             jni_so_copy=self.jni_so_copy, 
+            override_mosaic_version="main",
             script_out_name=self.FUSE_INIT_SCRIPT_FILENAME
         )
 

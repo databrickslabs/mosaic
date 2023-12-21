@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import os
 import pkg_resources
 import requests
-import shutil
+import subprocess
 
 __all__ = ["SetupMgr", "setup_fuse_install"]
 
@@ -139,7 +139,7 @@ class SetupMgr:
         # --- end of script config ---
 
         with_resources = self.jar_copy or self.jni_so_copy
-        if with_resources:        
+        if with_resources:   
             # - handle jar copy
             if self.jar_copy:
                 # url and version details
@@ -148,21 +148,16 @@ class SetupMgr:
                 if github_version == 'main':
                     latest = str(requests.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
                     resource_version = latest.split("/tag/v_")[1].split('"')[0]
-                
                 # download jar
                 jar_filename = f'mosaic-{resource_version}-jar-with-dependencies.jar'
                 jar_url = f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}'
-                jar_request = requests.get(jar_url, allow_redirects=True, stream=True)
-                with open(f'{self.to_fuse_dir}/{jar_filename}', 'wb') as jar_file:
-                    shutil.copyfileobj(jar_request.raw, jar_file)
+                subprocess.run(['sudo', 'wget', '-P', self.to_fuse_dir, jar_url])         
             
             # - handle so copy
             if self.jni_so_copy:
                 for so_filename in ['libgdalalljni.so', 'libgdalalljni.so.30', 'libgdalalljni.so.30.0.3']:
                     so_url = f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}'
-                    so_request = requests.get(so_url, allow_redirects=True, stream=True)
-                    with open(f'{self.to_fuse_dir}/{so_filename}', 'wb') as so_file:
-                        shutil.copyfileobj(so_request.raw, so_file)
+                    subprocess.run(['sudo', 'wget', '-P', self.to_fuse_dir, so_url])
 
         # - echo status
         print(f"::: Install setup complete :::")
