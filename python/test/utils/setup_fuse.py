@@ -26,8 +26,8 @@ class FuseInstaller:
             self._temp_dir.name,
             self.with_mosaic_pip,
             self.with_gdal,
-            self.jar_copy,
-            self.jni_so_copy, 
+            jar_copy=self.jar_copy,
+            jni_so_copy=self.jni_so_copy, 
             script_out_name=self.FUSE_INIT_SCRIPT_FILENAME
         )
 
