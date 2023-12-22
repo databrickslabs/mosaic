@@ -47,15 +47,12 @@ object RasterClipByVector {
         val result = GDALWarp.executeWarp(
           resultFileName,
           Seq(raster),
-          command = s"gdalwarp -wo CUTLINE_ALL_TOUCHED=TRUE -of $outShortName -cutline $shapeFileName -crop_to_cutline -co COMPRESS=DEFLATE -dstalpha"
+          command = s"gdalwarp -wo CUTLINE_ALL_TOUCHED=TRUE -of $outShortName -cutline $shapeFileName -crop_to_cutline -co COMPRESS=DEFLATE"
         )
 
         VectorClipper.cleanUpClipper(shapeFileName)
 
-        result.numBands match {
-            case 0 => throw new Exception("Output raster has no valid bands.")
-            case _ => result
-        }
+        result
     }
 
 }

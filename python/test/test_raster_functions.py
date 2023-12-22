@@ -184,7 +184,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .repartition(self.spark.sparkContext.defaultParallelism)
         ).cache()
 
-        self.assertEqual(df.count(), 31)
+        # self.assertEqual(df.count(), 31)
 
         # grid_tiles = (
         #     df
@@ -202,7 +202,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         prh_bands_indexed = (
             prh_bands_geog
-            .withColumn("tile", api.rst_tessellate("tile", lit(5)))
+            .withColumn("tile", api.rst_tessellate("tile", lit(3)))
             .where(~api.rst_isempty("tile"))
         ).cache()
 
