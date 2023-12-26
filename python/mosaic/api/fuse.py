@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import os
 import pkg_resources
 import requests
+import time
 
 __all__ = ["SetupMgr", "setup_fuse_install"]
 
@@ -152,28 +153,43 @@ class SetupMgr:
         with_resources = self.jar_copy or self.jni_so_copy
         resource_statuses = {}
         if with_resources:   
+            CHUNK_SIZE = 1024 * 1024 * 64 # 64MB
+            s = requests.Session()
             # - handle jar copy
             if self.jar_copy:
                 # url and version details
                 GITHUB_RELEASE_URL_BASE = 'https://github.com/databrickslabs/mosaic/releases'
                 resource_version = github_version
                 if github_version == 'main':
-                    latest = str(requests.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
+                    latest = str(s.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
                     resource_version = latest.split("/tag/v_")[1].split('"')[0]
                 # download jar    
                 jar_filename = f'mosaic-{resource_version}-jar-with-dependencies.jar'
-                with open(f"{self.to_fuse_dir}/{jar_filename}", 'wb') as f: 
-                    jar_url = f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}'
-                    r = requests.get(jar_url) 
-                    f.write(r.content)
-                    resource_statuses['JAR'] = r.status_code
+                jar_path = f'{self.to_fuse_dir}/{jar_filename}'
+                r = s.get(
+                    f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}', 
+                    stream=True
+                ) 
+                with open(jar_path, 'wb') as f:    
+                    for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
+                        f.write(ch)
+                while not os.path.exists(jar_path) and r.status_code == 200:
+                        time.wait(1)
+                resource_statuses[jar_filename] = r.status_code
             # - handle so copy    
             if self.jni_so_copy:
                 for so_filename in ['libgdalalljni.so', 'libgdalalljni.so.30', 'libgdalalljni.so.30.0.3']:
-                    with open(f"{self.to_fuse_dir}/{so_filename}", 'wb') as f: 
-                        r = requests.get(f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}')
-                        f.write(r.content) 
-                        resource_statuses[so_filename] = r.status_code
+                    so_path = f'{self.to_fuse_dir}/{so_filename}'
+                    r = s.get(
+                        f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}', 
+                        stream=True
+                    )
+                    with open(so_path, 'wb') as f: 
+                        for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
+                            f.write(ch)
+                    while not os.path.exists(so_path) and r.status_code == 200:
+                        time.wait(1)
+                    resource_statuses[so_filename] = r.status_code
 
         # - echo status
         print(f"::: Install setup complete :::")

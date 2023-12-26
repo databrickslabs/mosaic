@@ -11,7 +11,7 @@ class FuseInstaller:
         jar_copy = False, jni_so_copy = False
     ):
         self._site_packages = working_set.find(Requirement("keplergl")).location
-        self._temp_dir = tempfile.TemporaryDirectory()
+        self._temp_dir = tempfile.TemporaryDirectory(delete=False)
         self.with_mosaic_pip = with_mosaic_pip
         self.with_gdal = with_gdal
         self.jar_copy = jar_copy

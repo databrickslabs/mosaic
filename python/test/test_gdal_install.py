@@ -2,6 +2,11 @@ from .utils import SparkTestCase, GDALInstaller
 
 
 class TestGDALInstall(SparkTestCase):
+
+    def tearDown(self) -> None:
+        super.tearDown()
+        self.installer._temp_dir.cleanup()
+
     def test_setup_gdal(self):
         installer = GDALInstaller()
         try:

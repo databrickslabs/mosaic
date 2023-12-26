@@ -8,7 +8,7 @@ from test.context import api
 class GDALInstaller:
     def __init__(self):
         self._site_packages = working_set.find(Requirement("keplergl")).location
-        self._temp_dir = tempfile.TemporaryDirectory()
+        self._temp_dir = tempfile.TemporaryDirectory(delete=False)
         self.GDAL_INIT_SCRIPT_FILENAME = "mosaic-gdal-init.sh"
 
     def __del__(self):

@@ -33,3 +33,6 @@ class SparkTestCase(unittest.TestCase):
         logging.getLogger("pyspark").setLevel(logging.ERROR)
         logging.getLogger("py4j").setLevel(logging.ERROR)
         self.spark.sparkContext.setLogLevel("FATAL")
+
+    def tearDown(self) -> None:
+        return super().tearDown()

@@ -3,6 +3,10 @@ from .utils import SparkTestCase, FuseInstaller
 
 class TestFuseInstall(SparkTestCase):
 
+    def tearDown(self) -> None:
+        super.tearDown()
+        self.installer._temp_dir.cleanup()
+
     def test_setup_no_op(self):
         installer = FuseInstaller(False, False, jar_copy=False, jni_so_copy=False)
         try:
