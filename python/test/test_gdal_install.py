@@ -19,4 +19,4 @@ class TestGDALInstall(SparkTestCase):
         gdalinfo_result = installer.test_gdalinfo()
         self.assertEqual(gdalinfo_result, "GDAL 3.4.1, released 2021/12/27\n")
 
-        self.assertEquals(len(installer.list_files()), 1) # <- just init script
+        self.assertEqual(len(installer.list_files()), 1) # <- just init script

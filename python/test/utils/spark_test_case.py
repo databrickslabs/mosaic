@@ -1,15 +1,15 @@
-import unittest
-import os
 from importlib.metadata import version
-
 from pyspark.sql import SparkSession
 
+import logging
 import mosaic
-
+import os
+import unittest
 
 class SparkTestCase(unittest.TestCase):
     spark = None
     library_location = None
+    
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -23,11 +23,13 @@ class SparkTestCase(unittest.TestCase):
             .getOrCreate()
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
-
-    @classmethod
-    def setUp(self) -> None:
-        self.spark.sparkContext.setLogLevel("FATAL")
     
     @classmethod
     def tearDownClass(cls) -> None:
         cls.spark.stop()
+
+    def setUp(self) -> None:
+        logging.getLogger("log4j").setLevel(logging.ERROR)
+        logging.getLogger("pyspark").setLevel(logging.ERROR)
+        logging.getLogger("py4j").setLevel(logging.ERROR)
+        self.spark.sparkContext.setLogLevel("FATAL")

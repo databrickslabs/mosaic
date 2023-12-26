@@ -3,8 +3,6 @@ from dataclasses import dataclass
 import os
 import pkg_resources
 import requests
-import subprocess
-import time
 
 __all__ = ["SetupMgr", "setup_fuse_install"]
 
@@ -152,6 +150,7 @@ class SetupMgr:
         # --- end of script config ---
 
         with_resources = self.jar_copy or self.jni_so_copy
+        resource_statuses = {}
         if with_resources:   
             # - handle jar copy
             if self.jar_copy:
@@ -161,44 +160,20 @@ class SetupMgr:
                 if github_version == 'main':
                     latest = str(requests.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
                     resource_version = latest.split("/tag/v_")[1].split('"')[0]
-                # download jar
-                jar_timeout = 30    
+                # download jar    
                 jar_filename = f'mosaic-{resource_version}-jar-with-dependencies.jar'
-                jar_url = f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}'
-                jar_result = subprocess.run(
-                    ['sudo', 'wget', '-nv', '-P', self.to_fuse_dir, jar_url],
-                    stdout=subprocess.DEVNULL,
-                    timeout=jar_timeout
-                )
-                num_jar_waits = 0
-                while (
-                    num_jar_waits <= jar_timeout and
-                    not os.path.exists(f"{self.to_fuse_dir}/{jar_filename}") and 
-                    jar_result.returncode == 0
-                ):
-                        time.sleep(1)
-                        num_jar_waits += 1
-                print(f"jar '{jar_url}' download... returncode? {jar_result.returncode}, wait time? {num_jar_waits}")      
-            
-            # - handle so copy
+                with open(f"{self.to_fuse_dir}/{jar_filename}", 'wb') as f: 
+                    jar_url = f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}'
+                    r = requests.get(jar_url) 
+                    f.write(r.content)
+                    resource_statuses['JAR'] = r.status_code
+            # - handle so copy    
             if self.jni_so_copy:
-                so_timeout = 30
                 for so_filename in ['libgdalalljni.so', 'libgdalalljni.so.30', 'libgdalalljni.so.30.0.3']:
-                    so_url = f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}'
-                    so_result = subprocess.run(
-                        ['sudo', 'wget', '-nv', '-P', self.to_fuse_dir, so_url], 
-                        stdout=subprocess.DEVNULL,
-                        timeout=so_timeout
-                    )
-                    num_so_waits = 0        
-                    while (
-                        num_so_waits <= so_timeout and
-                        not os.path.exists(f"{self.to_fuse_dir}/{so_filename}") and 
-                        so_result.returncode == 0
-                    ):
-                        time.sleep(1)
-                        num_so_waits += 1
-                    print(f"so '{so_url}' download... returncode {so_result.returncode}, wait time? {num_so_waits}") # <- wait for return
+                    with open(f"{self.to_fuse_dir}/{so_filename}", 'wb') as f: 
+                        r = requests.get(f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}')
+                        f.write(r.content) 
+                        resource_statuses[so_filename] = r.status_code
 
         # - echo status
         print(f"::: Install setup complete :::")
@@ -212,6 +187,7 @@ class SetupMgr:
           print(f"               more at https://docs.databricks.com/en/init-scripts/cluster-scoped.html")
         if with_resources:
           print(f"- Resource(s): copied")
+          print(resource_statuses)
         print("\n")
     
 def setup_fuse_install(

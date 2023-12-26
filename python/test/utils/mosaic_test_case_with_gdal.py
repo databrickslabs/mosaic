@@ -18,3 +18,6 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
             .option("raster.read.strategy", "in_memory")
             .load("test/data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
         )
+
+    def setUp(self) -> None:
+        return super().setUp()

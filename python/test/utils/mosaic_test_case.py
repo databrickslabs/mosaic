@@ -13,6 +13,9 @@ class MosaicTestCase(SparkTestCase):
     def setUpClass(cls) -> None:
         super().setUpClass()
         api.enable_mosaic(cls.spark)
+    
+    def setUp(self) -> None:
+        return super().setUp()
 
     def generate_input_single_linestring(self) -> DataFrame:
         return self.spark.createDataFrame(
