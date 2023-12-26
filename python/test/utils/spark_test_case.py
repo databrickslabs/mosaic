@@ -23,9 +23,11 @@ class SparkTestCase(unittest.TestCase):
             .getOrCreate()
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
-        cls.spark.sparkContext.setLogLevel("FATAL")
 
     @classmethod
+    def setUp(self) -> None:
+        self.spark.sparkContext.setLogLevel("FATAL")
+    
+    @classmethod
     def tearDownClass(cls) -> None:
-        cls.spark.sparkContext.setLogLevel("FATAL")
         cls.spark.stop()

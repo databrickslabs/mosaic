@@ -72,10 +72,10 @@ then
     sudo cp -n $FUSE_DIR/libgdalalljni.so.30.0.3 /usr/lib
   else
     # copy from github
-    GITHUB_REPO_PATH=databrickslabs/mosaic/raw/main/resources/gdal/jammy
+    GITHUB_REPO_PATH=databrickslabs/mosaic/main/resources/gdal/jammy
     
-    sudo wget -P /usr/lib -nc https://github.com/$GITHUB_REPO_PATH/libgdalalljni.so
-    sudo wget -P /usr/lib -nc https://github.com/$GITHUB_REPO_PATH/libgdalalljni.so.30
-    sudo wget -P /usr/lib -nc https://github.com/$GITHUB_REPO_PATH/libgdalalljni.so.30.0.3
+    sudo wget -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so
+    sudo wget -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so.30
+    sudo wget -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so.30.0.3
   fi
 fi
