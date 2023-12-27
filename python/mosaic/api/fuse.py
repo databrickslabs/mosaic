@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import os
 import pkg_resources
@@ -82,6 +82,7 @@ class SetupMgr:
             script = None
             with requests.Session() as s:
                 script = s.get(script_url, allow_redirects=True).text
+                s.close()
             
             # - tokens used in script
             SCRIPT_FUSE_DIR_TOKEN= "FUSE_DIR='__FUSE_DIR__'"                                # <- ' added
@@ -178,11 +179,12 @@ class SetupMgr:
                         for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
                             f.write(ch)
                     resource_statuses[jar_filename] = r.status_code
+                    s.close()
             # - handle so copy    
             if self.jni_so_copy:
-                for so_filename in ['libgdalalljni.so', 'libgdalalljni.so.30', 'libgdalalljni.so.30.0.3']:
-                    so_path = f'{self.to_fuse_dir}/{so_filename}'
-                    with requests.Session() as s:
+                with requests.Session() as s:
+                    for so_filename in ['libgdalalljni.so', 'libgdalalljni.so.30', 'libgdalalljni.so.30.0.3']:
+                        so_path = f'{self.to_fuse_dir}/{so_filename}'
                         r = s.get(
                             f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}', 
                             stream=True
@@ -191,6 +193,7 @@ class SetupMgr:
                             for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
                                 f.write(ch)
                         resource_statuses[so_filename] = r.status_code
+                    s.close()
         
         # - echo status
         print(f"::: Install setup complete :::")
