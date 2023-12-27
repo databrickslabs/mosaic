@@ -40,7 +40,7 @@ runs:
           if: inputs.skip_tests == 'false'
           shell: bash
           run: |
-            # - 
+            # - setup tests
             sudo mvn -q clean test-compile
             # - quiet log4j2
             SPARK_LOG4J2_TEMPLATE=$(realpath $(find . -name "log4j2.properties.template"))
@@ -49,7 +49,7 @@ runs:
             cp $SPARK_LOG4J2_TEMPLATE $SPARK_CONFIG_DIR/log4j2.properties
             sed -i -e 's/info/error/g' $SPARK_CONFIG_DIR/log4j2.properties
             sed -i -e 's/warn/error/g' $SPARK_CONFIG_DIR/log4j2.properties
-            # - tests
+            # - run tests
             sudo mvn -q install
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
