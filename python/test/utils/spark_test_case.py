@@ -18,6 +18,8 @@ class SparkTestCase(unittest.TestCase):
         cls.spark = (
             SparkSession.builder.master("local")
             .config("spark.jars", cls.library_location)
+            .config("spark.driver.extraJavaOptions", "-Dorg.apache.logging.log4j.level=FATAL")
+            .config("spark.executor.extraJavaOptions", "-Dorg.apache.logging.log4j.level=FATAL")
             .getOrCreate()
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
