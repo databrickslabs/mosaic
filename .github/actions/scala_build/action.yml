@@ -41,8 +41,9 @@ runs:
           shell: bash
           run: |
             # - quiet log4j2
-            SPARK_LOG4J2_TEMPLATE=$(readlink -f $(find . -name "log4j2.properties.template"))
+            SPARK_LOG4J2_TEMPLATE=$(realpath $(find . -name "log4j2.properties.template"))
             SPARK_CONFIG_DIR=$(dirname "$SPARK_LOG4J2_TEMPLATE")
+            echo "...configuring $SPARK_CONFIG_DIR/log4j2.properties"
             cp $SPARK_LOG4J2_TEMPLATE $SPARK_CONFIG_DIR/log4j2.properties
             sed -i -e 's/info/error/g' $SPARK_CONFIG_DIR/log4j2.properties
             sed -i -e 's/warn/error/g' $SPARK_CONFIG_DIR/log4j2.properties
