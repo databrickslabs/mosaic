@@ -5,6 +5,9 @@ from .utils import MosaicTestCaseWithGDAL
 
 
 class TestRasterFunctions(MosaicTestCaseWithGDAL):
+    def setUp(self) -> None:
+        return super().setUp()
+    
     def test_read_raster(self):
         result = self.generate_singleband_raster_df().first()
         self.assertEqual(result.length, 1067862)

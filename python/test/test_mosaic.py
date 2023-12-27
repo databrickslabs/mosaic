@@ -5,6 +5,9 @@ from .utils import SparkTestCase
 
 
 class TestMosaicContext(SparkTestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+
     def test_invoke_function(self):
         _ = MosaicLibraryHandler(self.spark)
         context = MosaicContext(self.spark)

@@ -173,8 +173,6 @@ class SetupMgr:
                 with open(jar_path, 'wb') as f:    
                     for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
                         f.write(ch)
-                while not os.path.exists(jar_path) and r.status_code == 200:
-                        time.wait(1)
                 resource_statuses[jar_filename] = r.status_code
             # - handle so copy    
             if self.jni_so_copy:
@@ -187,8 +185,6 @@ class SetupMgr:
                     with open(so_path, 'wb') as f: 
                         for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
                             f.write(ch)
-                    while not os.path.exists(so_path) and r.status_code == 200:
-                        time.wait(1)
                     resource_statuses[so_filename] = r.status_code
 
         # - echo status

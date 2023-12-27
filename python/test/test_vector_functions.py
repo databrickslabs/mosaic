@@ -7,6 +7,9 @@ from .utils import MosaicTestCase
 
 
 class TestVectorFunctions(MosaicTestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+    
     def test_st_point(self):
         expected = [
             "POINT (0 0)",
