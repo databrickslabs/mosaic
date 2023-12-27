@@ -1,9 +1,10 @@
-import os
-import tempfile
-import subprocess
 from pkg_resources import working_set, Requirement
-
 from test.context import api
+
+import os
+import shutil
+import subprocess
+import tempfile
 
 class FuseInstaller:
     def __init__(
@@ -11,7 +12,7 @@ class FuseInstaller:
         jar_copy = False, jni_so_copy = False
     ):
         self._site_packages = working_set.find(Requirement("keplergl")).location
-        self._temp_dir = tempfile.TemporaryDirectory(delete=False)
+        self._temp_dir = tempfile.mkdtemp()
         self.with_mosaic_pip = with_mosaic_pip
         self.with_gdal = with_gdal
         self.jar_copy = jar_copy
@@ -19,7 +20,7 @@ class FuseInstaller:
         self.FUSE_INIT_SCRIPT_FILENAME = "mosaic-fuse-init.sh"
 
     def __del__(self):
-        self._temp_dir.cleanup()
+        shutil.rmtree(self._temp_dir)
 
     def do_op(self):
         api.setup_fuse_install(

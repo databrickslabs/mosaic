@@ -1,18 +1,19 @@
-import os
-import tempfile
-import subprocess
 from pkg_resources import working_set, Requirement
-
 from test.context import api
+
+import os
+import shutil
+import subprocess
+import tempfile
 
 class GDALInstaller:
     def __init__(self):
         self._site_packages = working_set.find(Requirement("keplergl")).location
-        self._temp_dir = tempfile.TemporaryDirectory(delete=False)
+        self._temp_dir = tempfile.mkdtemp()
         self.GDAL_INIT_SCRIPT_FILENAME = "mosaic-gdal-init.sh"
 
     def __del__(self):
-        self._temp_dir.cleanup()
+        shutil.rmtree(self._temp_dir)
 
     def copy_objects(self):
         api.setup_gdal(

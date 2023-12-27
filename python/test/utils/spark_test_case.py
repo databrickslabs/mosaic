@@ -29,5 +29,5 @@ class SparkTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         log4j = self.spark.sparkContext._jvm.org.apache.log4j
-        log4j.LogManager.getRootLogger().setLevel(log4j.Level.FATAL)
+        log4j.LogManager.getLogger("log4j.logger.org.apache.spark.api.python.PythonGatewayServer").setLevel(log4j.Level.FATAL)
         return super().setUp()

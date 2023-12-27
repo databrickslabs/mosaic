@@ -3,7 +3,6 @@ from dataclasses import dataclass
 import os
 import pkg_resources
 import requests
-import time
 
 __all__ = ["SetupMgr", "setup_fuse_install"]
 
