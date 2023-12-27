@@ -36,9 +36,11 @@ runs:
             sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so
             sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30
             sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30.0.3
-        - name: Test and build the scala JAR - skip tests is false
+         - name: Test and build the scala JAR - skip tests is false
+          if: inputs.skip_tests == 'false'
           shell: bash
           run: |
+            # - clean and install (no tests)
             sudo mvn -q clean install -DskipTests -Dscoverage.skip
             # - quiet log4j2
             SPARK_LOG4J2_TEMPLATE=$(realpath $(find . -name "log4j2.properties.template"))
@@ -47,9 +49,21 @@ runs:
             sudo cp $SPARK_LOG4J2_TEMPLATE $SPARK_CONFIG_DIR/log4j2.properties
             sudo sed -i -e 's/info/error/g' $SPARK_CONFIG_DIR/log4j2.properties
             sudo sed -i -e 's/warn/error/g' $SPARK_CONFIG_DIR/log4j2.properties
-          if: inputs.skip_tests == 'false'
+            # - install with tests
+            sudo mvn -q install
+        - name: Build the scala JAR - skip tests is true
+          if: inputs.skip_tests == 'true'
           shell: bash
-          run: sudo mvn -q install  
+          run: |
+            # - clean and install (no tests)
+            sudo mvn -q clean install -DskipTests -Dscoverage.skip
+            # - quiet log4j2
+            SPARK_LOG4J2_TEMPLATE=$(realpath $(find . -name "log4j2.properties.template"))
+            SPARK_CONFIG_DIR=$(dirname "$SPARK_LOG4J2_TEMPLATE")
+            echo "...configuring $SPARK_CONFIG_DIR/log4j2.properties"
+            sudo cp $SPARK_LOG4J2_TEMPLATE $SPARK_CONFIG_DIR/log4j2.properties
+            sudo sed -i -e 's/info/error/g' $SPARK_CONFIG_DIR/log4j2.properties
+            sudo sed -i -e 's/warn/error/g' $SPARK_CONFIG_DIR/log4j2.properties
         - name: Publish test coverage
           if: inputs.skip_tests == 'false'
           uses: codecov/codecov-action@v1
