@@ -36,13 +36,6 @@ class SetupMgr:
     override_mosaic_version: str = None
     jar_copy: bool = False
     jni_so_copy: bool = False
-    _session:requests.Session = field(init=False)
-
-    def __post_init__(self):
-        self._session = requests.Session()
-
-    def __del__(self):
-        self._session.close()
 
     def configure(self) -> bool:
         """
@@ -87,7 +80,7 @@ class SetupMgr:
             # TODO: MODIFY AFTER PR MERGE
             # script_url = f'{GITHUB_CONTENT_TAG_URL}/scripts/{self.script_in_name}'
             script_url = f'https://raw.githubusercontent.com/mjohns-databricks/mosaic/gdal-jammy-3/scripts/{self.script_in_name}'
-            script = self._session.get(script_url, allow_redirects=True).text
+            script = requests.get(script_url, allow_redirects=True).text
             
             # - tokens used in script
             SCRIPT_FUSE_DIR_TOKEN= "FUSE_DIR='__FUSE_DIR__'"                                # <- ' added
@@ -160,8 +153,6 @@ class SetupMgr:
 
         with_resources = self.jar_copy or self.jni_so_copy
         resource_statuses = {}
-        jar_download_status = False
-        so_download_status = False
         if with_resources:   
             CHUNK_SIZE = 1024 * 1024 * 64 # 64MB
             # - handle jar copy
@@ -170,12 +161,12 @@ class SetupMgr:
                 GITHUB_RELEASE_URL_BASE = 'https://github.com/databrickslabs/mosaic/releases'
                 resource_version = github_version
                 if github_version == 'main':
-                    latest = str(self._session.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
+                    latest = str(requests.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
                     resource_version = latest.split("/tag/v_")[1].split('"')[0]
                 # download jar    
                 jar_filename = f'mosaic-{resource_version}-jar-with-dependencies.jar'
                 jar_path = f'{self.to_fuse_dir}/{jar_filename}'
-                r = self._session.get(
+                r = requests.get(
                     f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}', 
                     stream=True
                 ) 
@@ -183,14 +174,11 @@ class SetupMgr:
                     for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
                         f.write(ch)
                 resource_statuses[jar_filename] = r.status_code
-                jar_download_status = True
-            else:
-                jar_download_status = True
             # - handle so copy    
             if self.jni_so_copy:
                 for so_filename in ['libgdalalljni.so', 'libgdalalljni.so.30', 'libgdalalljni.so.30.0.3']:
                     so_path = f'{self.to_fuse_dir}/{so_filename}'
-                    r = self._session.get(
+                    r = requests.get(
                         f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}', 
                         stream=True
                     )
@@ -198,18 +186,6 @@ class SetupMgr:
                         for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
                             f.write(ch)
                     resource_statuses[so_filename] = r.status_code
-                so_download_status = True
-            else:
-                so_download_status = True
-        else:
-            jar_download_status = True
-            so_download_status = True
-        
-        while (
-            not jar_download_status or
-            not so_download_status
-        ):
-            time.sleep(1.0)
         
         # - echo status
         print(f"::: Install setup complete :::")
