@@ -3,7 +3,6 @@ from pyspark.sql import SparkSession
 
 import mosaic
 import os
-import pyspark
 import unittest
 
 class SparkTestCase(unittest.TestCase):
