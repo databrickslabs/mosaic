@@ -17,14 +17,14 @@ class GDALInstaller:
 
     def copy_objects(self):
         api.setup_gdal(
-            self._temp_dir.name, 
+            self._temp_dir, 
             override_mosaic_version="main",
             script_out_name=self.GDAL_INIT_SCRIPT_FILENAME
         )
 
     def run_init_script(self):
         gdal_install_script_target = os.path.join(
-            self._temp_dir.name, self.GDAL_INIT_SCRIPT_FILENAME
+            self._temp_dir, self.GDAL_INIT_SCRIPT_FILENAME
         )
         os.chmod(gdal_install_script_target, mode=0x744)
         result = subprocess.run(
@@ -35,7 +35,7 @@ class GDALInstaller:
         return result.returncode
     
     def list_files(self):
-        return os.listdir(self._temp_dir.name)
+        return os.listdir(self._temp_dir)
 
     def test_gdalinfo(self):
         result = subprocess.run(["gdalinfo", "--version"], stdout=subprocess.PIPE)

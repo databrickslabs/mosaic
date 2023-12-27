@@ -24,7 +24,7 @@ class FuseInstaller:
 
     def do_op(self):
         api.setup_fuse_install(
-            self._temp_dir.name,
+            self._temp_dir,
             self.with_mosaic_pip,
             self.with_gdal,
             jar_copy=self.jar_copy,
@@ -35,7 +35,7 @@ class FuseInstaller:
 
     def run_init_script(self):
         fuse_install_script_target = os.path.join(
-            self._temp_dir.name, self.FUSE_INIT_SCRIPT_FILENAME
+            self._temp_dir, self.FUSE_INIT_SCRIPT_FILENAME
         )
         os.chmod(fuse_install_script_target, mode=0x744)
         result = subprocess.run(
@@ -46,4 +46,4 @@ class FuseInstaller:
         return result.returncode
 
     def list_files(self):
-        return os.listdir(self._temp_dir.name)
+        return os.listdir(self._temp_dir)
