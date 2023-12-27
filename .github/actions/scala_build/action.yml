@@ -41,8 +41,9 @@ runs:
           shell: bash
           run: |
             # - quiet log4j2
-            sed -i -e 's/info/error/g' org/apache/spark/log4j2-defaults.properties
-            sed -i -e 's/warn/error/g' org/apache/spark/log4j2-defaults.properties
+            cp org/apache/spark/conf/log4j2.properties.template org/apache/spark/conf/log4j2.properties
+            sed -i -e 's/info/error/g' org/apache/spark/conf/log4j2.properties
+            sed -i -e 's/warn/error/g' org/apache/spark/conf/log4j2.properties
             # - tests
             sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
