@@ -33,17 +33,19 @@ runs:
             sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
             # - install gdal with numpy
             pip install --no-cache-dir --force-reinstall 'GDAL[numpy]==${{ matrix.gdal }}'
-            sudo wget -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so
-            sudo wget -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30
-            sudo wget -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30.0.3
+            sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so
+            sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30
+            sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30.0.3
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
           run: |
             # - quiet log4j2
-            cp org/apache/spark/conf/log4j2.properties.template org/apache/spark/conf/log4j2.properties
-            sed -i -e 's/info/error/g' org/apache/spark/conf/log4j2.properties
-            sed -i -e 's/warn/error/g' org/apache/spark/conf/log4j2.properties
+            SPARK_LOG4J2_TEMPLATE=$(readlink -f $(find . -name "log4j2.properties.template"))
+            SPARK_CONFIG_DIR=$(dirname "$SPARK_LOG4J2_TEMPLATE")
+            cp $SPARK_LOG4J2_TEMPLATE $SPARK_CONFIG_DIR/log4j2.properties
+            sed -i -e 's/info/error/g' $SPARK_CONFIG_DIR/log4j2.properties
+            sed -i -e 's/warn/error/g' $SPARK_CONFIG_DIR/log4j2.properties
             # - tests
             sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
