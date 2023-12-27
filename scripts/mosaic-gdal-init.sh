@@ -11,7 +11,7 @@
 #     - setup_gdal(...)
 # [4] this script has conditional logic based on variables
 # Author: Michael Johns | mjohns@databricks.com
-# Last Modified: 20 DEC, 2023
+# Last Modified: 27 DEC, 2023
 
 # TEMPLATE-BASED REPLACEMENT
 # - can also be manually specified
@@ -74,8 +74,8 @@ then
     # copy from github
     GITHUB_REPO_PATH=databrickslabs/mosaic/main/resources/gdal/jammy
     
-    sudo wget -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so
-    sudo wget -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so.30
-    sudo wget -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so.30.0.3
+    sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so
+    sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so.30
+    sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so.30.0.3
   fi
 fi

@@ -39,7 +39,12 @@ runs:
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
-          run: sudo mvn -q clean install
+          run: |
+            # - quiet log4j2
+            sed -i -e 's/info/error/g' org/apache/spark/log4j2-defaults.properties
+            sed -i -e 's/warn/error/g' org/apache/spark/log4j2-defaults.properties
+            # - tests
+            sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash
