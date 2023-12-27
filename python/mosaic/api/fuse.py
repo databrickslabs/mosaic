@@ -1,8 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import os
 import pkg_resources
 import requests
+import time
 
 __all__ = ["SetupMgr", "setup_fuse_install"]
 
@@ -35,12 +36,20 @@ class SetupMgr:
     override_mosaic_version: str = None
     jar_copy: bool = False
     jni_so_copy: bool = False
+    session = field(init=False)
 
-    def configure(self) -> None:
+    def __post_init__(self):
+        self.session = requests.Session()
+
+    def __del__(self):
+        self.session.close()
+
+    def configure(self) -> bool:
         """
         Handle various config options.
         - if `with_mosaic_pip` or `with_gdal` or `with_ubuntugis`,
           script will be configured and written.
+        Returns True unless resources fail to download.
         """
         # - set the mosaic and github versions
         #   will be used in downloading resources
@@ -78,7 +87,7 @@ class SetupMgr:
             # TODO: MODIFY AFTER PR MERGE
             # script_url = f'{GITHUB_CONTENT_TAG_URL}/scripts/{self.script_in_name}'
             script_url = f'https://raw.githubusercontent.com/mjohns-databricks/mosaic/gdal-jammy-3/scripts/{self.script_in_name}'
-            script = requests.get(script_url, allow_redirects=True).text
+            script = self.session.get(script_url, allow_redirects=True).text
             
             # - tokens used in script
             SCRIPT_FUSE_DIR_TOKEN= "FUSE_DIR='__FUSE_DIR__'"                                # <- ' added
@@ -151,21 +160,22 @@ class SetupMgr:
 
         with_resources = self.jar_copy or self.jni_so_copy
         resource_statuses = {}
+        jar_download_status = False
+        so_download_status = False
         if with_resources:   
             CHUNK_SIZE = 1024 * 1024 * 64 # 64MB
-            s = requests.Session()
             # - handle jar copy
             if self.jar_copy:
                 # url and version details
                 GITHUB_RELEASE_URL_BASE = 'https://github.com/databrickslabs/mosaic/releases'
                 resource_version = github_version
                 if github_version == 'main':
-                    latest = str(s.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
+                    latest = str(self.session.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
                     resource_version = latest.split("/tag/v_")[1].split('"')[0]
                 # download jar    
                 jar_filename = f'mosaic-{resource_version}-jar-with-dependencies.jar'
                 jar_path = f'{self.to_fuse_dir}/{jar_filename}'
-                r = s.get(
+                r = self.session.get(
                     f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}', 
                     stream=True
                 ) 
@@ -173,11 +183,14 @@ class SetupMgr:
                     for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
                         f.write(ch)
                 resource_statuses[jar_filename] = r.status_code
+                jar_download_status = True
+            else:
+                jar_download_status = True
             # - handle so copy    
             if self.jni_so_copy:
                 for so_filename in ['libgdalalljni.so', 'libgdalalljni.so.30', 'libgdalalljni.so.30.0.3']:
                     so_path = f'{self.to_fuse_dir}/{so_filename}'
-                    r = s.get(
+                    r = self.session.get(
                         f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}', 
                         stream=True
                     )
@@ -185,7 +198,19 @@ class SetupMgr:
                         for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
                             f.write(ch)
                     resource_statuses[so_filename] = r.status_code
-
+                so_download_status = True
+            else:
+                so_download_status = True
+        else:
+            jar_download_status = True
+            so_download_status = True
+        
+        while (
+            not jar_download_status or
+            not so_download_status
+        ):
+            time.sleep(1.0)
+        
         # - echo status
         print(f"::: Install setup complete :::")
         print(f"- Settings: 'with_mosaic_pip'? {self.with_mosaic_pip}, 'with_gdal'? {self.with_gdal}, 'with_ubuntugis'? {self.with_ubuntugis}")
@@ -200,12 +225,20 @@ class SetupMgr:
           print(f"- Resource(s): copied")
           print(resource_statuses)
         print("\n")
+
+        if (
+            not any(resource_statuses) or
+            all(value == 200 for value in resource_statuses.values())
+        ):
+            return True
+        else:
+            return False
     
 def setup_fuse_install(
     to_fuse_dir: str, with_mosaic_pip: bool, with_gdal: bool, 
     with_ubuntugis: bool = False, script_out_name: str = 'mosaic-fuse-init.sh', 
     override_mosaic_version: str = None, jar_copy: bool = True, jni_so_copy: bool = True
-) -> None:
+) -> bool:
     """
     [1] Copies Mosaic "fat" JAR (with dependencies) into `to_fuse_dir`
         - by default, version will match the current mosaic version executing the command,
@@ -257,7 +290,7 @@ def setup_fuse_install(
     jni_so_copy: bool
             Whether to copy the GDAL JNI shared objects;
             default is True.
-    Returns
+    Returns True unless resources fail to download.
     -------
     """
     setup_mgr = SetupMgr(
@@ -270,4 +303,4 @@ def setup_fuse_install(
         jar_copy = jar_copy, 
         jni_so_copy = jni_so_copy
     )
-    setup_mgr.configure()
+    return setup_mgr.configure()

@@ -8,10 +8,11 @@ class TestGDALInstall(SparkTestCase):
     def test_setup_gdal(self):
         installer = GDALInstaller()
         try:
-            installer.copy_objects()
-            self.assertEqual(len(installer.list_files()), 1) # <- just init script    
+            self.assertTrue(installer.do_op())
         except Exception:
             self.fail("Copying objects with `setup_gdal()` raised an exception.")
+        
+        self.assertEqual(len(installer.list_files()), 1) # <- just init script    
 
         try:
             installer_result = installer.run_init_script()

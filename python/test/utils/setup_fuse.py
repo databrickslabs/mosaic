@@ -22,8 +22,8 @@ class FuseInstaller:
     def __del__(self):
         shutil.rmtree(self._temp_dir)
 
-    def do_op(self):
-        api.setup_fuse_install(
+    def do_op(self) -> bool:
+        return api.setup_fuse_install(
             self._temp_dir,
             self.with_mosaic_pip,
             self.with_gdal,
@@ -33,7 +33,7 @@ class FuseInstaller:
             script_out_name=self.FUSE_INIT_SCRIPT_FILENAME
         )
 
-    def run_init_script(self):
+    def run_init_script(self) -> int:
         fuse_install_script_target = os.path.join(
             self._temp_dir, self.FUSE_INIT_SCRIPT_FILENAME
         )
@@ -45,5 +45,5 @@ class FuseInstaller:
         )
         return result.returncode
 
-    def list_files(self):
+    def list_files(self) -> list[str]:
         return os.listdir(self._temp_dir)

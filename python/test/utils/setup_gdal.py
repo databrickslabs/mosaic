@@ -15,14 +15,14 @@ class GDALInstaller:
     def __del__(self):
         shutil.rmtree(self._temp_dir)
 
-    def copy_objects(self):
-        api.setup_gdal(
+    def do_op(self) -> bool:
+        return api.setup_gdal(
             self._temp_dir, 
             override_mosaic_version="main",
             script_out_name=self.GDAL_INIT_SCRIPT_FILENAME
         )
 
-    def run_init_script(self):
+    def run_init_script(self) -> int:
         gdal_install_script_target = os.path.join(
             self._temp_dir, self.GDAL_INIT_SCRIPT_FILENAME
         )
@@ -34,9 +34,9 @@ class GDALInstaller:
         )
         return result.returncode
     
-    def list_files(self):
+    def list_files(self) -> list[str]:
         return os.listdir(self._temp_dir)
 
-    def test_gdalinfo(self):
+    def test_gdalinfo(self) -> str:
         result = subprocess.run(["gdalinfo", "--version"], stdout=subprocess.PIPE)
         return result.stdout.decode()
