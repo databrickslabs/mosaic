@@ -10,7 +10,7 @@ from mosaic.core.mosaic_context import MosaicContext
 from mosaic.utils.notebook_utils import NotebookUtils
 
 
-def enable_mosaic(spark: SparkSession, dbutils=None, jar_autoattach=True) -> None:
+def enable_mosaic(spark: SparkSession, dbutils=None, jar_path:str=None, jar_autoattach:bool=True) -> None:
     """
     Enable Mosaic functions.
 
@@ -22,15 +22,20 @@ def enable_mosaic(spark: SparkSession, dbutils=None, jar_autoattach=True) -> Non
     spark : pyspark.sql.SparkSession
             The active SparkSession.
     dbutils : dbruntime.dbutils.DBUtils
-            The dbutils object used for `display` and `displayHTML` functions.
-            Optional, only applicable to Databricks workspace users.
+            Optional, specify dbutils object used for `display` and `displayHTML` functions.
+    jar_path : str
+            Convenience when you need to change the JAR path for Unity Catalog
+            Volumes with Shared Access clusters
+              - Default is None; if provided, sets 
+                "spark.databricks.labs.mosaic.jar.path" 
     jar_autoattach : bool
             Convenience when you need to turn off JAR auto-attach for Unity
-            Catalog Volumes with Shared Access clusters.
-              - False will not registers the JAR
+            Catalog Volumes with Shared Access clusters. 
+              - False will not registers the JAR; sets
+                "spark.databricks.labs.mosaic.jar.autoattach" to "false"
               - True will register the JAR; Default is True
-    
 
+              
     Returns
     -------
 
@@ -40,7 +45,7 @@ def enable_mosaic(spark: SparkSession, dbutils=None, jar_autoattach=True) -> Non
 
     - `spark.databricks.labs.mosaic.jar.autoattach`: 'true' (default) or 'false'
        Automatically attach the Mosaic JAR to the Databricks cluster? (Optional)
-    - `spark.databricks.labs.mosaic.jar.location`
+    - `spark.databricks.labs.mosaic.jar.path`
        Explicitly specify the path to the Mosaic JAR.
        (Optional and not required at all in a standard Databricks environment).
     - `spark.databricks.labs.mosaic.geometry.api`: 'JTS'
@@ -50,9 +55,14 @@ def enable_mosaic(spark: SparkSession, dbutils=None, jar_autoattach=True) -> Non
 
     """
     # Set spark session 
-    # - also set conf for jar autoattach
+    # - also set confs for jar autoattach
+    #   and jar path
     if not jar_autoattach:
         spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
+        print("...set 'spark.databricks.labs.mosaic.jar.autoattach' to false")
+    if jar_path is not None:
+        spark.conf.set("spark.databricks.labs.mosaic.jar.path", jar_path)
+        print(f"...set 'spark.databricks.labs.mosaic.jar.path' to '{jar_path}'")
     config.mosaic_spark = spark
     _ = MosaicLibraryHandler(config.mosaic_spark)
     config.mosaic_context = MosaicContext(config.mosaic_spark)
