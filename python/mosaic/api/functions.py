@@ -155,7 +155,7 @@ def st_convexhull(geom: ColumnOrName) -> Column:
     )
 
 
-def st_concavehull(geom: ColumnOrName, concavity: ColumnOrName, has_holes: ColumnOrName = lit(False)) -> Column:
+def st_concavehull(geom: ColumnOrName, concavity: ColumnOrName, has_holes: Any = False) -> Column:
     """
     Compute the concave hull of a geometry or multi-geometry object.
     It uses lengthRatio and
@@ -182,6 +182,10 @@ def st_concavehull(geom: ColumnOrName, concavity: ColumnOrName, has_holes: Colum
         A polygon
 
     """
+
+    if type(has_holes) == bool:
+        has_holes = lit(has_holes)
+
     return config.mosaic_context.invoke_function(
         "st_concavehull",
         pyspark_to_java_column(geom),
