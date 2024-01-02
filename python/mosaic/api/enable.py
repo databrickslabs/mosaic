@@ -10,7 +10,7 @@ from mosaic.core.mosaic_context import MosaicContext
 from mosaic.utils.notebook_utils import NotebookUtils
 
 
-def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
+def enable_mosaic(spark: SparkSession, dbutils=None, jar_autoattach=True) -> None:
     """
     Enable Mosaic functions.
 
@@ -23,7 +23,13 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
             The active SparkSession.
     dbutils : dbruntime.dbutils.DBUtils
             The dbutils object used for `display` and `displayHTML` functions.
-            Optional, only applicable to Databricks users.
+            Optional, only applicable to Databricks workspace users.
+    jar_autoattach : bool
+            Convenience when you need to turn off JAR auto-attach for Unity
+            Catalog Volumes with Shared Access clusters.
+              - False will not registers the JAR
+              - True will register the JAR; Default is True
+    
 
     Returns
     -------
@@ -43,6 +49,10 @@ def enable_mosaic(spark: SparkSession, dbutils=None) -> None:
        Explicitly specify the index system to use for optimized spatial joins. (Optional)
 
     """
+    # Set spark session 
+    # - also set conf for jar autoattach
+    if not jar_autoattach:
+        spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
     config.mosaic_spark = spark
     _ = MosaicLibraryHandler(config.mosaic_spark)
     config.mosaic_context = MosaicContext(config.mosaic_spark)

@@ -23,9 +23,6 @@ def get_install_mosaic_version() -> str:
 
 @dataclass
 class SetupMgr:
-    """
-    Defaults mirror setup_gdal.
-    """
     to_fuse_dir: str
     script_in_name: str = 'mosaic-gdal-init.sh'
     script_out_name: str = 'mosaic-fuse-init.sh'

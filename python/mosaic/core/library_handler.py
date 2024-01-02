@@ -15,7 +15,7 @@ class MosaicLibraryHandler:
     def __init__(self, spark):
         self.spark = spark
         self.sc = spark.sparkContext
-        self.sc.setLogLevel("info")
+        self.spark.setLogLevel("info")
         log4jLogger = self.sc._jvm.org.apache.log4j
         LOGGER = log4jLogger.LogManager.getLogger(__class__.__name__)
 
@@ -30,11 +30,11 @@ class MosaicLibraryHandler:
 
     @property
     def auto_attach_enabled(self) -> bool:
-        if not self._auto_attached_enabled:
+        if self._auto_attached_enabled is None:
             try:
                 result = (
                     self.spark.conf.get("spark.databricks.labs.mosaic.jar.autoattach")
-                    == "true"
+                    == 'true'
                 )
             except Py4JJavaError as e:
                 result = True
