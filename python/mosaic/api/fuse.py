@@ -52,15 +52,15 @@ class SetupMgr:
         release_version = None
 
         if (
-                self.override_mosaic_version is not None and 
-                set(self.override_mosaic_version).issubset(set('=0123456789.'))
-        ):
-            github_version = self.override_mosaic_version.replace('=','') 
-        elif (
             self.override_mosaic_version is not None and
             self.override_mosaic_version == 'main'
         ):
             github_version = 'main'
+        elif (
+                self.override_mosaic_version is not None and 
+                set(self.override_mosaic_version).issubset(set('=0123456789.'))
+        ):
+            github_version = self.override_mosaic_version.replace('=','') 
         elif mosaic_version is None:
             github_version = 'main'
 
@@ -82,7 +82,6 @@ class SetupMgr:
             script = None
             with requests.Session() as s:
                 script = s.get(script_url, allow_redirects=True).text
-                s.close()
             
             # - tokens used in script
             SCRIPT_FUSE_DIR_TOKEN= "FUSE_DIR='__FUSE_DIR__'"                                # <- ' added
@@ -179,7 +178,6 @@ class SetupMgr:
                         for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
                             f.write(ch)
                     resource_statuses[jar_filename] = r.status_code
-                    s.close()
             # - handle so copy    
             if self.jni_so_copy:
                 with requests.Session() as s:
@@ -193,7 +191,6 @@ class SetupMgr:
                             for ch in r.iter_content(chunk_size=CHUNK_SIZE):                             
                                 f.write(ch)
                         resource_statuses[so_filename] = r.status_code
-                    s.close()
         
         # - echo status
         print(f"::: Install setup complete :::")

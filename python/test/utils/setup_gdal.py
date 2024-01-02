@@ -17,7 +17,7 @@ class GDALInstaller:
 
     def do_op(self) -> bool:
         return api.setup_gdal(
-            self._temp_dir, 
+            to_fuse_dir = self._temp_dir, 
             override_mosaic_version="main",
             script_out_name=self.GDAL_INIT_SCRIPT_FILENAME
         )

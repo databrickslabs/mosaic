@@ -45,5 +45,5 @@ class FuseInstaller:
         )
         return result.returncode
 
-    def list_files(self) -> list[str]:
+    def list_files(self) ->list[str]:
         return os.listdir(self._temp_dir)

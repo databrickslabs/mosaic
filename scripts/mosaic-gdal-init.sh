@@ -11,7 +11,7 @@
 #     - setup_gdal(...)
 # [4] this script has conditional logic based on variables
 # Author: Michael Johns | mjohns@databricks.com
-# Last Modified: 27 DEC, 2023
+# Last Modified: 02 JAN, 2024
 
 # TEMPLATE-BASED REPLACEMENT
 # - can also be manually specified
@@ -51,11 +51,13 @@ then
     GDAL_VERSION=3.4.3 # <- update gdal version
   fi
   sudo apt-get update -y
-
-  # - install numpy first
+  
+  # - install specific numpy version
+  # - install scipy version (dep conflict)
   pip install --upgrade pip
+  pip uninstall scipy
   pip install --no-cache-dir --force-reinstall numpy==$NUMPY_VERSION
-  pip install "scipy$SCIPY_VERSION"
+  pip install --no-cache-dir --force-reinstall "scipy$SCIPY_VERSION"
   
   # - install natives
   sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
@@ -72,6 +74,7 @@ then
     sudo cp -n $FUSE_DIR/libgdalalljni.so.30.0.3 /usr/lib
   else
     # copy from github
+    # TODO: in v0.4.1, include $GITHUB_VERSION
     GITHUB_REPO_PATH=databrickslabs/mosaic/main/resources/gdal/jammy
     
     sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so

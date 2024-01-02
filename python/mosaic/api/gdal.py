@@ -7,7 +7,7 @@ __all__ = ["setup_gdal", "enable_gdal"]
 
      
 def setup_gdal(
-    to_fuse_dir: str = '/dbfs/FileStore/geospatial/mosaic/gdal/jammy',
+    to_fuse_dir: str = '/Workspace/Shared/geospatial/mosaic/gdal/jammy',
     with_mosaic_pip: bool = False, with_ubuntugis: bool = False, 
     script_out_name: str = 'mosaic-gdal-init.sh',
     override_mosaic_version: str = None
@@ -28,7 +28,7 @@ def setup_gdal(
     ----------
     to_fuse_dir : str
             Path to write out the init script for GDAL installation;
-            default is '/dbfs/FileStore/geospatial/mosaic/gdal/jammy'.
+            default is '/Workspace/Shared/geospatial/mosaic/gdal/jammy'.
     with_mosaic_pip : bool
             Whether to configure a script that pip installs databricks-mosaic, 
             fixed to the current version; default is False.
