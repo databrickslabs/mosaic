@@ -15,11 +15,6 @@ class MosaicLibraryHandler:
     def __init__(self, spark):
         self.spark = spark
         self.sc = spark.sparkContext
-        try:
-            spark.sparkContext.setLogLevel("info")
-        except Exception as e:
-            print("...environment disallows adjusting Log Level (not setting to 'info').")
-            pass
         log4jLogger = self.sc._jvm.org.apache.log4j
         LOGGER = log4jLogger.LogManager.getLogger(__class__.__name__)
 
