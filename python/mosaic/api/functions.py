@@ -16,6 +16,7 @@ __all__ = [
     "st_length",
     "st_perimeter",
     "st_convexhull",
+    "st_concavehull",
     "st_buffer",
     "st_bufferloop",
     "st_dimension",
@@ -154,6 +155,41 @@ def st_convexhull(geom: ColumnOrName) -> Column:
     )
 
 
+def st_concavehull(geom: ColumnOrName, concavity: ColumnOrName, has_holes: ColumnOrName = lit(False)) -> Column:
+    """
+    Compute the concave hull of a geometry or multi-geometry object.
+    It uses lengthRatio and
+    allowHoles to determine the concave hull. lengthRatio is the ratio of the
+    length of the concave hull to the length of the convex hull. If set to 1,
+    this is the same as the convex hull. If set to 0, this is the same as the
+    bounding box. AllowHoles is a boolean that determines whether the concave
+    hull can have holes. If set to true, the concave hull can have holes. If set
+    to false, the concave hull will not have holes. (For PostGIS, the default is
+    false.)
+
+    Parameters
+    ----------
+    geom : Column
+        The input geometry
+    concavity : Column
+        The concavity of the hull
+    has_holes : Column
+        Whether the hull has holes
+
+    Returns
+    -------
+    Column
+        A polygon
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_concavehull",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(concavity),
+        pyspark_to_java_column(has_holes)
+    )
+
+
 def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
     """
     Compute the buffered geometry based on geom and radius.
@@ -177,7 +213,7 @@ def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
 
 
 def st_bufferloop(
-    geom: ColumnOrName, inner_radius: ColumnOrName, outer_radius: ColumnOrName
+        geom: ColumnOrName, inner_radius: ColumnOrName, outer_radius: ColumnOrName
 ) -> Column:
     """
     Compute the buffered geometry loop (hollow ring) based on geom and provided radius-es.
@@ -323,7 +359,7 @@ def st_transform(geom: ColumnOrName, srid: ColumnOrName) -> Column:
 
 
 def st_hasvalidcoordinates(
-    geom: ColumnOrName, crs: ColumnOrName, which: ColumnOrName
+        geom: ColumnOrName, crs: ColumnOrName, which: ColumnOrName
 ) -> Column:
     """
     Checks if all points in geometry are valid with respect to crs bounds.
@@ -530,7 +566,7 @@ def st_distance(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
 
 
 def st_haversine(
-    lat1: ColumnOrName, lng1: ColumnOrName, lat2: ColumnOrName, lng2: ColumnOrName
+        lat1: ColumnOrName, lng1: ColumnOrName, lat2: ColumnOrName, lng2: ColumnOrName
 ) -> Column:
     """
     Compute the haversine distance in kilometers between two latitude/longitude pairs.
@@ -682,7 +718,7 @@ def st_unaryunion(geom: ColumnOrName) -> Column:
 
 
 def st_updatesrid(
-    geom: ColumnOrName, srcSRID: ColumnOrName, destSRID: ColumnOrName
+        geom: ColumnOrName, srcSRID: ColumnOrName, destSRID: ColumnOrName
 ) -> Column:
     """
     Updates the SRID of the input geometry `geom` from `srcSRID` to `destSRID`.
@@ -951,7 +987,7 @@ def grid_boundary(index_id: ColumnOrName, format_name: ColumnOrName) -> Column:
 
 
 def grid_longlatascellid(
-    lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
+        lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
 ) -> Column:
     """
     Returns the grid's cell ID associated with the input `lng` and `lat` coordinates at a given grid `resolution`.
@@ -1019,7 +1055,7 @@ def grid_polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
 
 
 def grid_tessellate(
-    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+        geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
     Generates:
@@ -1054,7 +1090,7 @@ def grid_tessellate(
 
 
 def grid_tessellateexplode(
-    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+        geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
     Generates:
@@ -1214,7 +1250,7 @@ def grid_cellkloopexplode(cellid: ColumnOrName, k: ColumnOrName) -> Column:
 
 
 def grid_geometrykring(
-    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+        geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the k-ring of cells around the input geometry.
@@ -1239,7 +1275,7 @@ def grid_geometrykring(
 
 
 def grid_geometrykloop(
-    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+        geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the k loop (hollow ring) of cells around the input geometry.
@@ -1264,7 +1300,7 @@ def grid_geometrykloop(
 
 
 def grid_geometrykringexplode(
-    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+        geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the exploded k-ring of cells around the input geometry.
@@ -1289,7 +1325,7 @@ def grid_geometrykringexplode(
 
 
 def grid_geometrykloopexplode(
-    geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
+        geom: ColumnOrName, resolution: ColumnOrName, k: ColumnOrName
 ) -> Column:
     """
     Returns the exploded k loop (hollow ring) of cells around the input geometry.
@@ -1336,7 +1372,7 @@ def point_index_geom(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
 
 
 def point_index_lonlat(
-    lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
+        lon: ColumnOrName, lat: ColumnOrName, resolution: ColumnOrName
 ) -> Column:
     """
     [Deprecated] alias for `grid_longlatascellid`
@@ -1393,7 +1429,7 @@ def polyfill(geom: ColumnOrName, resolution: ColumnOrName) -> Column:
 
 
 def mosaic_explode(
-    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+        geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
     [Deprecated] alias for `grid_tessellateexplode`
@@ -1428,7 +1464,7 @@ def mosaic_explode(
 
 
 def mosaicfill(
-    geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
+        geom: ColumnOrName, resolution: ColumnOrName, keep_core_geometries: Any = True
 ) -> Column:
     """
     [Deprecated] alias for `grid_tessellate`

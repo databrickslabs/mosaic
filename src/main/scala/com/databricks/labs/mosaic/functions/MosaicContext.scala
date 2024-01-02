@@ -149,6 +149,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[ST_Centroid](expressionConfig)
         mosaicRegistry.registerExpression[ST_Contains](expressionConfig)
         mosaicRegistry.registerExpression[ST_ConvexHull](expressionConfig)
+        mosaicRegistry.registerExpression[ST_ConcaveHull](expressionConfig)
         mosaicRegistry.registerExpression[ST_Distance](expressionConfig)
         mosaicRegistry.registerExpression[ST_Difference](expressionConfig)
         mosaicRegistry.registerExpression[ST_Dimension](expressionConfig)
@@ -558,6 +559,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_BufferCapStyle(geom.expr, lit(radius).cast("double").expr, lit(capStyle).expr, expressionConfig))
         def st_centroid(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, expressionConfig))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, expressionConfig))
+        def st_concavehull(geom: Column, concavity: Column, allowHoles: Column): Column =
+            ColumnAdapter(ST_ConcaveHull(geom.expr, concavity.cast("double").expr, allowHoles.expr, expressionConfig))
+        def st_concavehull(geom: Column, concavity: Double, allowHoles: Boolean = false): Column =
+            ColumnAdapter(ST_ConcaveHull(geom.expr, lit(concavity).cast("double").expr, lit(allowHoles).expr, expressionConfig))
         def st_difference(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Difference(geom1.expr, geom2.expr, expressionConfig))
         def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, expressionConfig))
         def st_dimension(geom: Column): Column = ColumnAdapter(ST_Dimension(geom.expr, expressionConfig))
