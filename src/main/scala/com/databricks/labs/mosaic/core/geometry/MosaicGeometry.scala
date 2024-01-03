@@ -41,6 +41,8 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def getCentroid: MosaicPoint
 
+    def getDimension: Int
+
     def isEmpty: Boolean
 
     def getBoundary: MosaicGeometry

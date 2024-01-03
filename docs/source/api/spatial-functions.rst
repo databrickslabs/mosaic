@@ -454,6 +454,60 @@ st_difference
     +-----------------------------------------------------------+
 
 
+st_dimension
+************
+
+.. function:: st_dimension(col)
+
+    Compute the dimension of the geometry.
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column: IntegerType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    >>> df.select(st_dimension('wkt')).show()
+    +-----------------+
+    |st_dimension(wkt)|
+    +-----------------+
+    |                2|
+    +-----------------+
+
+   .. code-tab:: scala
+
+    >>> val df = List("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))").toDF("wkt")
+    >>> df.select(st_dimension(col("wkt"))).show()
+    +-----------------+
+    |st_dimension(wkt)|
+    +-----------------+
+    |                2|
+    +-----------------+
+
+   .. code-tab:: sql
+
+    >>> SELECT st_dimension("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    +-----------------+
+    |st_dimension(wkt)|
+    +-----------------+
+    |                2|
+    +-----------------+
+
+   .. code-tab:: r R
+
+    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    >>> showDF(select(df, st_dimension(column("wkt"))))
+    +-----------------+
+    |st_dimension(wkt)|
+    +-----------------+
+    |                2|
+    +-----------------+
+
+
 st_distance
 ***********
 

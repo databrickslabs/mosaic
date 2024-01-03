@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.gdal
 
-import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
@@ -17,9 +17,10 @@ object MosaicGDAL extends Logging {
     private val usrlibsoPath = "/usr/lib/libgdal.so"
     private val usrlibso30Path = "/usr/lib/libgdal.so.30"
     private val usrlibso3003Path = "/usr/lib/libgdal.so.30.0.3"
-    private val libjnisoPath = "/lib/jni/libgdalalljni.so"
-    private val libjniso30Path = "/lib/jni/libgdalalljni.so.30"
-    private val libogdisoPath = "/lib/ogdi/libgdal.so"
+    private val libjnisoPath = "/usr/lib/libgdalalljni.so"
+    private val libjniso30Path = "/usr/lib/libgdalalljni.so.30"
+    private val libjniso3003Path = "/usr/lib/libgdalalljni.so.30.0.3"
+    private val libogdisoPath = "/usr/lib/ogdi/4.1/libgdal.so"
 
     // noinspection ScalaWeakerAccess
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
@@ -29,20 +30,8 @@ object MosaicGDAL extends Logging {
     def wasEnabled(spark: SparkSession): Boolean =
         spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
 
-    /** Prepares the GDAL environment. */
-    def prepareEnvironment(spark: SparkSession, initScriptPath: String): Unit = {
-        if (!wasEnabled(spark) && !isEnabled) {
-            Try {
-                copyInitScript(initScriptPath)
-            } match {
-                case scala.util.Success(_)         => logInfo("GDAL environment prepared successfully.")
-                case scala.util.Failure(exception) => logWarning("GDAL environment preparation failed.", exception)
-            }
-        }
-    }
-
     /** Configures the GDAL environment. */
-    def configureGDAL(): Unit = {
+    def configureGDAL(mosaicConfig: MosaicExpressionConfig): Unit = {
         val CPL_TMPDIR = MosaicContext.tmpDir
         val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir
         gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
@@ -51,6 +40,8 @@ object MosaicGDAL extends Logging {
         gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", GDAL_PAM_PROXY_DIR)
         gdal.SetConfigOption("GDAL_PAM_ENABLED", "YES")
         gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "NO")
+        gdal.SetConfigOption("CPL_LOG", s"$CPL_TMPDIR/gdal.log")
+        mosaicConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
     }
 
     /** Enables the GDAL environment. */
@@ -59,7 +50,8 @@ object MosaicGDAL extends Logging {
             Try {
                 isEnabled = true
                 loadSharedObjects()
-                configureGDAL()
+                val expressionConfig = MosaicExpressionConfig(spark)
+                configureGDAL(expressionConfig)
                 gdal.AllRegister()
                 spark.conf.set(GDAL_ENABLED, "true")
             } match {
@@ -75,19 +67,6 @@ object MosaicGDAL extends Logging {
         }
     }
 
-    // noinspection ScalaStyle
-    private def copyInitScript(path: String): Unit = {
-        val destPath = Paths.get(path)
-        if (!Files.exists(destPath)) Files.createDirectories(destPath)
-
-        val w = new PrintWriter(new File(s"$path/mosaic-gdal-init.sh"))
-        val scriptLines = readResourceLines("/scripts/install-gdal-databricks.sh")
-        scriptLines
-            .map { x => if (x.contains("__DEFAULT_JNI_PATH__")) x.replace("__DEFAULT_JNI_PATH__", path) else x }
-            .foreach(x => w.println(x))
-        w.close()
-    }
-
     /** Loads the shared objects required for GDAL. */
     private def loadSharedObjects(): Unit = {
         loadOrNOOP(usrlibsoPath)
@@ -95,6 +74,7 @@ object MosaicGDAL extends Logging {
         loadOrNOOP(usrlibso3003Path)
         loadOrNOOP(libjnisoPath)
         loadOrNOOP(libjniso30Path)
+        loadOrNOOP(libjniso3003Path)
         loadOrNOOP(libogdisoPath)
     }
 
@@ -125,5 +105,4 @@ object MosaicGDAL extends Logging {
         val lines = new String(bytes).split("\n")
         lines
     }
-
 }

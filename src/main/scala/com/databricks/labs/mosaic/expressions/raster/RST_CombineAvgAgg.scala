@@ -31,8 +31,6 @@ case class RST_CombineAvgAgg(
       with UnaryLike[Expression]
       with RasterExpressionSerialization {
 
-    GDAL.enable()
-
     override lazy val deterministic: Boolean = true
     override val child: Expression = rasterExpr
     override val nullable: Boolean = false
@@ -61,20 +59,18 @@ case class RST_CombineAvgAgg(
         copy(mutableAggBufferOffset = newMutableAggBufferOffset)
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
-        GDAL.enable()
+        GDAL.enable(expressionConfig)
 
         if (buffer.isEmpty) {
             null
-        } else if (buffer.size == 1) {
-            buffer.head
         } else {
 
             // Do do move the expression
-            val tiles = buffer.map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType))
+            var tiles = buffer.map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType))
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-            val combined = CombineAVG.compute(tiles.map(_.getRaster)).flushCache()
+            var combined = CombineAVG.compute(tiles.map(_.getRaster)).flushCache()
             // TODO: should parent path be an array?
             val parentPath = tiles.head.getParentPath
             val driver = tiles.head.getDriver
@@ -85,6 +81,9 @@ case class RST_CombineAvgAgg(
 
             tiles.foreach(RasterCleaner.dispose(_))
             RasterCleaner.dispose(result)
+
+            tiles = null
+            combined = null
 
             result
         }

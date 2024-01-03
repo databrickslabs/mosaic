@@ -151,6 +151,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[ST_ConvexHull](expressionConfig)
         mosaicRegistry.registerExpression[ST_Distance](expressionConfig)
         mosaicRegistry.registerExpression[ST_Difference](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Dimension](expressionConfig)
         mosaicRegistry.registerExpression[ST_Envelope](expressionConfig)
         mosaicRegistry.registerExpression[ST_GeometryType](expressionConfig)
         mosaicRegistry.registerExpression[ST_HasValidCoordinates](expressionConfig)
@@ -269,6 +270,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_Merge](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_MetaData](expressionConfig)
+        mosaicRegistry.registerExpression[RST_MapAlgebra](expressionConfig)
         mosaicRegistry.registerExpression[RST_NDVI](expressionConfig)
         mosaicRegistry.registerExpression[RST_NumBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_PixelWidth](expressionConfig)
@@ -560,6 +562,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, expressionConfig))
         def st_difference(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Difference(geom1.expr, geom2.expr, expressionConfig))
         def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, expressionConfig))
+        def st_dimension(geom: Column): Column = ColumnAdapter(ST_Dimension(geom.expr, expressionConfig))
         def st_dump(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
         def st_envelope(geom: Column): Column = ColumnAdapter(ST_Envelope(geom.expr, expressionConfig))
         def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr, expressionConfig))
@@ -652,6 +655,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_frombands(bandsArray: Column): Column = ColumnAdapter(RST_FromBands(bandsArray.expr, expressionConfig))
         def rst_merge(rasterArray: Column): Column = ColumnAdapter(RST_Merge(rasterArray.expr, expressionConfig))
         def rst_metadata(raster: Column): Column = ColumnAdapter(RST_MetaData(raster.expr, expressionConfig))
+        def rst_mapalgebra(rasterArray: Column, jsonSpec: Column): Column =
+            ColumnAdapter(RST_MapAlgebra(rasterArray.expr, jsonSpec.expr, expressionConfig))
         def rst_ndvi(raster: Column, band1: Column, band2: Column): Column =
             ColumnAdapter(RST_NDVI(raster.expr, band1.expr, band2.expr, expressionConfig))
         def rst_ndvi(raster: Column, band1: Int, band2: Int): Column =
@@ -967,6 +972,8 @@ object MosaicContext extends Logging {
 
     val tmpDir: String = Files.createTempDirectory("mosaic").toAbsolutePath.toString
 
+    val mosaicVersion: String = "0.3.14"
+
     private var instance: Option[MosaicContext] = None
 
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {
@@ -991,19 +998,33 @@ object MosaicContext extends Logging {
 
     // noinspection ScalaStyle,ScalaWeakerAccess
     def checkDBR(spark: SparkSession): Boolean = {
-        val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "")
+        val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "0")
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = spark.conf.getOption("spark.databricks.photon.enabled").getOrElse("false").toBoolean
-        val isTest = spark.conf.getOption("spark.databricks.clusterUsageTags.clusterType").isEmpty
+        val isTest = !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags."))
+
+        val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt
+        if (
+          (dbrMajor < 13 && mosaicVersion >= "0.4.0") ||
+          (dbrMajor > 12 && mosaicVersion < "0.4.0")
+        ) {
+            val msg = """|DEPRECATION ERROR:
+                         |    Mosaic v0.3.x series only supports Databricks Runtime 12 and below.
+                         |    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.""".stripMargin
+
+            logError(msg)
+            println(msg)
+            throw new Exception(msg)
+        }
 
         if (!isML && !isPhoton && !isTest) {
-            // Print out the warnings both to the log and to the console
-            logWarning("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
-            logWarning("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.x.")
-            logWarning("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).")
-            println("DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime")
-            println("DEPRECATION WARNING: Mosaic will stop working on this cluster after v0.3.x.")
-            println("Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).")
+            val msg = """|DEPRECATION WARNING: 
+                         |  Please use a Databricks:
+                         |      - Photon-enabled Runtime for performance benefits
+                         |      - Runtime ML for spatial AI benefits
+                         |  Mosaic will stop working on this cluster after v0.3.x.""".stripMargin
+            logWarning(msg)
+            println(msg)
             false
         } else {
             true

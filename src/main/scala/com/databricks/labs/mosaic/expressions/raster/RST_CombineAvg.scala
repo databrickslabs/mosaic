@@ -39,7 +39,7 @@ case class RST_CombineAvg(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_CombineAvg extends WithExpressionInfo {
 
-    override def name: String = "rst_combine_avg"
+    override def name: String = "rst_combineavg"
 
     override def usage: String =
         """

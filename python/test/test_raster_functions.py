@@ -1,7 +1,3 @@
-import logging
-import random
-import unittest
-
 from pyspark.sql.functions import abs, col, first, lit, sqrt, array
 
 from .context import api, readers

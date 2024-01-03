@@ -37,12 +37,6 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       with Serializable
       with RasterExpressionSerialization {
 
-    /**
-      * The raster API to be used. Enable the raster so that subclasses dont
-      * need to worry about this.
-      */
-    GDAL.enable()
-
     protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
 
     protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
@@ -74,7 +68,7 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       *   The result of the expression.
       */
     override def nullSafeEval(input: Any): Any = {
-        GDAL.enable()
+        GDAL.enable(expressionConfig)
         val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], cellIdDataType)
         val result = rasterTransform(tile)
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)

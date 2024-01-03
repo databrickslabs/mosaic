@@ -5,8 +5,6 @@ from mosaic.config import config
 
 
 class DisplayHandler:
-    MosaicFrameClass: py4j.java_gateway.JavaClass
-    MosaicFrameObject: py4j.java_gateway.JavaObject
     ScalaOptionClass: py4j.java_gateway.JavaClass
     ScalaOptionObject: py4j.java_gateway.JavaObject
     in_databricks: bool
@@ -30,11 +28,7 @@ class DisplayHandler:
 
     def display_dataframe(self, df: DataFrame):
         prettifier = self.PrettifierModule
-        pretty_jdf = (
-            prettifier.prettified(df._jdf, self.ScalaOptionObject.apply(None))
-            if not type(df) == "MosaicFrame"
-            else prettifier.prettifiedMosaicFrame(df._mosaicFrame)
-        )
+        pretty_jdf = (prettifier.prettified(df._jdf, self.ScalaOptionObject.apply(None)))
         pretty_df = DataFrame(pretty_jdf, config.sql_context)
         self.dataframe_display_function(pretty_df)
 

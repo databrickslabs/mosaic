@@ -23,6 +23,14 @@ object GDALBuildVRT {
         val vrtOptionsVec = OperatorOptions.parseOptions(command)
         val vrtOptions = new BuildVRTOptions(vrtOptionsVec)
         val result = gdal.BuildVRT(outputPath, rasters.map(_.getRaster).toArray, vrtOptions)
+        if (result == null) {
+            throw new Exception(
+                s"""
+                   |Build VRT failed.
+                   |Command: $command
+                   |Error: ${gdal.GetLastErrorMsg}
+                   |""".stripMargin)
+        }
         // TODO: Figure out multiple parents, should this be an array?
         // VRT files are just meta files, mem size doesnt make much sense so we keep -1
         MosaicRasterGDAL(result, outputPath, rasters.head.getParentPath, "VRT", -1).flushCache()

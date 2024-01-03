@@ -25,6 +25,14 @@ object GDALTranslate {
         val translateOptionsVec = OperatorOptions.parseOptions(command)
         val translateOptions = new TranslateOptions(translateOptionsVec)
         val result = gdal.Translate(outputPath, raster.getRaster, translateOptions)
+        if (result == null) {
+            throw new Exception(
+                s"""
+                   |Translate failed.
+                   |Command: $command
+                   |Error: ${gdal.GetLastErrorMsg}
+                   |""".stripMargin)
+        }
         val size = Files.size(Paths.get(outputPath))
         raster.copy(raster = result, path = outputPath, memSize = size).flushCache()
     }

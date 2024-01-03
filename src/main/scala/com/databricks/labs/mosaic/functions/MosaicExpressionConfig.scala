@@ -2,8 +2,8 @@ package com.databricks.labs.mosaic.functions
 
 import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.DataType
+import org.apache.spark.sql.{RuntimeConfig, SparkSession}
 
 /**
   * Mosaic Expression Config is a class that contains the configuration for the
@@ -22,6 +22,10 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
         configs.foreach { case (k, v) => sparkConf.set(k, v) }
     }
 
+    def getGDALConf: Map[String, String] = {
+        configs.filter { case (k, _) => k.startsWith(MOSAIC_GDAL_PREFIX) }
+    }
+
     def getGeometryAPI: String = configs.getOrElse(MOSAIC_GEOMETRY_API, JTS.name)
 
     def getIndexSystem: String = configs.getOrElse(MOSAIC_INDEX_SYSTEM, H3.name)
@@ -29,6 +33,11 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
     def getRasterCheckpoint: String = configs.getOrElse(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT)
 
     def getCellIdType: DataType = IndexSystemFactory.getIndexSystem(getIndexSystem).cellIdType
+
+    def setGDALConf(conf: RuntimeConfig): MosaicExpressionConfig = {
+        val toAdd = conf.getAll.filter(_._1.startsWith(MOSAIC_GDAL_PREFIX))
+        MosaicExpressionConfig(configs ++ toAdd)
+    }
 
     def setGeometryAPI(api: String): MosaicExpressionConfig = {
         MosaicExpressionConfig(configs + (MOSAIC_GEOMETRY_API -> api))
@@ -64,6 +73,7 @@ object MosaicExpressionConfig {
             .setGeometryAPI(spark.conf.get(MOSAIC_GEOMETRY_API, JTS.name))
             .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))
             .setRasterCheckpoint(spark.conf.get(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT))
+            .setGDALConf(spark.conf)
 
     }
 

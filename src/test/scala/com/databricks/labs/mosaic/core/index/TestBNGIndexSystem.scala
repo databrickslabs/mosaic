@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.index
 
-import com.databricks.labs.mosaic.core.geometry.{MosaicGeometryESRI, MosaicGeometryJTS}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometryJTS
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.unsafe.types.UTF8String
@@ -209,27 +209,14 @@ class TestBNGIndexSystem extends AnyFunSuite {
             .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
             .forall(Seq(POLYGON, MULTIPOLYGON).contains(_)) shouldBe true
         BNGIndexSystem
-            .coerceChipGeometry(geomsWKTs1.map(MosaicGeometryESRI.fromWKT))
-            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
-            .forall(Seq(POLYGON, MULTIPOLYGON).contains(_)) shouldBe true
-        BNGIndexSystem
             .coerceChipGeometry(geomsWKTs2.map(MosaicGeometryJTS.fromWKT))
-            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
-            .forall(Seq(LINESTRING, MULTILINESTRING).contains(_)) shouldBe true
-        BNGIndexSystem
-            .coerceChipGeometry(geomsWKTs2.map(MosaicGeometryESRI.fromWKT))
             .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
             .forall(Seq(LINESTRING, MULTILINESTRING).contains(_)) shouldBe true
         BNGIndexSystem
             .coerceChipGeometry(geomsWKTs3.map(MosaicGeometryJTS.fromWKT))
             .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
             .forall(Seq(POINT, MULTIPOINT).contains(_)) shouldBe true
-        BNGIndexSystem
-            .coerceChipGeometry(geomsWKTs3.map(MosaicGeometryESRI.fromWKT))
-            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
-            .forall(Seq(POINT, MULTIPOINT).contains(_)) shouldBe true
         BNGIndexSystem.coerceChipGeometry(geomsWKTs4.map(MosaicGeometryJTS.fromWKT)).isEmpty shouldBe true
-        BNGIndexSystem.coerceChipGeometry(geomsWKTs4.map(MosaicGeometryESRI.fromWKT)).isEmpty shouldBe true
     }
 
     test("Auxiliary methods should not throw exceptions") {

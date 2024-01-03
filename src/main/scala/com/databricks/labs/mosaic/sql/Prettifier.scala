@@ -11,12 +11,8 @@ import org.apache.spark.sql.functions.col
 
 object Prettifier {
 
-    def prettifiedMosaicFrame(mosaicFrame: MosaicFrame): DataFrame = {
-        prettified(mosaicFrame.toDF, Some(List(mosaicFrame.getFocalGeometryColumnName)))
-    }
-
     def prettified(df: DataFrame, columnNames: Option[List[String]] = None): DataFrame = {
-        val mosaicContext = MosaicContext.context
+        val mosaicContext = MosaicContext.context()
         import mosaicContext.functions._
 
         val keywords = List("WKB_", "_WKB", "_HEX", "HEX_", "COORDS_", "_COORDS", "POLYGON", "POINT", "GEOMETRY")

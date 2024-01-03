@@ -1,6 +1,6 @@
 name: build mosaic scala
 description: build mosaic scala
-inputs: 
+inputs:
   skip_tests:
     description: 'Skip Scala Tests? true or false'
     default: 'false'
@@ -19,10 +19,23 @@ runs:
         - name: Add packaged GDAL dependencies
           shell: bash
           run : |
-            sudo apt-get update && sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7 
-            pip install databricks-mosaic-gdal==${{ matrix.gdal }}
-            sudo tar -xf /opt/hostedtoolcache/Python/${{ matrix.python }}/x64/lib/python3.9/site-packages/databricks-mosaic-gdal/resources/gdal-${{ matrix.gdal }}-filetree.tar.xz -C /
-            sudo tar -xhf /opt/hostedtoolcache/Python/${{ matrix.python }}/x64/lib/python3.9/site-packages/databricks-mosaic-gdal/resources/gdal-${{ matrix.gdal }}-symlinks.tar.xz -C /
+            # - update apt
+            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-backports main universe multiverse restricted"
+            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-updates main universe multiverse restricted"
+            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-security main multiverse restricted universe"
+            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main multiverse restricted universe"
+            sudo apt-get update -y
+            # - install numpy first
+            pip install --upgrade pip
+            pip install 'numpy>=${{ matrix.numpy }}'
+            # - install natives
+            sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
+            sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
+            # - install gdal with numpy
+            pip install --no-cache-dir --force-reinstall 'GDAL[numpy]==${{ matrix.gdal }}'
+            sudo wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/resources/gdal/jammy/libgdalalljni.so
+            sudo wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/resources/gdal/jammy/libgdalalljni.so.30
+            #sudo wget -P /usr/lib -nc https://github.com/databrickslabs/mosaic/raw/main/resources/gdal/jammy/libgdalalljni.so.30.0.3
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash

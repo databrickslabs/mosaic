@@ -1,12 +1,11 @@
 package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.Mosaic.mosaicFill
-import com.databricks.labs.mosaic.core.geometry.api.{ESRI, GeometryAPI, JTS}
-import com.databricks.labs.mosaic.core.geometry.{MosaicGeometryESRI, MosaicGeometryJTS}
+import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
+import com.databricks.labs.mosaic.core.geometry.MosaicGeometryJTS
 import com.databricks.labs.mosaic.core.index.H3IndexSystem.indexToGeometry
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING, MULTIPOINT, MULTIPOLYGON, POINT, POLYGON}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
-import com.databricks.labs.mosaic.expressions.index.MosaicFill
 import com.uber.h3core.H3Core
 import org.apache.spark.sql.types.{BooleanType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
@@ -23,7 +22,6 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
         noException shouldBe thrownBy { H3IndexSystem.format(indexRes) }
         noException shouldBe thrownBy { H3IndexSystem.getResolutionStr(10) }
         noException shouldBe thrownBy { H3IndexSystem.indexToGeometry(H3IndexSystem.parse(H3IndexSystem.format(indexRes)), JTS) }
-        noException shouldBe thrownBy { H3IndexSystem.indexToGeometry(H3IndexSystem.parse(H3IndexSystem.format(indexRes)), ESRI) }
         an[IllegalArgumentException] shouldBe thrownBy { H3IndexSystem.getResolution(true) }
         an[IllegalStateException] shouldBe thrownBy { H3IndexSystem.getResolution("-1") }
     }
@@ -31,10 +29,8 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
     test("H3IndexSystem polyfill signatures") {
         val geomJTS = MosaicGeometryJTS.fromWKT("POLYGON((1 2, 2 2, 2 1, 1 1, 1 2))")
         val wrappedGeomJTS = MosaicGeometryJTS.fromWKT("POLYGON((179 2, 181 2, 181 1, 179 1, 179 2))")
-        val geomESRI = MosaicGeometryESRI.fromWKT("POLYGON((1 2, 2 2, 2 1, 1 1, 1 2))")
         noException shouldBe thrownBy { H3IndexSystem.polyfill(geomJTS, 10, JTS) }
         noException shouldBe thrownBy { H3IndexSystem.polyfill(wrappedGeomJTS, 10, JTS) }
-        noException shouldBe thrownBy { H3IndexSystem.polyfill(geomESRI, 10, ESRI) }
         val expected = MosaicGeometryJTS.fromWKT("MULTIPOLYGON(((179 2, 180 2, 180 1, 179 1, 179 2)), ((-179 2, -180 2, -180 1, -179 1, -179 2)))")
         val actualIndexes = mosaicFill(wrappedGeomJTS, 6, keepCoreGeom = true, H3IndexSystem, JTS)
         val actual = actualIndexes.map(_.geom)
@@ -122,35 +118,21 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
             .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
             .forall(Seq(POLYGON, MULTIPOLYGON).contains(_)) shouldBe true
         H3IndexSystem
-            .coerceChipGeometry(geomsWKTs1.map(MosaicGeometryESRI.fromWKT))
-            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
-            .forall(Seq(POLYGON, MULTIPOLYGON).contains(_)) shouldBe true
-        H3IndexSystem
             .coerceChipGeometry(geomsWKTs2.map(MosaicGeometryJTS.fromWKT))
-            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
-            .forall(Seq(LINESTRING, MULTILINESTRING).contains(_)) shouldBe true
-        H3IndexSystem
-            .coerceChipGeometry(geomsWKTs2.map(MosaicGeometryESRI.fromWKT))
             .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
             .forall(Seq(LINESTRING, MULTILINESTRING).contains(_)) shouldBe true
         H3IndexSystem
             .coerceChipGeometry(geomsWKTs3.map(MosaicGeometryJTS.fromWKT))
             .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
             .forall(Seq(POINT, MULTIPOINT).contains(_)) shouldBe true
-        H3IndexSystem
-            .coerceChipGeometry(geomsWKTs3.map(MosaicGeometryESRI.fromWKT))
-            .map(g => GeometryTypeEnum.fromString(g.getGeometryType))
-            .forall(Seq(POINT, MULTIPOINT).contains(_)) shouldBe true
         H3IndexSystem.coerceChipGeometry(geomsWKTs4.map(MosaicGeometryJTS.fromWKT)).isEmpty shouldBe true
-        H3IndexSystem.coerceChipGeometry(geomsWKTs4.map(MosaicGeometryESRI.fromWKT)).isEmpty shouldBe true
     }
 
     test("indexToGeometry should return valid and correct geometries") {
         val h3: H3Core = H3Core.newInstance()
 
-        val esriGeomAPI: GeometryAPI = GeometryAPI("ESRI")
         val jtsGeomAPI: GeometryAPI = GeometryAPI("JTS")
-        val apis = Seq(esriGeomAPI, jtsGeomAPI)
+        val apis = Seq(jtsGeomAPI)
 
         val baseCells = h3.getRes0Indexes.asScala.toList
         val lvl1Cells = baseCells.flatMap(h3.h3ToChildren(_, 1).asScala)

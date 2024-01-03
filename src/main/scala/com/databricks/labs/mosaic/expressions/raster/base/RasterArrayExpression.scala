@@ -35,8 +35,6 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       with Serializable
       with RasterExpressionSerialization {
 
-    GDAL.enable()
-
     override def child: Expression = rastersExpr
 
     /** Output Data Type */
@@ -66,7 +64,7 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       *   The result of the expression.
       */
     override def nullSafeEval(input: Any): Any = {
-        GDAL.enable()
+        GDAL.enable(expressionConfig)
         val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
         val result = rasterTransform(tiles)
         val serialized = serialize(result, returnsRaster, dataType, expressionConfig)

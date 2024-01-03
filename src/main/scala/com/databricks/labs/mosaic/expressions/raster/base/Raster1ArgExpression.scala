@@ -39,8 +39,6 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
       with Serializable
       with RasterExpressionSerialization {
 
-    GDAL.enable()
-
     override def left: Expression = rasterExpr
 
     override def right: Expression = arg1Expr
@@ -74,14 +72,15 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    //noinspection DuplicatedCode
+    // noinspection DuplicatedCode
     override def nullSafeEval(input: Any, arg1: Any): Any = {
-        GDAL.enable()
+        GDAL.enable(expressionConfig)
         val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
+        val raster = tile.getRaster
         val result = rasterTransform(tile, arg1)
         val serialized = serialize(result, returnsRaster, outputType, expressionConfig)
-        // passed by name makes things re-evaluated
-        RasterCleaner.dispose(tile)
+        RasterCleaner.dispose(raster)
+        RasterCleaner.dispose(result)
         serialized
     }
 

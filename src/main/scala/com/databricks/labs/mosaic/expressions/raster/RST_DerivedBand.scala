@@ -33,10 +33,9 @@ case class RST_DerivedBand(
         val pythonFunc = arg1.asInstanceOf[UTF8String].toString
         val funcName = arg2.asInstanceOf[UTF8String].toString
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-        val result = PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
         MosaicRasterTile(
           index,
-          result,
+          PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName),
           tiles.head.getParentPath,
           tiles.head.getDriver
         )
@@ -47,7 +46,7 @@ case class RST_DerivedBand(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_DerivedBand extends WithExpressionInfo {
 
-    override def name: String = "rst_derived_band"
+    override def name: String = "rst_derivedband"
 
     override def usage: String =
         """

@@ -28,8 +28,6 @@ case class RST_MergeAgg(
       with UnaryLike[Expression]
       with RasterExpressionSerialization {
 
-    GDAL.enable()
-
     override lazy val deterministic: Boolean = true
     override val child: Expression = rasterExpr
     override val nullable: Boolean = false
@@ -58,7 +56,7 @@ case class RST_MergeAgg(
         copy(mutableAggBufferOffset = newMutableAggBufferOffset)
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
-        GDAL.enable()
+        GDAL.enable(expressionConfig)
 
         if (buffer.isEmpty) {
             null
@@ -68,13 +66,13 @@ case class RST_MergeAgg(
 
             // This is a trick to get the rasters sorted by their parent path to ensure more consistent results
             // when merging rasters with large overlaps
-            val tiles = buffer
+            var tiles = buffer
                 .map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType))
                 .sortBy(_.getParentPath)
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-            val merged = MergeRasters.merge(tiles.map(_.getRaster)).flushCache()
+            var merged = MergeRasters.merge(tiles.map(_.getRaster)).flushCache()
             // TODO: should parent path be an array?
             val parentPath = tiles.head.getParentPath
             val driver = tiles.head.getDriver
@@ -85,6 +83,9 @@ case class RST_MergeAgg(
 
             tiles.foreach(RasterCleaner.dispose(_))
             RasterCleaner.dispose(merged)
+
+            tiles = null
+            merged = null
 
             result
         }

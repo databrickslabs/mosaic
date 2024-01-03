@@ -3,7 +3,9 @@ package com.databricks.labs.mosaic.core.raster.api
 import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterBandGDAL, MosaicRasterGDAL}
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.transform.RasterTransform
+import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import com.databricks.labs.mosaic.gdal.MosaicGDAL.configureGDAL
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.gdal
@@ -52,10 +54,15 @@ object GDAL {
       * on the worker nodes. This method registers all the drivers on the worker
       * nodes.
       */
-    def enable(): Unit = {
-        configureGDAL()
+    def enable(mosaicConfig: MosaicExpressionConfig): Unit = {
+        configureGDAL(mosaicConfig)
         gdal.UseExceptions()
         gdal.AllRegister()
+    }
+
+    def enable(spark: SparkSession): Unit = {
+        val mosaicConfig = MosaicExpressionConfig(spark)
+        enable(mosaicConfig)
     }
 
     /**

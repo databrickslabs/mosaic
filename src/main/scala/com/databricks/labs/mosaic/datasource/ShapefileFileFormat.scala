@@ -37,7 +37,7 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister with Ser
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] =
         (file: PartitionedFile) => {
-            if (checkExtension(file.filePath)) {
+            if (checkExtension(file.filePath.toString())) {
                 OGRFileFormat.buildReaderImpl(driverName, dataSchema, requiredSchema, options)(file)
             } else {
                 Seq.empty[InternalRow].iterator

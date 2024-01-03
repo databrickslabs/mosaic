@@ -366,10 +366,12 @@ case class MosaicRasterGDAL(
         val isSubdataset = PathUtils.isSubdataset(path)
         val filePath = if (isSubdataset) PathUtils.fromSubdatasetPath(path) else path
         val pamFilePath = s"$filePath.aux.xml"
-        Try(gdal.GetDriverByName(driverShortName).Delete(path))
-        Try(Files.deleteIfExists(Paths.get(path)))
-        Try(Files.deleteIfExists(Paths.get(filePath)))
-        Try(Files.deleteIfExists(Paths.get(pamFilePath)))
+        if (path != PathUtils.getCleanPath(parentPath)) {
+            Try(gdal.GetDriverByName(driverShortName).Delete(path))
+            Try(Files.deleteIfExists(Paths.get(path)))
+            Try(Files.deleteIfExists(Paths.get(filePath)))
+            Try(Files.deleteIfExists(Paths.get(pamFilePath)))
+        }
     }
 
     /**
@@ -424,7 +426,9 @@ case class MosaicRasterGDAL(
             }
         val byteArray = Files.readAllBytes(Paths.get(readPath))
         if (dispose) RasterCleaner.dispose(this)
-        Files.deleteIfExists(Paths.get(readPath))
+        if (readPath != PathUtils.getCleanPath(parentPath)) {
+            Files.deleteIfExists(Paths.get(readPath))
+        }
         byteArray
     }
 
@@ -492,7 +496,11 @@ case class MosaicRasterGDAL(
             .getOrElse(Map.empty[String, String])
             .values
             .find(_.toUpperCase(Locale.ROOT).endsWith(subsetName.toUpperCase(Locale.ROOT)))
-            .getOrElse(throw new Exception(s"Subdataset $subsetName not found"))
+            .getOrElse(throw new Exception(s"""
+                                              |Subdataset $subsetName not found!
+                                              |Available subdatasets:
+                                              |     ${subdatasets.keys.filterNot(_.startsWith("SUBDATASET_")).mkString(", ")}
+                        """.stripMargin))
         val ds = openRaster(path)
         // Avoid costly IO to compute MEM size here
         // It will be available when the raster is serialized for next operation

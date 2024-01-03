@@ -34,8 +34,6 @@ case class RST_DerivedBandAgg(
       with TernaryLike[Expression]
       with RasterExpressionSerialization {
 
-    GDAL.enable()
-
     override lazy val deterministic: Boolean = true
     override val nullable: Boolean = false
     override val dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
@@ -67,23 +65,23 @@ case class RST_DerivedBandAgg(
         copy(mutableAggBufferOffset = newMutableAggBufferOffset)
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
-        GDAL.enable()
+        GDAL.enable(expressionConfig)
 
         if (buffer.isEmpty) {
             null
-        } else if (buffer.size == 1) {
+        } else {
 
             // This works for Literals only
             val pythonFunc = pythonFuncExpr.eval(null).asInstanceOf[UTF8String].toString
             val funcName = funcNameExpr.eval(null).asInstanceOf[UTF8String].toString
 
             // Do do move the expression
-            val tiles = buffer.map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType))
+            var tiles = buffer.map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType))
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
 
-            val combined = PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
+            var combined = PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
             // TODO: should parent path be an array?
             val parentPath = tiles.head.getParentPath
             val driver = tiles.head.getDriver
@@ -94,6 +92,9 @@ case class RST_DerivedBandAgg(
 
             tiles.foreach(RasterCleaner.dispose(_))
             RasterCleaner.dispose(result)
+
+            tiles = null
+            combined = null
 
             result
         }

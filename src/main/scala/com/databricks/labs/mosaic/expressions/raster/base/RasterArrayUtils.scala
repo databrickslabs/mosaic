@@ -13,12 +13,11 @@ object RasterArrayUtils {
         val rasterDT = rastersExpr.dataType.asInstanceOf[ArrayType].elementType
         val arrayData = input.asInstanceOf[ArrayData]
         val n = arrayData.numElements()
-        val tiles = (0 until n)
+        (0 until n)
             .map(i =>
                 MosaicRasterTile
                     .deserialize(arrayData.get(i, rasterDT).asInstanceOf[InternalRow], expressionConfig.getCellIdType)
             )
-        tiles
     }
 
 }

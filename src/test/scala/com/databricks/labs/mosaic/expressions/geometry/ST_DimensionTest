@@ -1,0 +1,13 @@
+package com.databricks.labs.mosaic.expressions.geometry
+
+import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import org.apache.spark.sql.test.SharedSparkSession
+
+class ST_DimensionTest extends MosaicSpatialQueryTest with SharedSparkSession with ST_DimensionBehaviors {
+
+    testAllGeometriesNoCodegen("Testing stDimension") { dimensionBehavior }
+    testAllGeometriesCodegen("Testing stDimension CODEGEN compilation") { dimensionCodegen }
+    testAllGeometriesCodegen("Testing stDimension CODEGEN") { dimensionBehavior }
+    testAllGeometriesNoCodegen("Testing stDimension auxiliaryMethods") { auxiliaryMethods }
+
+}

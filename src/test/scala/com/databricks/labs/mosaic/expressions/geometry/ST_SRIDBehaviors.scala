@@ -44,7 +44,7 @@ trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
             .select(as_json($"json").alias("json"))
             .where(!upper(st_geometrytype($"json")).isin("MULTILINESTRING", "MULTIPOLYGON"))
 
-        val result = sourceDf // ESRI GeoJSON issue
+        val result = sourceDf // GeoJSON issue
             .select(st_srid($"json"))
             .as[Int]
             .collect()
@@ -89,7 +89,7 @@ trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
             .select(as_json($"json").alias("json"))
             .where(!upper(st_geometrytype($"json")).isin("MULTILINESTRING", "MULTIPOLYGON"))
 
-        val results = sourceDf // ESRI GeoJSON issue
+        val results = sourceDf // GeoJSON issue
             .select(st_srid($"json"))
             .as[Int]
 

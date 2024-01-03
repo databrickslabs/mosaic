@@ -1,4 +1,7 @@
 # Ship2Ship Transfer Detection
+
+> Note: `ipynb` files can be previewed in GitHub and can also be imported into Databricks, more [here](https://docs.databricks.com/en/notebooks/notebook-export-import.html).
+
 ![Ship Overlap](./images/kepler_output.png)
 ## Introduction
 This is an algorithmic implementation to detect Ship to Ship transfers at scale using Databricks. It was presented at the [Data and AI Summit 2022](https://www.youtube.com/watch?v=XQNflqbgP7Q). 

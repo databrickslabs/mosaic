@@ -3,6 +3,7 @@ from .aggregators import *
 from .constructors import *
 from .enable import enable_mosaic
 from .functions import *
+from .fuse import *
 from .predicates import *
 from .gdal import *
 from .raster import *

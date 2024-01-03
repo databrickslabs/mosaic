@@ -114,4 +114,4 @@ st_intersects
     |                 true|
     +---------------------+
 
-.. note:: Intersection logic will be dependent on the chosen geometry API (ESRI or JTS).
+.. note:: Intersection logic will be dependent on the chosen geometry API (ESRI or JTS). ESRI is only available for mosaic < 0.4.x series, in mosaic >= 0.4.0 JTS is the only geometry API.

@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.sql.extensions
 
 import com.databricks.labs.mosaic._
-import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
+import com.databricks.labs.mosaic.core.geometry.api.JTS
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.functions.MosaicContext
@@ -34,9 +34,7 @@ class MosaicSQL extends (SparkSessionExtensions => Unit) with Logging {
             // Fixes issue #297.
             val mosaicContext = (indexSystem, geometryAPI) match {
                 case ("H3", "JTS")   => MosaicContext.build(H3IndexSystem, JTS)
-                case ("H3", "ESRI")  => MosaicContext.build(H3IndexSystem, ESRI)
                 case ("BNG", "JTS")  => MosaicContext.build(BNGIndexSystem, JTS)
-                case ("BNG", "ESRI") => MosaicContext.build(BNGIndexSystem, ESRI)
                 case (is, gapi) => throw new Error(s"Index system, geometry API and rasterAPI: ($is, $gapi) not supported.")
             }
             logInfo(s"Registering Mosaic SQL Extensions ($indexSystem, $geometryAPI).")

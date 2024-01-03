@@ -16,7 +16,7 @@ case class RST_FromBands(
     expressionConfig: MosaicExpressionConfig
 ) extends RasterArrayExpression[RST_FromBands](
       bandsExpr,
-    RasterTileType(expressionConfig.getCellIdType),
+      RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
@@ -31,8 +31,7 @@ case class RST_FromBands(
       *   The stacked and resampled raster.
       */
     override def rasterTransform(rasters: Seq[MosaicRasterTile]): Any = {
-        val raster = MergeBands.merge(rasters.map(_.getRaster), "bilinear")
-        rasters.head.copy(raster = raster)
+        rasters.head.copy(raster = MergeBands.merge(rasters.map(_.getRaster), "bilinear"))
     }
 
 }

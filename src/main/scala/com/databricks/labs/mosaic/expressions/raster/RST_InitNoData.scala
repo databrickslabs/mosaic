@@ -40,12 +40,14 @@ case class RST_InitNoData(
             .map(GDAL.getNoDataConstant)
             .mkString(" ")
         val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(tile.getDriver))
-        val result = GDALWarp.executeWarp(
-          resultPath,
-          Seq(tile.getRaster),
-          command = s"""gdalwarp -of ${tile.getDriver} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
+        val cmd = s"""gdalwarp -of ${tile.getDriver} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
+        tile.copy(
+          raster = GDALWarp.executeWarp(
+            resultPath,
+            Seq(tile.getRaster),
+            command = cmd
+          )
         )
-        tile.copy(raster = result)
     }
 
 }
@@ -53,7 +55,7 @@ case class RST_InitNoData(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_InitNoData extends WithExpressionInfo {
 
-    override def name: String = "rst_init_no_data"
+    override def name: String = "rst_initnodata"
 
     override def usage: String =
         """

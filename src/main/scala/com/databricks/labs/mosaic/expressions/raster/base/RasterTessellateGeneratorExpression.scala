@@ -40,8 +40,6 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
-    GDAL.enable()
-
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
     val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
@@ -71,7 +69,8 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
     def rasterGenerator(raster: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        GDAL.enable()
+        GDAL.enable(expressionConfig)
+
         val tile = MosaicRasterTile
             .deserialize(
               rasterExpr.eval(input).asInstanceOf[InternalRow],
