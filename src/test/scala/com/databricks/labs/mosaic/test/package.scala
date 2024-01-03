@@ -353,7 +353,7 @@ package object test {
 
         override def name: String = "MOCK"
 
-        override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = ???
+        override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Seq[Long] = ???
 
         override def format(id: Long): String = ???
 
@@ -369,9 +369,7 @@ package object test {
 
         override def resolutions: Set[Int] = ???
 
-        override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = ???
-
-        override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = ???
+        override def indexToGeometry(index: Long, geometryAPI: GeometryAPI, makeSafe: Boolean): MosaicGeometry = ???
 
         override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = ???
 

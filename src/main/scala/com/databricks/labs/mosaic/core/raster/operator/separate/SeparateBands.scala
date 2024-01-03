@@ -33,6 +33,8 @@ object SeparateBands {
 
             val isEmpty = result.isEmpty
 
+            result.raster.SetMetadataItem("BAND_INDEX", (i + 1).toString, "DATABRICKS_MOSAIC")
+
             if (isEmpty) dispose(result)
 
             (isEmpty, result, i)
@@ -41,7 +43,7 @@ object SeparateBands {
 
         val (_, valid) = tiles.partition(_._1)
 
-        valid.map(t => new MosaicRasterTile(null, t._2, raster.getParentPath, raster.getDriversShortName, Some(t._3)))
+        valid.map(t => new MosaicRasterTile(null, t._2, raster.getParentPath, raster.getDriversShortName))
 
     }
 

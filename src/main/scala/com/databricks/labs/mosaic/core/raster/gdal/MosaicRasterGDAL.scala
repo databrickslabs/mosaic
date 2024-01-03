@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL.readRaster
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader, RasterWriter}
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
@@ -326,8 +327,16 @@ case class MosaicRasterGDAL(
       */
     def isEmpty: Boolean = {
         val bands = getBands
-        if (bands.isEmpty) return true
-        bands.takeWhile(_.isEmpty).nonEmpty
+        if (bands.isEmpty) {
+            subdatasets
+                .values
+                .filter(_.toLowerCase(Locale.ROOT).startsWith(driverShortName.toLowerCase(Locale.ROOT)))
+                .flatMap(readRaster(_, path).getBands)
+                .takeWhile(_.isEmpty)
+                .nonEmpty
+        } else {
+            bands.takeWhile(_.isEmpty).nonEmpty
+        }
     }
 
     /**

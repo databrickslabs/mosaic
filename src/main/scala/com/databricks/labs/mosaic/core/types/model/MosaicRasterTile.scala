@@ -7,6 +7,8 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
+import scala.util.{Failure, Success, Try}
+
 /**
   * A case class modeling an instance of a mosaic raster tile.
   *
@@ -19,14 +21,14 @@ import org.apache.spark.unsafe.types.UTF8String
   * @param driver
   *   Driver used to read the raster.
   * @param seqNo
-  * Sequence number of the raster, used if this is a single band extracted from a multi-band raster.
+  *   Sequence number of the raster, used if this is a single band extracted
+  *   from a multi-band raster.
   */
 case class MosaicRasterTile(
     index: Either[Long, String],
     raster: MosaicRasterGDAL,
     parentPath: String,
-    driver: String,
-    seqNo: Option[Int] = None
+    driver: String
 ) {
 
     def getIndex: Either[Long, String] = index
@@ -39,6 +41,7 @@ case class MosaicRasterTile(
 
     /**
       * Indicates whether the raster is present.
+      *
       * @return
       *   True if the raster is present, false otherwise.
       */
@@ -49,7 +52,6 @@ case class MosaicRasterTile(
       *
       * @param indexSystem
       *   Index system to use for formatting.
-      *
       * @return
       *   MosaicChip with formatted index ID.
       */
@@ -62,15 +64,13 @@ case class MosaicRasterTile(
                   index = Left(indexSystem.parse(value)),
                   raster = raster,
                   parentPath = parentPath,
-                  driver = driver,
-                  seqNo = seqNo
+                  driver = driver
                 )
             case (_: StringType, Left(value)) => new MosaicRasterTile(
                   index = Right(indexSystem.format(value)),
                   raster = raster,
                   parentPath = parentPath,
-                  driver = driver,
-                  seqNo = seqNo
+                  driver = driver
                 )
             case _                            => throw new IllegalArgumentException("Invalid cell id data type")
         }
@@ -81,7 +81,6 @@ case class MosaicRasterTile(
       *
       * @param indexSystem
       *   Index system to use for formatting.
-      *
       * @return
       *   MosaicChip with formatted index ID.
       */
@@ -93,6 +92,7 @@ case class MosaicRasterTile(
 
     /**
       * Formats the index ID as the string type.
+      *
       * @param indexSystem
       *   Index system to use for formatting.
       * @return
@@ -119,13 +119,13 @@ case class MosaicRasterTile(
         val encodedRaster = encodeRaster(rasterDataType, checkpointLocation)
         if (Option(index).isDefined) {
             if (index.isLeft) InternalRow.fromSeq(
-              Seq(index.left.get, encodedRaster, parentPathUTF8, driverUTF8, seqNo.orNull)
+              Seq(index.left.get, encodedRaster, parentPathUTF8, driverUTF8)
             )
             else InternalRow.fromSeq(
-              Seq(UTF8String.fromString(index.right.get), encodedRaster, parentPathUTF8, driverUTF8, seqNo.orNull)
+              Seq(UTF8String.fromString(index.right.get), encodedRaster, parentPathUTF8, driverUTF8)
             )
         } else {
-            InternalRow.fromSeq(Seq(null, encodedRaster, parentPathUTF8, driverUTF8, seqNo.orNull))
+            InternalRow.fromSeq(Seq(null, encodedRaster, parentPathUTF8, driverUTF8))
         }
 
     }
@@ -143,6 +143,11 @@ case class MosaicRasterTile(
         GDAL.writeRasters(Seq(raster), checkpointLocation, rasterDataType).head
     }
 
+    def getSequenceNumber: Int =
+        Try(raster.getRaster.GetMetadataItem("BAND_INDEX", "DATABRICKS_MOSAIC")) match {
+            case Success(value) => value.toInt
+            case Failure(_)     => -1
+        }
 }
 
 /** Companion object. */
@@ -168,12 +173,12 @@ object MosaicRasterTile {
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {
             if (index.isInstanceOf[Long]) {
-                new MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, parentPath, driver, Some(seqNo))
+                new MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, parentPath, driver)
             } else {
-                new MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, parentPath, driver, Some(seqNo))
+                new MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, parentPath, driver)
             }
         } else {
-            new MosaicRasterTile(null, raster, parentPath, driver, Some(seqNo))
+            new MosaicRasterTile(null, raster, parentPath, driver)
         }
 
     }

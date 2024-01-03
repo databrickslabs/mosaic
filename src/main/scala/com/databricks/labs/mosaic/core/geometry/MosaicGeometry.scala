@@ -177,4 +177,6 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
         )
     }
 
+    def getAPI: GeometryAPI
+
 }

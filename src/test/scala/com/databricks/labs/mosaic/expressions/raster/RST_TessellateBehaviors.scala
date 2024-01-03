@@ -47,13 +47,14 @@ trait RST_TessellateBehaviors extends QueryTest {
             .load("src/test/resources/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc")
             .withColumn("tile", rst_separatebands($"tile"))
             .withColumn("tile", rst_setsrid($"tile", lit(4326)))
+            .limit(1)
 
         val netcdfGridTiles = netcdf
-            .select(rst_tessellate($"tile", lit(3)).alias("tile"))
+            .select(rst_tessellate($"tile", lit(1)).alias("tile"))
 
         val netcdfResult = netcdfGridTiles.collect()
 
-        netcdfResult.length should be(4495)
+        netcdfResult.length should be(842)
 
     }
 

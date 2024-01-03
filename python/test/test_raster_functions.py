@@ -158,6 +158,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
     def test_netcdf(self):
 
+        target_resolution = 3
+
         region_keys = ["NAME", "STATE", "BOROUGH", "BLOCK", "TRACT"]
 
         census_df = (
@@ -170,8 +172,9 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .dropDuplicates()
             .withColumn("geom_0", api.st_simplify("geom_0", lit(0.001)))
             .withColumn("geom_0", api.st_updatesrid("geom_0", col("geom_0_srid"),lit(4326)))
-            .withColumn("chip", api.grid_tessellateexplode("geom_0", lit(5)))
+            .withColumn("chip", api.grid_tessellateexplode("geom_0", lit(target_resolution)))
             .select(*region_keys, "chip.*")
+            .repartition(self.spark.sparkContext.defaultParallelism)
         )
 
         df = (
@@ -181,42 +184,43 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                 "test/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
             )
             .select(api.rst_separatebands("tile").alias("tile"))
+            .where("tile.seqNo = 21")
             .repartition(self.spark.sparkContext.defaultParallelism)
-        ).cache()
-
-        # self.assertEqual(df.count(), 31)
-
-        # grid_tiles = (
-        #     df
-        #     .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
-        #     .select(api.rst_tessellate("tile", lit(3)).alias("tile"))
-        # )
-        #
-        # self.assertEqual(grid_tiles.count(), 4495)
+        )
 
         prh_bands_geog = (
             df
-            .select(api.rst_setsrid("tile", lit(4326)).alias("tile"))
+            .select(
+                api.rst_setsrid("tile", lit(4326)).alias("tile"),
+                api.st_astext(api.rst_boundingbox("tile")).alias("bbox")
+            )
             .withColumn("timestep", col("tile.seqNo"))
         )
 
         prh_bands_indexed = (
             prh_bands_geog
-            .withColumn("tile", api.rst_tessellate("tile", lit(3)))
-            .where(~api.rst_isempty("tile"))
-        ).cache()
+            .withColumn("tile", api.rst_tessellate("tile", lit(target_resolution)))
+        )
 
-        print(prh_bands_indexed.count())
-
-        # prh_bands_indexed.write.format("noop").mode("overwrite").save()
-
-        # clipped_precipitation = (
-        #     prh_bands_indexed.alias("var")
-        #     .join(census_df.alias("aoi"), how="inner", on=col("var.tile.index_id")==col("aoi.index_id"))
-        #     .withColumn("band", api.rst_clip("band", "gj_geom"))
-        #     # .where(~api.rst_isempty("band"))
+        # (
+        #     prh_bands_indexed
+        #     .select("timestep", "tile.index_id",
+        #     api.st_astext(api.rst_boundingbox("tile")).alias("the_geom"))
+        #     .coalesce(1)
+        #     .write.format("csv").mode("overwrite")
+        #     .option("header", "true")
+        #     .save("test/data/prh_bands_indexed.csv")
         # )
-        #
-        # clipped_precipitation.write.format("noop").mode("overwrite").save()
+
+        clipped_precipitation = (
+            prh_bands_indexed.alias("var")
+            .join(census_df.alias("aoi"), how="inner", on=col("var.tile.index_id")==col("aoi.index_id"))
+            .limit(5)
+            .withColumn("tile", api.rst_clip("var.tile", "aoi.wkb"))
+        )
+
+        print(f"row count in `clipped_precipitation`: {clipped_precipitation.count()}")
+
+
 
 

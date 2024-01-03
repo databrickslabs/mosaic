@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.geometry
 
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.geometrycollection.MosaicGeometryCollectionESRI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringESRI
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringESRI
@@ -183,6 +184,8 @@ abstract class MosaicGeometryESRI(geom: OGCGeometry) extends MosaicGeometry {
         }
         intersection
     }
+
+    override def getAPI: GeometryAPI = GeometryAPI("ESRI")
 
 }
 

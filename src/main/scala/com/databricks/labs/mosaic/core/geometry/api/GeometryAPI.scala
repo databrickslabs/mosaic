@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.core.geometry.api
 
 import com.databricks.labs.mosaic.MOSAIC_GEOMETRY_API
 import com.databricks.labs.mosaic.codegen.format._
+import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point._
 import com.databricks.labs.mosaic.core.types._
@@ -18,12 +19,16 @@ abstract class GeometryAPI(
 ) extends Serializable {
 
     def createBbox(xMin: Double, yMin: Double, xMax: Double, yMax: Double): MosaicGeometry = {
-        val p1 = fromGeoCoord(Coordinates(xMin, yMin))
-        val p2 = fromGeoCoord(Coordinates(xMin, yMax))
-        val p3 = fromGeoCoord(Coordinates(xMax, yMax))
-        val p4 = fromGeoCoord(Coordinates(xMax, yMin))
-        val p5 = fromGeoCoord(Coordinates(xMin, yMin))
-        geometry(Seq(p1, p2, p3, p4, p5), GeometryTypeEnum.POLYGON)
+        val p1 = fromGeoCoord(Coordinates(yMin, xMin))
+        val p2 = fromGeoCoord(Coordinates(yMax, xMin))
+        val p3 = fromGeoCoord(Coordinates(yMax, xMax))
+        val p4 = fromGeoCoord(Coordinates(yMin, xMax))
+        geometry(Seq(p1, p2, p3, p4, p1), GeometryTypeEnum.POLYGON)
+    }
+
+    def geographicExtent(spatialReferenceID: Int): MosaicGeometry = {
+        val bounds = CRSBoundsProvider(this).reprojectedBounds("EPSG", spatialReferenceID)
+        createBbox(bounds.lowerLeft.getX, bounds.lowerLeft.getY, bounds.upperRight.getX, bounds.upperRight.getY)
     }
 
 
