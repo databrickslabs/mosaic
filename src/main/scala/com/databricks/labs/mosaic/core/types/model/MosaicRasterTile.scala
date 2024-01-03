@@ -165,7 +165,6 @@ object MosaicRasterTile {
         val rasterBytes = row.get(1, BinaryType)
         val parentPath = row.get(2, StringType).toString
         val driver = row.get(3, StringType).toString
-        val seqNo = row.getInt(4)
         val raster = GDAL.readRaster(rasterBytes, parentPath, driver, BinaryType)
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {

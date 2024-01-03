@@ -30,8 +30,7 @@ object RasterTileType {
             StructField("index_id", idType),
             StructField("raster", BinaryType),
             StructField("parentPath", StringType),
-            StructField("driver", StringType),
-            StructField("seqNo", IntegerType)
+            StructField("driver", StringType)
           )
         )
     }
