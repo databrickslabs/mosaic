@@ -9,7 +9,18 @@ import java.nio.file.{Files, Paths}
 object PathUtils {
 
     def getCleanPath(path: String): String = {
-        val cleanPath = path.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
+        //val cleanPath = path.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
+        val cleanPath = {
+            if (path.startsWith("file:/")) {
+                path.replace("file:/", "/")
+            } else if (path.startsWith("dbfs:/Volumes")) {
+                path.replace("dbfs:/Volumes", "/Volumes")
+            } else if (path.startsWith("dbfs:/")) {
+                path.replace("dbfs:/", "/dbfs/")
+            } else {
+                path
+            }
+        }
         if (cleanPath.endsWith(".zip") || cleanPath.contains(".zip:")) {
             getZipPath(cleanPath)
         } else {
@@ -59,7 +70,18 @@ object PathUtils {
 
     def copyToTmp(inPath: String): String = {
         val cleanPath = getCleanPath(inPath)
-        val copyFromPath = inPath.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
+        //val copyFromPath = inPath.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
+        val copyFromPath = {
+            if (inPath.startsWith("file:/")) {
+                inPath.replace("file:/", "/")
+            } else if (inPath.startsWith("dbfs:/Volumes")) {
+                inPath.replace("dbfs:/Volumes", "/Volumes")
+            } else if (inPath.startsWith("dbfs:/")) {
+                inPath.replace("dbfs:/", "/dbfs/")
+            } else {
+                inPath
+            }
+        }
         val driver = MosaicRasterGDAL.identifyDriver(cleanPath)
         val extension = if (inPath.endsWith(".zip")) "zip" else GDAL.getExtension(driver)
         val tmpPath = createTmpFilePath(extension)
