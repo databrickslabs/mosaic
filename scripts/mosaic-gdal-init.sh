@@ -11,7 +11,7 @@
 #     - setup_gdal(...)
 # [4] this script has conditional logic based on variables
 # Author: Michael Johns | mjohns@databricks.com
-# Last Modified: 02 JAN, 2024
+# Last Modified: 03 JAN, 2024
 
 # TEMPLATE-BASED REPLACEMENT
 # - can also be manually specified
@@ -27,7 +27,6 @@ WITH_FUSE_SO=0   # <- use fuse dir shared objects (vs wget)
 
 # SPECIFIED VERSIONS 
 # - may be changed by conditional logic
-GDAL_VERSION=3.4.1           # <- matches Jammy (default)
 NUMPY_VERSION=1.26.2         # <- for GDAL
 SCIPY_VERSION='<1.12,>=1.11' # <- adjusted for numpy
 
@@ -48,22 +47,17 @@ then
   if [ $WITH_UBUNTUGIS == 1 ]
   then
     sudo add-apt-repository ppa:ubuntugis/ppa
-    GDAL_VERSION=3.4.3 # <- update gdal version
   fi
   sudo apt-get update -y
   
   # - install specific numpy version
   # - install scipy version (dep conflict)
   pip install --upgrade pip
-  pip uninstall scipy
   pip install --no-cache-dir --force-reinstall numpy==$NUMPY_VERSION
   pip install --no-cache-dir --force-reinstall "scipy$SCIPY_VERSION"
   
-  # - install natives
+  # - install natives + python gdal
   sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
-
-  # - install gdal with numpy
-  pip install --no-cache-dir --force-reinstall GDAL[numpy]==$GDAL_VERSION
 
   # - add pre-build JNI shared object to the path
   if [ $WITH_FUSE_SO == 1 ]
