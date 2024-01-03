@@ -10,7 +10,10 @@ from mosaic.core.mosaic_context import MosaicContext
 from mosaic.utils.notebook_utils import NotebookUtils
 
 
-def enable_mosaic(spark: SparkSession, dbutils=None, jar_path:str=None, jar_autoattach:bool=True) -> None:
+def enable_mosaic(
+        spark: SparkSession, dbutils = None, log_info: bool = False,
+        jar_path: str = None, jar_autoattach: bool = True
+) -> None:
     """
     Enable Mosaic functions.
 
@@ -23,6 +26,11 @@ def enable_mosaic(spark: SparkSession, dbutils=None, jar_path:str=None, jar_auto
             The active SparkSession.
     dbutils : dbruntime.dbutils.DBUtils
             Optional, specify dbutils object used for `display` and `displayHTML` functions.
+    log_info : bool
+            Logging cannot be adjusted with Unity Catalog Shared Access clusters;
+            if you try to do so, will throw a Py4JSecurityException.
+             - True will try to setLogLevel to 'info'
+             - False will not; Default is False 
     jar_path : str
             Convenience when you need to change the JAR path for Unity Catalog
             Volumes with Shared Access clusters
@@ -54,17 +62,20 @@ def enable_mosaic(spark: SparkSession, dbutils=None, jar_path:str=None, jar_auto
        Explicitly specify the index system to use for optimized spatial joins. (Optional)
 
     """
-    # Set spark session 
-    # - also set confs for jar autoattach
-    #   and jar path
+    # Set spark session, conditionally: 
+    # - set conf for jar autoattach
+    # - set conf for jar path
+    # - set log level to 'info'
     if not jar_autoattach:
         spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
         print("...set 'spark.databricks.labs.mosaic.jar.autoattach' to false")
     if jar_path is not None:
         spark.conf.set("spark.databricks.labs.mosaic.jar.path", jar_path)
         print(f"...set 'spark.databricks.labs.mosaic.jar.path' to '{jar_path}'")
+    if log_info:
+        spark.sparkContext.setLogLevel('info')
     config.mosaic_spark = spark
-    _ = MosaicLibraryHandler(config.mosaic_spark)
+    _ = MosaicLibraryHandler(config.mosaic_spark, log_info = log_info)
     config.mosaic_context = MosaicContext(config.mosaic_spark)
 
     # Register SQL functions

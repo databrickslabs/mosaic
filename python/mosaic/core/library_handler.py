@@ -11,21 +11,23 @@ class MosaicLibraryHandler:
     _jar_path = None
     _jar_filename = None
     _auto_attached_enabled = None
-
-    def __init__(self, spark):
+   
+    def __init__(self, spark, log_info: bool = True):
         self.spark = spark
         self.sc = spark.sparkContext
-        log4jLogger = self.sc._jvm.org.apache.log4j
-        LOGGER = log4jLogger.LogManager.getLogger(__class__.__name__)
+        LOGGER = None
+        if log_info:
+            log4jLogger = self.sc._jvm.org.apache.log4j
+            LOGGER = log4jLogger.LogManager.getLogger(__class__.__name__)
 
         if self.auto_attach_enabled:
             jar_path = self.mosaic_library_location 
-            LOGGER.info(f"Looking for Mosaic JAR at {jar_path}.")
+            LOGGER and LOGGER.info(f"Looking for Mosaic JAR at {jar_path}.")
             if not os.path.exists(jar_path):
                 raise FileNotFoundError(
                     f"Mosaic JAR package {self._jar_filename} could not be located at {jar_path}."
                 )
-            LOGGER.info(f"Automatically attaching Mosaic JAR to cluster.")
+            LOGGER and LOGGER.info(f"Automatically attaching Mosaic JAR to cluster.")
             self.auto_attach()
 
     @property
