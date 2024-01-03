@@ -182,7 +182,7 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
         geometryAPI: GeometryAPI
     ): Seq[MosaicChip] = {
         val intersections = for (index <- borderIndices) yield {
-            val indexGeom = indexToGeometry(index, geometryAPI, makeSafe = true)
+            val indexGeom = indexToGeometry(index, geometryAPI)
             val intersect = geometry.intersection(indexGeom)
             val coerced = coerceChipGeometry(intersect, indexGeom, geometry)
             val isCore = coerced.equals(indexGeom)
@@ -207,7 +207,7 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       */
     def getCoreChips(coreIndices: Seq[Long], keepCoreGeom: Boolean, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
         coreIndices.map(index => {
-            val indexGeom = if (keepCoreGeom) indexToGeometry(index, geometryAPI, makeSafe = true) else null
+            val indexGeom = if (keepCoreGeom) indexToGeometry(index, geometryAPI) else null
             MosaicChip(isCore = true, Left(index), indexGeom)
         })
     }
@@ -220,7 +220,7 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       * @return
       *   An instance of [[MosaicGeometry]] corresponding to index.
       */
-    def indexToGeometry(index: Long, geometryAPI: GeometryAPI, makeSafe: Boolean = true): MosaicGeometry
+    def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry
 
     /**
       * Get the index ID corresponding to the provided coordinates.

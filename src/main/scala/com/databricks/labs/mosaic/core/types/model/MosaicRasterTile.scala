@@ -20,9 +20,6 @@ import scala.util.{Failure, Success, Try}
   *   Parent path of the raster.
   * @param driver
   *   Driver used to read the raster.
-  * @param seqNo
-  *   Sequence number of the raster, used if this is a single band extracted
-  *   from a multi-band raster.
   */
 case class MosaicRasterTile(
     index: Either[Long, String],

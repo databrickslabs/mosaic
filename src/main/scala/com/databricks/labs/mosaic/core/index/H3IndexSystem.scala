@@ -85,10 +85,10 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
                 val boundary = indexGeom.getShellPoints.head // first shell is always in head
                 boundary.map(_.distance(centroid)).max
             case _ =>
-                val extents = indexGeom.flatten.map(_.extent)
-                val parentExtent = (extents.map(_._1).min, extents.map(_._2).min, extents.map(_._3).max, extents.map(_._4).max)
-                val diag = math.sqrt(math.pow(parentExtent._3 - parentExtent._1, 2) + math.pow(parentExtent._4 - parentExtent._2, 2))
-                diag / 2
+                indexGeom.flatten.flatMap(_.boundary.flatten).maxBy(_.getLength).getLength
+//                val parentExtent = (extents.map(_._1).min, extents.map(_._2).min, extents.map(_._3).max, extents.map(_._4).max)
+//                val diag = math.sqrt(math.pow(parentExtent._3 - parentExtent._1, 2) + math.pow(parentExtent._4 - parentExtent._2, 2))
+//                diag / 2
         }
     }
 
@@ -103,20 +103,12 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       * @return
       *   An instance of [[Geometry]] corresponding to index.
       */
-    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI, makeSafe: Boolean): MosaicGeometry = {
+    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
 
-        val geom = if (makeSafe) {
-            if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
+        val geom = if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
             else makeSafeGeometry(extended, geometryAPI)
-        } else {
-            geometryAPI.geometry(
-                extended.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
-                POLYGON
-            )
-        }
-
 
         geom.setSpatialReference(crsID)
         geom

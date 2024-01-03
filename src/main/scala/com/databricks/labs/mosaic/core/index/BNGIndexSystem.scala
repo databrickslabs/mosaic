@@ -186,7 +186,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
 //        require(geometryAPI.isDefined, "GeometryAPI cannot be None for BNG Index System.")
         @tailrec
         def visit(queue: Set[Long], visited: Set[Long], result: Set[Long]): Set[Long] = {
-            val visits = queue.map(index => (index, geometry.contains(indexToGeometry(index, geometryAPI, makeSafe = true).getCentroid)))
+            val visits = queue.map(index => (index, geometry.contains(indexToGeometry(index, geometryAPI).getCentroid)))
             val matches = visits.filter(_._2)
             val newVisited = visited ++ visits.map(_._1)
             val newQueue = matches.flatMap(c => kLoop(c._1, 1).filterNot(newVisited.contains))
@@ -415,7 +415,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       * @return
       *   An instance of [[Geometry]] corresponding to index.
       */
-    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI, makeSafe: Boolean): MosaicGeometry = {
+    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
         val digits = indexDigits(index)
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution)

@@ -32,7 +32,7 @@ object BadIndexSystem extends IndexSystem(BooleanType) {
     override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Seq[Long] =
         throw new UnsupportedOperationException
 
-    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI, makeSafe: Boolean): MosaicGeometry = throw new UnsupportedOperationException
+    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = throw new UnsupportedOperationException
 
     override def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = throw new UnsupportedOperationException
 

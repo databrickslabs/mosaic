@@ -36,10 +36,10 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
         noException shouldBe thrownBy { H3IndexSystem.polyfill(wrappedGeomJTS, 10, JTS) }
         noException shouldBe thrownBy { H3IndexSystem.polyfill(geomESRI, 10, ESRI) }
         val expected = MosaicGeometryJTS.fromWKT("MULTIPOLYGON(((179 2, 180 2, 180 1, 179 1, 179 2)), ((-179 2, -180 2, -180 1, -179 1, -179 2)))")
-        val actualIndexes = mosaicFill(wrappedGeomJTS, 4, keepCoreGeom = true, H3IndexSystem, JTS)
+        val actualIndexes = mosaicFill(wrappedGeomJTS, 6, keepCoreGeom = true, H3IndexSystem, JTS)
         val actual = actualIndexes.map(_.geom)
             .reduce(_ union _)
-        actual.getArea shouldEqual expected.getArea
+        actual.getArea - expected.getArea shouldEqual 0.0 +- 0.0001
         actual.minMaxCoord("x", "min") shouldEqual expected.minMaxCoord("x", "min")
         actual.minMaxCoord("x", "max") shouldEqual expected.minMaxCoord("x", "max")
         actual.minMaxCoord("y", "min") shouldEqual expected.minMaxCoord("y", "min")

@@ -369,7 +369,7 @@ package object test {
 
         override def resolutions: Set[Int] = ???
 
-        override def indexToGeometry(index: Long, geometryAPI: GeometryAPI, makeSafe: Boolean): MosaicGeometry = ???
+        override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = ???
 
         override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = ???
 

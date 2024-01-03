@@ -211,7 +211,7 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
       *   An instance of [[MosaicGeometry]] corresponding to index.
       */
     // noinspection DuplicatedCode
-    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI, makeSafe: Boolean): MosaicGeometry = {
+    override def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry = {
 
         val cellNumber = getCellPosition(index)
         val resolution = getCellResolution(index)
