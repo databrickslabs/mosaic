@@ -70,10 +70,10 @@ case class RST_FromContent(
         }
         val driver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val ext = GDAL.getExtension(driver)
-        val rasterArr = rasterExpr.eval(input).asInstanceOf[Array[Byte]]
+        var rasterArr = rasterExpr.eval(input).asInstanceOf[Array[Byte]]
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         if (targetSize <= 0 && raster.size <= Integer.MAX_VALUE) {
-            raster = MosaicRasterGDAL.readRaster(rasterArr, parentPath, driver)
+            var raster = MosaicRasterGDAL.readRaster(rasterArr, parentPath, driver)
             var tile = MosaicRasterTile(null, raster, parentPath, driver)
             val row = tile.formatCellId(indexSystem).serialize()
             RasterCleaner.dispose(raster)
