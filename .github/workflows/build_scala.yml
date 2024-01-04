@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         python: [ 3.10.12 ]
-        numpy: [ 1.26.2 ]
+        numpy: [ 1.26.3 ]
         gdal: [ 3.4.1 ]
         spark: [ 3.4.0 ]
         R: [ 4.2.2 ]

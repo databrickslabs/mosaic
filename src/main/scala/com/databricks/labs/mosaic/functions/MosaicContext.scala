@@ -997,7 +997,7 @@ object MosaicContext extends Logging {
 
     val tmpDir: String = Files.createTempDirectory("mosaic").toAbsolutePath.toString
 
-    val mosaicVersion: String = "0.3.14"
+    val mosaicVersion: String = "0.4.0"
 
     private var instance: Option[MosaicContext] = None
 

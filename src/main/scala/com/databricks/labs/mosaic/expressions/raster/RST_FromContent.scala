@@ -18,7 +18,7 @@ import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expressio
 import org.apache.spark.sql.types.{DataType, IntegerType, StringType, StructField, StructType}
 import org.apache.spark.unsafe.types.UTF8String
 
-import java.nio.file.{Files, Paths, StandardOpenOption}
+import java.nio.file.{Files, Paths}
 
 /**
   * The raster for construction of a raster tile. This should be the first
@@ -85,8 +85,10 @@ case class RST_FromContent(
         } else {
             // If target size is <0 and we are here that means the file is too big to fit in memory
             // - write the initial raster to file (unsplit)
+            // - repeating the createDirectories for context isolation
             val rasterPath = PathUtils.createTmpFilePath(ext)
-            Files.write(Paths.get(rasterPath), rasterArr, StandardOpenOption.TRUNCATE_EXISTING)
+            Files.createDirectories(Paths.get(rasterPath).getParent)
+            Files.write(Paths.get(rasterPath), rasterArr)
 
             // We split to tiles of size 64MB
             val size = if (targetSize <= 0) 64 else targetSize
