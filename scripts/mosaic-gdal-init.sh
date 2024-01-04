@@ -56,8 +56,8 @@ then
   # - install specific numpy version
   # - install scipy version (dep conflict)
   pip install --upgrade pip
-  pip install --force-reinstall "numpy$NUMPY_VERSION"
-  pip install --force-reinstall "scipy$SCIPY_VERSION"
+  pip install --no-cache-dir --force-reinstall "numpy$NUMPY_VERSION"
+  pip install --no-cache-dir --force-reinstall "scipy$SCIPY_VERSION"
   
   # - install natives
   sudo apt-get install -y gdal-bin libgdal-dev
