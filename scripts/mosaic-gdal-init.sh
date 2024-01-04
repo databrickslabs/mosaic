@@ -29,6 +29,7 @@ WITH_FUSE_SO=0   # <- use fuse dir shared objects (vs wget)
 # - may be changed by conditional logic
 NUMPY_VERSION=1.26.2         # <- for GDAL
 SCIPY_VERSION='<1.12,>=1.11' # <- adjusted for numpy
+GDAL_VERSION=3.4.1           # <- ubuntugis is 3.4.3
 
 # - optional: install Mosaic
 if [ $WITH_MOSAIC == 1 ]
@@ -47,6 +48,7 @@ then
   if [ $WITH_UBUNTUGIS == 1 ]
   then
     sudo add-apt-repository ppa:ubuntugis/ppa
+    GDAL_VERSION=3.4.3
   fi
   sudo apt-get update -y
   
@@ -56,8 +58,11 @@ then
   pip install --no-cache-dir --force-reinstall numpy==$NUMPY_VERSION
   pip install --no-cache-dir --force-reinstall "scipy$SCIPY_VERSION"
   
-  # - install natives + python gdal
-  sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
+  # - install natives
+  sudo apt-get install -y gdal-bin libgdal-dev
+
+  # - install gdal with numpy
+  pip install --no-cache-dir --force-reinstall GDAL[numpy]==$GDAL_VERSION
 
   # - add pre-build JNI shared object to the path
   if [ $WITH_FUSE_SO == 1 ]

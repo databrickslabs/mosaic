@@ -28,9 +28,11 @@ runs:
             # - install numpy first
             pip install --upgrade pip
             pip install --no-cache-dir --force-reinstall numpy==${{ matrix.numpy }}
-            # - install natives + gdal python
+            # - install natives
             sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
-            sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
+            sudo apt-get install -y gdal-bin libgdal-dev
+            # - install gdal with numpy
+            pip install --no-cache-dir --force-reinstall 'GDAL[numpy]==${{ matrix.gdal }}'
             # - add the so files 
             sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so
             sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30
