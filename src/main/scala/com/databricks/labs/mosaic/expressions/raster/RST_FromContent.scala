@@ -18,7 +18,7 @@ import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expressio
 import org.apache.spark.sql.types.{DataType, IntegerType, StructField, StructType}
 import org.apache.spark.unsafe.types.UTF8String
 
-import java.nio.file.{Files, Paths, StandardCopyOption, StandardOpenOption}
+import java.nio.file.{Files, Paths, StandardOpenOption}
 
 /**
   * The raster for construction of a raster tile. This should be the first
@@ -72,7 +72,7 @@ case class RST_FromContent(
         val ext = GDAL.getExtension(driver)
         var rasterArr = rasterExpr.eval(input).asInstanceOf[Array[Byte]]
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
-        if (targetSize <= 0 && rasterArr.size <= Integer.MAX_VALUE) {
+        if (targetSize <= 0 && rasterArr.length <= Integer.MAX_VALUE) {
             var raster = MosaicRasterGDAL.readRaster(rasterArr, parentPath, driver)
             var tile = MosaicRasterTile(null, raster, parentPath, driver)
             val row = tile.formatCellId(indexSystem).serialize()
@@ -127,8 +127,9 @@ object RST_FromContent extends WithExpressionInfo {
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
         (children: Seq[Expression]) => {
-            val sizeExpr = if (children.length == 3) new Literal(-1, IntegerType) else children(3)
-            RST_FromContent(children(0), children(1), children(2), sizeExpr, expressionConfig)
+            val sizeExpr = if (children.length < 4) new Literal(-1, IntegerType) else children(3)
+            val pathExpr = if (children.length < 3) new Literal(null, StringType) else children(2)
+            RST_FromContent(children(0), children(1), pathExpr, sizeExpr, expressionConfig)
         }
     }
 
