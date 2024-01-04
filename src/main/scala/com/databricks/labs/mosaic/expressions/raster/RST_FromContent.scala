@@ -70,13 +70,15 @@ case class RST_FromContent(
         }
         val driver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val ext = GDAL.getExtension(driver)
-        val raster = rasterExpr.eval(input).asInstanceOf[Array[Byte]]
+        val rasterArr = rasterExpr.eval(input).asInstanceOf[Array[Byte]]
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         if (targetSize <= 0 && raster.size <= Integer.MAX_VALUE) {
+            raster = MosaicRasterGDAL.readRaster(rasterArr, parentPath, driver)
             var tile = MosaicRasterTile(null, raster, parentPath, driver)
             val row = tile.formatCellId(indexSystem).serialize()
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
+            rasterArr = null
             raster = null
             tile = null
             Seq(InternalRow.fromSeq(Seq(row)))
@@ -84,7 +86,7 @@ case class RST_FromContent(
             // If target size is <0 and we are here that means the file is too big to fit in memory
             // - write the initial raster to file (unsplit)
             val rasterPath = PathUtils.createTmpFilePath(ext)
-            Files.write(Paths.get(rasterPath), raster, StandardOpenOption.TRUNCATE_EXISTING)
+            Files.write(Paths.get(rasterPath), rasterArr, StandardOpenOption.TRUNCATE_EXISTING)
 
             // We split to tiles of size 64MB
             val size = if (targetSize <= 0) 64 else targetSize
@@ -92,6 +94,7 @@ case class RST_FromContent(
             val rows = tiles.map(_.formatCellId(indexSystem).serialize())
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(rasterPath))
+            rasterArr = null
             tiles = null
             rows.map(row => InternalRow.fromSeq(Seq(row)))
         }
