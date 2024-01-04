@@ -60,7 +60,7 @@ then
   pip install --no-cache-dir --force-reinstall "scipy$SCIPY_VERSION"
   
   # - install natives
-  sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
+  sudo apt-get install -y gdal-bin libgdal-dev
 
   # - install gdal with numpy
   pip install GDAL[numpy]==$GDAL_VERSION
