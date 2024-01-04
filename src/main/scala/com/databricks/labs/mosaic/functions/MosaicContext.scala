@@ -704,11 +704,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
-        def rst_fromcontent(raster: Column, driver:Column): Column = 
-            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(None).cast('string').expr, lit(-1).expr, expressionConfig))
+        // def rst_fromcontent(raster: Column, driver:Column): Column = 
+        //     ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(null).cast('string').expr, lit(-1).expr, expressionConfig))
         // -- uncomment after initial testing
         // def rst_fromcontent(raster: Column, driver:String): Column = 
-        //     ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(None).cast('string').expr, lit(-1).expr, expressionConfig))
+        //     ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(null).cast('string').expr, lit(-1).expr, expressionConfig))
         // def rst_fromcontent(raster: Column, driver:Column, parentPath:Column): Column =
         //     ColumnAdapter(RST_FromContent(raster.expr, driver.expr, parentPath.expr, lit(-1).expr, expressionConfig))
         // def rst_fromcontent(raster: Column, driver:String, parentPath:Column): Column =
