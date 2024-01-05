@@ -14,8 +14,10 @@ trait RST_FromContentBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark
+        
         import mc.functions._
         import sc.implicits._
+        import org.apache.spark.sql.functions._
 
         val rastersInMemory = spark.read
             .format("binaryFile")
