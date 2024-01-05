@@ -344,14 +344,16 @@ case class MosaicRasterGDAL(
       * bytes.
       */
     def cleanUp(): Unit = {
-        val isSubdataset = PathUtils.isSubdataset(path)
-        val filePath = if (isSubdataset) PathUtils.fromSubdatasetPath(path) else path
-        val pamFilePath = s"$filePath.aux.xml"
-        if (path != PathUtils.getCleanPath(parentPath)) {
+        if (path != null){
+          val isSubdataset = PathUtils.isSubdataset(path)
+          val filePath = if (isSubdataset) PathUtils.fromSubdatasetPath(path) else path
+          val pamFilePath = s"$filePath.aux.xml"
+          if (path != PathUtils.getCleanPath(parentPath)) {
             Try(gdal.GetDriverByName(driverShortName).Delete(path))
             Try(Files.deleteIfExists(Paths.get(path)))
             Try(Files.deleteIfExists(Paths.get(filePath)))
             Try(Files.deleteIfExists(Paths.get(pamFilePath)))
+          }
         }
     }
 
