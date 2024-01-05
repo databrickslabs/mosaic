@@ -344,17 +344,46 @@ case class MosaicRasterGDAL(
       * bytes.
       */
     def cleanUp(): Unit = {
-        if (path != null){
-          val isSubdataset = PathUtils.isSubdataset(path)
-          val filePath = if (isSubdataset) PathUtils.fromSubdatasetPath(path) else path
-          val pamFilePath = s"$filePath.aux.xml"
-          if (path != PathUtils.getCleanPath(parentPath)) {
-            Try(gdal.GetDriverByName(driverShortName).Delete(path))
-            Try(Files.deleteIfExists(Paths.get(path)))
-            Try(Files.deleteIfExists(Paths.get(filePath)))
-            Try(Files.deleteIfExists(Paths.get(pamFilePath)))
+      if (path != null){
+        val cleanPath = PathUtils.getCleanPath(path)
+        val cleanParent = {
+          Try {
+            PathUtils.getCleanPath(parentPath)
+          } catch {
+              case _: Any => null
           }
         }
+        val hasParent = cleanParent != null
+        val isParent = hasParent && cleanPath != cleanParent
+        //need this for SecurityException on volume access blocked
+        val isAccessible = {
+          Try {
+            Files.exists(Paths.get(cleanPath))
+          } catch {
+              case _: Any => false
+          }
+        }
+        if (!isParent && isAccessible) {
+          Try(gdal.GetDriverByName(driverShortName).Delete(cleanPath))
+          Try(Files.deleteIfExists(Paths.get(cleanPath)))
+          Try(Files.deleteIfExists(Paths.get(s"$cleanPath.aux.xml")))
+        } 
+        if (!isParent && PathUtils.isSubdataset(path)) {
+          val filePath = PathUtils.fromSubdatasetPath(path)
+          //need this for SecurityException on volume access blocked
+          val isFileAccessible = {
+            Try {
+              Files.exists(filePath)
+            } catch {
+              case _: Any => false
+            }
+            if (isFileAccessible) {
+              Try(Files.deleteIfExists(Paths.get(filePath)))
+              Try(Files.deleteIfExists(Paths.get(s"$filePath.aux.xml")))
+            }
+          }
+        }
+      }
     }
 
     /**
