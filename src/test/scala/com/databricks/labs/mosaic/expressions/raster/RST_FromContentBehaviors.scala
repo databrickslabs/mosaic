@@ -22,7 +22,7 @@ trait RST_FromContentBehaviors extends QueryTest {
             .load("src/test/resources/modis")
 
         val gridTiles = rastersInMemory
-            .withColumn("tile", rst_fromcontent($"content"), lit("GTiff"))
+            .withColumn("tile", rst_fromcontent($"content", lit("GTiff"))
             .withColumn("bbox", rst_boundingbox($"tile"))
             .withColumn("cent", st_centroid($"bbox"))
             .withColumn("clip_region", st_buffer($"cent", 0.1))
