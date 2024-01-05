@@ -44,6 +44,7 @@ then
   sudo apt-get update -y
   
   # - install natives
+  sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
   sudo apt-get install -y gdal-bin libgdal-dev python3-numpy python3-gdal
 
   # - pip install gdal
