@@ -37,35 +37,35 @@ trait RST_FromContentBehaviors extends QueryTest {
 
         gridTiles.forall(identity) should be(true)
 
-        // rastersInMemory.createOrReplaceTempView("source")
+        rastersInMemory.createOrReplaceTempView("source")
 
-        // val gridTilesSQL = spark
-        //     .sql("""
-        //            |with subquery as (
-        //            |   select rst_fromcontent(content, 'GTiff') as tile from source
-        //            |)
-        //            |select st_area(rst_boundingbox(tile)) != st_area(rst_boundingbox(rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 0.1)))) as result
-        //            |from subquery
-        //            |""".stripMargin)
-        //     .as[Boolean]
-        //     .collect()
+        val gridTilesSQL = spark
+            .sql("""
+                   |with subquery as (
+                   |   select rst_fromcontent(content, 'GTiff') as tile from source
+                   |)
+                   |select st_area(rst_boundingbox(tile)) != st_area(rst_boundingbox(rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 0.1)))) as result
+                   |from subquery
+                   |""".stripMargin)
+            .as[Boolean]
+            .collect()
 
-        // gridTilesSQL.forall(identity) should be(true)
+        gridTilesSQL.forall(identity) should be(true)
 
 
-        // val gridTilesSQL2 = spark
-        //     .sql(
-        //         """
-        //           |with subquery as (
-        //           |   select rst_fromcontent(content, 'GTiff', 4) as tile from source
-        //           |)
-        //           |select st_area(rst_boundingbox(tile)) != st_area(rst_boundingbox(rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 0.1)))) as result
-        //           |from subquery
-        //           |""".stripMargin)
-        //     .as[Boolean]
-        //     .collect()
+        val gridTilesSQL2 = spark
+            .sql(
+                """
+                  |with subquery as (
+                  |   select rst_fromcontent(content, 'GTiff', 4) as tile from source
+                  |)
+                  |select st_area(rst_boundingbox(tile)) != st_area(rst_boundingbox(rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 0.1)))) as result
+                  |from subquery
+                  |""".stripMargin)
+            .as[Boolean]
+            .collect()
 
-        // gridTilesSQL2.forall(identity) should be(true)
+        gridTilesSQL2.forall(identity) should be(true)
 
     }
 
