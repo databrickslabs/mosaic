@@ -12,8 +12,9 @@ runs:
       run: |
         cd python
         pip install build wheel pyspark==${{ matrix.spark }} 
-        pip install numpy==${{ matrix.numpy }}
-        pip install gdal==${{ matrix.gdal }}
+        pip install gdal[numpy]==${{ matrix.gdal }}
+        # https://github.com/OSGeo/gdal/issues/5844 fix
+        pip install --no-cache-dir --force-reinstall numpy==${{ matrix.numpy }}
         pip install .
     - name: Test and build python package
       shell: bash
