@@ -11,7 +11,7 @@
 #     - setup_gdal(...)
 # [4] this script has conditional logic based on variables
 # Author: Michael Johns | mjohns@databricks.com
-# Last Modified: 04 JAN, 2024
+# Last Modified: 05 JAN, 2024
 
 # TEMPLATE-BASED REPLACEMENT
 # - can also be manually specified
@@ -28,8 +28,7 @@ WITH_FUSE_SO=0   # <- use fuse dir shared objects (vs wget)
 # SPECIFIED VERSIONS 
 # - may be changed by conditional logic
 # - https://docs.scipy.org/doc/scipy/dev/toolchain.html#toolchain-roadmap
-NUMPY_VERSION='<1.27,>=1.26' # <- for GDAL
-SCIPY_VERSION='<1.12,>=1.11' # <- adjusted for numpy
+NUMPY_VERSION='<1.23,>=1.22' # <- for GDAL + Mosaic
 GDAL_VERSION=3.4.1           # <- ubuntugis is 3.4.3
 
 # - optional: install Mosaic
@@ -54,10 +53,8 @@ then
   sudo apt-get update -y
   
   # - install specific numpy version
-  # - install scipy version (dep conflict)
   pip install --upgrade pip
   pip install --no-cache-dir --force-reinstall "numpy$NUMPY_VERSION"
-  pip install --no-cache-dir --force-reinstall "scipy$SCIPY_VERSION"
   
   # - install natives
   sudo apt-get install -y gdal-bin libgdal-dev
