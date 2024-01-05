@@ -10,11 +10,11 @@ runs:
     - name: Install python dependencies
       shell: bash
       run: |
+        # - install natives for gdal python
+        sudo apt-get install -y python3-numpy python3-gdal
+        # - install pyspark
         cd python
         pip install build wheel pyspark==${{ matrix.spark }} 
-        pip install gdal[numpy]==${{ matrix.gdal }}
-        # https://github.com/OSGeo/gdal/issues/5844 fix
-        pip install --no-cache-dir --force-reinstall numpy==${{ matrix.numpy }}
         pip install .
     - name: Test and build python package
       shell: bash
