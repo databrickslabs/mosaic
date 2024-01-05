@@ -344,7 +344,7 @@ case class MosaicRasterGDAL(
       * bytes.
       */
     def cleanUp(): Unit = {
-      if (path != null){
+      if (path != null) {
         val cleanPath = PathUtils.getCleanPath(path)
         val cleanParent = {
           try {
@@ -370,7 +370,7 @@ case class MosaicRasterGDAL(
           Try(Files.deleteIfExists(Paths.get(s"$cleanPath.aux.xml")))
         } 
 
-        if (!isParent && PathUtils.isSubdataset(path)) {
+        if (PathUtils.isSubdataset(path)) {
           val filePath = PathUtils.fromSubdatasetPath(path)
           //need this for SecurityException on volume access blocked
           val isFileAccessible = {
