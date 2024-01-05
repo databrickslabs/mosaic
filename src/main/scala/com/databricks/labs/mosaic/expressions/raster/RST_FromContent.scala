@@ -64,8 +64,8 @@ case class RST_FromContent(
         var rasterArr = rasterExpr.eval(input).asInstanceOf[Array[Byte]]
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         if (targetSize <= 0 && rasterArr.length <= Integer.MAX_VALUE) {
-            var raster = MosaicRasterGDAL.readRaster(rasterArr, null, driver)
-            var tile = MosaicRasterTile(null, raster, null, driver)
+            var raster = MosaicRasterGDAL.readRaster(rasterArr, PathUtils.NO_PATH_STRING, driver)
+            var tile = MosaicRasterTile(null, raster, PathUtils.NO_PATH_STRING, driver)
             val row = tile.formatCellId(indexSystem).serialize()
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
@@ -83,7 +83,7 @@ case class RST_FromContent(
 
             // We split to tiles of size 64MB
             val size = if (targetSize <= 0) 64 else targetSize
-            var tiles = ReTileOnRead.localSubdivide(rasterPath, null, size)
+            var tiles = ReTileOnRead.localSubdivide(rasterPath, PathUtils.NO_PATH_STRING, size)
             val rows = tiles.map(_.formatCellId(indexSystem).serialize())
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(rasterPath))

@@ -8,6 +8,8 @@ import java.nio.file.{Files, Paths}
 
 object PathUtils {
 
+    val NO_PATH_STRING = "no_path"
+
     def getCleanPath(path: String): String = {
         val cleanPath = path
             .replace("file:/", "/")

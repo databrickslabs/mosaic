@@ -344,7 +344,6 @@ case class MosaicRasterGDAL(
       * bytes.
       */
     def cleanUp(): Unit = {
-      try {
         val isSubdataset = PathUtils.isSubdataset(path)
         val filePath = if (isSubdataset) PathUtils.fromSubdatasetPath(path) else path
         val pamFilePath = s"$filePath.aux.xml"
@@ -354,9 +353,6 @@ case class MosaicRasterGDAL(
             Try(Files.deleteIfExists(Paths.get(filePath)))
             Try(Files.deleteIfExists(Paths.get(pamFilePath)))
         }
-      } catch {
-          case _: Any => ()
-      }
     }
 
     /**
