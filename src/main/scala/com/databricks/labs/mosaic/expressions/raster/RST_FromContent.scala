@@ -130,7 +130,7 @@ object RST_FromContent extends WithExpressionInfo {
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
         (children: Seq[Expression]) => {
             val sizeExpr = if (children.length < 3) new Literal(-1, IntegerType) else children(2)
-            val pathExpr = if (children.length < 4) new Literal("<no parentPath>", StringType) else children(3)
+            val pathExpr = if (children.length < 4) new Literal(null, StringType) else children(3)
             RST_FromContent(children(0), children(1), sizeExpr, pathExpr, expressionConfig)
         }
     }
