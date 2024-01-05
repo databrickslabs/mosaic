@@ -40,7 +40,7 @@ trait RST_FromContentBehaviors extends QueryTest {
         val gridTilesSQL = spark
             .sql("""
                    |with subquery as (
-                   |   select rst_fromcontent(content) as tile from source
+                   |   select rst_fromcontent(content, "GTiff") as tile from source
                    |)
                    |select st_area(rst_boundingbox(tile)) != st_area(rst_boundingbox(rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 0.1)))) as result
                    |from subquery
@@ -55,7 +55,7 @@ trait RST_FromContentBehaviors extends QueryTest {
             .sql(
                 """
                   |with subquery as (
-                  |   select rst_fromcontent(content, 4) as tile from source
+                  |   select rst_fromcontent(content, "GTiff", 4) as tile from source
                   |)
                   |select st_area(rst_boundingbox(tile)) != st_area(rst_boundingbox(rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 0.1)))) as result
                   |from subquery
