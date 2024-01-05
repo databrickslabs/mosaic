@@ -344,47 +344,18 @@ case class MosaicRasterGDAL(
       * bytes.
       */
     def cleanUp(): Unit = {
-      if (path != null) {
-        val cleanPath = PathUtils.getCleanPath(path)
-        val cleanParent = {
-          try {
-            PathUtils.getCleanPath(parentPath)
-          } catch {
-            case _: Any => null
-          }
-        }
-        val hasParent = cleanParent != null
-        val isParent = hasParent && cleanPath != cleanParent
-
-        //need this for SecurityException on volume access blocked
-        val isAccessible = {
-          try {
-            Files.exists(Paths.get(cleanPath))
-          } catch {
-              case _: Any => false
-          }
-        }
-        if (!isParent && isAccessible) {
-          Try(gdal.GetDriverByName(driverShortName).Delete(cleanPath))
-          Try(Files.deleteIfExists(Paths.get(cleanPath)))
-          Try(Files.deleteIfExists(Paths.get(s"$cleanPath.aux.xml")))
-        } 
-
-        if (PathUtils.isSubdataset(path)) {
-          val filePath = PathUtils.fromSubdatasetPath(path)
-          //need this for SecurityException on volume access blocked
-          val isFileAccessible = {
-            try {
-              Files.exists(Paths.get(filePath))
-            } catch {
-                case _: Any => false
-            }
-          }
-          if (isFileAccessible) {
+      try {
+        val isSubdataset = PathUtils.isSubdataset(path)
+        val filePath = if (isSubdataset) PathUtils.fromSubdatasetPath(path) else path
+        val pamFilePath = s"$filePath.aux.xml"
+        if (path != PathUtils.getCleanPath(parentPath)) {
+            Try(gdal.GetDriverByName(driverShortName).Delete(path))
+            Try(Files.deleteIfExists(Paths.get(path)))
             Try(Files.deleteIfExists(Paths.get(filePath)))
-            Try(Files.deleteIfExists(Paths.get(s"$filePath.aux.xml")))
-          }
+            Try(Files.deleteIfExists(Paths.get(pamFilePath)))
         }
+      } catch {
+          case _: Any => ()
       }
     }
 
