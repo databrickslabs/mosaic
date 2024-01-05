@@ -704,18 +704,20 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
+        
         def rst_fromcontent(raster: Column, driver:Column): Column = 
-            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(-1).expr, lit(null).cast("string").expr, expressionConfig))
+            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver:String): Column = 
-            ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(-1).expr, lit(null).cast("string").expr, expressionConfig))
+            ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver:Column, sizeInMB:Column): Column =
-            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, sizeInMB.expr, lit(null).cast("string").expr, expressionConfig))
+            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, sizeInMB.expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver:Column, sizeInMB:Int): Column =
-            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(sizeInMB).expr, lit(null).cast("string").expr, expressionConfig))
+            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(sizeInMB).expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver:String, sizeInMB: Int): Column =
-            ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(sizeInMB).expr, lit(null).cast("string").expr, expressionConfig))
+            ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(sizeInMB).expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver:String, sizeInMB: Int, parentPath:Column): Column =
             ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(sizeInMB).expr, parentPath.expr, expressionConfig))
+        
         def rst_fromfile(raster: Column): Column = ColumnAdapter(RST_FromFile(raster.expr, lit(-1).expr, expressionConfig))
         def rst_fromfile(raster: Column, sizeInMB: Column): Column =
             ColumnAdapter(RST_FromFile(raster.expr, sizeInMB.expr, expressionConfig))
