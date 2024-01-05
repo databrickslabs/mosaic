@@ -28,7 +28,6 @@ case class RST_FromContent(
     rasterExpr: Expression,
     driverExpr: Expression,
     sizeInMB: Expression,
-    parentPathExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
       with Serializable
@@ -47,7 +46,7 @@ case class RST_FromContent(
 
     override def inline: Boolean = false
 
-    override def children: Seq[Expression] = Seq(rasterExpr, driverExpr, sizeInMB, parentPathExpr)
+    override def children: Seq[Expression] = Seq(rasterExpr, driverExpr, sizeInMB)
 
     override def elementSchema: StructType = StructType(Array(StructField("tile", dataType)))
 
@@ -60,21 +59,13 @@ case class RST_FromContent(
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
-        //parentPath may be null (it is not used here as content may be different)
-        val parentPath = {
-            try {
-                parentPathExpr.eval(input).asInstanceOf[UTF8String].toString
-            } catch {
-                case _: Any => null
-            }
-        }
         val driver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val ext = GDAL.getExtension(driver)
         var rasterArr = rasterExpr.eval(input).asInstanceOf[Array[Byte]]
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         if (targetSize <= 0 && rasterArr.length <= Integer.MAX_VALUE) {
-            var raster = MosaicRasterGDAL.readRaster(rasterArr, parentPath, driver)
-            var tile = MosaicRasterTile(null, raster, parentPath, driver)
+            var raster = MosaicRasterGDAL.readRaster(rasterArr, null, driver)
+            var tile = MosaicRasterTile(null, raster, null, driver)
             val row = tile.formatCellId(indexSystem).serialize()
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
@@ -92,7 +83,7 @@ case class RST_FromContent(
 
             // We split to tiles of size 64MB
             val size = if (targetSize <= 0) 64 else targetSize
-            var tiles = ReTileOnRead.localSubdivide(rasterPath, parentPath, size)
+            var tiles = ReTileOnRead.localSubdivide(rasterPath, null, size)
             val rows = tiles.map(_.formatCellId(indexSystem).serialize())
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(rasterPath))
@@ -116,13 +107,13 @@ object RST_FromContent extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2, expr3, expr4) - Returns raster tiles from binary content within threshold in MBs.
+          |_FUNC_(expr1, expr2, expr3) - Returns raster tiles from binary content within threshold in MBs.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(raster, driver, sizeInMB, parentPath);
+          |      > SELECT _FUNC_(raster, driver, sizeInMB);
           |        {index_id, raster, parentPath, driver}
           |        ...
           |  """.stripMargin
@@ -130,8 +121,7 @@ object RST_FromContent extends WithExpressionInfo {
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
         (children: Seq[Expression]) => {
             val sizeExpr = if (children.length < 3) new Literal(-1, IntegerType) else children(2)
-            val pathExpr = if (children.length < 4) new Literal(null, StringType) else children(3)
-            RST_FromContent(children(0), children(1), sizeExpr, pathExpr, expressionConfig)
+            RST_FromContent(children(0), children(1), sizeExpr, expressionConfig)
         }
     }
 
