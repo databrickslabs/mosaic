@@ -375,7 +375,7 @@ case class MosaicRasterGDAL(
           //need this for SecurityException on volume access blocked
           val isFileAccessible = {
             try {
-              Files.exists(filePath)
+              Files.exists(Paths.get(filePath))
             } catch {
                 case _: Any => false
             }
