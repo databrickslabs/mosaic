@@ -46,6 +46,10 @@ then
   # - install natives
   sudo apt-get install -y gdal-bin libgdal-dev python3-numpy python3-gdal
 
+  # - pip install gdal
+  pip install --upgrade pip
+  pip install gdal==$GDAL_VERSION
+
   # - add pre-build JNI shared object to the path
   if [ $WITH_FUSE_SO == 1 ]
   then
