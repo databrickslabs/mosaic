@@ -13,6 +13,8 @@ runs:
         # - install pip libs
         cd python
         pip install build wheel pyspark==${{ matrix.spark }} 
+        pip install --no-cache-dir --force-reinstall gdal[numpy]==${{ matrix.gdal }}
+        pip install --no-cache-dir --force-reinstall numpy==${{ matrix.numpy }}
         pip install .
     - name: Test and build python package
       shell: bash
