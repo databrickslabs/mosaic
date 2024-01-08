@@ -29,8 +29,8 @@ runs:
             sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
             sudo apt-get install -y gdal-bin libgdal-dev python3-numpy python3-gdal
             # - install pip libs
-            pip install --upgrade pip
-            pip install gdal==${{ matrix.gdal }}
+            pip install --no-build-isolation --upgrade pip
+            pip install --no-build-isolation gdal==${{ matrix.gdal }}
             # - add the so files 
             sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so
             sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30

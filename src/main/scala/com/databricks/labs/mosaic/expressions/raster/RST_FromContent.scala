@@ -63,7 +63,8 @@ case class RST_FromContent(
         val ext = GDAL.getExtension(driver)
         var rasterArr = rasterExpr.eval(input).asInstanceOf[Array[Byte]]
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
-        if (targetSize <= 0 && rasterArr.length <= Integer.MAX_VALUE) {
+        if (targetSize <= 0 || rasterArr.length <= targetSize) {
+            // - no split required
             var raster = MosaicRasterGDAL.readRaster(rasterArr, PathUtils.NO_PATH_STRING, driver)
             var tile = MosaicRasterTile(null, raster, PathUtils.NO_PATH_STRING, driver)
             val row = tile.formatCellId(indexSystem).serialize()
@@ -74,16 +75,15 @@ case class RST_FromContent(
             tile = null
             Seq(InternalRow.fromSeq(Seq(row)))
         } else {
-            // If target size is <0 and we are here that means the file is too big to fit in memory
+            // target size is > 0 and raster size > target size
             // - write the initial raster to file (unsplit)
-            // - repeating the createDirectories for context isolation
+            // - createDirectories in case of context isolation
             val rasterPath = PathUtils.createTmpFilePath(ext)
             Files.createDirectories(Paths.get(rasterPath).getParent)
             Files.write(Paths.get(rasterPath), rasterArr)
 
-            // We split to tiles of size 64MB
-            val size = if (targetSize <= 0) 64 else targetSize
-            var tiles = ReTileOnRead.localSubdivide(rasterPath, PathUtils.NO_PATH_STRING, size)
+            // split to tiles up to specifed threshold
+            var tiles = ReTileOnRead.localSubdivide(rasterPath, PathUtils.NO_PATH_STRING, targetSize)
             val rows = tiles.map(_.formatCellId(indexSystem).serialize())
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(rasterPath))
