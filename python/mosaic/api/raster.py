@@ -917,19 +917,18 @@ def rst_tessellate(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
     )
 
 
-def rst_fromcontent(raster: ColumnOrName, driver: ColumnOrName, parentPath: ColumnOrName, sizeInMB: ColumnOrName) -> Column:
+def rst_fromcontent(raster: ColumnOrName, driver: ColumnOrName, sizeInMB: ColumnOrName) -> Column:
     """
     Tiles the raster binary into tiles of the given size.
     :param raster:
     :param driver:
-    :param parentPath:
     :param sizeInMB:
     :return:
     """
 
     return config.mosaic_context.invoke_function(
         "rst_fromcontent", pyspark_to_java_column(raster), pyspark_to_java_column(driver), 
-        pyspark_to_java_column(parentPath), pyspark_to_java_column(sizeInMB)
+        pyspark_to_java_column(sizeInMB)
     )
 
 
