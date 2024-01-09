@@ -28,6 +28,7 @@ package object mosaic {
     val MOSAIC_RASTER_READ_AS_PATH = "as_path"
     val MOSAIC_RASTER_RE_TILE_ON_READ = "retile_on_read"
 
+
     def read: MosaicDataFrameReader = new MosaicDataFrameReader(SparkSession.builder().getOrCreate())
 
 }

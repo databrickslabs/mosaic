@@ -17,8 +17,8 @@ trait ST_SimplifyBehaviors extends QueryTest {
     def simplifyBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
-        import mc.functions._
         val sc = spark
+        import mc.functions._
         import sc.implicits._
         mc.register(spark)
 

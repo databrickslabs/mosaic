@@ -15,6 +15,7 @@ __all__ = [
     "rst_combineavg",
     "rst_derivedband",
     "rst_frombands",
+    "rst_fromcontent",
     "rst_fromfile",
     "rst_georeference",
     "rst_getnodata",
@@ -913,6 +914,21 @@ def rst_tessellate(raster: ColumnOrName, resolution: ColumnOrName) -> Column:
         "rst_tessellate",
         pyspark_to_java_column(raster),
         pyspark_to_java_column(resolution),
+    )
+
+
+def rst_fromcontent(raster: ColumnOrName, driver: ColumnOrName, sizeInMB: ColumnOrName) -> Column:
+    """
+    Tiles the raster binary into tiles of the given size.
+    :param raster:
+    :param driver:
+    :param sizeInMB:
+    :return:
+    """
+
+    return config.mosaic_context.invoke_function(
+        "rst_fromcontent", pyspark_to_java_column(raster), pyspark_to_java_column(driver), 
+        pyspark_to_java_column(sizeInMB)
     )
 
 

@@ -18,6 +18,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set(MOSAIC_RASTER_API, "GDAL")
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQL")
         var spark = withConf(conf)
+        spark.sparkContext.setLogLevel("FATAL")
         it should behave like sqlRegister(MosaicContext.build(H3IndexSystem, JTS), spark)
 
         conf = new SparkConf(false)
@@ -26,6 +27,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set(MOSAIC_RASTER_API, "GDAL")
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQL")
         spark = withConf(conf)
+        spark.sparkContext.setLogLevel("FATAL")
         it should behave like sqlRegister(MosaicContext.build(BNGIndexSystem, JTS), spark)
 
         conf = new SparkConf(false)
@@ -34,6 +36,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
             .set(MOSAIC_RASTER_API, "GDAL")
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQL")
         spark = withConf(conf)
+        spark.sparkContext.setLogLevel("FATAL")
         it should behave like {
             an[Error] should be thrownBy spark.sql("""show functions""").collect()
         }
@@ -41,6 +44,7 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
         conf = new SparkConf(false)
             .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicSQLDefault")
         spark = withConf(conf)
+        spark.sparkContext.setLogLevel("FATAL")
         it should behave like sqlRegister(MosaicContext.build(H3IndexSystem, JTS), spark)
 
     }
@@ -49,9 +53,10 @@ class TestSQLExtensions extends AnyFlatSpec with SQLExtensionsBehaviors with Spa
         assume(System.getProperty("os.name") == "Linux")
 
         val conf = new SparkConf(loadDefaults = false)
-            .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicGDAL")
             .set(MOSAIC_GDAL_NATIVE, "true")
+            .set("spark.sql.extensions", "com.databricks.labs.mosaic.sql.extensions.MosaicGDAL")
         val spark = withConf(conf)
+        spark.sparkContext.setLogLevel("FATAL")
         it should behave like mosaicGDAL(MosaicContext.build(H3IndexSystem, JTS), spark)
 
     }

@@ -294,6 +294,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_Subdatasets](expressionConfig)
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
+        mosaicRegistry.registerExpression[RST_FromContent](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromFile](expressionConfig)
         mosaicRegistry.registerExpression[RST_ToOverlappingTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_TryOpen](expressionConfig)
@@ -703,6 +704,16 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
+        def rst_fromcontent(raster: Column, driver:Column): Column = 
+            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(-1).expr, expressionConfig))
+        def rst_fromcontent(raster: Column, driver:String): Column = 
+            ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(-1).expr, expressionConfig))
+        def rst_fromcontent(raster: Column, driver:Column, sizeInMB:Column): Column =
+            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, sizeInMB.expr, expressionConfig))
+        def rst_fromcontent(raster: Column, driver:Column, sizeInMB:Int): Column =
+            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(sizeInMB).expr, expressionConfig))
+        def rst_fromcontent(raster: Column, driver:String, sizeInMB: Int): Column =
+            ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(sizeInMB).expr, expressionConfig))
         def rst_fromfile(raster: Column): Column = ColumnAdapter(RST_FromFile(raster.expr, lit(-1).expr, expressionConfig))
         def rst_fromfile(raster: Column, sizeInMB: Column): Column =
             ColumnAdapter(RST_FromFile(raster.expr, sizeInMB.expr, expressionConfig))
@@ -967,7 +978,7 @@ object MosaicContext extends Logging {
 
     val tmpDir: String = Files.createTempDirectory("mosaic").toAbsolutePath.toString
 
-    val mosaicVersion: String = "0.3.14"
+    val mosaicVersion: String = "0.4.0"
 
     private var instance: Option[MosaicContext] = None
 
@@ -994,17 +1005,18 @@ object MosaicContext extends Logging {
     // noinspection ScalaStyle,ScalaWeakerAccess
     def checkDBR(spark: SparkSession): Boolean = {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "0")
-        val isML = sparkVersion.contains("-ml-")
-        val isPhoton = spark.conf.getOption("spark.databricks.photon.enabled").getOrElse("false").toBoolean
-        val isTest = !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags."))
-
         val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt
-        if (
-          (dbrMajor < 13 && mosaicVersion >= "0.4.0") ||
-          (dbrMajor > 12 && mosaicVersion < "0.4.0")
-        ) {
+
+        val isML = sparkVersion.contains("-ml-")
+        val isPhoton = sparkVersion.contains("-photon-")
+        val isTest = (
+            dbrMajor == 0  
+            && !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags.")) 
+        )
+        
+        if (dbrMajor != 13 && !isTest) {
             val msg = """|DEPRECATION ERROR:
-                         |    Mosaic v0.3.x series only supports Databricks Runtime 12 and below.
+                         |    Mosaic v0.4.x series only supports Databricks Runtime 13.
                          |    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.""".stripMargin
 
             logError(msg)
@@ -1013,17 +1025,16 @@ object MosaicContext extends Logging {
         }
 
         if (!isML && !isPhoton && !isTest) {
-            val msg = """|DEPRECATION WARNING: 
+            val msg = """|DEPRECATION ERROR: 
                          |  Please use a Databricks:
                          |      - Photon-enabled Runtime for performance benefits
                          |      - Runtime ML for spatial AI benefits
-                         |  Mosaic will stop working on this cluster after v0.3.x.""".stripMargin
-            logWarning(msg)
+                         |  Mosaic 0.4.x series restricts executing this cluster.""".stripMargin
+            logError(msg)
             println(msg)
-            false
-        } else {
-            true
-        }
+            throw new Exception(msg)
+        } 
+        true
     }
 
 }

@@ -13,7 +13,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.unsafe.types.UTF8String
 
-/** The expression for computing NDVI index. */
+/** The expression for map algebra. */
 case class RST_MapAlgebra(
     rastersExpr: Expression,
     jsonSpecExpr: Expression,
@@ -29,13 +29,13 @@ case class RST_MapAlgebra(
       with CodegenFallback {
 
     /**
-      * Computes NDVI index.
+      * Map Algebra.
       * @param tiles
       *   The raster to be used.
       * @param arg1
       *   The red band index.
       * @return
-      *   The raster contains NDVI index.
+      *   The raster (tile) from the calculation.
       */
     override def rasterTransform(tiles: Seq[MosaicRasterTile], arg1: Any): Any = {
         val jsonSpec = arg1.asInstanceOf[UTF8String].toString

@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         python: [ 3.10.12 ]
-        numpy: [ 1.21.5 ]
+        numpy: [ 1.22.4 ]
         gdal: [ 3.4.1 ]
         spark: [ 3.4.0 ]
         R: [ 4.2.2 ]
@@ -28,7 +28,7 @@ jobs:
         uses: ./.github/actions/scala_build
       - name: build python
         uses: ./.github/actions/python_build
-      - name: build R
-        uses: ./.github/actions/r_build
+      # - name: build R
+      #   uses: ./.github/actions/r_build
       - name: upload artefacts
         uses: ./.github/actions/upload_artefacts
