@@ -54,7 +54,10 @@ build_method<-function(input){
   arg_names <- lapply(input$args, function(x){c(x[1])})
   #this handles converting non-Column arguments to their R equivalents
   argument_parser <- function(x){
-    if(x[2] == 'Int'){
+    if (is.na(x[2])) {
+      x[2] <- NA
+    }  
+    else if(x[2] == 'Int'){
       x[2] <- "numeric"
     }
     else if(x[2] == 'String'){

@@ -32,26 +32,53 @@ The supported languages are Scala, Python, R, and SQL.
 
 ## How does it work?
 
-The Mosaic library is written in Scala to guarantee maximum performance with Spark and when possible, it uses code generation to give an extra performance boost.
+The Mosaic library is written in Scala (JVM) to guarantee maximum performance with Spark and when possible, it uses code generation to give an extra performance boost.
 
-The other supported languages (Python, R and SQL) are thin wrappers around the Scala code.
-
+__The other supported languages (Python, R and SQL) are thin wrappers around the Scala (JVM) code.__
 
 ![mosaic-logical-design](src/main/resources/MosaicLogicalDesign.png)
 Image1: Mosaic logical design.
 
 ## Getting started
 
-We recommend using Databricks Runtime versions 11.3 LTS or 12.2 LTS with Photon enabled; this will leverage the 
-Databricks H3 expressions when using H3 grid system. 
+### Mosaic 0.4.x Series [Latest]
 
-:warning: **Mosaic 0.3 series does not support DBR 13** (coming soon); also, DBR 10 is no longer supported in Mosaic. 
+We recommend using Databricks Runtime versions 13.3 LTS with Photon enabled. 
 
-As of the 0.3.11 release, Mosaic issues the following warning when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML [[ADB](https://learn.microsoft.com/en-us/azure/databricks/runtime/) | [AWS](https://docs.databricks.com/runtime/index.html) | [GCP](https://docs.gcp.databricks.com/runtime/index.html)]:
+:warning: **Mosaic 0.4.x series only supports DBR 13**. If running on a different DBR with throw an exception:
 
-> DEPRECATION WARNING: Mosaic is not supported on the selected Databricks Runtime. Mosaic will stop working on this cluster after v0.3.x. Please use a Databricks Photon-enabled Runtime (for performance benefits) or Runtime ML (for spatial AI benefits).
+> DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.
 
-If you are receiving this warning in v0.3.11+, you will want to begin to plan for a supported runtime. The reason we are making this change is that we are streamlining Mosaic internals to be more aligned with future product APIs which are powered by Photon. Along this direction of change, Mosaic will be standardizing to JTS as its default and supported Vector Geometry Provider.
+As of the 0.4.0 release, Mosaic issues the following ERROR when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML [[ADB](https://learn.microsoft.com/en-us/azure/databricks/runtime/) | [AWS](https://docs.databricks.com/runtime/index.html) | [GCP](https://docs.gcp.databricks.com/runtime/index.html)]:
+
+> DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.
+
+__Language Bindings__
+
+As of Mosaic 0.4.0 (subject to change in follow-on releases)...
+
+* _No Mosaic SQL expressions cannot yet be registered with [Unity Catalog](https://www.databricks.com/product/unity-catalog) due to API changes affecting DBRs >= 13._
+* [Assigned Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Python, R, and Scala APIs.
+* [Shared Access Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Scala API (JVM) with Admin [allowlisting](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html); _Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters._ 
+
+__Additional Notes:__ 
+
+As of Mosaic 0.4.0 (subject to change in follow-on releases)...
+
+1. [Unity Catalog](https://www.databricks.com/product/unity-catalog): Enforces process isolation which is difficult to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from other supported languages in Shared Access Clusters. 
+2. [Volumes](https://docs.databricks.com/en/connect/unity-catalog/volumes.html): Along the same principle of isolation, clusters (both assigned and shared access) can read Volumes via relevant built-in readers and writers or via custom python calls which do not involve any custom JVM code.
+
+### Mosaic 0.3.x Series
+
+We recommend using Databricks Runtime versions 12.2 LTS with Photon enabled. 
+
+:warning: **Mosaic 0.3.x series does not support DBR 13**.
+
+As of the 0.3.11 release, Mosaic issues the following WARNING when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML [[ADB](https://learn.microsoft.com/en-us/azure/databricks/runtime/) | [AWS](https://docs.databricks.com/runtime/index.html) | [GCP](https://docs.gcp.databricks.com/runtime/index.html)]:
+
+> DEPRECATION WARNING: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic will stop working on this cluster after v0.3.x.
+              
+If you are receiving this warning in v0.3.11+, you will want to begin to plan for a supported runtime. The reason we are making this change is that we are streamlining Mosaic internals to be more aligned with future product APIs which are powered by Photon. Along this direction of change, Mosaic has standardized to JTS as its default and supported Vector Geometry Provider.
 
 ### Documentation
 
@@ -114,21 +141,24 @@ import com.databricks.labs.mosaic.JTS
 val mosaicContext = MosaicContext.build(H3, JTS)
 mosaicContext.register(spark)
 ```
-
+__Note: Mosaic 0.4.x SQL bindings for DBR 13 not yet available in Unity Catalog due to API changes.__
 
 ## Examples
 
+Here are some example notebooks, check the language links for latest [[Python](/notebooks/examples/python/) | [Scala](/notebooks/examples/scala/) | [SQL](/notebooks/examples/sql/) | [R](/notebooks/examples/R/)]: 
+
 | Example | Description | Links |
 | --- | --- | --- |
-| __Quick Start__ | Example of performing spatial point-in-polygon joins on the NYC Taxi dataset | [python](/notebooks/examples/python/QuickstartNotebook.py), [scala](notebooks/examples/scala/QuickstartNotebook.scala), [R](notebooks/examples/R/QuickstartNotebook.r), [SQL](notebooks/examples/sql/QuickstartNotebook.sql) | 
+| __Quick Start__ | Example of performing spatial point-in-polygon joins on the NYC Taxi dataset | [python](/notebooks/examples/python/QuickstartNotebook.ipynb), [scala](notebooks/examples/scala/QuickstartNotebook.ipynb), [R](notebooks/examples/R/QuickstartNotebook.r), [SQL](notebooks/examples/sql/QuickstartNotebook.ipynb) | 
+| Shapefiles | Examples of reading multiple shapefiles | [python](notebooks/examples/python/Shapefiles/) |
 | Spatial KNN | Runnable notebook-based example using Mosaic [SpatialKNN](https://databrickslabs.github.io/mosaic/models/spatial-knn.html) model | [python](notebooks/examples/python/SpatialKNN) |
-| Open Street Maps | Ingesting and processing with Delta Live Tables the Open Street Maps dataset to extract buildings polygons and calculate aggregation statistics over H3 indexes | [python](notebooks/examples/python/OpenStreetMaps) |
+| NetCDF |  Read multiple NetCDFs, process through various data engineering steps before analyzing and rendering | [python](notebooks/examples/python/NetCDF/) |
 | STS Transfers | Detecting Ship-to-Ship transfers at scale by leveraging Mosaic to process AIS data. | [python](notebooks/examples/python/Ship2ShipTransfers), [blog](https://medium.com/@timo.roest/ship-to-ship-transfer-detection-b370dd9d43e8) |
 
-You can import those examples in Databricks workspace using [these instructions](https://docs.databricks.com/notebooks/notebooks-manage.html#import-a-notebook).
+You can import those examples in Databricks workspace using [these instructions](https://docs.databricks.com/en/notebooks/index.html).
 
 ## Ecosystem
-Mosaic is intended to augment the existing system and unlock the potential by integrating spark, delta and 3rd party frameworks into the Lakehouse architecture.
+Mosaic is intended to augment the existing system and unlock the potential by integrating [Spark](https://spark.apache.org/), [Delta Lake](https://delta.io/) and 3rd party frameworks into the Lakehouse architecture.
 
 ![mosaic-logo](src/main/resources/MosaicEcosystem.png)
 Image2: Mosaic ecosystem - Lakehouse integration.
