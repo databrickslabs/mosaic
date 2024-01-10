@@ -705,13 +705,11 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver:Column): Column = rst_fromcontent(raster, driver, lit(-1))
-        def rst_fromcontent(raster: Column, driver:String): Column = rst_fromcontent(raster, driver, lit(-1))
+        def rst_fromcontent(raster: Column, driver:String): Column = rst_fromcontent(raster, lit(driver), lit(-1))
+        def rst_fromcontent(raster: Column, driver:Column, sizeInMB:Int): Column = rst_fromcontent(raster, driver lit(sizeInMB))
+        def rst_fromcontent(raster: Column, driver:String, sizeInMB: Int): Column = rst_fromcontent(raster, lit(driver), lit(sizeInMB))
         def rst_fromcontent(raster: Column, driver:Column, sizeInMB:Column): Column =
             ColumnAdapter(RST_FromContent(raster.expr, driver.expr, sizeInMB.expr, expressionConfig))
-        def rst_fromcontent(raster: Column, driver:Column, sizeInMB:Int): Column =
-            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(sizeInMB).expr, expressionConfig))
-        def rst_fromcontent(raster: Column, driver:String, sizeInMB: Int): Column =
-            ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(sizeInMB).expr, expressionConfig))
         def rst_fromfile(raster: Column): Column = rst_fromfile(raster, lit(-1))
         def rst_fromfile(raster: Column, sizeInMB: Column): Column =
             ColumnAdapter(RST_FromFile(raster.expr, sizeInMB.expr, expressionConfig))
