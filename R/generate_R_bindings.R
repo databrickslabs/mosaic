@@ -55,10 +55,7 @@ build_method<-function(input){
   # this handles converting non-Column arguments to their R equivalents
   # - NA handled as string
   argument_parser <- function(x){
-    if (is.na(x[2])) {
-      x[2] <- "character"
-    }  
-    else if(x[2] == 'Int'){
+    if(x[2] == 'Int'){
       x[2] <- "numeric"
     }
     else if(x[2] == 'String'){
