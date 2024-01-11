@@ -4,6 +4,7 @@
 - Removed OSS ESRI Geometry API for 0.4 series, JTS now the only vector provider.
 - MosaicAnalyzer functions now accept Spark DataFrames instead of MosaicFrame, which has been removed.
 - Docs for 0.3.x have been archived and linked from current docs; notebooks for 0.3.x have been separated from current notebooks.
+- This release targets Assigned (vs Shared Access) clusters and offers python and scala language bindings; SQL expressions will not register in this release within Unity Catalog.
 
 ## v0.3.14 [DBR < 13]
 - Fixes for Warning and Error messages on mosaic_enable call.
