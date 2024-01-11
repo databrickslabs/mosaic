@@ -101,8 +101,11 @@ object MosaicPolygonJTS extends GeometryReader {
                     }
                 val holes = extractedLines.tail
                     .map({ h: MosaicLineStringJTS =>
-                        if (h.asSeq.head.coord == h.asSeq.last.coord) h.asSeq.map(_.coord).toArray
-                        else h.asSeq.map(_.coord).toArray ++ Array(h.asSeq.head.coord)
+                        if (h.asSeq.head.coord == h.asSeq.last.coord) {
+                            h.asSeq.map(_.coord).toArray
+                        } else {
+                            h.asSeq.map(_.coord).toArray ++ Array(h.asSeq.head.coord)
+                        }
                     })
                     .map(gf.createLinearRing)
                     .toArray
