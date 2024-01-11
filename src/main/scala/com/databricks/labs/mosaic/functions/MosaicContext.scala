@@ -177,6 +177,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[ST_UnaryUnion](expressionConfig)
         mosaicRegistry.registerExpression[ST_Union](expressionConfig)
         mosaicRegistry.registerExpression[ST_UpdateSRID](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Within](expressionConfig)
         mosaicRegistry.registerExpression[ST_X](expressionConfig)
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
         mosaicRegistry.registerExpression[ST_Haversine](expressionConfig)
@@ -630,6 +631,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         /** Spatial predicates */
         def st_contains(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Contains(geom1.expr, geom2.expr, expressionConfig))
         def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, expressionConfig))
+        def st_within(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Within(geom1.expr, geom2.expr, expressionConfig))
 
         /** RasterAPI dependent functions */
         def rst_bandmetadata(raster: Column, band: Column): Column =

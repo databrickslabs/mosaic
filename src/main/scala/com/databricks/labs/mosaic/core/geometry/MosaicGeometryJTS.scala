@@ -148,6 +148,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
 
+    override def within(geom2: MosaicGeometry): Boolean = geom.within(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
+
     def getGeom: Geometry = geom
 
     override def isValid: Boolean = geom.isValid
