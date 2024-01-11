@@ -42,7 +42,7 @@ class TestPolygonJTS extends AnyFlatSpec {
 
     "MosaicPolygonJTS" should "be instantiable from a Seq of MosaicPointJTS" in {
         val polygonReference = MosaicPolygonJTS.fromWKT("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
-        val pointSeq = Seq("POINT (30 10)", "POINT (40 40)", "POINT (20 40)", "POINT (10 20)")
+        val pointSeq = Seq("POINT (30 10)", "POINT (40 40)", "POINT (20 40)", "POINT (10 20)", "POINT (30 10)")
             .map(MosaicPointJTS.fromWKT)
             .map(_.asInstanceOf[MosaicPointJTS])
         val polygonTest = MosaicPolygonJTS.fromSeq(pointSeq)
@@ -59,7 +59,7 @@ class TestPolygonJTS extends AnyFlatSpec {
 
     "MosaicPolygonJTS" should "be instantiable from a Seq of MosaicLineStringJTS" in {
         val polygonReference = MosaicPolygonJTS.fromWKT("POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30, 35 35, 30 20, 20 30))")
-        val linesSeq = Seq("LINESTRING (35 10, 45 45, 15 40, 10 20)", "LINESTRING (20 30, 35 35, 30 20)")
+        val linesSeq = Seq("LINESTRING (35 10, 45 45, 15 40, 10 20, 35 10)", "LINESTRING (20 30, 35 35, 30 20, 20 30)")
             .map(MosaicLineStringJTS.fromWKT)
             .map(_.asInstanceOf[MosaicLineStringJTS])
         val polygonTest = MosaicPolygonJTS.fromSeq(linesSeq)

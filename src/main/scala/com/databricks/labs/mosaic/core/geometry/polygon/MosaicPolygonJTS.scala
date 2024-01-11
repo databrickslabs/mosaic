@@ -84,14 +84,14 @@ object MosaicPolygonJTS extends GeometryReader {
         val newGeom = GeometryTypeEnum.fromString(geomSeq.head.getGeometryType) match {
             case POINT                         =>
                 val extractedPoints = geomSeq.map(_.asInstanceOf[MosaicPointJTS])
-                val exteriorRing = extractedPoints.map(_.coord).toArray ++ Array(extractedPoints.head.coord)
+                val exteriorRing = extractedPoints.map(_.coord).toArray
                 gf.createPolygon(exteriorRing)
             case LINESTRING                    =>
                 val extractedLines = geomSeq.map(_.asInstanceOf[MosaicLineStringJTS])
                 val exteriorRing =
-                    gf.createLinearRing(extractedLines.head.asSeq.map(_.coord).toArray ++ Array(extractedLines.head.asSeq.head.coord))
+                    gf.createLinearRing(extractedLines.head.asSeq.map(_.coord).toArray)
                 val holes = extractedLines.tail
-                    .map({ h: MosaicLineStringJTS => h.asSeq.map(_.coord).toArray ++ Array(h.asSeq.head.coord) })
+                    .map({ h: MosaicLineStringJTS => h.asSeq.map(_.coord).toArray})
                     .map(gf.createLinearRing)
                     .toArray
                 gf.createPolygon(exteriorRing, holes)
