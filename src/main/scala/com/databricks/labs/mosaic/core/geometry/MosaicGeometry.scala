@@ -83,6 +83,8 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def contains(other: MosaicGeometry): Boolean
 
+    def within(other: MosaicGeometry): Boolean
+
     def flatten: Seq[MosaicGeometry]
 
     def equals(other: MosaicGeometry): Boolean
