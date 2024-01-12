@@ -45,6 +45,7 @@ class TestVectorFunctions(MosaicTestCase):
             .withColumn("st_buffer", api.st_bufferloop("wkt", lit(1.1), lit(1.2)))
             .withColumn("st_perimeter", api.st_perimeter("wkt"))
             .withColumn("st_convexhull", api.st_convexhull("wkt"))
+            .withColumn("st_concavehull", api.st_concavehull("wkt", lit(0.5)))
             .withColumn("st_dump", api.st_dump("wkt"))
             .withColumn("st_translate", api.st_translate("wkt", lit(1), lit(1)))
             .withColumn("st_scale", api.st_scale("wkt", lit(1), lit(1)))

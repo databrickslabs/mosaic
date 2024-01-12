@@ -97,6 +97,9 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def convexHull: MosaicGeometry
 
+    // Allow holes is set to false by default to match the behavior of the POSTGIS implementation
+    def concaveHull(lengthRatio: Double, allow_holes: Boolean = false): MosaicGeometry
+
     def minMaxCoord(dimension: String, func: String): Double = {
         val coordArray = this.getShellPoints.map(shell => {
             val unitArray = dimension.toUpperCase(Locale.ROOT) match {

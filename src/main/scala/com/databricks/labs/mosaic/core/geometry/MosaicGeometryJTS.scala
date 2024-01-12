@@ -11,6 +11,7 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.esotericsoftware.kryo.Kryo
 import org.apache.spark.sql.catalyst.InternalRow
+import org.locationtech.jts.algorithm.hull.ConcaveHull
 import org.locationtech.jts.geom.{Geometry, GeometryCollection, GeometryFactory}
 import org.locationtech.jts.geom.util.AffineTransformation
 import org.locationtech.jts.io._
@@ -180,6 +181,12 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         val convexHull = geom.convexHull()
         convexHull.setSRID(geom.getSRID)
         MosaicGeometryJTS(convexHull)
+    }
+
+    override def concaveHull(lengthRatio: Double, allow_holes: Boolean = false): MosaicGeometryJTS = {
+        val concaveHull = ConcaveHull.concaveHullByLengthRatio(geom, lengthRatio, allow_holes)
+        concaveHull.setSRID(geom.getSRID)
+        MosaicGeometryJTS(concaveHull)
     }
 
     override def unaryUnion: MosaicGeometryJTS = {
