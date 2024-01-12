@@ -118,16 +118,16 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
         // First quadrant
         val wkt0 = grid.indexToGeometry(0 | resolutionMask, JTS).toWKT
-        wkt0 shouldBe "POLYGON ((0 0, 50 0, 50 50, 0 50, 0 0, 0 0))"
+        wkt0 shouldBe "POLYGON ((0 0, 50 0, 50 50, 0 50, 0 0))"
 
         val wkt1 = grid.indexToGeometry(1 | resolutionMask, JTS).toWKT
-        wkt1 shouldBe "POLYGON ((50 0, 100 0, 100 50, 50 50, 50 0, 50 0))"
+        wkt1 shouldBe "POLYGON ((50 0, 100 0, 100 50, 50 50, 50 0))"
 
         val wkt2 = grid.indexToGeometry(2 | resolutionMask, JTS).toWKT
-        wkt2 shouldBe "POLYGON ((0 50, 50 50, 50 100, 0 100, 0 50, 0 50))"
+        wkt2 shouldBe "POLYGON ((0 50, 50 50, 50 100, 0 100, 0 50))"
 
         val wkt3 = grid.indexToGeometry(3 | resolutionMask, JTS).toWKT
-        wkt3 shouldBe "POLYGON ((50 50, 100 50, 100 100, 50 100, 50 50, 50 50))"
+        wkt3 shouldBe "POLYGON ((50 50, 100 50, 100 100, 50 100, 50 50))"
     }
 
     test("polyfill single cell") {

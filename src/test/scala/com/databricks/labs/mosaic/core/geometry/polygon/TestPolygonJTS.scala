@@ -42,11 +42,16 @@ class TestPolygonJTS extends AnyFlatSpec {
 
     "MosaicPolygonJTS" should "be instantiable from a Seq of MosaicPointJTS" in {
         val polygonReference = MosaicPolygonJTS.fromWKT("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
-        val pointSeq = Seq("POINT (30 10)", "POINT (40 40)", "POINT (20 40)", "POINT (10 20)")
+        val pointSeq_open = Seq("POINT (30 10)", "POINT (40 40)", "POINT (20 40)", "POINT (10 20)")
             .map(MosaicPointJTS.fromWKT)
             .map(_.asInstanceOf[MosaicPointJTS])
-        val polygonTest = MosaicPolygonJTS.fromSeq(pointSeq)
-        polygonReference.equals(polygonTest) shouldBe true
+        val pointSeq_closed = Seq("POINT (30 10)", "POINT (40 40)", "POINT (20 40)", "POINT (10 20)", "POINT (30 10)")
+            .map(MosaicPointJTS.fromWKT)
+            .map(_.asInstanceOf[MosaicPointJTS])
+        val polygonTest_open = MosaicPolygonJTS.fromSeq(pointSeq_open)
+        val polygonTest_closed = MosaicPolygonJTS.fromSeq(pointSeq_closed)
+        polygonReference.equals(polygonTest_open) shouldBe true
+        polygonReference.equals(polygonTest_closed) shouldBe true
     }
 
     "MosaicPolygonJTS" should "not fail for empty Seq" in {
@@ -59,11 +64,16 @@ class TestPolygonJTS extends AnyFlatSpec {
 
     "MosaicPolygonJTS" should "be instantiable from a Seq of MosaicLineStringJTS" in {
         val polygonReference = MosaicPolygonJTS.fromWKT("POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10), (20 30, 35 35, 30 20, 20 30))")
-        val linesSeq = Seq("LINESTRING (35 10, 45 45, 15 40, 10 20)", "LINESTRING (20 30, 35 35, 30 20)")
+        val linesSeq_open = Seq("LINESTRING (35 10, 45 45, 15 40, 10 20)", "LINESTRING (20 30, 35 35, 30 20)")
             .map(MosaicLineStringJTS.fromWKT)
             .map(_.asInstanceOf[MosaicLineStringJTS])
-        val polygonTest = MosaicPolygonJTS.fromSeq(linesSeq)
-        polygonReference.equals(polygonTest) shouldBe true
+        val linesSeq_closed = Seq("LINESTRING (35 10, 45 45, 15 40, 10 20, 35 10)", "LINESTRING (20 30, 35 35, 30 20, 20 30)")
+            .map(MosaicLineStringJTS.fromWKT)
+            .map(_.asInstanceOf[MosaicLineStringJTS])
+        val polygonTest_open = MosaicPolygonJTS.fromSeq(linesSeq_open)
+        val polygonTest_closed = MosaicPolygonJTS.fromSeq(linesSeq_closed)
+        polygonReference.equals(polygonTest_open) shouldBe true
+        polygonReference.equals(polygonTest_closed) shouldBe true
     }
 
     "MosaicPolygonJTS" should "return a Seq of MosaicLineStringJTS object when calling asSeq" in {
