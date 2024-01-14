@@ -181,6 +181,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[ST_Within](expressionConfig)
         mosaicRegistry.registerExpression[ST_X](expressionConfig)
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Z](expressionConfig)
         mosaicRegistry.registerExpression[ST_Haversine](expressionConfig)
 
         // noinspection ScalaDeprecation
@@ -596,6 +597,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_Translate(geom1.expr, xd.expr, yd.expr, expressionConfig))
         def st_x(geom: Column): Column = ColumnAdapter(ST_X(geom.expr, expressionConfig))
         def st_y(geom: Column): Column = ColumnAdapter(ST_Y(geom.expr, expressionConfig))
+        def st_z(geom: Column): Column = ColumnAdapter(ST_Z(geom.expr, expressionConfig))
         def st_xmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "X", "MAX"))
         def st_xmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "X", "MIN"))
         def st_ymax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "Y", "MAX"))

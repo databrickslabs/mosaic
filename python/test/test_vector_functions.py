@@ -27,6 +27,20 @@ class TestVectorFunctions(MosaicTestCase):
         )
         self.assertListEqual([rw.points for rw in result], expected)
 
+    def test_st_z(self):
+        expected = [
+            0,
+            1,
+        ]
+        result = (
+            self.spark.range(2)
+            .select(col("id").cast("double"))
+            .withColumn("points", api.st_point("id", "id")) # , "id"))
+            .withColumn("z", api.st_z("points"))
+            .collect()
+        )
+        self.assertListEqual([rw.z for rw in result], expected)
+
     def test_st_bindings_happy_flow(self):
         # Checks that the python bindings do not throw exceptions
         # Not testing the logic, since that is tested in Scala
