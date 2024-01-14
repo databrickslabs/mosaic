@@ -35,7 +35,7 @@ class TestVectorFunctions(MosaicTestCase):
         result = (
             self.spark.range(2)
             .select(col("id").cast("double"))
-            .withColumn("points", api.st_point("id", "id", "id"))
+            .withColumn("points", api.st_geomfromwkt(f"POINT ({id} {id} {id})"))
             .withColumn("z", api.st_z("points"))
             .collect()
         )
