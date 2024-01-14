@@ -786,7 +786,7 @@ def st_y(geom: ColumnOrName) -> Column:
 
 def st_z(geom: ColumnOrName) -> Column:
     """
-    Returns the z coordinate of the input geometry `geom`.
+    Returns the z coordinate of the input point `geom`. Input must be a point.
 
     Parameters
     ----------

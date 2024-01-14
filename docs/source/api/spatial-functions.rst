@@ -2028,9 +2028,9 @@ st_z
 ****
 .. function:: st_z(col)
 
-    Returns the z coordinate of the input geometry.
+    Returns the z coordinate of the input point. Input must be a point.
 
-    :param col: Geometry
+    :param col: Point Geometry
     :type col: Column
     :rtype: Column: DoubleType
 
