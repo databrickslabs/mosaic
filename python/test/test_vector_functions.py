@@ -1,6 +1,6 @@
 import random
 
-from pyspark.sql.functions import abs, col, first, lit, sqrt
+from pyspark.sql.functions import abs, col, concat, first, lit, sqrt
 
 from .context import api
 from .utils import MosaicTestCase
@@ -35,7 +35,12 @@ class TestVectorFunctions(MosaicTestCase):
         result = (
             self.spark.range(2)
             .select(col("id").cast("double"))
-            .withColumn("points", api.st_geomfromwkt(f"POINT ({id} {id} {id})"))
+            .withColumn(
+                "points",
+                api.st_geomfromwkt(
+                    concat(lit("POINT ("), "id", "id", "id", lit(")"))
+                ),
+            )
             .withColumn("z", api.st_z("points"))
             .collect()
         )
