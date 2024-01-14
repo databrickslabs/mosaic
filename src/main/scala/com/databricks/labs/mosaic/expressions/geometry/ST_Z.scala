@@ -10,10 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.{DataType, DoubleType}
 
 /**
-  * SQL expression that returns Z coordinate of the input geometry. If the
-  * geometry is a point, the Z coordinate of the point is returned. If the
-  * geometry is any other type, the Z coordinate of the centroid of the geometry
-  * is returned.
+  * SQL expression that returns Z coordinate of the input point. Input must be a point.
   *
   * @param inputGeom
   *   Expression containing the geometry.
@@ -44,7 +41,7 @@ object ST_Z extends WithExpressionInfo {
     override def name: String = "st_z"
 
     override def usage: String =
-        "_FUNC_(expr1) - Returns z coordinate of a point or z coordinate of the centroid if the geometry isn't a point."
+        "_FUNC_(expr1) - Returns z coordinate of a point."
 
     override def example: String =
         """
