@@ -28,11 +28,10 @@ jobs:
         requirements_path: docs/docs-requirements.txt
     - name: checkout v0.3.x archive
       run: |
-        git submodule add https://github.com/databrickslabs/mosaic.git v0.3.x/mosaic
-        git checkout gh-pages-v0.3.x
-        rm -f .gitmodules
+        git archive gh-pages-v0.3.x | tar -x -C ./v0.3.x
         git add --all
         git commit -am "Adding v0.3.x docs"
+        cd v0.3.x
         ls -la
     - name: Push changes
       uses: ad-m/github-push-action@master
