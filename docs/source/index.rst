@@ -75,6 +75,7 @@ Documentation
    usage/usage
    models/models
    literature/videos
+   v0.3.x/index
 
 
 Indices and tables
