@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GDAL Installation guide &mdash; Mosaic</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/fonts.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Using grid index systems in Mosaic" href="grid-indexes.html" />
+    <link rel="prev" title="Installation guide" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">API Documentation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="usage.html">Usage</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation guide</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">GDAL Installation guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid-indexes.html">Using grid index systems in Mosaic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid-indexes-bng.html">BNG - British National Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kepler.html">Kepler visualizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="automatic-sql-registration.html">Automatic SQL registration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../literature/videos.html">Mosaic Videos and Talks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mosaic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="usage.html">Usage</a></li>
+      <li class="breadcrumb-item active">GDAL Installation guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/usage/install-gdal.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gdal-installation-guide">
+<h1>GDAL Installation guide<a class="headerlink" href="#gdal-installation-guide" title="Permalink to this heading"></a></h1>
+<section id="supported-platforms">
+<h2>Supported platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this heading"></a></h2>
+<p>In order to use Mosaic, you must have access to a Databricks cluster running
+Databricks Runtime 11.3 or higher.
+If you have cluster creation permissions in your Databricks
+workspace, you can create a cluster using the instructions
+<a class="reference external" href="https://docs.databricks.com/clusters/create.html#use-the-cluster-ui">here</a>.</p>
+<p>You will also need “Can Manage” permissions on this cluster in order to attach the
+Mosaic library to your cluster. A workspace administrator will be able to grant
+these permissions and more information about cluster permissions can be found
+in our documentation
+<a class="reference external" href="https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions">here</a>.</p>
+</section>
+<section id="gdal-installation">
+<h2>GDAL Installation<a class="headerlink" href="#gdal-installation" title="Permalink to this heading"></a></h2>
+<section id="setup-gdal-files-and-scripts">
+<h3>Setup GDAL files and scripts<a class="headerlink" href="#setup-gdal-files-and-scripts" title="Permalink to this heading"></a></h3>
+<p>Mosaic requires GDAL to be installed on the cluster. The easiest way to do this is to use the
+the mos.setup_gdal() function. This function will extract the GDAL files and scripts from the
+mosaic library and place them in the /dbfs/FileStore/geospatial/mosaic/gdal/ directory.
+This call is no longer needed in versions &gt;= 0.3.12. The shared objects are now included in the
+databricks-mosaic-gdal pip installable bundle.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
+
+<span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
+<span class="n">mos</span><span class="o">.</span><span class="n">setup_gdal</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
+<span class="n">GDAL</span> <span class="n">setup</span> <span class="n">complete</span><span class="o">.</span>
+<span class="n">Shared</span> <span class="n">objects</span> <span class="p">(</span><span class="o">*.</span><span class="n">so</span><span class="p">)</span> <span class="n">stored</span> <span class="ow">in</span><span class="p">:</span> <span class="o">/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">FileStore</span><span class="o">/</span><span class="n">geospatial</span><span class="o">/</span><span class="n">mosaic</span><span class="o">/</span><span class="n">gdal</span><span class="o">/.</span>
+<span class="n">Init</span> <span class="n">script</span> <span class="n">stored</span> <span class="ow">in</span><span class="p">:</span> <span class="o">/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">FileStore</span><span class="o">/</span><span class="n">geospatial</span><span class="o">/</span><span class="n">mosaic</span><span class="o">/</span><span class="n">gdal</span><span class="o">/.</span>
+<span class="n">Please</span> <span class="n">restart</span> <span class="n">the</span> <span class="n">cluster</span> <span class="k">with</span> <span class="n">the</span> <span class="n">generated</span> <span class="n">init</span> <span class="n">script</span> <span class="n">to</span> <span class="n">complete</span> <span class="n">the</span> <span class="n">setup</span><span class="o">.</span>
+</pre></div>
+</div>
+</section>
+<section id="configure-the-init-script">
+<h3>Configure the init script<a class="headerlink" href="#configure-the-init-script" title="Permalink to this heading"></a></h3>
+<p>After the mos.setup_gdal() function has been run, you will need to configure the cluster to use the
+init script. For versions &gt;= 0.3.12, we are required to use the following init script:
+<a class="reference external" href="https://github.com/databrickslabs/mosaic/blob/main/modules/python/gdal_package/databricks-mosaic-gdal/resources/scripts/mosaic-gdal-3.4.3-filetree-init.sh">here</a>.
+The init script can be set by clicking on the “Edit” button on the cluster page and adding
+the following to the “Advanced Options” section:</p>
+<figure class="doc-figure align-default" id="id1">
+<img alt="../_images/init_script.png" src="../_images/init_script.png" />
+<figcaption>
+<p><span class="caption-text">Fig 1. Init script configuration</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="enable-gdal-for-a-notebook">
+<h3>Enable GDAL for a notebook<a class="headerlink" href="#enable-gdal-for-a-notebook" title="Permalink to this heading"></a></h3>
+<p>Once the cluster has been restarted, you can enable GDAL for a notebook by running the following
+code at the top of the notebook:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
+
+<span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
+<span class="n">mos</span><span class="o">.</span><span class="n">enable_gdal</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
+<span class="n">GDAL</span> <span class="n">enabled</span><span class="o">.</span>
+<span class="n">GDAL</span> <span class="mf">3.4.3</span><span class="p">,</span> <span class="n">released</span> <span class="mi">2022</span><span class="o">/</span><span class="mi">04</span><span class="o">/</span><span class="mi">22</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="grid-indexes.html" class="btn btn-neutral float-right" title="Using grid index systems in Mosaic" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Databricks Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
