@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Geometry constructors &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,12 +34,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -76,7 +82,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="api.html">API Documentation</a></li>
       <li class="breadcrumb-item active">Geometry constructors</li>
       <li class="wy-breadcrumbs-aside">
@@ -88,25 +94,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="geometry-constructors">
-<h1>Geometry constructors<a class="headerlink" href="#geometry-constructors" title="Permalink to this headline"></a></h1>
-<div class="section" id="st-point">
-<h2>st_point<a class="headerlink" href="#st-point" title="Permalink to this headline"></a></h2>
+  <section id="geometry-constructors">
+<h1>Geometry constructors<a class="headerlink" href="#geometry-constructors" title="Permalink to this heading"></a></h1>
+<section id="st-point">
+<h2>st_point<a class="headerlink" href="#st-point" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_point">
 <span class="sig-name descname"><span class="pre">st_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_point" title="Permalink to this definition"></a></dt>
 <dd><p>Create a new Mosaic Point geometry from two DoubleType values.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> (<em>Column: DoubleType</em>) – x coordinate (DoubleType)</p></li>
 <li><p><strong>y</strong> (<em>Column: DoubleType</em>) – y coordinate (DoubleType)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: InternalGeometryType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -148,21 +154,21 @@
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-makeline">
-<h2>st_makeline<a class="headerlink" href="#st-makeline" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-makeline">
+<h2>st_makeline<a class="headerlink" href="#st-makeline" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_makeline">
 <span class="sig-name descname"><span class="pre">st_makeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_makeline" title="Permalink to this definition"></a></dt>
 <dd><p>Create a new Mosaic LineString geometry from an Array of Mosaic Points.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column: ArrayType</em><em>[</em><em>InternalGeometryType</em><em>]</em>) – Point array</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: InternalGeometryType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -230,21 +236,21 @@ FROM points
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-makepolygon">
-<h2>st_makepolygon<a class="headerlink" href="#st-makepolygon" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-makepolygon">
+<h2>st_makepolygon<a class="headerlink" href="#st-makepolygon" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_makepolygon">
 <span class="sig-name descname"><span class="pre">st_makepolygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_makepolygon" title="Permalink to this definition"></a></dt>
 <dd><p>Create a new Mosaic Polygon geometry from a closed LineString.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column: InternalGeometryType</em>) – closed LineString</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: InternalGeometryType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -286,21 +292,21 @@ FROM points
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-geomfromwkt">
-<h2>st_geomfromwkt<a class="headerlink" href="#st-geomfromwkt" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-geomfromwkt">
+<h2>st_geomfromwkt<a class="headerlink" href="#st-geomfromwkt" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_geomfromwkt">
 <span class="sig-name descname"><span class="pre">st_geomfromwkt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_geomfromwkt" title="Permalink to this definition"></a></dt>
 <dd><p>Create a new Mosaic geometry from Well-known Text.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column: StringType</em>) – Well-known Text Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: InternalGeometryType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -342,21 +348,21 @@ FROM points
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-geomfromwkb">
-<h2>st_geomfromwkb<a class="headerlink" href="#st-geomfromwkb" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-geomfromwkb">
+<h2>st_geomfromwkb<a class="headerlink" href="#st-geomfromwkb" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_geomfromwkb">
 <span class="sig-name descname"><span class="pre">st_geomfromwkb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_geomfromwkb" title="Permalink to this definition"></a></dt>
 <dd><p>Create a new Mosaic geometry from Well-known Binary.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column: BinaryType</em>) – Well-known Binary Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: InternalGeometryType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -402,21 +408,21 @@ FROM points
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-geomfromgeojson">
-<h2>st_geomfromgeojson<a class="headerlink" href="#st-geomfromgeojson" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-geomfromgeojson">
+<h2>st_geomfromgeojson<a class="headerlink" href="#st-geomfromgeojson" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_geomfromgeojson">
 <span class="sig-name descname"><span class="pre">st_geomfromgeojson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_geomfromgeojson" title="Permalink to this definition"></a></dt>
 <dd><p>Create a new Mosaic geometry from GeoJSON.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column: StringType</em>) – GeoJSON Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: InternalGeometryType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -501,8 +507,8 @@ FROM points
 </pre></div>
 </div>
 </div></div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

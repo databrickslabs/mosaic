@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Installation guide &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,12 +34,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -73,7 +79,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="usage.html">Usage</a></li>
       <li class="breadcrumb-item active">Installation guide</li>
       <li class="wy-breadcrumbs-aside">
@@ -85,10 +91,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="installation-guide">
-<h1>Installation guide<a class="headerlink" href="#installation-guide" title="Permalink to this headline"></a></h1>
-<div class="section" id="supported-platforms">
-<h2>Supported platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this headline"></a></h2>
+  <section id="installation-guide">
+<h1>Installation guide<a class="headerlink" href="#installation-guide" title="Permalink to this heading"></a></h1>
+<section id="supported-platforms">
+<h2>Supported platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this heading"></a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <dl class="simple">
@@ -120,20 +126,20 @@ Mosaic library to your cluster. A workspace administrator will be able to grant
 these permissions and more information about cluster permissions can be found
 in our documentation
 <a class="reference external" href="https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions">here</a>.</p>
-</div>
-<div class="section" id="package-installation">
-<h2>Package installation<a class="headerlink" href="#package-installation" title="Permalink to this headline"></a></h2>
-<div class="section" id="installation-from-pypi">
-<h3>Installation from PyPI<a class="headerlink" href="#installation-from-pypi" title="Permalink to this headline"></a></h3>
+</section>
+<section id="package-installation">
+<h2>Package installation<a class="headerlink" href="#package-installation" title="Permalink to this heading"></a></h2>
+<section id="installation-from-pypi">
+<h3>Installation from PyPI<a class="headerlink" href="#installation-from-pypi" title="Permalink to this heading"></a></h3>
 <p>Python users can install the library directly from <a class="reference external" href="https://pypi.org/project/databricks-mosaic/">PyPI</a>
 using the instructions <a class="reference external" href="https://docs.databricks.com/libraries/cluster-libraries.html">here</a>
 or from within a Databricks notebook using the <code class="code docutils literal notranslate"><span class="pre">%pip</span></code> magic command, e.g.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%pip<span class="w"> </span>install<span class="w"> </span>databricks-mosaic
 </pre></div>
 </div>
-</div>
-<div class="section" id="installation-from-release-artifacts">
-<h3>Installation from release artifacts<a class="headerlink" href="#installation-from-release-artifacts" title="Permalink to this headline"></a></h3>
+</section>
+<section id="installation-from-release-artifacts">
+<h3>Installation from release artifacts<a class="headerlink" href="#installation-from-release-artifacts" title="Permalink to this heading"></a></h3>
 <p>Alternatively, you can access the latest release artifacts <a class="reference external" href="https://github.com/databrickslabs/mosaic/releases">here</a>
 and manually attach the appropriate library to your cluster.</p>
 <p>Which artifact you choose to attach will depend on the language API you intend to use.</p>
@@ -143,16 +149,16 @@ and manually attach the appropriate library to your cluster.</p>
 <li><p>For R users, download the Scala JAR and the R bindings library [see the sparkR readme](R/sparkR-mosaic/README.md).</p></li>
 </ul>
 <p>Instructions for how to attach libraries to a Databricks cluster can be found <a class="reference external" href="https://docs.databricks.com/libraries/cluster-libraries.html">here</a>.</p>
-</div>
-<div class="section" id="automated-sql-registration">
-<h3>Automated SQL registration<a class="headerlink" href="#automated-sql-registration" title="Permalink to this headline"></a></h3>
+</section>
+<section id="automated-sql-registration">
+<h3>Automated SQL registration<a class="headerlink" href="#automated-sql-registration" title="Permalink to this heading"></a></h3>
 <p>If you would like to use Mosaic’s functions in pure SQL (in a SQL notebook, from a business intelligence tool,
 or via a middleware layer such as Geoserver, perhaps) then you can configure
 “Automatic SQL Registration” using the instructions <a class="reference external" href="https://databrickslabs.github.io/mosaic/usage/automatic-sql-registration.html">here</a>.</p>
-</div>
-</div>
-<div class="section" id="enabling-the-mosaic-functions">
-<h2>Enabling the Mosaic functions<a class="headerlink" href="#enabling-the-mosaic-functions" title="Permalink to this headline"></a></h2>
+</section>
+</section>
+<section id="enabling-the-mosaic-functions">
+<h2>Enabling the Mosaic functions<a class="headerlink" href="#enabling-the-mosaic-functions" title="Permalink to this heading"></a></h2>
 <p>The mechanism for enabling the Mosaic functions varies by language:</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-0-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-0-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-0-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-0-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-0-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-0-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mosaic</span> <span class="kn">import</span> <span class="n">enable_mosaic</span>
@@ -172,8 +178,8 @@ or via a middleware layer such as Geoserver, perhaps) then you can configure
 </pre></div>
 </div>
 </div></div>
-<div class="section" id="sql-usage">
-<h3>SQL usage<a class="headerlink" href="#sql-usage" title="Permalink to this headline"></a></h3>
+<section id="sql-usage">
+<h3>SQL usage<a class="headerlink" href="#sql-usage" title="Permalink to this heading"></a></h3>
 <p>If you have not employed <a class="reference internal" href="automatic-sql-registration.html#automatic-sql-registration"><span class="std std-ref">Automatic SQL registration</span></a>, you will need to
 register the Mosaic SQL functions in your SparkSession from a Scala notebook cell:</p>
 <div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nn">functions</span><span class="p">.</span><span class="nc">MosaicContext</span>
@@ -184,9 +190,9 @@ register the Mosaic SQL functions in your SparkSession from a Scala notebook cel
 <span class="n">mosaicContext</span><span class="p">.</span><span class="n">register</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

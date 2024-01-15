@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Raster functions &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,12 +34,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -76,7 +82,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="api.html">API Documentation</a></li>
       <li class="breadcrumb-item active">Raster functions</li>
       <li class="wy-breadcrumbs-aside">
@@ -88,10 +94,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="raster-functions">
-<h1>Raster functions<a class="headerlink" href="#raster-functions" title="Permalink to this headline"></a></h1>
-<div class="section" id="intro">
-<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this headline"></a></h2>
+  <section id="raster-functions">
+<h1>Raster functions<a class="headerlink" href="#raster-functions" title="Permalink to this heading"></a></h1>
+<section id="intro">
+<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this heading"></a></h2>
 <p>Raster functions are available in mosaic if you have installed the optional dependency <cite>GDAL</cite>.
 Please see <a class="reference internal" href="../usage/install-gdal.html"><span class="doc">Install and Enable GDAL with Mosaic</span></a> for installation instructions.
 Mosaic provides several unique raster functions that are not available in other Spark packages.
@@ -107,24 +113,24 @@ If you use spark.read.format(“gdal”) tiles are automatically generated for y
 <p>For mosaic versions &gt; 0.3.11 please do not use setup_gdal call. There is no longer a need for shared objects to be copied around.
 Please use the updated init_script.sh script to install GDAL on your cluster. See <a class="reference internal" href="../usage/install-gdal.html"><span class="doc">Install and Enable GDAL with Mosaic</span></a> for more details.</p>
 </div>
-<div class="section" id="rst-bandmetadata">
-<h3>rst_bandmetadata<a class="headerlink" href="#rst-bandmetadata" title="Permalink to this headline"></a></h3>
+<section id="rst-bandmetadata">
+<h3>rst_bandmetadata<a class="headerlink" href="#rst-bandmetadata" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_bandmetadata">
 <span class="sig-name descname"><span class="pre">rst_bandmetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_bandmetadata" title="Permalink to this definition"></a></dt>
 <dd><p>Extract the metadata describing the raster band.
 Metadata is return as a map of key value pairs.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>band</strong> (<em>Column</em><em> (</em><em>IntegerType</em><em>)</em>) – The band number to extract metadata for.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: MapType(StringType, StringType)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -184,21 +190,21 @@ SELECT rst_bandmetadata(tile, 1) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-boundingbox">
-<h3>rst_boundingbox<a class="headerlink" href="#rst-boundingbox" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-boundingbox">
+<h3>rst_boundingbox<a class="headerlink" href="#rst-boundingbox" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_boundingbox">
 <span class="sig-name descname"><span class="pre">rst_boundingbox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_boundingbox" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the bounding box of the raster as a polygon geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StructType(DoubleType, DoubleType, DoubleType, DoubleType)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -237,9 +243,9 @@ SELECT rst_bandmetadata(tile, 1) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-clip">
-<h3>rst_clip<a class="headerlink" href="#rst-clip" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-clip">
+<h3>rst_clip<a class="headerlink" href="#rst-clip" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_clip">
 <span class="sig-name descname"><span class="pre">rst_clip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_clip" title="Permalink to this definition"></a></dt>
@@ -252,16 +258,16 @@ The output raster will have the same pixel type as the input raster.
 The output raster will have the same pixel size as the input raster.
 The output raster will have the same coordinate reference system as the input raster.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile.</p></li>
 <li><p><strong>geometry</strong> – A column containing the geometry to clip the raster to.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: RasterTileType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -288,9 +294,6 @@ The output raster will have the same coordinate reference system as the input ra
 <div class="line">rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                         |</div>
 </div>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 100%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>{index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” }</p></td>
 </tr>
@@ -308,9 +311,9 @@ SELECT rst_clip(tile, &quot;POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))&quot;) FROM c
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-combineavg">
-<h3>rst_combineavg<a class="headerlink" href="#rst-combineavg" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-combineavg">
+<h3>rst_combineavg<a class="headerlink" href="#rst-combineavg" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_combineavg">
 <span class="sig-name descname"><span class="pre">rst_combineavg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rasters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_combineavg" title="Permalink to this definition"></a></dt>
@@ -323,13 +326,13 @@ The output raster will have the same pixel type as the input rasters.
 The output raster will have the same pixel size as the input rasters.
 The output raster will have the same coordinate reference system as the input rasters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing an array of raster tiles.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: RasterTileType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -373,9 +376,9 @@ SELECT rst_combineavg(tile) FROM grouped LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-combineavgagg">
-<h3>rst_combineavgagg<a class="headerlink" href="#rst-combineavgagg" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-combineavgagg">
+<h3>rst_combineavgagg<a class="headerlink" href="#rst-combineavgagg" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_combineavgagg">
 <span class="sig-name descname"><span class="pre">rst_combineavgagg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rasters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_combineavgagg" title="Permalink to this definition"></a></dt>
@@ -388,13 +391,13 @@ The output raster will have the same pixel type as the input rasters.
 The output raster will have the same pixel size as the input rasters.
 The output raster will have the same coordinate reference system as the input rasters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing raster tiles.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: RasterTileType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -435,9 +438,9 @@ GROUP BY 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-frombands">
-<h3>rst_frombands<a class="headerlink" href="#rst-frombands" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-frombands">
+<h3>rst_frombands<a class="headerlink" href="#rst-frombands" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_frombands">
 <span class="sig-name descname"><span class="pre">rst_frombands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rasters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_frombands" title="Permalink to this definition"></a></dt>
@@ -450,13 +453,13 @@ The output raster will have the same pixel type as the input raster bands.
 The output raster will have the same pixel size as the highest resolution input rasters.
 The output raster will have the same coordinate reference system as the input rasters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing an array of raster tiles.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: RasterTileType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -500,9 +503,9 @@ SELECT rst_frombands(tile) FROM grouped LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-fromfile">
-<h3>rst_fromfile<a class="headerlink" href="#rst-fromfile" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-fromfile">
+<h3>rst_fromfile<a class="headerlink" href="#rst-fromfile" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_fromfile">
 <span class="sig-name descname"><span class="pre">rst_fromfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;size_in_MB&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_fromfile" title="Permalink to this definition"></a></dt>
@@ -514,16 +517,16 @@ If the size_in_MB parameter is specified, the raster will be split into tiles of
 If the size_in_MB parameter is not specified, the raster will not be split into tiles.
 If the size_in_Mb &lt; 0 the raster wont be split into tiles.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> – A column containing the path to a raster file.</p></li>
 <li><p><strong>size_in_MB</strong> – Optional parameter to specify the size of the raster tile in MB. Default is not to split the input.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: RasterTileType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -560,9 +563,9 @@ If the size_in_Mb &lt; 0 the raster wont be split into tiles.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-georeference">
-<h3>rst_georeference<a class="headerlink" href="#rst-georeference" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-georeference">
+<h3>rst_georeference<a class="headerlink" href="#rst-georeference" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_georeference">
 <span class="sig-name descname"><span class="pre">rst_georeference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_georeference" title="Permalink to this definition"></a></dt>
@@ -574,13 +577,13 @@ GT(3) y-coordinate of the upper-left corner of the upper-left pixel.
 GT(4) column rotation (typically zero).
 GT(5) n-s pixel resolution / pixel height (negative value for a north-up image).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: MapType(StringType, DoubleType)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -622,21 +625,21 @@ SELECT rst_georeference(path) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rest-getnodata">
-<h3>rest_getnodata<a class="headerlink" href="#rest-getnodata" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rest-getnodata">
+<h3>rest_getnodata<a class="headerlink" href="#rest-getnodata" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_getnodata">
 <span class="sig-name descname"><span class="pre">rst_getnodata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_getnodata" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the nodata value of the raster bands.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType(DoubleType)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -675,9 +678,9 @@ SELECT rst_georeference(path) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-getsubdataset">
-<h3>rst_getsubdataset<a class="headerlink" href="#rst-getsubdataset" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-getsubdataset">
+<h3>rst_getsubdataset<a class="headerlink" href="#rst-getsubdataset" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_getsubdataset">
 <span class="sig-name descname"><span class="pre">rst_getsubdataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_getsubdataset" title="Permalink to this definition"></a></dt>
@@ -686,16 +689,16 @@ The subdataset name must be a string. The name is not a full path.
 The name is the last identifier in the subdataset path (FORMAT:PATH:NAME).
 The subdataset name must be a valid subdataset name for the raster.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>name</strong> – A column containing the name of the subdataset to return.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: RasterTileType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -731,30 +734,27 @@ The subdataset name must be a valid subdataset name for the raster.</p>
 </pre></div>
 </div>
 </div><table class="docutils align-default">
-<colgroup>
-<col style="width: 100%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>{index_id: 593308294097928191, raster: [00 01 10 … 00], parentPath: “dbfs:/path_to_file”, driver: “NetCDF” }</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-</div>
-<div class="section" id="rst-height">
-<h3>rst_height<a class="headerlink" href="#rst-height" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-height">
+<h3>rst_height<a class="headerlink" href="#rst-height" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_height">
 <span class="sig-name descname"><span class="pre">rst_height</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_height" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the height of the raster in pixels.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: IntegerType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -796,9 +796,9 @@ The subdataset name must be a valid subdataset name for the raster.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-initnodata">
-<h3>rst_initnodata<a class="headerlink" href="#rst-initnodata" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-initnodata">
+<h3>rst_initnodata<a class="headerlink" href="#rst-initnodata" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_initnodata">
 <span class="sig-name descname"><span class="pre">rst_initnodata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_initnodata" title="Permalink to this definition"></a></dt>
@@ -813,13 +813,13 @@ The default nodata value for IntegerType is Int.MinValue (-2147483648).
 The default nodata value for FloatType is Float.MinValue (-3.4028234663852886E38).
 The default nodata value for DoubleType is Double.MinValue (-1.7976931348623157E308).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: RasterTileType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -858,21 +858,21 @@ SELECT rst_initnodata(path) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-isempty">
-<h3>rst_isempty<a class="headerlink" href="#rst-isempty" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-isempty">
+<h3>rst_isempty<a class="headerlink" href="#rst-isempty" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_isempty">
 <span class="sig-name descname"><span class="pre">rst_isempty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_isempty" title="Permalink to this definition"></a></dt>
 <dd><p>Returns true if the raster is empty.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: BooleanType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -914,21 +914,21 @@ SELECT rst_initnodata(path) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-memsize">
-<h3>rst_memsize<a class="headerlink" href="#rst-memsize" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-memsize">
+<h3>rst_memsize<a class="headerlink" href="#rst-memsize" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_memsize">
 <span class="sig-name descname"><span class="pre">rst_memsize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_memsize" title="Permalink to this definition"></a></dt>
 <dd><p>Returns size of the raster in bytes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: LongType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -970,9 +970,9 @@ SELECT rst_initnodata(path) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-merge">
-<h3>rst_merge<a class="headerlink" href="#rst-merge" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-merge">
+<h3>rst_merge<a class="headerlink" href="#rst-merge" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_merge">
 <span class="sig-name descname"><span class="pre">rst_merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rasters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_merge" title="Permalink to this definition"></a></dt>
@@ -988,13 +988,13 @@ The output raster will have the same pixel type as the input rasters.
 The output raster will have the same pixel size as the highest resolution input rasters.
 The output raster will have the same coordinate reference system as the input rasters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing an array of raster tiles.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: RasterTileType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1038,9 +1038,9 @@ SELECT rst_merge(tile) FROM grouped LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-mergeagg">
-<h3>rst_mergeagg<a class="headerlink" href="#rst-mergeagg" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-mergeagg">
+<h3>rst_mergeagg<a class="headerlink" href="#rst-mergeagg" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_mergeagg">
 <span class="sig-name descname"><span class="pre">rst_mergeagg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rasters</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_mergeagg" title="Permalink to this definition"></a></dt>
@@ -1059,13 +1059,13 @@ The output raster will have the same pixel type as the input rasters.
 The output raster will have the same pixel size as the highest resolution input rasters.
 The output raster will have the same coordinate reference system as the input rasters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing raster tiles.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: RasterTileType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1104,22 +1104,22 @@ SELECT rst_mergeagg(tile) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-metadata">
-<h3>rst_metadata<a class="headerlink" href="#rst-metadata" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-metadata">
+<h3>rst_metadata<a class="headerlink" href="#rst-metadata" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_metadata">
 <span class="sig-name descname"><span class="pre">rst_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_metadata" title="Permalink to this definition"></a></dt>
 <dd><p>Extract the metadata describing the raster.
 Metadata is return as a map of key value pairs.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: MapType(StringType, StringType)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1185,9 +1185,9 @@ SELECT rst_metadata(path) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-ndvi">
-<h3>rst_ndvi<a class="headerlink" href="#rst-ndvi" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-ndvi">
+<h3>rst_ndvi<a class="headerlink" href="#rst-ndvi" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_ndvi">
 <span class="sig-name descname"><span class="pre">rst_ndvi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">red_band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nir_band</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_ndvi" title="Permalink to this definition"></a></dt>
@@ -1198,17 +1198,17 @@ The output raster will have a single band.
 The output raster will have a pixel type of float64.
 The output raster will have the same coordinate reference system as the input raster.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile.</p></li>
 <li><p><strong>red_band</strong> – A column containing the band number of the red band.</p></li>
 <li><p><strong>nir_band</strong> – A column containing the band number of the near infrared band.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: RasterTileType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1247,21 +1247,21 @@ SELECT rst_ndvi(path, 1, 2) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-numbands">
-<h3>rst_numbands<a class="headerlink" href="#rst-numbands" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-numbands">
+<h3>rst_numbands<a class="headerlink" href="#rst-numbands" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_numbands">
 <span class="sig-name descname"><span class="pre">rst_numbands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_numbands" title="Permalink to this definition"></a></dt>
 <dd><p>Returns number of bands in the raster.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: IntegerType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1303,21 +1303,21 @@ SELECT rst_ndvi(path, 1, 2) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-pixelheight">
-<h3>rst_pixelheight<a class="headerlink" href="#rst-pixelheight" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-pixelheight">
+<h3>rst_pixelheight<a class="headerlink" href="#rst-pixelheight" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_pixelheight">
 <span class="sig-name descname"><span class="pre">rst_pixelheight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_pixelheight" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the height of the pixel in the raster derived via GeoTransform.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1359,21 +1359,21 @@ SELECT rst_ndvi(path, 1, 2) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-pixelwidth">
-<h3>rst_pixelwidth<a class="headerlink" href="#rst-pixelwidth" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-pixelwidth">
+<h3>rst_pixelwidth<a class="headerlink" href="#rst-pixelwidth" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_pixelwidth">
 <span class="sig-name descname"><span class="pre">rst_pixelwidth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_pixelwidth" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the width of the pixel in the raster derived via GeoTransform.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1415,9 +1415,9 @@ SELECT rst_ndvi(path, 1, 2) FROM coral_netcdf LIMIT 1
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-rastertogridavg">
-<h3>rst_rastertogridavg<a class="headerlink" href="#rst-rastertogridavg" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-rastertogridavg">
+<h3>rst_rastertogridavg<a class="headerlink" href="#rst-rastertogridavg" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_rastertogridavg">
 <span class="sig-name descname"><span class="pre">rst_rastertogridavg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_rastertogridavg" title="Permalink to this definition"></a></dt>
@@ -1426,16 +1426,16 @@ For getting the output of cellID-&gt;value pairs, please use explode() function 
 CellID can be LongType or StringType depending on the configuration of MosaicContext.
 The value/measure for each cell is the average of the pixel values in the cell.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>resolution</strong> – A resolution of the grid index system.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1492,13 +1492,15 @@ SELECT rst_rastertogridavg(path, 3)
 </pre></div>
 </div>
 </div></div>
-<div class="doc-figure figure align-default" id="id2">
+<figure class="doc-figure align-default" id="id2">
 <img alt="../_images/h3.png" src="../_images/h3.png" />
-<p class="caption"><span class="caption-text">Fig 1. RST_RasterToGridAvg(raster, 3)</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
-</div>
-</div>
-<div class="section" id="rst-rastertogridcount">
-<h3>rst_rastertogridcount<a class="headerlink" href="#rst-rastertogridcount" title="Permalink to this headline"></a></h3>
+<figcaption>
+<p><span class="caption-text">Fig 1. RST_RasterToGridAvg(raster, 3)</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="rst-rastertogridcount">
+<h3>rst_rastertogridcount<a class="headerlink" href="#rst-rastertogridcount" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_rastertogridcount">
 <span class="sig-name descname"><span class="pre">rst_rastertogridcount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_rastertogridcount" title="Permalink to this definition"></a></dt>
@@ -1507,16 +1509,16 @@ For getting the output of cellID-&gt;value pairs, please use explode() function 
 CellID can be LongType or StringType depending on the configuration of MosaicContext.
 The value/measure for each cell is the average of the pixel values in the cell.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>resolution</strong> – A resolution of the grid index system.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1573,13 +1575,15 @@ SELECT rst_rastertogridcount(path, 3)
 </pre></div>
 </div>
 </div></div>
-<div class="doc-figure figure align-default" id="id3">
+<figure class="doc-figure align-default" id="id3">
 <img alt="../_images/h3.png" src="../_images/h3.png" />
-<p class="caption"><span class="caption-text">Fig 2. RST_RasterToGridCount(raster, 3)</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
-</div>
-</div>
-<div class="section" id="rst-rastertogridmax">
-<h3>rst_rastertogridmax<a class="headerlink" href="#rst-rastertogridmax" title="Permalink to this headline"></a></h3>
+<figcaption>
+<p><span class="caption-text">Fig 2. RST_RasterToGridCount(raster, 3)</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="rst-rastertogridmax">
+<h3>rst_rastertogridmax<a class="headerlink" href="#rst-rastertogridmax" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_rastertogridmax">
 <span class="sig-name descname"><span class="pre">rst_rastertogridmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_rastertogridmax" title="Permalink to this definition"></a></dt>
@@ -1588,16 +1592,16 @@ For getting the output of cellID-&gt;value pairs, please use explode() function 
 CellID can be LongType or StringType depending on the configuration of MosaicContext.
 The value/measure for each cell is the maximum pixel value.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>resolution</strong> – A resolution of the grid index system.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1654,13 +1658,15 @@ SELECT rst_rastertogridmax(path, 3)
 </pre></div>
 </div>
 </div></div>
-<div class="doc-figure figure align-default" id="id4">
+<figure class="doc-figure align-default" id="id4">
 <img alt="../_images/h3.png" src="../_images/h3.png" />
-<p class="caption"><span class="caption-text">Fig 3. RST_RasterToGridMax(raster, 3)</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
-</div>
-</div>
-<div class="section" id="rst-rastertogridmedian">
-<h3>rst_rastertogridmedian<a class="headerlink" href="#rst-rastertogridmedian" title="Permalink to this headline"></a></h3>
+<figcaption>
+<p><span class="caption-text">Fig 3. RST_RasterToGridMax(raster, 3)</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="rst-rastertogridmedian">
+<h3>rst_rastertogridmedian<a class="headerlink" href="#rst-rastertogridmedian" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_rastertogridmedian">
 <span class="sig-name descname"><span class="pre">rst_rastertogridmedian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_rastertogridmedian" title="Permalink to this definition"></a></dt>
@@ -1669,16 +1675,16 @@ For getting the output of cellID-&gt;value pairs, please use explode() function 
 CellID can be LongType or StringType depending on the configuration of MosaicContext.
 The value/measure for each cell is the median pixel value.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>resolution</strong> – A resolution of the grid index system.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1735,13 +1741,15 @@ SELECT rst_rastertogridmax(path, 3)
 </pre></div>
 </div>
 </div></div>
-<div class="doc-figure figure align-default" id="id5">
+<figure class="doc-figure align-default" id="id5">
 <img alt="../_images/h3.png" src="../_images/h3.png" />
-<p class="caption"><span class="caption-text">Fig 4. RST_RasterToGridMedian(raster, 3)</span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
-</div>
-</div>
-<div class="section" id="rst-rastertogridmin">
-<h3>rst_rastertogridmin<a class="headerlink" href="#rst-rastertogridmin" title="Permalink to this headline"></a></h3>
+<figcaption>
+<p><span class="caption-text">Fig 4. RST_RasterToGridMedian(raster, 3)</span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="rst-rastertogridmin">
+<h3>rst_rastertogridmin<a class="headerlink" href="#rst-rastertogridmin" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_rastertogridmin">
 <span class="sig-name descname"><span class="pre">rst_rastertogridmin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_rastertogridmin" title="Permalink to this definition"></a></dt>
@@ -1750,16 +1758,16 @@ For getting the output of cellID-&gt;value pairs, please use explode() function 
 CellID can be LongType or StringType depending on the configuration of MosaicContext.
 The value/measure for each cell is the median pixel value.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>resolution</strong> – A resolution of the grid index system.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1816,13 +1824,15 @@ SELECT rst_rastertogridmin(path, 3)
 </pre></div>
 </div>
 </div></div>
-<div class="doc-figure figure align-default" id="id6">
+<figure class="doc-figure align-default" id="id6">
 <img alt="../_images/h3.png" src="../_images/h3.png" />
-<p class="caption"><span class="caption-text">Fig 4. RST_RasterToGridMin(raster, 3)</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
-</div>
-</div>
-<div class="section" id="rst-rastertoworldcoord">
-<h3>rst_rastertoworldcoord<a class="headerlink" href="#rst-rastertoworldcoord" title="Permalink to this headline"></a></h3>
+<figcaption>
+<p><span class="caption-text">Fig 4. RST_RasterToGridMin(raster, 3)</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="rst-rastertoworldcoord">
+<h3>rst_rastertoworldcoord<a class="headerlink" href="#rst-rastertoworldcoord" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_rastertoworldcoord">
 <span class="sig-name descname"><span class="pre">rst_rastertoworldcoord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_rastertoworldcoord" title="Permalink to this definition"></a></dt>
@@ -1830,17 +1840,17 @@ SELECT rst_rastertogridmin(path, 3)
 The result is a WKT point geometry.
 The coordinates are computed using the GeoTransform of the raster to respect the projection.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>x</strong> – x coordinate of the pixel.</p></li>
 <li><p><strong>y</strong> – y coordinate of the pixel.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StringType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1879,26 +1889,26 @@ The coordinates are computed using the GeoTransform of the raster to respect the
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-rastertoworldcoordx">
-<h3>rst_rastertoworldcoordx<a class="headerlink" href="#rst-rastertoworldcoordx" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-rastertoworldcoordx">
+<h3>rst_rastertoworldcoordx<a class="headerlink" href="#rst-rastertoworldcoordx" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="id0">
 <span class="sig-name descname"><span class="pre">rst_rastertoworldcoord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the world coordinates of the raster pixel at the given x and y coordinates.
 The result is the X coordinate of the point after applying the GeoTransform of the raster.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>x</strong> – x coordinate of the pixel.</p></li>
 <li><p><strong>y</strong> – y coordinate of the pixel.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StringType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1937,26 +1947,26 @@ The result is the X coordinate of the point after applying the GeoTransform of t
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-rastertoworldcoordy">
-<h3>rst_rastertoworldcoordy<a class="headerlink" href="#rst-rastertoworldcoordy" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-rastertoworldcoordy">
+<h3>rst_rastertoworldcoordy<a class="headerlink" href="#rst-rastertoworldcoordy" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_rastertoworldcoordy">
 <span class="sig-name descname"><span class="pre">rst_rastertoworldcoordy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_rastertoworldcoordy" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the world coordinates of the raster pixel at the given x and y coordinates.
 The result is the X coordinate of the point after applying the GeoTransform of the raster.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>x</strong> – x coordinate of the pixel.</p></li>
 <li><p><strong>y</strong> – y coordinate of the pixel.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StringType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1995,9 +2005,9 @@ The result is the X coordinate of the point after applying the GeoTransform of t
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-retile">
-<h3>rst_retile<a class="headerlink" href="#rst-retile" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-retile">
+<h3>rst_retile<a class="headerlink" href="#rst-retile" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_retile">
 <span class="sig-name descname"><span class="pre">rst_retile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_retile" title="Permalink to this definition"></a></dt>
@@ -2006,17 +2016,17 @@ The new rasters are stored in the checkpoint directory.
 The results are the paths to the new rasters.
 The result set is automatically exploded.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p></li>
 <li><p><strong>width</strong> – The width of the tiles.</p></li>
 <li><p><strong>height</strong> – The height of the tiles.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StringType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2058,9 +2068,9 @@ SELECT rst_retile(path, 300, 300)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-rotation">
-<h3>rst_rotation<a class="headerlink" href="#rst-rotation" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-rotation">
+<h3>rst_rotation<a class="headerlink" href="#rst-rotation" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_rotation">
 <span class="sig-name descname"><span class="pre">rst_rotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_rotation" title="Permalink to this definition"></a></dt>
@@ -2068,13 +2078,13 @@ SELECT rst_retile(path, 300, 300)
 The rotation is the angle between the X axis and the North axis.
 The rotation is computed using the GeoTransform of the raster.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2116,21 +2126,21 @@ The rotation is computed using the GeoTransform of the raster.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-scalex">
-<h3>rst_scalex<a class="headerlink" href="#rst-scalex" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-scalex">
+<h3>rst_scalex<a class="headerlink" href="#rst-scalex" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_scalex">
 <span class="sig-name descname"><span class="pre">rst_scalex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_scalex" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the scale of the raster in the X direction.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2169,21 +2179,21 @@ The rotation is computed using the GeoTransform of the raster.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-scaley">
-<h3>rst_scaley<a class="headerlink" href="#rst-scaley" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-scaley">
+<h3>rst_scaley<a class="headerlink" href="#rst-scaley" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_scaley">
 <span class="sig-name descname"><span class="pre">rst_scaley</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_scaley" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the scale of the raster in the Y direction.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2222,9 +2232,9 @@ The rotation is computed using the GeoTransform of the raster.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-setnodata">
-<h3>rst_setnodata<a class="headerlink" href="#rst-setnodata" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-setnodata">
+<h3>rst_setnodata<a class="headerlink" href="#rst-setnodata" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_setnodata">
 <span class="sig-name descname"><span class="pre">rst_setnodata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodata</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_setnodata" title="Permalink to this definition"></a></dt>
@@ -2233,16 +2243,16 @@ The result is a new raster with the nodata value set.
 The same nodata value is set for all bands of the raster if a single value is passed.
 If an array of values is passed, the nodata value is set for each band of the raster.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p></li>
 <li><p><strong>nodata</strong> – The nodata value to set.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StringType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2284,21 +2294,21 @@ SELECT rst_setnodata(path, 0)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-skewx">
-<h3>rst_skewx<a class="headerlink" href="#rst-skewx" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-skewx">
+<h3>rst_skewx<a class="headerlink" href="#rst-skewx" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_skewx">
 <span class="sig-name descname"><span class="pre">rst_skewx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_skewx" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the skew of the raster in the X direction.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2337,21 +2347,21 @@ SELECT rst_setnodata(path, 0)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-skewy">
-<h3>rst_skewy<a class="headerlink" href="#rst-skewy" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-skewy">
+<h3>rst_skewy<a class="headerlink" href="#rst-skewy" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="id1">
 <span class="sig-name descname"><span class="pre">rst_skewx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the skew of the raster in the Y direction.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2390,9 +2400,9 @@ SELECT rst_setnodata(path, 0)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-srid">
-<h3>rst_srid<a class="headerlink" href="#rst-srid" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-srid">
+<h3>rst_srid<a class="headerlink" href="#rst-srid" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_srid">
 <span class="sig-name descname"><span class="pre">rst_srid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_srid" title="Permalink to this definition"></a></dt>
@@ -2403,13 +2413,13 @@ The SRID is the EPSG code of the raster.</p>
 <p>For complex CRS definition the EPSG code may default to 0.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2448,9 +2458,9 @@ The SRID is the EPSG code of the raster.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-subdatasets">
-<h3>rst_subdatasets<a class="headerlink" href="#rst-subdatasets" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-subdatasets">
+<h3>rst_subdatasets<a class="headerlink" href="#rst-subdatasets" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_subdatasets">
 <span class="sig-name descname"><span class="pre">rst_subdatasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_subdatasets" title="Permalink to this definition"></a></dt>
@@ -2458,13 +2468,13 @@ The SRID is the EPSG code of the raster.</p>
 The subdatasets are the paths to the subdatasets of the raster.
 The result is a map of the subdataset path to the subdatasets and the description of the subdatasets.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: MapType(StringType, StringType)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2512,9 +2522,9 @@ SELECT rst_subdatasets(path)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-subdivide">
-<h3>rst_subdivide<a class="headerlink" href="#rst-subdivide" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-subdivide">
+<h3>rst_subdivide<a class="headerlink" href="#rst-subdivide" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_subdivide">
 <span class="sig-name descname"><span class="pre">rst_subdivide</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizeInMB</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_subdivide" title="Permalink to this definition"></a></dt>
@@ -2528,13 +2538,13 @@ The result set is automatically exploded.</p>
 <p>The size of the tiles is approximate. Due to compressions and other effects we cannot guarantee the size of the tiles in MB.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p></li>
 <li><p><strong>sizeInMB</strong> – The size of the tiles in MB.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Example</dt>
+<dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2576,9 +2586,9 @@ SELECT rst_subdivide(path, 10)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-summary">
-<h3>rst_summary<a class="headerlink" href="#rst-summary" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-summary">
+<h3>rst_summary<a class="headerlink" href="#rst-summary" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_summary">
 <span class="sig-name descname"><span class="pre">rst_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_summary" title="Permalink to this definition"></a></dt>
@@ -2587,13 +2597,13 @@ The summary is a map of the statistics of the raster.
 The logic is produced by gdalinfo procedure.
 The result is stored as JSON.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: MapType(StringType, StringType)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2644,9 +2654,9 @@ SELECT rst_summary(path)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-tessellate">
-<h3>rst_tessellate<a class="headerlink" href="#rst-tessellate" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-tessellate">
+<h3>rst_tessellate<a class="headerlink" href="#rst-tessellate" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_tessellate">
 <span class="sig-name descname"><span class="pre">rst_tessellate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_tessellate" title="Permalink to this definition"></a></dt>
@@ -2656,13 +2666,13 @@ The result set is automatically exploded.
 If rst_merge is called on the tile set the original raster will be reconstructed.
 The output tiles have same number of bands as the input rasters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile.</p></li>
 <li><p><strong>sizeInMB</strong> – The size of the tiles in MB.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Example</dt>
+<dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2704,9 +2714,9 @@ SELECT rst_tessellate(path, 10)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-tooverlappingtiles">
-<h3>rst_tooverlappingtiles<a class="headerlink" href="#rst-tooverlappingtiles" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-tooverlappingtiles">
+<h3>rst_tooverlappingtiles<a class="headerlink" href="#rst-tooverlappingtiles" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_tooverlappingtiles">
 <span class="sig-name descname"><span class="pre">rst_tooverlappingtiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_tooverlappingtiles" title="Permalink to this definition"></a></dt>
@@ -2717,7 +2727,7 @@ The result set is automatically exploded.
 If rst_merge is called on the tile set the original raster will be reconstructed.
 The output tiles have same number of bands as the input rasters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile.</p></li>
 <li><p><strong>width</strong> – The width of the tiles in pixels.</p></li>
@@ -2725,7 +2735,7 @@ The output tiles have same number of bands as the input rasters.</p>
 <li><p><strong>overlap</strong> – The overlap of the tiles in percentage.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Example</dt>
+<dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2767,21 +2777,21 @@ SELECT rst_tooverlappingtiles(path, 10, 10, 10)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-tryopen">
-<h3>rst_tryopen<a class="headerlink" href="#rst-tryopen" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-tryopen">
+<h3>rst_tryopen<a class="headerlink" href="#rst-tryopen" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_tryopen">
 <span class="sig-name descname"><span class="pre">rst_tryopen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_tryopen" title="Permalink to this definition"></a></dt>
 <dd><p>Tries to open the raster. If the raster cannot be opened the result is false and if the raster can be opened the result is true.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: BooleanType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2820,22 +2830,22 @@ df.select(rst_tryopen(col(&quot;path&quot;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-upperleftx">
-<h3>rst_upperleftx<a class="headerlink" href="#rst-upperleftx" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-upperleftx">
+<h3>rst_upperleftx<a class="headerlink" href="#rst-upperleftx" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_upperleftx">
 <span class="sig-name descname"><span class="pre">rst_upperleftx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_upperleftx" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the upper left X coordinate of the raster.
 The value is computed based on GeoTransform.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2874,22 +2884,22 @@ The value is computed based on GeoTransform.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-upperlefty">
-<h3>rst_upperlefty<a class="headerlink" href="#rst-upperlefty" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-upperlefty">
+<h3>rst_upperlefty<a class="headerlink" href="#rst-upperlefty" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_upperlefty">
 <span class="sig-name descname"><span class="pre">rst_upperlefty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_upperlefty" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the upper left Y coordinate of the raster.
 The value is computed based on GeoTransform.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2928,21 +2938,21 @@ The value is computed based on GeoTransform.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-width">
-<h3>rst_width<a class="headerlink" href="#rst-width" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-width">
+<h3>rst_width<a class="headerlink" href="#rst-width" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_width">
 <span class="sig-name descname"><span class="pre">rst_width</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_width" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the width of the raster in pixels.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: IntegerType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2981,9 +2991,9 @@ The value is computed based on GeoTransform.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-worldtorastercoord">
-<h3>rst_worldtorastercoord<a class="headerlink" href="#rst-worldtorastercoord" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-worldtorastercoord">
+<h3>rst_worldtorastercoord<a class="headerlink" href="#rst-worldtorastercoord" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_worldtorastercoord">
 <span class="sig-name descname"><span class="pre">rst_worldtorastercoord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xworld</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yworld</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_worldtorastercoord" title="Permalink to this definition"></a></dt>
@@ -2992,17 +3002,17 @@ The raster coordinates are the pixel coordinates of the raster.
 The world coordinates are the coordinates in the CRS of the raster.
 The coordinates are resolved using GeoTransform.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p></li>
 <li><p><strong>x</strong> – X world coordinate.</p></li>
 <li><p><strong>y</strong> – Y world coordinate.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StructType(IntegerType, IntegerType)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -3041,9 +3051,9 @@ SELECT rst_worldtorastercoord(path, -160.1, 40.0)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-worldtorastercoordx">
-<h3>rst_worldtorastercoordx<a class="headerlink" href="#rst-worldtorastercoordx" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-worldtorastercoordx">
+<h3>rst_worldtorastercoordx<a class="headerlink" href="#rst-worldtorastercoordx" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_worldtorastercoordx">
 <span class="sig-name descname"><span class="pre">rst_worldtorastercoordx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xworld</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yworld</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_worldtorastercoordx" title="Permalink to this definition"></a></dt>
@@ -3053,17 +3063,17 @@ The world coordinates are the coordinates in the CRS of the raster.
 The coordinates are resolved using GeoTransform.
 This method returns the X coordinate.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p></li>
 <li><p><strong>x</strong> – X world coordinate.</p></li>
 <li><p><strong>y</strong> – Y world coordinate.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: IntegerType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -3102,9 +3112,9 @@ This method returns the X coordinate.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="rst-worldtorastercoordy">
-<h3>rst_worldtorastercoordy<a class="headerlink" href="#rst-worldtorastercoordy" title="Permalink to this headline"></a></h3>
+</section>
+<section id="rst-worldtorastercoordy">
+<h3>rst_worldtorastercoordy<a class="headerlink" href="#rst-worldtorastercoordy" title="Permalink to this heading"></a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="rst_worldtorastercoordy">
 <span class="sig-name descname"><span class="pre">rst_worldtorastercoordy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xworld</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yworld</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rst_worldtorastercoordy" title="Permalink to this definition"></a></dt>
@@ -3114,17 +3124,17 @@ The world coordinates are the coordinates in the CRS of the raster.
 The coordinates are resolved using GeoTransform.
 This method returns the Y coordinate.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tile</strong> – A column containing the raster tile. For &lt; 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.</p></li>
 <li><p><strong>x</strong> – X world coordinate.</p></li>
 <li><p><strong>y</strong> – Y world coordinate.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: IntegerType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -3163,9 +3173,9 @@ This method returns the Y coordinate.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

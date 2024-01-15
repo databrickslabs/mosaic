@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spatial functions &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,12 +34,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -76,7 +82,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="api.html">API Documentation</a></li>
       <li class="breadcrumb-item active">Spatial functions</li>
       <li class="wy-breadcrumbs-aside">
@@ -88,22 +94,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="spatial-functions">
-<h1>Spatial functions<a class="headerlink" href="#spatial-functions" title="Permalink to this headline"></a></h1>
-<div class="section" id="flatten-polygons">
-<h2>flatten_polygons<a class="headerlink" href="#flatten-polygons" title="Permalink to this headline"></a></h2>
+  <section id="spatial-functions">
+<h1>Spatial functions<a class="headerlink" href="#spatial-functions" title="Permalink to this heading"></a></h1>
+<section id="flatten-polygons">
+<h2>flatten_polygons<a class="headerlink" href="#flatten-polygons" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="flatten_polygons">
 <span class="sig-name descname"><span class="pre">flatten_polygons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#flatten_polygons" title="Permalink to this definition"></a></dt>
 <dd><p>Explodes a MultiPolygon geometry into one row per constituent Polygon.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – MultiPolygon Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StringType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -151,21 +157,21 @@
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-area">
-<h2>st_area<a class="headerlink" href="#st-area" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-area">
+<h2>st_area<a class="headerlink" href="#st-area" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_area">
 <span class="sig-name descname"><span class="pre">st_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_area" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the area of a geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -211,24 +217,24 @@
 <p class="admonition-title">Note</p>
 <p>Results of this function are always expressed in the original units of the input geometry.</p>
 </div>
-</div>
-<div class="section" id="st-buffer">
-<h2>st_buffer<a class="headerlink" href="#st-buffer" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-buffer">
+<h2>st_buffer<a class="headerlink" href="#st-buffer" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_buffer">
 <span class="sig-name descname"><span class="pre">st_buffer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_buffer" title="Permalink to this definition"></a></dt>
 <dd><p>Buffer the input geometry by radius <cite>radius</cite> and return a new, buffered geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>col</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>radius</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Double</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: Geometry</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -270,26 +276,26 @@
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-bufferloop">
-<h2>st_bufferloop<a class="headerlink" href="#st-bufferloop" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-bufferloop">
+<h2>st_bufferloop<a class="headerlink" href="#st-bufferloop" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_bufferloop">
 <span class="sig-name descname"><span class="pre">st_bufferloop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">innerRadius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outerRadius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_bufferloop" title="Permalink to this definition"></a></dt>
 <dd><p>Returns a difference between st_buffer(col, outerRadius) and st_buffer(col, innerRadius).
 The resulting geometry is a loop with a width of outerRadius - innerRadius.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>col</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>innerRadius</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Radius of the resulting geometry hole.</p></li>
 <li><p><strong>outerRadius</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Radius of the resulting geometry.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: Geometry</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -331,25 +337,27 @@ df.select(st_bufferloop(&#39;wkt&#39;, lit(2.), lit(2.1))).show()
 </pre></div>
 </div>
 </div></div>
-<div class="doc-figure figure align-default" id="id1">
+<figure class="doc-figure align-default" id="id1">
 <img alt="../_images/geom.png" src="../_images/geom.png" />
-<p class="caption"><span class="caption-text">Fig 1. ST_BufferLoop(geom, 0.02, 0.04)</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
-</div>
-</div>
-<div class="section" id="st-centroid2d-deprecated">
-<h2>st_centroid2D [Deprecated]<a class="headerlink" href="#st-centroid2d-deprecated" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 1. ST_BufferLoop(geom, 0.02, 0.04)</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="st-centroid2d-deprecated">
+<h2>st_centroid2D [Deprecated]<a class="headerlink" href="#st-centroid2d-deprecated" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_centroid2D">
 <span class="sig-name descname"><span class="pre">st_centroid2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_centroid2D" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the x and y coordinates representing the centroid of the input geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StructType[x: DoubleType, y: DoubleType]</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -391,21 +399,21 @@ df.select(st_bufferloop(&#39;wkt&#39;, lit(2.), lit(2.1))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-centroid">
-<h2>st_centroid<a class="headerlink" href="#st-centroid" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-centroid">
+<h2>st_centroid<a class="headerlink" href="#st-centroid" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_centroid">
 <span class="sig-name descname"><span class="pre">st_centroid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_centroid" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the POINT geometry representing the centroid of the input geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: Geometry</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -447,21 +455,21 @@ df.select(st_bufferloop(&#39;wkt&#39;, lit(2.), lit(2.1))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-convexhull">
-<h2>st_convexhull<a class="headerlink" href="#st-convexhull" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-convexhull">
+<h2>st_convexhull<a class="headerlink" href="#st-convexhull" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_convexhull">
 <span class="sig-name descname"><span class="pre">st_convexhull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_convexhull" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the convex hull of a geometry or multi-geometry object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -503,24 +511,24 @@ df.select(st_bufferloop(&#39;wkt&#39;, lit(2.), lit(2.1))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-difference">
-<h2>st_difference<a class="headerlink" href="#st-difference" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-difference">
+<h2>st_difference<a class="headerlink" href="#st-difference" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_difference">
 <span class="sig-name descname"><span class="pre">st_difference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_geom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_difference" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the point set difference of the left and right geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>left_geom</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>right_geom</strong> (<em>Column</em>) – Geometry</p></li>
 </ul>
 </dd>
-<dt class="field-even">Rtype Column</dt>
+<dt class="field-even">Rtype Column<span class="colon">:</span></dt>
 <dd class="field-even"><p>Geometry</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -562,21 +570,21 @@ df.select(st_difference(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-dimension">
-<h2>st_dimension<a class="headerlink" href="#st-dimension" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-dimension">
+<h2>st_dimension<a class="headerlink" href="#st-dimension" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_dimension">
 <span class="sig-name descname"><span class="pre">st_dimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_dimension" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the dimension of the geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: IntegerType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -618,24 +626,24 @@ df.select(st_difference(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-distance">
-<h2>st_distance<a class="headerlink" href="#st-distance" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-distance">
+<h2>st_distance<a class="headerlink" href="#st-distance" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_distance">
 <span class="sig-name descname"><span class="pre">st_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geom2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_distance" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the euclidean distance between <cite>geom1</cite> and <cite>geom2</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geom1</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>geom2</strong> (<em>Column</em>) – Geometry</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -681,21 +689,21 @@ df.select(st_difference(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <p class="admonition-title">Note</p>
 <p>Results of this euclidean distance function are always expressed in the original units of the input geometries, e.g. for WGS84 (SRID 4326) units are degrees.</p>
 </div>
-</div>
-<div class="section" id="st-dump">
-<h2>st_dump<a class="headerlink" href="#st-dump" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-dump">
+<h2>st_dump<a class="headerlink" href="#st-dump" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_dump">
 <span class="sig-name descname"><span class="pre">st_dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_dump" title="Permalink to this definition"></a></dt>
 <dd><p>Explodes a multi-geometry into one row per constituent geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – The input multi-geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -749,22 +757,22 @@ df.select(st_difference(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-envelope">
-<h2>st_envelope<a class="headerlink" href="#st-envelope" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-envelope">
+<h2>st_envelope<a class="headerlink" href="#st-envelope" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_envelope">
 <span class="sig-name descname"><span class="pre">st_envelope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_envelope" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the minimum bounding box of the input geometry, as a geometry.
 This bounding box is defined by the rectangular polygon with corner points <cite>(x_min, y_min)</cite>, <cite>(x_max, y_min)</cite>, <cite>(x_min, y_max)</cite>, <cite>(x_max, y_max)</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -806,21 +814,21 @@ df.select(st_envelope(&#39;wkt&#39;)).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-geometrytype">
-<h2>st_geometrytype<a class="headerlink" href="#st-geometrytype" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-geometrytype">
+<h2>st_geometrytype<a class="headerlink" href="#st-geometrytype" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_geometrytype">
 <span class="sig-name descname"><span class="pre">st_geometrytype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_geometrytype" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the type of the input geometry (“POINT”, “LINESTRING”, “POLYGON” etc.).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StringType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -862,15 +870,15 @@ df.select(st_envelope(&#39;wkt&#39;)).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-haversine">
-<h2>st_haversine<a class="headerlink" href="#st-haversine" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-haversine">
+<h2>st_haversine<a class="headerlink" href="#st-haversine" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_haversine">
 <span class="sig-name descname"><span class="pre">st_haversine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lng1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lng2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_haversine" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the haversine distance between lat1/lng1 and lat2/lng2.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lat1</strong> (<em>Column</em>) – DoubleType</p></li>
 <li><p><strong>lng1</strong> (<em>Column</em>) – DoubleType</p></li>
@@ -878,10 +886,10 @@ df.select(st_envelope(&#39;wkt&#39;)).show()
 <li><p><strong>lng2</strong> (<em>Column</em>) – DoubleType</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -927,26 +935,26 @@ df.select(st_envelope(&#39;wkt&#39;)).show()
 <p class="admonition-title">Note</p>
 <p>Results of this function are always expressed in km, while the input lat/lng pairs are expected to be in degrees. The radius used (in km) is 6371.0088.</p>
 </div>
-</div>
-<div class="section" id="st-hasvalidcoordinates">
-<h2>st_hasvalidcoordinates<a class="headerlink" href="#st-hasvalidcoordinates" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-hasvalidcoordinates">
+<h2>st_hasvalidcoordinates<a class="headerlink" href="#st-hasvalidcoordinates" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_hasvalidcoordinates">
 <span class="sig-name descname"><span class="pre">st_hasvalidcoordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">which</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_hasvalidcoordinates" title="Permalink to this definition"></a></dt>
 <dd><p>Checks if all points in <cite>geom</cite> are valid with respect to crs bounds.
 CRS bounds can be provided either as bounds or as reprojected_bounds.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geom</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>crs</strong> (<em>Column</em>) – CRS name (EPSG ID), e.g. “EPSG:2192”</p></li>
 <li><p><strong>which</strong> (<em>Column</em>) – Check against geographic <cite>“bounds”</cite> or geometric <cite>“reprojected_bounds”</cite> bounds.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: IntegerType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -988,24 +996,24 @@ CRS bounds can be provided either as bounds or as reprojected_bounds.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-intersection">
-<h2>st_intersection<a class="headerlink" href="#st-intersection" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-intersection">
+<h2>st_intersection<a class="headerlink" href="#st-intersection" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_intersection">
 <span class="sig-name descname"><span class="pre">st_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geom2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_intersection" title="Permalink to this definition"></a></dt>
 <dd><p>Returns a geometry representing the intersection of <cite>left_geom</cite> and <cite>right_geom</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geom1</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>geom2</strong> (<em>Column</em>) – Geometry</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1047,21 +1055,21 @@ CRS bounds can be provided either as bounds or as reprojected_bounds.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-isvalid">
-<h2>st_isvalid<a class="headerlink" href="#st-isvalid" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-isvalid">
+<h2>st_isvalid<a class="headerlink" href="#st-isvalid" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_isvalid">
 <span class="sig-name descname"><span class="pre">st_isvalid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_isvalid" title="Permalink to this definition"></a></dt>
 <dd><p>Returns <cite>true</cite> if the geometry is valid.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: BooleanType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1142,21 +1150,21 @@ CRS bounds can be provided either as bounds or as reprojected_bounds.</p>
 The assertions used in the ESRI geometry API (JTS is the default) follow the definitions in the
 “Simple feature access - Part 1” document (OGC 06-103r4) for each geometry type.</p>
 </div>
-</div>
-<div class="section" id="st-length">
-<h2>st_length<a class="headerlink" href="#st-length" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-length">
+<h2>st_length<a class="headerlink" href="#st-length" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_length">
 <span class="sig-name descname"><span class="pre">st_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_length" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the length of a geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1206,21 +1214,21 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 <p class="admonition-title">Note</p>
 <p>Alias for <a class="reference internal" href="#st-perimeter"><span class="std std-ref">st_perimeter</span></a>.</p>
 </div>
-</div>
-<div class="section" id="st-numpoints">
-<h2>st_numpoints<a class="headerlink" href="#st-numpoints" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-numpoints">
+<h2>st_numpoints<a class="headerlink" href="#st-numpoints" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_numpoints">
 <span class="sig-name descname"><span class="pre">st_numpoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_numpoints" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the number of points in <cite>geom</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: IntegerType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1262,21 +1270,21 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-perimeter">
-<h2>st_perimeter<a class="headerlink" href="#st-perimeter" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-perimeter">
+<h2>st_perimeter<a class="headerlink" href="#st-perimeter" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_perimeter">
 <span class="sig-name descname"><span class="pre">st_perimeter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_perimeter" title="Permalink to this definition"></a></dt>
 <dd><p>Compute the perimeter length of a geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1326,24 +1334,24 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 <p class="admonition-title">Note</p>
 <p>Alias for <a class="reference internal" href="#st-length"><span class="std std-ref">st_length</span></a>.</p>
 </div>
-</div>
-<div class="section" id="st-rotate">
-<h2>st_rotate<a class="headerlink" href="#st-rotate" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-rotate">
+<h2>st_rotate<a class="headerlink" href="#st-rotate" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_rotate">
 <span class="sig-name descname"><span class="pre">st_rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">td</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_rotate" title="Permalink to this definition"></a></dt>
 <dd><p>Rotates <cite>geom</cite> using the rotational factor <cite>td</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geom</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>td</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Rotation (in radians)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1387,25 +1395,25 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-scale">
-<h2>st_scale<a class="headerlink" href="#st-scale" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-scale">
+<h2>st_scale<a class="headerlink" href="#st-scale" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_scale">
 <span class="sig-name descname"><span class="pre">st_scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yd</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_scale" title="Permalink to this definition"></a></dt>
 <dd><p>Scales <cite>geom</cite> using the scaling factors <cite>xd</cite> and <cite>yd</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geom</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>xd</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Scale factor in the x-direction</p></li>
 <li><p><strong>yd</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Scale factor in the y-direction</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1447,24 +1455,24 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-setsrid">
-<h2>st_setsrid<a class="headerlink" href="#st-setsrid" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-setsrid">
+<h2>st_setsrid<a class="headerlink" href="#st-setsrid" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_setsrid">
 <span class="sig-name descname"><span class="pre">st_setsrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_setsrid" title="Permalink to this definition"></a></dt>
 <dd><p>Sets the Coordinate Reference System well-known identifier (SRID) for <cite>geom</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geom</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>srid</strong> (<em>Column</em><em> (</em><em>IntegerType</em><em>)</em>) – The spatial reference identifier of <cite>geom</cite>, expressed as an integer, e.g. <cite>4326</cite> for EPSG:4326 / WGS84</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1512,24 +1520,24 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 rather it tells Mosaic the SRID in which the current coordinates are expressed.
 ST_SetSRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.</p>
 </div>
-</div>
-<div class="section" id="st-simplify">
-<h2>st_simplify<a class="headerlink" href="#st-simplify" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-simplify">
+<h2>st_simplify<a class="headerlink" href="#st-simplify" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_simplify">
 <span class="sig-name descname"><span class="pre">st_simplify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_simplify" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the simplified geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geom</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>tol</strong> (<em>Column</em>) – Tolerance</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: Geometry</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1575,21 +1583,21 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 <p class="admonition-title">Note</p>
 <p>The specified tolerance will be ignored by the ESRI geometry API.</p>
 </div>
-</div>
-<div class="section" id="st-srid">
-<h2>st_srid<a class="headerlink" href="#st-srid" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-srid">
+<h2>st_srid<a class="headerlink" href="#st-srid" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_srid">
 <span class="sig-name descname"><span class="pre">st_srid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_srid" title="Permalink to this definition"></a></dt>
 <dd><p>Looks up the Coordinate Reference System well-known identifier (SRID) for <cite>geom</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>geom</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1639,24 +1647,24 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 <p class="admonition-title">Note</p>
 <p>ST_SRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.</p>
 </div>
-</div>
-<div class="section" id="st-transform">
-<h2>st_transform<a class="headerlink" href="#st-transform" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-transform">
+<h2>st_transform<a class="headerlink" href="#st-transform" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_transform">
 <span class="sig-name descname"><span class="pre">st_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_transform" title="Permalink to this definition"></a></dt>
 <dd><p>Transforms the horizontal (XY) coordinates of <cite>geom</cite> from the current reference system to that described by <cite>srid</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geom</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>srid</strong> (<em>Column</em><em> (</em><em>IntegerType</em><em>)</em>) – Target spatial reference system for <cite>geom</cite>, expressed as an integer, e.g. <cite>3857</cite> for EPSG:3857 / Pseudo-Mercator</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1708,25 +1716,25 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 <p class="admonition-title">Note</p>
 <p>If <cite>geom</cite> does not have an associated SRID, use ST_SetSRID to set this before calling ST_Transform.</p>
 </div>
-</div>
-<div class="section" id="st-translate">
-<h2>st_translate<a class="headerlink" href="#st-translate" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-translate">
+<h2>st_translate<a class="headerlink" href="#st-translate" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_translate">
 <span class="sig-name descname"><span class="pre">st_translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yd</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_translate" title="Permalink to this definition"></a></dt>
 <dd><p>Translates <cite>geom</cite> to a new location using the distance parameters <cite>xd</cite> and <cite>yd</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geom</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>xd</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Offset in the x-direction</p></li>
 <li><p><strong>yd</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Offset in the y-direction</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1768,24 +1776,24 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-union">
-<h2>st_union<a class="headerlink" href="#st-union" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-union">
+<h2>st_union<a class="headerlink" href="#st-union" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_union">
 <span class="sig-name descname"><span class="pre">st_union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_geom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_union" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the point set union of the input geometries.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>left_geom</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>right_geom</strong> (<em>Column</em>) – Geometry</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: Geometry</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1827,21 +1835,21 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-unaryunion">
-<h2>st_unaryunion<a class="headerlink" href="#st-unaryunion" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-unaryunion">
+<h2>st_unaryunion<a class="headerlink" href="#st-unaryunion" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_unaryunion">
 <span class="sig-name descname"><span class="pre">st_unaryunion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_unaryunion" title="Permalink to this definition"></a></dt>
 <dd><p>Returns a geometry that represents the point set union of the given geometry</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: Geometry</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1883,21 +1891,21 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-x">
-<h2>st_x<a class="headerlink" href="#st-x" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-x">
+<h2>st_x<a class="headerlink" href="#st-x" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_x">
 <span class="sig-name descname"><span class="pre">st_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_x" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the x coordinate of the input geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1939,21 +1947,21 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-xmax">
-<h2>st_xmax<a class="headerlink" href="#st-xmax" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-xmax">
+<h2>st_xmax<a class="headerlink" href="#st-xmax" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_xmax">
 <span class="sig-name descname"><span class="pre">st_xmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_xmax" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the largest x coordinate in the input geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1995,21 +2003,21 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-xmin">
-<h2>st_xmin<a class="headerlink" href="#st-xmin" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-xmin">
+<h2>st_xmin<a class="headerlink" href="#st-xmin" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_xmin">
 <span class="sig-name descname"><span class="pre">st_xmin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_xmin" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the smallest x coordinate in the input geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2051,21 +2059,21 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-y">
-<h2>st_y<a class="headerlink" href="#st-y" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-y">
+<h2>st_y<a class="headerlink" href="#st-y" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_y">
 <span class="sig-name descname"><span class="pre">st_y</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_y" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the y coordinate of the input geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2107,21 +2115,21 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-ymax">
-<h2>st_ymax<a class="headerlink" href="#st-ymax" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-ymax">
+<h2>st_ymax<a class="headerlink" href="#st-ymax" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_ymax">
 <span class="sig-name descname"><span class="pre">st_ymax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_ymax" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the largest y coordinate in the input geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2163,21 +2171,21 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-ymin">
-<h2>st_ymin<a class="headerlink" href="#st-ymin" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-ymin">
+<h2>st_ymin<a class="headerlink" href="#st-ymin" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_ymin">
 <span class="sig-name descname"><span class="pre">st_ymin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_ymin" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the smallest y coordinate in the input geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2219,21 +2227,21 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-zmax">
-<h2>st_zmax<a class="headerlink" href="#st-zmax" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-zmax">
+<h2>st_zmax<a class="headerlink" href="#st-zmax" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_zmax">
 <span class="sig-name descname"><span class="pre">st_zmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_zmax" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the largest z coordinate in the input geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2275,21 +2283,21 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-zmin">
-<h2>st_zmin<a class="headerlink" href="#st-zmin" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-zmin">
+<h2>st_zmin<a class="headerlink" href="#st-zmin" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_zmin">
 <span class="sig-name descname"><span class="pre">st_zmin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_zmin" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the smallest z coordinate in the input geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -2331,8 +2339,8 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

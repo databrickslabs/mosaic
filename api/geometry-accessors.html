@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Geometry accessors &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,12 +34,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -76,7 +82,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="api.html">API Documentation</a></li>
       <li class="breadcrumb-item active">Geometry accessors</li>
       <li class="wy-breadcrumbs-aside">
@@ -88,22 +94,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="geometry-accessors">
-<h1>Geometry accessors<a class="headerlink" href="#geometry-accessors" title="Permalink to this headline"></a></h1>
-<div class="section" id="st-asbinary">
-<h2>st_asbinary<a class="headerlink" href="#st-asbinary" title="Permalink to this headline"></a></h2>
+  <section id="geometry-accessors">
+<h1>Geometry accessors<a class="headerlink" href="#geometry-accessors" title="Permalink to this heading"></a></h1>
+<section id="st-asbinary">
+<h2>st_asbinary<a class="headerlink" href="#st-asbinary" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_asbinary">
 <span class="sig-name descname"><span class="pre">st_asbinary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_asbinary" title="Permalink to this definition"></a></dt>
 <dd><p>Translate a geometry into its Well-known Binary (WKB) representation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column: StringType</em><em>, </em><em>HexType</em><em>, </em><em>JSONType</em><em> or </em><em>InternalGeometryType</em>) – Geometry column</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: BinaryType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -149,21 +155,21 @@
 <p class="admonition-title">Note</p>
 <p>Alias for <a class="reference internal" href="#st-aswkb"><span class="std std-ref">st_aswkb</span></a>.</p>
 </div>
-</div>
-<div class="section" id="st-asgeojson">
-<h2>st_asgeojson<a class="headerlink" href="#st-asgeojson" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-asgeojson">
+<h2>st_asgeojson<a class="headerlink" href="#st-asgeojson" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_asgeojson">
 <span class="sig-name descname"><span class="pre">st_asgeojson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_asgeojson" title="Permalink to this definition"></a></dt>
 <dd><p>Translate a geometry into its GeoJSON representation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column: BinaryType</em><em>, </em><em>StringType</em><em>, </em><em>HexType</em><em> or </em><em>InternalGeometryType</em>) – Geometry column</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: JSONType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -205,21 +211,21 @@
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-astext">
-<h2>st_astext<a class="headerlink" href="#st-astext" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-astext">
+<h2>st_astext<a class="headerlink" href="#st-astext" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_astext">
 <span class="sig-name descname"><span class="pre">st_astext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_astext" title="Permalink to this definition"></a></dt>
 <dd><p>Translate a geometry into its Well-known Text (WKT) representation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column: BinaryType</em><em>, </em><em>HexType</em><em>, </em><em>JSONType</em><em> or </em><em>InternalGeometryType</em>) – Geometry column</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StringType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -265,21 +271,21 @@
 <p class="admonition-title">Note</p>
 <p>Alias for <a class="reference internal" href="#st-aswkt"><span class="std std-ref">st_aswkt</span></a>.</p>
 </div>
-</div>
-<div class="section" id="st-aswkb">
-<h2>st_aswkb<a class="headerlink" href="#st-aswkb" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-aswkb">
+<h2>st_aswkb<a class="headerlink" href="#st-aswkb" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_aswkb">
 <span class="sig-name descname"><span class="pre">st_aswkb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_aswkb" title="Permalink to this definition"></a></dt>
 <dd><p>Translate a geometry into its Well-known Binary (WKB) representation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column: StringType</em><em>, </em><em>HexType</em><em>, </em><em>JSONType</em><em> or </em><em>InternalGeometryType</em>) – Geometry column</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: BinaryType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -325,21 +331,21 @@
 <p class="admonition-title">Note</p>
 <p>Alias for <a class="reference internal" href="#st-asbinary"><span class="std std-ref">st_asbinary</span></a>.</p>
 </div>
-</div>
-<div class="section" id="st-aswkt">
-<h2>st_aswkt<a class="headerlink" href="#st-aswkt" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-aswkt">
+<h2>st_aswkt<a class="headerlink" href="#st-aswkt" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_aswkt">
 <span class="sig-name descname"><span class="pre">st_aswkt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_aswkt" title="Permalink to this definition"></a></dt>
 <dd><p>Translate a geometry into its Well-known Text (WKT) representation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column: BinaryType</em><em>, </em><em>HexType</em><em>, </em><em>JSONType</em><em> or </em><em>InternalGeometryType</em>) – Geometry column</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: StringType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -385,8 +391,8 @@
 <p class="admonition-title">Note</p>
 <p>Alias for <a class="reference internal" href="#st-astext"><span class="std std-ref">st_astext</span></a>.</p>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

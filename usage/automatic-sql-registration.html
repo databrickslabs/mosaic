@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Automatic SQL registration &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -31,12 +33,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -72,7 +78,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="usage.html">Usage</a></li>
       <li class="breadcrumb-item active">Automatic SQL registration</li>
       <li class="wy-breadcrumbs-aside">
@@ -84,16 +90,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="automatic-sql-registration">
-<h1>Automatic SQL registration<a class="headerlink" href="#automatic-sql-registration" title="Permalink to this headline"></a></h1>
+  <section id="automatic-sql-registration">
+<h1>Automatic SQL registration<a class="headerlink" href="#automatic-sql-registration" title="Permalink to this heading"></a></h1>
 <p>If you are looking to use only the SQL functions exposed by Mosaic, without the need
 to execute any Python or Scala set-up code, this can be achieved through the automatic SQL
 registration process described on this page.</p>
 <p>An example of when this might be useful would be connecting a business intelligence tool
 to your Spark / Databricks cluster to perform spatial queries or integrating Spark
 with a geospatial middleware component such as [Geoserver](<a class="reference external" href="https://geoserver.org/">https://geoserver.org/</a>).</p>
-<div class="section" id="pre-requisites">
-<h2>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this headline"></a></h2>
+<section id="pre-requisites">
+<h2>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this heading"></a></h2>
 <p>In order to use Mosaic, you must have access to a Databricks cluster running
 Databricks Runtime 10.0 or higher (11.2 with photon or higher is recommended).
 If you have cluster creation permissions in your Databricks
@@ -104,9 +110,9 @@ to your cluster. A workspace administrator will be able to grant
 these permissions and more information about cluster permissions can be found
 in our documentation
 <a class="reference external" href="https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions">here</a>.</p>
-</div>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h2>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <p>To install Mosaic on your Databricks cluster, take the following steps:</p>
 <ol class="arabic">
 <li><p>Upload Mosaic jar to a dedicated dbfs location. E.g. dbfs:/FileStore/mosaic/jars/.</p></li>
@@ -145,9 +151,9 @@ spark.sql.extensions<span class="w"> </span>com.databricks.labs.mosaic.sql.exten
 </div></blockquote>
 </li>
 </ol>
-</div>
-<div class="section" id="testing">
-<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline"></a></h2>
+</section>
+<section id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this heading"></a></h2>
 <p>To test the installation, create a new Python notebook and run the following command:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;show functions&quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;startswith(function, &#39;st_&#39;)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
 </pre></div>
@@ -170,8 +176,8 @@ configuration. The issue has been fixed since Mosaic V0.3.10. For releases betwe
 please add the following configuration to your cluster spark configs: (spark.databricks.labs.mosaic.raster.api, “GDAL”),
 or alternatively in python/scala code: spark.conf.set(“spark.databricks.labs.mosaic.raster.api”, “GDAL”)</p>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

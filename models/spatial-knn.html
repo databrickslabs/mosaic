@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spatial K Nearest Neighbours &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,12 +34,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -67,7 +73,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="models.html">Models</a></li>
       <li class="breadcrumb-item active">Spatial K Nearest Neighbours</li>
       <li class="wy-breadcrumbs-aside">
@@ -79,31 +85,33 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="spatial-k-nearest-neighbours">
-<h1>Spatial K Nearest Neighbours<a class="headerlink" href="#spatial-k-nearest-neighbours" title="Permalink to this headline"></a></h1>
+  <section id="spatial-k-nearest-neighbours">
+<h1>Spatial K Nearest Neighbours<a class="headerlink" href="#spatial-k-nearest-neighbours" title="Permalink to this heading"></a></h1>
 <ul class="simple">
 <li><p>Runnable notebook based python example available, see <a class="reference external" href="https://github.com/databrickslabs/mosaic/tree/main/notebooks/examples/python/SpatialKNN">here</a></p></li>
 <li><p>Also, reference SpatialKNN code-level APIs <a class="reference external" href="https://github.com/databrickslabs/mosaic/blob/main/python/mosaic/models/knn/spatial_knn.py">Python</a> |  <a class="reference external" href="https://github.com/databrickslabs/mosaic/tree/main/src/main/scala/com/databricks/labs/mosaic/models/knn">Scala</a> for any additions or changes</p></li>
 </ul>
-<div class="section" id="intro">
-<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this headline"></a></h2>
+<section id="intro">
+<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this heading"></a></h2>
 <p>Nearest neighbour problem is defined as finding an observation from a set S that is the most similar to the given
 observation O. The similarity is defined by a distance function d(O, S[i]). The most common distance function is the Euclidean.
 The nearest neighbour problem is a special case of the k-nearest neighbour problem, where k=1. The k-nearest neighbour
 problem is defined as finding k observations from a set S that are the most similar to the given observation O.</p>
-<div class="doc-figure figure align-default" id="id1">
+<figure class="doc-figure align-default" id="id1">
 <img alt="../_images/nearest_neighbour.png" src="../_images/nearest_neighbour.png" />
-<p class="caption"><span class="caption-text">Fig 1. Nearest neighbour problem</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
-</div>
+<figcaption>
+<p><span class="caption-text">Fig 1. Nearest neighbour problem</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 <p>We define spatial k-nearest neighbour problem as finding k observations from a set of candidates C that are the most similar to the
 given a landmark L[i], where the similarity is defined by a distance function d(L[i], S[j]) = st_distance(L[i], S[j]).
 In our case we further define the similarity as the inverse of the distance, so the most similar observation is the one with
 the smallest distance. ST_Distance function is defined as the shortest distance between two geometries in projected units.
 We do not restrict the type of geometries that can be used in the problem. The only requirement is that the geometries
 must be in the same coordinate system.</p>
-</div>
-<div class="section" id="spatial-knn-as-a-join-relation">
-<h2>Spatial KNN as a Join Relation<a class="headerlink" href="#spatial-knn-as-a-join-relation" title="Permalink to this headline"></a></h2>
+</section>
+<section id="spatial-knn-as-a-join-relation">
+<h2>Spatial KNN as a Join Relation<a class="headerlink" href="#spatial-knn-as-a-join-relation" title="Permalink to this heading"></a></h2>
 <p>The traditional definition of the nearest neighbour problem is defined as:
 “given a set S of points in a space M and a query point q in M, find the point in S that is closest to q”.
 We have relaxed this definition by allowing the query point to be a set of points. In our case the result of the nearest
@@ -114,9 +122,9 @@ st_distance(L[i], C[j]) &lt;= st_distance(L[i], C[k]) where C[k] is the kth near
 candidates C. The result set isn’t symmetric and it does depend on the direction of operation. If S[j] is in the knn set of Q[i]
 it does not imply that Q[i] is in the knn set of S[j]. This join would default to a Cartesian product if we were to
 use the traditional join syntax. We have to use a different approach.</p>
-</div>
-<div class="section" id="spatial-knn-as-an-iterative-transformation">
-<h2>Spatial KNN as an Iterative Transformation<a class="headerlink" href="#spatial-knn-as-an-iterative-transformation" title="Permalink to this headline"></a></h2>
+</section>
+<section id="spatial-knn-as-an-iterative-transformation">
+<h2>Spatial KNN as an Iterative Transformation<a class="headerlink" href="#spatial-knn-as-an-iterative-transformation" title="Permalink to this heading"></a></h2>
 <p>The problem of finding the k-nearest neighbours can be formulated as an iterative transformation. The transformation
 is defined as follows:
 * For each geometry in set L generate a hex ring in grid index space
@@ -130,13 +138,15 @@ iterating over the hex ring for L[i]
 in the hex ring for any L[i] geometry in the set L for N iterations (knn.setEarlyStopIterations(N))
 * Continue with the next hex ring until max number of iterations is performed
 * Return the geometries that have the smallest distance to the query geometries</p>
-<div class="doc-figure figure align-default" id="id2">
+<figure class="doc-figure align-default" id="id2">
 <img alt="../_images/spatial_knn_iterations.png" src="../_images/spatial_knn_iterations.png" />
-<p class="caption"><span class="caption-text">Fig 2. Spatial KNN example over 4 iterations.</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
-</div>
-</div>
-<div class="section" id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Spatial KNN example over 4 iterations.</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
 <p>The transformer has the following parameters:</p>
 <ul class="simple">
 <li><p>candidatesDf: the dataframe containing the geometries that will be used as candidates for the KNN search</p></li>
@@ -165,9 +175,9 @@ identify missed neighbours. The missed neighbours will be added to the K set and
 set will be sorted by distance to the target geometry. Grid cells can be skewed at different
 locations in a different way, meaning the hex rings are more of ellipses than circles.
 To account for that we need to perform the finalisation step that is based on buffer geometries.</p>
-</div>
-<div class="section" id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline"></a></h2>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
 <p>Mosaic implements a transformer that implements the iterative approach outlined above.
 The transformer is called SpatialKNN and it is used as follows:</p>
 <div class="sphinx-tabs docutils container">
@@ -263,9 +273,9 @@ The transformer is called SpatialKNN and it is used as follows:</p>
 <p>Note: the transformer is implemented only in python and scala at the moment.</p>
 <p>Mosaic supports all indexing systems for this transformer.
 Please see <a class="reference internal" href="../api/spatial-indexing.html"><span class="doc">Spatial Indexing</span></a> for supported indexing operations.</p>
-</div>
-<div class="section" id="visualisation">
-<h2>Visualisation<a class="headerlink" href="#visualisation" title="Permalink to this headline"></a></h2>
+</section>
+<section id="visualisation">
+<h2>Visualisation<a class="headerlink" href="#visualisation" title="Permalink to this heading"></a></h2>
 <p>The transformer returns a dataframe with the following columns:</p>
 <ul class="simple">
 <li><p>left_id: the id of the left geometry</p></li>
@@ -292,13 +302,15 @@ Please see <a class="reference internal" href="../api/spatial-indexing.html"><sp
 <li><p>geometry_geometry_distance</p></li>
 </ul>
 <p>The following image shows the result of the transformer applied on the buildings and taxi trip pickup locations:</p>
-<div class="doc-figure figure align-default" id="id3">
+<figure class="doc-figure align-default" id="id3">
 <img alt="../_images/knn_result_visualisation.png" src="../_images/knn_result_visualisation.png" />
-<p class="caption"><span class="caption-text">Fig 3. Spatial KNN example visualisation.</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
-</div>
-</div>
-<div class="section" id="mlflow-integration">
-<h2>Mlflow Integration<a class="headerlink" href="#mlflow-integration" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 3. Spatial KNN example visualisation.</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="mlflow-integration">
+<h2>Mlflow Integration<a class="headerlink" href="#mlflow-integration" title="Permalink to this heading"></a></h2>
 <p>SpatialKNN transformer supports mlflow integration since it extends spark.mllib APIs.
 In addition the transformer comes with .getParams() and .getMetrics() methods to facilitate
 easy logging with mlflow. The .getParams() method returns a dictionary with the parameters
@@ -323,21 +335,27 @@ transformer after the convergence.</p>
 </pre></div>
 </div>
 </div></div>
-<div class="doc-figure-full figure align-default" id="id4">
+<figure class="doc-figure-full align-default" id="id4">
 <img alt="../_images/knn_mlflow_notebook.png" src="../_images/knn_mlflow_notebook.png" />
-<p class="caption"><span class="caption-text">Fig 4. Spatial KNN mlflow integration in notebooks.</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
-</div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id5">
+<figcaption>
+<p><span class="caption-text">Fig 4. Spatial KNN mlflow integration in notebooks.</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id5">
 <img alt="../_images/knn_mlflow_params.png" src="../_images/knn_mlflow_params.png" />
-<p class="caption"><span class="caption-text">Fig 5. Spatial KNN mlflow integration params.</span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id6">
+<figcaption>
+<p><span class="caption-text">Fig 5. Spatial KNN mlflow integration params.</span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id6">
 <img alt="../_images/knn_mlflow_metrics.png" src="../_images/knn_mlflow_metrics.png" />
-<p class="caption"><span class="caption-text">Fig 6. Spatial KNN mlflow integration metrics.</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="model-serialisation">
-<h2>Model serialisation<a class="headerlink" href="#model-serialisation" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 6. Spatial KNN mlflow integration metrics.</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="model-serialisation">
+<h2>Model serialisation<a class="headerlink" href="#model-serialisation" title="Permalink to this heading"></a></h2>
 <p>The transformer can be serialised and deserialised using the model.write.save() and model.read.load() methods.
 The serialised model can be used for audit purposes only.
 The transformers are not models in a pure sense - they do not create a new object that can be called on each row.
@@ -404,9 +422,9 @@ params.foreach(println)
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="shape-aware-hex-rings">
-<h2>Shape Aware Hex Rings<a class="headerlink" href="#shape-aware-hex-rings" title="Permalink to this headline"></a></h2>
+</section>
+<section id="shape-aware-hex-rings">
+<h2>Shape Aware Hex Rings<a class="headerlink" href="#shape-aware-hex-rings" title="Permalink to this heading"></a></h2>
 <p>When performing the iterations the transformer will use the grid to identify
 the candidates for the K set. The grid is generated using the shape aware
 hex rings algorithm. The algorithm will generate a grid that will be skewed
@@ -415,12 +433,14 @@ If the target geometry is a point the hex ring will coincide with the grid
 base implementation. If the target geometry is a line the hex ring will be skewed in
 the direction of the line. If the target geometry is a polygon the hex ring will be
 skewed around the shape of the polygon, the polygon holes will be considered.</p>
-<div class="doc-figure figure align-default" id="id7">
+<figure class="doc-figure align-default" id="id7">
 <img alt="../_images/knn_line_hexrings.png" src="../_images/knn_line_hexrings.png" />
-<p class="caption"><span class="caption-text">Fig 7. Spatial KNN example of shape aware hex rings.</span><a class="headerlink" href="#id7" title="Permalink to this image"></a></p>
-</div>
-</div>
-</div>
+<figcaption>
+<p><span class="caption-text">Fig 7. Spatial KNN example of shape aware hex rings.</span><a class="headerlink" href="#id7" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
 
 
            </div>

@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spatial grid indexing &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,12 +34,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -76,7 +82,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="api.html">API Documentation</a></li>
       <li class="breadcrumb-item active">Spatial grid indexing</li>
       <li class="wy-breadcrumbs-aside">
@@ -88,8 +94,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="spatial-grid-indexing">
-<h1>Spatial grid indexing<a class="headerlink" href="#spatial-grid-indexing" title="Permalink to this headline"></a></h1>
+  <section id="spatial-grid-indexing">
+<h1>Spatial grid indexing<a class="headerlink" href="#spatial-grid-indexing" title="Permalink to this heading"></a></h1>
 <p>Spatial grid indexing is the process of mapping a geometry (or a point) to one or more cells (or cell ID)
 from the selected spatial grid.</p>
 <p>The grid system can be specified by using the spark configuration <cite>spark.databricks.labs.mosaic.index.system</cite>
@@ -121,25 +127,25 @@ before enabling Mosaic.</p>
 </pre></div>
 </div>
 </div></div>
-<div class="section" id="grid-longlatascellid">
-<h2>grid_longlatascellid<a class="headerlink" href="#grid-longlatascellid" title="Permalink to this headline"></a></h2>
+<section id="grid-longlatascellid">
+<h2>grid_longlatascellid<a class="headerlink" href="#grid-longlatascellid" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_longlatascellid">
 <span class="sig-name descname"><span class="pre">grid_longlatascellid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_longlatascellid" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the <cite>resolution</cite> grid index associated with
 the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lon</strong> (<em>Column: DoubleType</em>) – Longitude</p></li>
 <li><p><strong>lat</strong> (<em>Column: DoubleType</em>) – Latitude</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: LongType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -181,33 +187,37 @@ the input <cite>lon</cite> and <cite>lat</cite> coordinates.</p>
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id1">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id1">
 <img alt="../_images/h31.png" src="../_images/h31.png" />
-<p class="caption"><span class="caption-text">Fig 1. Point to grid cell in H3(9)</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id2">
+<figcaption>
+<p><span class="caption-text">Fig 1. Point to grid cell in H3(9)</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id2">
 <img alt="../_images/bng.png" src="../_images/bng.png" />
-<p class="caption"><span class="caption-text">Fig 2. Point to grid cell in BNG(4)</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-pointascellid">
-<h2>grid_pointascellid<a class="headerlink" href="#grid-pointascellid" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Point to grid cell in BNG(4)</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-pointascellid">
+<h2>grid_pointascellid<a class="headerlink" href="#grid-pointascellid" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_pointascellid">
 <span class="sig-name descname"><span class="pre">grid_pointascellid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_pointascellid" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the <cite>resolution</cite> grid index associated
 with the input point geometry <cite>geometry</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: LongType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -249,17 +259,21 @@ with the input point geometry <cite>geometry</cite>.</p>
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id3">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id3">
 <img alt="../_images/h31.png" src="../_images/h31.png" />
-<p class="caption"><span class="caption-text">Fig 1. Point to grid cell in H3(9)</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id4">
+<figcaption>
+<p><span class="caption-text">Fig 1. Point to grid cell in H3(9)</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id4">
 <img alt="../_images/bng.png" src="../_images/bng.png" />
-<p class="caption"><span class="caption-text">Fig 2. Point to grid cell in BNG(4)</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-polyfill">
-<h2>grid_polyfill<a class="headerlink" href="#grid-polyfill" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Point to grid cell in BNG(4)</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-polyfill">
+<h2>grid_polyfill<a class="headerlink" href="#grid-polyfill" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_polyfill">
 <span class="sig-name descname"><span class="pre">grid_polyfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_polyfill" title="Permalink to this definition"></a></dt>
@@ -267,16 +281,16 @@ with the input point geometry <cite>geometry</cite>.</p>
 <p>When using <cite>H3 &lt;https://h3geo.org/&gt;</cite> index system, this is equivalent to the
 <cite>H3 polyfill &lt;https://h3geo.org/docs/api/regions/#polyfill&gt;</cite> method</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType[LongType]</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -320,26 +334,30 @@ with the input point geometry <cite>geometry</cite>.</p>
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id5">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id5">
 <img alt="../_images/h32.png" src="../_images/h32.png" />
-<p class="caption"><span class="caption-text">Fig 1. Polyfill of a polygon in H3(8)</span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id6">
+<figcaption>
+<p><span class="caption-text">Fig 1. Polyfill of a polygon in H3(8)</span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id6">
 <img alt="../_images/bng1.png" src="../_images/bng1.png" />
-<p class="caption"><span class="caption-text">Fig 2. Polyfill of a polygon in BNG(4)</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-boundaryaswkb">
-<h2>grid_boundaryaswkb<a class="headerlink" href="#grid-boundaryaswkb" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Polyfill of a polygon in BNG(4)</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-boundaryaswkb">
+<h2>grid_boundaryaswkb<a class="headerlink" href="#grid-boundaryaswkb" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_boundaryaswkb">
 <span class="sig-name descname"><span class="pre">grid_boundaryaswkb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_boundaryaswkb" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the boundary of the grid cell as a WKB.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>cellid</strong> (<em>Column: Union</em><em>(</em><em>LongType</em><em>, </em><em>StringType</em><em>)</em>) – Grid cell id</p>
 </dd>
-<dt class="field-even">Example</dt>
+<dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 </dd></dl>
@@ -381,21 +399,21 @@ with the input point geometry <cite>geometry</cite>.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="grid-boundary">
-<h2>grid_boundary<a class="headerlink" href="#grid-boundary" title="Permalink to this headline"></a></h2>
+</section>
+<section id="grid-boundary">
+<h2>grid_boundary<a class="headerlink" href="#grid-boundary" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_boundary">
 <span class="sig-name descname"><span class="pre">grid_boundary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_boundary" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the boundary of the grid cell as a geometry in specified format.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cellid</strong> (<em>Column: Union</em><em>(</em><em>LongType</em><em>, </em><em>StringType</em><em>)</em>) – Grid cell id</p></li>
 <li><p><strong>format</strong> (<em>Column: StringType</em>) – Geometry format</p></li>
 </ul>
 </dd>
-<dt class="field-even">Example</dt>
+<dt class="field-even">Example<span class="colon">:</span></dt>
 <dd class="field-even"><p></p></dd>
 </dl>
 </dd></dl>
@@ -437,9 +455,9 @@ with the input point geometry <cite>geometry</cite>.</p>
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="grid-tessellate">
-<h2>grid_tessellate<a class="headerlink" href="#grid-tessellate" title="Permalink to this headline"></a></h2>
+</section>
+<section id="grid-tessellate">
+<h2>grid_tessellate<a class="headerlink" href="#grid-tessellate" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_tessellate">
 <span class="sig-name descname"><span class="pre">grid_tessellate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_tessellate" title="Permalink to this definition"></a></dt>
@@ -455,17 +473,17 @@ with the input point geometry <cite>geometry</cite>.</p>
 <p>In contrast to <a class="reference internal" href="#grid-polyfill"><span class="std std-ref">grid_polyfill</span></a>, <cite>grid_tessellate</cite> fully covers the original <cite>geometry</cite> even if the index centroid
 falls outside of the original geometry. This makes it suitable to index lines as well.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
 <li><p><strong>keep_core_geometries</strong> (<em>Column: Boolean</em>) – Whether to keep the core geometries or set them to null</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType[MosaicType]</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -534,17 +552,21 @@ falls outside of the original geometry. This makes it suitable to index lines as
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id7">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id7">
 <img alt="../_images/h33.png" src="../_images/h33.png" />
-<p class="caption"><span class="caption-text">Fig 1. Tessellation of a polygon in H3(8)</span><a class="headerlink" href="#id7" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id8">
+<figcaption>
+<p><span class="caption-text">Fig 1. Tessellation of a polygon in H3(8)</span><a class="headerlink" href="#id7" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id8">
 <img alt="../_images/bng2.png" src="../_images/bng2.png" />
-<p class="caption"><span class="caption-text">Fig 2. Tessellation of a polygon in BNG(4)</span><a class="headerlink" href="#id8" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-tessellateexplode">
-<h2>grid_tessellateexplode<a class="headerlink" href="#grid-tessellateexplode" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Tessellation of a polygon in BNG(4)</span><a class="headerlink" href="#id8" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-tessellateexplode">
+<h2>grid_tessellateexplode<a class="headerlink" href="#grid-tessellateexplode" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_tessellateexplode">
 <span class="sig-name descname"><span class="pre">grid_tessellateexplode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_tessellateexplode" title="Permalink to this definition"></a></dt>
@@ -560,17 +582,17 @@ falls outside of the original geometry. This makes it suitable to index lines as
 <p>In contrast to <a class="reference internal" href="#grid-polyfill"><span class="std std-ref">grid_polyfill</span></a>, <cite>grid_tessellateexplode</cite> fully covers the original <cite>geometry</cite> even if the index centroid
 falls outside of the original geometry. This makes it suitable to index lines as well.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
 <li><p><strong>keep_core_geometries</strong> (<em>Column: Boolean</em>) – Whether to keep the core geometries or set them to null</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: MosaicType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -640,29 +662,33 @@ falls outside of the original geometry. This makes it suitable to index lines as
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id9">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id9">
 <img alt="../_images/h33.png" src="../_images/h33.png" />
-<p class="caption"><span class="caption-text">Fig 1. Tessellation of a polygon in H3(8)</span><a class="headerlink" href="#id9" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id10">
+<figcaption>
+<p><span class="caption-text">Fig 1. Tessellation of a polygon in H3(8)</span><a class="headerlink" href="#id9" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id10">
 <img alt="../_images/bng2.png" src="../_images/bng2.png" />
-<p class="caption"><span class="caption-text">Fig 2. Tessellation of a polygon in BNG(4)</span><a class="headerlink" href="#id10" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-cellarea">
-<h2>grid_cellarea<a class="headerlink" href="#grid-cellarea" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Tessellation of a polygon in BNG(4)</span><a class="headerlink" href="#id10" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-cellarea">
+<h2>grid_cellarea<a class="headerlink" href="#grid-cellarea" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_cellarea">
 <span class="sig-name descname"><span class="pre">grid_cellarea</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cellarea" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the area of a given cell in km^2.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>cellid</strong> (<em>Column: Long</em>) – Grid cell ID</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: DoubleType</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -704,24 +730,24 @@ df.select(grid_cellarea(&#39;grid_cellid&#39;).alias(&quot;area&quot;)).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="grid-cellkring">
-<h2>grid_cellkring<a class="headerlink" href="#grid-cellkring" title="Permalink to this headline"></a></h2>
+</section>
+<section id="grid-cellkring">
+<h2>grid_cellkring<a class="headerlink" href="#grid-cellkring" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_cellkring">
 <span class="sig-name descname"><span class="pre">grid_cellkring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cellkring" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the k-ring of a given cell.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cellid</strong> (<em>Column: Long</em>) – Grid cell ID</p></li>
 <li><p><strong>k</strong> (<em>Column: Integer</em>) – K-ring size</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType(Long)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -763,32 +789,36 @@ df.select(grid_cellkring(&#39;grid_cellid&#39;, lit(2)).alias(&quot;kring&quot;)
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id11">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id11">
 <img alt="../_images/h34.png" src="../_images/h34.png" />
-<p class="caption"><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id11" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id12">
+<figcaption>
+<p><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id11" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id12">
 <img alt="../_images/bng3.png" src="../_images/bng3.png" />
-<p class="caption"><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id12" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-cellkringexplode">
-<h2>grid_cellkringexplode<a class="headerlink" href="#grid-cellkringexplode" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id12" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-cellkringexplode">
+<h2>grid_cellkringexplode<a class="headerlink" href="#grid-cellkringexplode" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_cellkringexplode">
 <span class="sig-name descname"><span class="pre">grid_cellkringexplode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cellkringexplode" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the k-ring of a given cell exploded.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cellid</strong> (<em>Column: Long</em>) – Grid cell ID</p></li>
 <li><p><strong>k</strong> (<em>Column: Integer</em>) – K-ring size</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: Long</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -846,32 +876,36 @@ df.select(grid_cellkringexplode(&#39;grid_cellid&#39;, lit(2)).alias(&quot;kring
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id13">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id13">
 <img alt="../_images/h34.png" src="../_images/h34.png" />
-<p class="caption"><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id13" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id14">
+<figcaption>
+<p><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id13" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id14">
 <img alt="../_images/bng3.png" src="../_images/bng3.png" />
-<p class="caption"><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id14" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-cell-intersection">
-<h2>grid_cell_intersection<a class="headerlink" href="#grid-cell-intersection" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id14" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-cell-intersection">
+<h2>grid_cell_intersection<a class="headerlink" href="#grid-cell-intersection" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_cell_intersection">
 <span class="sig-name descname"><span class="pre">grid_cell_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_chip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_chip</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cell_intersection" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the chip representing the intersection of two chips based on the same grid cell</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>left_chip</strong> (<em>Column: ChipType</em><em>(</em><em>LongType</em><em>)</em>) – Chip</p></li>
 <li><p><strong>left_chip</strong> – Chip</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ChipType(LongType)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -913,24 +947,24 @@ df.select(grid_cellkringexplode(&#39;grid_cellid&#39;, lit(2)).alias(&quot;kring
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="grid-cell-union">
-<h2>grid_cell_union<a class="headerlink" href="#grid-cell-union" title="Permalink to this headline"></a></h2>
+</section>
+<section id="grid-cell-union">
+<h2>grid_cell_union<a class="headerlink" href="#grid-cell-union" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_cell_union">
 <span class="sig-name descname"><span class="pre">grid_cell_union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_chip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_chip</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cell_union" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the chip representing the union of two chips based on the same grid cell</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>left_chip</strong> (<em>Column: ChipType</em><em>(</em><em>LongType</em><em>)</em>) – Chip</p></li>
 <li><p><strong>left_chip</strong> – Chip</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ChipType(LongType)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -972,24 +1006,24 @@ df.select(grid_cellkringexplode(&#39;grid_cellid&#39;, lit(2)).alias(&quot;kring
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="grid-cellkloop">
-<h2>grid_cellkloop<a class="headerlink" href="#grid-cellkloop" title="Permalink to this headline"></a></h2>
+</section>
+<section id="grid-cellkloop">
+<h2>grid_cellkloop<a class="headerlink" href="#grid-cellkloop" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_cellkloop">
 <span class="sig-name descname"><span class="pre">grid_cellkloop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cellkloop" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the k loop (hollow ring) of a given cell.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cellid</strong> (<em>Column: Long</em>) – Grid cell ID</p></li>
 <li><p><strong>k</strong> (<em>Column: Integer</em>) – K-loop size</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType(Long)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1031,32 +1065,36 @@ df.select(grid_cellkloop(&#39;grid_cellid&#39;, lit(2)).alias(&quot;kloop&quot;)
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id15">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id15">
 <img alt="../_images/h35.png" src="../_images/h35.png" />
-<p class="caption"><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id15" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id16">
+<figcaption>
+<p><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id15" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id16">
 <img alt="../_images/bng4.png" src="../_images/bng4.png" />
-<p class="caption"><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id16" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-cellkloopexplode">
-<h2>grid_cellkloopexplode<a class="headerlink" href="#grid-cellkloopexplode" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id16" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-cellkloopexplode">
+<h2>grid_cellkloopexplode<a class="headerlink" href="#grid-cellkloopexplode" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_cellkloopexplode">
 <span class="sig-name descname"><span class="pre">grid_cellkloopexplode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cellkloopexplode" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the k loop (hollow ring) of a given cell exploded.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cellid</strong> (<em>Column: Long</em>) – Grid cell ID</p></li>
 <li><p><strong>k</strong> (<em>Column: Integer</em>) – K-loop size</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: Long</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1114,33 +1152,37 @@ df.select(grid_cellkloopexplode(&#39;grid_cellid&#39;, lit(2)).alias(&quot;kloop
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id17">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id17">
 <img alt="../_images/h35.png" src="../_images/h35.png" />
-<p class="caption"><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id17" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id18">
+<figcaption>
+<p><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id17" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id18">
 <img alt="../_images/bng4.png" src="../_images/bng4.png" />
-<p class="caption"><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id18" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-geometrykring">
-<h2>grid_geometrykring<a class="headerlink" href="#grid-geometrykring" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id18" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-geometrykring">
+<h2>grid_geometrykring<a class="headerlink" href="#grid-geometrykring" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_geometrykring">
 <span class="sig-name descname"><span class="pre">grid_geometrykring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_geometrykring" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the k-ring of a given geometry respecting the boundary shape.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry to be used</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Resolution of the index used to calculate the k-ring</p></li>
 <li><p><strong>k</strong> (<em>Column: Integer</em>) – K-ring size</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType(Long)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1182,33 +1224,37 @@ df.select(grid_geometrykring(&#39;geometry&#39;, lit(8), lit(1)).alias(&quot;kri
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id19">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id19">
 <img alt="../_images/h36.png" src="../_images/h36.png" />
-<p class="caption"><span class="caption-text">Fig 1. Geometry based kring(1) in H3(8)</span><a class="headerlink" href="#id19" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id20">
+<figcaption>
+<p><span class="caption-text">Fig 1. Geometry based kring(1) in H3(8)</span><a class="headerlink" href="#id19" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id20">
 <img alt="../_images/bng5.png" src="../_images/bng5.png" />
-<p class="caption"><span class="caption-text">Fig 2. Geometry based kring(1) in BNG(4)</span><a class="headerlink" href="#id20" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-geometrykringexplode">
-<h2>grid_geometrykringexplode<a class="headerlink" href="#grid-geometrykringexplode" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Geometry based kring(1) in BNG(4)</span><a class="headerlink" href="#id20" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-geometrykringexplode">
+<h2>grid_geometrykringexplode<a class="headerlink" href="#grid-geometrykringexplode" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_geometrykringexplode">
 <span class="sig-name descname"><span class="pre">grid_geometrykringexplode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_geometrykringexplode" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the k-ring of a given geometry exploded.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry to be used</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Resolution of the index used to calculate the k-ring</p></li>
 <li><p><strong>k</strong> (<em>Column: Integer</em>) – K-ring size</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: Long</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1266,33 +1312,37 @@ df.select(grid_geometrykringexplode(&#39;geometry&#39;, lit(8), lit(2)).alias(&q
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id21">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id21">
 <img alt="../_images/h36.png" src="../_images/h36.png" />
-<p class="caption"><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id21" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id22">
+<figcaption>
+<p><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id21" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id22">
 <img alt="../_images/bng5.png" src="../_images/bng5.png" />
-<p class="caption"><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id22" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-geometrykloop">
-<h2>grid_geometrykloop<a class="headerlink" href="#grid-geometrykloop" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id22" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-geometrykloop">
+<h2>grid_geometrykloop<a class="headerlink" href="#grid-geometrykloop" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_geometrykloop">
 <span class="sig-name descname"><span class="pre">grid_geometrykloop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_geometrykloop" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the k-loop (hollow ring) of a given geometry.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry to be used</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Resolution of the index used to calculate the k loop</p></li>
 <li><p><strong>k</strong> (<em>Column: Integer</em>) – K-Loop size</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: ArrayType(Long)</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1334,33 +1384,37 @@ df.select(grid_cellkloop(&#39;geometry&#39;, lit(2)).alias(&quot;kloop&quot;)).s
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id23">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id23">
 <img alt="../_images/h37.png" src="../_images/h37.png" />
-<p class="caption"><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id23" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id24">
+<figcaption>
+<p><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id23" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id24">
 <img alt="../_images/bng6.png" src="../_images/bng6.png" />
-<p class="caption"><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id24" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="grid-geometrykloopexplode">
-<h2>grid_geometrykloopexplode<a class="headerlink" href="#grid-geometrykloopexplode" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id24" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="grid-geometrykloopexplode">
+<h2>grid_geometrykloopexplode<a class="headerlink" href="#grid-geometrykloopexplode" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_geometrykloopexplode">
 <span class="sig-name descname"><span class="pre">grid_geometrykloopexplode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_geometrykloopexplode" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the k loop (hollow ring) of a given geometry exploded.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry to be used</p></li>
 <li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Resolution of the index used to calculate the k loop</p></li>
 <li><p><strong>k</strong> (<em>Column: Integer</em>) – K-loop size</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column: Long</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -1418,61 +1472,65 @@ df.select(grid_geometrykloopexplode(&#39;geometry&#39;, lit(8), lit(2)).alias(&q
 </pre></div>
 </div>
 </div></div>
-<div class="figure-group"><div class="doc-figure-float-left figure align-default" id="id25">
+<div class="figure-group"><figure class="doc-figure-float-left align-default" id="id25">
 <img alt="../_images/h37.png" src="../_images/h37.png" />
-<p class="caption"><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id25" title="Permalink to this image"></a></p>
-</div>
-<div class="doc-figure-float-left figure align-default" id="id26">
+<figcaption>
+<p><span class="caption-text">Fig 1. Cell based kring(2) in H3(8)</span><a class="headerlink" href="#id25" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="doc-figure-float-left align-default" id="id26">
 <img alt="../_images/bng6.png" src="../_images/bng6.png" />
-<p class="caption"><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id26" title="Permalink to this image"></a></p>
-</div>
-</div></div>
-<div class="section" id="mosaic-explode-deprecated">
-<h2>mosaic_explode [Deprecated]<a class="headerlink" href="#mosaic-explode-deprecated" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 2. Cell based kring(2) in BNG(4)</span><a class="headerlink" href="#id26" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</div></section>
+<section id="mosaic-explode-deprecated">
+<h2>mosaic_explode [Deprecated]<a class="headerlink" href="#mosaic-explode-deprecated" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="mosaic_explode">
 <span class="sig-name descname"><span class="pre">mosaic_explode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mosaic_explode" title="Permalink to this definition"></a></dt>
 <dd><p>This is an alias for <a class="reference internal" href="#grid-tessellateexplode"><span class="std std-ref">grid_tessellateexplode</span></a></p>
 </dd></dl>
 
-</div>
-<div class="section" id="mosaicfill-deprecated">
-<h2>mosaicfill [Deprecated]<a class="headerlink" href="#mosaicfill-deprecated" title="Permalink to this headline"></a></h2>
+</section>
+<section id="mosaicfill-deprecated">
+<h2>mosaicfill [Deprecated]<a class="headerlink" href="#mosaicfill-deprecated" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="mosaicfill">
 <span class="sig-name descname"><span class="pre">mosaicfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mosaicfill" title="Permalink to this definition"></a></dt>
 <dd><p>This is an alias for <a class="reference internal" href="#grid-tessellate"><span class="std std-ref">grid_tessellate</span></a></p>
 </dd></dl>
 
-</div>
-<div class="section" id="point-index-geom-deprecated">
-<h2>point_index_geom [Deprecated]<a class="headerlink" href="#point-index-geom-deprecated" title="Permalink to this headline"></a></h2>
+</section>
+<section id="point-index-geom-deprecated">
+<h2>point_index_geom [Deprecated]<a class="headerlink" href="#point-index-geom-deprecated" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="point_index_geom">
 <span class="sig-name descname"><span class="pre">point_index_geom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#point_index_geom" title="Permalink to this definition"></a></dt>
 <dd><p>This is an alias for <a class="reference internal" href="#grid-pointascellid"><span class="std std-ref">grid_pointascellid</span></a></p>
 </dd></dl>
 
-</div>
-<div class="section" id="point-index-lonlat-deprecated">
-<h2>point_index_lonlat [Deprecated]<a class="headerlink" href="#point-index-lonlat-deprecated" title="Permalink to this headline"></a></h2>
+</section>
+<section id="point-index-lonlat-deprecated">
+<h2>point_index_lonlat [Deprecated]<a class="headerlink" href="#point-index-lonlat-deprecated" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="point_index_lonlat">
 <span class="sig-name descname"><span class="pre">point_index_lonlat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#point_index_lonlat" title="Permalink to this definition"></a></dt>
 <dd><p>This is an alias for <a class="reference internal" href="#grid-longlatascellid"><span class="std std-ref">grid_longlatascellid</span></a></p>
 </dd></dl>
 
-</div>
-<div class="section" id="polyfill-deprecated">
-<h2>polyfill [Deprecated]<a class="headerlink" href="#polyfill-deprecated" title="Permalink to this headline"></a></h2>
+</section>
+<section id="polyfill-deprecated">
+<h2>polyfill [Deprecated]<a class="headerlink" href="#polyfill-deprecated" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="polyfill">
 <span class="sig-name descname"><span class="pre">polyfill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polyfill" title="Permalink to this definition"></a></dt>
 <dd><p>This is an alias for <a class="reference internal" href="#grid-polyfill"><span class="std std-ref">grid_polyfill</span></a></p>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

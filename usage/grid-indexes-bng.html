@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BNG - British National Grid &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,12 +34,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -73,7 +79,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="usage.html">Usage</a></li>
       <li class="breadcrumb-item active">BNG - British National Grid</li>
       <li class="wy-breadcrumbs-aside">
@@ -85,10 +91,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="bng-british-national-grid">
-<h1>BNG - British National Grid<a class="headerlink" href="#bng-british-national-grid" title="Permalink to this headline"></a></h1>
-<div class="section" id="intro">
-<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this headline"></a></h2>
+  <section id="bng-british-national-grid">
+<h1>BNG - British National Grid<a class="headerlink" href="#bng-british-national-grid" title="Permalink to this heading"></a></h1>
+<section id="intro">
+<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this heading"></a></h2>
 <p>The <a class="reference external" href="https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid">Ordnance Survey National Grid reference system</a>
 also known as the British National Grid (BNG) is a grid index system defined over the territory of Great Britain and
 is extensively being used by many organizations in UK for indexing their geospatial data.
@@ -96,9 +102,9 @@ Mosaic supports multiple different grid indexes. One of the supported index syst
 All of the operations that can be performed on H3 grid system are transferable to BNG grid system, and in general, are
 transferable to a generic index system.</p>
 <a class="reference internal image-reference" href="../_images/OS_BNG_definition.png"><img alt="Ordnance Survey British National Grid" class="align-center" src="../_images/OS_BNG_definition.png" style="width: 600px; height: 600px;" /></a>
-</div>
-<div class="section" id="configuring-bng">
-<h2>Configuring BNG<a class="headerlink" href="#configuring-bng" title="Permalink to this headline"></a></h2>
+</section>
+<section id="configuring-bng">
+<h2>Configuring BNG<a class="headerlink" href="#configuring-bng" title="Permalink to this heading"></a></h2>
 <p>The default index system for Mosaic is H3. If the users wish to use BNG instead, this can be achieved using spark
 configurations. Spark provides an easy way to supply configuration parameters using spark.conf.set API.</p>
 <div class="sphinx-tabs docutils container">
@@ -124,9 +130,9 @@ configurations. Spark provides an easy way to supply configuration parameters us
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="coordinate-reference-system">
-<h2>Coordinate Reference System<a class="headerlink" href="#coordinate-reference-system" title="Permalink to this headline"></a></h2>
+</section>
+<section id="coordinate-reference-system">
+<h2>Coordinate Reference System<a class="headerlink" href="#coordinate-reference-system" title="Permalink to this heading"></a></h2>
 <p>British National Grid (BNG) expects that coordinates are provided in EPSG:27700 coordinate reference system.
 EPSG:27700 CRS is also referred to as “OSGB36 / British National Grid – United Kingdom Ordnance Survey”.
 For more information on the CRS you can visit <a class="reference external" href="https://epsg.io/27700">EPSG:27700</a>.</p>
@@ -171,8 +177,8 @@ possible to index with BNG.</p>
 </div></div>
 <p>Mosaic supports all indexing operations for both H3 and BNG.
 Please see <a class="reference internal" href="../api/spatial-indexing.html"><span class="doc">Spatial Indexing</span></a> for supported indexing operations.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

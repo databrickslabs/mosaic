@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spatial aggregation functions &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/tabs.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,12 +34,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -76,7 +82,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="api.html">API Documentation</a></li>
       <li class="breadcrumb-item active">Spatial aggregation functions</li>
       <li class="wy-breadcrumbs-aside">
@@ -88,25 +94,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="spatial-aggregation-functions">
-<h1>Spatial aggregation functions<a class="headerlink" href="#spatial-aggregation-functions" title="Permalink to this headline"></a></h1>
-<div class="section" id="st-intersects-aggregate">
-<h2>st_intersects_aggregate<a class="headerlink" href="#st-intersects-aggregate" title="Permalink to this headline"></a></h2>
+  <section id="spatial-aggregation-functions">
+<h1>Spatial aggregation functions<a class="headerlink" href="#spatial-aggregation-functions" title="Permalink to this heading"></a></h1>
+<section id="st-intersects-aggregate">
+<h2>st_intersects_aggregate<a class="headerlink" href="#st-intersects-aggregate" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_intersects_aggregate">
 <span class="sig-name descname"><span class="pre">st_intersects_aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">leftIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rightIndex</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_intersects_aggregate" title="Permalink to this definition"></a></dt>
 <dd><p>Returns <cite>true</cite> if any of the <cite>leftIndex</cite> and <cite>rightIndex</cite> pairs intersect.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>leftIndex</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>rightIndex</strong> (<em>Column</em>) – Geometry</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -182,24 +188,24 @@
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-intersection-aggregate">
-<h2>st_intersection_aggregate<a class="headerlink" href="#st-intersection-aggregate" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-intersection-aggregate">
+<h2>st_intersection_aggregate<a class="headerlink" href="#st-intersection-aggregate" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_intersection_aggregate">
 <span class="sig-name descname"><span class="pre">st_intersection_aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">leftIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rightIndex</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_intersection_aggregate" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the intersections of <cite>leftIndex</cite> and <cite>rightIndex</cite> and returns the union of these intersections.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>leftIndex</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>rightIndex</strong> (<em>Column</em>) – Geometry</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -275,21 +281,21 @@
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="st-union-agg">
-<h2>st_union_agg<a class="headerlink" href="#st-union-agg" title="Permalink to this headline"></a></h2>
+</section>
+<section id="st-union-agg">
+<h2>st_union_agg<a class="headerlink" href="#st-union-agg" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_union_agg">
 <span class="sig-name descname"><span class="pre">st_union_agg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_union_agg" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the union of the input geometries.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>geom</strong> (<em>Column</em>) – Geometry</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -332,21 +338,21 @@ df.select(st_astext(st_union_agg(col(&#39;geom&#39;)))).show()
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="grid-cell-intersection-agg">
-<h2>grid_cell_intersection_agg<a class="headerlink" href="#grid-cell-intersection-agg" title="Permalink to this headline"></a></h2>
+</section>
+<section id="grid-cell-intersection-agg">
+<h2>grid_cell_intersection_agg<a class="headerlink" href="#grid-cell-intersection-agg" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_cell_intersection_agg">
 <span class="sig-name descname"><span class="pre">grid_cell_intersection_agg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chips</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cell_intersection_agg" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the chip representing the intersection of the input chips.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>chips</strong> (<em>Column</em>) – Chips</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -388,21 +394,21 @@ SELECT grid_cell_intersection_agg(chips) AS agg_chip FROM chips GROUP BY chips.i
 </pre></div>
 </div>
 </div></div>
-</div>
-<div class="section" id="grid-cell-union-agg">
-<h2>grid_cell_union_agg<a class="headerlink" href="#grid-cell-union-agg" title="Permalink to this headline"></a></h2>
+</section>
+<section id="grid-cell-union-agg">
+<h2>grid_cell_union_agg<a class="headerlink" href="#grid-cell-union-agg" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_cell_union_agg">
 <span class="sig-name descname"><span class="pre">grid_cell_union_agg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chips</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_cell_union_agg" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the chip representing the union of the input chips.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>chips</strong> (<em>Column</em>) – Chips</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Column</p>
 </dd>
-<dt class="field-odd">Example</dt>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p></dd>
 </dl>
 </dd></dl>
@@ -444,8 +450,8 @@ SELECT grid_cell_union_agg(chips) AS agg_chip FROM chips GROUP BY chips.index_id
 </pre></div>
 </div>
 </div></div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

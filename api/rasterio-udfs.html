@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rasterio UDFs &mdash; Mosaic</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,10 +15,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -31,12 +33,16 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Mosaic
-            <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -75,7 +81,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="api.html">API Documentation</a></li>
       <li class="breadcrumb-item active">Rasterio UDFs</li>
       <li class="wy-breadcrumbs-aside">
@@ -87,10 +93,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="rasterio-udfs">
-<h1>Rasterio UDFs<a class="headerlink" href="#rasterio-udfs" title="Permalink to this headline"></a></h1>
-<div class="section" id="intro">
-<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this headline"></a></h2>
+  <section id="rasterio-udfs">
+<h1>Rasterio UDFs<a class="headerlink" href="#rasterio-udfs" title="Permalink to this heading"></a></h1>
+<section id="intro">
+<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this heading"></a></h2>
 <p>Rasterio (<a class="reference external" href="https://rasterio.readthedocs.io/en/latest/">https://rasterio.readthedocs.io/en/latest/</a>) is a Python library for reading and writing geospatial raster datasets.
 It uses GDAL (<a class="reference external" href="https://gdal.org/">https://gdal.org/</a>) for file I/O and raster formatting and provides a Python API for GDAL functions.
 It is a great library for working with raster data in Python and it is a popular choice for many geospatial data scientists.
@@ -106,9 +112,9 @@ We assume that you have a basic understanding of Rasterio and GDAL.</p>
 <span class="n">spark</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;spark.sql.shuffle.partitions&quot;</span><span class="p">,</span> <span class="s2">&quot;400&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="rasterio-raster-plotting">
-<h2>Rasterio raster plotting<a class="headerlink" href="#rasterio-raster-plotting" title="Permalink to this headline"></a></h2>
+</section>
+<section id="rasterio-raster-plotting">
+<h2>Rasterio raster plotting<a class="headerlink" href="#rasterio-raster-plotting" title="Permalink to this heading"></a></h2>
 <p>In this example we will show how to plot a raster file using Rasterio Python API.</p>
 <p>Firstly we will create a spark DataFrame from a directory of raster files.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/path/to/raster/files&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
@@ -145,13 +151,15 @@ Please apply reasonable filters to the DataFrame before collecting the results.<
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plot_raster</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;tile&quot;</span><span class="p">][</span><span class="s2">&quot;raster&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
-<div class="doc-figure figure align-default" id="id1">
+<figure class="doc-figure align-default" id="id1">
 <img alt="../_images/plot_raster.png" src="../_images/plot_raster.png" />
-<p class="caption"><span class="caption-text">Fig 1. Plot raster using Rasterio Python API</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
-</div>
-</div>
-<div class="section" id="udf-example-for-computing-band-statistics">
-<h2>UDF example for computing band statistics<a class="headerlink" href="#udf-example-for-computing-band-statistics" title="Permalink to this headline"></a></h2>
+<figcaption>
+<p><span class="caption-text">Fig 1. Plot raster using Rasterio Python API</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="udf-example-for-computing-band-statistics">
+<h2>UDF example for computing band statistics<a class="headerlink" href="#udf-example-for-computing-band-statistics" title="Permalink to this heading"></a></h2>
 <p>In this example we will show how to compute band statistics for a raster file.</p>
 <p>Firstly we will create a spark DataFrame from a directory of raster files.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/path/to/raster/files&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
@@ -192,9 +200,9 @@ Please apply reasonable filters to the DataFrame before collecting the results.<
 <span class="o">+---------------------------+</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="udf-example-for-computing-ndvi">
-<h2>UDF example for computing NDVI<a class="headerlink" href="#udf-example-for-computing-ndvi" title="Permalink to this headline"></a></h2>
+</section>
+<section id="udf-example-for-computing-ndvi">
+<h2>UDF example for computing NDVI<a class="headerlink" href="#udf-example-for-computing-ndvi" title="Permalink to this heading"></a></h2>
 <p>In this example we will show how to compute NDVI for a raster file.
 NDVI is a common index used to assess vegetation health.
 It is computed as follows: ndvi = (nir - red) / (nir + red).
@@ -264,9 +272,9 @@ We will show how to return a raster object as a result of a UDF.</p>
 <span class="o">+-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="udf-example-for-writing-raster-files-to-disk">
-<h2>UDF example for writing raster files to disk<a class="headerlink" href="#udf-example-for-writing-raster-files-to-disk" title="Permalink to this headline"></a></h2>
+</section>
+<section id="udf-example-for-writing-raster-files-to-disk">
+<h2>UDF example for writing raster files to disk<a class="headerlink" href="#udf-example-for-writing-raster-files-to-disk" title="Permalink to this heading"></a></h2>
 <p>In this example we will show how to write a raster file to disk using Rasterio Python API.
 This is an examples showing how to materialize a raster binary object as a raster file on disk.
 The format of the output file should match the driver format of the binary object.</p>
@@ -320,8 +328,8 @@ The format of the output file should match the driver format of the binary objec
 <span class="o">+-------------------------------------+</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
