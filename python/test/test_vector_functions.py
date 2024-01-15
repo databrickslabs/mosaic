@@ -38,7 +38,7 @@ class TestVectorFunctions(MosaicTestCase):
             .withColumn(
                 "points",
                 api.st_geomfromwkt(
-                    concat(lit("POINT ("), "id", lit(" "), "id", lit(" "), "id", lit(")"))
+                    concat(lit("POINT (9 9 "), "id", lit(")"))
                 ),
             )
             .withColumn("z", api.st_z("points"))
