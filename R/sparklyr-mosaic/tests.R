@@ -11,7 +11,7 @@ library(sparklyr)
 
 spark_home <- Sys.getenv("SPARK_HOME")
 spark_home_set(spark_home)
-install.packages("sparklyrMosaic_0.3.14.tar.gz", repos = NULL)
+install.packages("sparklyrMosaic_0.4.0.tar.gz", repos = NULL)
 library(sparklyrMosaic)
 
 # find the mosaic jar in staging
