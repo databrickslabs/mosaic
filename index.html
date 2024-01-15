@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Documentation &mdash; Mosaic</title>
+  <title>Version 0.4.0 &mdash; Mosaic</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
@@ -69,7 +69,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Documentation</li>
+      <li class="breadcrumb-item active">Version 0.4.0</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -115,7 +115,50 @@ this will leverage the Databricks H3 expressions when using H3 grid system.</p>
 </ul>
 </dd>
 </dl>
-<p>For Mosaic versions &lt; 0.4.0 please use the <a class="reference external" href="https://databrickslabs.github.io/mosaic/0.3.x/index.html">0.3.x docs</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For Mosaic versions &lt; 0.4.0 please use the <a class="reference external" href="https://databrickslabs.github.io/mosaic/v0.3.x/index.html">0.3.x docs</a>.</p>
+</div>
+<section id="version-0-4-0">
+<h1>Version 0.4.0<a class="headerlink" href="#version-0-4-0" title="Permalink to this heading"></a></h1>
+<p>We recommend using Databricks Runtime versions 13.3 LTS with Photon enabled.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Mosaic 0.4.x series only supports DBR 13.x DBRs.
+If running on a different DBR it will throw an exception:</p>
+<p><strong>DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify `%pip install ‘databricks-mosaic&lt;0.4,&gt;=0.3’` for DBR &lt; 13.</strong></p>
+</div>
+<p>As of the 0.4.0 release, Mosaic issues the following ERROR when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML <a class="reference external" href="https://learn.microsoft.com/en-us/azure/databricks/runtime/">ADB</a> | <a class="reference external" href="https://docs.databricks.com/runtime/index.html/">AWS</a> | <a class="reference external" href="https://docs.gcp.databricks.com/runtime/index.html/">GCP</a> :</p>
+<p><strong>DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.</strong></p>
+<dl class="simple">
+<dt>As of Mosaic 0.4.0 (subject to change in follow-on releases)</dt><dd><ul class="simple">
+<li><p>No Mosaic SQL expressions cannot yet be registered with <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a> due to API changes affecting DBRs &gt;= 13.</p></li>
+<li><p><a class="reference external" href="https://docs.databricks.com/en/compute/configure.html#access-modes">Assigned Clusters</a> : Mosaic Python, R, and Scala APIs.</p></li>
+<li><p><a class="reference external" href="https://docs.databricks.com/en/compute/configure.html#access-modes">Shared Access Clusters</a> : Mosaic Scala API (JVM) with Admin <a class="reference external" href="https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html">allowlisting</a> ; Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As of Mosaic 0.4.0 (subject to change in follow-on releases)</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a> : Enforces process isolation which is difficult to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from other supported languages in Shared Access Clusters.</p></li>
+<li><p><a class="reference external" href="https://docs.databricks.com/en/connect/unity-catalog/volumes.html">Volumes</a> : Along the same principle of isolation, clusters (both assigned and shared access) can read Volumes via relevant built-in readers and writers or via custom python calls which do not involve any custom JVM code.</p></li>
+</ul>
+</div>
+</section>
+<section id="version-0-3-x-series">
+<h1>Version 0.3.x Series<a class="headerlink" href="#version-0-3-x-series" title="Permalink to this heading"></a></h1>
+<p>We recommend using Databricks Runtime versions 12.2 LTS with Photon enabled.
+For Mosaic versions &lt; 0.4.0 please use the <a class="reference external" href="https://databrickslabs.github.io/mosaic/v0.3.x/index.html">0.3.x docs</a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Mosaic 0.3.x series does not support DBR 13.x DBRs.</p>
+</div>
+<p>As of the 0.3.11 release, Mosaic issues the following WARNING when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML <a class="reference external" href="https://learn.microsoft.com/en-us/azure/databricks/runtime/">ADB</a> | <a class="reference external" href="https://docs.databricks.com/runtime/index.html/">AWS</a> | <a class="reference external" href="https://docs.gcp.databricks.com/runtime/index.html/">GCP</a> :</p>
+<p><strong>DEPRECATION WARNING: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic will stop working on this cluster after v0.3.x.</strong>
+If you are receiving this warning in v0.3.11+, you will want to begin to plan for a supported runtime. The reason we are making this change is that we are streamlining Mosaic internals to be more aligned with future product APIs which are powered by Photon. Along this direction of change, Mosaic has standardized to JTS as its default and supported Vector Geometry Provider.</p>
+</section>
 <section id="documentation">
 <h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading"></a></h1>
 <div class="toctree-wrapper compound">
