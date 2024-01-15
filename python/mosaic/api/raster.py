@@ -927,7 +927,9 @@ def rst_fromcontent(raster: ColumnOrName, driver: ColumnOrName, sizeInMB: Column
     """
 
     return config.mosaic_context.invoke_function(
-        "rst_fromcontent", pyspark_to_java_column(raster), pyspark_to_java_column(driver), 
+        "rst_fromcontent",
+        pyspark_to_java_column(raster),
+        pyspark_to_java_column(driver),
         pyspark_to_java_column(sizeInMB)
     )
 

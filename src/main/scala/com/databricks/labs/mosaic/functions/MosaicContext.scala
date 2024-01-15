@@ -711,16 +711,15 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
-        def rst_fromcontent(raster: Column, driver:Column): Column = 
+        def rst_fromcontent(raster: Column, driver: Column): Column =
             ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(-1).expr, expressionConfig))
-        def rst_fromcontent(raster: Column, driver:Column, sizeInMB:Column): Column =
+        def rst_fromcontent(raster: Column, driver: Column, sizeInMB: Column): Column =
             ColumnAdapter(RST_FromContent(raster.expr, driver.expr, sizeInMB.expr, expressionConfig))
-        def rst_fromcontent(raster: Column, driver:String): Column = 
+        def rst_fromcontent(raster: Column, driver: String): Column =
             ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(-1).expr, expressionConfig))
-        def rst_fromcontent(raster: Column, driver:String, sizeInMB:Int): Column = 
+        def rst_fromcontent(raster: Column, driver: String, sizeInMB: Int): Column =
             ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(sizeInMB).expr, expressionConfig))
-        def rst_fromfile(raster: Column): Column = 
-            ColumnAdapter(RST_FromFile(raster.expr, lit(-1).expr, expressionConfig))
+        def rst_fromfile(raster: Column): Column = ColumnAdapter(RST_FromFile(raster.expr, lit(-1).expr, expressionConfig))
         def rst_fromfile(raster: Column, sizeInMB: Column): Column =
             ColumnAdapter(RST_FromFile(raster.expr, sizeInMB.expr, expressionConfig))
         def rst_fromfile(raster: Column, sizeInMB: Int): Column =
@@ -1015,11 +1014,12 @@ object MosaicContext extends Logging {
 
         val isML = sparkVersion.contains("-ml-")
         val isPhoton = sparkVersion.contains("-photon-")
-        val isTest = (
-            dbrMajor == 0  
-            && !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags.")) 
-        )
-        
+        val isTest =
+            (
+              dbrMajor == 0
+              && !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags."))
+            )
+
         if (dbrMajor != 13 && !isTest) {
             val msg = """|DEPRECATION ERROR:
                          |    Mosaic v0.4.x series only supports Databricks Runtime 13.
@@ -1039,7 +1039,7 @@ object MosaicContext extends Logging {
             logError(msg)
             println(msg)
             throw new Exception(msg)
-        } 
+        }
         true
     }
 
