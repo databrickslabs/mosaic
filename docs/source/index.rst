@@ -96,6 +96,7 @@ Version 0.3.x Series
 ====================
 
 We recommend using Databricks Runtime versions 12.2 LTS with Photon enabled.
+For Mosaic versions < 0.4.0 please use the `0.3.x docs <https://databrickslabs.github.io/mosaic/v0.3.x/index.html>`_.
 
 .. warning::
    Mosaic 0.3.x series does not support DBR 13.x DBRs.
