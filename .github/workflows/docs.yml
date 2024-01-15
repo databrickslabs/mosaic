@@ -35,5 +35,5 @@ jobs:
       run: |
         mkdir ./v0.3.x
         cd ./v0.3.x
-        git clone -b gh-pages-v0.3.x --single-branch git@github.com:databrickslabs/mosaic.git
+        git clone -b gh-pages-v0.3.x --single-branch https://github.com/databrickslabs/mosaic.git
 
