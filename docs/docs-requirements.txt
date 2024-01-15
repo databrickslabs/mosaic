@@ -1,7 +1,7 @@
 setuptools==68.1.2
-Sphinx==6.1.0
+Sphinx==6.1.3
 sphinx-material==0.0.36
-nbsphinx==0.8.8
+nbsphinx>=0.8.8
 ipython>=8.10.1
 sphinxcontrib-fulltoc==1.2.0
 livereload==2.6.3
