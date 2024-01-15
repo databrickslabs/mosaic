@@ -31,7 +31,10 @@ jobs:
         mkdir ./v0.3.x
         cd ./v0.3.x
         git clone -b gh-pages-v0.3.x --single-branch https://github.com/databrickslabs/mosaic.git
-        ls -lah
+        git add --all
+        git commit -am "Adding v0.3.x docs"
+        cd ../
+        ls -la
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
