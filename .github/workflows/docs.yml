@@ -30,8 +30,7 @@ jobs:
       run: |
         git submodule add https://github.com/databrickslabs/mosaic.git v0.3.x/mosaic
         git checkout gh-pages-v0.3.x
-        git add --all
-        ls -la
+        rm -f .gitmodules
         git add --all
         git commit -am "Adding v0.3.x docs"
         ls -la
