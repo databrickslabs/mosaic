@@ -55,6 +55,16 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         MosaicPointJTS(centroid)
     }
 
+    override def getAnyPoint: MosaicPointJTS = {
+        // while this doesn't return the centroid but an arbitrary point via getCoordinate in JTS, 
+        // inlike getCentroid this supports a Z coordinate.
+
+        val coord = geom.getCoordinate
+        val gf = new GeometryFactory()
+        val point = gf.createPoint(coord)
+        MosaicPointJTS(point)
+    }
+
     override def isEmpty: Boolean = geom.isEmpty
 
     override def boundary: MosaicGeometryJTS = MosaicGeometryJTS(geom.getBoundary)

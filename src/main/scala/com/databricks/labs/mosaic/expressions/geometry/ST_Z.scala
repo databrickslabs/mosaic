@@ -25,11 +25,11 @@ case class ST_Z(
 
     override def dataType: DataType = DoubleType
 
-    override def geometryTransform(geometry: MosaicGeometry): Any = geometry.getCentroid.getZ
+    override def geometryTransform(geometry: MosaicGeometry): Any = geometry.getAnyPoint.getZ
 
     override def geometryCodeGen(geometryRef: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val code = s"""double $resultRef = $geometryRef.getCentroid().getZ();"""
+        val code = s"""double $resultRef = $geometryRef.getAnyPoint().getZ();"""
         (code, resultRef)
     }
 
