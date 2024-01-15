@@ -8,7 +8,7 @@ import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader, RasterWriter}
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
 import org.gdal.gdal.gdal.GDALInfo
 import org.gdal.gdal.{Dataset, InfoOptions, gdal}
 import org.gdal.gdalconst.gdalconstConstants._
@@ -405,7 +405,7 @@ case class MosaicRasterGDAL(
             } else {
                 path
             }
-        val byteArray = Files.readAllBytes(Paths.get(readPath))
+        val byteArray = FileUtils.readBytes(readPath)
         if (dispose) RasterCleaner.dispose(this)
         if (readPath != PathUtils.getCleanPath(parentPath)) {
             Files.deleteIfExists(Paths.get(readPath))

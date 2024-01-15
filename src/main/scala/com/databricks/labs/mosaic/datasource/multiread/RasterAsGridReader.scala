@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.datasource.multiread
 
+import com.databricks.labs.mosaic.MOSAIC_RASTER_READ_STRATEGY
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
@@ -25,6 +26,12 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         nPartitions
     }
 
+    private def workerNCores = {
+        sparkSession.sparkContext.range(0, 1).map(_ => java.lang.Runtime.getRuntime.availableProcessors).collect.head
+    }
+
+    private def nWorkers = sparkSession.sparkContext.getExecutorMemoryStatus.size
+
     override def load(path: String): DataFrame = load(Seq(path): _*)
 
     override def load(paths: String*): DataFrame = {
@@ -32,11 +39,23 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val config = getConfig
         val resolution = config("resolution").toInt
         val nPartitions = getNPartitions(config)
+        val readStrategy = config("retile") match {
+            case "true" => "retile_on_read"
+            case _      => "in_memory"
+        }
+        val tileSize = config("sizeInMB").toInt
+
+        val nCores = nWorkers * workerNCores
+        val stageCoefficient = math.ceil(math.log(nCores) / math.log(4))
+
+        val firstStageSize = (tileSize * math.pow(4, stageCoefficient)).toInt
 
         val pathsDf = sparkSession.read
             .format("gdal")
             .option("extensions", config("extensions"))
-            .option("raster_storage", "in-memory")
+            .option(MOSAIC_RASTER_READ_STRATEGY, readStrategy)
+            .option("vsizip", config("vsizip"))
+            .option("sizeInMB", firstStageSize)
             .load(paths: _*)
             .repartition(nPartitions)
 
@@ -46,7 +65,12 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         val retiledDf = retileRaster(rasterDf, config)
 
-        val loadedDf = retiledDf
+        val loadedDf = rasterDf
+            .withColumn(
+              "tile",
+                rst_tessellate(col("tile"), lit(resolution))
+            )
+            .repartition(nPartitions)
             .withColumn(
               "grid_measures",
               rasterToGridCombiner(col("tile"), lit(resolution))
@@ -58,6 +82,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             .select(
               posexplode(col("grid_measures")).as(Seq("band_id", "grid_measures"))
             )
+            .repartition(nPartitions)
             .select(
               col("band_id"),
               explode(col("grid_measures")).alias("grid_measures")
@@ -88,16 +113,22 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       */
     private def retileRaster(rasterDf: DataFrame, config: Map[String, String]) = {
         val retile = config("retile").toBoolean
-        val tileSize = config("tileSize").toInt
+        val tileSize = config.getOrElse("tileSize", "-1").toInt
+        val memSize = config.getOrElse("sizeInMB", "-1").toInt
         val nPartitions = getNPartitions(config)
 
         if (retile) {
-            rasterDf
-                .withColumn(
-                  "tile",
-                  rst_retile(col("tile"), lit(tileSize), lit(tileSize))
-                )
-                .repartition(nPartitions)
+            if (memSize > 0) {
+                rasterDf
+                    .withColumn("tile", rst_subdivide(col("tile"), lit(memSize)))
+                    .repartition(nPartitions)
+            } else if (tileSize > 0) {
+                rasterDf
+                    .withColumn("tile", rst_retile(col("tile"), lit(tileSize), lit(tileSize)))
+                    .repartition(nPartitions)
+            } else {
+                rasterDf
+            }
         } else {
             rasterDf
         }
@@ -200,7 +231,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
           "resolution" -> this.extraOptions.getOrElse("resolution", "0"),
           "combiner" -> this.extraOptions.getOrElse("combiner", "mean"),
           "retile" -> this.extraOptions.getOrElse("retile", "false"),
-          "tileSize" -> this.extraOptions.getOrElse("tileSize", "256"),
+          "tileSize" -> this.extraOptions.getOrElse("tileSize", "-1"),
+          "sizeInMB" -> this.extraOptions.getOrElse("sizeInMB", ""),
           "kRingInterpolate" -> this.extraOptions.getOrElse("kRingInterpolate", "0")
         )
     }

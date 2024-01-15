@@ -220,6 +220,30 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
     }
 
     /**
+      * Counts the number of pixels in the band. The mask is used to determine
+      * if a pixel is valid. If pixel value is noData or mask value is 0.0, the
+      * pixel is not counted.
+      *
+      * @return
+      *   Returns the band's pixel count.
+      */
+    def pixelCount: Int = {
+        val line = Array.ofDim[Double](band.GetXSize())
+        val maskLine = Array.ofDim[Double](band.GetXSize())
+        var count = 0
+        for (y <- 0 until band.GetYSize()) {
+            band.ReadRaster(0, y, band.GetXSize(), 1, line)
+            val maskRead = band.GetMaskBand().ReadRaster(0, y, band.GetXSize(), 1, maskLine)
+            if (maskRead != gdalconstConstants.CE_None) {
+                count = count + line.count(_ != noDataValue)
+            } else {
+                count = count + line.zip(maskLine).count { case (pixel, mask) => pixel != noDataValue && mask != 0.0 }
+            }
+        }
+        count
+    }
+
+    /**
       * @return
       *   Returns the band's mask flags.
       */

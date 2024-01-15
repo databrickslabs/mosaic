@@ -21,9 +21,12 @@ object BalancedSubdivision {
       */
     def getNumSplits(raster: MosaicRasterGDAL, destSize: Int): Int = {
         val size = raster.getMemSize
-        val n = size.toDouble / (destSize * 1000 * 1000)
-        val nInt = Math.ceil(n).toInt
-        Math.pow(4, Math.ceil(Math.log(nInt) / Math.log(4))).toInt
+        var n = 1
+        while (true) {
+            n *= 4
+            if (size / n <= destSize * 1000 * 1000) return n
+        }
+        n
     }
 
     /**
