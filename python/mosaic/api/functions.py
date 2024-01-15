@@ -754,7 +754,7 @@ def st_updatesrid(
 
 def st_x(geom: ColumnOrName) -> Column:
     """
-    Returns the x coordinate of the input geometry `geom`.
+    Returns the x coordinate of the centroid point of the input geometry `geom`.
 
     Parameters
     ----------
@@ -770,7 +770,7 @@ def st_x(geom: ColumnOrName) -> Column:
 
 def st_y(geom: ColumnOrName) -> Column:
     """
-    Returns the y coordinate of the input geometry `geom`.
+    Returns the y coordinate of the centroid point of the input geometry `geom`.
 
     Parameters
     ----------
@@ -786,7 +786,7 @@ def st_y(geom: ColumnOrName) -> Column:
 
 def st_z(geom: ColumnOrName) -> Column:
     """
-    Returns the z coordinate of the input point `geom`. Input must be a point.
+    Returns the z coordinate of an arbitrary point of the input geometry `geom`.
 
     Parameters
     ----------

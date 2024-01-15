@@ -1709,7 +1709,7 @@ st_x
 
 .. function:: st_x(col)
 
-    Returns the x coordinate of the input geometry.
+    Returns the x coordinate of the centroid point of the input geometry.
 
     :param col: Geometry
     :type col: Column
@@ -1868,7 +1868,7 @@ st_y
 ****
 .. function:: st_y(col)
 
-    Returns the y coordinate of the input geometry.
+    Returns the y coordinate of the centroid point of the input geometry.
 
     :param col: Geometry
     :type col: Column
@@ -2028,7 +2028,7 @@ st_z
 ****
 .. function:: st_z(col)
 
-    Returns the z coordinate of the input point. Input must be a point.
+    Returns the z coordinate of an arbitrary point of the input geometry `geom`.
 
     :param col: Point Geometry
     :type col: Column

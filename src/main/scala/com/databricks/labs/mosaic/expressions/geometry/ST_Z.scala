@@ -41,7 +41,7 @@ object ST_Z extends WithExpressionInfo {
     override def name: String = "st_z"
 
     override def usage: String =
-        "_FUNC_(expr1) - Returns z coordinate of a point."
+        "_FUNC_(expr1) - Returns z coordinate of a point or z coordinate of an arbitrary point in geometry if it isn't a point."
 
     override def example: String =
         """
