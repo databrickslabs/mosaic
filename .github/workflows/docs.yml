@@ -31,3 +31,9 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: gh-pages
+    - name: checkout v0.3.x archive
+      run: |
+        mkdir ./v0.3.x
+        cd ./v0.3.x
+        git clone -b gh-pages-v0.3.x --single-branch git@github.com:databrickslabs/mosaic.git
+
