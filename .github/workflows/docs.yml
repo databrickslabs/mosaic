@@ -30,6 +30,7 @@ jobs:
       run: |
         git checkout gh-pages-v0.3.x
         git pull
+        mkdir ./v0.3.x
         git archive gh-pages-v0.3.x | tar -x -C ./v0.3.x
         git add --all
         git commit -am "Adding v0.3.x docs"
