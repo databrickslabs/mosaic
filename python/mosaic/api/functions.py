@@ -159,13 +159,13 @@ def st_concavehull(geom: ColumnOrName, concavity: ColumnOrName, has_holes: Any =
     """
     Compute the concave hull of a geometry or multi-geometry object.
     It uses lengthRatio and
-    allowHoles to determine the concave hull. lengthRatio is the ratio of the
-    length of the concave hull to the length of the convex hull. If set to 1,
-    this is the same as the convex hull. If set to 0, this is the same as the
-    bounding box. AllowHoles is a boolean that determines whether the concave
-    hull can have holes. If set to true, the concave hull can have holes. If set
-    to false, the concave hull will not have holes. (For PostGIS, the default is
-    false.)
+    allowHoles to determine the concave hull. lengthRatio is the fraction of the
+    difference between the longest and shortest edge lengths in the Delaunay
+    Triangulation. If set to 1, this is the same as the convex hull. If set to
+    0, it produces produces maximum concaveness. AllowHoles is a boolean that
+    determines whether the concave hull can have holes. If set to true, the
+    concave hull can have holes. If set to false, the concave hull will not have
+    holes. (For PostGIS, the default is false.)
 
     Parameters
     ----------
