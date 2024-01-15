@@ -6,20 +6,21 @@ Raster Format Readers
 Intro
 #####
 Mosaic provides spark readers for the following raster formats:
-* GTiff (GeoTiff) using .tif file extension - https://gdal.org/drivers/raster/gtiff.html
-* COG (Cloud Optimized GeoTiff) using .tif file extension - https://gdal.org/drivers/raster/cog.html
-* HDF4 using .hdf file extension - https://gdal.org/drivers/raster/hdf4.html
-* HDF5 using .h5 file extension - https://gdal.org/drivers/raster/hdf5.html
-* NetCDF using .nc file extension - https://gdal.org/drivers/raster/netcdf.html
-* JP2ECW using .jp2 file extension - https://gdal.org/drivers/raster/jp2ecw.html
-* JP2KAK using .jp2 file extension - https://gdal.org/drivers/raster/jp2kak.html
-* JP2OpenJPEG using .jp2 file extension - https://gdal.org/drivers/raster/jp2openjpeg.html
-* PDF using .pdf file extension - https://gdal.org/drivers/raster/pdf.html
-* PNG using .png file extension - https://gdal.org/drivers/raster/png.html
-* VRT using .vrt file extension - https://gdal.org/drivers/raster/vrt.html
-* XPM using .xpm file extension - https://gdal.org/drivers/raster/xpm.html
-* GRIB using .grb file extension - https://gdal.org/drivers/raster/grib.html
-* Zarr using .zarr file extension - https://gdal.org/drivers/raster/zarr.html
+
+    * GTiff (GeoTiff) using .tif file extension - https://gdal.org/drivers/raster/gtiff.html
+    * COG (Cloud Optimized GeoTiff) using .tif file extension - https://gdal.org/drivers/raster/cog.html
+    * HDF4 using .hdf file extension - https://gdal.org/drivers/raster/hdf4.html
+    * HDF5 using .h5 file extension - https://gdal.org/drivers/raster/hdf5.html
+    * NetCDF using .nc file extension - https://gdal.org/drivers/raster/netcdf.html
+    * JP2ECW using .jp2 file extension - https://gdal.org/drivers/raster/jp2ecw.html
+    * JP2KAK using .jp2 file extension - https://gdal.org/drivers/raster/jp2kak.html
+    * JP2OpenJPEG using .jp2 file extension - https://gdal.org/drivers/raster/jp2openjpeg.html
+    * PDF using .pdf file extension - https://gdal.org/drivers/raster/pdf.html
+    * PNG using .png file extension - https://gdal.org/drivers/raster/png.html
+    * VRT using .vrt file extension - https://gdal.org/drivers/raster/vrt.html
+    * XPM using .xpm file extension - https://gdal.org/drivers/raster/xpm.html
+    * GRIB using .grb file extension - https://gdal.org/drivers/raster/grib.html
+    * Zarr using .zarr file extension - https://gdal.org/drivers/raster/zarr.html
 
 Other formats are supported if supported by GDAL available drivers.
 
@@ -33,14 +34,15 @@ spark.read.format("gdal")
 A base Spark SQL data source for reading GDAL raster data sources.
 It reads metadata of the raster and exposes the direct paths for the raster files.
 The output of the reader is a DataFrame with the following columns:
-* tile - loaded raster tile (RasterTileType)
-* ySize - height of the raster in pixels (IntegerType)
-* xSize - width of the raster in pixels (IntegerType)
-* bandCount - number of bands in the raster (IntegerType)
-* metadata - raster metadata (MapType(StringType, StringType))
-* subdatasets - raster subdatasets (MapType(StringType, StringType))
-* srid - raster spatial reference system identifier (IntegerType)
-* proj4Str - raster spatial reference system proj4 string (StringType)
+
+    * tile - loaded raster tile (RasterTileType)
+    * ySize - height of the raster in pixels (IntegerType)
+    * xSize - width of the raster in pixels (IntegerType)
+    * bandCount - number of bands in the raster (IntegerType)
+    * metadata - raster metadata (MapType(StringType, StringType))
+    * subdatasets - raster subdatasets (MapType(StringType, StringType))
+    * srid - raster spatial reference system identifier (IntegerType)
+    * proj4Str - raster spatial reference system proj4 string (StringType)
 
 .. function:: spark.read.format("gdal").load(path)
 
@@ -95,16 +97,17 @@ If the raster pixels are larger than the grid cells, the cell values can be calc
 The interpolation method used is Inverse Distance Weighting (IDW) where the distance function is a k_ring
 distance of the grid.
 The reader supports the following options:
-* fileExtension - file extension of the raster file (StringType) - default is *.*
-* vsizip - if the rasters are zipped files, set this to true (BooleanType)
-* resolution - resolution of the output grid (IntegerType)
-* combiner - combiner operation to use when converting raster to grid (StringType) - default is mean
-* retile - if the rasters are too large they can be re-tiled to smaller tiles (BooleanType)
-* tileSize - size of the re-tiled tiles, tiles are always squares of tileSize x tileSize (IntegerType)
-* readSubdatasets - if the raster has subdatasets set this to true (BooleanType)
-* subdatasetNumber - if the raster has subdatasets, select a specific subdataset by index (IntegerType)
-* subdatasetName - if the raster has subdatasets, select a specific subdataset by name (StringType)
-* kRingInterpolate - if the raster pixels are larger than the grid cells, use k_ring interpolation with n = kRingInterpolate (IntegerType)
+
+    * fileExtension - file extension of the raster file (StringType) - default is *.*
+    * vsizip - if the rasters are zipped files, set this to true (BooleanType)
+    * resolution - resolution of the output grid (IntegerType)
+    * combiner - combiner operation to use when converting raster to grid (StringType) - default is mean
+    * retile - if the rasters are too large they can be re-tiled to smaller tiles (BooleanType)
+    * tileSize - size of the re-tiled tiles, tiles are always squares of tileSize x tileSize (IntegerType)
+    * readSubdatasets - if the raster has subdatasets set this to true (BooleanType)
+    * subdatasetNumber - if the raster has subdatasets, select a specific subdataset by index (IntegerType)
+    * subdatasetName - if the raster has subdatasets, select a specific subdataset by name (StringType)
+    * kRingInterpolate - if the raster pixels are larger than the grid cells, use k_ring interpolation with n = kRingInterpolate (IntegerType)
 
 .. function:: mos.read().format("raster_to_grid").load(path)
 

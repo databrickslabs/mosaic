@@ -100,18 +100,22 @@
 <h2>Intro<a class="headerlink" href="#intro" title="Permalink to this heading"></a></h2>
 <p>Mosaic provides spark readers for vector files supported by GDAL OGR drivers.
 Only the drivers that are built by default are supported.
-Here are some common useful file formats:
-* GeoJSON (also ESRIJSON, TopoJSON) <a class="reference external" href="https://gdal.org/drivers/vector/geojson.html">https://gdal.org/drivers/vector/geojson.html</a>
-* ESRI File Geodatabase (FileGDB) and ESRI File Geodatabase vector (OpenFileGDB). Mosaic implements named reader geo_db (described in this doc). <a class="reference external" href="https://gdal.org/drivers/vector/filegdb.html">https://gdal.org/drivers/vector/filegdb.html</a>
-* ESRI Shapefile / DBF (ESRI Shapefile) - Mosaic implements named reader shapefile (described in this doc) <a class="reference external" href="https://gdal.org/drivers/vector/shapefile.html">https://gdal.org/drivers/vector/shapefile.html</a>
-* Network Common Data Form (netCDF) - Mosaic implements raster reader also <a class="reference external" href="https://gdal.org/drivers/raster/netcdf.html">https://gdal.org/drivers/raster/netcdf.html</a>
-* (Geo)Parquet (Parquet) - Mosaic will be implementing a custom reader soon <a class="reference external" href="https://gdal.org/drivers/vector/parquet.html">https://gdal.org/drivers/vector/parquet.html</a>
-* Spreadsheets (XLSX, XLS, ODS) <a class="reference external" href="https://gdal.org/drivers/vector/xls.html">https://gdal.org/drivers/vector/xls.html</a>
-* U.S. Census TIGER/Line (TIGER) <a class="reference external" href="https://gdal.org/drivers/vector/tiger.html">https://gdal.org/drivers/vector/tiger.html</a>
-* PostgreSQL Dump (PGDump) <a class="reference external" href="https://gdal.org/drivers/vector/pgdump.html">https://gdal.org/drivers/vector/pgdump.html</a>
-* Keyhole Markup Language (KML) <a class="reference external" href="https://gdal.org/drivers/vector/kml.html">https://gdal.org/drivers/vector/kml.html</a>
-* Geography Markup Language (GML) <a class="reference external" href="https://gdal.org/drivers/vector/gml.html">https://gdal.org/drivers/vector/gml.html</a>
-* GRASS - option for Linear Referencing Systems (LRS) <a class="reference external" href="https://gdal.org/drivers/vector/grass.html">https://gdal.org/drivers/vector/grass.html</a></p>
+Here are some common useful file formats:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>GeoJSON (also ESRIJSON, TopoJSON) <a class="reference external" href="https://gdal.org/drivers/vector/geojson.html">https://gdal.org/drivers/vector/geojson.html</a></p></li>
+<li><p>ESRI File Geodatabase (FileGDB) and ESRI File Geodatabase vector (OpenFileGDB). Mosaic implements named reader geo_db (described in this doc). <a class="reference external" href="https://gdal.org/drivers/vector/filegdb.html">https://gdal.org/drivers/vector/filegdb.html</a></p></li>
+<li><p>ESRI Shapefile / DBF (ESRI Shapefile) - Mosaic implements named reader shapefile (described in this doc) <a class="reference external" href="https://gdal.org/drivers/vector/shapefile.html">https://gdal.org/drivers/vector/shapefile.html</a></p></li>
+<li><p>Network Common Data Form (netCDF) - Mosaic implements raster reader also <a class="reference external" href="https://gdal.org/drivers/raster/netcdf.html">https://gdal.org/drivers/raster/netcdf.html</a></p></li>
+<li><p>(Geo)Parquet (Parquet) - Mosaic will be implementing a custom reader soon <a class="reference external" href="https://gdal.org/drivers/vector/parquet.html">https://gdal.org/drivers/vector/parquet.html</a></p></li>
+<li><p>Spreadsheets (XLSX, XLS, ODS) <a class="reference external" href="https://gdal.org/drivers/vector/xls.html">https://gdal.org/drivers/vector/xls.html</a></p></li>
+<li><p>U.S. Census TIGER/Line (TIGER) <a class="reference external" href="https://gdal.org/drivers/vector/tiger.html">https://gdal.org/drivers/vector/tiger.html</a></p></li>
+<li><p>PostgreSQL Dump (PGDump) <a class="reference external" href="https://gdal.org/drivers/vector/pgdump.html">https://gdal.org/drivers/vector/pgdump.html</a></p></li>
+<li><p>Keyhole Markup Language (KML) <a class="reference external" href="https://gdal.org/drivers/vector/kml.html">https://gdal.org/drivers/vector/kml.html</a></p></li>
+<li><p>Geography Markup Language (GML) <a class="reference external" href="https://gdal.org/drivers/vector/gml.html">https://gdal.org/drivers/vector/gml.html</a></p></li>
+<li><p>GRASS - option for Linear Referencing Systems (LRS) <a class="reference external" href="https://gdal.org/drivers/vector/grass.html">https://gdal.org/drivers/vector/grass.html</a></p></li>
+</ul>
+</div></blockquote>
 <p>For more information please refer to gdal documentation: <a class="reference external" href="https://gdal.org/drivers/vector/index.html">https://gdal.org/drivers/vector/index.html</a></p>
 <p>Mosaic provides two flavors of the readers:
 * spark.read.format(“ogr”) for reading 1 file per spark task
@@ -126,12 +130,16 @@ Each feature will be provided as 2 columns:
 * srid - spatial reference system identifier of the feature (StringType)</p>
 <p>The fields of the feature will be provided as columns in the DataFrame.
 The types of the fields are coerced to most concrete type that can hold all the values.
-The reader supports the following options:
-* driverName - GDAL driver name (StringType)
-* vsizip - if the vector files are zipped files, set this to true (BooleanType)
-* asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
-* layerName - name of the layer to read (StringType)
-* layerNumber - number of the layer to read (IntegerType)</p>
+The reader supports the following options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>driverName - GDAL driver name (StringType)</p></li>
+<li><p>vsizip - if the vector files are zipped files, set this to true (BooleanType)</p></li>
+<li><p>asWKB - if the geometry should be returned as WKB (BooleanType) - default is false</p></li>
+<li><p>layerName - name of the layer to read (StringType)</p></li>
+<li><p>layerNumber - number of the layer to read (IntegerType)</p></li>
+</ul>
+</div></blockquote>
 <dl class="py function">
 <dt class="sig sig-object py" id="read.format">
 <span class="sig-prename descclassname"><span class="pre">read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;ogr&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#read.format" title="Permalink to this definition"></a></dt>
@@ -192,13 +200,17 @@ Each feature will be provided as 2 columns:
 * srid - spatial reference system identifier of the feature (StringType)</p>
 <p>The fields of the feature will be provided as columns in the DataFrame.
 The types of the fields are coerced to most concrete type that can hold all the values.
-The reader supports the following options:
-* driverName - GDAL driver name (StringType)
-* vsizip - if the vector files are zipped files, set this to true (BooleanType)
-* asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
-* chunkSize - size of the chunk to read from the file per single task (IntegerType) - default is 5000
-* layerName - name of the layer to read (StringType)
-* layerNumber - number of the layer to read (IntegerType)</p>
+The reader supports the following options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>driverName - GDAL driver name (StringType)</p></li>
+<li><p>vsizip - if the vector files are zipped files, set this to true (BooleanType)</p></li>
+<li><p>asWKB - if the geometry should be returned as WKB (BooleanType) - default is false</p></li>
+<li><p>chunkSize - size of the chunk to read from the file per single task (IntegerType) - default is 5000</p></li>
+<li><p>layerName - name of the layer to read (StringType)</p></li>
+<li><p>layerNumber - number of the layer to read (IntegerType)</p></li>
+</ul>
+</div></blockquote>
 <dl class="py function">
 <dt class="sig sig-object py" id="id0">
 <span class="sig-prename descclassname"><span class="pre">read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;multi_read_ogr&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
@@ -252,11 +264,15 @@ The reader supports the following options:
 <p>Mosaic provides a reader for GeoDB files natively in Spark.
 The output of the reader is a DataFrame with inferred schema.
 Only 1 file per task is read. For parallel reading of large files use the multi_read_ogr reader.
-The reader supports the following options:
-* asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
-* layerName - name of the layer to read (StringType)
-* layerNumber - number of the layer to read (IntegerType)
-* vsizip - if the vector files are zipped files, set this to true (BooleanType)</p>
+The reader supports the following options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>asWKB - if the geometry should be returned as WKB (BooleanType) - default is false</p></li>
+<li><p>layerName - name of the layer to read (StringType)</p></li>
+<li><p>layerNumber - number of the layer to read (IntegerType)</p></li>
+<li><p>vsizip - if the vector files are zipped files, set this to true (BooleanType)</p></li>
+</ul>
+</div></blockquote>
 <dl class="py function">
 <dt class="sig sig-object py" id="id1">
 <span class="sig-prename descclassname"><span class="pre">read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;geo_db&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition"></a></dt>
@@ -309,11 +325,15 @@ The reader supports the following options:
 <p>Mosaic provides a reader for Shapefiles natively in Spark.
 The output of the reader is a DataFrame with inferred schema.
 Only 1 file per task is read. For parallel reading of large files use the multi_read_ogr reader.
-The reader supports the following options:
-* asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
-* layerName - name of the layer to read (StringType)
-* layerNumber - number of the layer to read (IntegerType)
-* vsizip - if the vector files are zipped files, set this to true (BooleanType)</p>
+The reader supports the following options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>asWKB - if the geometry should be returned as WKB (BooleanType) - default is false</p></li>
+<li><p>layerName - name of the layer to read (StringType)</p></li>
+<li><p>layerNumber - number of the layer to read (IntegerType)</p></li>
+<li><p>vsizip - if the vector files are zipped files, set this to true (BooleanType)</p></li>
+</ul>
+</div></blockquote>
 <dl class="py function">
 <dt class="sig sig-object py" id="id2">
 <span class="sig-prename descclassname"><span class="pre">read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;shapefile&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition"></a></dt>
