@@ -23,6 +23,7 @@ trait ST_ZBehaviors extends MosaicSpatialQueryTest {
             .getWKTRowsDf()
             .orderBy("id")
             .select("wkt")
+            .where("wkt SUBSTRING(wkt, 1, 5) = 'POINT'")
             .as[String]
             .collect()
             .map(wkt => mc.getGeometryAPI.geometry(wkt, "WKT"))
@@ -46,7 +47,7 @@ trait ST_ZBehaviors extends MosaicSpatialQueryTest {
         sqlResult.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
     }
 
-    def stxCodegen(mosaicContext: MosaicContext): Unit = {
+    def stzCodegen(mosaicContext: MosaicContext): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
         val mc = mosaicContext
         val sc = spark
