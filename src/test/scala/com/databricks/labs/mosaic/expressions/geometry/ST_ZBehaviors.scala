@@ -31,7 +31,7 @@ trait ST_ZBehaviors extends MosaicSpatialQueryTest {
             .withColumn("result", st_z($"wkt"))
             .where($"expected" === $"result")
 
-        results.count shouldBe 4
+        result.count shouldBe 4
     }
 
     def stzCodegen(mosaicContext: MosaicContext): Unit = {
