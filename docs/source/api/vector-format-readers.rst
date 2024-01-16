@@ -8,36 +8,26 @@ Intro
 Mosaic provides spark readers for vector files supported by GDAL OGR drivers.
 Only the drivers that are built by default are supported.
 Here are some common useful file formats:
-    * GeoJSON (also ESRIJSON, TopoJSON)
-      https://gdal.org/drivers/vector/geojson.html
-    * ESRI File Geodatabase (FileGDB) and ESRI File Geodatabase vector (OpenFileGDB)
-      Mosaic implements named reader geo_db (described in this doc)
-      https://gdal.org/drivers/vector/filegdb.html
-    * ESRI Shapefile / DBF (ESRI Shapefile) - Mosaic implements named reader shapefile (described in this doc)
-      https://gdal.org/drivers/vector/shapefile.html
-    * Network Common Data Form (netCDF) - Mosaic implements raster reader also
-      https://gdal.org/drivers/raster/netcdf.html
-    * (Geo)Parquet (Parquet) - Mosaic will be implementing a custom reader soon
-      https://gdal.org/drivers/vector/parquet.html
-    * Spreadsheets (XLSX, XLS, ODS)
-      https://gdal.org/drivers/vector/xls.html
-    * U.S. Census TIGER/Line (TIGER)
-      https://gdal.org/drivers/vector/tiger.html
-    * PostgreSQL Dump (PGDump)
-      https://gdal.org/drivers/vector/pgdump.html
-    * Keyhole Markup Language (KML)
-      https://gdal.org/drivers/vector/kml.html
-    * Geography Markup Language (GML)
-      https://gdal.org/drivers/vector/gml.html
-    * GRASS - option for Linear Referencing Systems (LRS)
-      https://gdal.org/drivers/vector/grass.html
+
+    * GeoJSON (also ESRIJSON, TopoJSON) https://gdal.org/drivers/vector/geojson.html
+    * ESRI File Geodatabase (FileGDB) and ESRI File Geodatabase vector (OpenFileGDB). Mosaic implements named reader geo_db (described in this doc). https://gdal.org/drivers/vector/filegdb.html
+    * ESRI Shapefile / DBF (ESRI Shapefile) - Mosaic implements named reader shapefile (described in this doc) https://gdal.org/drivers/vector/shapefile.html
+    * Network Common Data Form (netCDF) - Mosaic implements raster reader also https://gdal.org/drivers/raster/netcdf.html
+    * (Geo)Parquet (Parquet) - Mosaic will be implementing a custom reader soon https://gdal.org/drivers/vector/parquet.html
+    * Spreadsheets (XLSX, XLS, ODS) https://gdal.org/drivers/vector/xls.html
+    * U.S. Census TIGER/Line (TIGER) https://gdal.org/drivers/vector/tiger.html
+    * PostgreSQL Dump (PGDump) https://gdal.org/drivers/vector/pgdump.html
+    * Keyhole Markup Language (KML) https://gdal.org/drivers/vector/kml.html
+    * Geography Markup Language (GML) https://gdal.org/drivers/vector/gml.html
+    * GRASS - option for Linear Referencing Systems (LRS) https://gdal.org/drivers/vector/grass.html
+
 For more information please refer to gdal documentation: https://gdal.org/drivers/vector/index.html
 
 
 
 Mosaic provides two flavors of the readers:
-    * spark.read.format("ogr") for reading 1 file per spark task
-    * mos.read().format("multi_read_ogr") for reading file in parallel with multiple spark tasks
+* spark.read.format("ogr") for reading 1 file per spark task
+* mos.read().format("multi_read_ogr") for reading file in parallel with multiple spark tasks
 
 
 spark.read.format("ogr")
@@ -46,12 +36,13 @@ A base Spark SQL data source for reading GDAL vector data sources.
 The output of the reader is a DataFrame with inferred schema.
 The schema is inferred from both features and fields in the vector file.
 Each feature will be provided as 2 columns:
-    * geometry - geometry of the feature (GeometryType)
-    * srid - spatial reference system identifier of the feature (StringType)
+* geometry - geometry of the feature (GeometryType)
+* srid - spatial reference system identifier of the feature (StringType)
 
 The fields of the feature will be provided as columns in the DataFrame.
 The types of the fields are coerced to most concrete type that can hold all the values.
 The reader supports the following options:
+
     * driverName - GDAL driver name (StringType)
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
     * asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
@@ -109,12 +100,13 @@ Chunk size is the number of file rows that will be read per single task.
 The output of the reader is a DataFrame with inferred schema.
 The schema is inferred from both features and fields in the vector file.
 Each feature will be provided as 2 columns:
-    * geometry - geometry of the feature (GeometryType)
-    * srid - spatial reference system identifier of the feature (StringType)
+* geometry - geometry of the feature (GeometryType)
+* srid - spatial reference system identifier of the feature (StringType)
 
 The fields of the feature will be provided as columns in the DataFrame.
 The types of the fields are coerced to most concrete type that can hold all the values.
 The reader supports the following options:
+
     * driverName - GDAL driver name (StringType)
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
     * asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
@@ -171,6 +163,7 @@ Mosaic provides a reader for GeoDB files natively in Spark.
 The output of the reader is a DataFrame with inferred schema.
 Only 1 file per task is read. For parallel reading of large files use the multi_read_ogr reader.
 The reader supports the following options:
+
     * asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
     * layerName - name of the layer to read (StringType)
     * layerNumber - number of the layer to read (IntegerType)
@@ -223,6 +216,7 @@ Mosaic provides a reader for Shapefiles natively in Spark.
 The output of the reader is a DataFrame with inferred schema.
 Only 1 file per task is read. For parallel reading of large files use the multi_read_ogr reader.
 The reader supports the following options:
+
     * asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
     * layerName - name of the layer to read (StringType)
     * layerNumber - number of the layer to read (IntegerType)
