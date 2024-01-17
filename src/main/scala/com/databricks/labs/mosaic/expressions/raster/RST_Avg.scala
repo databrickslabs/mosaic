@@ -39,7 +39,7 @@ case class RST_Avg(raster: Expression, expressionConfig: MosaicExpressionConfig)
 /** Expression info required for the expression registration for spark SQL. */
 object RST_Avg extends WithExpressionInfo {
 
-    override def name: String = "rst_mean"
+    override def name: String = "rst_avg"
 
     override def usage: String = "_FUNC_(expr1) - Returns an array containing mean values for each band."
 

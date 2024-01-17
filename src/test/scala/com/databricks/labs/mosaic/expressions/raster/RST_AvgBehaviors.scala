@@ -7,7 +7,7 @@ import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.functions._
 import org.scalatest.matchers.should.Matchers._
 
-trait RST_MaxBehaviors extends QueryTest {
+trait RST_AvgBehaviors extends QueryTest {
 
     def behavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
@@ -23,7 +23,7 @@ trait RST_MaxBehaviors extends QueryTest {
 
         val df = rastersInMemory
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
-            .withColumn("result", rst_max($"tile"))
+            .withColumn("result", rst_avg($"tile"))
             .select("result")
             .select(explode($"result").as("result"))
 
@@ -32,7 +32,7 @@ trait RST_MaxBehaviors extends QueryTest {
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_max(tile) from source
+                                                   |select rst_avg(tile) from source
                                                    |""".stripMargin)
 
         val result = df.as[Double].collect().max
@@ -40,7 +40,7 @@ trait RST_MaxBehaviors extends QueryTest {
         result > 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
-                                                     |select rst_max() from source
+                                                     |select rst_avg() from source
                                                      |""".stripMargin)
 
     }
