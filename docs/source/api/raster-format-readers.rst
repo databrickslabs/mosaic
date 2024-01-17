@@ -4,8 +4,9 @@ Raster Format Readers
 
 
 Intro
-################
+#####
 Mosaic provides spark readers for the following raster formats:
+
     * GTiff (GeoTiff) using .tif file extension - https://gdal.org/drivers/raster/gtiff.html
     * COG (Cloud Optimized GeoTiff) using .tif file extension - https://gdal.org/drivers/raster/cog.html
     * HDF4 using .hdf file extension - https://gdal.org/drivers/raster/hdf4.html
@@ -20,6 +21,7 @@ Mosaic provides spark readers for the following raster formats:
     * XPM using .xpm file extension - https://gdal.org/drivers/raster/xpm.html
     * GRIB using .grb file extension - https://gdal.org/drivers/raster/grib.html
     * Zarr using .zarr file extension - https://gdal.org/drivers/raster/zarr.html
+
 Other formats are supported if supported by GDAL available drivers.
 
 Mosaic provides two flavors of the readers:
@@ -32,6 +34,7 @@ spark.read.format("gdal")
 A base Spark SQL data source for reading GDAL raster data sources.
 It reads metadata of the raster and exposes the direct paths for the raster files.
 The output of the reader is a DataFrame with the following columns:
+
     * tile - loaded raster tile (RasterTileType)
     * ySize - height of the raster in pixels (IntegerType)
     * xSize - width of the raster in pixels (IntegerType)
@@ -94,6 +97,7 @@ If the raster pixels are larger than the grid cells, the cell values can be calc
 The interpolation method used is Inverse Distance Weighting (IDW) where the distance function is a k_ring
 distance of the grid.
 The reader supports the following options:
+
     * fileExtension - file extension of the raster file (StringType) - default is *.*
     * vsizip - if the rasters are zipped files, set this to true (BooleanType)
     * resolution - resolution of the output grid (IntegerType)

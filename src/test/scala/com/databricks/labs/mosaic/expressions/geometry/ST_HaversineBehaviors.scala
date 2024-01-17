@@ -13,6 +13,7 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 trait ST_HaversineBehaviors extends QueryTest {
 
     def haversineBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)

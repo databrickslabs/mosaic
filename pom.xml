@@ -149,7 +149,7 @@
             <plugin>
                 <groupId>org.scoverage</groupId>
                 <artifactId>scoverage-maven-plugin</artifactId>
-                <version>2.0.0</version>
+                <version>2.0.1</version>
                 <executions>
                     <execution>
                         <id>scoverage-report</id>
@@ -191,7 +191,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.3</version>
+                <version>3.2.5</version>
                 <configuration>
                     <!-- Tests will be run with scalatest-maven-plugin instead -->
                     <skipTests>true</skipTests>
@@ -278,7 +278,7 @@
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
                 <spark.version>3.4.0</spark.version>
-                <mosaic.version>0.3.14</mosaic.version>
+                <mosaic.version>0.4.0</mosaic.version>
             </properties>
         </profile>
     </profiles>

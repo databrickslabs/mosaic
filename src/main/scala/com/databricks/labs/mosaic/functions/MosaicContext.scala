@@ -150,6 +150,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[ST_Centroid](expressionConfig)
         mosaicRegistry.registerExpression[ST_Contains](expressionConfig)
         mosaicRegistry.registerExpression[ST_ConvexHull](expressionConfig)
+        mosaicRegistry.registerExpression[ST_ConcaveHull](expressionConfig)
         mosaicRegistry.registerExpression[ST_Distance](expressionConfig)
         mosaicRegistry.registerExpression[ST_Difference](expressionConfig)
         mosaicRegistry.registerExpression[ST_Dimension](expressionConfig)
@@ -178,6 +179,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[ST_UnaryUnion](expressionConfig)
         mosaicRegistry.registerExpression[ST_Union](expressionConfig)
         mosaicRegistry.registerExpression[ST_UpdateSRID](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Within](expressionConfig)
         mosaicRegistry.registerExpression[ST_X](expressionConfig)
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
         mosaicRegistry.registerExpression[ST_Haversine](expressionConfig)
@@ -300,6 +302,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_Subdatasets](expressionConfig)
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
+        mosaicRegistry.registerExpression[RST_FromContent](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromFile](expressionConfig)
         mosaicRegistry.registerExpression[RST_ToOverlappingTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_TryOpen](expressionConfig)
@@ -564,6 +567,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_BufferCapStyle(geom.expr, lit(radius).cast("double").expr, lit(capStyle).expr, expressionConfig))
         def st_centroid(geom: Column): Column = ColumnAdapter(ST_Centroid(geom.expr, expressionConfig))
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, expressionConfig))
+        def st_concavehull(geom: Column, concavity: Column, allowHoles: Column): Column =
+            ColumnAdapter(ST_ConcaveHull(geom.expr, concavity.cast("double").expr, allowHoles.expr, expressionConfig))
+        def st_concavehull(geom: Column, concavity: Double, allowHoles: Boolean = false): Column =
+            ColumnAdapter(ST_ConcaveHull(geom.expr, lit(concavity).cast("double").expr, lit(allowHoles).expr, expressionConfig))
         def st_difference(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Difference(geom1.expr, geom2.expr, expressionConfig))
         def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, expressionConfig))
         def st_dimension(geom: Column): Column = ColumnAdapter(ST_Dimension(geom.expr, expressionConfig))
@@ -635,6 +642,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         /** Spatial predicates */
         def st_contains(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Contains(geom1.expr, geom2.expr, expressionConfig))
         def st_intersects(left: Column, right: Column): Column = ColumnAdapter(ST_Intersects(left.expr, right.expr, expressionConfig))
+        def st_within(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Within(geom1.expr, geom2.expr, expressionConfig))
 
         /** RasterAPI dependent functions */
         def rst_bandmetadata(raster: Column, band: Column): Column =
@@ -714,6 +722,14 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
+        def rst_fromcontent(raster: Column, driver: Column): Column =
+            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(-1).expr, expressionConfig))
+        def rst_fromcontent(raster: Column, driver: Column, sizeInMB: Column): Column =
+            ColumnAdapter(RST_FromContent(raster.expr, driver.expr, sizeInMB.expr, expressionConfig))
+        def rst_fromcontent(raster: Column, driver: String): Column =
+            ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(-1).expr, expressionConfig))
+        def rst_fromcontent(raster: Column, driver: String, sizeInMB: Int): Column =
+            ColumnAdapter(RST_FromContent(raster.expr, lit(driver).expr, lit(sizeInMB).expr, expressionConfig))
         def rst_fromfile(raster: Column): Column = ColumnAdapter(RST_FromFile(raster.expr, lit(-1).expr, expressionConfig))
         def rst_fromfile(raster: Column, sizeInMB: Column): Column =
             ColumnAdapter(RST_FromFile(raster.expr, sizeInMB.expr, expressionConfig))
@@ -977,7 +993,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 object MosaicContext extends Logging {
 
     val tmpDir: String = FileUtils.createMosaicTempDir()
-    val mosaicVersion: String = "0.3.14"
+    val mosaicVersion: String = "0.4.0"
 
     private var instance: Option[MosaicContext] = None
 
@@ -1004,17 +1020,19 @@ object MosaicContext extends Logging {
     // noinspection ScalaStyle,ScalaWeakerAccess
     def checkDBR(spark: SparkSession): Boolean = {
         val sparkVersion = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion", "0")
-        val isML = sparkVersion.contains("-ml-")
-        val isPhoton = spark.conf.getOption("spark.databricks.photon.enabled").getOrElse("false").toBoolean
-        val isTest = !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags."))
-
         val dbrMajor = sparkVersion.split("-").head.split("\\.").head.toInt
-        if (
-          (dbrMajor < 13 && mosaicVersion >= "0.4.0") ||
-          (dbrMajor > 12 && mosaicVersion < "0.4.0")
-        ) {
+
+        val isML = sparkVersion.contains("-ml-")
+        val isPhoton = sparkVersion.contains("-photon-")
+        val isTest =
+            (
+              dbrMajor == 0
+              && !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags."))
+            )
+
+        if (dbrMajor != 13 && !isTest) {
             val msg = """|DEPRECATION ERROR:
-                         |    Mosaic v0.3.x series only supports Databricks Runtime 12 and below.
+                         |    Mosaic v0.4.x series only supports Databricks Runtime 13.
                          |    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.""".stripMargin
 
             logError(msg)
@@ -1023,17 +1041,16 @@ object MosaicContext extends Logging {
         }
 
         if (!isML && !isPhoton && !isTest) {
-            val msg = """|DEPRECATION WARNING: 
+            val msg = """|DEPRECATION ERROR:
                          |  Please use a Databricks:
                          |      - Photon-enabled Runtime for performance benefits
                          |      - Runtime ML for spatial AI benefits
-                         |  Mosaic will stop working on this cluster after v0.3.x.""".stripMargin
-            logWarning(msg)
+                         |  Mosaic 0.4.x series restricts executing this cluster.""".stripMargin
+            logError(msg)
             println(msg)
-            false
-        } else {
-            true
+            throw new Exception(msg)
         }
+        true
     }
 
 }

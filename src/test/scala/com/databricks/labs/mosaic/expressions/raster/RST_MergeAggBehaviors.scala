@@ -10,6 +10,7 @@ trait RST_MergeAggBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark
@@ -19,6 +20,7 @@ trait RST_MergeAggBehaviors extends QueryTest {
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
+            .option("pathGlobFilter", "*_B01.TIF")
             .load("src/test/resources/modis")
 
         val gridTiles = rastersInMemory

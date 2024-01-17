@@ -9,6 +9,7 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_WidthBehaviors extends QueryTest {
 
     def widthBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark

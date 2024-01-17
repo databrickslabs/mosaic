@@ -1,5 +1,6 @@
 package org.apache.spark.sql.test
 
+import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.utils.FileUtils
 import com.databricks.labs.mosaic.{MOSAIC_GDAL_NATIVE, MOSAIC_RASTER_CHECKPOINT}
@@ -24,10 +25,6 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         val session = new MosaicTestSparkSession(conf)
         session.sparkContext.setLogLevel("INFO")
         Try {
-            //val tempPath = Files.createTempDirectory("mosaic-gdal")
-            // prepareEnvironment no longer exists
-            // - only have python calls now
-            //MosaicGDAL.prepareEnvironment(session, tempPath.toAbsolutePath.toString)
             MosaicGDAL.enableGDAL(session)
         }
         session

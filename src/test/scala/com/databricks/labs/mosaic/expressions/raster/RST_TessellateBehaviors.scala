@@ -10,6 +10,7 @@ trait RST_TessellateBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def tessellateBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark

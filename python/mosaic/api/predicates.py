@@ -52,3 +52,24 @@ def st_contains(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
         pyspark_to_java_column(geom1),
         pyspark_to_java_column(geom2),
     )
+
+
+def st_within(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
+    """
+    Returns `true` if geom1 'spatially' is within geom2.
+
+    Parameters
+    ----------
+    geom1 : Column
+    geom2 : Column
+
+    Returns
+    -------
+    Column (BooleanType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_within",
+        pyspark_to_java_column(geom1),
+        pyspark_to_java_column(geom2),
+    )

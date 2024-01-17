@@ -11,6 +11,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
 
     def bandMetadataBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val sc = spark
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
 
