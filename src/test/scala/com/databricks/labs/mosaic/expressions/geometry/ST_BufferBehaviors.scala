@@ -68,7 +68,7 @@ trait ST_BufferBehaviors extends QueryTest {
               st_distance($"geomBufferedRef", $"geomBufferedTest"),
               st_area(st_intersection($"geomBufferedRef", $"geomBufferedTest")),
               st_area(st_union($"geomBufferedRef", $"geomBufferedTest")),
-              st_area($"geomBufferedRef"),
+              st_area($"geomBufferedRef")
             )
             .as[(Double, Double, Double, Double)]
             .collect()
@@ -79,7 +79,7 @@ trait ST_BufferBehaviors extends QueryTest {
             a1 shouldBe a3 +- 1e-9
         })
 
-/*         val extraParamResult = sourceDf
+        /*         val extraParamResult = sourceDf
             .withColumn("geomBufferedTest", st_buffer(convert_to($"geom", "COORDS"), $"buffer", $"endCapStyle", $"quadrantSegments"))
             .select(
               st_distance($"geomBufferedRef", $"geomBufferedTest"),
@@ -95,7 +95,7 @@ trait ST_BufferBehaviors extends QueryTest {
             a1 shouldBe a2 +- 1e-9
             a1 shouldBe a3 +- 1e-9
         })
- */
+         */
 
     }
 
@@ -222,7 +222,6 @@ trait ST_BufferBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
         import mc.functions._
-
 
         val df = getWKTRowsDf()
 
