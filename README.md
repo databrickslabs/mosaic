@@ -57,7 +57,7 @@ __Language Bindings__
 
 As of Mosaic 0.4.0 (subject to change in follow-on releases)...
 
-* _No Mosaic SQL expressions cannot yet be registered with [Unity Catalog](https://www.databricks.com/product/unity-catalog) due to API changes affecting DBRs >= 13._
+* _Mosaic SQL expressions cannot yet be registered with [Unity Catalog](https://www.databricks.com/product/unity-catalog) due to API changes affecting DBRs >= 13._
 * [Assigned Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Python, R, and Scala APIs.
 * [Shared Access Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Scala API (JVM) with Admin [allowlisting](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html); _Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters._ 
 
@@ -154,6 +154,7 @@ Here are some example notebooks, check the language links for latest [[Python](/
 | Spatial KNN | Runnable notebook-based example using Mosaic [SpatialKNN](https://databrickslabs.github.io/mosaic/models/spatial-knn.html) model | [python](notebooks/examples/python/SpatialKNN) |
 | NetCDF |  Read multiple NetCDFs, process through various data engineering steps before analyzing and rendering | [python](notebooks/examples/python/NetCDF/) |
 | STS Transfers | Detecting Ship-to-Ship transfers at scale by leveraging Mosaic to process AIS data. | [python](notebooks/examples/python/Ship2ShipTransfers), [blog](https://medium.com/@timo.roest/ship-to-ship-transfer-detection-b370dd9d43e8) |
+| EO Gridded STAC | End-to-end Earth Observation series showing downloading Sentinel-2 STAC assets for Alaska from [MSFT Planetary Computer](https://planetarycomputer.microsoft.com/), tiling them to H3 global grid, band stacking, NDVI, merging (mosaicing), clipping, and applying a [Segment Anything Model](https://huggingface.co/facebook/sam-vit-huge)  | [python](notebooks/examples/python/EarthObservation/EOGriddedSTAC) |
 
 You can import those examples in Databricks workspace using [these instructions](https://docs.databricks.com/en/notebooks/index.html).
 
