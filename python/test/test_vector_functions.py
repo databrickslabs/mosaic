@@ -42,7 +42,7 @@ class TestVectorFunctions(MosaicTestCase):
             df.withColumn("st_area", api.st_area("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
             .withColumn("st_buffer", api.st_buffer("wkt", lit(1.1)))
-            .withColumn("st_buffer", api.st_bufferloop("wkt", lit(1.1), lit(1.2)))
+            .withColumn("st_bufferloop", api.st_bufferloop("wkt", lit(1.1), lit(1.2)))
             .withColumn("st_perimeter", api.st_perimeter("wkt"))
             .withColumn("st_convexhull", api.st_convexhull("wkt"))
             .withColumn("st_concavehull", api.st_concavehull("wkt", lit(0.5)))
