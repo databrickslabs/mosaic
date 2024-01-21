@@ -63,7 +63,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def buffer(distance: Double, bufferStyleParameters: String): MosaicGeometryJTS = {
 
-        val params = buffer_style_parameters.split(" ")
+        val params = bufferStyleParameters.split(" ")
             .map(_.split("="))
             .map { case Array(k, v) => (k, v) }
             .toMap
@@ -71,7 +71,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         val gBuf = new BufferOp(geom)
 
         if(params.contains("endcap")) {
-            val capStyle = params.get("endcap")
+            val capStyle = params.getOrElse("endcap", "")
             val capStyleConst = capStyle match {
                 case "round"  => BufferParameters.CAP_ROUND
                 case "flat"   => BufferParameters.CAP_FLAT
@@ -81,8 +81,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
             gBuf.setEndCapStyle(capStyleConst)
         }
         if(params.contains("quad_segs")) {
-            val quadSegs = params.get("quad_segs")
-]            gBuf.setQuadrantSegments(quadSegs)
+            val quadSegs = params.getOrElse("quad_segs", "")
+            gBuf.setQuadrantSegments(quadSegs.toInt)
         }
         val buffered = gBuf.getResultGeometry(distance)
         buffered.setSRID(geom.getSRID)

@@ -2,13 +2,16 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
-import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector1ArgExpression
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
+import org.apache.spark.unsafe.types.UTF8String
+import org.apache.spark.sql.functions._
+
 
 /**
   * SQL expression that returns the input geometry buffered by the radius.
@@ -27,14 +30,14 @@ import org.apache.spark.sql.types.DataType
 case class ST_Buffer(
     inputGeom: Expression,
     radiusExpr: Expression,
-    bufferStyleParametersExpr: Expression,
+    bufferStyleParametersExpr: Expression = lit("").expr,
     expressionConfig: MosaicExpressionConfig
 ) extends UnaryVector2ArgExpression[ST_Buffer](inputGeom, radiusExpr, bufferStyleParametersExpr, returnsGeometry = true, expressionConfig) {
 
     override def dataType: DataType = inputGeom.dataType
 
     override def geometryTransform(geometry: MosaicGeometry, arg1: Any, arg2: Any): Any = {
-        val radius = arg.asInstanceOf[Double]
+        val radius = arg1.asInstanceOf[Double]
         val bufferStyleParameters = arg2.asInstanceOf[UTF8String].toString
         geometry.buffer(radius, bufferStyleParameters)
     }
