@@ -14,6 +14,7 @@ test_that("scalar vector functions behave as intended", {
   sdf <- mutate(sdf, "st_length" = st_length(wkt))
   sdf <- mutate(sdf, "st_perimeter" = st_perimeter(wkt))
   sdf <- mutate(sdf, "st_buffer" = st_buffer(wkt, as.double(1.1)))
+  sdf <- mutate(sdf, "st_buffer_optparams" = st_buffer(wkt, as.double(1.1), "endcap=square quad_segs=2"))
   sdf <- mutate(sdf, "st_bufferloop" = st_bufferloop(wkt, as.double(1.1), as.double(1.2)))
   sdf <- mutate(sdf, "st_convexhull" = st_convexhull(wkt))
   sdf <- mutate(sdf, "st_dump" = st_dump(wkt))

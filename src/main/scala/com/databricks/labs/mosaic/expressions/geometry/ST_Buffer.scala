@@ -16,6 +16,10 @@ import org.apache.spark.sql.types.DataType
   *   Expression containing the geometry.
   * @param radiusExpr
   *   The radius of the buffer.
+  * @param bufferStyleParameters
+  *   'quad_segs=# endcap=round|flat|square' where "#" is the number of line segments used to
+  *   approximate a quarter circle (default is 8); and endcap style for line features is one of
+  *   listed (default="round")
   * @param expressionConfig
   *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
   *   arguments for the expression (expressionConfigs).
@@ -23,8 +27,9 @@ import org.apache.spark.sql.types.DataType
 case class ST_Buffer(
     inputGeom: Expression,
     radiusExpr: Expression,
+    bufferStyleParametersExpr: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends UnaryVector1ArgExpression[ST_Buffer](inputGeom, radiusExpr, returnsGeometry = true, expressionConfig) {
+) extends UnaryVector2ArgExpression[ST_Buffer](inputGeom, radiusExpr, bufferStyleParametersExpr, returnsGeometry = true, expressionConfig) {
 
     override def dataType: DataType = inputGeom.dataType
 
