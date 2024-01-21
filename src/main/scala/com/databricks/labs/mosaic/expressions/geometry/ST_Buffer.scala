@@ -16,7 +16,7 @@ import org.apache.spark.sql.types.DataType
   *   Expression containing the geometry.
   * @param radiusExpr
   *   The radius of the buffer.
-  * @param bufferStyleParameters
+  * @param bufferStyleParametersExpr
   *   'quad_segs=# endcap=round|flat|square' where "#" is the number of line segments used to
   *   approximate a quarter circle (default is 8); and endcap style for line features is one of
   *   listed (default="round")
@@ -33,14 +33,15 @@ case class ST_Buffer(
 
     override def dataType: DataType = inputGeom.dataType
 
-    override def geometryTransform(geometry: MosaicGeometry, arg: Any): Any = {
+    override def geometryTransform(geometry: MosaicGeometry, arg1: Any, arg2: Any): Any = {
         val radius = arg.asInstanceOf[Double]
-        geometry.buffer(radius)
+        val bufferStyleParameters = arg2.asInstanceOf[UTF8String].toString
+        geometry.buffer(radius, bufferStyleParameters)
     }
 
-    override def geometryCodeGen(geometryRef: String, argRef: String, ctx: CodegenContext): (String, String) = {
+    override def geometryCodeGen(geometryRef: String, argRef1: String, argRef2: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.buffer($argRef);"""
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.buffer($argRef1, $argRef2.toString());"""
         (code, resultRef)
     }
 
@@ -61,7 +62,7 @@ object ST_Buffer extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
-        ST_Buffer(children.head, Column(children(1)).cast("double").expr, expressionConfig)
+        ST_Buffer(children.head, Column(children(1)).cast("double").expr, children(2), expressionConfig)
     }
 
 }
