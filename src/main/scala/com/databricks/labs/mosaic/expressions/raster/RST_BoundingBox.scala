@@ -57,7 +57,7 @@ object RST_BoundingBox extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns the bounding box of the raster.
+          |_FUNC_(expr1) - Returns the bounding box of the raster tile.
           |""".stripMargin
 
     override def example: String =

@@ -11,12 +11,15 @@ Mainly raster to grid functions, which are useful for reprojecting the raster da
 This is useful for performing spatial joins between raster data and vector data.
 Mosaic also provides a scalable retiling function that can be used to retile raster data in case of bottlenecking due to large files.
 All raster functions respect the \"rst\_\" prefix naming convention.
-In versions <= 0.3.11 mosaic was operating using either string paths or byte arrays.
-In versions > 0.3.11 mosaic is operating using tile objects only. Tile objects are created using rst_fromfile(path_to_raster) function.
+Mosaic is operating using raster tile objects only since 0.3.11. Tile objects are created using functions such as rst_fromfile(path_to_raster)
+or rst_fromcontent(raster_bin).
 If you use spark.read.format("gdal") tiles are automatically generated for you.
+Also, scala does not have a df.display method while python does. In practice you would most often call display(df) in
+scala for a prettier output, but for brevity, we write df.show in scala.
 
-.. note:: For mosaic versions > 0.3.11 please do not use setup_gdal call. There is no longer a need for shared objects to be copied around.
-    Please use the updated init_script.sh script to install GDAL on your cluster. See :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for more details.
+.. note:: For mosaic versions > 0.4.0 you can use the revamped setup_gdal function or new setup_fuse_install.
+    These functions will configure an init script in your preferred Workspace, Volume, or DBFS location to install GDAL on your cluster.
+    See :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for more details.
 
 rst_bandmetadata
 ****************
@@ -37,8 +40,6 @@ rst_bandmetadata
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("gdal").option("extensions", "nc")\
-            .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral")
     df.select(mos.rst_bandmetadata("tile", F.lit(1))).limit(1).display()
     +--------------------------------------------------------------------------------------+
     | rst_bandmetadata(tile, 1)                                                            |
@@ -55,10 +56,7 @@ rst_bandmetadata
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("gdal").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_bandmetadata(col("tile"), lit(1))).limit(1).show(false)
+    df.select(rst_bandmetadata(col("tile"), lit(1))).limit(1).show
     +--------------------------------------------------------------------------------------+
     | rst_bandmetadata(tile, 1)                                                            |
     +--------------------------------------------------------------------------------------+
@@ -74,10 +72,7 @@ rst_bandmetadata
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_bandmetadata(tile, 1) FROM coral_netcdf LIMIT 1
+    SELECT rst_bandmetadata(tile, 1) FROM table LIMIT 1
     +--------------------------------------------------------------------------------------+
     | rst_bandmetadata(tile, 1)                                                            |
     +--------------------------------------------------------------------------------------+
@@ -94,7 +89,7 @@ rst_bandmetadata
 rst_boundingbox
 ***************
 
-.. function:: rst_boundingbox(raster)
+.. function:: rst_boundingbox(tile)
 
     Returns the bounding box of the raster as a polygon geometry.
 
@@ -107,8 +102,6 @@ rst_boundingbox
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("gdal").option("extensions", "nc")\
-                .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral")
      df.select(mos.rst_boundingbox("tile")).limit(1).display()
      +------------------------------------------------------------------+
      | rst_boundingbox(tile)                                            |
@@ -118,10 +111,7 @@ rst_boundingbox
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("gdal").option("extensions", "nc")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(rst_boundingbox(col("tile"))).limit(1).show(false)
+     df.select(rst_boundingbox(col("tile"))).limit(1).show
      +------------------------------------------------------------------+
      | rst_boundingbox(tile)                                            |
      +------------------------------------------------------------------+
@@ -130,10 +120,7 @@ rst_boundingbox
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-         USING gdal
-         OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     SELECT rst_boundingbox(tile) FROM coral_netcdf LIMIT 1
+     SELECT rst_boundingbox(tile) FROM table LIMIT 1
      +------------------------------------------------------------------+
      | rst_boundingbox(tile)                                            |
      +------------------------------------------------------------------+
@@ -143,9 +130,9 @@ rst_boundingbox
 rst_clip
 ********
 
-.. function:: rst_clip(raster, geometry)
+.. function:: rst_clip(tile, geometry)
 
-    Clips the raster to the geometry.
+    Clips the raster tile to the supported geometry (WKB, WKT, GeoJSON).
     The geometry is expected to be in the same coordinate reference system as the raster.
     The geometry is expected to be a polygon or a multipolygon.
     The output raster will have the same extent as the input geometry.
@@ -165,8 +152,6 @@ rst_clip
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("gdal").option("extensions", "nc")\
-                .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral")
      df.select(mos.rst_clip("tile", F.lit("POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))"))).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
      | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                        |
@@ -176,10 +161,7 @@ rst_clip
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("gdal").option("extensions", "nc")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(rst_clip(col("tile"), lit("POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))"))).limit(1).show(false)
+     df.select(rst_clip(col("tile"), lit("POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
     | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                         |
     +-----------------------------------------------------------------------------------------------------------------+
@@ -188,10 +170,7 @@ rst_clip
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-         USING gdal
-         OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     SELECT rst_clip(tile, "POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))") FROM coral_netcdf LIMIT 1
+     SELECT rst_clip(tile, "POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))") FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
      | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                        |
      +----------------------------------------------------------------------------------------------------------------+
@@ -201,9 +180,9 @@ rst_clip
 rst_combineavg
 **************
 
-.. function:: rst_combineavg(rasters)
+.. function:: rst_combineavg(tiles)
 
-    Combines a collection of rasters by averaging the pixel values.
+    Combines a collection of raster tiles by averaging the pixel values.
     The rasters must have the same extent, number of bands, and pixel type.
     The rasters must have the same pixel size and coordinate reference system.
     The output raster will have the same extent as the input rasters.
@@ -212,7 +191,7 @@ rst_combineavg
     The output raster will have the same pixel size as the input rasters.
     The output raster will have the same coordinate reference system as the input rasters.
 
-    :param tile: A column containing an array of raster tiles.
+    :param tiles: A column containing an array of raster tiles.
     :type col: Column (ArrayType(RasterTileType))
     :rtype: Column: RasterTileType
 
@@ -221,40 +200,31 @@ rst_combineavg
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("gdal").option("extensions", "nc")\
-                .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral")\
-                .groupBy().agg(F.collect_list("tile").alias("tile"))
-     df.select(mos.rst_combineavg("tile")).limit(1).display()
+     df\
+       .select(F.array("tile1","tile2","tile3")).alias("tiles"))\
+       .select(mos.rst_combineavg("tiles")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_combineavg(tile)                                                                                           |
+     | rst_combineavg(tiles)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("gdal").option("extensions", "nc")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-          .groupBy().agg(collect_list(col("tile")).as("tile"))
-     df.select(rst_combineavg(col("tile"))).limit(1).show(false)
+     df
+       .select(F.array("tile1","tile2","tile3")).as("tiles"))
+       .select(rst_combineavg(col("tiles"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_combineavg(tile)                                                                                           |
+     | rst_combineavg(tiles)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-          USING gdal
-          OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     WITH grouped as (
-         SELECT collect_list(tile) as tile FROM coral_netcdf
-     )
-     SELECT rst_combineavg(tile) FROM grouped LIMIT 1
+     SELECT rst_combineavg(array(tile1,tile2,tile3)) FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_combineavg(tile)                                                                                           |
+     | rst_combineavg(array(tile1,tile2,tile3))                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -262,9 +232,9 @@ rst_combineavg
 rst_combineavgagg
 *****************
 
-.. function:: rst_combineavgagg(rasters)
+.. function:: rst_combineavgagg(tile)
 
-    Combines a group by statement over rasters by averaging the pixel values.
+    Combines a group by statement over aggregated raster tiles by averaging the pixel values.
     The rasters must have the same extent, number of bands, and pixel type.
     The rasters must have the same pixel size and coordinate reference system.
     The output raster will have the same extent as the input rasters.
@@ -273,7 +243,7 @@ rst_combineavgagg
     The output raster will have the same pixel size as the input rasters.
     The output raster will have the same coordinate reference system as the input rasters.
 
-    :param tile: A column containing raster tiles.
+    :param tile: A grouped column containing raster tiles.
     :type col: Column (ArrayType(RasterTileType))
     :rtype: Column: RasterTileType
 
@@ -282,9 +252,8 @@ rst_combineavgagg
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("gdal").option("extensions", "nc")\
-                .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral")\
-     df.groupBy().agg(mos.rst_combineavgagg("tile")).limit(1).display()
+     df.groupBy()\
+       .agg(mos.rst_combineavgagg("tile").limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
      | rst_combineavgagg(tile)                                                                                        |
      +----------------------------------------------------------------------------------------------------------------+
@@ -293,10 +262,8 @@ rst_combineavgagg
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("gdal").option("extensions", "nc")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.groupBy().agg(rst_combineavgagg(col("tile"))).limit(1).show(false)
+     df.groupBy()
+       .agg(rst_combineavgagg(col("tile")).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
      | rst_combineavgagg(tile)                                                                                        |
      +----------------------------------------------------------------------------------------------------------------+
@@ -305,11 +272,8 @@ rst_combineavgagg
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-          USING gdal
-          OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
      SELECT rst_combineavgagg(tile)
-     FROM coral_netcdf
+     FROM table
      GROUP BY 1
      +----------------------------------------------------------------------------------------------------------------+
      | rst_combineavgagg(tile)                                                                                        |
@@ -320,9 +284,9 @@ rst_combineavgagg
 rst_frombands
 **************
 
-.. function:: rst_frombands(rasters)
+.. function:: rst_frombands(tiles)
 
-    Combines a collection of rasters into a single raster.
+    Combines a collection of raster tiles of different bands into a single raster.
     The rasters must have the same extent.
     The rasters must have the same pixel coordinate reference system.
     The output raster will have the same extent as the input rasters.
@@ -331,7 +295,7 @@ rst_frombands
     The output raster will have the same pixel size as the highest resolution input rasters.
     The output raster will have the same coordinate reference system as the input rasters.
 
-    :param tile: A column containing an array of raster tiles.
+    :param tiles: A column containing an array of raster tiles.
     :type col: Column (ArrayType(RasterTileType))
     :rtype: Column: RasterTileType
 
@@ -340,40 +304,30 @@ rst_frombands
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("gdal").option("extensions", "nc")\
-                .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral")\
-                .groupBy().agg(F.collect_list("tile").alias("tile"))
-     df.select(mos.rst_frombands("tile")).limit(1).display()
+     df.select(F.array("tile1", "tile2", "tile3").as("tiles"))\
+       .select(mos.rst_frombands("tiles")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_frombands(tile)                                                                                            |
+     | rst_frombands(tiles)                                                                                            |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("gdal").option("extensions", "nc")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-          .groupBy().agg(collect_list(col("tile")).as("tile"))
-     df.select(rst_frombands(col("tile"))).limit(1).show(false)
+     df
+       .select(array("tile1", "tile2", "tile3").as("tiles"))
+       .select(rst_frombands(col("tiles"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_frombands(tile)                                                                                            |
+     | rst_frombands(tiles)                                                                                            |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-         USING gdal
-         OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     WITH grouped as (
-         SELECT collect_list(tile) as tile FROM coral_netcdf
-     )
-     SELECT rst_frombands(tile) FROM grouped LIMIT 1
+     SELECT rst_frombands(array(tile1,tile2,tile3)) FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_frombands(tile)                                                                                            |
+     | rst_frombands(array(tile1,tile2,tile3))                                                                                            |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -388,8 +342,8 @@ rst_fromfile
     The file path must be a valid path to a raster file.
     The file path must be a path to a file that GDAL can read.
     If the size_in_MB parameter is specified, the raster will be split into tiles of the specified size.
-    If the size_in_MB parameter is not specified, the raster will not be split into tiles.
-    If the size_in_Mb < 0 the raster wont be split into tiles.
+    If the size_in_MB parameter is not specified or if the size_in_Mb < 0, the raster will only be split if
+    it exceeds Integer.MAX_VALUE. The split will be at a threshold of 64MB in this case.
 
     :param path: A column containing the path to a raster file.
     :type col: Column (StringType)
@@ -403,7 +357,8 @@ rst_fromfile
     .. code-tab:: py
 
      df = spark.read.format("binaryFile")\
-                .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+                .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")\
+                .drop("content")
      df.select(mos.rst_fromfile("path")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
      | rst_fromfile(path)                                                                                             |
@@ -416,6 +371,7 @@ rst_fromfile
      val df = spark.read
           .format("binaryFile")
           .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+          .drop("content")
      df.select(rst_fromfile(col("path"))).limit(1).show(false)
      +----------------------------------------------------------------------------------------------------------------+
      | rst_fromfile(path)                                                                                             |
@@ -432,13 +388,15 @@ rst_fromfile
      +----------------------------------------------------------------------------------------------------------------+
      | rst_fromfile(path)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
 rst_georeference
 ****************
 
-.. function:: rst_georeference(raster)
+.. function:: rst_georeference(raster_tile)
 
-    Returns GeoTransform of the raster as a GT array of doubles.
+    Returns GeoTransform of the raster tile as a GT array of doubles.
     GT(0) x-coordinate of the upper-left corner of the upper-left pixel.
     GT(1) w-e pixel resolution / pixel width.
     GT(2) row rotation (typically zero).
@@ -455,11 +413,9 @@ rst_georeference
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_georeference("path")).limit(1).display()
+    df.select(mos.rst_georeference("tile")).limit(1).display()
     +--------------------------------------------------------------------------------------------+
-    | rst_georeference(path)                                                                     |
+    | rst_georeference(tile)                                                                     |
     +--------------------------------------------------------------------------------------------+
     | {"scaleY": -0.049999999152053956, "skewX": 0, "skewY": 0, "upperLeftY": 89.99999847369712, |
     | "upperLeftX": -180.00000610436345, "scaleX": 0.050000001695656514}                         |
@@ -467,12 +423,9 @@ rst_georeference
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_georeference(col("path"))).limit(1).show()
+    df.select(rst_georeference(col("tile"))).limit(1).show
     +--------------------------------------------------------------------------------------------+
-    | rst_georeference(path)                                                                     |
+    | rst_georeference(tile)                                                                     |
     +--------------------------------------------------------------------------------------------+
     | {"scaleY": -0.049999999152053956, "skewX": 0, "skewY": 0, "upperLeftY": 89.99999847369712, |
     | "upperLeftX": -180.00000610436345, "scaleX": 0.050000001695656514}                         |
@@ -480,12 +433,9 @@ rst_georeference
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_georeference(path) FROM coral_netcdf LIMIT 1
+    SELECT rst_georeference(tile) FROM table LIMIT 1
     +--------------------------------------------------------------------------------------------+
-    | rst_georeference(path)                                                                     |
+    | rst_georeference(tile)                                                                     |
     +--------------------------------------------------------------------------------------------+
     | {"scaleY": -0.049999999152053956, "skewX": 0, "skewY": 0, "upperLeftY": 89.99999847369712, |
     | "upperLeftX": -180.00000610436345, "scaleX": 0.050000001695656514}                         |
@@ -494,9 +444,9 @@ rst_georeference
 rest_getnodata
 **************
 
-.. function:: rst_getnodata(raster)
+.. function:: rst_getnodata(tile)
 
-    Returns the nodata value of the raster bands.
+    Returns the nodata value of the raster tile bands.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
@@ -507,35 +457,27 @@ rest_getnodata
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("binaryFile").option("extensions", "nc")\
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(mos.rst_getnodata("path")).limit(1).display()
+     df.select(mos.rst_getnodata("tile")).limit(1).display()
      +---------------------+
-     | rst_getnodata(path) |
+     | rst_getnodata(tile) |
      +---------------------+
      | [0.0, -9999.0, ...] |
      +---------------------+
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("binaryFile").option("extensions", "nc")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(rst_getnodata(col("path"))).limit(1).show()
+     df.select(rst_getnodata(col("tile"))).limit(1).show
      +---------------------+
-     | rst_getnodata(path) |
+     | rst_getnodata(tile) |
      +---------------------+
      | [0.0, -9999.0, ...] |
      +---------------------+
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-          USING gdal
-          OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     SELECT rst_getnodata(path) FROM coral_netcdf LIMIT 1
+     SELECT rst_getnodata(tile) FROM table LIMIT 1
      +---------------------+
-     | rst_getnodata(path) |
+     | rst_getnodata(tile) |
      +---------------------+
      | [0.0, -9999.0, ...] |
      +---------------------+
@@ -543,9 +485,9 @@ rest_getnodata
 rst_getsubdataset
 *****************
 
-.. function:: rst_getsubdataset(raster, name)
+.. function:: rst_getsubdataset(tile, name)
 
-    Returns the subdataset of the raster with a given name.
+    Returns the subdataset of the raster tile with a given name.
     The subdataset name must be a string. The name is not a full path.
     The name is the last identifier in the subdataset path (FORMAT:PATH:NAME).
     The subdataset name must be a valid subdataset name for the raster.
@@ -561,35 +503,27 @@ rst_getsubdataset
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("binaryFile").option("extensions", "nc")\
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(mos.rst_getsubdataset("path", "sst")).limit(1).display()
+     df.select(mos.rst_getsubdataset("tile", "sst")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_getsubdataset(path, sst)                                                                                   |
+     | rst_getsubdataset(tile, sst)                                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("binaryFile").option("extensions", "nc")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(rst_getsubdataset(col("path"), lit("sst"))).limit(1).show(false)
+     df.select(rst_getsubdataset(col("tile"), lit("sst"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_getsubdataset(path, sst)                                                                                   |
+     | rst_getsubdataset(tile, sst)                                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-          USING gdal
-          OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     SELECT rst_getsubdataset(path, "sst") FROM coral_netcdf LIMIT 1
+     SELECT rst_getsubdataset(tile, "sst") FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_getsubdataset(path, sst)                                                                                   |
+     | rst_getsubdataset(tile, sst)                                                                                   |
     +----------------------------------------------------------------------------------------------------------------+
     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
     +----------------------------------------------------------------------------------------------------------------+
@@ -597,9 +531,9 @@ rst_getsubdataset
 rst_height
 **********
 
-.. function:: rst_height(raster)
+.. function:: rst_height(tile)
 
-    Returns the height of the raster in pixels.
+    Returns the height of the raster tile in pixels.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
@@ -610,11 +544,9 @@ rst_height
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_height('path')).show()
+    df.select(mos.rst_height('tile')).display()
     +--------------------+
-    | rst_height(path)   |
+    | rst_height(tile)   |
     +--------------------+
     | 3600               |
     | 3600               |
@@ -622,12 +554,9 @@ rst_height
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_height(col("path"))).show()
+    df.select(rst_height(col("tile"))).show
     +--------------------+
-    | rst_height(path)   |
+    | rst_height(tile)   |
     +--------------------+
     |3600                |
     |3600                |
@@ -635,12 +564,9 @@ rst_height
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_height(path) FROM coral_netcdf
+    SELECT rst_height(tile) FROM table
     +--------------------+
-    | rst_height(path)   |
+    | rst_height(tile)   |
     +--------------------+
     |3600                |
     |3600                |
@@ -649,9 +575,9 @@ rst_height
 rst_initnodata
 **************
 
-.. function:: rst_initnodata(raster)
+.. function:: rst_initnodata(tile)
 
-    Initializes the nodata value of the raster bands.
+    Initializes the nodata value of the raster tile bands.
     The nodata value will be set to default values for the pixel type of the raster bands.
     The output raster will have the same extent as the input raster.
     The default nodata value for ByteType is 0.
@@ -671,35 +597,27 @@ rst_initnodata
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("binaryFile").option("extensions", "nc")\
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(mos.rst_initnodata("path")).limit(1).display()
+     df.select(mos.rst_initnodata("tile")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_initnodata(path)                                                                                        |
+     | rst_initnodata(tile)                                                                                        |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("binaryFile").option("extensions", "nc")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(rst_initnodata(col("path"))).limit(1).show(false)
+     df.select(rst_initnodata(col("tile"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_initnodata(path)                                                                                        |
+     | rst_initnodata(tile)                                                                                        |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-           USING gdal
-           OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     SELECT rst_initnodata(path) FROM coral_netcdf LIMIT 1
+     SELECT rst_initnodata(tile) FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_initnodata(path)                                                                                        |
+     | rst_initnodata(tile)                                                                                        |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -707,9 +625,9 @@ rst_initnodata
 rst_isempty
 *************
 
-.. function:: rst_isempty(raster)
+.. function:: rst_isempty(tile)
 
-    Returns true if the raster is empty.
+    Returns true if the raster tile is empty.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
@@ -720,11 +638,9 @@ rst_isempty
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_isempty('path')).show()
+    df.select(mos.rst_isempty('tile')).display()
     +--------------------+
-    | rst_height(path)   |
+    | rst_height(tile)   |
     +--------------------+
     |false               |
     |false               |
@@ -732,12 +648,9 @@ rst_isempty
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_isempty(col("path"))).show()
+    df.select(rst_isempty(col("tile"))).show
     +--------------------+
-    | rst_height(path)   |
+    | rst_height(tile)   |
     +--------------------+
     |false               |
     |false               |
@@ -745,12 +658,9 @@ rst_isempty
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_isempty(path) FROM coral_netcdf
+    SELECT rst_isempty(tile) FROM table
     +--------------------+
-    | rst_height(path)   |
+    | rst_height(tile)   |
     +--------------------+
     |false               |
     |false               |
@@ -759,9 +669,9 @@ rst_isempty
 rst_memsize
 *************
 
-.. function:: rst_memsize(raster)
+.. function:: rst_memsize(tile)
 
-    Returns size of the raster in bytes.
+    Returns size of the raster tile in bytes.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
@@ -772,11 +682,9 @@ rst_memsize
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_memsize('path')).show()
+    df.select(mos.rst_memsize('tile')).display()
     +--------------------+
-    | rst_height(path)   |
+    | rst_height(tile)   |
     +--------------------+
     |730260              |
     |730260              |
@@ -784,12 +692,9 @@ rst_memsize
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_memsize(col("path"))).show()
+    df.select(rst_memsize(col("tile"))).show
     +--------------------+
-    | rst_height(path)   |
+    | rst_height(tile)   |
     +--------------------+
     |730260              |
     |730260              |
@@ -797,12 +702,9 @@ rst_memsize
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_memsize(path) FROM coral_netcdf
+    SELECT rst_memsize(tile) FROM table
     +--------------------+
-    | rst_height(path)   |
+    | rst_height(tile)   |
     +--------------------+
     |730260              |
     |730260              |
@@ -811,9 +713,9 @@ rst_memsize
 rst_merge
 *********
 
-.. function:: rst_merge(rasters)
+.. function:: rst_merge(tiles)
 
-    Combines a collection of rasters into a single raster.
+    Combines a collection of raster tiles into a single raster.
     The rasters do not need to have the same extent.
     The rasters must have the same coordinate reference system.
     The rasters are combined using gdalwarp.
@@ -834,40 +736,29 @@ rst_merge
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("gdal").option("extensions", "nc")\
-                .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral")\
-                .groupBy().agg(F.collect_list("tile").alias("tile"))
-     df.select(mos.rst_merge("tile")).limit(1).display()
+     df.select(F.array("tile1", "tile2", "tile3").alias("tiles"))\
+       .select(mos.rst_merge("tiles")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_merge(tile)                                                                                                |
+     | rst_merge(tiles)                                                                                                |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("gdal").option("extensions", "nc")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-          .groupBy().agg(collect_list(col("tile")).as("tile"))
-     df.select(rst_merge(col("tile"))).limit(1).show(false)
+     df.select(array("tile1", "tile2", "tile3").as("tiles"))
+       .select(rst_merge(col("tiles"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_merge(tile)                                                                                                |
+     | rst_merge(tiles)                                                                                                |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-         USING gdal
-         OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     WITH grouped as (
-         SELECT collect_list(tile) as tile FROM coral_netcdf
-     )
-     SELECT rst_merge(tile) FROM grouped LIMIT 1
+     SELECT rst_merge(array(tile1,tile2,tile3)) FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_merge(tile)                                                                                                |
+     | rst_merge(array(tile1,tile2,tile3))                                                                                               |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -875,9 +766,9 @@ rst_merge
 rst_mergeagg
 ************
 
-.. function:: rst_mergeagg(rasters)
+.. function:: rst_mergeagg(tiles)
 
-    Combines a collection of rasters into a single raster.
+    Combines a grouped aggregate of raster tiles into a single raster.
     The rasters do not need to have the same extent.
     The rasters must have the same coordinate reference system.
     The rasters are combined using gdalwarp.
@@ -901,9 +792,8 @@ rst_mergeagg
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("gdal").option("extensions", "nc")\
-                .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/gdal-netcdf-coral")
-     df.select(mos.rst_mergeagg("tile")).limit(1).display()
+     df.groupBy("date")\
+       .agg(mos.rst_mergeagg("tile")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
      | rst_mergeagg(tile)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
@@ -912,10 +802,8 @@ rst_mergeagg
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("gdal").option("extensions", "nc")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(rst_mergeagg(col("tile"))).limit(1).show(false)
+     df.groupBy("date")
+       .agg(rst_mergeagg(col("tile"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
      | rst_mergeagg(tile)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
@@ -924,10 +812,9 @@ rst_mergeagg
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-         USING gdal
-         OPTIONS (extension "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     SELECT rst_mergeagg(tile) FROM coral_netcdf LIMIT 1
+     SELECT rst_mergeagg(tile)
+     FROM table
+     GROUP BY date
      +----------------------------------------------------------------------------------------------------------------+
      | rst_mergeagg(tile)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
@@ -937,9 +824,9 @@ rst_mergeagg
 rst_metadata
 *************
 
-.. function:: rst_metadata(raster)
+.. function:: rst_metadata(tile)
 
-    Extract the metadata describing the raster.
+    Extract the metadata describing the raster tile.
     Metadata is return as a map of key value pairs.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
@@ -951,11 +838,9 @@ rst_metadata
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_metadata('path')).show()
+    df.select(mos.rst_metadata('tile')).display()
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_metadata(path)                                                                                                 |
+    | rst_metadata(tile)                                                                                                 |
     +--------------------------------------------------------------------------------------------------------------------+
     | {"NC_GLOBAL#publisher_url": "https://coralreefwatch.noaa.gov", "NC_GLOBAL#geospatial_lat_units": "degrees_north",  |
     | "NC_GLOBAL#platform_vocabulary": "NOAA NODC Ocean Archive System Platforms", "NC_GLOBAL#creator_type": "group",    |
@@ -971,12 +856,9 @@ rst_metadata
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_metadata(col("path"))).show()
+    df.select(rst_metadata(col("tile"))).show
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_metadata(path)                                                                                                 |
+    | rst_metadata(tile)                                                                                                 |
     +--------------------------------------------------------------------------------------------------------------------+
     | {"NC_GLOBAL#publisher_url": "https://coralreefwatch.noaa.gov", "NC_GLOBAL#geospatial_lat_units": "degrees_north",  |
     | "NC_GLOBAL#platform_vocabulary": "NOAA NODC Ocean Archive System Platforms", "NC_GLOBAL#creator_type": "group",    |
@@ -992,12 +874,9 @@ rst_metadata
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_metadata(path) FROM coral_netcdf LIMIT 1
+    SELECT rst_metadata(tile) FROM table LIMIT 1
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_metadata(path)                                                                                                 |
+    | rst_metadata(tile)                                                                                                 |
     +--------------------------------------------------------------------------------------------------------------------+
     | {"NC_GLOBAL#publisher_url": "https://coralreefwatch.noaa.gov", "NC_GLOBAL#geospatial_lat_units": "degrees_north",  |
     | "NC_GLOBAL#platform_vocabulary": "NOAA NODC Ocean Archive System Platforms", "NC_GLOBAL#creator_type": "group",    |
@@ -1014,7 +893,7 @@ rst_metadata
 rst_ndvi
 ********
 
-.. function:: rst_ndvi(raster, red_band, nir_band)
+.. function:: rst_ndvi(tile, red_band_num, nir_band_num)
 
     Calculates the Normalized Difference Vegetation Index (NDVI) for a raster.
     The NDVI is calculated using the formula: (NIR - RED) / (NIR + RED).
@@ -1025,9 +904,9 @@ rst_ndvi
 
     :param tile: A column containing the raster tile.
     :type col: Column (RasterTileType)
-    :param red_band: A column containing the band number of the red band.
+    :param red_band_num: A column containing the band number of the red band.
     :type col: Column (IntegerType)
-    :param nir_band: A column containing the band number of the near infrared band.
+    :param nir_band_num: A column containing the band number of the near infrared band.
     :type col: Column (IntegerType)
     :rtype: Column: RasterTileType
 
@@ -1036,35 +915,27 @@ rst_ndvi
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("binaryFile").option("extensions", "nc")\
-         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(mos.rst_ndvi("path", 1, 2)).limit(1).display()
+     df.select(mos.rst_ndvi("tile", 1, 2)).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_ndvi(path, 1, 2)                                                                                           |
+     | rst_ndvi(tile, 1, 2)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
 
-     val df = spark.read
-         .format("binaryFile").option("extensions", "nc")
-         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     df.select(rst_ndvi(col("path"), lit(1), lit(2))).limit(1).show(false)
+     df.select(rst_ndvi(col("tile"), lit(1), lit(2))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_ndvi(path, 1, 2)                                                                                           |
+     | rst_ndvi(tile, 1, 2)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-         USING gdal
-         OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     SELECT rst_ndvi(path, 1, 2) FROM coral_netcdf LIMIT 1
+     SELECT rst_ndvi(tile, 1, 2) FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_ndvi(path, 1, 2)                                                                                           |
+     | rst_ndvi(tile, 1, 2)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -1072,9 +943,9 @@ rst_ndvi
 rst_numbands
 *************
 
-.. function:: rst_numbands(raster)
+.. function:: rst_numbands(tile)
 
-    Returns number of bands in the raster.
+    Returns number of bands in the raster tile.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
@@ -1085,11 +956,9 @@ rst_numbands
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_numbands('path')).show()
+    df.select(mos.rst_numbands('tile')).display()
     +---------------------+
-    | rst_numbands(path)  |
+    | rst_numbands(tile)  |
     +---------------------+
     | 1                   |
     | 1                   |
@@ -1097,12 +966,9 @@ rst_numbands
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_metadata(col("path"))).show()
+    df.select(rst_metadata(col("tile"))).show
     +---------------------+
-    | rst_numbands(path)  |
+    | rst_numbands(tile)  |
     +---------------------+
     | 1                   |
     | 1                   |
@@ -1110,12 +976,9 @@ rst_numbands
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_metadata(path)
+    SELECT rst_metadata(tile) FROM table
     +---------------------+
-    | rst_numbands(path)  |
+    | rst_numbands(tile)  |
     +---------------------+
     | 1                   |
     | 1                   |
@@ -1124,9 +987,9 @@ rst_numbands
 rst_pixelheight
 ***************
 
-.. function:: rst_pixelheight(raster)
+.. function:: rst_pixelheight(tile)
 
-    Returns the height of the pixel in the raster derived via GeoTransform.
+    Returns the height of the pixel in the raster tile derived via GeoTransform.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
@@ -1137,11 +1000,9 @@ rst_pixelheight
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_pixelheight('path')).show()
+    df.select(mos.rst_pixelheight('tile')).display()
     +-----------------------+
-    | rst_pixelheight(path) |
+    | rst_pixelheight(tile) |
     +-----------------------+
     | 1                     |
     | 1                     |
@@ -1149,12 +1010,9 @@ rst_pixelheight
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_pixelheight(col("path"))).show()
+    df.select(rst_pixelheight(col("tile"))).show
     +-----------------------+
-    | rst_pixelheight(path) |
+    | rst_pixelheight(tile) |
     +-----------------------+
     | 1                     |
     | 1                     |
@@ -1162,12 +1020,9 @@ rst_pixelheight
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_pixelheight(path)
+    SELECT rst_pixelheight(tile) FROM table
     +-----------------------+
-    | rst_pixelheight(path) |
+    | rst_pixelheight(tile) |
     +-----------------------+
     | 1                     |
     | 1                     |
@@ -1176,9 +1031,9 @@ rst_pixelheight
 rst_pixelwidth
 **************
 
-.. function:: rst_pixelwidth(raster)
+.. function:: rst_pixelwidth(tile)
 
-    Returns the width of the pixel in the raster derived via GeoTransform.
+    Returns the width of the pixel in the raster tile derived via GeoTransform.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
@@ -1189,11 +1044,9 @@ rst_pixelwidth
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_pixelwidth('path')).show()
+    df.select(mos.rst_pixelwidth('tile')).display()
     +---------------------+
-    | rst_pixelwidth(path)|
+    | rst_pixelwidth(tile)|
     +---------------------+
     | 1                   |
     | 1                   |
@@ -1201,12 +1054,9 @@ rst_pixelwidth
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_pixelwidth(col("path"))).show()
+    df.select(rst_pixelwidth(col("tile"))).show
     +---------------------+
-    | rst_pixelwidth(path)|
+    | rst_pixelwidth(tile)|
     +---------------------+
     | 1                   |
     | 1                   |
@@ -1214,12 +1064,9 @@ rst_pixelwidth
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_pixelwidth(path)
+    SELECT rst_pixelwidth(tile) FROM table
     +---------------------+
-    | rst_pixelwidth(path)|
+    | rst_pixelwidth(tile)|
     +---------------------+
     | 1                   |
     | 1                   |
@@ -1228,7 +1075,7 @@ rst_pixelwidth
 rst_rastertogridavg
 *******************
 
-.. function:: rst_rastertogridavg(raster, resolution)
+.. function:: rst_rastertogridavg(tile, resolution)
 
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
@@ -1246,11 +1093,9 @@ rst_rastertogridavg
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertogridavg('path', F.lit(3))).show()
+    df.select(mos.rst_rastertogridavg('tile', F.lit(3))).display()
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridavg(path, 3)                                                                                       |
+    | rst_rastertogridavg(tile, 3)                                                                                       |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1263,12 +1108,9 @@ rst_rastertogridavg
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertogridavg(col("path"), lit(3))).show()
+    df.select(rst_rastertogridavg(col("tile"), lit(3))).show
       +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridavg(path, 3)                                                                                       |
+    | rst_rastertogridavg(tile, 3)                                                                                       |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1281,12 +1123,9 @@ rst_rastertogridavg
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_rastertogridavg(path, 3)
+    SELECT rst_rastertogridavg(tile, 3) FROM table
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridavg(path, 3)                                                                                       |
+    | rst_rastertogridavg(tile, 3)                                                                                       |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1300,12 +1139,12 @@ rst_rastertogridavg
 .. figure:: ../images/rst_rastertogridavg/h3.png
    :figclass: doc-figure
 
-   Fig 1. RST_RasterToGridAvg(raster, 3)
+   Fig 1. RST_RasterToGridAvg(tile, 3)
 
 rst_rastertogridcount
 *********************
 
-.. function:: rst_rastertogridcount(raster, resolution)
+.. function:: rst_rastertogridcount(tile, resolution)
 
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
@@ -1323,11 +1162,9 @@ rst_rastertogridcount
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertogridcount('path', F.lit(3))).show()
+    df.select(mos.rst_rastertogridcount('tile', F.lit(3))).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridcount(path, 3)                                                                                   |
+    | rst_rastertogridcount(tile, 3)                                                                                   |
     +------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1},                |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                  |
@@ -1340,12 +1177,9 @@ rst_rastertogridcount
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertogridcount(col("path"), lit(3))).show()
+    df.select(rst_rastertogridcount(col("tile"), lit(3))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridcount(path, 3)                                                                                   |
+    | rst_rastertogridcount(tile, 3)                                                                                   |
     +------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1},                |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                  |
@@ -1358,12 +1192,9 @@ rst_rastertogridcount
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_rastertogridcount(path, 3)
+    SELECT rst_rastertogridcount(tile, 3) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridcount(path, 3)                                                                                   |
+    | rst_rastertogridcount(tile, 3)                                                                                   |
     +------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1},                |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                  |
@@ -1377,12 +1208,12 @@ rst_rastertogridcount
 .. figure:: ../images/rst_rastertogridavg/h3.png
    :figclass: doc-figure
 
-   Fig 2. RST_RasterToGridCount(raster, 3)
+   Fig 2. RST_RasterToGridCount(tile, 3)
 
 rst_rastertogridmax
 *******************
 
-.. function:: rst_rastertogridmax(raster, resolution)
+.. function:: rst_rastertogridmax(tile, resolution)
 
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
@@ -1400,11 +1231,9 @@ rst_rastertogridmax
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertogridmax('path', F.lit(3))).show()
+    df.select(mos.rst_rastertogridmax('tile', F.lit(3))).display()
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridmax(path, 3)                                                                                       |
+    | rst_rastertogridmax(tile, 3)                                                                                       |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1417,12 +1246,9 @@ rst_rastertogridmax
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertogridmax(col("path"), lit(3))).show()
+    df.select(rst_rastertogridmax(col("tile"), lit(3))).show
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridmax(path, 3)                                                                                       |
+    | rst_rastertogridmax(tile, 3)                                                                                       |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1435,12 +1261,9 @@ rst_rastertogridmax
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_rastertogridmax(path, 3)
+    SELECT rst_rastertogridmax(tile, 3) FROM table
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridmax(path, 3)                                                                                       |
+    | rst_rastertogridmax(tile, 3)                                                                                       |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1454,12 +1277,12 @@ rst_rastertogridmax
 .. figure:: ../images/rst_rastertogridavg/h3.png
    :figclass: doc-figure
 
-   Fig 3. RST_RasterToGridMax(raster, 3)
+   Fig 3. RST_RasterToGridMax(tile, 3)
 
 rst_rastertogridmedian
 **********************
 
-.. function:: rst_rastertogridmedian(raster, resolution)
+.. function:: rst_rastertogridmedian(tile, resolution)
 
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
@@ -1477,11 +1300,9 @@ rst_rastertogridmedian
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertogridmedian('path', F.lit(3))).show()
+    df.select(mos.rst_rastertogridmedian('tile', F.lit(3))).display()
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridmedian(path, 3)                                                                                    |
+    | rst_rastertogridmedian(tile, 3)                                                                                    |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1494,12 +1315,9 @@ rst_rastertogridmedian
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertogridmedian(col("path"), lit(3))).show()
+    df.select(rst_rastertogridmedian(col("tile"), lit(3))).show
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridmedian(path, 3)                                                                                    |
+    | rst_rastertogridmedian(tile, 3)                                                                                    |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1512,12 +1330,9 @@ rst_rastertogridmedian
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_rastertogridmax(path, 3)
+    SELECT rst_rastertogridmax(tile, 3) FROM table
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridmedian(path, 3)                                                                                    |
+    | rst_rastertogridmedian(tile, 3)                                                                                    |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1531,12 +1346,12 @@ rst_rastertogridmedian
 .. figure:: ../images/rst_rastertogridavg/h3.png
    :figclass: doc-figure
 
-   Fig 4. RST_RasterToGridMedian(raster, 3)
+   Fig 4. RST_RasterToGridMedian(tile, 3)
 
 rst_rastertogridmin
 *******************
 
-.. function:: rst_rastertogridmin(raster, resolution)
+.. function:: rst_rastertogridmin(tile, resolution)
 
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
@@ -1554,11 +1369,9 @@ rst_rastertogridmin
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertogridmin('path', F.lit(3))).show()
+    df.select(mos.rst_rastertogridmin('tile', F.lit(3))).display()
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridmin(path, 3)                                                                                       |
+    | rst_rastertogridmin(tile, 3)                                                                                       |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1571,12 +1384,9 @@ rst_rastertogridmin
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertogridmin(col("path"), lit(3))).show()
+    df.select(rst_rastertogridmin(col("tile"), lit(3))).show
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridmin(path, 3)                                                                                       |
+    | rst_rastertogridmin(tile, 3)                                                                                       |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1589,12 +1399,9 @@ rst_rastertogridmin
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_rastertogridmin(path, 3)
+    SELECT rst_rastertogridmin(tile, 3) FROM table
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertogridmin(path, 3)                                                                                       |
+    | rst_rastertogridmin(tile, 3)                                                                                       |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
     | {"cellID": "593308294097928191", "measure": 0}, {"cellID": "593825202001936383", "measure": 0},                    |
@@ -1608,14 +1415,14 @@ rst_rastertogridmin
 .. figure:: ../images/rst_rastertogridavg/h3.png
    :figclass: doc-figure
 
-   Fig 4. RST_RasterToGridMin(raster, 3)
+   Fig 4. RST_RasterToGridMin(tile, 3)
 
 rst_rastertoworldcoord
 **********************
 
-.. function:: rst_rastertoworldcoord(raster, x, y)
+.. function:: rst_rastertoworldcoord(tile, x, y)
 
-    Computes the world coordinates of the raster pixel at the given x and y coordinates.
+    Computes the world coordinates of the raster tile at the given x and y pixel coordinates.
     The result is a WKT point geometry.
     The coordinates are computed using the GeoTransform of the raster to respect the projection.
 
@@ -1632,35 +1439,27 @@ rst_rastertoworldcoord
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertoworldcoord('path', F.lit(3), F.lit(3))).show()
+    df.select(mos.rst_rastertoworldcoord('tile', F.lit(3), F.lit(3))).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertoworldcoord(path, 3, 3)                                                                               |
+    | rst_rastertoworldcoord(tile, 3, 3)                                                                               |
     +------------------------------------------------------------------------------------------------------------------+
     |POINT (-179.85000609927647 89.84999847624096)                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertoworldcoord(col("path"), lit(3), lit(3))).show()
+    df.select(rst_rastertoworldcoord(col("tile"), lit(3), lit(3))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertoworldcoord(path, 3, 3)                                                                               |
+    | rst_rastertoworldcoord(tile, 3, 3)                                                                               |
     +------------------------------------------------------------------------------------------------------------------+
     |POINT (-179.85000609927647 89.84999847624096)                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_rastertoworldcoord(path, 3, 3)
+    SELECT rst_rastertoworldcoord(tile, 3, 3) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertoworldcoord(path, 3, 3)                                                                               |
+    | rst_rastertoworldcoord(tile, 3, 3)                                                                               |
     +------------------------------------------------------------------------------------------------------------------+
     |POINT (-179.85000609927647 89.84999847624096)                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1668,9 +1467,9 @@ rst_rastertoworldcoord
 rst_rastertoworldcoordx
 **********************
 
-.. function:: rst_rastertoworldcoord(raster, x, y)
+.. function:: rst_rastertoworldcoord(tile, x, y)
 
-    Computes the world coordinates of the raster pixel at the given x and y coordinates.
+    Computes the world coordinates of the raster tile at the given x and y pixel coordinates.
     The result is the X coordinate of the point after applying the GeoTransform of the raster.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
@@ -1679,42 +1478,34 @@ rst_rastertoworldcoordx
     :type col: Column (IntegerType)
     :param y: y coordinate of the pixel.
     :type col: Column (IntegerType)
-    :rtype: Column: StringType
+    :rtype: Column: DoubleType
 
     :example:
 
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertoworldcoordx('path', F.lit(3), F.lit(3))).show()
+    df.select(mos.rst_rastertoworldcoordx('tile', F.lit(3), F.lit(3))).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertoworldcoordx(path, 3, 3)                                                                              |
+    | rst_rastertoworldcoordx(tile, 3, 3)                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
     | -179.85000609927647                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertoworldcoordx(col("path"), lit(3), lit(3))).show()
+    df.select(rst_rastertoworldcoordx(col("tile"), lit(3), lit(3))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertoworldcoordx(path, 3, 3)                                                                              |
+    | rst_rastertoworldcoordx(tile, 3, 3)                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
     | -179.85000609927647                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_rastertoworldcoordx(path, 3, 3)
+    SELECT rst_rastertoworldcoordx(tile, 3, 3) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertoworldcoordx(path, 3, 3)                                                                              |
+    | rst_rastertoworldcoordx(tile, 3, 3)                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
     | -179.85000609927647                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1722,9 +1513,9 @@ rst_rastertoworldcoordx
 rst_rastertoworldcoordy
 **********************
 
-.. function:: rst_rastertoworldcoordy(raster, x, y)
+.. function:: rst_rastertoworldcoordy(tile, x, y)
 
-    Computes the world coordinates of the raster pixel at the given x and y coordinates.
+    Computes the world coordinates of the raster tile at the given x and y pixel coordinates.
     The result is the X coordinate of the point after applying the GeoTransform of the raster.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
@@ -1733,42 +1524,34 @@ rst_rastertoworldcoordy
     :type col: Column (IntegerType)
     :param y: y coordinate of the pixel.
     :type col: Column (IntegerType)
-    :rtype: Column: StringType
+    :rtype: Column: DoubleType
 
     :example:
 
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rastertoworldcoordy('path', F.lit(3), F.lit(3))).show()
+    df.select(mos.rst_rastertoworldcoordy('tile', F.lit(3), F.lit(3))).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertoworldcoordy(path, 3, 3)                                                                              |
+    | rst_rastertoworldcoordy(tile, 3, 3)                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
     | 89.84999847624096                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rastertoworldcoordy(col("path"), lit(3), lit(3))).show()
+    df.select(rst_rastertoworldcoordy(col("tile"), lit(3), lit(3))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertoworldcoordy(path, 3, 3)                                                                              |
+    | rst_rastertoworldcoordy(tile, 3, 3)                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
     | 89.84999847624096                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_rastertoworldcoordy(path, 3, 3)
+    SELECT rst_rastertoworldcoordy(tile, 3, 3) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rastertoworldcoordy(path, 3, 3)                                                                              |
+    | rst_rastertoworldcoordy(tile, 3, 3)                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
     | 89.84999847624096                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1776,9 +1559,9 @@ rst_rastertoworldcoordy
 rst_retile
 **********************
 
-.. function:: rst_retile(raster, width, height)
+.. function:: rst_retile(tile, width, height)
 
-    Retiles the raster to the given tile size. The result is a collection of new raster files.
+    Retiles the raster tile to the given size. The result is a collection of new raster tiles.
     The new rasters are stored in the checkpoint directory.
     The results are the paths to the new rasters.
     The result set is automatically exploded.
@@ -1789,18 +1572,16 @@ rst_retile
     :type col: Column (IntegerType)
     :param height: The height of the tiles.
     :type col: Column (IntegerType)
-    :rtype: Column: StringType
+    :rtype: Column: (RasterTileType)
 
     :example:
 
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_retile('path', F.lit(300), F.lit(300))).show()
+    df.select(mos.rst_retile('tile', F.lit(300), F.lit(300))).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_retile(path, 300, 300)                                                                                       |
+    | rst_retile(tile, 300, 300)                                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
@@ -1808,12 +1589,9 @@ rst_retile
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_retile(col("path"), lit(300), lit(300))).show()
+    df.select(rst_retile(col("tile"), lit(300), lit(300))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_retile(path, 300, 300)                                                                                       |
+    | rst_retile(tile, 300, 300)                                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
@@ -1821,12 +1599,9 @@ rst_retile
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_retile(path, 300, 300)
+    SELECT rst_retile(tile, 300, 300) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_retile(path, 300, 300)                                                                                       |
+    | rst_retile(tile, 300, 300)                                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
@@ -1835,9 +1610,9 @@ rst_retile
 rst_rotation
 **********************
 
-.. function:: rst_rotation(raster)
+.. function:: rst_rotation(tile)
 
-    Computes the rotation of the raster in degrees.
+    Computes the rotation of the raster tile in degrees.
     The rotation is the angle between the X axis and the North axis.
     The rotation is computed using the GeoTransform of the raster.
 
@@ -1850,11 +1625,9 @@ rst_rotation
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_rotation('path').show()
+    df.select(mos.rst_rotation('tile').display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rotation(path)                                                                                               |
+    | rst_rotation(tile)                                                                                               |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     | 21.2                                                                                                             |
@@ -1862,12 +1635,9 @@ rst_rotation
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_rotation(col("path"))).show()
+    df.select(rst_rotation(col("tile"))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rotation(path)                                                                                               |
+    | rst_rotation(tile)                                                                                               |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     | 21.2                                                                                                             |
@@ -1875,12 +1645,9 @@ rst_rotation
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_rotation(path)
+    SELECT rst_rotation(tile) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_rotation(path)                                                                                               |
+    | rst_rotation(tile)                                                                                               |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     | 21.2                                                                                                             |
@@ -1889,9 +1656,9 @@ rst_rotation
 rst_scalex
 **********************
 
-.. function:: rst_scalex(raster)
+.. function:: rst_scalex(tile)
 
-    Computes the scale of the raster in the X direction.
+    Computes the scale of the raster tile in the X direction.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
@@ -1902,35 +1669,27 @@ rst_scalex
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_scalex('path')).show()
+    df.select(mos.rst_scalex('tile')).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_scalex(path)                                                                                                 |
+    | rst_scalex(tile)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_scalex(col("path"))).show()
+    df.select(rst_scalex(col("tile"))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_scalex(path)                                                                                                 |
+    | rst_scalex(tile)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_scalex(path)
+    SELECT rst_scalex(tile) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_scalex(path)                                                                                                 |
+    | rst_scalex(tile)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1938,9 +1697,9 @@ rst_scalex
 rst_scaley
 **********************
 
-.. function:: rst_scaley(raster)
+.. function:: rst_scaley(tile)
 
-    Computes the scale of the raster in the Y direction.
+    Computes the scale of the raster tile in the Y direction.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
     :type col: Column (RasterTileType)
@@ -1951,9 +1710,7 @@ rst_scaley
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_scaley('path')).show()
+    df.select(mos.rst_scaley('tile')).display()
     +------------------------------------------------------------------------------------------------------------------+
     | rst_scaley(path)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1962,24 +1719,18 @@ rst_scaley
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_scaley(col("path"))).show()
+    df.select(rst_scaley(col("tile"))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_scaley(path)                                                                                                 |
+    | rst_scaley(tile)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_scaley(path)
+    SELECT rst_scaley(tile) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_scaley(path)                                                                                                 |
+    | rst_scaley(tile)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -1987,10 +1738,10 @@ rst_scaley
 rst_setnodata
 **********************
 
-.. function:: rst_setnodata(raster, nodata)
+.. function:: rst_setnodata(tile, nodata)
 
-    Sets the nodata value of the raster.
-    The result is a new raster with the nodata value set.
+    Sets the nodata value of the raster tile.
+    The result is a new raster tile with the nodata value set.
     The same nodata value is set for all bands of the raster if a single value is passed.
     If an array of values is passed, the nodata value is set for each band of the raster.
 
@@ -1998,7 +1749,7 @@ rst_setnodata
     :type col: Column (RasterTileType)
     :param nodata: The nodata value to set.
     :type col: Column (DoubleType) / ArrayType(DoubleType)
-    :rtype: Column: StringType
+    :rtype: Column: (RasterTileType)
 
     :example:
 
@@ -2006,11 +1757,9 @@ rst_setnodata
 
     .. code-tab:: py
 
-     df = spark.read.format("binaryFile").option("extensions", "tif")\
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     df.select(mos.rst_setnodata('path', F.lit(0))).show()
+     df.select(mos.rst_setnodata('tile', F.lit(0))).display()
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_setnodata(path, 0)                                                                                           |
+     | rst_setnodata(tile, 0)                                                                                           |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2018,12 +1767,9 @@ rst_setnodata
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("binaryFile").option("extensions", "tif")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     df.select(rst_setnodata(col("path"), lit(0))).show()
+     df.select(rst_setnodata(col("tile"), lit(0))).show
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_setnodata(path, 0)                                                                                           |
+     | rst_setnodata(tile, 0)                                                                                           |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2031,12 +1777,9 @@ rst_setnodata
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_tif
-         USING gdal
-         OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     SELECT rst_setnodata(path, 0)
+     SELECT rst_setnodata(tile, 0) FROM table
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_setnodata(path, 0)                                                                                           |
+     | rst_setnodata(tile, 0)                                                                                           |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2045,9 +1788,9 @@ rst_setnodata
 rst_skewx
 **********************
 
-.. function:: rst_skewx(raster)
+.. function:: rst_skewx(tile)
 
-    Computes the skew of the raster in the X direction.
+    Computes the skew of the raster tile in the X direction.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
     :type col: Column (RasterTileType)
@@ -2058,35 +1801,27 @@ rst_skewx
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_skewx('path')).show()
+    df.select(mos.rst_skewx('tile')).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_skewx(path)                                                                                                  |
+    | rst_skewx(tile)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_skewx(col("path"))).show()
+    df.select(rst_skewx(col("tile"))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_skewx(path)                                                                                                  |
+    | rst_skewx(tile)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_skewx(path)
+    SELECT rst_skewx(tile) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_skewx(path)                                                                                                  |
+    | rst_skewx(tile)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2094,9 +1829,9 @@ rst_skewx
 rst_skewy
 **********************
 
-.. function:: rst_skewx(raster)
+.. function:: rst_skewx(tile)
 
-    Computes the skew of the raster in the Y direction.
+    Computes the skew of the raster tile in the Y direction.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
     :type col: Column (RasterTileType)
@@ -2107,35 +1842,27 @@ rst_skewy
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_skewy('path')).show()
+    df.select(mos.rst_skewy('tile')).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_skewy(path)                                                                                                  |
+    | rst_skewy(tile)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_skewy(col("path"))).show()
+    df.select(rst_skewy(col("tile"))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_skewy(path)                                                                                                  |
+    | rst_skewy(tile)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_skewy(path)
+    SELECT rst_skewy(tile) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_skewy(path)                                                                                                  |
+    | rst_skewy(tile)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2143,9 +1870,9 @@ rst_skewy
 rst_srid
 **********************
 
-.. function:: rst_srid(raster)
+.. function:: rst_srid(tile)
 
-    Computes the SRID of the raster.
+    Computes the SRID of the raster tile.
     The SRID is the EPSG code of the raster.
 
     .. note:: For complex CRS definition the EPSG code may default to 0.
@@ -2159,35 +1886,27 @@ rst_srid
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_srid('path')).show()
+    df.select(mos.rst_srid('tile')).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_srid(path)                                                                                                   |
+    | rst_srid(tile)                                                                                                   |
     +------------------------------------------------------------------------------------------------------------------+
     | 9122                                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_srid(col("path"))).show()
+    df.select(rst_srid(col("tile"))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_srid(path)                                                                                                   |
+    | rst_srid(tile)                                                                                                   |
     +------------------------------------------------------------------------------------------------------------------+
     | 9122                                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_srid(path)
+    SELECT rst_srid(tile) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_srid(path)                                                                                                   |
+    | rst_srid(tile)                                                                                                   |
     +------------------------------------------------------------------------------------------------------------------+
     | 9122                                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2195,9 +1914,9 @@ rst_srid
 rst_subdatasets
 **********************
 
-.. function:: rst_subdatasets(raster)
+.. function:: rst_subdatasets(tile)
 
-    Computes the subdatasets of the raster.
+    Computes the subdatasets of the raster tile.
     The subdatasets are the paths to the subdatasets of the raster.
     The result is a map of the subdataset path to the subdatasets and the description of the subdatasets.
 
@@ -2210,11 +1929,9 @@ rst_subdatasets
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_subdatasets('path')).show()
+    df.select(mos.rst_subdatasets('tile')).display()
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_subdatasets(path)                                                                                              |
+    | rst_subdatasets(tile)                                                                                              |
     +--------------------------------------------------------------------------------------------------------------------+
     | {"NETCDF:\"/dbfs/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral/ct5km_baa_max_7d_v3_1_2022010  |
     | 6-1.nc\":bleaching_alert_area": "[1x3600x7200] N/A (8-bit unsigned integer)", "NETCDF:\"/dbfs/FileStore/geospatial |
@@ -2224,12 +1941,9 @@ rst_subdatasets
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_subdatasets(col("path"))).show()
+    df.select(rst_subdatasets(col("tile"))).show
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_subdatasets(path)                                                                                              |
+    | rst_subdatasets(tile)                                                                                              |
     +--------------------------------------------------------------------------------------------------------------------+
     | {"NETCDF:\"/dbfs/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral/ct5km_baa_max_7d_v3_1_2022010  |
     | 6-1.nc\":bleaching_alert_area": "[1x3600x7200] N/A (8-bit unsigned integer)", "NETCDF:\"/dbfs/FileStore/geospatial |
@@ -2239,12 +1953,9 @@ rst_subdatasets
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_subdatasets(path)
+    SELECT rst_subdatasets(tile) FROM table
     +--------------------------------------------------------------------------------------------------------------------+
-    | rst_subdatasets(path)                                                                                              |
+    | rst_subdatasets(tile)                                                                                              |
     +--------------------------------------------------------------------------------------------------------------------+
     | {"NETCDF:\"/dbfs/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral/ct5km_baa_max_7d_v3_1_2022010  |
     | 6-1.nc\":bleaching_alert_area": "[1x3600x7200] N/A (8-bit unsigned integer)", "NETCDF:\"/dbfs/FileStore/geospatial |
@@ -2255,9 +1966,9 @@ rst_subdatasets
 rst_subdivide
 **********************
 
-.. function:: rst_subdivide(raster, sizeInMB)
+.. function:: rst_subdivide(tile, sizeInMB)
 
-    Subdivides the raster to the given tile size in MB. The result is a collection of new raster files.
+    Subdivides the raster tile to the given tile size in MB. The result is a collection of new raster tiles.
     The tiles are split until the expected size of a tile is < sizeInMB.
     The tile is always split in 4 tiles. This ensures that the tiles are always split in the same way.
     The aspect ratio of the tiles is preserved.
@@ -2275,11 +1986,9 @@ rst_subdivide
 
     .. code-tab:: py
 
-     df = spark.read.format("binaryFile").option("extensions", "tif")\
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     df.select(mos.rst_subdivide('path', F.lit(10))).show()
+     df.select(mos.rst_subdivide('tile', F.lit(10))).display()
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_subdivide(path, 10)                                                                                          |
+     | rst_subdivide(tile, 10)                                                                                          |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2287,12 +1996,9 @@ rst_subdivide
 
     .. code-tab:: scala
 
-     val df = spark.read
-          .format("binaryFile").option("extensions", "tif")
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     df.select(rst_subdivide(col("path"), lit(10))).show()
+     df.select(rst_subdivide(col("tile"), lit(10))).show
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_subdivide(path, 10)                                                                                          |
+     | rst_subdivide(tile, 10)                                                                                          |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2300,12 +2006,9 @@ rst_subdivide
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_tif
-         USING gdal
-         OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     SELECT rst_subdivide(path, 10)
+     SELECT rst_subdivide(tile, 10) FROM table
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_subdivide(path, 10)                                                                                          |
+     | rst_subdivide(tile, 10)                                                                                          |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2314,9 +2017,9 @@ rst_subdivide
 rst_summary
 **********************
 
-.. function:: rst_summary(raster)
+.. function:: rst_summary(tile)
 
-    Computes the summary of the raster.
+    Computes the summary of the raster tile.
     The summary is a map of the statistics of the raster.
     The logic is produced by gdalinfo procedure.
     The result is stored as JSON.
@@ -2330,11 +2033,9 @@ rst_summary
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_summary('path')).show()
+    df.select(mos.rst_summary('tile')).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_summary(path)                                                                                                |
+    | rst_summary(tile)                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
     | {   "description":"/dbfs/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral/ct5km_baa_max_7d_v3_1|
     |_20220106-1.nc",   "driverShortName":"netCDF",   "driverLongName":"Network Common Data Format",   "files":[       |
@@ -2345,12 +2046,9 @@ rst_summary
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_summary(col("path"))).show()
+    df.select(rst_summary(col("tile"))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_summary(path)                                                                                                |
+    | rst_summary(tile)                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
     | {   "description":"/dbfs/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral/ct5km_baa_max_7d_v3_1|
     |_20220106-1.nc",   "driverShortName":"netCDF",   "driverLongName":"Network Common Data Format",   "files":[       |
@@ -2361,12 +2059,9 @@ rst_summary
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_summary(path)
+    SELECT rst_summary(tile) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_summary(path)                                                                                                |
+    | rst_summary(tile)                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
     | {   "description":"/dbfs/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral/ct5km_baa_max_7d_v3_1|
     |_20220106-1.nc",   "driverShortName":"netCDF",   "driverLongName":"Network Common Data Format",   "files":[       |
@@ -2378,9 +2073,9 @@ rst_summary
 rst_tessellate
 **********************
 
-.. function:: rst_tessellate(raster, resolution)
+.. function:: rst_tessellate(tile, resolution)
 
-    Tessellates the raster to the given resolution of the supported grid (H3, BNG, Custom). The result is a collection of new raster files.
+    Tessellates the raster tile to the given resolution of the supported grid (H3, BNG, Custom). The result is a collection of new raster tiles.
     Each tile in the tile set corresponds to a cell that is a part of the tesselation of the bounding box of the raster.
     The result set is automatically exploded.
     If rst_merge is called on the tile set the original raster will be reconstructed.
@@ -2388,18 +2083,16 @@ rst_tessellate
 
     :param tile: A column containing the raster tile.
     :type col: Column (RasterTileType)
-    :param sizeInMB: The size of the tiles in MB.
+    :param resolution: The resolution of the supported grid.
 
     :example:
 
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("binaryFile").option("extensions", "tif")\
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     df.select(mos.rst_tessellate('path', F.lit(10))).show()
+     df.select(mos.rst_tessellate('tile', F.lit(10))).display()
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_tessellate(path, 10)                                                                                         |
+     | rst_tessellate(tile, 10)                                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2407,12 +2100,9 @@ rst_tessellate
 
     .. code-tab:: scala
 
-     val df = spark.read
-         .format("binaryFile").option("extensions", "tif")
-         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     df.select(rst_tessellate(col("path"), lit(10))).show()
+     df.select(rst_tessellate(col("tile"), lit(10))).show
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_tessellate(path, 10)                                                                                         |
+     | rst_tessellate(tile, 10)                                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2420,12 +2110,9 @@ rst_tessellate
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_tif
-         USING gdal
-         OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     SELECT rst_tessellate(path, 10)
+     SELECT rst_tessellate(tile, 10) FROM table
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_tessellate(path, 10)                                                                                         |
+     | rst_tessellate(tile, 10)                                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2434,9 +2121,9 @@ rst_tessellate
 rst_tooverlappingtiles
 **********************
 
-.. function:: rst_tooverlappingtiles(raster, width, height, overlap)
+.. function:: rst_tooverlappingtiles(tile, width, height, overlap)
 
-    Splits the raster into overlapping tiles of the given width and height.
+    Splits the raster tile into overlapping tiles of the given width and height.
     The overlap is the the percentage of the tile size that the tiles overlap.
     The result is a collection of new raster files.
     The result set is automatically exploded.
@@ -2457,11 +2144,9 @@ rst_tooverlappingtiles
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("binaryFile").option("extensions", "tif")\
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     df.select(mos.rst_tooverlappingtiles('path', F.lit(10), F.lit(10), F.lit(10))).show()
+     df.select(mos.rst_tooverlappingtiles('tile', F.lit(10), F.lit(10), F.lit(10))).display()
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_tooverlappingtiles(path, 10, 10, 10)                                                                         |
+     | rst_tooverlappingtiles(tile, 10, 10, 10)                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2469,12 +2154,9 @@ rst_tooverlappingtiles
 
     .. code-tab:: scala
 
-     val df = spark.read
-         .format("binaryFile").option("extensions", "tif")
-         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif
-     df.select(rst_tooverlappingtiles(col("path"), lit(10), lit(10), lit(10))).show()
+     df.select(rst_tooverlappingtiles(col("tile"), lit(10), lit(10), lit(10))).show
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_tooverlappingtiles(path, 10, 10, 10)                                                                         |
+     | rst_tooverlappingtiles(tile, 10, 10, 10)                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2482,12 +2164,9 @@ rst_tooverlappingtiles
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_tif
-         USING gdal
-         OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     SELECT rst_tooverlappingtiles(path, 10, 10, 10)
+     SELECT rst_tooverlappingtiles(tile, 10, 10, 10) FROM table
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_tooverlappingtiles(path, 10, 10, 10)                                                                         |
+     | rst_tooverlappingtiles(tile, 10, 10, 10)                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
@@ -2496,9 +2175,9 @@ rst_tooverlappingtiles
 rst_tryopen
 **********************
 
-.. function:: rst_tryopen(raster)
+.. function:: rst_tryopen(tile)
 
-    Tries to open the raster. If the raster cannot be opened the result is false and if the raster can be opened the result is true.
+    Tries to open the raster tile. If the raster cannot be opened the result is false and if the raster can be opened the result is true.
 
     :param tile: A column containing the raster tile.
     :type col: Column (RasterTileType)
@@ -2509,35 +2188,27 @@ rst_tryopen
 .. tabs::
     .. code-tab:: py
 
-     df = spark.read.format("binaryFile").option("extensions", "tif")\
-          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     df.select(mos.rst_tryopen('path')).show()
+     df.select(mos.rst_tryopen('tile')).display()
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_tryopen(path)                                                                                                |
+     | rst_tryopen(tile)                                                                                                |
      +------------------------------------------------------------------------------------------------------------------+
      | true                                                                                                             |
      +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
 
-     val df = spark.read
-         .format("binaryFile").option("extensions", "tif")
-         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif
-     df.select(rst_tryopen(col("path"))).show()
+     df.select(rst_tryopen(col("tile"))).show
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_tryopen(path)                                                                                                |
+     | rst_tryopen(tile)                                                                                                |
      +------------------------------------------------------------------------------------------------------------------+
      | true                                                                                                             |
      +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-     CREATE TABLE IF NOT EXISTS TABLE coral_tif
-         USING gdal
-         OPTIONS (extensions "tif", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/tif")
-     SELECT rst_tryopen(path)
+     SELECT rst_tryopen(tile) FROM table
      +------------------------------------------------------------------------------------------------------------------+
-     | rst_tryopen(path)                                                                                                |
+     | rst_tryopen(tile)                                                                                                |
      +------------------------------------------------------------------------------------------------------------------+
      | true                                                                                                             |
      +------------------------------------------------------------------------------------------------------------------+
@@ -2545,9 +2216,9 @@ rst_tryopen
 rst_upperleftx
 **********************
 
-.. function:: rst_upperleftx(raster)
+.. function:: rst_upperleftx(tile)
 
-    Computes the upper left X coordinate of the raster.
+    Computes the upper left X coordinate of the raster tile.
     The value is computed based on GeoTransform.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
@@ -2559,35 +2230,27 @@ rst_upperleftx
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_upperleftx('path')).show()
+    df.select(mos.rst_upperleftx('tile')).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_upperleftx(path)                                                                                             |
+    | rst_upperleftx(tile)                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
     | -180.00000610436345                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_upperleftx(col("path"))).show()
+    df.select(rst_upperleftx(col("tile"))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_upperleftx(path)                                                                                             |
+    | rst_upperleftx(tile)                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
     | -180.00000610436345                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_upperleftx(path)
+    SELECT rst_upperleftx(tile) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_upperleftx(path)                                                                                             |
+    | rst_upperleftx(tile)                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
     | -180.00000610436345                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2595,9 +2258,9 @@ rst_upperleftx
 rst_upperlefty
 **********************
 
-.. function:: rst_upperlefty(raster)
+.. function:: rst_upperlefty(tile)
 
-    Computes the upper left Y coordinate of the raster.
+    Computes the upper left Y coordinate of the raster tile.
     The value is computed based on GeoTransform.
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
@@ -2609,35 +2272,27 @@ rst_upperlefty
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_upperlefty('path')).show()
+    df.select(mos.rst_upperlefty('tile')).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_upperlefty(path)                                                                                             |
+    | rst_upperlefty(tile)                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
     | 89.99999847369712                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_upperlefty(col("path"))).show()
+    df.select(rst_upperlefty(col("tile"))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_upperlefty(path)                                                                                             |
+    | rst_upperlefty(tile)                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
     | 89.99999847369712                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_upperlefty(path)
+    SELECT rst_upperlefty(tile) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_upperlefty(path)                                                                                             |
+    | rst_upperlefty(tile)                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
     | 89.99999847369712                                                                                                |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2645,9 +2300,9 @@ rst_upperlefty
 rst_width
 **********************
 
-.. function:: rst_width(raster)
+.. function:: rst_width(tile)
 
-    Computes the width of the raster in pixels.
+    Computes the width of the raster tile in pixels.
 
 
     :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
@@ -2659,35 +2314,27 @@ rst_width
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_width('path')).show()
+    df.select(mos.rst_width('tile')).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_width(path)                                                                                                  |
+    | rst_width(tile)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
     | 600                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_width(col("path"))).show()
+    df.select(rst_width(col("tile"))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_width(path)                                                                                                  |
+    | rst_width(tile)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
     | 600                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_width(path)
+    SELECT rst_width(tile) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_width(path)                                                                                                  |
+    | rst_width(tile)                                                                                                  |
     +------------------------------------------------------------------------------------------------------------------+
     | 600                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2695,9 +2342,9 @@ rst_width
 rst_worldtorastercoord
 **********************
 
-.. function:: rst_worldtorastercoord(raster, xworld, yworld)
+.. function:: rst_worldtorastercoord(tile, xworld, yworld)
 
-    Computes the raster coordinates of the world coordinates.
+    Computes the raster tile coordinates of the world coordinates.
     The raster coordinates are the pixel coordinates of the raster.
     The world coordinates are the coordinates in the CRS of the raster.
     The coordinates are resolved using GeoTransform.
@@ -2715,35 +2362,27 @@ rst_worldtorastercoord
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_worldtorastercoord('path', F.lit(-160.1), F.lit(40.0))).show()
+    df.select(mos.rst_worldtorastercoord('tile', F.lit(-160.1), F.lit(40.0))).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoord(path)                                                                                     |
+    | rst_worldtorastercoord(tile, -160.1, 40.0)                                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
     | {"x": 398, "y": 997}                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_worldtorastercoord(col("path"), lit(-160.1), lit(40.0))).show()
+    df.select(rst_worldtorastercoord(col("tile"), lit(-160.1), lit(40.0))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoord(path)                                                                                     |
+    | rst_worldtorastercoord(tile, -160.1, 40.0)                                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
     | {"x": 398, "y": 997}                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_worldtorastercoord(path, -160.1, 40.0)
+    SELECT rst_worldtorastercoord(tile, -160.1, 40.0) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoord(path)                                                                                     |
+    | rst_worldtorastercoord(tile, -160.1, 40.0)                                                                                     |
     +------------------------------------------------------------------------------------------------------------------+
     | {"x": 398, "y": 997}                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2751,9 +2390,9 @@ rst_worldtorastercoord
 rst_worldtorastercoordx
 ***********************
 
-.. function:: rst_worldtorastercoordx(raster, xworld, yworld)
+.. function:: rst_worldtorastercoordx(tile, xworld, yworld)
 
-    Computes the raster coordinates of the world coordinates.
+    Computes the raster tile coordinates of the world coordinates.
     The raster coordinates are the pixel coordinates of the raster.
     The world coordinates are the coordinates in the CRS of the raster.
     The coordinates are resolved using GeoTransform.
@@ -2773,35 +2412,27 @@ rst_worldtorastercoordx
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_worldtorastercoord('path', F.lit(-160.1), F.lit(40.0))).show()
+    df.select(mos.rst_worldtorastercoord('tile', F.lit(-160.1), F.lit(40.0))).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoordx(path, -160.1, 40.0)                                                                      |
+    | rst_worldtorastercoordx(tile, -160.1, 40.0)                                                                      |
     +------------------------------------------------------------------------------------------------------------------+
     | 398                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_worldtorastercoordx(col("path"), lit(-160.1), lit(40.0))).show()
+    df.select(rst_worldtorastercoordx(col("tile"), lit(-160.1), lit(40.0))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoordx(path, -160.1, 40.0)                                                                      |
+    | rst_worldtorastercoordx(tile, -160.1, 40.0)                                                                      |
     +------------------------------------------------------------------------------------------------------------------+
     | 398                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_worldtorastercoordx(path, -160.1, 40.0)
+    SELECT rst_worldtorastercoordx(tile, -160.1, 40.0) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoordx(path, -160.1, 40.0)                                                                      |
+    | rst_worldtorastercoordx(tile, -160.1, 40.0)                                                                      |
     +------------------------------------------------------------------------------------------------------------------+
     | 398                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2809,9 +2440,9 @@ rst_worldtorastercoordx
 rst_worldtorastercoordy
 ***********************
 
-.. function:: rst_worldtorastercoordy(raster, xworld, yworld)
+.. function:: rst_worldtorastercoordy(tile, xworld, yworld)
 
-    Computes the raster coordinates of the world coordinates.
+    Computes the raster tile coordinates of the world coordinates.
     The raster coordinates are the pixel coordinates of the raster.
     The world coordinates are the coordinates in the CRS of the raster.
     The coordinates are resolved using GeoTransform.
@@ -2831,35 +2462,27 @@ rst_worldtorastercoordy
 .. tabs::
    .. code-tab:: py
 
-    df = spark.read.format("binaryFile").option("extensions", "nc")\
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(mos.rst_worldtorastercoordy('path', F.lit(-160.1), F.lit(40.0))).show()
+    df.select(mos.rst_worldtorastercoordy('tile', F.lit(-160.1), F.lit(40.0))).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoordy(path, -160.1, 40.0)                                                                      |
+    | rst_worldtorastercoordy(tile, -160.1, 40.0)                                                                      |
     +------------------------------------------------------------------------------------------------------------------+
     | 997                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
 
-    val df = spark.read
-        .format("binaryFile").option("extensions", "nc")
-        .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    df.select(rst_worldtorastercoordy(col("path"), lit(-160.1), lit(40.0))).show()
+    df.select(rst_worldtorastercoordy(col("tile"), lit(-160.1), lit(40.0))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoordy(path, -160.1, 40.0)                                                                      |
+    | rst_worldtorastercoordy(tile, -160.1, 40.0)                                                                      |
     +------------------------------------------------------------------------------------------------------------------+
     | 997                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
 
-    CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
-        USING gdal
-        OPTIONS (extensions "nc", path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-    SELECT rst_worldtorastercoordy(path, -160.1, 40.0)
+    SELECT rst_worldtorastercoordy(tile, -160.1, 40.0) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoordy(path, -160.1, 40.0)                                                                      |
+    | rst_worldtorastercoordy(tile, -160.1, 40.0)                                                                      |
     +------------------------------------------------------------------------------------------------------------------+
     | 997                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+

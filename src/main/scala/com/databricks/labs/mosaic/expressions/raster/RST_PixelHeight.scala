@@ -36,7 +36,7 @@ object RST_PixelHeight extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns pixel height in the raster.
+          |_FUNC_(expr1) - Returns pixel height in the raster tile.
           |The width is a hypotenuse of a right triangle formed by scaleY and skewX.
           |""".stripMargin
 

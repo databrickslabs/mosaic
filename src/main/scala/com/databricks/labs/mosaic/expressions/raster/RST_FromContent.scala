@@ -113,8 +113,8 @@ object RST_FromContent extends WithExpressionInfo {
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(raster, driver, sizeInMB);
-          |        {index_id, raster, parentPath, driver}
+          |      > SELECT _FUNC_(raster_bin, driver, size_in_mb);
+          |        {index_id, raster, parent_path, driver}
           |        ...
           |  """.stripMargin
 

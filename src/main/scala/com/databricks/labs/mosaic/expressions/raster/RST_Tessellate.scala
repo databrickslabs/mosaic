@@ -45,7 +45,7 @@ object RST_Tessellate extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Returns a set of new rasters with the specified resolution within configured grid.
+          |_FUNC_(expr1, expr2) - Returns a set of new raster tiles with the specified resolution within configured grid.
           |""".stripMargin
 
     override def example: String =

@@ -25,7 +25,7 @@ object RST_MemSize extends WithExpressionInfo {
 
     override def name: String = "rst_memsize"
 
-    override def usage: String = "_FUNC_(expr1) - Returns number of bytes for in memory representation of the raster."
+    override def usage: String = "_FUNC_(expr1) - Returns number of bytes for in memory representation of the raster tile."
 
     override def example: String =
         """

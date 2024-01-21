@@ -103,7 +103,7 @@ object RST_MapAlgebra extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Performs map algebra on the rasters.
+          |_FUNC_(expr1, expr2) - Performs map algebra on the raster tiles.
           |""".stripMargin
 
     override def example: String =

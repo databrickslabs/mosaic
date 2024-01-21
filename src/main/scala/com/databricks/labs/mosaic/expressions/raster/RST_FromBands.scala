@@ -43,7 +43,7 @@ object RST_FromBands extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster that is a result of stacking and resampling input bands.
+          |_FUNC_(expr1) - Returns raster tiles that are a result of stacking and resampling input bands.
           |""".stripMargin
 
     override def example: String =

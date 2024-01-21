@@ -66,7 +66,7 @@ object RST_SetNoData extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Returns a raster clipped by provided vector.
+          |_FUNC_(expr1, expr2) - Sets the nodata value of the raster tile for all bands.
           |""".stripMargin
 
     override def example: String =
