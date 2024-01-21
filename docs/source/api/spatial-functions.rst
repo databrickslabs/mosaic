@@ -125,11 +125,17 @@ st_buffer
 .. function:: st_buffer(col, radius)
 
     Buffer the input geometry by radius `radius` and return a new, buffered geometry.
+    The optional parameter buffer_style_parameters='quad_segs=# endcap=round|flat|square' where "#"
+    is the number of line segments used to approximate a quarter circle (default is 8); and endcap
+    style for line features is one of listed (default="round")
+
 
     :param col: Geometry
     :type col: Column
     :param radius: Double
     :type radius: Column (DoubleType)
+    :param buffer_style_parameters: String
+    :type buffer_style_parameters: Column (StringType)
     :rtype: Column: Geometry
 
     :example:
