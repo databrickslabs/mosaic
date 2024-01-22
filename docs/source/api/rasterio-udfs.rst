@@ -234,40 +234,118 @@ Firstly we will create a spark DataFrame from a directory of raster files.
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
 
 
-Next we will define a function that will write a given raster file to disk.
+Next we will define a function that will write a given raster file to disk. A "gotcha" to keep in mind is that you do
+not want to have a file context manager open when you go to write out its context as the context manager will not yet
+have been flushed.
 
 .. code-block:: python
 
-    import numpy as np
-    import rasterio
-    from rasterio.io import MemoryFile
-    from io import BytesIO
-    from pyspark.sql.functions import udf
-    from pathlib import Path
-
     @udf("string")
-    def write_raster(raster, file_id, parent_dir):
-      with MemoryFile(BytesIO(raster)) as memfile:
-        with memfile.open() as dataset:
-          Path(outputpath).mkdir(parents=True, exist_ok=True)
-          extensions_map = rasterio.drivers.raster_driver_extensions()
-          driver_map = {v: k for k, v in extensions_map.items()}
-          extension = driver_map[dataset.driver]
-          path = f"{parent_dir}/{file_id}.{extension}"
-          # If you want to write the raster to a different format
-          # you can update the profile here. Note that the extension
-          # should match the driver format
-          with rasterio.open(path, "w", **dataset.profile) as dst:
-            dst.write(dataset.read())
-          return path
+    def write_raster(raster, driver, file_id, fuse_dir):
+        from io import BytesIO
+        from pathlib import Path
+        from pyspark.sql.functions import udf
+        from rasterio.io import MemoryFile
+        import numpy as np
+        import rasterio
+        import shutil
+        import tempfile
+
+        # - [1] populate the initial profile
+        # # profile is needed in order to georeference the image
+        profile = None
+        with MemoryFile(BytesIO(raster)) as memfile:
+            with memfile.open() as dataset:
+              profile = dataset.profile
+
+        # - [2] get the correct extension
+        extensions_map = rasterio.drivers.raster_driver_extensions()
+        driver_map = {v: k for k, v in extensions_map.items()}
+        extension = driver_map[driver] #e.g. GTiff
+        file_name = f"{file_id}.{extension}"
+
+        # - [3] write local raster
+        # - this is showing a single band [1]
+        #   being written
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = f"{tmp_dir}/{file_name}"
+            # here you can update profile using .update method
+            # example https://rasterio.readthedocs.io/en/latest/topics/writing.html
+            with rasterio.open(
+                tmp_path,
+                "w",
+                **profile
+            ) as dst:
+                dst.write(raster,1) # <- adjust as needed
+
+            # - [4] copy to fuse path
+            Path(fuse_dir).mkdir(parents=True, exist_ok=True)
+            fuse_path = f"{fuse_dir}/{file_name}"
+            if not os.path.exists(fuse_path):
+                shutil.copyfile(tmp_path, fuse_path)
+        return fuse_path
 
 Finally we will apply the function to the DataFrame.
 
 .. code-block:: python
 
-    df.select(write_raster("tile.raster", "uuid", lit("dbfs:/path/to/output/dir"))).show()
+    df.select(
+      write_raster(
+        "tile.raster",
+        lit("GTiff").alias("driver"),
+        "uuid",
+        lit("dbfs:/path/to/output/dir").alias("fuse_dir")
+      )
+    ).display()
     +-------------------------------------+
-    | write_raster(raster, output, output)|
+    | write_raster(raster, driver, uuid, fuse_dir)|
+    +-------------------------------------+
+    | dbfs:/path/to/output/dir/1234.tif   |
+    | dbfs:/path/to/output/dir/4545.tif   |
+    | dbfs:/path/to/output/dir/3215.tif   |
+    | ...                                 |
+    +-------------------------------------+
+
+Sometimes you don't need to be quite as fancy. Consider when you simply want to specify to write out raster contents,
+in this case as a TIF (or you could specify the extension or include it in the file_id).
+
+.. code-block:: python
+
+    @udf("string")
+    def write_tif(raster, file_id, fuse_dir):
+        from pathlib import Path
+        import os
+        import shutil
+        import tempfile
+
+        Path(fuse_dir).mkdir(parents=True, exist_ok=True)
+        file_name = f"{file_id}.tif"
+        fuse_path = f"{fuse_dir}/{file_name}"
+        if not os.path.exists(fuse_path):
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                tmp_path = f"{tmp_dir}/{file_name}"
+                # - write within the tmp_dir context
+                # - flush the writer before copy
+                tmp_file = open(tmp_path, "wb")
+                tmp_file.write(raster)  # <- write entire binary content
+                tmp_file.close()
+                # - copy local to fuse
+                shutil.copyfile(tmp_path, fuse_path)
+        return fuse_path
+
+Finally we will apply the function to the DataFrame.
+
+.. code-block:: python
+
+    df.select(
+      write_tif(
+        "tile.raster",
+        "uuid",
+        lit("dbfs:/path/to/output/dir").alias("fuse_dir")
+      )
+    ).display()
+    +-------------------------------------+
+    | write_tif(raster, uuid, fuse_dir)|
     +-------------------------------------+
     | dbfs:/path/to/output/dir/1234.tif   |
     | dbfs:/path/to/output/dir/4545.tif   |
