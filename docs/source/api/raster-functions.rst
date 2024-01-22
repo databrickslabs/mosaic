@@ -224,7 +224,7 @@ rst_combineavg
 
      SELECT rst_combineavg(array(tile1,tile2,tile3)) FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_combineavg(array(tile1,tile2,tile3))                                                                                           |
+     | rst_combineavg(array(tile1,tile2,tile3))                                                                       |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -281,6 +281,179 @@ rst_combineavgagg
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
+
+rst_derivedband
+**************
+
+.. function:: rst_derivedband(tiles, python_func, func_name)
+
+    Combine an array of raster tiles using provided python function.
+    The rasters must have the same extent, number of bands, and pixel type.
+    The rasters must have the same pixel size and coordinate reference system.
+    The output raster will have the same extent as the input rasters.
+    The output raster will have the same number of bands as the input rasters.
+    The output raster will have the same pixel type as the input rasters.
+    The output raster will have the same pixel size as the input rasters.
+    The output raster will have the same coordinate reference system as the input rasters.
+
+    :param tiles: A column containing an array of raster tiles.
+    :type col: Column (ArrayType(RasterTileType))
+    :param python_func: A function to evaluate in python.
+    :type col: Column (StringType)
+    :param func_name: name of the function to evaluate in python.
+        :type col: Column (StringType)
+    :rtype: Column: RasterTileType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df\
+       .select(
+         F.array("tile1","tile2","tile3")).alias("tiles"),
+         F.lit(
+           """
+           import numpy as np
+           def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize, raster_ysize, buf_radius, gt, **kwargs):
+              out_ar[:] = np.sum(in_ar, axis=0) / len(in_ar)
+           """).alias("py_func1"),
+         F.lit("average").alias("func1_name")
+       )\
+       .select(mos.rst_deriveband("tiles","py_func1","func1_name")).limit(1).display()
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_derivedband(tiles,py_func1,func1_name)                                                                      |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df
+        .select(
+            array("tile1","tile2","tile3")).alias("tiles"),
+            lit(
+                """
+                |import numpy as np
+                |def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize, raster_ysize, buf_radius, gt, **kwargs):
+                |  out_ar[:] = np.sum(in_ar, axis=0) / len(in_ar)
+                |""".stripMargin).as("py_func1"),
+            lit("average").as("func1_name")
+        )
+        .select(mos.rst_deriveband("tiles","py_func1","func1_name")).limit(1).show
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_derivedband(tiles,py_func1,func1_name)                                                                                          |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+     SELECT
+     rst_derivedband(array(tile1,tile2,tile3)) as tiles,
+     """
+     import numpy as np
+     def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize, raster_ysize, buf_radius, gt, **kwargs):
+        out_ar[:] = np.sum(in_ar, axis=0) / len(in_ar)
+     """ as py_func1,
+     "average" as funct1_name
+     FROM table LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_derivedband(tiles,py_func1,func1_name)                                                                       |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+
+rst_derivedbandagg
+*****************
+
+.. function:: rst_derivedbandagg(tile, python_func, func_name)
+
+    Combines a group by statement over aggregated raster tiles by using the provided python function.
+    The rasters must have the same extent, number of bands, and pixel type.
+    The rasters must have the same pixel size and coordinate reference system.
+    The output raster will have the same extent as the input rasters.
+    The output raster will have the same number of bands as the input rasters.
+    The output raster will have the same pixel type as the input rasters.
+    The output raster will have the same pixel size as the input rasters.
+    The output raster will have the same coordinate reference system as the input rasters.
+
+    :param tile: A grouped column containing raster tile(s).
+    :type col: Column (RasterTileType)
+    :param python_func: A function to evaluate in python.
+    :type col: Column (StringType)
+    :param func_name: name of the function to evaluate in python.
+    :type col: Column (StringType)
+    :rtype: Column: RasterTileType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+     from textwrap import dedent
+     df\
+       .select(
+         "date", "tile",
+         F.lit(dedent(
+           """
+           import numpy as np
+           def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize, raster_ysize, buf_radius, gt, **kwargs):
+              out_ar[:] = np.sum(in_ar, axis=0) / len(in_ar)
+           """)).alias("py_func1"),
+         F.lit("average").alias("func1_name")
+       )\
+       .groupBy("date", "py_func1", "func1_name")\
+         .agg(mos.rst_derivedbandagg("tile","py_func1","func1_name")).limit(1).display()
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_derivedbandagg(tile,py_func1,func1_name)                                                                      |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df
+        .select(
+            "date", "tile"
+            lit(
+                """
+                |import numpy as np
+                |def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize, raster_ysize, buf_radius, gt, **kwargs):
+                |  out_ar[:] = np.sum(in_ar, axis=0) / len(in_ar)
+                |""".stripMargin).as("py_func1"),
+            lit("average").as("func1_name")
+        )
+        .groupBy("date", "py_func1", "func1_name")
+            .agg(mos.rst_derivedbandagg("tile","py_func1","func1_name")).limit(1).show
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_derivedbandagg(tile,py_func1,func1_name)                                                                                          |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+     SELECT
+     date, py_func1, func1_name,
+     rst_derivedbandagg(tile, py_func1, func1_name)
+     FROM SELECT (
+     date, tile,
+     """
+     import numpy as np
+     def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize, raster_ysize, buf_radius, gt, **kwargs):
+        out_ar[:] = np.sum(in_ar, axis=0) / len(in_ar)
+     """ as py_func1,
+     "average" as func1_name
+     FROM table
+     )
+     GROUP BY date, py_func1, func1_name
+     LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_derivedbandagg(tile,py_func1,func1_name)                                                                       |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+
 rst_frombands
 **************
 
@@ -327,7 +500,63 @@ rst_frombands
 
      SELECT rst_frombands(array(tile1,tile2,tile3)) FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_frombands(array(tile1,tile2,tile3))                                                                                            |
+     | rst_frombands(array(tile1,tile2,tile3))                                                                        |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+rst_fromcontent
+************
+
+.. function:: rst_fromcontent(raster_bin, driver, <size_in_MB>)
+
+    Returns a tile from raster data.
+    The raster must be a binary.
+    The driver must be one that GDAL can read.
+    If the size_in_MB parameter is specified, the raster will be split into tiles of the specified size.
+    If the size_in_MB parameter is not specified or if the size_in_Mb < 0, the raster will only be split if
+    it exceeds Integer.MAX_VALUE. The split will be at a threshold of 64MB in this case.
+
+    :param raster_bin: A column containing the raster data.
+    :type col: Column (BinaryType)
+    :param size_in_MB: Optional parameter to specify the size of the raster tile in MB. Default is not to split the input.
+    :type col: Column (IntegerType)
+    :rtype: Column: RasterTileType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+     # binary is python bytearray data type
+     df = spark.read.format("binaryFile")\
+         .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")\
+     df.select(mos.rst_fromcontent("content")).limit(1).display()
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_fromcontent(content)                                                                                       |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+     //binary is scala/java Array(Byte) data type
+     val df = spark.read
+          .format("binaryFile")
+          .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     df.select(rst_fromcontent(col("content"))).limit(1).show(false)
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_fromcontent(content)                                                                                       |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
+          USING binaryFile
+          OPTIONS (path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     SELECT rst_fromcontent(content) FROM coral_netcdf LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | rst_fromcontent(content)                                                                                       |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -524,9 +753,9 @@ rst_getsubdataset
      SELECT rst_getsubdataset(tile, "sst") FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
      | rst_getsubdataset(tile, sst)                                                                                   |
-    +----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-    +----------------------------------------------------------------------------------------------------------------+
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
 
 rst_height
 **********
@@ -599,7 +828,7 @@ rst_initnodata
 
      df.select(mos.rst_initnodata("tile")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_initnodata(tile)                                                                                        |
+     | rst_initnodata(tile)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -608,7 +837,7 @@ rst_initnodata
 
      df.select(rst_initnodata(col("tile"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_initnodata(tile)                                                                                        |
+     | rst_initnodata(tile)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -617,7 +846,7 @@ rst_initnodata
 
      SELECT rst_initnodata(tile) FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_initnodata(tile)                                                                                        |
+     | rst_initnodata(tile)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -665,6 +894,56 @@ rst_isempty
     |false               |
     |false               |
     +--------------------+
+
+
+rst_mapalgebra
+********
+
+.. function:: rst_mapalgebra(tile, json_spec)
+
+    Performs map algebra on the raster tile.
+    Rasters are provided as 'A' to 'Z' values.
+    Bands are provided as 0..n values.
+    Uses gdal_calc: command line raster calculator with numpy syntax. Use any basic arithmetic supported by numpy
+    arrays (such as +, -, *, and /) along with logical operators (such as >, <, =). For this distributed implementation,
+    all rasters must have the same dimensions and no projection checking is performed.
+
+    :param tile: A column containing the raster tile.
+    :type col: Column (RasterTileType)
+    :param json_spec: A column containing the map algebra operation specification.
+    :type col: Column (StringType)
+    :rtype: Column: RasterTileType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.select(mos.rst_mapalgebra("tile", "{calc: 'A+B', A_index: 0, B_index: 1}").alias("tile").limit(1).display()
+     +----------------------------------------------------------------------------------------------------------------+
+     | tile                                                                                                           |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.select(mos.rst_mapalgebra("tile", "{calc: 'A+B', A_index: 0, B_index: 1}").as("tile")).limit(1).show
+     +----------------------------------------------------------------------------------------------------------------+
+     | tile                                                                                                           |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_mapalgebra(tile, "{calc: 'A+B', A_index: 0, B_index: 1}") as tile FROM table LIMIT 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | tile                                                                                                           |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     +----------------------------------------------------------------------------------------------------------------+
+
 
 rst_memsize
 *************
@@ -739,7 +1018,7 @@ rst_merge
      df.select(F.array("tile1", "tile2", "tile3").alias("tiles"))\
        .select(mos.rst_merge("tiles")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_merge(tiles)                                                                                                |
+     | rst_merge(tiles)                                                                                               |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -749,7 +1028,7 @@ rst_merge
      df.select(array("tile1", "tile2", "tile3").as("tiles"))
        .select(rst_merge(col("tiles"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_merge(tiles)                                                                                                |
+     | rst_merge(tiles)                                                                                               |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -758,7 +1037,7 @@ rst_merge
 
      SELECT rst_merge(array(tile1,tile2,tile3)) FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_merge(array(tile1,tile2,tile3))                                                                                               |
+     | rst_merge(array(tile1,tile2,tile3))                                                                            |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -1109,7 +1388,7 @@ rst_rastertogridavg
    .. code-tab:: scala
 
     df.select(rst_rastertogridavg(col("tile"), lit(3))).show
-      +--------------------------------------------------------------------------------------------------------------------+
+    +--------------------------------------------------------------------------------------------------------------------+
     | rst_rastertogridavg(tile, 3)                                                                                       |
     +--------------------------------------------------------------------------------------------------------------------+
     | [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure": 1.2037735849056603}, |
@@ -2364,7 +2643,7 @@ rst_worldtorastercoord
 
     df.select(mos.rst_worldtorastercoord('tile', F.lit(-160.1), F.lit(40.0))).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoord(tile, -160.1, 40.0)                                                                                     |
+    | rst_worldtorastercoord(tile, -160.1, 40.0)                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
     | {"x": 398, "y": 997}                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2373,7 +2652,7 @@ rst_worldtorastercoord
 
     df.select(rst_worldtorastercoord(col("tile"), lit(-160.1), lit(40.0))).show
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoord(tile, -160.1, 40.0)                                                                                     |
+    | rst_worldtorastercoord(tile, -160.1, 40.0)                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
     | {"x": 398, "y": 997}                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2382,7 +2661,7 @@ rst_worldtorastercoord
 
     SELECT rst_worldtorastercoord(tile, -160.1, 40.0) FROM table
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_worldtorastercoord(tile, -160.1, 40.0)                                                                                     |
+    | rst_worldtorastercoord(tile, -160.1, 40.0)                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
     | {"x": 398, "y": 997}                                                                                             |
     +------------------------------------------------------------------------------------------------------------------+

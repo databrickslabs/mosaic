@@ -15,7 +15,9 @@ __all__ = [
     "rst_boundingbox",
     "rst_clip",
     "rst_combineavg",
+    "rst_combineavgagg",
     "rst_derivedband",
+    "rst_derivedbandagg",
     "rst_frombands",
     "rst_fromcontent",
     "rst_fromfile",
@@ -25,8 +27,10 @@ __all__ = [
     "rst_height",
     "rst_initnodata",
     "rst_isempty",
+    "rst_mapalgebra",
     "rst_memsize",
     "rst_merge",
+    "rst_mergeagg",
     "rst_metadata",
     "rst_ndvi",
     "rst_numbands",
@@ -69,7 +73,7 @@ def rst_bandmetadata(raster_tile: ColumnOrName, band: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     band : Column (IntegerType)
         Band index, starts from 1.
@@ -91,7 +95,7 @@ def rst_boundingbox(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -113,14 +117,14 @@ def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     geometry : Column (StringType)
         The geometry to clip the raster to.
 
     Returns
     -------
-    Column (StringType)
+    Column (RasterTileType)
         Mosaic raster tile struct column.
 
     """
@@ -135,17 +139,37 @@ def rst_combineavg(raster_tiles: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tiles : Column (ArrayType(StringType))
+    raster_tiles : Column (ArrayType(RasterTileType))
         Raster tiles to combine.
 
     Returns
     -------
-    Column (RasterTile)
+    Column (RasterTileType)
         The combined raster tile.
 
     """
     return config.mosaic_context.invoke_function(
         "rst_combineavg", pyspark_to_java_column(raster_tiles)
+    )
+
+
+def rst_combineavgagg(raster_tile: ColumnOrName) -> Column:
+    """
+    Combines the aggregate raster tiles into a single tile.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Aggregate raster tile col to combine.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        The combined raster tile.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_combineavgagg", pyspark_to_java_column(raster_tile)
     )
 
 
@@ -156,7 +180,7 @@ def rst_derivedband(raster_tile: ColumnOrName, python_func: ColumnOrName, func_n
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     python_func : Column (StringType)
         The python function to apply to the bands.
@@ -165,12 +189,40 @@ def rst_derivedband(raster_tile: ColumnOrName, python_func: ColumnOrName, func_n
 
     Returns
     -------
-    Column (StringType)
+    Column (RasterTileType)
         Mosaic raster tile struct column.
 
     """
     return config.mosaic_context.invoke_function(
         "rst_derivedband",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(python_func),
+        pyspark_to_java_column(func_name),
+    )
+
+
+def rst_derivedbandagg(raster_tile: ColumnOrName, python_func: ColumnOrName, func_name: ColumnOrName) -> Column:
+    """
+    Creates a new band by applying the given python function to the input rasters.
+    The result is a raster tile.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Aggregate raster tile col to derive from.
+    python_func : Column (StringType)
+        The python function to apply to the bands.
+    func_name : Column (StringType)
+        The name of the function.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_derivedbandagg",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(python_func),
         pyspark_to_java_column(func_name),
@@ -190,7 +242,7 @@ def rst_georeference(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -210,7 +262,7 @@ def rst_getnodata(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     band : Column (IntegerType)
         Band index, starts from 1.
@@ -233,14 +285,14 @@ def rst_getsubdataset(raster_tile: ColumnOrName, subdataset: ColumnOrName) -> Co
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     subdataset : Column (IntegerType)
         The index of the subdataset to get.
 
     Returns
     -------
-    Column (StringType)
+    Column (RasterTileType)
         Mosaic raster tile struct of the subdataset.
 
     """
@@ -255,7 +307,7 @@ def rst_height(raster_tile: ColumnOrName) -> Column:
     """
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -275,12 +327,12 @@ def rst_initnodata(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
     -------
-    Column (StringType)
+    Column (RasterTileType)
         Mosaic raster tile struct column.
 
     """
@@ -293,7 +345,7 @@ def rst_isempty(raster_tile: ColumnOrName) -> Column:
     """
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -307,11 +359,30 @@ def rst_isempty(raster_tile: ColumnOrName) -> Column:
     )
 
 
+def rst_mapalgebra(raster_tile: ColumnOrName, json_spec: ColumnOrName) -> Column:
+    """
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    json_spec : Column (StringType)
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_mapalgebra", pyspark_to_java_column(raster_tile, json_spec)
+    )
+
+
 def rst_memsize(raster_tile: ColumnOrName) -> Column:
     """
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -329,7 +400,7 @@ def rst_metadata(raster_tile: ColumnOrName) -> Column:
     """
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -351,17 +422,39 @@ def rst_merge(raster_tiles: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tiles : Column (ArrayType(StringType))
+    raster_tiles : Column (ArrayType(RasterTileType))
         Raster tiles to merge.
 
     Returns
     -------
-    Column (StringType)
+    Column (RasterTileType)
         Mosaic raster tile struct of the merged raster.
 
     """
     return config.mosaic_context.invoke_function(
         "rst_merge", pyspark_to_java_column(raster_tiles)
+    )
+
+
+def rst_mergeagg(raster_tile: ColumnOrName) -> Column:
+    """
+    Merges (mosaics) the aggregated raster tiles into a single tile.
+    The result is Mosaic raster tile struct of the merged raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Aggregate Raster tile column to merge.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct of the merged raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_mergeagg", pyspark_to_java_column(raster_tile)
     )
 
 
@@ -373,12 +466,12 @@ def rst_frombands(bands: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    bands : Column (ArrayType(StringType))
+    bands : Column (ArrayType(RasterTileType))
         Raster tiles of the bands to merge.
 
     Returns
     -------
-    Column (StringType)
+    Column (RasterTileType)
         Mosaic raster tile struct of the band stacking.
 
     """
@@ -391,7 +484,7 @@ def rst_numbands(raster_tile: ColumnOrName) -> Column:
     """
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -413,7 +506,7 @@ def rst_ndvi(raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     band1 : Column (IntegerType)
         The first band index.
@@ -422,7 +515,7 @@ def rst_ndvi(raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName
 
     Returns
     -------
-    Column (StringType)
+    Column (RasterTileType)
         Mosaic raster tile structs of the NDVI raster.
 
     """
@@ -438,7 +531,7 @@ def rst_pixelheight(raster_tile: ColumnOrName) -> Column:
     """
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -456,7 +549,7 @@ def rst_pixelwidth(raster_tile: ColumnOrName) -> Column:
     """
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -479,7 +572,7 @@ def rst_rastertogridavg(raster_tile: ColumnOrName, resolution: ColumnOrName) -> 
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -504,7 +597,7 @@ def rst_rastertogridcount(raster_tile: ColumnOrName, resolution: ColumnOrName) -
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -529,7 +622,7 @@ def rst_rastertogridmax(raster_tile: ColumnOrName, resolution: ColumnOrName) -> 
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -554,7 +647,7 @@ def rst_rastertogridmedian(raster_tile: ColumnOrName, resolution: ColumnOrName) 
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -579,7 +672,7 @@ def rst_rastertogridmin(raster_tile: ColumnOrName, resolution: ColumnOrName) -> 
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -605,7 +698,7 @@ def rst_rastertoworldcoord(
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -631,12 +724,12 @@ def rst_rastertoworldcoordx(
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
     -------
-    Column (StringType)
+    Column (DoubleType)
         The X coordinate of the point after applying the GeoTransform of the raster.
 
     """
@@ -657,13 +750,13 @@ def rst_rastertoworldcoordy(
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
     -------
-    Column (StringType)
-        The X coordinate of the point after applying the GeoTransform of the raster.
+    Column (DoubleType)
+        The Y coordinate of the point after applying the GeoTransform of the raster.
 
     """
     return config.mosaic_context.invoke_function(
@@ -685,12 +778,12 @@ def rst_retile(
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
     -------
-    Column (StringType)
+    Column (RasterTileType)
         Mosaic raster tile structs from the exploded retile.
 
     """
@@ -710,7 +803,7 @@ def rst_rotation(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -730,7 +823,7 @@ def rst_scalex(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -750,7 +843,7 @@ def rst_scaley(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -770,14 +863,14 @@ def rst_setnodata(raster_tile: ColumnOrName, nodata: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     nodata : Column (DoubleType)
         The nodata value to set.
 
     Returns
     -------
-    Column (StringType)
+    Column (RasterTileType)
         Mosaic raster tile struct column.
 
     """
@@ -794,7 +887,7 @@ def rst_skewx(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -814,7 +907,7 @@ def rst_skewy(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -835,7 +928,7 @@ def rst_srid(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -857,7 +950,7 @@ def rst_subdatasets(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -880,7 +973,7 @@ def rst_summary(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -901,14 +994,14 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     resolution : Column (IntegerType)
         The resolution of the tiles.
 
     Returns
     -------
-    Column (RasterTiles)
+    Column (RasterTileType)
         A struct containing the tiles of the raster.
 
     """
@@ -981,7 +1074,7 @@ def rst_tryopen(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -1002,14 +1095,14 @@ def rst_subdivide(raster_tile: ColumnOrName, size_in_mb: ColumnOrName) -> Column
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     size_in_mb : Column (IntegerType)
         The size of the tiles in MB.
 
     Returns
     -------
-    Column (RasterTiles)
+    Column (RasterTileType)
         A collection of tiles of the raster.
 
     """
@@ -1027,7 +1120,7 @@ def rst_upperleftx(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
 
     Returns
@@ -1048,7 +1141,7 @@ def rst_upperlefty(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
        Mosaic raster tile struct column.
 
     Returns
@@ -1068,7 +1161,7 @@ def rst_width(raster_tile: ColumnOrName) -> Column:
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
        Mosaic raster tile struct column.
 
     Returns
@@ -1093,7 +1186,7 @@ def rst_worldtorastercoord(
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
        Mosaic raster tile struct column.
 
     Returns
@@ -1122,7 +1215,7 @@ def rst_worldtorastercoordx(
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
        Mosaic raster tile struct column.
 
     Returns
@@ -1151,7 +1244,7 @@ def rst_worldtorastercoordy(
 
     Parameters
     ----------
-    raster_tile : Column (StringType)
+    raster_tile : Column (RasterTileType)
        Mosaic raster tile struct column.
 
     Returns

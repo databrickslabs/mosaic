@@ -344,6 +344,69 @@ st_centroid
     |POINT (25.454545454545453, 26.96969696969697)|
     +---------------------------------------------+
 
+
+st_concavehull
+*************
+
+.. function:: st_concavehull(geom, concavity, <has_holes>)
+
+    Compute the concave hull of a geometry or multi-geometry object. It uses concavity and has_holes to determine
+    the concave hull. Param concavity is the fraction of the difference between the longest and shortest edge lengths in
+    the Delaunay Triangulation. If set to 1, this is the same as the convex hull. If set to 0, it produces
+    maximum concaveness. Param has_holes is a boolean that determines whether the concave hull can have holes. If set to
+    true, the concave hull can have holes. If set to false, the concave hull will not have holes.
+
+    :param geom: The input geometry
+    :type col: Column
+    :param concavity: The concavity of the hull
+    :type col: Column (DoubleType)
+    :param has_holes:  Whether the hull has holes, default false
+    :type col: Column (BooleanType)
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+    df.select(st_concavehull('wkt'), lit(0.1))).show(1, False)
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                           |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+   .. code-tab:: scala
+
+    val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
+    df.select(st_concavehull(col("wkt"), lit(0.1))).show(false)
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                           |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT st_convexhull("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))", 0.1)
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                           |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+   .. code-tab:: r R
+
+    df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    showDF(select(df, st_concavehull(column("wkt"), lit(0.1))))
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                           |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+
 st_convexhull
 *************
 

@@ -383,7 +383,7 @@ grid_boundary
 grid_tessellate
 ***************
 
-.. function:: grid_tessellate(geometry, resolution, keep_core_geometries)
+.. function:: grid_tessellate(geometry, resolution, <keep_core_geometries>)
 
     Cuts the original `geometry` into several pieces along the grid index borders at the specified `resolution`.
 
@@ -405,9 +405,9 @@ grid_tessellate
     :param geometry: Geometry
     :type geometry: Column
     :param resolution: Index resolution
-    :type resolution: Column: Integer
-    :param keep_core_geometries: Whether to keep the core geometries or set them to null
-    :type keep_core_geometries: Column: Boolean
+    :type resolution: Column (IntegerType)
+    :param keep_core_geometries: Whether to keep the core geometries or set them to null, default true
+    :type keep_core_geometries: Column (BooleanType)
     :rtype: Column: ArrayType[MosaicType]
 
     :example:
@@ -505,7 +505,7 @@ grid_tessellate
 grid_tessellateexplode
 **********************
 
-.. function:: grid_tessellateexplode(geometry, resolution, keep_core_geometries)
+.. function:: grid_tessellateexplode(geometry, resolution, <keep_core_geometries>)
 
     Cuts the original `geometry` into several pieces along the grid index borders at the specified `resolution`.
 
@@ -527,9 +527,9 @@ grid_tessellateexplode
     :param geometry: Geometry
     :type geometry: Column
     :param resolution: Index resolution
-    :type resolution: Column: Integer
-    :param keep_core_geometries: Whether to keep the core geometries or set them to null
-    :type keep_core_geometries: Column: Boolean
+    :type resolution: Column (IntegerType)
+    :param keep_core_geometries: Whether to keep the core geometries or set them to null, default true
+    :type keep_core_geometries: Column (BooleanType)
     :rtype: Column: MosaicType
 
     :example:
