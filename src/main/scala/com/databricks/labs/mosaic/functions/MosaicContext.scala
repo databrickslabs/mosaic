@@ -563,8 +563,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, expressionConfig))
         def st_concavehull(geom: Column, concavity: Column, allowHoles: Column): Column =
             ColumnAdapter(ST_ConcaveHull(geom.expr, concavity.cast("double").expr, allowHoles.expr, expressionConfig))
-        def st_concavehull(geom: Column, concavity: Double, allowHoles: Boolean = false): Column =
+        def st_concavehull(geom: Column, concavity: Double, allowHoles: Boolean): Column =
             ColumnAdapter(ST_ConcaveHull(geom.expr, lit(concavity).cast("double").expr, lit(allowHoles).expr, expressionConfig))
+        def st_concavehull(geom: Column, concavity: Double): Column =
+            ColumnAdapter(ST_ConcaveHull(geom.expr, lit(concavity).cast("double").expr, lit(false).expr, expressionConfig))
         def st_difference(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Difference(geom1.expr, geom2.expr, expressionConfig))
         def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, expressionConfig))
         def st_dimension(geom: Column): Column = ColumnAdapter(ST_Dimension(geom.expr, expressionConfig))
