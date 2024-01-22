@@ -122,7 +122,7 @@ trait ST_BufferBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stBuffer = ST_Buffer(lit(1).expr, lit(1).expr, mc.expressionConfig)
+        val stBuffer = ST_Buffer(lit(1).expr, lit(1).expr, lit("").expr, mc.expressionConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stBuffer.genCode(ctx)
     }
@@ -214,12 +214,13 @@ trait ST_BufferBehaviors extends QueryTest {
 
         val df = getWKTRowsDf()
 
-        val stBuffer = ST_Buffer(df.col("wkt").expr, lit(1).expr, mc.expressionConfig)
+        val stBuffer = ST_Buffer(df.col("wkt").expr, lit(1).expr, lit("").expr, mc.expressionConfig)
 
-        stBuffer.left shouldEqual df.col("wkt").expr
-        stBuffer.right shouldEqual lit(1).expr
+        stBuffer.first shouldEqual df.col("wkt").expr
+        stBuffer.second shouldEqual lit(1).expr
+        stBuffer.third shouldEqual lit("").expr
         stBuffer.dataType shouldEqual df.col("wkt").expr.dataType
-        noException should be thrownBy stBuffer.makeCopy(Array(stBuffer.left, stBuffer.right))
+        noException should be thrownBy stBuffer.makeCopy(Array(stBuffer.first, stBuffer.second, stBuffer.third))
 
         st_buffer(col("wkt"), 1).expr.children(1) shouldEqual lit(1.0).cast("double").expr
 
