@@ -195,7 +195,7 @@ trait ST_BufferBehaviors extends QueryTest {
           Seq(
             StructField("geom", StringType),
             StructField("buffer", DoubleType),
-            StructField("bufferStyleParameters", IntegerType),
+            StructField("bufferStyleParameters", StringType),
             StructField("geomBufferedRef", StringType)
           )
         )

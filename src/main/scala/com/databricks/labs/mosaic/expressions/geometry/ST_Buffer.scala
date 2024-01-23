@@ -65,7 +65,11 @@ object ST_Buffer extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
-        ST_Buffer(children.head, Column(children(1)).cast("double").expr, children(2), expressionConfig)
+        if (children.size == 2) {
+            ST_Buffer(children.head, Column(children(1)).cast("double").expr, lit("").expr, expressionConfig)
+        } else if (children.size == 3) {
+            ST_Buffer(children.head, Column(children(1)).cast("double").expr, Column(children(2)).cast("string").expr, expressionConfig)
+        } else throw new Exception ("unexpected number of arguments")
     }
 
 }
