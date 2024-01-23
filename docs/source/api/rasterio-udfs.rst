@@ -297,14 +297,14 @@ Finally we will apply the function to the DataFrame.
         lit("dbfs:/path/to/output/dir").alias("fuse_dir")
       )
     ).display()
-    +---------------------------------------------+
-    | write_raster(raster, driver, uuid, fuse_dir)|
-    +---------------------------------------------+
-    | dbfs:/path/to/output/dir/1234.tif           |
-    | dbfs:/path/to/output/dir/4545.tif           |
-    | dbfs:/path/to/output/dir/3215.tif           |
-    | ...                                         |
-    +---------------------------------------------+
+    +----------------------------------------------+
+    | write_raster(raster, driver, uuid, fuse_dir) |
+    +----------------------------------------------+
+    | dbfs:/path/to/output/dir/1234.tif            |
+    | dbfs:/path/to/output/dir/4545.tif            |
+    | dbfs:/path/to/output/dir/3215.tif            |
+    | ...                                          |
+    +----------------------------------------------+
 
 Sometimes you don't need to be quite as fancy. Consider when you simply want to specify to write out raster contents,
 assuming you specify the extension in the file_id. This is just writing binary column to file, nothing further.
@@ -343,11 +343,11 @@ Finally we will apply the function to the DataFrame.
         lit("dbfs:/path/to/output/dir").alias("fuse_dir")
       )
     ).display()
-    +-------------------------------------+
-    | write_tif(raster, file_name, fuse_dir)   |
-    +-------------------------------------+
-    | dbfs:/path/to/output/dir/1234.tif   |
-    | dbfs:/path/to/output/dir/4545.tif   |
-    | dbfs:/path/to/output/dir/3215.tif   |
-    | ...                                 |
-    +-------------------------------------+
+    +----------------------------------------+
+    | write_tif(raster, file_name, fuse_dir) |
+    +----------------------------------------+
+    | dbfs:/path/to/output/dir/1234.tif      |
+    | dbfs:/path/to/output/dir/4545.tif      |
+    | dbfs:/path/to/output/dir/3215.tif      |
+    | ...                                    |
+    +----------------------------------------+
