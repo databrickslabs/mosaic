@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
 import org.apache.spark.sql.catalyst.trees.BinaryLike
 import org.apache.spark.sql.types._
 
-case class ST_IntersectionAggregate(
+case class ST_IntersectionAgg(
     leftChip: Expression,
     rightChip: Expression,
     geometryAPIName: String,
@@ -27,7 +27,7 @@ case class ST_IntersectionAggregate(
     override val dataType: DataType = BinaryType
     private val emptyWKB = geometryAPI.geometry("POLYGON(EMPTY)", "WKT").toWKB
 
-    override def prettyName: String = "st_intersection_aggregate"
+    override def prettyName: String = "st_intersection_agg"
 
     private[geometry] def getCellGeom(row: InternalRow, dt: DataType) = {
         dt.asInstanceOf[StructType].fields.find(_.name == "index_id").map(_.dataType) match {
@@ -86,18 +86,18 @@ case class ST_IntersectionAggregate(
 
     override def deserialize(storageFormat: Array[Byte]): Array[Byte] = storageFormat
 
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): ST_IntersectionAggregate =
+    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): ST_IntersectionAgg =
         copy(leftChip = newLeft, rightChip = newRight)
 
 }
 
-object ST_IntersectionAggregate {
+object ST_IntersectionAgg {
 
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
           classOf[IndexGeometry].getCanonicalName,
           db.orNull,
-          "st_reduce_intersection",
+          "st_intersection_agg",
           """
             |    _FUNC_(left_index, right_index)) - Resolves an intersection geometry based on matched indices.
             """.stripMargin,

@@ -66,16 +66,16 @@ the mos.setup_gdal() function.
     mos.enable_mosaic(spark, dbutils)
     mos.setup_gdal()
 
-    +---------------------------------------------------------------------------------------------------------+
-    |::: Install setup complete :::                                                                           |
-    +---------------------------------------------------------------------------------------------------------+
-    |- Settings: 'with_mosaic_pip'? False, 'with_gdal'? True, 'with_ubuntugis'? False                         |
-    |           'jar_copy'? False, 'jni_so_copy'? False, 'override_mosaic_version'? None                      |
-    |- Derived:  'mosaic_version'? 0.4.0, 'github_version'? 0.4.0, 'release_version'? None, 'pip_str'? ==0.4.0|
-    |- Fuse Dir: '/Workspace/Shared/geospatial/mosaic/gdal/jammy'                                             |
-    |- Init Script: configured and stored at 'mosaic-gdal-init.sh'; add to your cluster and restart,          |
-    |               more at https://docs.databricks.com/en/init-scripts/cluster-scoped.html                   |
-    +---------------------------------------------------------------------------------------------------------+
+    +-----------------------------------------------------------------------------------------------------------+
+    | ::: Install setup complete :::                                                                            |
+    +-----------------------------------------------------------------------------------------------------------+
+    | - Settings: 'with_mosaic_pip'? False, 'with_gdal'? True, 'with_ubuntugis'? False                          |
+    |             'jar_copy'? False, 'jni_so_copy'? False, 'override_mosaic_version'? None                      |
+    | - Derived:  'mosaic_version'? 0.4.0, 'github_version'? 0.4.0, 'release_version'? None, 'pip_str'? ==0.4.0 |
+    | - Fuse Dir: '/Workspace/Shared/geospatial/mosaic/gdal/jammy'                                              |
+    | - Init Script: configured and stored at 'mosaic-gdal-init.sh'; add to your cluster and restart,           |
+    |               more at https://docs.databricks.com/en/init-scripts/cluster-scoped.html                     |
+    +-----------------------------------------------------------------------------------------------------------+
 
 
 Configure the init script

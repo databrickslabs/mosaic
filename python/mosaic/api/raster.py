@@ -15,9 +15,9 @@ __all__ = [
     "rst_boundingbox",
     "rst_clip",
     "rst_combineavg",
-    "rst_combineavgagg",
+    "rst_combineavg_agg",
     "rst_derivedband",
-    "rst_derivedbandagg",
+    "rst_derivedband_agg",
     "rst_frombands",
     "rst_fromcontent",
     "rst_fromfile",
@@ -30,7 +30,7 @@ __all__ = [
     "rst_mapalgebra",
     "rst_memsize",
     "rst_merge",
-    "rst_mergeagg",
+    "rst_merge_agg",
     "rst_metadata",
     "rst_ndvi",
     "rst_numbands",
@@ -153,26 +153,6 @@ def rst_combineavg(raster_tiles: ColumnOrName) -> Column:
     )
 
 
-def rst_combineavgagg(raster_tile: ColumnOrName) -> Column:
-    """
-    Combines the aggregate raster tiles into a single tile.
-
-    Parameters
-    ----------
-    raster_tile : Column (RasterTileType)
-        Aggregate raster tile col to combine.
-
-    Returns
-    -------
-    Column (RasterTileType)
-        The combined raster tile.
-
-    """
-    return config.mosaic_context.invoke_function(
-        "rst_combineavgagg", pyspark_to_java_column(raster_tile)
-    )
-
-
 def rst_derivedband(raster_tile: ColumnOrName, python_func: ColumnOrName, func_name: ColumnOrName) -> Column:
     """
     Creates a new band by applying the given python function to the input rasters.
@@ -195,34 +175,6 @@ def rst_derivedband(raster_tile: ColumnOrName, python_func: ColumnOrName, func_n
     """
     return config.mosaic_context.invoke_function(
         "rst_derivedband",
-        pyspark_to_java_column(raster_tile),
-        pyspark_to_java_column(python_func),
-        pyspark_to_java_column(func_name),
-    )
-
-
-def rst_derivedbandagg(raster_tile: ColumnOrName, python_func: ColumnOrName, func_name: ColumnOrName) -> Column:
-    """
-    Creates a new band by applying the given python function to the input rasters.
-    The result is a raster tile.
-
-    Parameters
-    ----------
-    raster_tile : Column (RasterTileType)
-        Aggregate raster tile col to derive from.
-    python_func : Column (StringType)
-        The python function to apply to the bands.
-    func_name : Column (StringType)
-        The name of the function.
-
-    Returns
-    -------
-    Column (RasterTileType)
-        Mosaic raster tile struct column.
-
-    """
-    return config.mosaic_context.invoke_function(
-        "rst_derivedbandagg",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(python_func),
         pyspark_to_java_column(func_name),
@@ -433,28 +385,6 @@ def rst_merge(raster_tiles: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_merge", pyspark_to_java_column(raster_tiles)
-    )
-
-
-def rst_mergeagg(raster_tile: ColumnOrName) -> Column:
-    """
-    Merges (mosaics) the aggregated raster tiles into a single tile.
-    The result is Mosaic raster tile struct of the merged raster.
-    The result is stored in the checkpoint directory.
-
-    Parameters
-    ----------
-    raster_tile : Column (RasterTileType)
-        Aggregate Raster tile column to merge.
-
-    Returns
-    -------
-    Column (RasterTileType)
-        Mosaic raster tile struct of the merged raster.
-
-    """
-    return config.mosaic_context.invoke_function(
-        "rst_mergeagg", pyspark_to_java_column(raster_tile)
     )
 
 

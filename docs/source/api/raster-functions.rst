@@ -12,7 +12,7 @@ This is useful for performing spatial joins between raster data and vector data.
 Mosaic also provides a scalable retiling function that can be used to retile raster data in case of bottlenecking due to large files.
 All raster functions respect the \"rst\_\" prefix naming convention.
 Mosaic is operating using raster tile objects only since 0.3.11. Tile objects are created using functions such as rst_fromfile(path_to_raster)
-or rst_fromcontent(raster_bin).
+or rst_fromcontent(raster_bin, driver). These functions are used as places to start when working with initial data.
 If you use spark.read.format("gdal") tiles are automatically generated for you.
 Also, scala does not have a df.display method while python does. In practice you would most often call display(df) in
 scala for a prettier output, but for brevity, we write df.show in scala.
@@ -204,7 +204,7 @@ rst_combineavg
        .select(F.array("tile1","tile2","tile3")).alias("tiles"))\
        .select(mos.rst_combineavg("tiles")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_combineavg(tiles)                                                                                           |
+     | rst_combineavg(tiles)                                                                                          |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -215,7 +215,7 @@ rst_combineavg
        .select(F.array("tile1","tile2","tile3")).as("tiles"))
        .select(rst_combineavg(col("tiles"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_combineavg(tiles)                                                                                           |
+     | rst_combineavg(tiles)                                                                                          |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -322,7 +322,7 @@ rst_derivedband
        )\
        .select(mos.rst_deriveband("tiles","py_func1","func1_name")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_derivedband(tiles,py_func1,func1_name)                                                                      |
+     | rst_derivedband(tiles,py_func1,func1_name)                                                                     |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -342,7 +342,7 @@ rst_derivedband
         )
         .select(mos.rst_deriveband("tiles","py_func1","func1_name")).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_derivedband(tiles,py_func1,func1_name)                                                                                          |
+     | rst_derivedband(tiles,py_func1,func1_name)                                                                     |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -358,7 +358,7 @@ rst_derivedband
      "average" as funct1_name
      FROM table LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_derivedband(tiles,py_func1,func1_name)                                                                       |
+     | rst_derivedband(tiles,py_func1,func1_name)                                                                     |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -405,7 +405,7 @@ rst_derivedbandagg
        .groupBy("date", "py_func1", "func1_name")\
          .agg(mos.rst_derivedbandagg("tile","py_func1","func1_name")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_derivedbandagg(tile,py_func1,func1_name)                                                                      |
+     | rst_derivedbandagg(tile,py_func1,func1_name)                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -426,7 +426,7 @@ rst_derivedbandagg
         .groupBy("date", "py_func1", "func1_name")
             .agg(mos.rst_derivedbandagg("tile","py_func1","func1_name")).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_derivedbandagg(tile,py_func1,func1_name)                                                                                          |
+     | rst_derivedbandagg(tile,py_func1,func1_name)                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -448,7 +448,7 @@ rst_derivedbandagg
      GROUP BY date, py_func1, func1_name
      LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_derivedbandagg(tile,py_func1,func1_name)                                                                       |
+     | rst_derivedbandagg(tile,py_func1,func1_name)                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -480,7 +480,7 @@ rst_frombands
      df.select(F.array("tile1", "tile2", "tile3").as("tiles"))\
        .select(mos.rst_frombands("tiles")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_frombands(tiles)                                                                                            |
+     | rst_frombands(tiles)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -491,7 +491,7 @@ rst_frombands
        .select(array("tile1", "tile2", "tile3").as("tiles"))
        .select(rst_frombands(col("tiles"))).limit(1).show
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_frombands(tiles)                                                                                            |
+     | rst_frombands(tiles)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
