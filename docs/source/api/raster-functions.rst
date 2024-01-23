@@ -908,6 +908,12 @@ rst_mapalgebra
     arrays (such as +, -, *, and /) along with logical operators (such as >, <, =). For this distributed implementation,
     all rasters must have the same dimensions and no projection checking is performed.
 
+    Here are examples of the json_spec': (1) shows default indexing, (2) shows reusing an index,
+    and (3) shows band indexing.
+    (1) '{"calc": "A+B/C"}'
+    (2) '{"calc": "A+B/C", "A_index": 0, "B_index": 1, "C_index": 1}'
+    (3) '{"calc": "A+B/C", "A_index": 0, "B_index": 1, "C_index": 2, "A_band": 1, "B_band": 1, "C_band": 1}'
+
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param json_spec: A column containing the map algebra operation specification.
