@@ -119,14 +119,14 @@ Finally we will apply the function to the DataFrame.
 .. code-block:: python
 
     df.select(compute_band_mean("tile.raster")).show()
-    +---------------------------+
-    | compute_band_mean(raster) |
-    +---------------------------+
-    |         0.0111000000000000|
-    |         0.0021000000000000|
-    |         0.3001000000000000|
-    | ...                       |
-    +---------------------------+
+    +----------------------------+
+    | compute_band_mean(raster)  |
+    +----------------------------+
+    |         0.0111000000000000 |
+    |         0.0021000000000000 |
+    |         0.3001000000000000 |
+    | ...                        |
+    +----------------------------+
 
 
 UDF example for computing NDVI
@@ -297,29 +297,28 @@ Finally we will apply the function to the DataFrame.
         lit("dbfs:/path/to/output/dir").alias("fuse_dir")
       )
     ).display()
-    +-------------------------------------+
+    +---------------------------------------------+
     | write_raster(raster, driver, uuid, fuse_dir)|
-    +-------------------------------------+
-    | dbfs:/path/to/output/dir/1234.tif   |
-    | dbfs:/path/to/output/dir/4545.tif   |
-    | dbfs:/path/to/output/dir/3215.tif   |
-    | ...                                 |
-    +-------------------------------------+
+    +---------------------------------------------+
+    | dbfs:/path/to/output/dir/1234.tif           |
+    | dbfs:/path/to/output/dir/4545.tif           |
+    | dbfs:/path/to/output/dir/3215.tif           |
+    | ...                                         |
+    +---------------------------------------------+
 
 Sometimes you don't need to be quite as fancy. Consider when you simply want to specify to write out raster contents,
-in this case as a TIF (or you could specify the extension or include it in the file_id).
+assuming you specify the extension in the file_id. This is just writing binary column to file, nothing further.
 
 .. code-block:: python
 
     @udf("string")
-    def write_tif(raster, file_id, fuse_dir):
+    def write_contents(raster, file_name, fuse_dir):
         from pathlib import Path
         import os
         import shutil
         import tempfile
 
         Path(fuse_dir).mkdir(parents=True, exist_ok=True)
-        file_name = f"{file_id}.tif"
         fuse_path = f"{fuse_dir}/{file_name}"
         if not os.path.exists(fuse_path):
             with tempfile.TemporaryDirectory() as tmp_dir:
@@ -338,14 +337,14 @@ Finally we will apply the function to the DataFrame.
 .. code-block:: python
 
     df.select(
-      write_tif(
+      write_contents(
         "tile.raster",
-        "uuid",
+        F.concat("uuid", F.lit(".tif").alias("file_name"),
         lit("dbfs:/path/to/output/dir").alias("fuse_dir")
       )
     ).display()
     +-------------------------------------+
-    | write_tif(raster, uuid, fuse_dir)|
+    | write_tif(raster, file_name, fuse_dir)   |
     +-------------------------------------+
     | dbfs:/path/to/output/dir/1234.tif   |
     | dbfs:/path/to/output/dir/4545.tif   |
