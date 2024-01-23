@@ -61,6 +61,10 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def envelope: MosaicGeometryJTS = MosaicGeometryJTS(geom.getEnvelope)
 
+    override def buffer(distance: Double): MosaicGeometryJTS = {
+        buffer(distance, "")
+    }
+    
     override def buffer(distance: Double, bufferStyleParameters: String): MosaicGeometryJTS = {
 
         val gBuf = new BufferOp(geom)
