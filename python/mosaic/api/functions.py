@@ -198,7 +198,7 @@ def st_buffer(
         geom: ColumnOrName,
         radius: ColumnOrName,
         buffer_style_parameters: Any = "",
-    ) -> Column:
+) -> Column:
     """
     Compute the buffered geometry based on geom and radius.
 

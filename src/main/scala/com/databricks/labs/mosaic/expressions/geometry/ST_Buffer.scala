@@ -12,7 +12,6 @@ import org.apache.spark.sql.types.DataType
 import org.apache.spark.unsafe.types.UTF8String
 import org.apache.spark.sql.functions._
 
-
 /**
   * SQL expression that returns the input geometry buffered by the radius.
   * @param inputGeom
@@ -20,9 +19,9 @@ import org.apache.spark.sql.functions._
   * @param radiusExpr
   *   The radius of the buffer.
   * @param bufferStyleParametersExpr
-  *   'quad_segs=# endcap=round|flat|square' where "#" is the number of line segments used to
-  *   approximate a quarter circle (default is 8); and endcap style for line features is one of
-  *   listed (default="round")
+  *   'quad_segs=# endcap=round|flat|square' where "#" is the number of line
+  *   segments used to approximate a quarter circle (default is 8); and endcap
+  *   style for line features is one of listed (default="round")
   * @param expressionConfig
   *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
   *   arguments for the expression (expressionConfigs).
@@ -69,7 +68,7 @@ object ST_Buffer extends WithExpressionInfo {
             ST_Buffer(children.head, Column(children(1)).cast("double").expr, lit("").expr, expressionConfig)
         } else if (children.size == 3) {
             ST_Buffer(children.head, Column(children(1)).cast("double").expr, Column(children(2)).cast("string").expr, expressionConfig)
-        } else throw new Exception ("unexpected number of arguments")
+        } else throw new Exception("unexpected number of arguments")
     }
 
 }

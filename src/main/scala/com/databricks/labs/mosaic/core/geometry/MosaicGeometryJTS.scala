@@ -66,12 +66,13 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         val gBuf = new BufferOp(geom)
 
         if (bufferStyleParameters contains "=") {
-            val params = bufferStyleParameters.split(" ")
+            val params = bufferStyleParameters
+                .split(" ")
                 .map(_.split("="))
                 .map { case Array(k, v) => (k, v) }
                 .toMap
 
-            if(params.contains("endcap")) {
+            if (params.contains("endcap")) {
                 val capStyle = params.getOrElse("endcap", "")
                 val capStyleConst = capStyle match {
                     case "round"  => BufferParameters.CAP_ROUND
@@ -81,7 +82,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
                 }
                 gBuf.setEndCapStyle(capStyleConst)
             }
-            if(params.contains("quad_segs")) {
+            if (params.contains("quad_segs")) {
                 val quadSegs = params.getOrElse("quad_segs", "8")
                 gBuf.setQuadrantSegments(quadSegs.toInt)
             }

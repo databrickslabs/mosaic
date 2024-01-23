@@ -552,7 +552,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_buffer(geom: Column, radius: Column, buffer_style_parameters: Column): Column =
             ColumnAdapter(ST_Buffer(geom.expr, radius.cast("double").expr, buffer_style_parameters.cast("string").expr, expressionConfig))
         def st_buffer(geom: Column, radius: Double, buffer_style_parameters: Column): Column =
-            ColumnAdapter(ST_Buffer(geom.expr, lit(radius).cast("double").expr, lit(buffer_style_parameters).cast("string").expr, expressionConfig))
+            ColumnAdapter(
+              ST_Buffer(geom.expr, lit(radius).cast("double").expr, lit(buffer_style_parameters).cast("string").expr, expressionConfig)
+            )
         def st_bufferloop(geom: Column, r1: Column, r2: Column): Column =
             ColumnAdapter(ST_BufferLoop(geom.expr, r1.cast("double").expr, r2.cast("double").expr, expressionConfig))
         def st_bufferloop(geom: Column, r1: Double, r2: Double): Column =
