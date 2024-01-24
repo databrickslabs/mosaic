@@ -101,7 +101,7 @@ object RST_FromFile extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a set of new rasters with the specified tile size (tileWidth x tileHeight).
+          |_FUNC_(expr1) - Returns a set of new raster tiles within threshold in MBs.
           |""".stripMargin
 
     override def example: String =

@@ -116,7 +116,7 @@ object RST_MergeAgg {
           db.orNull,
           "rst_merge_agg",
           """
-            |    _FUNC_(tiles)) - Merges rasters into a single raster.
+            |    _FUNC_(tiles)) - Aggregate merge of raster tiles.
             """.stripMargin,
           "",
           """

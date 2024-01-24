@@ -55,13 +55,13 @@ object RST_Clip extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster clipped by provided vector.
+          |_FUNC_(expr1) - Returns a raster tile clipped by provided vector.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(raster, vector);
+          |      > SELECT _FUNC_(raster_tile, vector);
           |        {index_id, clipped_raster, parentPath, driver}
           |        {index_id, clipped_raster, parentPath, driver}
           |        ...

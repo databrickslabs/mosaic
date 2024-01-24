@@ -50,7 +50,7 @@ object RST_BandMetaData extends WithExpressionInfo {
 
     override def name: String = "rst_bandmetadata"
 
-    override def usage: String = "_FUNC_(expr1, expr2) - Extracts metadata from a raster band."
+    override def usage: String = "_FUNC_(expr1, expr2) - Extracts metadata from a raster tile band."
 
     override def example: String =
         """

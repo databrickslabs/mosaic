@@ -31,7 +31,7 @@ object RST_Rotation extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns the rotation angle of the raster with respect to equator.
+          |_FUNC_(expr1) - Returns the rotation angle of the raster tile with respect to equator.
           |""".stripMargin
 
     override def example: String =

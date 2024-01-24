@@ -311,23 +311,23 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         /** Aggregators */
         registry.registerFunction(
           FunctionIdentifier("st_intersection_aggregate", database),
-          ST_IntersectionAggregate.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_IntersectionAggregate(exprs(0), exprs(1), geometryAPI.name, indexSystem, 0, 0)
+          ST_IntersectionAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_IntersectionAgg(exprs(0), exprs(1), geometryAPI.name, indexSystem, 0, 0)
         )
         registry.registerFunction(
           FunctionIdentifier("st_intersection_agg", database),
-          ST_IntersectionAggregate.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_IntersectionAggregate(exprs(0), exprs(1), geometryAPI.name, indexSystem, 0, 0)
+          ST_IntersectionAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_IntersectionAgg(exprs(0), exprs(1), geometryAPI.name, indexSystem, 0, 0)
         )
         registry.registerFunction(
           FunctionIdentifier("st_intersects_aggregate", database),
-          ST_IntersectsAggregate.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_IntersectsAggregate(exprs(0), exprs(1), geometryAPI.name)
+          ST_IntersectsAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_IntersectsAgg(exprs(0), exprs(1), geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("st_intersects_agg", database),
-          ST_IntersectsAggregate.registryExpressionInfo(database),
-          (exprs: Seq[Expression]) => ST_IntersectsAggregate(exprs(0), exprs(1), geometryAPI.name)
+          ST_IntersectsAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_IntersectsAgg(exprs(0), exprs(1), geometryAPI.name)
         )
         registry.registerFunction(
           FunctionIdentifier("st_union_agg", database),
@@ -502,6 +502,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
         /** Legacy API Specific aliases */
         aliasFunction(registry, "index_geometry", database, "grid_boundaryaswkb", database)
+        aliasFunction(registry, "st_intersection_aggregate", database, "st_intersection_agg", database)
+        aliasFunction(registry, "st_intersects_aggregate", database, "st_intersects_agg", database)
         aliasFunction(registry, "mosaic_explode", database, "grid_tessellateexplode", database)
         aliasFunction(registry, "mosaicfill", database, "grid_tessellate", database)
         aliasFunction(registry, "point_index_geom", database, "grid_pointascellid", database)
@@ -563,8 +565,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_convexhull(geom: Column): Column = ColumnAdapter(ST_ConvexHull(geom.expr, expressionConfig))
         def st_concavehull(geom: Column, concavity: Column, allowHoles: Column): Column =
             ColumnAdapter(ST_ConcaveHull(geom.expr, concavity.cast("double").expr, allowHoles.expr, expressionConfig))
-        def st_concavehull(geom: Column, concavity: Double, allowHoles: Boolean = false): Column =
+        def st_concavehull(geom: Column, concavity: Double, allowHoles: Boolean): Column =
             ColumnAdapter(ST_ConcaveHull(geom.expr, lit(concavity).cast("double").expr, lit(allowHoles).expr, expressionConfig))
+        def st_concavehull(geom: Column, concavity: Double): Column =
+            ColumnAdapter(ST_ConcaveHull(geom.expr, lit(concavity).cast("double").expr, lit(false).expr, expressionConfig))
         def st_difference(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Difference(geom1.expr, geom2.expr, expressionConfig))
         def st_distance(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Distance(geom1.expr, geom2.expr, expressionConfig))
         def st_dimension(geom: Column): Column = ColumnAdapter(ST_Dimension(geom.expr, expressionConfig))
@@ -750,18 +754,15 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_WorldToRasterCoordY(raster.expr, lit(x).expr, lit(y).expr, expressionConfig))
 
         /** Aggregators */
-        def st_intersects_aggregate(leftIndex: Column, rightIndex: Column): Column =
+        def st_intersects_agg(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(
-              ST_IntersectsAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name).toAggregateExpression(isDistinct = false)
+                ST_IntersectsAgg(leftIndex.expr, rightIndex.expr, geometryAPI.name).toAggregateExpression(isDistinct = false)
             )
-
-        def st_intersects_agg(leftIndex: Column, rightIndex: Column): Column = st_intersects_aggregate(leftIndex, rightIndex)
-        def st_intersection_aggregate(leftIndex: Column, rightIndex: Column): Column =
+        def st_intersection_agg(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(
-              ST_IntersectionAggregate(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem, 0, 0)
-                  .toAggregateExpression(isDistinct = false)
+                ST_IntersectionAgg(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem, 0, 0)
+                    .toAggregateExpression(isDistinct = false)
             )
-        def st_intersection_agg(leftIndex: Column, rightIndex: Column): Column = st_intersection_aggregate(leftIndex, rightIndex)
         def st_union_agg(geom: Column): Column =
             ColumnAdapter(ST_UnionAgg(geom.expr, geometryAPI.name).toAggregateExpression(isDistinct = false))
         def rst_merge_agg(raster: Column): Column =
@@ -919,6 +920,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
 
         // Legacy API
+        @deprecated("Please use 'st_intersects_agg' expression instead.")
+        def st_intersects_aggregate(leftIndex: Column, rightIndex: Column): Column = st_intersects_agg(leftIndex, rightIndex)
+        @deprecated("Please use 'st_intersection_agg' expression instead.")
+        def st_intersection_aggregate(leftIndex: Column, rightIndex: Column): Column = st_intersection_agg(leftIndex, rightIndex)
         @deprecated("Please use 'grid_boundaryaswkb' or 'grid_boundary(..., format_name)' expressions instead.")
         def index_geometry(indexID: Column): Column = grid_boundaryaswkb(indexID)
         @deprecated("Please use 'grid_tessellateexplode' expression instead.")

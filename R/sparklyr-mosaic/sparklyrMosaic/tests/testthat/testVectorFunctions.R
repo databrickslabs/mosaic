@@ -92,8 +92,8 @@ test_that("aggregate vector functions behave as intended", {
     inner_join(sdf.r, by = c("left_index" = "right_index"), keep = TRUE) %>%
     dplyr::group_by(left_id, right_id) %>%
     dplyr::summarise(
-      agg_intersects = st_intersects_aggregate(left_index, right_index),
-      agg_intersection = st_intersection_aggregate(left_index, right_index),
+      agg_intersects = st_intersects_agg(left_index, right_index),
+      agg_intersection = st_intersection_agg(left_index, right_index),
       left_geom = max(left_geom, 1),
       right_geom = max(right_geom, 1)
     ) %>%

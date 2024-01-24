@@ -27,7 +27,7 @@ object RST_TryOpen extends WithExpressionInfo {
 
     override def name: String = "rst_tryopen"
 
-    override def usage: String = "_FUNC_(expr1) - Returns true if the raster can be opened."
+    override def usage: String = "_FUNC_(expr1) - Returns true if the raster tile can be opened."
 
     override def example: String =
         """

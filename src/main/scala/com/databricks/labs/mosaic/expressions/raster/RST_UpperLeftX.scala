@@ -27,7 +27,7 @@ object RST_UpperLeftX extends WithExpressionInfo {
 
     override def name: String = "rst_upperleftx"
 
-    override def usage: String = "_FUNC_(expr1) - Returns upper left x coordinate."
+    override def usage: String = "_FUNC_(expr1) - Returns upper left x coordinate of the raster tile."
 
     override def example: String =
         """

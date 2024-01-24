@@ -35,13 +35,14 @@ object RST_Subdivide extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Returns a set of new rasters with same aspect ratio that are not larger than the threshold memory footprint.
+          |_FUNC_(expr1, expr2) - Returns a set of new raster tiles with same aspect ratio that are not larger than the
+          |                       threshold memory footprint in MBs.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(raster_tile, 256);
+          |      > SELECT _FUNC_(raster_tile, 32);
           |        {index_id, raster_tile, tile_width, tile_height}
           |        {index_id, raster_tile, tile_width, tile_height}
           |        ...

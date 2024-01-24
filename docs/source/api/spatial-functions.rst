@@ -236,7 +236,7 @@ st_bufferloop
 .. figure:: ../images/st_bufferloop/geom.png
    :figclass: doc-figure
 
-   Fig 1. ST_BufferLoop(geom, 0.02, 0.04)
+   Fig 1. ST_BufferLoop(wkt, 0.02, 0.04)
 
 st_centroid2D [Deprecated]
 **************************
@@ -343,6 +343,69 @@ st_centroid
     +---------------------------------------------+
     |POINT (25.454545454545453, 26.96969696969697)|
     +---------------------------------------------+
+
+
+st_concavehull
+*************
+
+.. function:: st_concavehull(col, concavity, <has_holes>)
+
+    Compute the concave hull of a geometry or multi-geometry object. It uses concavity and has_holes to determine
+    the concave hull. Param concavity is the fraction of the difference between the longest and shortest edge lengths in
+    the Delaunay Triangulation. If set to 1, this is the same as the convex hull. If set to 0, it produces
+    maximum concaveness. Param has_holes is a boolean that determines whether the concave hull can have holes. If set to
+    true, the concave hull can have holes. If set to false, the concave hull will not have holes.
+
+    :param col: The input geometry
+    :type col: Column
+    :param concavity: The concavity of the hull
+    :type concavity: Column (DoubleType)
+    :param has_holes:  Whether the hull has holes, default false
+    :type has_holes: Column (BooleanType)
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+    df.select(st_concavehull('wkt'), lit(0.1))).show(1, False)
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                     |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+   .. code-tab:: scala
+
+    val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
+    df.select(st_concavehull(col("wkt"), lit(0.1))).show(false)
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                     |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT st_convexhull("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))", 0.1)
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                     |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+   .. code-tab:: r R
+
+    df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    showDF(select(df, st_concavehull(column("wkt"), lit(0.1))))
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                     |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
 
 st_convexhull
 *************
@@ -804,13 +867,13 @@ st_haversine
 st_hasvalidcoordinates
 **********************
 
-.. function:: st_hasvalidcoordinates(geom, crs, which)
+.. function:: st_hasvalidcoordinates(col, crs, which)
 
     Checks if all points in `geom` are valid with respect to crs bounds.
     CRS bounds can be provided either as bounds or as reprojected_bounds.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param crs: CRS name (EPSG ID), e.g. "EPSG:2192"
     :type crs: Column
     :param which: Check against geographic `"bounds"` or geometric `"reprojected_bounds"` bounds.
@@ -1180,12 +1243,12 @@ st_perimeter
 st_rotate
 *********
 
-.. function:: st_rotate(geom, td)
+.. function:: st_rotate(col, td)
 
     Rotates `geom` using the rotational factor `td`.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param td: Rotation (in radians)
     :type td: Column (DoubleType)
     :rtype: Column
@@ -1239,12 +1302,12 @@ st_rotate
 st_scale
 ********
 
-.. function:: st_scale(geom, xd, yd)
+.. function:: st_scale(col, xd, yd)
 
     Scales `geom` using the scaling factors `xd` and `yd`.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param xd: Scale factor in the x-direction
     :type xd: Column (DoubleType)
     :param yd: Scale factor in the y-direction
@@ -1297,12 +1360,12 @@ st_scale
 st_setsrid
 **********
 
-.. function:: st_setsrid(geom, srid)
+.. function:: st_setsrid(col, srid)
 
     Sets the Coordinate Reference System well-known identifier (SRID) for `geom`.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param srid: The spatial reference identifier of `geom`, expressed as an integer, e.g. `4326` for EPSG:4326 / WGS84
     :type srid: Column (IntegerType)
     :rtype: Column
@@ -1357,12 +1420,12 @@ st_setsrid
 st_simplify
 ***********
 
-.. function:: st_simplify(geom, tol)
+.. function:: st_simplify(col, tol)
 
     Returns the simplified geometry.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param tol: Tolerance
     :type tol: Column
     :rtype: Column: Geometry
@@ -1415,12 +1478,12 @@ st_simplify
 st_srid
 *******
 
-.. function:: st_srid(geom)
+.. function:: st_srid(col)
 
     Looks up the Coordinate Reference System well-known identifier (SRID) for `geom`.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :rtype: Column
 
     :example:
@@ -1476,12 +1539,12 @@ st_srid
 st_transform
 ************
 
-.. function:: st_transform(geom, srid)
+.. function:: st_transform(col, srid)
 
     Transforms the horizontal (XY) coordinates of `geom` from the current reference system to that described by `srid`.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param srid: Target spatial reference system for `geom`, expressed as an integer, e.g. `3857` for EPSG:3857 / Pseudo-Mercator
     :type srid: Column (IntegerType)
     :rtype: Column
@@ -1515,7 +1578,7 @@ st_transform
 
    .. code-tab:: sql
 
-    select st_astext(st_transform(st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326), 3857))
+    select st_astext(st_transform(st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326) as geom, 3857))
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1542,12 +1605,12 @@ st_transform
 st_translate
 ************
 
-.. function:: st_translate(geom, xd, yd)
+.. function:: st_translate(col, xd, yd)
 
     Translates `geom` to a new location using the distance parameters `xd` and `yd`.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param xd: Offset in the x-direction
     :type xd: Column (DoubleType)
     :param yd: Offset in the y-direction

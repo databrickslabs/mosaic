@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate,
 import org.apache.spark.sql.catalyst.trees.BinaryLike
 import org.apache.spark.sql.types._
 
-case class ST_IntersectsAggregate(
+case class ST_IntersectsAgg(
     leftChip: Expression,
     rightChip: Expression,
     geometryAPIName: String,
@@ -23,7 +23,7 @@ case class ST_IntersectsAggregate(
     override val nullable: Boolean = false
     override val dataType: DataType = BooleanType
 
-    override def prettyName: String = "st_intersects_aggregate"
+    override def prettyName: String = "st_intersects_agg"
 
     override def update(accumulator: Boolean, inputRow: InternalRow): Boolean = {
         accumulator || {
@@ -59,18 +59,18 @@ case class ST_IntersectsAggregate(
         storageFormat.head.equals(1.asInstanceOf[Byte])
     }
 
-    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): ST_IntersectsAggregate =
+    override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): ST_IntersectsAgg =
         copy(leftChip = newLeft, rightChip = newRight)
 
 }
 
-object ST_IntersectsAggregate {
+object ST_IntersectsAgg {
 
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
           classOf[IndexGeometry].getCanonicalName,
           db.orNull,
-          "st_intersects_aggregate",
+          "st_intersects_agg",
           """
             |    _FUNC_(left_index, right_index)) - Resolves an intersects based on matched indices.
             """.stripMargin,

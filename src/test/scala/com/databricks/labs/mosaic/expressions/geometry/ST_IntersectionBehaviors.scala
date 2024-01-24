@@ -31,7 +31,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             .select(
               col("wkt"),
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), resolution).alias("left_index"),
+              grid_tessellateexplode(col("wkt"), resolution).alias("left_index"),
               col("wkt").alias("left_wkt")
             )
 
@@ -43,7 +43,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             .select(
               col("wkt"),
               col("id").alias("right_id"),
-              mosaic_explode(col("wkt"), resolution).alias("right_index"),
+              grid_tessellateexplode(col("wkt"), resolution).alias("right_index"),
               col("wkt").alias("right_wkt")
             )
 
@@ -58,7 +58,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
               "right_id"
             )
             .agg(
-              st_intersection_aggregate(col("left_index"), col("right_index")).alias("agg_intersection"),
+              st_intersection_agg(col("left_index"), col("right_index")).alias("agg_intersection"),
               first("left_wkt").alias("left_wkt"),
               first("right_wkt").alias("right_wkt")
             )
@@ -123,7 +123,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
               col("left_index.index_id") === col("right_index.index_id")
             )
             .groupBy("left_row_id")
-            .agg(st_intersection_aggregate(col("left_index"), col("right_index")).alias("geom"))
+            .agg(st_intersection_agg(col("left_index"), col("right_index")).alias("geom"))
             .withColumn("area", st_area(col("geom")))
 
         (results.select("area").as[Double].collect().head -
@@ -136,7 +136,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
           """
             |SELECT
             |  left_row_id,
-            |  ST_Area(ST_Intersection_Aggregate(left_index, right_index)) AS area
+            |  ST_Area(ST_Intersection_Agg(left_index, right_index)) AS area
             |FROM left
             |JOIN right
             |ON left_index.index_id = right_index.index_id
@@ -177,7 +177,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             .select(
               col("wkt"),
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), resolution).alias("left_index"),
+              grid_tessellateexplode(col("wkt"), resolution).alias("left_index"),
               col("wkt").alias("left_wkt")
             )
 
@@ -199,7 +199,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
               "right_id"
             )
             .agg(
-              st_intersection_aggregate(col("left_index"), col("right_index")).alias("agg_intersection"),
+              st_intersection_agg(col("left_index"), col("right_index")).alias("agg_intersection"),
               first("left_wkt").alias("left_wkt"),
               first("right_wkt").alias("right_wkt")
             )
@@ -263,7 +263,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             case H3IndexSystem  => InternalRow.fromSeq(Seq(true, 622236750694711295L, Array.empty[Byte]))
         }
 
-        val stIntersectionAgg = ST_IntersectionAggregate(null, null, geometryAPI.name, indexSystem, 0, 0)
+        val stIntersectionAgg = ST_IntersectionAgg(null, null, geometryAPI.name, indexSystem, 0, 0)
         noException should be thrownBy stIntersectionAgg.getCellGeom(stringIDRow, ChipType(StringType))
         noException should be thrownBy stIntersectionAgg.getCellGeom(longIDRow, ChipType(LongType))
         an[Error] should be thrownBy stIntersectionAgg.getCellGeom(
