@@ -47,7 +47,7 @@ The reader supports the following options:
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
     * asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
     * layerName - name of the layer to read (StringType)
-    * layerNumber - number of the layer to read (IntegerType)
+    * layerNumber - number of the layer to read (IntegerType), zero-indexed
 
 
 .. function:: read.format("ogr").load(path)
@@ -105,14 +105,15 @@ Each feature will be provided as 2 columns:
 
 The fields of the feature will be provided as columns in the DataFrame.
 The types of the fields are coerced to most concrete type that can hold all the values.
-The reader supports the following options:
+ALL options should be passed as String as they are provided as a Map<String,String>
+and parsed into expected types on execution. The reader supports the following options:
 
     * driverName - GDAL driver name (StringType)
-    * vsizip - if the vector files are zipped files, set this to true (BooleanType)
-    * asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
-    * chunkSize - size of the chunk to read from the file per single task (IntegerType) - default is 5000
+    * vsizip - if the vector files are zipped files, set this to true (BooleanType) [pass as String]
+    * asWKB - if the geometry should be returned as WKB (BooleanType) - default is false [pass as String]
+    * chunkSize - size of the chunk to read from the file per single task (IntegerType) - default is 5000 [pass as String]
     * layerName - name of the layer to read (StringType)
-    * layerNumber - number of the layer to read (IntegerType)
+    * layerNumber - number of the layer to read (IntegerType), zero-indexed [pass as String]
 
 
 .. function:: read.format("multi_read_ogr").load(path)
@@ -157,7 +158,7 @@ The reader supports the following options:
     +--------------------+-------+-----+-----------------+-----------+
 
 
-spark.read().format("geo_db")
+spark.read.format("geo_db")
 *****************************
 Mosaic provides a reader for GeoDB files natively in Spark.
 The output of the reader is a DataFrame with inferred schema.
@@ -166,7 +167,7 @@ The reader supports the following options:
 
     * asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
     * layerName - name of the layer to read (StringType)
-    * layerNumber - number of the layer to read (IntegerType)
+    * layerNumber - number of the layer to read (IntegerType), zero-indexed
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
 
 .. function:: read.format("geo_db").load(path)
@@ -210,7 +211,7 @@ The reader supports the following options:
     +--------------------+-------+-----+-----------------+-----------+
 
 
-spark.read().format("shapefile")
+spark.read.format("shapefile")
 ********************************
 Mosaic provides a reader for Shapefiles natively in Spark.
 The output of the reader is a DataFrame with inferred schema.
@@ -219,7 +220,7 @@ The reader supports the following options:
 
     * asWKB - if the geometry should be returned as WKB (BooleanType) - default is false
     * layerName - name of the layer to read (StringType)
-    * layerNumber - number of the layer to read (IntegerType)
+    * layerNumber - number of the layer to read (IntegerType), zero-indexed
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
 
 .. function:: read.format("shapefile").load(path)
