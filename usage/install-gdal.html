@@ -94,8 +94,8 @@
 <h1>GDAL Installation guide<a class="headerlink" href="#gdal-installation-guide" title="Permalink to this heading"></a></h1>
 <section id="supported-platforms">
 <h2>Supported platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this heading"></a></h2>
-<p>In order to use Mosaic, you must have access to a Databricks cluster running
-Databricks Runtime 11.3 or higher.
+<p>In order to use Mosaic 0.4 series, you must have access to a Databricks cluster running
+Databricks Runtime 13.3 LTS.
 If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
 <a class="reference external" href="https://docs.databricks.com/clusters/create.html#use-the-cluster-ui">here</a>.</p>
@@ -104,33 +104,81 @@ Mosaic library to your cluster. A workspace administrator will be able to grant
 these permissions and more information about cluster permissions can be found
 in our documentation
 <a class="reference external" href="https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions">here</a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>These instructions assume an Assigned cluster is being used (vs a Shared Access cluster),
+more on access modes <a class="reference external" href="https://docs.databricks.com/en/compute/configure.html#access-modes">here</a>.</p>
+</div>
 </section>
 <section id="gdal-installation">
 <h2>GDAL Installation<a class="headerlink" href="#gdal-installation" title="Permalink to this heading"></a></h2>
 <section id="setup-gdal-files-and-scripts">
 <h3>Setup GDAL files and scripts<a class="headerlink" href="#setup-gdal-files-and-scripts" title="Permalink to this heading"></a></h3>
 <p>Mosaic requires GDAL to be installed on the cluster. The easiest way to do this is to use the
-the mos.setup_gdal() function. This function will extract the GDAL files and scripts from the
-mosaic library and place them in the /dbfs/FileStore/geospatial/mosaic/gdal/ directory.
-This call is no longer needed in versions &gt;= 0.3.12. The shared objects are now included in the
-databricks-mosaic-gdal pip installable bundle.</p>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
+the mos.setup_gdal() function.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="loweralpha simple">
+<li><p>This is close in behavior to Mosaic &lt; 0.4 series (prior to DBR 13), with new options
+to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1).</p></li>
+<li><dl class="simple">
+<dt><cite>to_fuse_dir</cite> can be one of <cite>/Volumes/..</cite>, <cite>/Workspace/..</cite>, <cite>/dbfs/..</cite>;</dt><dd><p>however, you should consider <cite>setup_fuse_install()</cite> for Volume based installs as that
+exposes more options, to include copying JAR and JNI Shared Objects.</p>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="setup_gdal">
+<span class="sig-name descname"><span class="pre">setup_gdal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#setup_gdal" title="Permalink to this definition"></a></dt>
+<dd><p>Generate an init script that will install GDAL native libraries on each worker node.
+All of the listed parameters are optional. You can have even more control with setup_fuse_install function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>to_fuse_dir</strong> (<em>str</em>) – Path to write out the init script for GDAL installation;
+default is ‘/Workspace/Shared/geospatial/mosaic/gdal/jammy’.</p></li>
+<li><p><strong>with_mosaic_pip</strong> (<em>bool</em>) – Whether to configure a script that pip installs databricks-mosaic,
+fixed to the current version; default is False.</p></li>
+<li><p><strong>with_ubuntugis</strong> (<em>bool</em>) – Whether to use ubuntugis ppa for GDAL instead of built-in;
+default is False.</p></li>
+<li><p><strong>script_out_name</strong> (<em>str</em>) – name of the script to be written;
+default is ‘mosaic-gdal-init.sh’.</p></li>
+<li><p><strong>override_mosaic_version</strong> (<em>str</em>) – String value to use to override the mosaic version to install,
+e.g. ‘==0.4.0’ or ‘&lt;0.5,&gt;=0.4’; default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
 
-<span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
-<span class="n">mos</span><span class="o">.</span><span class="n">setup_gdal</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
-<span class="n">GDAL</span> <span class="n">setup</span> <span class="n">complete</span><span class="o">.</span>
-<span class="n">Shared</span> <span class="n">objects</span> <span class="p">(</span><span class="o">*.</span><span class="n">so</span><span class="p">)</span> <span class="n">stored</span> <span class="ow">in</span><span class="p">:</span> <span class="o">/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">FileStore</span><span class="o">/</span><span class="n">geospatial</span><span class="o">/</span><span class="n">mosaic</span><span class="o">/</span><span class="n">gdal</span><span class="o">/.</span>
-<span class="n">Init</span> <span class="n">script</span> <span class="n">stored</span> <span class="ow">in</span><span class="p">:</span> <span class="o">/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">FileStore</span><span class="o">/</span><span class="n">geospatial</span><span class="o">/</span><span class="n">mosaic</span><span class="o">/</span><span class="n">gdal</span><span class="o">/.</span>
-<span class="n">Please</span> <span class="n">restart</span> <span class="n">the</span> <span class="n">cluster</span> <span class="k">with</span> <span class="n">the</span> <span class="n">generated</span> <span class="n">init</span> <span class="n">script</span> <span class="n">to</span> <span class="n">complete</span> <span class="n">the</span> <span class="n">setup</span><span class="o">.</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span>import mosaic as mos
+
+mos.enable_mosaic(spark, dbutils)
+mos.setup_gdal()
+
++-----------------------------------------------------------------------------------------------------------+
+| ::: Install setup complete :::                                                                            |
++-----------------------------------------------------------------------------------------------------------+
+| - Settings: &#39;with_mosaic_pip&#39;? False, &#39;with_gdal&#39;? True, &#39;with_ubuntugis&#39;? False                          |
+|             &#39;jar_copy&#39;? False, &#39;jni_so_copy&#39;? False, &#39;override_mosaic_version&#39;? None                      |
+| - Derived:  &#39;mosaic_version&#39;? 0.4.0, &#39;github_version&#39;? 0.4.0, &#39;release_version&#39;? None, &#39;pip_str&#39;? ==0.4.0 |
+| - Fuse Dir: &#39;/Workspace/Shared/geospatial/mosaic/gdal/jammy&#39;                                              |
+| - Init Script: configured and stored at &#39;mosaic-gdal-init.sh&#39;; add to your cluster and restart,           |
+|               more at https://docs.databricks.com/en/init-scripts/cluster-scoped.html                     |
++-----------------------------------------------------------------------------------------------------------+
 </pre></div>
 </div>
 </section>
 <section id="configure-the-init-script">
 <h3>Configure the init script<a class="headerlink" href="#configure-the-init-script" title="Permalink to this heading"></a></h3>
 <p>After the mos.setup_gdal() function has been run, you will need to configure the cluster to use the
-init script. For versions &gt;= 0.3.12, we are required to use the following init script:
-<a class="reference external" href="https://github.com/databrickslabs/mosaic/blob/main/modules/python/gdal_package/databricks-mosaic-gdal/resources/scripts/mosaic-gdal-3.4.3-filetree-init.sh">here</a>.
-The init script can be set by clicking on the “Edit” button on the cluster page and adding
+init script. The init script can be set by clicking on the “Edit” button on the cluster page and adding
 the following to the “Advanced Options” section:</p>
 <figure class="doc-figure align-default" id="id1">
 <img alt="../_images/init_script.png" src="../_images/init_script.png" />

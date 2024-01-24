@@ -190,14 +190,14 @@ Please apply reasonable filters to the DataFrame before collecting the results.<
 </div>
 <p>Finally we will apply the function to the DataFrame.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">compute_band_mean</span><span class="p">(</span><span class="s2">&quot;tile.raster&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="o">+---------------------------+</span>
-<span class="o">|</span> <span class="n">compute_band_mean</span><span class="p">(</span><span class="n">raster</span><span class="p">)</span> <span class="o">|</span>
-<span class="o">+---------------------------+</span>
-<span class="o">|</span>         <span class="mf">0.0111000000000000</span><span class="o">|</span>
-<span class="o">|</span>         <span class="mf">0.0021000000000000</span><span class="o">|</span>
-<span class="o">|</span>         <span class="mf">0.3001000000000000</span><span class="o">|</span>
-<span class="o">|</span> <span class="o">...</span>                       <span class="o">|</span>
-<span class="o">+---------------------------+</span>
+<span class="o">+----------------------------+</span>
+<span class="o">|</span> <span class="n">compute_band_mean</span><span class="p">(</span><span class="n">raster</span><span class="p">)</span>  <span class="o">|</span>
+<span class="o">+----------------------------+</span>
+<span class="o">|</span>         <span class="mf">0.0111000000000000</span> <span class="o">|</span>
+<span class="o">|</span>         <span class="mf">0.0021000000000000</span> <span class="o">|</span>
+<span class="o">|</span>         <span class="mf">0.3001000000000000</span> <span class="o">|</span>
+<span class="o">|</span> <span class="o">...</span>                        <span class="o">|</span>
+<span class="o">+----------------------------+</span>
 </pre></div>
 </div>
 </section>
@@ -291,41 +291,119 @@ The format of the output file should match the driver format of the binary objec
 <span class="o">+-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+</span>
 </pre></div>
 </div>
-<p>Next we will define a function that will write a given raster file to disk.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">rasterio</span>
-<span class="kn">from</span> <span class="nn">rasterio.io</span> <span class="kn">import</span> <span class="n">MemoryFile</span>
-<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
-<span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="n">udf</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<p>Next we will define a function that will write a given raster file to disk. A “gotcha” to keep in mind is that you do
+not want to have a file context manager open when you go to write out its context as the context manager will not yet
+have been flushed. Another “gotcha” might be that the raster dataset does not have CRS included; if this arises, we
+recommend adjusting the function to specify the CRS and set it on the dst variable, more at
+<a class="reference external" href="https://rasterio.readthedocs.io/en/stable/api/rasterio.crs.html">rasterio.crs</a>. We would also point out that notional
+“file_id” param can be constructed as a repeatable name from other field(s) in your dataframe / table or be random,
+depending on your needs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@udf</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">write_raster</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">driver</span><span class="p">,</span> <span class="n">file_id</span><span class="p">,</span> <span class="n">fuse_dir</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="n">udf</span>
+    <span class="kn">from</span> <span class="nn">rasterio.io</span> <span class="kn">import</span> <span class="n">MemoryFile</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">rasterio</span>
+    <span class="kn">import</span> <span class="nn">shutil</span>
+    <span class="kn">import</span> <span class="nn">tempfile</span>
 
-<span class="nd">@udf</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">write_raster</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">file_id</span><span class="p">,</span> <span class="n">parent_dir</span><span class="p">):</span>
-  <span class="k">with</span> <span class="n">MemoryFile</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">raster</span><span class="p">))</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
-    <span class="k">with</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
-      <span class="n">Path</span><span class="p">(</span><span class="n">outputpath</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-      <span class="n">extensions_map</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">drivers</span><span class="o">.</span><span class="n">raster_driver_extensions</span><span class="p">()</span>
-      <span class="n">driver_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">extensions_map</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-      <span class="n">extension</span> <span class="o">=</span> <span class="n">driver_map</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">driver</span><span class="p">]</span>
-      <span class="n">path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parent_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">extension</span><span class="si">}</span><span class="s2">&quot;</span>
-      <span class="c1"># If you want to write the raster to a different format</span>
-      <span class="c1"># you can update the profile here. Note that the extension</span>
-      <span class="c1"># should match the driver format</span>
-      <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">dataset</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
-        <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
-      <span class="k">return</span> <span class="n">path</span>
+    <span class="c1"># - [1] populate the initial profile</span>
+    <span class="c1"># # profile is needed in order to georeference the image</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp_dir</span><span class="p">:</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">data_arr</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">with</span> <span class="n">MemoryFile</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">raster</span><span class="p">))</span> <span class="k">as</span> <span class="n">memfile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">memfile</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">dataset</span><span class="p">:</span>
+                <span class="n">profile</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">profile</span>
+                <span class="n">data_arr</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="c1"># here you can update profile using .update method</span>
+        <span class="c1"># example https://rasterio.readthedocs.io/en/latest/topics/writing.html</span>
+        <span class="c1"># - [2] get the correct extension</span>
+        <span class="n">extensions_map</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">drivers</span><span class="o">.</span><span class="n">raster_driver_extensions</span><span class="p">()</span>
+        <span class="n">driver_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">extensions_map</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">extension</span> <span class="o">=</span> <span class="n">driver_map</span><span class="p">[</span><span class="n">driver</span><span class="p">]</span> <span class="c1">#e.g. GTiff</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">extension</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="c1"># - [3] write local raster</span>
+        <span class="c1"># - this is showing a single band [1]</span>
+        <span class="c1">#   being written</span>
+        <span class="n">tmp_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tmp_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+          <span class="n">tmp_path</span><span class="p">,</span>
+          <span class="s2">&quot;w&quot;</span><span class="p">,</span>
+          <span class="o">**</span><span class="n">profile</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+            <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data_arr</span><span class="p">)</span> <span class="c1"># &lt;- adjust as needed</span>
+        <span class="c1"># - [4] copy to fuse path</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">fuse_dir</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">fuse_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fuse_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fuse_path</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">fuse_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fuse_path</span>
 </pre></div>
 </div>
 <p>Finally we will apply the function to the DataFrame.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">write_raster</span><span class="p">(</span><span class="s2">&quot;tile.raster&quot;</span><span class="p">,</span> <span class="s2">&quot;uuid&quot;</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="s2">&quot;dbfs:/path/to/output/dir&quot;</span><span class="p">)))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="o">+-------------------------------------+</span>
-<span class="o">|</span> <span class="n">write_raster</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span><span class="o">|</span>
-<span class="o">+-------------------------------------+</span>
-<span class="o">|</span> <span class="n">dbfs</span><span class="p">:</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">output</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span><span class="mf">1234.</span><span class="n">tif</span>   <span class="o">|</span>
-<span class="o">|</span> <span class="n">dbfs</span><span class="p">:</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">output</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span><span class="mf">4545.</span><span class="n">tif</span>   <span class="o">|</span>
-<span class="o">|</span> <span class="n">dbfs</span><span class="p">:</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">output</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span><span class="mf">3215.</span><span class="n">tif</span>   <span class="o">|</span>
-<span class="o">|</span> <span class="o">...</span>                                 <span class="o">|</span>
-<span class="o">+-------------------------------------+</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+  <span class="n">write_raster</span><span class="p">(</span>
+    <span class="s2">&quot;tile.raster&quot;</span><span class="p">,</span>
+    <span class="n">lit</span><span class="p">(</span><span class="s2">&quot;GTiff&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;driver&quot;</span><span class="p">),</span>
+    <span class="s2">&quot;uuid&quot;</span><span class="p">,</span>
+    <span class="n">lit</span><span class="p">(</span><span class="s2">&quot;/dbfs/path/to/output/dir&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;fuse_dir&quot;</span><span class="p">)</span>
+  <span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+<span class="o">+----------------------------------------------+</span>
+<span class="o">|</span> <span class="n">write_raster</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">driver</span><span class="p">,</span> <span class="n">uuid</span><span class="p">,</span> <span class="n">fuse_dir</span><span class="p">)</span> <span class="o">|</span>
+<span class="o">+----------------------------------------------+</span>
+<span class="o">|</span> <span class="o">/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">output</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span><span class="mf">1234.</span><span class="n">tif</span>            <span class="o">|</span>
+<span class="o">|</span> <span class="o">/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">output</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span><span class="mf">4545.</span><span class="n">tif</span>            <span class="o">|</span>
+<span class="o">|</span> <span class="o">/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">output</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span><span class="mf">3215.</span><span class="n">tif</span>            <span class="o">|</span>
+<span class="o">|</span> <span class="o">...</span>                                          <span class="o">|</span>
+<span class="o">+----------------------------------------------+</span>
+</pre></div>
+</div>
+<p>Sometimes you don’t need to be quite as fancy. Consider when you simply want to specify to write out raster contents,
+assuming you specify the extension in the file_name. This is just writing binary column to file, nothing further. Again,
+we use a notional “uuid” column as part of “file_name” param, which would have the same considerations as mentioned
+above.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@udf</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">write_binary</span><span class="p">(</span><span class="n">raster_bin</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">fuse_dir</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">shutil</span>
+    <span class="kn">import</span> <span class="nn">tempfile</span>
+
+    <span class="n">Path</span><span class="p">(</span><span class="n">fuse_dir</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">fuse_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fuse_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fuse_path</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp_dir</span><span class="p">:</span>
+            <span class="n">tmp_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tmp_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="c1"># - write within the tmp_dir context</span>
+            <span class="c1"># - flush the writer before copy</span>
+            <span class="n">tmp_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span>
+            <span class="n">tmp_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">raster_bin</span><span class="p">)</span>  <span class="c1"># &lt;- write entire binary content</span>
+            <span class="n">tmp_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="c1"># - copy local to fuse</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">fuse_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fuse_path</span>
+</pre></div>
+</div>
+<p>Finally we will apply the function to the DataFrame.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+  <span class="n">write_binary</span><span class="p">(</span>
+    <span class="s2">&quot;tile.raster&quot;</span><span class="p">,</span>
+    <span class="n">F</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="s2">&quot;.tif&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;file_name&quot;</span><span class="p">),</span>
+    <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="s2">&quot;/dbfs/path/to/output/dir&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;fuse_dir&quot;</span><span class="p">)</span>
+  <span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+<span class="o">+-------------------------------------------+</span>
+<span class="o">|</span> <span class="n">write_binary</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">fuse_dir</span><span class="p">)</span> <span class="o">|</span>
+<span class="o">+-------------------------------------------+</span>
+<span class="o">|</span> <span class="o">/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">output</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span><span class="mf">1234.</span><span class="n">tif</span>         <span class="o">|</span>
+<span class="o">|</span> <span class="o">/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">output</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span><span class="mf">4545.</span><span class="n">tif</span>         <span class="o">|</span>
+<span class="o">|</span> <span class="o">/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">output</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span><span class="mf">3215.</span><span class="n">tif</span>         <span class="o">|</span>
+<span class="o">|</span> <span class="o">...</span>                                       <span class="o">|</span>
+<span class="o">+-------------------------------------------+</span>
 </pre></div>
 </div>
 </section>

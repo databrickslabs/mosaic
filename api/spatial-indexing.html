@@ -460,7 +460,7 @@ with the input point geometry <cite>geometry</cite>.</p>
 <h2>grid_tessellate<a class="headerlink" href="#grid-tessellate" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_tessellate">
-<span class="sig-name descname"><span class="pre">grid_tessellate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_tessellate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">grid_tessellate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;keep_core_geometries&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_tessellate" title="Permalink to this definition"></a></dt>
 <dd><p>Cuts the original <cite>geometry</cite> into several pieces along the grid index borders at the specified <cite>resolution</cite>.</p>
 <p>Returns an array of Mosaic chips <strong>covering</strong> the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
 <p>A Mosaic chip is a struct type composed of:</p>
@@ -476,8 +476,8 @@ falls outside of the original geometry. This makes it suitable to index lines as
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
-<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
-<li><p><strong>keep_core_geometries</strong> (<em>Column: Boolean</em>) – Whether to keep the core geometries or set them to null</p></li>
+<li><p><strong>resolution</strong> (<em>Column</em><em> (</em><em>IntegerType</em><em>)</em>) – Index resolution</p></li>
+<li><p><strong>keep_core_geometries</strong> (<em>Column</em><em> (</em><em>BooleanType</em><em>)</em>) – Whether to keep the core geometries or set them to null, default true</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -569,7 +569,7 @@ falls outside of the original geometry. This makes it suitable to index lines as
 <h2>grid_tessellateexplode<a class="headerlink" href="#grid-tessellateexplode" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="grid_tessellateexplode">
-<span class="sig-name descname"><span class="pre">grid_tessellateexplode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_core_geometries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_tessellateexplode" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">grid_tessellateexplode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">&lt;keep_core_geometries&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#grid_tessellateexplode" title="Permalink to this definition"></a></dt>
 <dd><p>Cuts the original <cite>geometry</cite> into several pieces along the grid index borders at the specified <cite>resolution</cite>.</p>
 <p>Returns the set of Mosaic chips <strong>covering</strong> the input <cite>geometry</cite> at <cite>resolution</cite>.</p>
 <p>A Mosaic chip is a struct type composed of:</p>
@@ -585,8 +585,8 @@ falls outside of the original geometry. This makes it suitable to index lines as
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>geometry</strong> (<em>Column</em>) – Geometry</p></li>
-<li><p><strong>resolution</strong> (<em>Column: Integer</em>) – Index resolution</p></li>
-<li><p><strong>keep_core_geometries</strong> (<em>Column: Boolean</em>) – Whether to keep the core geometries or set them to null</p></li>
+<li><p><strong>resolution</strong> (<em>Column</em><em> (</em><em>IntegerType</em><em>)</em>) – Index resolution</p></li>
+<li><p><strong>keep_core_geometries</strong> (<em>Column</em><em> (</em><em>BooleanType</em><em>)</em>) – Whether to keep the core geometries or set them to null, default true</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
