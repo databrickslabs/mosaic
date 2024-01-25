@@ -29,9 +29,9 @@ Mosaic requires GDAL to be installed on the cluster. The easiest way to do this 
 the :code:`setup_gdal` function.
 
 .. note::
-   (a) This is close in behavior to Mosaic < 0.4 series (prior to DBR 13), with new options
+   - This is close in behavior to Mosaic < 0.4 series (prior to DBR 13), with new options
        to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1).
-   (b) 'to_fuse_dir' can be one of '/Volumes/..', '/Workspace/..', '/dbfs/..';
+   - Param "to_fuse_dir" can be one of "/Volumes/..", "/Workspace/..", "/dbfs/..";
         however, you should consider :code:`setup_fuse_install()` for Volume based installs as that
         exposes more options, to include copying JAR and JNI Shared Objects.
 

@@ -32,7 +32,8 @@ Installation
 
 To install Mosaic on your Databricks cluster, take the following steps:
 
-#. Upload Mosaic jar to a dedicated fuse mount location. E.g. dbfs:/FileStore/mosaic/jars/.
+#. Upload Mosaic jar to a dedicated fuse mount location. E.g. "dbfs:/FileStore/mosaic/jars/".
+
 #. Create an init script that fetches the mosaic jar and copies it to databricks/jars.
     You can also use the output from (0.4 series) python function :code:`setup_fuse_install`, e.g.
     :code:`setup_fuse_intall(<to_fuse_dir>, jar_copy=True)` which can help to copy the JAR used in
@@ -56,8 +57,9 @@ To install Mosaic on your Databricks cluster, take the following steps:
 
         EOF
 
-#. Configure the init script for the cluster following the instructions `here <https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script>`__.
-#. Add the following spark configuration values for your cluster following the instructions `here <https://docs.databricks.com/clusters/configure.html#spark-configuration>`__.
+#. Configure the init script for the cluster following the instructions `here <https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script>`_.
+
+#. Add the following spark configuration values for your cluster following the instructions `here <https://docs.databricks.com/clusters/configure.html#spark-configuration>`_.
 
     .. code-block:: bash
 
