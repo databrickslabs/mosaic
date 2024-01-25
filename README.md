@@ -59,7 +59,7 @@ As of Mosaic 0.4.0 (subject to change in follow-on releases)...
 
 * [Assigned Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Python, SQL, R, and Scala APIs.
 * [Shared Access Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Scala API (JVM) with Admin [allowlisting](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html); _Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters._ 
-  * _Mosaic SQL expressions cannot yet be registered with [Unity Catalog](https://www.databricks.com/product/unity-catalog) due to API changes affecting DBRs >= 13, more [here](https://docs.databricks.com/en/udf/index.html)._
+  * Mosaic SQL expressions cannot yet be registered with [Unity Catalog](https://www.databricks.com/product/unity-catalog) due to API changes affecting DBRs >= 13, more [here](https://docs.databricks.com/en/udf/index.html).
 
 __Additional Notes:__ 
 
