@@ -61,16 +61,14 @@ Version 0.4.x Series
 
 We recommend using Databricks Runtime versions 13.3 LTS with Photon enabled.
 
-.. warning::
-   Mosaic 0.4.x series only supports DBR 13.x DBRs.
-   If running on a different DBR it will throw an exception:
 
-   **DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.**
+Mosaic 0.4.x series only supports DBR 13.x DBRs. If running on a different DBR it will throw an exception:
 
-.. warning::
-    Mosaic 0.4.x series issues the following ERROR on a standard, non-Photon cluster `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ | `AWS <https://docs.databricks.com/runtime/index.html/>`_ | `GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_ :
+**DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.**
 
-   **DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.**
+Mosaic 0.4.x series issues the following ERROR on a standard, non-Photon cluster `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ | `AWS <https://docs.databricks.com/runtime/index.html/>`_ | `GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_ :
+
+**DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.**
 
 As of Mosaic 0.4.0 (subject to change in follow-on releases)
    * No Mosaic SQL expressions cannot yet be registered with `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ due to API changes affecting DBRs >= 13.
@@ -96,6 +94,7 @@ For Mosaic versions < 0.4.0 please use the `0.3.x docs <https://databrickslabs.g
 As of the 0.3.11 release, Mosaic issues the following WARNING when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ | `AWS <https://docs.databricks.com/runtime/index.html/>`_ | `GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_ :
 
 **DEPRECATION WARNING: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic will stop working on this cluster after v0.3.x.**
+
 If you are receiving this warning in v0.3.11+, you will want to begin to plan for a supported runtime. The reason we are making this change is that we are streamlining Mosaic internals to be more aligned with future product APIs which are powered by Photon. Along this direction of change, Mosaic has standardized to JTS as its default and supported Vector Geometry Provider.
 
 
