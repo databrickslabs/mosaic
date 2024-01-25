@@ -56,6 +56,9 @@ Mosaic provides:
 .. note::
    For Mosaic versions < 0.4 please use the `0.3 docs <https://databrickslabs.github.io/mosaic/v0.3.x/index.html>`_.
 
+.. warning::
+   At times, it is useful to "hard refresh" pages to ensure your cached local version matches the latest live,
+   more `here <https://www.howtogeek.com/672607/how-to-hard-refresh-your-web-browser-to-bypass-your-cache/>`_.
 
 Version 0.4.x Series
 ====================
