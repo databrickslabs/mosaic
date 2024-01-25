@@ -122,7 +122,7 @@ the mos.setup_gdal() function.</p>
 <li><p>This is close in behavior to Mosaic &lt; 0.4 series (prior to DBR 13), with new options
 to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1).</p></li>
 <li><dl class="simple">
-<dt><cite>to_fuse_dir</cite> can be one of <cite>/Volumes/..</cite>, <cite>/Workspace/..</cite>, <cite>/dbfs/..</cite>;</dt><dd><p>however, you should consider <cite>setup_fuse_install()</cite> for Volume based installs as that
+<dt>‘to_fuse_dir’ can be one of ‘/Volumes/..’, ‘/Workspace/..’, ‘/dbfs/..’;</dt><dd><p>however, you should consider setup_fuse_install()` for Volume based installs as that
 exposes more options, to include copying JAR and JNI Shared Objects.</p>
 </dd>
 </dl>
@@ -195,8 +195,10 @@ code at the top of the notebook:</p>
 
 <span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
 <span class="n">mos</span><span class="o">.</span><span class="n">enable_gdal</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
-<span class="n">GDAL</span> <span class="n">enabled</span><span class="o">.</span>
-<span class="n">GDAL</span> <span class="mf">3.4.3</span><span class="p">,</span> <span class="n">released</span> <span class="mi">2022</span><span class="o">/</span><span class="mi">04</span><span class="o">/</span><span class="mi">22</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GDAL enabled.
+GDAL 3.4.1, released 2021/12/27
 </pre></div>
 </div>
 </section>

@@ -1066,7 +1066,8 @@ CRS bounds can be provided either as bounds or as reprojected_bounds.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_intersection">
 <span class="sig-name descname"><span class="pre">st_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geom2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_intersection" title="Permalink to this definition"></a></dt>
-<dd><p>Returns a geometry representing the intersection of <cite>left_geom</cite> and <cite>right_geom</cite>.</p>
+<dd><p>Returns a geometry representing the intersection of <cite>left_geom</cite> and <cite>right_geom</cite>.
+Also, see <a class="reference internal" href="spatial-aggregations.html"><span class="doc">st_intersection_agg</span></a> function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1846,7 +1847,8 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 <dl class="py function">
 <dt class="sig sig-object py" id="st_union">
 <span class="sig-name descname"><span class="pre">st_union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_geom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_union" title="Permalink to this definition"></a></dt>
-<dd><p>Returns the point set union of the input geometries.</p>
+<dd><p>Returns the point set union of the input geometries.
+Also, see <a class="reference internal" href="spatial-aggregations.html"><span class="doc">st_union_agg</span></a> function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

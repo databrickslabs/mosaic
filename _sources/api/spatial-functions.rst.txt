@@ -929,6 +929,7 @@ st_intersection
 .. function:: st_intersection(geom1, geom2)
 
     Returns a geometry representing the intersection of `left_geom` and `right_geom`.
+    Also, see :doc:`st_intersection_agg </api/spatial-aggregations>` function.
 
     :param geom1: Geometry
     :type geom1: Column
@@ -1665,6 +1666,7 @@ st_union
 .. function:: st_union(left_geom, right_geom)
 
     Returns the point set union of the input geometries.
+    Also, see :doc:`st_union_agg </api/spatial-aggregations>` function.
 
     :param left_geom: Geometry
     :type left_geom: Column

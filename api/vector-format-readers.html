@@ -137,7 +137,7 @@ The reader supports the following options:</p>
 <li><p>vsizip - if the vector files are zipped files, set this to true (BooleanType)</p></li>
 <li><p>asWKB - if the geometry should be returned as WKB (BooleanType) - default is false</p></li>
 <li><p>layerName - name of the layer to read (StringType)</p></li>
-<li><p>layerNumber - number of the layer to read (IntegerType)</p></li>
+<li><p>layerNumber - number of the layer to read (IntegerType), zero-indexed</p></li>
 </ul>
 </div></blockquote>
 <dl class="py function">
@@ -200,15 +200,16 @@ Each feature will be provided as 2 columns:
 * srid - spatial reference system identifier of the feature (StringType)</p>
 <p>The fields of the feature will be provided as columns in the DataFrame.
 The types of the fields are coerced to most concrete type that can hold all the values.
-The reader supports the following options:</p>
+ALL options should be passed as String as they are provided as a Map&lt;String,String&gt;
+and parsed into expected types on execution. The reader supports the following options:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>driverName - GDAL driver name (StringType)</p></li>
-<li><p>vsizip - if the vector files are zipped files, set this to true (BooleanType)</p></li>
-<li><p>asWKB - if the geometry should be returned as WKB (BooleanType) - default is false</p></li>
-<li><p>chunkSize - size of the chunk to read from the file per single task (IntegerType) - default is 5000</p></li>
+<li><p>vsizip - if the vector files are zipped files, set this to true (BooleanType) [pass as String]</p></li>
+<li><p>asWKB - if the geometry should be returned as WKB (BooleanType) - default is false [pass as String]</p></li>
+<li><p>chunkSize - size of the chunk to read from the file per single task (IntegerType) - default is 5000 [pass as String]</p></li>
 <li><p>layerName - name of the layer to read (StringType)</p></li>
-<li><p>layerNumber - number of the layer to read (IntegerType)</p></li>
+<li><p>layerNumber - number of the layer to read (IntegerType), zero-indexed [pass as String]</p></li>
 </ul>
 </div></blockquote>
 <dl class="py function">
@@ -260,7 +261,7 @@ The reader supports the following options:</p>
 </div></div>
 </section>
 <section id="spark-read-format-geo-db">
-<h3>spark.read().format(“geo_db”)<a class="headerlink" href="#spark-read-format-geo-db" title="Permalink to this heading"></a></h3>
+<h3>spark.read.format(“geo_db”)<a class="headerlink" href="#spark-read-format-geo-db" title="Permalink to this heading"></a></h3>
 <p>Mosaic provides a reader for GeoDB files natively in Spark.
 The output of the reader is a DataFrame with inferred schema.
 Only 1 file per task is read. For parallel reading of large files use the multi_read_ogr reader.
@@ -269,7 +270,7 @@ The reader supports the following options:</p>
 <div><ul class="simple">
 <li><p>asWKB - if the geometry should be returned as WKB (BooleanType) - default is false</p></li>
 <li><p>layerName - name of the layer to read (StringType)</p></li>
-<li><p>layerNumber - number of the layer to read (IntegerType)</p></li>
+<li><p>layerNumber - number of the layer to read (IntegerType), zero-indexed</p></li>
 <li><p>vsizip - if the vector files are zipped files, set this to true (BooleanType)</p></li>
 </ul>
 </div></blockquote>
@@ -321,7 +322,7 @@ The reader supports the following options:</p>
 </div></div>
 </section>
 <section id="spark-read-format-shapefile">
-<h3>spark.read().format(“shapefile”)<a class="headerlink" href="#spark-read-format-shapefile" title="Permalink to this heading"></a></h3>
+<h3>spark.read.format(“shapefile”)<a class="headerlink" href="#spark-read-format-shapefile" title="Permalink to this heading"></a></h3>
 <p>Mosaic provides a reader for Shapefiles natively in Spark.
 The output of the reader is a DataFrame with inferred schema.
 Only 1 file per task is read. For parallel reading of large files use the multi_read_ogr reader.
@@ -330,7 +331,7 @@ The reader supports the following options:</p>
 <div><ul class="simple">
 <li><p>asWKB - if the geometry should be returned as WKB (BooleanType) - default is false</p></li>
 <li><p>layerName - name of the layer to read (StringType)</p></li>
-<li><p>layerNumber - number of the layer to read (IntegerType)</p></li>
+<li><p>layerNumber - number of the layer to read (IntegerType), zero-indexed</p></li>
 <li><p>vsizip - if the vector files are zipped files, set this to true (BooleanType)</p></li>
 </ul>
 </div></blockquote>
