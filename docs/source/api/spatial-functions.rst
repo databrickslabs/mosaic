@@ -124,7 +124,7 @@ st_buffer
 
 .. function:: st_buffer(col, radius)
 
-    Buffer the input geometry by radius `radius` and return a new, buffered geometry.
+    Buffer the input geometry by radius :code:`radius` and return a new, buffered geometry.
 
     :param col: Geometry
     :type col: Column
@@ -576,7 +576,7 @@ st_distance
 
 .. function:: st_distance(geom1, geom2)
 
-    Compute the euclidean distance between `geom1` and `geom2`.
+    Compute the euclidean distance between :code:`geom1` and :code:`geom2`.
 
     :param geom1: Geometry
     :type geom1: Column
@@ -699,7 +699,8 @@ st_envelope
 .. function:: st_envelope(col)
 
     Returns the minimum bounding box of the input geometry, as a geometry.
-    This bounding box is defined by the rectangular polygon with corner points `(x_min, y_min)`, `(x_max, y_min)`, `(x_min, y_max)`, `(x_max, y_max)`.
+    This bounding box is defined by the rectangular polygon with corner points :code:`(x_min, y_min)`,
+    :code:`(x_max, y_min)`, :code:`(x_min, y_max)`, :code:`(x_max, y_max)`.
 
     :param col: Geometry
     :type col: Column
@@ -869,14 +870,14 @@ st_hasvalidcoordinates
 
 .. function:: st_hasvalidcoordinates(col, crs, which)
 
-    Checks if all points in `geom` are valid with respect to crs bounds.
+    Checks if all points in :code:`geom` are valid with respect to crs bounds.
     CRS bounds can be provided either as bounds or as reprojected_bounds.
 
     :param col: Geometry
     :type col: Column
     :param crs: CRS name (EPSG ID), e.g. "EPSG:2192"
     :type crs: Column
-    :param which: Check against geographic `"bounds"` or geometric `"reprojected_bounds"` bounds.
+    :param which: Check against geographic :code:`"bounds"` or geometric :code:`"reprojected_bounds"` bounds.
     :type which: Column
     :rtype: Column: IntegerType
 
@@ -928,8 +929,8 @@ st_intersection
 
 .. function:: st_intersection(geom1, geom2)
 
-    Returns a geometry representing the intersection of `left_geom` and `right_geom`.
-    Also, see :doc:`st_intersection_agg </api/spatial-aggregations>` function.
+    Returns a geometry representing the intersection of :code:`left_geom` and :code:`right_geom`.
+    Also, see :doc:`st_intersection_agg </api/spatial-aggregations#st-intersection-agg>` function.
 
     :param geom1: Geometry
     :type geom1: Column
@@ -985,7 +986,7 @@ st_isvalid
 
 .. function:: st_isvalid(col)
 
-    Returns `true` if the geometry is valid.
+    Returns :code:`true` if the geometry is valid.
 
     :param col: Geometry
     :type col: Column
@@ -1066,10 +1067,6 @@ st_isvalid
     |          false|
     +---------------+
 
-.. note:: Validity assertions will be dependent on the chosen geometry API.
-    The assertions used in the ESRI geometry API (JTS is the default) follow the definitions in the
-    "Simple feature access - Part 1" document (OGC 06-103r4) for each geometry type.
-
 
 st_length
 ************
@@ -1135,7 +1132,7 @@ st_numpoints
 
 .. function:: st_numpoints(col)
 
-    Returns the number of points in `geom`.
+    Returns the number of points in :code:`geom`.
 
     :param col: Geometry
     :type col: Column
@@ -1246,7 +1243,7 @@ st_rotate
 
 .. function:: st_rotate(col, td)
 
-    Rotates `geom` using the rotational factor `td`.
+    Rotates :code:`geom` using the rotational factor :code:`td`.
 
     :param col: Geometry
     :type col: Column
@@ -1305,7 +1302,7 @@ st_scale
 
 .. function:: st_scale(col, xd, yd)
 
-    Scales `geom` using the scaling factors `xd` and `yd`.
+    Scales :code:`geom` using the scaling factors :code:`xd` and :code:`yd`.
 
     :param col: Geometry
     :type col: Column
@@ -1363,11 +1360,11 @@ st_setsrid
 
 .. function:: st_setsrid(col, srid)
 
-    Sets the Coordinate Reference System well-known identifier (SRID) for `geom`.
+    Sets the Coordinate Reference System well-known identifier (SRID) for :code:`geom`.
 
     :param col: Geometry
     :type col: Column
-    :param srid: The spatial reference identifier of `geom`, expressed as an integer, e.g. `4326` for EPSG:4326 / WGS84
+    :param srid: The spatial reference identifier of :code:`geom`, expressed as an integer, e.g. :code:`4326` for EPSG:4326 / WGS84
     :type srid: Column (IntegerType)
     :rtype: Column
 
@@ -1414,9 +1411,9 @@ st_setsrid
     +---------------------------------+
 
 .. note::
-    ST_SetSRID does not transform the coordinates of `geom`,
+    ST_SetSRID does not transform the coordinates of :code:`geom`,
     rather it tells Mosaic the SRID in which the current coordinates are expressed.
-    ST_SetSRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.
+    :ref:`st_setsrid` can only operate on geometries encoded in GeoJSON.
 
 st_simplify
 ***********
@@ -1481,7 +1478,7 @@ st_srid
 
 .. function:: st_srid(col)
 
-    Looks up the Coordinate Reference System well-known identifier (SRID) for `geom`.
+    Looks up the Coordinate Reference System well-known identifier (SRID) for :code:`geom`.
 
     :param col: Geometry
     :type col: Column
@@ -1534,7 +1531,7 @@ st_srid
     +------------+
 
 .. note::
-    ST_SRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.
+    ST_SRID can only operate on geometries encoded in GeoJSON.
 
 
 st_transform
@@ -1542,11 +1539,13 @@ st_transform
 
 .. function:: st_transform(col, srid)
 
-    Transforms the horizontal (XY) coordinates of `geom` from the current reference system to that described by `srid`.
+    Transforms the horizontal (XY) coordinates of :code:`geom` from the current reference system to that described by :code:`srid`.
+
+
 
     :param col: Geometry
     :type col: Column
-    :param srid: Target spatial reference system for `geom`, expressed as an integer, e.g. `3857` for EPSG:3857 / Pseudo-Mercator
+    :param srid: Target spatial reference system for :code:`geom`, expressed as an integer, e.g. :code:`3857` for EPSG:3857 / Pseudo-Mercator
     :type srid: Column (IntegerType)
     :rtype: Column
 
@@ -1557,7 +1556,7 @@ st_transform
 
     df = (
       spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
-      .withColumn('geom', st_setsrid(st_geomfromwkt('wkt'), lit(4326)))
+      .withColumn('geom', st_setsrid(st_asgeojson('wkt'), lit(4326)))
     )
     df.select(st_astext(st_transform('geom', lit(3857)))).show(1, False)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1569,7 +1568,7 @@ st_transform
    .. code-tab:: scala
 
     val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
-      .withColumn("geom", st_setsrid(st_geomfromwkt(col("wkt")), lit(4326)))
+      .withColumn("geom", st_setsrid(st_asgeojson(col("wkt")), lit(4326)))
     df.select(st_astext(st_transform(col("geom"), lit(3857)))).show(1, false)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |
@@ -1589,7 +1588,7 @@ st_transform
    .. code-tab:: r R
 
     df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
-    df <- withColumn(df, 'geom', st_setsrid(st_geomfromwkt(column('wkt')), lit(4326L)))
+    df <- withColumn(df, 'geom', st_setsrid(st_asgeojson(column('wkt')), lit(4326L)))
     >>>
     showDF(select(df, st_astext(st_transform(column('geom'), lit(3857L)))), truncate=F)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1599,8 +1598,10 @@ st_transform
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. note::
-    If `geom` does not have an associated SRID, use ST_SetSRID to set this before calling ST_Transform.
-
+    If :code:`geom` does not have an associated SRID, use :ref:`st_setsrid` to set this before calling :ref:`st_transform`.
+    **Changed in 0.4 series** :ref:`st_srid`, :ref:`st_setsrid`, and :ref:`st_transform` only operate on
+    GeoJSON (columnar) data, so be sure to call :ref:`/api/geometry-accessors#st_asgeojson` to convert from WKT and WKB. You can convert
+    back after the transform, e.g. using :ref:`/api/geometry-accessors#st_astext` or :ref:`/api/geometry-accessors#st_asbinary`.
 
 
 st_translate
@@ -1608,7 +1609,7 @@ st_translate
 
 .. function:: st_translate(col, xd, yd)
 
-    Translates `geom` to a new location using the distance parameters `xd` and `yd`.
+    Translates :code:`geom` to a new location using the distance parameters :code:`xd` and :code:`yd`.
 
     :param col: Geometry
     :type col: Column
@@ -1666,7 +1667,7 @@ st_union
 .. function:: st_union(left_geom, right_geom)
 
     Returns the point set union of the input geometries.
-    Also, see :doc:`st_union_agg </api/spatial-aggregations>` function.
+    Also, see :doc:`st_union_agg </api/spatial-aggregations#st-union-agg>` function.
 
     :param left_geom: Geometry
     :type left_geom: Column

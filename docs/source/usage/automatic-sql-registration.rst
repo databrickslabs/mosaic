@@ -10,12 +10,14 @@ An example of when this might be useful would be connecting a business intellige
 to your Spark / Databricks cluster to perform spatial queries or integrating Spark
 with a geospatial middleware component such as [Geoserver](https://geoserver.org/).
 
+.. warning::
+    Mosaic 0.4.x SQL bindings for DBR 13 not yet available in Unity Catalog due to API changes.
+
 Pre-requisites
 **************
 
 In order to use Mosaic, you must have access to a Databricks cluster running
-Databricks Runtime 10.0 or higher (11.2 with photon or higher is recommended).
-If you have cluster creation permissions in your Databricks
+Databricks Runtime 13. If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
 `here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
 
@@ -30,8 +32,11 @@ Installation
 
 To install Mosaic on your Databricks cluster, take the following steps:
 
-#. Upload Mosaic jar to a dedicated dbfs location. E.g. dbfs:/FileStore/mosaic/jars/.
+#. Upload Mosaic jar to a dedicated fuse mount location. E.g. dbfs:/FileStore/mosaic/jars/.
 #. Create an init script that fetches the mosaic jar and copies it to databricks/jars.
+    You can also use the output from (0.4 series) python function :code:`setup_fuse_install`, e.g.
+    :code:`setup_fuse_intall(<to_fuse_dir>, jar_copy=True)` which can help to copy the JAR used in
+    the init script below.
 
     .. code-block:: bash
 
@@ -45,7 +50,7 @@ To install Mosaic on your Databricks cluster, take the following steps:
         #!/bin/bash
         #
         # File: mosaic-init.sh
-        # On cluster startup, this script will copy the Mosaic jars to the cluster's default jar directory.
+        # On cluster startup, this script will copy the Mosaic JAR to the cluster's default jar directory.
 
         cp /dbfs/FileStore/mosaic/jars/*.jar /databricks/jars
 
@@ -73,6 +78,9 @@ To test the installation, create a new Python notebook and run the following com
     spark.sql("""show functions""").where("startswith(function, 'st_')").display()
 
 You should see all the supported functions registered by Mosaic appear in the output.
+
+.. note::
+  You may see some :code:`ST_` functions from other libraries, so pay close attention to the provider.
 
 .. warning::
     Issue 317: https://github.com/databrickslabs/mosaic/issues/317
