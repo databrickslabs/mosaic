@@ -117,17 +117,30 @@ Here are some common useful file formats:</p>
 </ul>
 </div></blockquote>
 <p>For more information please refer to gdal documentation: <a class="reference external" href="https://gdal.org/drivers/vector/index.html">https://gdal.org/drivers/vector/index.html</a></p>
-<p>Mosaic provides two flavors of the readers:
-* spark.read.format(“ogr”) for reading 1 file per spark task
-* mos.read().format(“multi_read_ogr”) for reading file in parallel with multiple spark tasks</p>
+<p>Mosaic provides two flavors of the general readers:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">spark.read.format(&quot;ogr&quot;)</span></code> for reading 1 file per spark task</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">mos.read().format(&quot;multi_read_ogr&quot;)</span></code> for reading file in parallel with multiple spark tasks</p></li>
+</ul>
+</div></blockquote>
+<p>Additionally, for convenience, Mosaic provides specific readers for Shapefile and File Geodatabases:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">spark.read.format(&quot;geo_db&quot;)</span></code> reader for GeoDB files natively in Spark.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">spark.read.format(&quot;shapefile&quot;)</span></code> reader for Shapefiles natively in Spark.</p></li>
+</ul>
+</div></blockquote>
 <section id="spark-read-format-ogr">
 <h3>spark.read.format(“ogr”)<a class="headerlink" href="#spark-read-format-ogr" title="Permalink to this heading"></a></h3>
 <p>A base Spark SQL data source for reading GDAL vector data sources.
 The output of the reader is a DataFrame with inferred schema.
 The schema is inferred from both features and fields in the vector file.
-Each feature will be provided as 2 columns:
-* geometry - geometry of the feature (GeometryType)
-* srid - spatial reference system identifier of the feature (StringType)</p>
+Each feature will be provided as 2 columns:</p>
+<ul class="simple">
+<li><p>geometry - geometry of the feature (GeometryType)</p></li>
+<li><p>srid - spatial reference system identifier of the feature (StringType)</p></li>
+</ul>
 <p>The fields of the feature will be provided as columns in the DataFrame.
 The types of the fields are coerced to most concrete type that can hold all the values.
 The reader supports the following options:</p>
@@ -141,8 +154,8 @@ The reader supports the following options:</p>
 </ul>
 </div></blockquote>
 <dl class="py function">
-<dt class="sig sig-object py" id="read.format">
-<span class="sig-prename descclassname"><span class="pre">read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;ogr&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#read.format" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="spark.read.format">
+<span class="sig-prename descclassname"><span class="pre">spark.read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;ogr&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spark.read.format" title="Permalink to this definition"></a></dt>
 <dd><p>Loads a vector file and returns the result as a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -195,12 +208,16 @@ The amount of data per task is controlled by the chunkSize option.
 Chunk size is the number of file rows that will be read per single task.
 The output of the reader is a DataFrame with inferred schema.
 The schema is inferred from both features and fields in the vector file.
-Each feature will be provided as 2 columns:
-* geometry - geometry of the feature (GeometryType)
-* srid - spatial reference system identifier of the feature (StringType)</p>
+Each feature will be provided as 2 columns:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>geometry - geometry of the feature (GeometryType)</p></li>
+<li><p>srid - spatial reference system identifier of the feature (StringType)</p></li>
+</ul>
+</div></blockquote>
 <p>The fields of the feature will be provided as columns in the DataFrame.
 The types of the fields are coerced to most concrete type that can hold all the values.
-ALL options should be passed as String as they are provided as a Map&lt;String,String&gt;
+ALL options should be passed as String as they are provided as a <code class="code docutils literal notranslate"><span class="pre">Map&lt;String,String&gt;</span></code>
 and parsed into expected types on execution. The reader supports the following options:</p>
 <blockquote>
 <div><ul class="simple">
@@ -213,8 +230,8 @@ and parsed into expected types on execution. The reader supports the following o
 </ul>
 </div></blockquote>
 <dl class="py function">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-prename descclassname"><span class="pre">read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;multi_read_ogr&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="mos.read">
+<span class="sig-prename descclassname"><span class="pre">mos.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">).format(&quot;multi_read_ogr&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mos.read" title="Permalink to this definition"></a></dt>
 <dd><p>Loads a vector file and returns the result as a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -275,8 +292,8 @@ The reader supports the following options:</p>
 </ul>
 </div></blockquote>
 <dl class="py function">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-prename descclassname"><span class="pre">read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;geo_db&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="id0">
+<span class="sig-prename descclassname"><span class="pre">spark.read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;geo_db&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
 <dd><p>Loads a GeoDB file and returns the result as a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -336,8 +353,8 @@ The reader supports the following options:</p>
 </ul>
 </div></blockquote>
 <dl class="py function">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-prename descclassname"><span class="pre">read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;shapefile&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="id1">
+<span class="sig-prename descclassname"><span class="pre">spark.read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;shapefile&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition"></a></dt>
 <dd><p>Loads a Shapefile and returns the result as a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

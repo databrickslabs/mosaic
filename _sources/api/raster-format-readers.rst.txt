@@ -25,8 +25,9 @@ Mosaic provides spark readers for the following raster formats:
 Other formats are supported if supported by GDAL available drivers.
 
 Mosaic provides two flavors of the readers:
-    * spark.read.format("gdal") for reading 1 file per spark task
-    * mos.read().format("raster_to_grid") reader that automatically converts raster to grid.
+
+    * :code:`spark.read.format("gdal")` for reading 1 file per spark task
+    * :code: `mos.read().format("raster_to_grid")` reader that automatically converts raster to grid.
 
 
 spark.read.format("gdal")
@@ -91,7 +92,7 @@ mos.read().format("raster_to_grid")
 ***********************************
 Reads a GDAL raster file and converts it to a grid.
 It uses a pattern similar to standard spark.read.format(*).option(*).load(*) pattern.
-The only difference is that it uses mos.read() instead of spark.read().
+The only difference is that it uses :code:`mos.read()` instead of :code:`spark.read()`.
 The raster pixels are converted to grid cells using specified combiner operation (default is mean).
 If the raster pixels are larger than the grid cells, the cell values can be calculated using interpolation.
 The interpolation method used is Inverse Distance Weighting (IDW) where the distance function is a k_ring

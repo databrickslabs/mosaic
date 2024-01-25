@@ -115,14 +115,14 @@ more on access modes <a class="reference external" href="https://docs.databricks
 <section id="setup-gdal-files-and-scripts">
 <h3>Setup GDAL files and scripts<a class="headerlink" href="#setup-gdal-files-and-scripts" title="Permalink to this heading"></a></h3>
 <p>Mosaic requires GDAL to be installed on the cluster. The easiest way to do this is to use the
-the mos.setup_gdal() function.</p>
+the <code class="code docutils literal notranslate"><span class="pre">setup_gdal</span></code> function.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="loweralpha simple">
 <li><p>This is close in behavior to Mosaic &lt; 0.4 series (prior to DBR 13), with new options
 to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1).</p></li>
 <li><dl class="simple">
-<dt>‘to_fuse_dir’ can be one of ‘/Volumes/..’, ‘/Workspace/..’, ‘/dbfs/..’;</dt><dd><p>however, you should consider setup_fuse_install()` for Volume based installs as that
+<dt>‘to_fuse_dir’ can be one of ‘/Volumes/..’, ‘/Workspace/..’, ‘/dbfs/..’;</dt><dd><p>however, you should consider <code class="code docutils literal notranslate"><span class="pre">setup_fuse_install()</span></code> for Volume based installs as that
 exposes more options, to include copying JAR and JNI Shared Objects.</p>
 </dd>
 </dl>
@@ -133,7 +133,7 @@ exposes more options, to include copying JAR and JNI Shared Objects.</p>
 <dt class="sig sig-object py" id="setup_gdal">
 <span class="sig-name descname"><span class="pre">setup_gdal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#setup_gdal" title="Permalink to this definition"></a></dt>
 <dd><p>Generate an init script that will install GDAL native libraries on each worker node.
-All of the listed parameters are optional. You can have even more control with setup_fuse_install function.</p>
+All of the listed parameters are optional. You can have even more control with <code class="code docutils literal notranslate"><span class="pre">setup_fuse_install</span></code> function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -177,7 +177,7 @@ mos.setup_gdal()
 </section>
 <section id="configure-the-init-script">
 <h3>Configure the init script<a class="headerlink" href="#configure-the-init-script" title="Permalink to this heading"></a></h3>
-<p>After the mos.setup_gdal() function has been run, you will need to configure the cluster to use the
+<p>After the <code class="code docutils literal notranslate"><span class="pre">setup_gdal</span></code> function has been run, you will need to configure the cluster to use the
 init script. The init script can be set by clicking on the “Edit” button on the cluster page and adding
 the following to the “Advanced Options” section:</p>
 <figure class="doc-figure align-default" id="id1">
@@ -197,8 +197,12 @@ code at the top of the notebook:</p>
 <span class="n">mos</span><span class="o">.</span><span class="n">enable_gdal</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>GDAL enabled.
-GDAL 3.4.1, released 2021/12/27
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>   GDAL enabled.
+   GDAL 3.4.1, released 2021/12/27
+
+.. note::
+    You can configure init script from default ubuntu GDAL (3.4.1) to `ubuntugis ppa &lt;https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa&gt;`__ (3.4.3)
+    with :code:`setup_gdal(with_ubuntugis=True)`
 </pre></div>
 </div>
 </section>

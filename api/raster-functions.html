@@ -99,22 +99,27 @@
 <section id="intro">
 <h2>Intro<a class="headerlink" href="#intro" title="Permalink to this heading"></a></h2>
 <p>Raster functions are available in mosaic if you have installed the optional dependency <cite>GDAL</cite>.
-Please see <a class="reference internal" href="../usage/install-gdal.html"><span class="doc">Install and Enable GDAL with Mosaic</span></a> for installation instructions.
-Mosaic provides several unique raster functions that are not available in other Spark packages.
-Mainly raster to grid functions, which are useful for reprojecting the raster data into a standard grid index system.
-This is useful for performing spatial joins between raster data and vector data.
-Mosaic also provides a scalable retiling function that can be used to retile raster data in case of bottlenecking due to large files.
-All raster functions respect the &quot;rst_&quot; prefix naming convention.
-Mosaic is operating using raster tile objects only since 0.3.11. Tile objects are created using functions such as rst_fromfile(path_to_raster)
-or rst_fromcontent(raster_bin, driver). These functions are used as places to start when working with initial data.
-If you use spark.read.format(“gdal”) tiles are automatically generated for you.
-Also, scala does not have a df.display method while python does. In practice you would most often call display(df) in
-scala for a prettier output, but for brevity, we write df.show in scala.</p>
+Please see <a class="reference internal" href="../usage/install-gdal.html"><span class="doc">Install and Enable GDAL with Mosaic</span></a> for installation instructions.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Mosaic provides several unique raster functions that are not available in other Spark packages.
+Mainly raster to grid functions, which are useful for reprojecting the raster data into a standard grid index
+system. This is useful for performing spatial joins between raster data and vector data.</p></li>
+<li><p>Mosaic also provides a scalable retiling function that can be used to retile raster data in case of bottlenecking
+due to large files.</p></li>
+<li><p>All raster functions respect the <code class="code docutils literal notranslate"><span class="pre">rst_</span></code> prefix naming convention.</p></li>
+<li><p>Mosaic is operating using raster tile objects only since 0.3.11. Tile objects are created using functions such as
+<code class="code docutils literal notranslate"><span class="pre">rst_fromfile</span></code> or <code class="code docutils literal notranslate"><span class="pre">rst_fromcontent</span></code>. These functions are used as places to start when working with
+initial data. If you use <code class="code docutils literal notranslate"><span class="pre">spark.read.format(&quot;gdal&quot;)</span></code> tiles are automatically generated for you.</p></li>
+<li><p>Also, scala does not have a <code class="code docutils literal notranslate"><span class="pre">df.display()</span></code> method while python does. In practice you would most often call
+<code class="code docutils literal notranslate"><span class="pre">display(df)</span></code> in scala for a prettier output, but for brevity, we write <code class="code docutils literal notranslate"><span class="pre">df.show</span></code> in scala.</p></li>
+</ul>
+</div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>For mosaic versions &gt; 0.4.0 you can use the revamped setup_gdal function or new setup_fuse_install.
-These functions will configure an init script in your preferred Workspace, Volume, or DBFS location to install GDAL on your cluster.
-See <a class="reference internal" href="../usage/install-gdal.html"><span class="doc">Install and Enable GDAL with Mosaic</span></a> for more details.</p>
+These functions will configure an init script in your preferred Workspace, Volume, or DBFS location to install GDAL
+on your cluster. See <a class="reference internal" href="../usage/install-gdal.html"><span class="doc">Install and Enable GDAL with Mosaic</span></a> for more details.</p>
 </div>
 <section id="rst-bandmetadata">
 <h3>rst_bandmetadata<a class="headerlink" href="#rst-bandmetadata" title="Permalink to this heading"></a></h3>
@@ -304,7 +309,7 @@ The output raster will have the same number of bands as the input rasters.
 The output raster will have the same pixel type as the input rasters.
 The output raster will have the same pixel size as the input rasters.
 The output raster will have the same coordinate reference system as the input rasters.
-Also, see <a class="reference internal" href="spatial-aggregations.html"><span class="doc">rst_combineavg_agg</span></a> function.</p>
+Also, see <span class="xref std std-doc">rst_combineavg_agg</span> function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tiles</strong> (<em>Column</em><em> (</em><em>ArrayType</em><em>(</em><em>RasterTileType</em><em>)</em><em>)</em>) – A column containing an array of raster tiles.</p>
@@ -361,7 +366,7 @@ The output raster will have the same number of bands as the input rasters.
 The output raster will have the same pixel type as the input rasters.
 The output raster will have the same pixel size as the input rasters.
 The output raster will have the same coordinate reference system as the input rasters.
-Also, see <a class="reference internal" href="spatial-aggregations.html"><span class="doc">rst_derivedband_agg</span></a> function.</p>
+Also, see <span class="xref std std-doc">rst_derivedband_agg</span> function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -379,7 +384,7 @@ Also, see <a class="reference internal" href="spatial-aggregations.html"><span c
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-4-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-4-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-4-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-4-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-4-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-4-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-4-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-4-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button></div><div aria-labelledby="tab-4-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-4-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span>\
   <span class="o">.</span><span class="n">select</span><span class="p">(</span>
     <span class="n">F</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s2">&quot;tile1&quot;</span><span class="p">,</span><span class="s2">&quot;tile2&quot;</span><span class="p">,</span><span class="s2">&quot;tile3&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;tiles&quot;</span><span class="p">),</span>
     <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span>
@@ -415,6 +420,22 @@ Also, see <a class="reference internal" href="spatial-aggregations.html"><span c
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
 <span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="n">index_id</span><span class="p">:</span><span class="w"> </span><span class="mi">593308294097928191</span><span class="p">,</span><span class="w"> </span><span class="n">raster</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">00</span><span class="w"> </span><span class="mi">01</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="mi">00</span><span class="p">],</span><span class="w"> </span><span class="n">parentPath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;dbfs:/path_to_file&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">driver</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;NetCDF&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">|</span>
 <span class="o">+----------------------------------------------------------------------------------------------------------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-4-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span>SELECT
+rst_derivedband(array(tile1,tile2,tile3)) as tiles,
+&quot;&quot;&quot;
+import numpy as np
+def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize, raster_ysize, buf_radius, gt, **kwargs):
+   out_ar[:] = np.sum(in_ar, axis=0) / len(in_ar)
+&quot;&quot;&quot; as py_func1,
+&quot;average&quot; as funct1_name
+FROM table LIMIT 1
++----------------------------------------------------------------------------------------------------------------+
+| rst_derivedband(tiles,py_func1,func1_name)                                                                     |
++----------------------------------------------------------------------------------------------------------------+
+| {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: &quot;dbfs:/path_to_file&quot;, driver: &quot;NetCDF&quot; } |
++----------------------------------------------------------------------------------------------------------------+
 </pre></div>
 </div>
 </div></div>
@@ -1025,7 +1046,7 @@ The output raster will have the same number of bands as the input rasters.
 The output raster will have the same pixel type as the input rasters.
 The output raster will have the same pixel size as the highest resolution input rasters.
 The output raster will have the same coordinate reference system as the input rasters.
-Also, see <a class="reference internal" href="spatial-aggregations.html"><span class="doc">rst_merge_agg</span></a> function.</p>
+Also, see <span class="xref std std-doc">rst_merge_agg</span> function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tiles</strong> (<em>Column</em><em> (</em><em>ArrayType</em><em>(</em><em>RasterTileType</em><em>)</em><em>)</em>) – A column containing an array of raster tiles.</p>

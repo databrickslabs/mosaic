@@ -223,7 +223,7 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="st_buffer">
 <span class="sig-name descname"><span class="pre">st_buffer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_buffer" title="Permalink to this definition"></a></dt>
-<dd><p>Buffer the input geometry by radius <cite>radius</cite> and return a new, buffered geometry.</p>
+<dd><p>Buffer the input geometry by radius <code class="code docutils literal notranslate"><span class="pre">radius</span></code> and return a new, buffered geometry.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -696,7 +696,7 @@ df.select(st_difference(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <dl class="py function">
 <dt class="sig sig-object py" id="st_distance">
 <span class="sig-name descname"><span class="pre">st_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geom2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_distance" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the euclidean distance between <cite>geom1</cite> and <cite>geom2</cite>.</p>
+<dd><p>Compute the euclidean distance between <code class="code docutils literal notranslate"><span class="pre">geom1</span></code> and <code class="code docutils literal notranslate"><span class="pre">geom2</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -828,7 +828,8 @@ df.select(st_difference(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <dt class="sig sig-object py" id="st_envelope">
 <span class="sig-name descname"><span class="pre">st_envelope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_envelope" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the minimum bounding box of the input geometry, as a geometry.
-This bounding box is defined by the rectangular polygon with corner points <cite>(x_min, y_min)</cite>, <cite>(x_max, y_min)</cite>, <cite>(x_min, y_max)</cite>, <cite>(x_max, y_max)</cite>.</p>
+This bounding box is defined by the rectangular polygon with corner points <code class="code docutils literal notranslate"><span class="pre">(x_min,</span> <span class="pre">y_min)</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">(x_max,</span> <span class="pre">y_min)</span></code>, <code class="code docutils literal notranslate"><span class="pre">(x_min,</span> <span class="pre">y_max)</span></code>, <code class="code docutils literal notranslate"><span class="pre">(x_max,</span> <span class="pre">y_max)</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
@@ -1005,14 +1006,14 @@ df.select(st_envelope(&#39;wkt&#39;)).show()
 <dl class="py function">
 <dt class="sig sig-object py" id="st_hasvalidcoordinates">
 <span class="sig-name descname"><span class="pre">st_hasvalidcoordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">which</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_hasvalidcoordinates" title="Permalink to this definition"></a></dt>
-<dd><p>Checks if all points in <cite>geom</cite> are valid with respect to crs bounds.
+<dd><p>Checks if all points in <code class="code docutils literal notranslate"><span class="pre">geom</span></code> are valid with respect to crs bounds.
 CRS bounds can be provided either as bounds or as reprojected_bounds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>col</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>crs</strong> (<em>Column</em>) – CRS name (EPSG ID), e.g. “EPSG:2192”</p></li>
-<li><p><strong>which</strong> (<em>Column</em>) – Check against geographic <cite>“bounds”</cite> or geometric <cite>“reprojected_bounds”</cite> bounds.</p></li>
+<li><p><strong>which</strong> (<em>Column</em>) – Check against geographic <code class="code docutils literal notranslate"><span class="pre">&quot;bounds&quot;</span></code> or geometric <code class="code docutils literal notranslate"><span class="pre">&quot;reprojected_bounds&quot;</span></code> bounds.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1066,8 +1067,8 @@ CRS bounds can be provided either as bounds or as reprojected_bounds.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="st_intersection">
 <span class="sig-name descname"><span class="pre">st_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geom2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_intersection" title="Permalink to this definition"></a></dt>
-<dd><p>Returns a geometry representing the intersection of <cite>left_geom</cite> and <cite>right_geom</cite>.
-Also, see <a class="reference internal" href="spatial-aggregations.html"><span class="doc">st_intersection_agg</span></a> function.</p>
+<dd><p>Returns a geometry representing the intersection of <code class="code docutils literal notranslate"><span class="pre">left_geom</span></code> and <code class="code docutils literal notranslate"><span class="pre">right_geom</span></code>.
+Also, see <span class="xref std std-doc">st_intersection_agg</span> function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1126,7 +1127,7 @@ Also, see <a class="reference internal" href="spatial-aggregations.html"><span c
 <dl class="py function">
 <dt class="sig sig-object py" id="st_isvalid">
 <span class="sig-name descname"><span class="pre">st_isvalid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_isvalid" title="Permalink to this definition"></a></dt>
-<dd><p>Returns <cite>true</cite> if the geometry is valid.</p>
+<dd><p>Returns <code class="code docutils literal notranslate"><span class="pre">true</span></code> if the geometry is valid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
@@ -1209,12 +1210,6 @@ Also, see <a class="reference internal" href="spatial-aggregations.html"><span c
 </pre></div>
 </div>
 </div></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Validity assertions will be dependent on the chosen geometry API.
-The assertions used in the ESRI geometry API (JTS is the default) follow the definitions in the
-“Simple feature access - Part 1” document (OGC 06-103r4) for each geometry type.</p>
-</div>
 </section>
 <section id="st-length">
 <h2>st_length<a class="headerlink" href="#st-length" title="Permalink to this heading"></a></h2>
@@ -1285,7 +1280,7 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 <dl class="py function">
 <dt class="sig sig-object py" id="st_numpoints">
 <span class="sig-name descname"><span class="pre">st_numpoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_numpoints" title="Permalink to this definition"></a></dt>
-<dd><p>Returns the number of points in <cite>geom</cite>.</p>
+<dd><p>Returns the number of points in <code class="code docutils literal notranslate"><span class="pre">geom</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
@@ -1405,7 +1400,7 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 <dl class="py function">
 <dt class="sig sig-object py" id="st_rotate">
 <span class="sig-name descname"><span class="pre">st_rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">td</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_rotate" title="Permalink to this definition"></a></dt>
-<dd><p>Rotates <cite>geom</cite> using the rotational factor <cite>td</cite>.</p>
+<dd><p>Rotates <code class="code docutils literal notranslate"><span class="pre">geom</span></code> using the rotational factor <code class="code docutils literal notranslate"><span class="pre">td</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1466,7 +1461,7 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 <dl class="py function">
 <dt class="sig sig-object py" id="st_scale">
 <span class="sig-name descname"><span class="pre">st_scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yd</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_scale" title="Permalink to this definition"></a></dt>
-<dd><p>Scales <cite>geom</cite> using the scaling factors <cite>xd</cite> and <cite>yd</cite>.</p>
+<dd><p>Scales <code class="code docutils literal notranslate"><span class="pre">geom</span></code> using the scaling factors <code class="code docutils literal notranslate"><span class="pre">xd</span></code> and <code class="code docutils literal notranslate"><span class="pre">yd</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1526,12 +1521,12 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 <dl class="py function">
 <dt class="sig sig-object py" id="st_setsrid">
 <span class="sig-name descname"><span class="pre">st_setsrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_setsrid" title="Permalink to this definition"></a></dt>
-<dd><p>Sets the Coordinate Reference System well-known identifier (SRID) for <cite>geom</cite>.</p>
+<dd><p>Sets the Coordinate Reference System well-known identifier (SRID) for <code class="code docutils literal notranslate"><span class="pre">geom</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>col</strong> (<em>Column</em>) – Geometry</p></li>
-<li><p><strong>srid</strong> (<em>Column</em><em> (</em><em>IntegerType</em><em>)</em>) – The spatial reference identifier of <cite>geom</cite>, expressed as an integer, e.g. <cite>4326</cite> for EPSG:4326 / WGS84</p></li>
+<li><p><strong>srid</strong> (<em>Column</em><em> (</em><em>IntegerType</em><em>)</em>) – The spatial reference identifier of <code class="code docutils literal notranslate"><span class="pre">geom</span></code>, expressed as an integer, e.g. <code class="code docutils literal notranslate"><span class="pre">4326</span></code> for EPSG:4326 / WGS84</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1581,9 +1576,9 @@ The assertions used in the ESRI geometry API (JTS is the default) follow the def
 </div></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>ST_SetSRID does not transform the coordinates of <cite>geom</cite>,
+<p>ST_SetSRID does not transform the coordinates of <code class="code docutils literal notranslate"><span class="pre">geom</span></code>,
 rather it tells Mosaic the SRID in which the current coordinates are expressed.
-ST_SetSRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.</p>
+<a class="reference internal" href="#st-setsrid"><span class="std std-ref">st_setsrid</span></a> can only operate on geometries encoded in GeoJSON.</p>
 </div>
 </section>
 <section id="st-simplify">
@@ -1654,7 +1649,7 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 <dl class="py function">
 <dt class="sig sig-object py" id="st_srid">
 <span class="sig-name descname"><span class="pre">st_srid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_srid" title="Permalink to this definition"></a></dt>
-<dd><p>Looks up the Coordinate Reference System well-known identifier (SRID) for <cite>geom</cite>.</p>
+<dd><p>Looks up the Coordinate Reference System well-known identifier (SRID) for <code class="code docutils literal notranslate"><span class="pre">geom</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
@@ -1710,7 +1705,7 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 </div></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>ST_SRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.</p>
+<p>ST_SRID can only operate on geometries encoded in GeoJSON.</p>
 </div>
 </section>
 <section id="st-transform">
@@ -1718,12 +1713,12 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 <dl class="py function">
 <dt class="sig sig-object py" id="st_transform">
 <span class="sig-name descname"><span class="pre">st_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_transform" title="Permalink to this definition"></a></dt>
-<dd><p>Transforms the horizontal (XY) coordinates of <cite>geom</cite> from the current reference system to that described by <cite>srid</cite>.</p>
+<dd><p>Transforms the horizontal (XY) coordinates of <code class="code docutils literal notranslate"><span class="pre">geom</span></code> from the current reference system to that described by <code class="code docutils literal notranslate"><span class="pre">srid</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>col</strong> (<em>Column</em>) – Geometry</p></li>
-<li><p><strong>srid</strong> (<em>Column</em><em> (</em><em>IntegerType</em><em>)</em>) – Target spatial reference system for <cite>geom</cite>, expressed as an integer, e.g. <cite>3857</cite> for EPSG:3857 / Pseudo-Mercator</p></li>
+<li><p><strong>srid</strong> (<em>Column</em><em> (</em><em>IntegerType</em><em>)</em>) – Target spatial reference system for <code class="code docutils literal notranslate"><span class="pre">geom</span></code>, expressed as an integer, e.g. <code class="code docutils literal notranslate"><span class="pre">3857</span></code> for EPSG:3857 / Pseudo-Mercator</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1737,7 +1732,7 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-26-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-26-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-26-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-26-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-26-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-26-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-26-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-26-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-26-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-26-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="p">(</span>
   <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;wkt&#39;</span><span class="p">:</span> <span class="s1">&#39;MULTIPOINT ((10 40), (40 30), (20 20), (30 10))&#39;</span><span class="p">}])</span>
-  <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s1">&#39;geom&#39;</span><span class="p">,</span> <span class="n">st_setsrid</span><span class="p">(</span><span class="n">st_geomfromwkt</span><span class="p">(</span><span class="s1">&#39;wkt&#39;</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="mi">4326</span><span class="p">)))</span>
+  <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s1">&#39;geom&#39;</span><span class="p">,</span> <span class="n">st_setsrid</span><span class="p">(</span><span class="n">st_asgeojson</span><span class="p">(</span><span class="s1">&#39;wkt&#39;</span><span class="p">),</span> <span class="n">lit</span><span class="p">(</span><span class="mi">4326</span><span class="p">)))</span>
 <span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_astext</span><span class="p">(</span><span class="n">st_transform</span><span class="p">(</span><span class="s1">&#39;geom&#39;</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">3857</span><span class="p">))))</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 <span class="o">+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+</span>
@@ -1748,7 +1743,7 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-26-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-26-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">(</span><span class="s">&quot;MULTIPOINT ((10 40), (40 30), (20 20), (30 10))&quot;</span><span class="p">).</span><span class="n">toDF</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">)</span>
-<span class="w">  </span><span class="p">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">st_setsrid</span><span class="p">(</span><span class="n">st_geomfromwkt</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">)),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">4326</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">st_setsrid</span><span class="p">(</span><span class="n">st_asgeojson</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">)),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">4326</span><span class="p">)))</span>
 <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_astext</span><span class="p">(</span><span class="n">st_transform</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;geom&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">lit</span><span class="p">(</span><span class="mi">3857</span><span class="p">)))).</span><span class="n">show</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
 <span class="o">+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+</span>
 <span class="o">|</span><span class="n">convert_to</span><span class="p">(</span><span class="n">st_transform</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span><span class="w"> </span><span class="mi">3857</span><span class="p">))</span><span class="w">                                                                                                                                      </span><span class="o">|</span>
@@ -1766,7 +1761,7 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-26-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-26-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;MULTIPOINT ((10 40), (40 30), (20 20), (30 10))&quot;</span><span class="p">))</span>
-<span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">withColumn</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;geom&#39;</span><span class="p">,</span><span class="w"> </span><span class="nf">st_setsrid</span><span class="p">(</span><span class="nf">st_geomfromwkt</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&#39;wkt&#39;</span><span class="p">)),</span><span class="w"> </span><span class="nf">lit</span><span class="p">(</span><span class="m">4326L</span><span class="p">)))</span>
+<span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">withColumn</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;geom&#39;</span><span class="p">,</span><span class="w"> </span><span class="nf">st_setsrid</span><span class="p">(</span><span class="nf">st_asgeojson</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&#39;wkt&#39;</span><span class="p">)),</span><span class="w"> </span><span class="nf">lit</span><span class="p">(</span><span class="m">4326L</span><span class="p">)))</span>
 <span class="o">&gt;&gt;&gt;</span>
 <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="nf">st_astext</span><span class="p">(</span><span class="nf">st_transform</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&#39;geom&#39;</span><span class="p">),</span><span class="w"> </span><span class="nf">lit</span><span class="p">(</span><span class="m">3857L</span><span class="p">)))),</span><span class="w"> </span><span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
 <span class="o">+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+</span>
@@ -1779,7 +1774,10 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 </div></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If <cite>geom</cite> does not have an associated SRID, use ST_SetSRID to set this before calling ST_Transform.</p>
+<p>If <code class="code docutils literal notranslate"><span class="pre">geom</span></code> does not have an associated SRID, use <a class="reference internal" href="#st-setsrid"><span class="std std-ref">st_setsrid</span></a> to set this before calling <a class="reference internal" href="#st-transform"><span class="std std-ref">st_transform</span></a>.
+<strong>Changed in 0.4 series</strong> <a class="reference internal" href="#st-srid"><span class="std std-ref">st_srid</span></a>, <a class="reference internal" href="#st-setsrid"><span class="std std-ref">st_setsrid</span></a>, and <a class="reference internal" href="#st-transform"><span class="std std-ref">st_transform</span></a> only operate on
+GeoJSON (columnar) data, so be sure to call <span class="xref std std-ref">/api/geometry-accessors#st_asgeojson</span> to convert from WKT and WKB. You can convert
+back after the transform, e.g. using <span class="xref std std-ref">/api/geometry-accessors#st_astext</span> or <span class="xref std std-ref">/api/geometry-accessors#st_asbinary</span>.</p>
 </div>
 </section>
 <section id="st-translate">
@@ -1787,7 +1785,7 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 <dl class="py function">
 <dt class="sig sig-object py" id="st_translate">
 <span class="sig-name descname"><span class="pre">st_translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yd</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_translate" title="Permalink to this definition"></a></dt>
-<dd><p>Translates <cite>geom</cite> to a new location using the distance parameters <cite>xd</cite> and <cite>yd</cite>.</p>
+<dd><p>Translates <code class="code docutils literal notranslate"><span class="pre">geom</span></code> to a new location using the distance parameters <code class="code docutils literal notranslate"><span class="pre">xd</span></code> and <code class="code docutils literal notranslate"><span class="pre">yd</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1848,7 +1846,7 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 <dt class="sig sig-object py" id="st_union">
 <span class="sig-name descname"><span class="pre">st_union</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_geom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_union" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the point set union of the input geometries.
-Also, see <a class="reference internal" href="spatial-aggregations.html"><span class="doc">st_union_agg</span></a> function.</p>
+Also, see <span class="xref std std-doc">st_union_agg</span> function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

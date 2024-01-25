@@ -211,7 +211,7 @@ st_intersects_aggregate
 
 .. function:: st_intersects_agg(leftIndex, rightIndex)
 
-    Returns `true` if any of the `leftIndex` and `rightIndex` pairs intersect.
+    Returns :code:`true` if any of the :code:`leftIndex` and :code:`rightIndex` pairs intersect.
 
     :param leftIndex: Geometry
     :type leftIndex: Column
@@ -301,7 +301,7 @@ st_intersection_agg
 
 .. function:: st_intersection_agg(leftIndex, rightIndex)
 
-    Computes the intersections of `leftIndex` and `rightIndex` and returns the union of these intersections.
+    Computes the intersections of :code:`leftIndex` and :code:`rightIndex` and returns the union of these intersections.
 
     :param leftIndex: Geometry
     :type leftIndex: Column

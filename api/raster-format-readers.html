@@ -118,13 +118,18 @@
 </ul>
 </div></blockquote>
 <p>Other formats are supported if supported by GDAL available drivers.</p>
-<dl class="simple">
-<dt>Mosaic provides two flavors of the readers:</dt><dd><ul class="simple">
-<li><p>spark.read.format(“gdal”) for reading 1 file per spark task</p></li>
-<li><p>mos.read().format(“raster_to_grid”) reader that automatically converts raster to grid.</p></li>
-</ul>
+<p>Mosaic provides two flavors of the readers:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">spark.read.format(&quot;gdal&quot;)</span></code> for reading 1 file per spark task</p></li>
+<li><dl class="field-list simple">
+<dt class="field-odd">code<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>mos.read().format(“raster_to_grid”)</cite> reader that automatically converts raster to grid.</p>
 </dd>
 </dl>
+</li>
+</ul>
+</div></blockquote>
 <section id="spark-read-format-gdal">
 <h3>spark.read.format(“gdal”)<a class="headerlink" href="#spark-read-format-gdal" title="Permalink to this heading"></a></h3>
 <p>A base Spark SQL data source for reading GDAL raster data sources.
@@ -195,7 +200,7 @@ For example, if you want to read a GeoTiff file, you have to use the following o
 <h3>mos.read().format(“raster_to_grid”)<a class="headerlink" href="#mos-read-format-raster-to-grid" title="Permalink to this heading"></a></h3>
 <p>Reads a GDAL raster file and converts it to a grid.
 It uses a pattern similar to standard spark.read.format(*).option(*).load(*) pattern.
-The only difference is that it uses mos.read() instead of spark.read().
+The only difference is that it uses <code class="code docutils literal notranslate"><span class="pre">mos.read()</span></code> instead of <code class="code docutils literal notranslate"><span class="pre">spark.read()</span></code>.
 The raster pixels are converted to grid cells using specified combiner operation (default is mean).
 If the raster pixels are larger than the grid cells, the cell values can be calculated using interpolation.
 The interpolation method used is Inverse Distance Weighting (IDW) where the distance function is a k_ring

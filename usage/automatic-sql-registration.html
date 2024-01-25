@@ -98,11 +98,14 @@ registration process described on this page.</p>
 <p>An example of when this might be useful would be connecting a business intelligence tool
 to your Spark / Databricks cluster to perform spatial queries or integrating Spark
 with a geospatial middleware component such as [Geoserver](<a class="reference external" href="https://geoserver.org/">https://geoserver.org/</a>).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Mosaic 0.4.x SQL bindings for DBR 13 not yet available in Unity Catalog due to API changes.</p>
+</div>
 <section id="pre-requisites">
 <h2>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this heading"></a></h2>
 <p>In order to use Mosaic, you must have access to a Databricks cluster running
-Databricks Runtime 10.0 or higher (11.2 with photon or higher is recommended).
-If you have cluster creation permissions in your Databricks
+Databricks Runtime 13. If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
 <a class="reference external" href="https://docs.databricks.com/clusters/create.html#use-the-cluster-ui">here</a>.</p>
 <p>You will also need “Can Manage” permissions on this cluster in order to attach init script
@@ -115,10 +118,12 @@ in our documentation
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <p>To install Mosaic on your Databricks cluster, take the following steps:</p>
 <ol class="arabic">
-<li><p>Upload Mosaic jar to a dedicated dbfs location. E.g. dbfs:/FileStore/mosaic/jars/.</p></li>
-<li><p>Create an init script that fetches the mosaic jar and copies it to databricks/jars.</p>
-<blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%sh
+<li><p>Upload Mosaic jar to a dedicated fuse mount location. E.g. dbfs:/FileStore/mosaic/jars/.</p></li>
+<li><dl>
+<dt>Create an init script that fetches the mosaic jar and copies it to databricks/jars.</dt><dd><p>You can also use the output from (0.4 series) python function <code class="code docutils literal notranslate"><span class="pre">setup_fuse_install</span></code>, e.g.
+<code class="code docutils literal notranslate"><span class="pre">setup_fuse_intall(&lt;to_fuse_dir&gt;,</span> <span class="pre">jar_copy=True)</span></code> which can help to copy the JAR used in
+the init script below.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%sh
 
 <span class="c1"># Create init script directory for Mosaic</span>
 mkdir<span class="w"> </span>-p<span class="w"> </span>/dbfs/FileStore/mosaic/scripts
@@ -128,14 +133,15 @@ cat<span class="w"> </span>&gt;<span class="w"> </span>/dbfs/FileStore/mosaic/sc
 <span class="s">#!/bin/bash</span>
 <span class="s">#</span>
 <span class="s"># File: mosaic-init.sh</span>
-<span class="s"># On cluster startup, this script will copy the Mosaic jars to the cluster&#39;s default jar directory.</span>
+<span class="s"># On cluster startup, this script will copy the Mosaic JAR to the cluster&#39;s default jar directory.</span>
 
 <span class="s">cp /dbfs/FileStore/mosaic/jars/*.jar /databricks/jars</span>
 
 <span class="s">EOF</span>
 </pre></div>
 </div>
-</div></blockquote>
+</dd>
+</dl>
 </li>
 <li><p>Configure the init script for the cluster following the instructions <a class="reference external" href="https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script">here</a>.</p></li>
 <li><p>Add the following spark configuration values for your cluster following the instructions <a class="reference external" href="https://docs.databricks.com/clusters/configure.html#spark-configuration">here</a>.</p>
@@ -159,6 +165,10 @@ spark.sql.extensions<span class="w"> </span>com.databricks.labs.mosaic.sql.exten
 </pre></div>
 </div>
 <p>You should see all the supported functions registered by Mosaic appear in the output.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You may see some <code class="code docutils literal notranslate"><span class="pre">ST_</span></code> functions from other libraries, so pay close attention to the provider.</p>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Issue 317: <a class="reference external" href="https://github.com/databrickslabs/mosaic/issues/317">https://github.com/databrickslabs/mosaic/issues/317</a>

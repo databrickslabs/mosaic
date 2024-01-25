@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Version 0.4.0 &mdash; Mosaic</title>
+  <title>Version 0.4.x Series &mdash; Mosaic</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/tabs.css" type="text/css" />
@@ -69,7 +69,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Version 0.4.0</li>
+      <li class="breadcrumb-item active">Version 0.4.x Series</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -96,7 +96,7 @@ this will leverage the Databricks H3 expressions when using H3 grid system.</p>
 <dt>Mosaic provides:</dt><dd><ul class="simple">
 <li><p>easy conversion between common spatial data encodings (WKT, WKB and GeoJSON);</p></li>
 <li><p>constructors to easily generate new geometries from Spark native data types;</p></li>
-<li><p>many of the OGC SQL standard <cite>ST_</cite> functions implemented as Spark Expressions for transforming, aggregating and joining spatial datasets;</p></li>
+<li><p>many of the OGC SQL standard <code class="code docutils literal notranslate"><span class="pre">ST_</span></code> functions implemented as Spark Expressions for transforming, aggregating and joining spatial datasets;</p></li>
 <li><p>high performance through implementation of Spark code generation within the core Mosaic functions;</p></li>
 <li><p>optimisations for performing point-in-polygon joins using an approach we co-developed with Ordnance Survey (<a class="reference external" href="https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html">blog post</a>); and</p></li>
 <li><p>the choice of a Scala, SQL and Python API.</p></li>
@@ -105,10 +105,10 @@ this will leverage the Databricks H3 expressions when using H3 grid system.</p>
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For Mosaic versions &lt; 0.4.0 please use the <a class="reference external" href="https://databrickslabs.github.io/mosaic/v0.3.x/index.html">0.3.x docs</a>.</p>
+<p>For Mosaic versions &lt; 0.4 please use the <a class="reference external" href="https://databrickslabs.github.io/mosaic/v0.3.x/index.html">0.3 docs</a>.</p>
 </div>
-<section id="version-0-4-0">
-<h1>Version 0.4.0<a class="headerlink" href="#version-0-4-0" title="Permalink to this heading"></a></h1>
+<section id="version-0-4-x-series">
+<h1>Version 0.4.x Series<a class="headerlink" href="#version-0-4-x-series" title="Permalink to this heading"></a></h1>
 <p>We recommend using Databricks Runtime versions 13.3 LTS with Photon enabled.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -116,8 +116,13 @@ this will leverage the Databricks H3 expressions when using H3 grid system.</p>
 If running on a different DBR it will throw an exception:</p>
 <p><strong>DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify `%pip install ‘databricks-mosaic&lt;0.4,&gt;=0.3’` for DBR &lt; 13.</strong></p>
 </div>
-<p>As of the 0.4.0 release, Mosaic issues the following ERROR when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML <a class="reference external" href="https://learn.microsoft.com/en-us/azure/databricks/runtime/">ADB</a> | <a class="reference external" href="https://docs.databricks.com/runtime/index.html/">AWS</a> | <a class="reference external" href="https://docs.gcp.databricks.com/runtime/index.html/">GCP</a> :</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<blockquote>
+<div><p>Mosaic 0.4.x series issues the following ERROR on a standard, non-Photon cluster <a class="reference external" href="https://learn.microsoft.com/en-us/azure/databricks/runtime/">ADB</a> | <a class="reference external" href="https://docs.databricks.com/runtime/index.html/">AWS</a> | <a class="reference external" href="https://docs.gcp.databricks.com/runtime/index.html/">GCP</a> :</p>
+</div></blockquote>
 <p><strong>DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.</strong></p>
+</div>
 <dl class="simple">
 <dt>As of Mosaic 0.4.0 (subject to change in follow-on releases)</dt><dd><ul class="simple">
 <li><p>No Mosaic SQL expressions cannot yet be registered with <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a> due to API changes affecting DBRs &gt;= 13.</p></li>
