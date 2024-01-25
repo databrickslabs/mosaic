@@ -17,9 +17,11 @@ Mosaic 0.4.x series issues the following ERROR on a standard, non-Photon cluster
 **DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.**
 
 As of Mosaic 0.4.0 (subject to change in follow-on releases)
-   * No Mosaic SQL expressions cannot yet be registered with `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ due to API changes affecting DBRs >= 13.
-   * `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Python, R, and Scala APIs.
+
+   * `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Python, SQL, R, and Scala APIs.
    * `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Scala API (JVM) with Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_ ; Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
+     - Mosaic SQL expressions cannot yet be registered with `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_
+       due to API changes affecting DBRs >= 13, more `here <https://docs.databricks.com/en/udf/index.html>`_.
 
 .. note::
    As of Mosaic 0.4.0 (subject to change in follow-on releases)
@@ -119,4 +121,5 @@ register the Mosaic SQL functions in your SparkSession from a Scala notebook cel
     mosaicContext.register(spark)
 
 .. warning::
-    Mosaic 0.4.x SQL bindings for DBR 13 not yet available in Unity Catalog due to API changes.
+    Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters, but not Shared Access due to API changes,
+    more `here <https://docs.databricks.com/en/udf/index.html>`_.

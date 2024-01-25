@@ -8,17 +8,17 @@ In order to use Mosaic 0.4 series, you must have access to a Databricks cluster 
 Databricks Runtime 13.3 LTS.
 If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
-`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
+`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`_.
 
 You will also need "Can Manage" permissions on this cluster in order to attach the
 Mosaic library to your cluster. A workspace administrator will be able to grant 
 these permissions and more information about cluster permissions can be found 
 in our documentation
-`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`__.
+`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`_.
 
 .. warning::
     These instructions assume an Assigned cluster is being used (vs a Shared Access cluster),
-    more on access modes `here <https://docs.databricks.com/en/compute/configure.html#access-modes>`__.
+    more on access modes `here <https://docs.databricks.com/en/compute/configure.html#access-modes>`_.
 
 GDAL Installation
 ####################
@@ -30,10 +30,10 @@ the :code:`setup_gdal` function.
 
 .. note::
    - This is close in behavior to Mosaic < 0.4 series (prior to DBR 13), with new options
-       to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1).
+     to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1).
    - Param "to_fuse_dir" can be one of "/Volumes/..", "/Workspace/..", "/dbfs/..";
-        however, you should consider :code:`setup_fuse_install()` for Volume based installs as that
-        exposes more options, to include copying JAR and JNI Shared Objects.
+     however, you should consider :code:`setup_fuse_install()` for Volume based installs as that
+     exposes more options, to include copying JAR and JNI Shared Objects.
 
 .. function:: setup_gdal()
 
@@ -107,5 +107,5 @@ code at the top of the notebook:
     GDAL 3.4.1, released 2021/12/27
 
  .. note::
-     You can configure init script from default ubuntu GDAL (3.4.1) to `ubuntugis ppa <https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa>`__ (3.4.3)
+     You can configure init script from default ubuntu GDAL (3.4.1) to `ubuntugis ppa <https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa>`_ (3.4.3)
      with :code:`setup_gdal(with_ubuntugis=True)`

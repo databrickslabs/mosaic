@@ -45,6 +45,7 @@ We currently recommend using Databricks Runtime with Photon enabled;
 this will leverage the Databricks H3 expressions when using H3 grid system. 
 
 Mosaic provides:
+
    * easy conversion between common spatial data encodings (WKT, WKB and GeoJSON);
    * constructors to easily generate new geometries from Spark native data types;
    * many of the OGC SQL standard :code:`ST_` functions implemented as Spark Expressions for transforming, aggregating and joining spatial datasets;
@@ -71,9 +72,11 @@ Mosaic 0.4.x series issues the following ERROR on a standard, non-Photon cluster
 **DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.**
 
 As of Mosaic 0.4.0 (subject to change in follow-on releases)
-   * No Mosaic SQL expressions cannot yet be registered with `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ due to API changes affecting DBRs >= 13.
-   * `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Python, R, and Scala APIs.
+
+   * `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Python, SQL, R, and Scala APIs.
    * `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Scala API (JVM) with Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_ ; Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
+     - Mosaic SQL expressions cannot yet be registered with `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_
+       due to API changes affecting DBRs >= 13, more `here <https://docs.databricks.com/en/udf/index.html>`_.
 
 .. note::
    As of Mosaic 0.4.0 (subject to change in follow-on releases)

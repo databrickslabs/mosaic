@@ -19,13 +19,13 @@ Pre-requisites
 In order to use Mosaic, you must have access to a Databricks cluster running
 Databricks Runtime 13. If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
-`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
+`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`_.
 
 You will also need "Can Manage" permissions on this cluster in order to attach init script
 to your cluster. A workspace administrator will be able to grant
 these permissions and more information about cluster permissions can be found 
 in our documentation
-`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`__.
+`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`_.
 
 Installation
 ************
@@ -82,7 +82,11 @@ To test the installation, create a new Python notebook and run the following com
 You should see all the supported functions registered by Mosaic appear in the output.
 
 .. note::
-  You may see some :code:`ST_` functions from other libraries, so pay close attention to the provider.
+    You may see some :code:`ST_` functions from other libraries, so pay close attention to the provider.
+
+.. warning::
+    Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters, but not Shared Access due to API changes,
+    more `here <https://docs.databricks.com/en/udf/index.html>`_.
 
 .. warning::
     Issue 317: https://github.com/databrickslabs/mosaic/issues/317
