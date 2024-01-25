@@ -24,10 +24,15 @@ Here are some common useful file formats:
 For more information please refer to gdal documentation: https://gdal.org/drivers/vector/index.html
 
 
+Mosaic provides two flavors of the general readers:
 
-Mosaic provides two flavors of the readers:
-* spark.read.format("ogr") for reading 1 file per spark task
-* mos.read().format("multi_read_ogr") for reading file in parallel with multiple spark tasks
+    * :code:`spark.read.format("ogr")` for reading 1 file per spark task
+    * :code:`mos.read().format("multi_read_ogr")` for reading file in parallel with multiple spark tasks
+
+Additionally, for convenience, Mosaic provides specific readers for Shapefile and File Geodatabases:
+
+    * :code:`spark.read.format("geo_db")` reader for GeoDB files natively in Spark.
+    * :code:`spark.read.format("shapefile")` reader for Shapefiles natively in Spark.
 
 
 spark.read.format("ogr")
@@ -36,6 +41,7 @@ A base Spark SQL data source for reading GDAL vector data sources.
 The output of the reader is a DataFrame with inferred schema.
 The schema is inferred from both features and fields in the vector file.
 Each feature will be provided as 2 columns:
+
 * geometry - geometry of the feature (GeometryType)
 * srid - spatial reference system identifier of the feature (StringType)
 
@@ -50,7 +56,7 @@ The reader supports the following options:
     * layerNumber - number of the layer to read (IntegerType), zero-indexed
 
 
-.. function:: read.format("ogr").load(path)
+.. function:: spark.read.format("ogr").load(path)
 
     Loads a vector file and returns the result as a :class:`DataFrame`.
 
@@ -100,12 +106,13 @@ Chunk size is the number of file rows that will be read per single task.
 The output of the reader is a DataFrame with inferred schema.
 The schema is inferred from both features and fields in the vector file.
 Each feature will be provided as 2 columns:
-* geometry - geometry of the feature (GeometryType)
-* srid - spatial reference system identifier of the feature (StringType)
+
+    * geometry - geometry of the feature (GeometryType)
+    * srid - spatial reference system identifier of the feature (StringType)
 
 The fields of the feature will be provided as columns in the DataFrame.
 The types of the fields are coerced to most concrete type that can hold all the values.
-ALL options should be passed as String as they are provided as a Map<String,String>
+ALL options should be passed as String as they are provided as a :code:`Map<String,String>`
 and parsed into expected types on execution. The reader supports the following options:
 
     * driverName - GDAL driver name (StringType)
@@ -116,7 +123,7 @@ and parsed into expected types on execution. The reader supports the following o
     * layerNumber - number of the layer to read (IntegerType), zero-indexed [pass as String]
 
 
-.. function:: read.format("multi_read_ogr").load(path)
+.. function:: mos.read().format("multi_read_ogr").load(path)
 
     Loads a vector file and returns the result as a :class:`DataFrame`.
 
@@ -170,7 +177,7 @@ The reader supports the following options:
     * layerNumber - number of the layer to read (IntegerType), zero-indexed
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
 
-.. function:: read.format("geo_db").load(path)
+.. function:: spark.read.format("geo_db").load(path)
 
     Loads a GeoDB file and returns the result as a :class:`DataFrame`.
 
@@ -223,7 +230,7 @@ The reader supports the following options:
     * layerNumber - number of the layer to read (IntegerType), zero-indexed
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
 
-.. function:: read.format("shapefile").load(path)
+.. function:: spark.read.format("shapefile").load(path)
 
     Loads a Shapefile and returns the result as a :class:`DataFrame`.
 

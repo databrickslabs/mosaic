@@ -6,20 +6,22 @@ Intro
 ################
 Raster functions are available in mosaic if you have installed the optional dependency `GDAL`.
 Please see :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for installation instructions.
-Mosaic provides several unique raster functions that are not available in other Spark packages.
-Mainly raster to grid functions, which are useful for reprojecting the raster data into a standard grid index system.
-This is useful for performing spatial joins between raster data and vector data.
-Mosaic also provides a scalable retiling function that can be used to retile raster data in case of bottlenecking due to large files.
-All raster functions respect the \"rst\_\" prefix naming convention.
-Mosaic is operating using raster tile objects only since 0.3.11. Tile objects are created using functions such as rst_fromfile(path_to_raster)
-or rst_fromcontent(raster_bin, driver). These functions are used as places to start when working with initial data.
-If you use spark.read.format("gdal") tiles are automatically generated for you.
-Also, scala does not have a df.display method while python does. In practice you would most often call display(df) in
-scala for a prettier output, but for brevity, we write df.show in scala.
+
+    * Mosaic provides several unique raster functions that are not available in other Spark packages.
+      Mainly raster to grid functions, which are useful for reprojecting the raster data into a standard grid index
+      system. This is useful for performing spatial joins between raster data and vector data.
+    * Mosaic also provides a scalable retiling function that can be used to retile raster data in case of bottlenecking
+      due to large files.
+    * All raster functions respect the :code:`rst_` prefix naming convention.
+    * Mosaic is operating using raster tile objects only since 0.3.11. Tile objects are created using functions such as
+      :code:`rst_fromfile` or :code:`rst_fromcontent`. These functions are used as places to start when working with
+      initial data. If you use :code:`spark.read.format("gdal")` tiles are automatically generated for you.
+    * Also, scala does not have a :code:`df.display()` method while python does. In practice you would most often call
+      :code:`display(df)` in scala for a prettier output, but for brevity, we write :code:`df.show` in scala.
 
 .. note:: For mosaic versions > 0.4.0 you can use the revamped setup_gdal function or new setup_fuse_install.
-    These functions will configure an init script in your preferred Workspace, Volume, or DBFS location to install GDAL on your cluster.
-    See :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for more details.
+    These functions will configure an init script in your preferred Workspace, Volume, or DBFS location to install GDAL
+    on your cluster. See :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for more details.
 
 rst_bandmetadata
 ****************
@@ -190,7 +192,7 @@ rst_combineavg
     The output raster will have the same pixel type as the input rasters.
     The output raster will have the same pixel size as the input rasters.
     The output raster will have the same coordinate reference system as the input rasters.
-    Also, see :doc:`rst_combineavg_agg </api/spatial-aggregations>` function.
+    Also, see :doc:`rst_combineavg_agg </api/spatial-aggregations#rst-combineavg-agg>` function.
 
     :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))
@@ -244,7 +246,7 @@ rst_derivedband
     The output raster will have the same pixel type as the input rasters.
     The output raster will have the same pixel size as the input rasters.
     The output raster will have the same coordinate reference system as the input rasters.
-    Also, see :doc:`rst_derivedband_agg </api/spatial-aggregations>` function.
+    Also, see :doc:`rst_derivedband_agg </api/spatial-aggregations#rst-derivedband-agg>` function.
 
     :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))
@@ -298,6 +300,7 @@ rst_derivedband
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
+
      SELECT
      rst_derivedband(array(tile1,tile2,tile3)) as tiles,
      """
@@ -876,7 +879,7 @@ rst_merge
     The output raster will have the same pixel type as the input rasters.
     The output raster will have the same pixel size as the highest resolution input rasters.
     The output raster will have the same coordinate reference system as the input rasters.
-    Also, see :doc:`rst_merge_agg </api/spatial-aggregations>` function.
+    Also, see :doc:`rst_merge_agg </api/spatial-aggregations#rst-merge-agg>` function.
 
     :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))

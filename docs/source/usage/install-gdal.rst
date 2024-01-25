@@ -26,19 +26,19 @@ GDAL Installation
 Setup GDAL files and scripts
 ****************************
 Mosaic requires GDAL to be installed on the cluster. The easiest way to do this is to use the
-the mos.setup_gdal() function.
+the :code:`setup_gdal` function.
 
 .. note::
    (a) This is close in behavior to Mosaic < 0.4 series (prior to DBR 13), with new options
        to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1).
    (b) 'to_fuse_dir' can be one of '/Volumes/..', '/Workspace/..', '/dbfs/..';
-        however, you should consider setup_fuse_install()` for Volume based installs as that
+        however, you should consider :code:`setup_fuse_install()` for Volume based installs as that
         exposes more options, to include copying JAR and JNI Shared Objects.
 
 .. function:: setup_gdal()
 
     Generate an init script that will install GDAL native libraries on each worker node.
-    All of the listed parameters are optional. You can have even more control with setup_fuse_install function.
+    All of the listed parameters are optional. You can have even more control with :code:`setup_fuse_install` function.
 
     :param to_fuse_dir: Path to write out the init script for GDAL installation;
                         default is '/Workspace/Shared/geospatial/mosaic/gdal/jammy'.
@@ -80,7 +80,7 @@ the mos.setup_gdal() function.
 
 Configure the init script
 **************************
-After the mos.setup_gdal() function has been run, you will need to configure the cluster to use the
+After the :code:`setup_gdal` function has been run, you will need to configure the cluster to use the
 init script. The init script can be set by clicking on the "Edit" button on the cluster page and adding
 the following to the "Advanced Options" section:
 
@@ -105,3 +105,7 @@ code at the top of the notebook:
 
     GDAL enabled.
     GDAL 3.4.1, released 2021/12/27
+
+ .. note::
+     You can configure init script from default ubuntu GDAL (3.4.1) to `ubuntugis ppa <https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa>`__ (3.4.3)
+     with :code:`setup_gdal(with_ubuntugis=True)`
