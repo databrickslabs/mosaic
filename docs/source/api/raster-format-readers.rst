@@ -5,7 +5,7 @@ Raster Format Readers
 
 Intro
 #####
-Mosaic provides spark readers for vector files supported by GDAL OGR drivers.
+Mosaic provides spark readers for raster files supported by GDAL OGR drivers.
 Only the drivers that are built by default are supported.
 Here are some common useful file formats:
 
