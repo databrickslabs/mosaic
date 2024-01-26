@@ -54,7 +54,7 @@ or from within a Databricks notebook using the :code:`%pip` magic command, e.g.
 
 If you need to install Mosaic 0.3 series for DBR 12.2 LTS, e.g.
 
-.. code-block::bash
+.. code-block:: bash
 
     %pip install "databricks-mosaic<0.4,>=0.3"
 
