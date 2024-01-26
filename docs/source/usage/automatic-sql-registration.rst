@@ -19,20 +19,21 @@ Pre-requisites
 In order to use Mosaic, you must have access to a Databricks cluster running
 Databricks Runtime 13. If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
-`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
+`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`_.
 
 You will also need "Can Manage" permissions on this cluster in order to attach init script
 to your cluster. A workspace administrator will be able to grant
 these permissions and more information about cluster permissions can be found 
 in our documentation
-`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`__.
+`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`_.
 
 Installation
 ************
 
 To install Mosaic on your Databricks cluster, take the following steps:
 
-#. Upload Mosaic jar to a dedicated fuse mount location. E.g. dbfs:/FileStore/mosaic/jars/.
+#. Upload Mosaic jar to a dedicated fuse mount location. E.g. "dbfs:/FileStore/mosaic/jars/".
+
 #. Create an init script that fetches the mosaic jar and copies it to databricks/jars.
     You can also use the output from (0.4 series) python function :code:`setup_fuse_install`, e.g.
     :code:`setup_fuse_intall(<to_fuse_dir>, jar_copy=True)` which can help to copy the JAR used in
@@ -56,8 +57,9 @@ To install Mosaic on your Databricks cluster, take the following steps:
 
         EOF
 
-#. Configure the init script for the cluster following the instructions `here <https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script>`__.
-#. Add the following spark configuration values for your cluster following the instructions `here <https://docs.databricks.com/clusters/configure.html#spark-configuration>`__.
+#. Configure the init script for the cluster following the instructions `here <https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script>`_.
+
+#. Add the following spark configuration values for your cluster following the instructions `here <https://docs.databricks.com/clusters/configure.html#spark-configuration>`_.
 
     .. code-block:: bash
 
@@ -80,7 +82,11 @@ To test the installation, create a new Python notebook and run the following com
 You should see all the supported functions registered by Mosaic appear in the output.
 
 .. note::
-  You may see some :code:`ST_` functions from other libraries, so pay close attention to the provider.
+    You may see some :code:`ST_` functions from other libraries, so pay close attention to the provider.
+
+.. warning::
+    Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters, but not Shared Access due to API changes,
+    more `here <https://docs.databricks.com/en/udf/index.html>`_.
 
 .. warning::
     Issue 317: https://github.com/databrickslabs/mosaic/issues/317

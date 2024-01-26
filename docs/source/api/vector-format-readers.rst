@@ -61,6 +61,7 @@ The reader supports the following options:
     Loads a vector file and returns the result as a :class:`DataFrame`.
 
     :param path: the path of the vector file
+    :type path: Column(StringType)
     :return: :class:`DataFrame`
 
     :example:
@@ -97,6 +98,11 @@ The reader supports the following options:
     |       "description"|      3| ... | POINT (3.0 3.0) |       4326|
     +--------------------+-------+-----+-----------------+-----------+
 
+.. note::
+    Keyword options not identified in function signature are converted to a :code:`Map<String,String>`.
+    These must be supplied as a :code:`String`.
+    Also, you can supply function signature values as :code:`String`.
+
 
 mos.read().format("multi_read_ogr")
 ***********************************
@@ -128,6 +134,7 @@ and parsed into expected types on execution. The reader supports the following o
     Loads a vector file and returns the result as a :class:`DataFrame`.
 
     :param path: the path of the vector file
+    :type path: Column(StringType)
     :return: :class:`DataFrame`
 
     :example:
@@ -164,6 +171,9 @@ and parsed into expected types on execution. The reader supports the following o
     |       "description"|      3| ... | POINT (3.0 3.0) |       4326|
     +--------------------+-------+-----+-----------------+-----------+
 
+.. note::
+    All options are converted to a :code:`Map<String,String>` and must be supplied as a :code:`String`.
+
 
 spark.read.format("geo_db")
 *****************************
@@ -182,6 +192,7 @@ The reader supports the following options:
     Loads a GeoDB file and returns the result as a :class:`DataFrame`.
 
     :param path: the path of the GeoDB file
+    :type path: Column(StringType)
     :return: :class:`DataFrame`
 
     :example:
@@ -217,6 +228,11 @@ The reader supports the following options:
     |       "description"|      3| ... | POINT (3.0 3.0) |       4326|
     +--------------------+-------+-----+-----------------+-----------+
 
+.. note::
+    Keyword options not identified in function signature are converted to a :code:`Map<String,String>`.
+    These must be supplied as a :code:`String`.
+    Also, you can supply function signature values as :code:`String`.
+
 
 spark.read.format("shapefile")
 ********************************
@@ -235,6 +251,7 @@ The reader supports the following options:
     Loads a Shapefile and returns the result as a :class:`DataFrame`.
 
     :param path: the path of the Shapefile
+    :type path: Column(StringType)
     :return: :class:`DataFrame`
 
     :example:
@@ -269,3 +286,8 @@ The reader supports the following options:
     |       "description"|      2| ... | POINT (2.0 2.0) |       4326|
     |       "description"|      3| ... | POINT (3.0 3.0) |       4326|
     +--------------------+-------+-----+-----------------+-----------+
+
+.. note::
+    Keyword options not identified in function signature are converted to a :code:`Map<String,String>`.
+    These must be supplied as a :code:`String`.
+    Also, you can supply function signature values as :code:`String`.

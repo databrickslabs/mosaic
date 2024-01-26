@@ -27,7 +27,7 @@ Other formats are supported if supported by GDAL available drivers.
 Mosaic provides two flavors of the readers:
 
     * :code:`spark.read.format("gdal")` for reading 1 file per spark task
-    * :code: `mos.read().format("raster_to_grid")` reader that automatically converts raster to grid.
+    * :code:`mos.read().format("raster_to_grid")` reader that automatically converts raster to grid.
 
 
 spark.read.format("gdal")
@@ -48,10 +48,10 @@ The output of the reader is a DataFrame with the following columns:
 .. function:: spark.read.format("gdal").load(path)
 
     Loads a GDAL raster file and returns the result as a DataFrame.
-    It uses standard spark.read.format(*).option(*).load(*) pattern.
+    It uses standard :code:`spark.read.format(*).option(*).load(*)` pattern.
 
     :param path: path to the raster file on dbfs
-    :type path: *StringType
+    :type path: Column(StringType)
     :rtype: DataFrame
 
     :example:
@@ -80,6 +80,11 @@ The output of the reader is a DataFrame with the following columns:
         +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
         | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |  100 |  100 |        1 | {AREA_OR_POINT=Po...|                null| 4326|  +proj=longlat +da...|
         +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
+
+.. note::
+    Keyword options not identified in function signature are converted to a :code:`Map<String,String>`.
+    These must be supplied as a :code:`String`.
+    Also, you can supply function signature values as :code:`String`.
 
 .. warning::
     Issue 350: https://github.com/databrickslabs/mosaic/issues/350
@@ -113,10 +118,10 @@ The reader supports the following options:
 .. function:: mos.read().format("raster_to_grid").load(path)
 
     Loads a GDAL raster file and returns the result as a DataFrame.
-    It uses standard mos.read().format(*).option(*).load(*) pattern.
+    It uses standard :code:`mos.read().format(*).option(*).load(*)` pattern.
 
     :param path: path to the raster file on dbfs
-    :type path: *StringType
+    :type path: Column(StringType)
     :rtype: DataFrame
 
     :example:
@@ -161,6 +166,11 @@ The reader supports the following options:
         |       1|       3|0.2464000000000000|
         |       1|       4|0.2464000000000000|
         +--------+--------+------------------+
+
+.. note::
+    Keyword options not identified in function signature are converted to a :code:`Map<String,String>`.
+    These must be supplied as a :code:`String`.
+    Also, you can supply function signature values as :code:`String`.
 
 .. warning::
     Issue 350: https://github.com/databrickslabs/mosaic/issues/350
