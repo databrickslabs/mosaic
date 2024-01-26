@@ -238,58 +238,6 @@ st_bufferloop
 
    Fig 1. ST_BufferLoop(wkt, 0.02, 0.04)
 
-st_centroid2D [Deprecated]
-**************************
-
-.. function:: st_centroid2D(col)
-
-    Returns the x and y coordinates representing the centroid of the input geometry.
-
-    :param col: Geometry
-    :type col: Column
-    :rtype: Column: StructType[x: DoubleType, y: DoubleType]
-
-    :example:
-
-.. tabs::
-   .. code-tab:: py
-
-    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    df.select(st_centroid2D('wkt')).show()
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
-
-   .. code-tab:: scala
-
-    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    df.select(st_centroid2D(col("wkt"))).show()
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
-
-   .. code-tab:: sql
-
-    SELECT st_centroid2D("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
-
-   .. code-tab:: r R
-
-    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    showDF(select(df, st_centroid2D(column("wkt"))), truncate=F)
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
 
 st_centroid
 *************
@@ -533,8 +481,8 @@ st_dimension
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_dimension('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_dimension('wkt')).show()
     +-----------------+
     |st_dimension(wkt)|
     +-----------------+
@@ -543,8 +491,8 @@ st_dimension
 
    .. code-tab:: scala
 
-    >>> val df = List("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))").toDF("wkt")
-    >>> df.select(st_dimension(col("wkt"))).show()
+    val df = List("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))").toDF("wkt")
+    df.select(st_dimension(col("wkt"))).show()
     +-----------------+
     |st_dimension(wkt)|
     +-----------------+
@@ -553,7 +501,7 @@ st_dimension
 
    .. code-tab:: sql
 
-    >>> SELECT st_dimension("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_dimension("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +-----------------+
     |st_dimension(wkt)|
     +-----------------+
@@ -562,8 +510,8 @@ st_dimension
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_dimension(column("wkt"))))
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_dimension(column("wkt"))))
     +-----------------+
     |st_dimension(wkt)|
     +-----------------+

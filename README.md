@@ -93,11 +93,11 @@ as a [cluster library](https://docs.databricks.com/libraries/cluster-libraries.h
 %pip install databricks-mosaic
 ```
 
-Then enable it with
+Then enable Mosaic (and namespace it in python) with
 
 ```python
-from mosaic import enable_mosaic
-enable_mosaic(spark, dbutils)
+import mosaic as mos
+mos.enable_mosaic(spark, dbutils)
 ```
 
 ### Scala
