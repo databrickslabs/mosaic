@@ -107,5 +107,5 @@ code at the top of the notebook:
     GDAL 3.4.1, released 2021/12/27
 
  .. note::
-     You can configure init script from default ubuntu GDAL (3.4.1) to `ubuntugis ppa <https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa>`_ (3.4.3)
-     with :code:`setup_gdal(with_ubuntugis=True)`
+     You can configure init script from default ubuntu GDAL (3.4.1) to ubuntugis ppa @ https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa (3.4.3)
+     with `setup_gdal(with_ubuntugis=True)`

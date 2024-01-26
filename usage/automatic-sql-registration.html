@@ -119,8 +119,9 @@ in our documentation
 <p>To install Mosaic on your Databricks cluster, take the following steps:</p>
 <ol class="arabic">
 <li><p>Upload Mosaic jar to a dedicated fuse mount location. E.g. “dbfs:/FileStore/mosaic/jars/”.</p></li>
-<li><dl>
-<dt>Create an init script that fetches the mosaic jar and copies it to databricks/jars.</dt><dd><p>You can also use the output from (0.4 series) python function <code class="code docutils literal notranslate"><span class="pre">setup_fuse_install</span></code>, e.g.
+<li><p>Create an init script that fetches the mosaic jar and copies it to “databricks/jars”.</p>
+<blockquote>
+<div><p>You can also use the output from (0.4 series) python function <code class="code docutils literal notranslate"><span class="pre">setup_fuse_install</span></code>, e.g.
 <code class="code docutils literal notranslate"><span class="pre">setup_fuse_intall(&lt;to_fuse_dir&gt;,</span> <span class="pre">jar_copy=True)</span></code> which can help to copy the JAR used in
 the init script below.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%sh
@@ -140,8 +141,7 @@ cat<span class="w"> </span>&gt;<span class="w"> </span>/dbfs/FileStore/mosaic/sc
 <span class="s">EOF</span>
 </pre></div>
 </div>
-</dd>
-</dl>
+</div></blockquote>
 </li>
 <li><p>Configure the init script for the cluster following the instructions <a class="reference external" href="https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script">here</a>.</p></li>
 <li><p>Add the following spark configuration values for your cluster following the instructions <a class="reference external" href="https://docs.databricks.com/clusters/configure.html#spark-configuration">here</a>.</p>
@@ -160,15 +160,30 @@ spark.sql.extensions<span class="w"> </span>com.databricks.labs.mosaic.sql.exten
 </section>
 <section id="testing">
 <h2>Testing<a class="headerlink" href="#testing" title="Permalink to this heading"></a></h2>
-<p>To test the installation, create a new Python notebook and run the following command:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;show functions&quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;startswith(function, &#39;st_&#39;)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+<p>To test the installation, create a new Python notebook and run the following commands (similar for <code class="code docutils literal notranslate"><span class="pre">grid_</span></code> and <code class="code docutils literal notranslate"><span class="pre">rst_</span></code>, not shown):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;SHOW FUNCTIONS&quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;startswith(function, &#39;st_&#39;)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>You should see all the supported functions registered by Mosaic appear in the output.</p>
+<p>You should see all the supported <code class="code docutils literal notranslate"><span class="pre">ST_</span></code> functions registered by Mosaic appear in the output.</p>
+<figure class="doc-figure align-default" id="id5">
+<img alt="../_images/functions_show.png" src="../_images/functions_show.png" />
+<figcaption>
+<p><span class="caption-text">Fig 1. Show Functions Example</span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You may see some <code class="code docutils literal notranslate"><span class="pre">ST_</span></code> functions from other libraries, so pay close attention to the provider.</p>
 </div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DESCRIBE FUNCTION st_buffer&quot;&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<figure class="doc-figure align-default" id="id6">
+<img alt="../_images/function_describe.png" src="../_images/function_describe.png" />
+<figcaption>
+<p><span class="caption-text">Fig 2. Describe Function Example</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters, but not Shared Access due to API changes,

@@ -34,7 +34,8 @@ To install Mosaic on your Databricks cluster, take the following steps:
 
 #. Upload Mosaic jar to a dedicated fuse mount location. E.g. "dbfs:/FileStore/mosaic/jars/".
 
-#. Create an init script that fetches the mosaic jar and copies it to databricks/jars.
+#. Create an init script that fetches the mosaic jar and copies it to "databricks/jars".
+
     You can also use the output from (0.4 series) python function :code:`setup_fuse_install`, e.g.
     :code:`setup_fuse_intall(<to_fuse_dir>, jar_copy=True)` which can help to copy the JAR used in
     the init script below.
@@ -73,16 +74,30 @@ To install Mosaic on your Databricks cluster, take the following steps:
 Testing
 *******
 
-To test the installation, create a new Python notebook and run the following command:
+To test the installation, create a new Python notebook and run the following commands (similar for :code:`grid_` and :code:`rst_`, not shown):
 
 .. code-block:: python
 
-    spark.sql("""show functions""").where("startswith(function, 'st_')").display()
+    sql("""SHOW FUNCTIONS""").where("startswith(function, 'st_')").display()
 
-You should see all the supported functions registered by Mosaic appear in the output.
+You should see all the supported :code:`ST_` functions registered by Mosaic appear in the output.
+
+.. figure:: ../images/functions_show.png
+   :figclass: doc-figure
+
+   Fig 1. Show Functions Example
 
 .. note::
     You may see some :code:`ST_` functions from other libraries, so pay close attention to the provider.
+
+.. code-block:: python
+
+    sql("""DESCRIBE FUNCTION st_buffer""")
+
+.. figure:: ../images/function_describe.png
+   :figclass: doc-figure
+
+   Fig 2. Describe Function Example
 
 .. warning::
     Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters, but not Shared Access due to API changes,
