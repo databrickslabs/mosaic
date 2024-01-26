@@ -159,7 +159,7 @@ The reader supports the following options:</p>
 <dd><p>Loads a vector file and returns the result as a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> – the path of the vector file</p>
+<dd class="field-odd"><p><strong>path</strong> (<em>Column</em><em>(</em><em>StringType</em><em>)</em>) – the path of the vector file</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
@@ -200,6 +200,12 @@ The reader supports the following options:</p>
 </pre></div>
 </div>
 </div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Keyword options not identified in function signature are converted to a <code class="code docutils literal notranslate"><span class="pre">Map&lt;String,String&gt;</span></code>.
+These must be supplied as a <code class="code docutils literal notranslate"><span class="pre">String</span></code>.
+Also, you can supply function signature values as <code class="code docutils literal notranslate"><span class="pre">String</span></code>.</p>
+</div>
 </section>
 <section id="mos-read-format-multi-read-ogr">
 <h3>mos.read().format(“multi_read_ogr”)<a class="headerlink" href="#mos-read-format-multi-read-ogr" title="Permalink to this heading"></a></h3>
@@ -235,7 +241,7 @@ and parsed into expected types on execution. The reader supports the following o
 <dd><p>Loads a vector file and returns the result as a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> – the path of the vector file</p>
+<dd class="field-odd"><p><strong>path</strong> (<em>Column</em><em>(</em><em>StringType</em><em>)</em>) – the path of the vector file</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
@@ -276,6 +282,10 @@ and parsed into expected types on execution. The reader supports the following o
 </pre></div>
 </div>
 </div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All options are converted to a <code class="code docutils literal notranslate"><span class="pre">Map&lt;String,String&gt;</span></code> and must be supplied as a <code class="code docutils literal notranslate"><span class="pre">String</span></code>.</p>
+</div>
 </section>
 <section id="spark-read-format-geo-db">
 <h3>spark.read.format(“geo_db”)<a class="headerlink" href="#spark-read-format-geo-db" title="Permalink to this heading"></a></h3>
@@ -297,7 +307,7 @@ The reader supports the following options:</p>
 <dd><p>Loads a GeoDB file and returns the result as a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> – the path of the GeoDB file</p>
+<dd class="field-odd"><p><strong>path</strong> (<em>Column</em><em>(</em><em>StringType</em><em>)</em>) – the path of the GeoDB file</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
@@ -337,6 +347,12 @@ The reader supports the following options:</p>
 </pre></div>
 </div>
 </div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Keyword options not identified in function signature are converted to a <code class="code docutils literal notranslate"><span class="pre">Map&lt;String,String&gt;</span></code>.
+These must be supplied as a <code class="code docutils literal notranslate"><span class="pre">String</span></code>.
+Also, you can supply function signature values as <code class="code docutils literal notranslate"><span class="pre">String</span></code>.</p>
+</div>
 </section>
 <section id="spark-read-format-shapefile">
 <h3>spark.read.format(“shapefile”)<a class="headerlink" href="#spark-read-format-shapefile" title="Permalink to this heading"></a></h3>
@@ -358,7 +374,7 @@ The reader supports the following options:</p>
 <dd><p>Loads a Shapefile and returns the result as a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> – the path of the Shapefile</p>
+<dd class="field-odd"><p><strong>path</strong> (<em>Column</em><em>(</em><em>StringType</em><em>)</em>) – the path of the Shapefile</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
@@ -398,6 +414,12 @@ The reader supports the following options:</p>
 </pre></div>
 </div>
 </div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Keyword options not identified in function signature are converted to a <code class="code docutils literal notranslate"><span class="pre">Map&lt;String,String&gt;</span></code>.
+These must be supplied as a <code class="code docutils literal notranslate"><span class="pre">String</span></code>.
+Also, you can supply function signature values as <code class="code docutils literal notranslate"><span class="pre">String</span></code>.</p>
+</div>
 </section>
 </section>
 </section>

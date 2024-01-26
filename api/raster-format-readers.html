@@ -122,12 +122,7 @@
 <blockquote>
 <div><ul class="simple">
 <li><p><code class="code docutils literal notranslate"><span class="pre">spark.read.format(&quot;gdal&quot;)</span></code> for reading 1 file per spark task</p></li>
-<li><dl class="field-list simple">
-<dt class="field-odd">code<span class="colon">:</span></dt>
-<dd class="field-odd"><p><cite>mos.read().format(“raster_to_grid”)</cite> reader that automatically converts raster to grid.</p>
-</dd>
-</dl>
-</li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">mos.read().format(&quot;raster_to_grid&quot;)</span></code> reader that automatically converts raster to grid.</p></li>
 </ul>
 </div></blockquote>
 <section id="spark-read-format-gdal">
@@ -151,10 +146,10 @@ The output of the reader is a DataFrame with the following columns:</p>
 <dt class="sig sig-object py" id="spark.read.format">
 <span class="sig-prename descclassname"><span class="pre">spark.read.</span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&quot;gdal&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#spark.read.format" title="Permalink to this definition"></a></dt>
 <dd><p>Loads a GDAL raster file and returns the result as a DataFrame.
-It uses standard spark.read.format(*).option(*).load(*) pattern.</p>
+It uses standard <code class="code docutils literal notranslate"><span class="pre">spark.read.format(*).option(*).load(*)</span></code> pattern.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> (<a href="#id1"><span class="problematic" id="id2">*</span></a>StringType) – path to the raster file on dbfs</p>
+<dd class="field-odd"><p><strong>path</strong> (<em>Column</em><em>(</em><em>StringType</em><em>)</em>) – path to the raster file on dbfs</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>DataFrame</p>
@@ -188,6 +183,12 @@ It uses standard spark.read.format(*).option(*).load(*) pattern.</p>
 </pre></div>
 </div>
 </div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Keyword options not identified in function signature are converted to a <code class="code docutils literal notranslate"><span class="pre">Map&lt;String,String&gt;</span></code>.
+These must be supplied as a <code class="code docutils literal notranslate"><span class="pre">String</span></code>.
+Also, you can supply function signature values as <code class="code docutils literal notranslate"><span class="pre">String</span></code>.</p>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Issue 350: <a class="reference external" href="https://github.com/databrickslabs/mosaic/issues/350">https://github.com/databrickslabs/mosaic/issues/350</a>
@@ -224,10 +225,10 @@ The reader supports the following options:</p>
 <dt class="sig sig-object py" id="mos.read">
 <span class="sig-prename descclassname"><span class="pre">mos.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">).format(&quot;raster_to_grid&quot;).load(path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mos.read" title="Permalink to this definition"></a></dt>
 <dd><p>Loads a GDAL raster file and returns the result as a DataFrame.
-It uses standard mos.read().format(*).option(*).load(*) pattern.</p>
+It uses standard <code class="code docutils literal notranslate"><span class="pre">mos.read().format(*).option(*).load(*)</span></code> pattern.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> (<a href="#id3"><span class="problematic" id="id4">*</span></a>StringType) – path to the raster file on dbfs</p>
+<dd class="field-odd"><p><strong>path</strong> (<em>Column</em><em>(</em><em>StringType</em><em>)</em>) – path to the raster file on dbfs</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>DataFrame</p>
@@ -277,10 +278,16 @@ It uses standard mos.read().format(*).option(*).load(*) pattern.</p>
 </pre></div>
 </div>
 </div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Keyword options not identified in function signature are converted to a <code class="code docutils literal notranslate"><span class="pre">Map&lt;String,String&gt;</span></code>.
+These must be supplied as a <code class="code docutils literal notranslate"><span class="pre">String</span></code>.
+Also, you can supply function signature values as <code class="code docutils literal notranslate"><span class="pre">String</span></code>.</p>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Issue 350: <a class="reference external" href="https://github.com/databrickslabs/mosaic/issues/350">https://github.com/databrickslabs/mosaic/issues/350</a>
-The option ‘fileExtension’ expects a wild card mask. Please use the following format: ‘<a href="#id5"><span class="problematic" id="id6">*</span></a>.tif’ or equivalent for other formats.
+The option ‘fileExtension’ expects a wild card mask. Please use the following format: ‘<a href="#id1"><span class="problematic" id="id2">*</span></a>.tif’ or equivalent for other formats.
 If you use ‘tif’ without the wildcard the reader wont pick up any files and you will have empty table as a result.</p>
 </div>
 </section>

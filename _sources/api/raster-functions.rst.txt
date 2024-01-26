@@ -192,7 +192,7 @@ rst_combineavg
     The output raster will have the same pixel type as the input rasters.
     The output raster will have the same pixel size as the input rasters.
     The output raster will have the same coordinate reference system as the input rasters.
-    Also, see :doc:`rst_combineavg_agg </api/spatial-aggregations#rst-combineavg-agg>` function.
+    Also, see :ref:`rst_combineavg_agg` function.
 
     :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))
@@ -246,7 +246,7 @@ rst_derivedband
     The output raster will have the same pixel type as the input rasters.
     The output raster will have the same pixel size as the input rasters.
     The output raster will have the same coordinate reference system as the input rasters.
-    Also, see :doc:`rst_derivedband_agg </api/spatial-aggregations#rst-derivedband-agg>` function.
+    Also, see :ref:`rst_derivedband_agg` function.
 
     :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))
@@ -879,7 +879,7 @@ rst_merge
     The output raster will have the same pixel type as the input rasters.
     The output raster will have the same pixel size as the highest resolution input rasters.
     The output raster will have the same coordinate reference system as the input rasters.
-    Also, see :doc:`rst_merge_agg </api/spatial-aggregations#rst-merge-agg>` function.
+    Also, see :ref:`rst_merge_agg` function.
 
     :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))

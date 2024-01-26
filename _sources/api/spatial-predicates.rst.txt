@@ -67,7 +67,7 @@ st_intersects
 .. function:: st_intersects(geom1, geom2)
 
     Returns true if the geometry :code:`geom1` intersects :code:`geom2`.
-    Also, see :doc:`st_intersects_agg </api/spatial-aggregations#st-intersects-agg>` function.
+    Also, see :ref:`st_intersects_agg` function.
 
     :param geom1: Geometry
     :type geom1: Column

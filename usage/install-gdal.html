@@ -118,16 +118,13 @@ more on access modes <a class="reference external" href="https://docs.databricks
 the <code class="code docutils literal notranslate"><span class="pre">setup_gdal</span></code> function.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<ol class="loweralpha simple">
+<ul class="simple">
 <li><p>This is close in behavior to Mosaic &lt; 0.4 series (prior to DBR 13), with new options
 to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1).</p></li>
-<li><dl class="simple">
-<dt>‘to_fuse_dir’ can be one of ‘/Volumes/..’, ‘/Workspace/..’, ‘/dbfs/..’;</dt><dd><p>however, you should consider <code class="code docutils literal notranslate"><span class="pre">setup_fuse_install()</span></code> for Volume based installs as that
-exposes more options, to include copying JAR and JNI Shared Objects.</p>
-</dd>
-</dl>
-</li>
-</ol>
+<li><p>Param “to_fuse_dir” can be one of “/Volumes/..”, “/Workspace/..”, “/dbfs/..”;
+however, you should consider <code class="code docutils literal notranslate"><span class="pre">setup_fuse_install()</span></code> for Volume based installs as that
+exposes more options, to include copying JAR and JNI Shared Objects.</p></li>
+</ul>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="setup_gdal">
@@ -180,10 +177,10 @@ mos.setup_gdal()
 <p>After the <code class="code docutils literal notranslate"><span class="pre">setup_gdal</span></code> function has been run, you will need to configure the cluster to use the
 init script. The init script can be set by clicking on the “Edit” button on the cluster page and adding
 the following to the “Advanced Options” section:</p>
-<figure class="doc-figure align-default" id="id1">
+<figure class="doc-figure align-default" id="id3">
 <img alt="../_images/init_script.png" src="../_images/init_script.png" />
 <figcaption>
-<p><span class="caption-text">Fig 1. Init script configuration</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Fig 1. Init script configuration</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </section>
@@ -201,7 +198,7 @@ code at the top of the notebook:</p>
    GDAL 3.4.1, released 2021/12/27
 
 .. note::
-    You can configure init script from default ubuntu GDAL (3.4.1) to `ubuntugis ppa &lt;https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa&gt;`__ (3.4.3)
+    You can configure init script from default ubuntu GDAL (3.4.1) to `ubuntugis ppa &lt;https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa&gt;`_ (3.4.3)
     with :code:`setup_gdal(with_ubuntugis=True)`
 </pre></div>
 </div>

@@ -118,7 +118,7 @@ in our documentation
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <p>To install Mosaic on your Databricks cluster, take the following steps:</p>
 <ol class="arabic">
-<li><p>Upload Mosaic jar to a dedicated fuse mount location. E.g. dbfs:/FileStore/mosaic/jars/.</p></li>
+<li><p>Upload Mosaic jar to a dedicated fuse mount location. E.g. “dbfs:/FileStore/mosaic/jars/”.</p></li>
 <li><dl>
 <dt>Create an init script that fetches the mosaic jar and copies it to databricks/jars.</dt><dd><p>You can also use the output from (0.4 series) python function <code class="code docutils literal notranslate"><span class="pre">setup_fuse_install</span></code>, e.g.
 <code class="code docutils literal notranslate"><span class="pre">setup_fuse_intall(&lt;to_fuse_dir&gt;,</span> <span class="pre">jar_copy=True)</span></code> which can help to copy the JAR used in
@@ -168,6 +168,11 @@ spark.sql.extensions<span class="w"> </span>com.databricks.labs.mosaic.sql.exten
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>You may see some <code class="code docutils literal notranslate"><span class="pre">ST_</span></code> functions from other libraries, so pay close attention to the provider.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters, but not Shared Access due to API changes,
+more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>

@@ -855,7 +855,7 @@ grid_cell_intersection
 .. function:: grid_cell_intersection(left_chip, right_chip)
 
     Returns the chip representing the intersection of two chips based on the same grid cell.
-    Also, see :doc:`grid_cell_intersection_agg </api/spatial-aggregations#grid-cell-intersection-agg>` function.
+    Also, see :ref:`grid_cell_intersection_agg` function.
 
     :param left_chip: Chip
     :type left_chip: Column: ChipType(LongType)
@@ -911,7 +911,7 @@ grid_cell_union
 .. function:: grid_cell_union(left_chip, right_chip)
 
     Returns the chip representing the union of two chips based on the same grid cell.
-    Also, see :doc:`grid_cell_union_agg </api/spatial-aggregations#grid-cell-union-agg>` function.
+    Also, see :ref:`grid_cell_union_agg` function.
 
     :param left_chip: Chip
     :type left_chip: Column: ChipType(LongType)

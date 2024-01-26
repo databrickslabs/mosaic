@@ -99,25 +99,22 @@
 <p class="admonition-title">Note</p>
 <p>For Mosaic 0.4 series, we recommend DBR 13.3 LTS on Photon or ML Runtime clusters.</p>
 </div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Mosaic 0.4.x series only supports DBR 13.x DBRs.
-If running on a different DBR it will throw an exception:</p>
+<p>Mosaic 0.4.x series only supports DBR 13.x DBRs. If running on a different DBR it will throw an exception:</p>
 <p><strong>DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify `%pip install ‘databricks-mosaic&lt;0.4,&gt;=0.3’` for DBR &lt; 13.</strong></p>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
 <p>Mosaic 0.4.x series issues the following ERROR on a standard, non-Photon cluster <a class="reference external" href="https://learn.microsoft.com/en-us/azure/databricks/runtime/">ADB</a> | <a class="reference external" href="https://docs.databricks.com/runtime/index.html/">AWS</a> | <a class="reference external" href="https://docs.gcp.databricks.com/runtime/index.html/">GCP</a> :</p>
 <p><strong>DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.</strong></p>
-</div>
-<dl class="simple">
-<dt>As of Mosaic 0.4.0 (subject to change in follow-on releases)</dt><dd><ul class="simple">
-<li><p>No Mosaic SQL expressions cannot yet be registered with <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a> due to API changes affecting DBRs &gt;= 13.</p></li>
-<li><p><a class="reference external" href="https://docs.databricks.com/en/compute/configure.html#access-modes">Assigned Clusters</a> : Mosaic Python, R, and Scala APIs.</p></li>
-<li><p><a class="reference external" href="https://docs.databricks.com/en/compute/configure.html#access-modes">Shared Access Clusters</a> : Mosaic Scala API (JVM) with Admin <a class="reference external" href="https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html">allowlisting</a> ; Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.</p></li>
+<p>As of Mosaic 0.4.0 (subject to change in follow-on releases)</p>
+<blockquote>
+<div><ul>
+<li><p><a class="reference external" href="https://docs.databricks.com/en/compute/configure.html#access-modes">Assigned Clusters</a> : Mosaic Python, SQL, R, and Scala APIs.</p></li>
+<li><p><a class="reference external" href="https://docs.databricks.com/en/compute/configure.html#access-modes">Shared Access Clusters</a> : Mosaic Scala API (JVM) with Admin <a class="reference external" href="https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html">allowlisting</a> ; Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
+- Mosaic SQL expressions cannot yet be registered with <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a></p>
+<blockquote>
+<div><p>due to API changes affecting DBRs &gt;= 13, more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
+</div></blockquote>
+</li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>As of Mosaic 0.4.0 (subject to change in follow-on releases)</p>
@@ -206,7 +203,8 @@ register the Mosaic SQL functions in your SparkSession from a Scala notebook cel
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Mosaic 0.4.x SQL bindings for DBR 13 not yet available in Unity Catalog due to API changes.</p>
+<p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters, but not Shared Access due to API changes,
+more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
 </div>
 </section>
 </section>
