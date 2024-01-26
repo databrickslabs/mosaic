@@ -65,27 +65,38 @@ Version 0.4.x Series
 
 We recommend using Databricks Runtime versions 13.3 LTS with Photon enabled.
 
-
 Mosaic 0.4.x series only supports DBR 13.x DBRs. If running on a different DBR it will throw an exception:
 
-**DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.**
+**DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify
+`%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.**
 
-Mosaic 0.4.x series issues the following ERROR on a standard, non-Photon cluster `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ | `AWS <https://docs.databricks.com/runtime/index.html/>`_ | `GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_ :
+Mosaic 0.4.x series issues an ERROR on standard, non-Photon clusters `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ |
+`AWS <https://docs.databricks.com/runtime/index.html/>`_ |
+`GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_ :
 
-**DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.**
+**DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial
+AI benefits; Mosaic 0.4.x series restricts executing this cluster.**
 
 As of Mosaic 0.4.0 (subject to change in follow-on releases)
 
    * `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Python, SQL, R, and Scala APIs.
-   * `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Scala API (JVM) with Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_ ; Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
-     - Mosaic SQL expressions cannot yet be registered with `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_
-       due to API changes affecting DBRs >= 13, more `here <https://docs.databricks.com/en/udf/index.html>`_.
+   * `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Scala API (JVM) with
+     Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_ ;
+     Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
+
+.. warning::
+    Mosaic SQL expressions cannot yet be registered with `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_
+    due to API changes affecting DBRs >= 13, more `here <https://docs.databricks.com/en/udf/index.html>`_.
 
 .. note::
    As of Mosaic 0.4.0 (subject to change in follow-on releases)
 
-   * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ : Enforces process isolation which is difficult to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from other supported languages in Shared Access Clusters.
-   * `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`_ : Along the same principle of isolation, clusters (both assigned and shared access) can read Volumes via relevant built-in readers and writers or via custom python calls which do not involve any custom JVM code.
+   * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ : Enforces process isolation which is difficult to
+      accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from other
+      supported languages in Shared Access Clusters.
+   * `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`_ : Along the same principle of isolation,
+      clusters (both assigned and shared access) can read Volumes via relevant built-in readers and writers or via custom
+      python calls which do not involve any custom JVM code.
 
 
 Version 0.3.x Series
@@ -97,11 +108,18 @@ For Mosaic versions < 0.4.0 please use the `0.3.x docs <https://databrickslabs.g
 .. warning::
    Mosaic 0.3.x series does not support DBR 13.x DBRs.
 
-As of the 0.3.11 release, Mosaic issues the following WARNING when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ | `AWS <https://docs.databricks.com/runtime/index.html/>`_ | `GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_ :
+As of the 0.3.11 release, Mosaic issues the following WARNING when initialized on a cluster that is neither Photon Runtime
+nor Databricks Runtime ML `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ |
+`AWS <https://docs.databricks.com/runtime/index.html/>`_ |
+`GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_ :
 
-**DEPRECATION WARNING: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic will stop working on this cluster after v0.3.x.**
+**DEPRECATION WARNING: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial
+AI benefits; Mosaic will stop working on this cluster after v0.3.x.**
 
-If you are receiving this warning in v0.3.11+, you will want to begin to plan for a supported runtime. The reason we are making this change is that we are streamlining Mosaic internals to be more aligned with future product APIs which are powered by Photon. Along this direction of change, Mosaic has standardized to JTS as its default and supported Vector Geometry Provider.
+If you are receiving this warning in v0.3.11+, you will want to begin to plan for a supported runtime. The reason we are
+making this change is that we are streamlining Mosaic internals to be more aligned with future product APIs which are
+powered by Photon. Along this direction of change, Mosaic has standardized to JTS as its default and supported Vector
+Geometry Provider.
 
 
 Documentation

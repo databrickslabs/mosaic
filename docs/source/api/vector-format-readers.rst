@@ -9,19 +9,24 @@ Mosaic provides spark readers for vector files supported by GDAL OGR drivers.
 Only the drivers that are built by default are supported.
 Here are some common useful file formats:
 
-    * GeoJSON (also ESRIJSON, TopoJSON) https://gdal.org/drivers/vector/geojson.html
-    * ESRI File Geodatabase (FileGDB) and ESRI File Geodatabase vector (OpenFileGDB). Mosaic implements named reader geo_db (described in this doc). https://gdal.org/drivers/vector/filegdb.html
-    * ESRI Shapefile / DBF (ESRI Shapefile) - Mosaic implements named reader shapefile (described in this doc) https://gdal.org/drivers/vector/shapefile.html
-    * Network Common Data Form (netCDF) - Mosaic implements raster reader also https://gdal.org/drivers/raster/netcdf.html
-    * (Geo)Parquet (Parquet) - Mosaic will be implementing a custom reader soon https://gdal.org/drivers/vector/parquet.html
-    * Spreadsheets (XLSX, XLS, ODS) https://gdal.org/drivers/vector/xls.html
-    * U.S. Census TIGER/Line (TIGER) https://gdal.org/drivers/vector/tiger.html
-    * PostgreSQL Dump (PGDump) https://gdal.org/drivers/vector/pgdump.html
-    * Keyhole Markup Language (KML) https://gdal.org/drivers/vector/kml.html
-    * Geography Markup Language (GML) https://gdal.org/drivers/vector/gml.html
-    * GRASS - option for Linear Referencing Systems (LRS) https://gdal.org/drivers/vector/grass.html
+    * `GeoJSON <https://gdal.org/drivers/vector/geojson.html>`_ (also `ESRIJSON <https://gdal.org/drivers/vector/esrijson.html>`_,
+      `TopoJSON  <https://gdal.org/drivers/vector/topojson.html>`_)
+    * `FileGDB <https://gdal.org/drivers/vector/filegdb.html>`_ (ESRI File Geodatabase) and
+      `OpenFileGDB <https://gdal.org/drivers/vector/openfilegdb.html>`_ (ESRI File Geodatabase vector) -
+       Mosaic implements named reader :ref:`spark.read.format("geo_db")` (described in this doc).
+    * `ESRI Shapefile <https://gdal.org/drivers/vector/shapefile.html>`_ (ESRI Shapefile / DBF) -
+       Mosaic implements named reader :ref:`spark.read.format("shapefile")` (described in this doc).
+    * `netCDF <https://gdal.org/drivers/raster/netcdf.html>`_ (Network Common Data Form) -
+       Mosaic supports GDAL netCDF raster reader also.
+    * `XLSX <https://gdal.org/drivers/vector/xlsx.html>`_, `XLS <https://gdal.org/drivers/vector/xls.html>`_,
+       `ODS <https://gdal.org/drivers/vector/ods.html>`_ spreadsheets
+    * `TIGER <https://gdal.org/drivers/vector/tiger.html>`_ (U.S. Census TIGER/Line)
+    * `PGDump <https://gdal.org/drivers/vector/pgdump.html>`_ (PostgreSQL Dump)
+    * `KML <https://gdal.org/drivers/vector/kml.html>`_ (Keyhole Markup Language)
+    * `GML <https://gdal.org/drivers/vector/gml.html>`_ (Geography Markup Language)
+    * `GRASS <https://gdal.org/drivers/vector/grass.html>`_ - option for Linear Referencing Systems (LRS)
 
-For more information please refer to gdal documentation: https://gdal.org/drivers/vector/index.html
+For more information please refer to gdal `vector driver <https://gdal.org/drivers/vector/index.html>`_ documentation.
 
 
 Mosaic provides two flavors of the general readers:
