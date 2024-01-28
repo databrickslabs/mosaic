@@ -10,24 +10,36 @@ Supported platforms
 
 Mosaic 0.4.x series only supports DBR 13.x DBRs. If running on a different DBR it will throw an exception:
 
-**DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.**
+**DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify
+`%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.**
 
-Mosaic 0.4.x series issues the following ERROR on a standard, non-Photon cluster `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ | `AWS <https://docs.databricks.com/runtime/index.html/>`_ | `GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_ :
+Mosaic 0.4.x series issues an ERROR on standard, non-Photon clusters `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ |
+`AWS <https://docs.databricks.com/runtime/index.html/>`_ |
+`GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_ :
 
-**DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.**
+**DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial
+AI benefits; Mosaic 0.4.x series restricts executing this cluster.**
 
 As of Mosaic 0.4.0 (subject to change in follow-on releases)
 
    * `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Python, SQL, R, and Scala APIs.
-   * `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Scala API (JVM) with Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_ ; Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
-     - Mosaic SQL expressions cannot yet be registered with `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_
-       due to API changes affecting DBRs >= 13, more `here <https://docs.databricks.com/en/udf/index.html>`_.
+   * `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Scala API (JVM) with
+     Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_ ;
+     Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
+
+.. warning::
+    Mosaic SQL expressions cannot yet be registered with `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_
+    due to API changes affecting DBRs >= 13, more `here <https://docs.databricks.com/en/udf/index.html>`_.
 
 .. note::
    As of Mosaic 0.4.0 (subject to change in follow-on releases)
 
-   * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ : Enforces process isolation which is difficult to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from other supported languages in Shared Access Clusters.
-   * `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`_ : Along the same principle of isolation, clusters (both assigned and shared access) can read Volumes via relevant built-in readers and writers or via custom python calls which do not involve any custom JVM code.
+   * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ : Enforces process isolation which is difficult to
+      accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from other
+      supported languages in Shared Access Clusters.
+   * `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`_ : Along the same principle of isolation,
+      clusters (both assigned and shared access) can read Volumes via relevant built-in readers and writers or via custom
+      python calls which do not involve any custom JVM code.
 
 If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions

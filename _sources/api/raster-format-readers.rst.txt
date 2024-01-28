@@ -5,24 +5,26 @@ Raster Format Readers
 
 Intro
 #####
-Mosaic provides spark readers for the following raster formats:
+Mosaic provides spark readers for raster files supported by GDAL OGR drivers.
+Only the drivers that are built by default are supported.
+Here are some common useful file formats:
 
-    * GTiff (GeoTiff) using .tif file extension - https://gdal.org/drivers/raster/gtiff.html
-    * COG (Cloud Optimized GeoTiff) using .tif file extension - https://gdal.org/drivers/raster/cog.html
-    * HDF4 using .hdf file extension - https://gdal.org/drivers/raster/hdf4.html
-    * HDF5 using .h5 file extension - https://gdal.org/drivers/raster/hdf5.html
-    * NetCDF using .nc file extension - https://gdal.org/drivers/raster/netcdf.html
-    * JP2ECW using .jp2 file extension - https://gdal.org/drivers/raster/jp2ecw.html
-    * JP2KAK using .jp2 file extension - https://gdal.org/drivers/raster/jp2kak.html
-    * JP2OpenJPEG using .jp2 file extension - https://gdal.org/drivers/raster/jp2openjpeg.html
-    * PDF using .pdf file extension - https://gdal.org/drivers/raster/pdf.html
-    * PNG using .png file extension - https://gdal.org/drivers/raster/png.html
-    * VRT using .vrt file extension - https://gdal.org/drivers/raster/vrt.html
-    * XPM using .xpm file extension - https://gdal.org/drivers/raster/xpm.html
-    * GRIB using .grb file extension - https://gdal.org/drivers/raster/grib.html
-    * Zarr using .zarr file extension - https://gdal.org/drivers/raster/zarr.html
+    * `GTiff <https://gdal.org/drivers/raster/gtiff.html>`_ (GeoTiff) using .tif file extension
+    * `COG <https://gdal.org/drivers/raster/cog.html>`_ (Cloud Optimized GeoTiff) using .tif file extension
+    * `HDF4 <https://gdal.org/drivers/raster/hdf4.html>`_ using .hdf file extension
+    * `HDF5 <https://gdal.org/drivers/raster/hdf5.html>`_ using .h5 file extension
+    * `NetCDF <https://gdal.org/drivers/raster/netcdf.html>`_ using .nc file extension
+    * `JP2ECW <https://gdal.org/drivers/raster/jp2ecw.html>`_ using .jp2 file extension
+    * `JP2KAK <https://gdal.org/drivers/raster/jp2kak.html>`_ using .jp2 file extension
+    * `JP2OpenJPEG <https://gdal.org/drivers/raster/jp2openjpeg.html>`_ using .jp2 file extension
+    * `PDF <https://gdal.org/drivers/raster/pdf.html>`_ using .pdf file extension
+    * `PNG <https://gdal.org/drivers/raster/png.html>`_ using .png file extension
+    * `VRT <https://gdal.org/drivers/raster/vrt.html>`_ using .vrt file extension
+    * `XPM <https://gdal.org/drivers/raster/xpm.html>`_ using .xpm file extension
+    * `GRIB <https://gdal.org/drivers/raster/grib.html>`_ using .grb file extension
+    * `Zarr <https://gdal.org/drivers/raster/zarr.html>`_ using .zarr file extension
 
-Other formats are supported if supported by GDAL available drivers.
+For more information please refer to gdal `raster driver <https://gdal.org/drivers/raster/index.html>`_ documentation.
 
 Mosaic provides two flavors of the readers:
 

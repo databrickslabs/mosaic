@@ -102,21 +102,38 @@
 Only the drivers that are built by default are supported.
 Here are some common useful file formats:</p>
 <blockquote>
-<div><ul class="simple">
-<li><p>GeoJSON (also ESRIJSON, TopoJSON) <a class="reference external" href="https://gdal.org/drivers/vector/geojson.html">https://gdal.org/drivers/vector/geojson.html</a></p></li>
-<li><p>ESRI File Geodatabase (FileGDB) and ESRI File Geodatabase vector (OpenFileGDB). Mosaic implements named reader geo_db (described in this doc). <a class="reference external" href="https://gdal.org/drivers/vector/filegdb.html">https://gdal.org/drivers/vector/filegdb.html</a></p></li>
-<li><p>ESRI Shapefile / DBF (ESRI Shapefile) - Mosaic implements named reader shapefile (described in this doc) <a class="reference external" href="https://gdal.org/drivers/vector/shapefile.html">https://gdal.org/drivers/vector/shapefile.html</a></p></li>
-<li><p>Network Common Data Form (netCDF) - Mosaic implements raster reader also <a class="reference external" href="https://gdal.org/drivers/raster/netcdf.html">https://gdal.org/drivers/raster/netcdf.html</a></p></li>
-<li><p>(Geo)Parquet (Parquet) - Mosaic will be implementing a custom reader soon <a class="reference external" href="https://gdal.org/drivers/vector/parquet.html">https://gdal.org/drivers/vector/parquet.html</a></p></li>
-<li><p>Spreadsheets (XLSX, XLS, ODS) <a class="reference external" href="https://gdal.org/drivers/vector/xls.html">https://gdal.org/drivers/vector/xls.html</a></p></li>
-<li><p>U.S. Census TIGER/Line (TIGER) <a class="reference external" href="https://gdal.org/drivers/vector/tiger.html">https://gdal.org/drivers/vector/tiger.html</a></p></li>
-<li><p>PostgreSQL Dump (PGDump) <a class="reference external" href="https://gdal.org/drivers/vector/pgdump.html">https://gdal.org/drivers/vector/pgdump.html</a></p></li>
-<li><p>Keyhole Markup Language (KML) <a class="reference external" href="https://gdal.org/drivers/vector/kml.html">https://gdal.org/drivers/vector/kml.html</a></p></li>
-<li><p>Geography Markup Language (GML) <a class="reference external" href="https://gdal.org/drivers/vector/gml.html">https://gdal.org/drivers/vector/gml.html</a></p></li>
-<li><p>GRASS - option for Linear Referencing Systems (LRS) <a class="reference external" href="https://gdal.org/drivers/vector/grass.html">https://gdal.org/drivers/vector/grass.html</a></p></li>
+<div><ul>
+<li><p><a class="reference external" href="https://gdal.org/drivers/vector/geojson.html">GeoJSON</a> (also <a class="reference external" href="https://gdal.org/drivers/vector/esrijson.html">ESRIJSON</a>,
+<a class="reference external" href="https://gdal.org/drivers/vector/topojson.html">TopoJSON</a>)</p></li>
+<li><p><a class="reference external" href="https://gdal.org/drivers/vector/filegdb.html">FileGDB</a> (ESRI File Geodatabase) and
+<a class="reference external" href="https://gdal.org/drivers/vector/openfilegdb.html">OpenFileGDB</a> (ESRI File Geodatabase vector) -</p>
+<blockquote>
+<div><p>Mosaic implements named reader <a class="reference internal" href="#spark-read-format-geo-db"><span class="std std-ref">spark.read.format(“geo_db”)</span></a> (described in this doc).</p>
+</div></blockquote>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="https://gdal.org/drivers/vector/shapefile.html">ESRI Shapefile</a> (ESRI Shapefile / DBF) -</dt><dd><p>Mosaic implements named reader <a class="reference internal" href="#spark-read-format-shapefile"><span class="std std-ref">spark.read.format(“shapefile”)</span></a> (described in this doc).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="https://gdal.org/drivers/raster/netcdf.html">netCDF</a> (Network Common Data Form) -</dt><dd><p>Mosaic supports GDAL netCDF raster reader also.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="https://gdal.org/drivers/vector/xlsx.html">XLSX</a>, <a class="reference external" href="https://gdal.org/drivers/vector/xls.html">XLS</a>,</dt><dd><p><a class="reference external" href="https://gdal.org/drivers/vector/ods.html">ODS</a> spreadsheets</p>
+</dd>
+</dl>
+</li>
+<li><p><a class="reference external" href="https://gdal.org/drivers/vector/tiger.html">TIGER</a> (U.S. Census TIGER/Line)</p></li>
+<li><p><a class="reference external" href="https://gdal.org/drivers/vector/pgdump.html">PGDump</a> (PostgreSQL Dump)</p></li>
+<li><p><a class="reference external" href="https://gdal.org/drivers/vector/kml.html">KML</a> (Keyhole Markup Language)</p></li>
+<li><p><a class="reference external" href="https://gdal.org/drivers/vector/gml.html">GML</a> (Geography Markup Language)</p></li>
+<li><p><a class="reference external" href="https://gdal.org/drivers/vector/grass.html">GRASS</a> - option for Linear Referencing Systems (LRS)</p></li>
 </ul>
 </div></blockquote>
-<p>For more information please refer to gdal documentation: <a class="reference external" href="https://gdal.org/drivers/vector/index.html">https://gdal.org/drivers/vector/index.html</a></p>
+<p>For more information please refer to gdal <a class="reference external" href="https://gdal.org/drivers/vector/index.html">vector driver</a> documentation.</p>
 <p>Mosaic provides two flavors of the general readers:</p>
 <blockquote>
 <div><ul class="simple">
