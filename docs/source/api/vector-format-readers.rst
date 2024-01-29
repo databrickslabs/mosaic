@@ -11,15 +11,10 @@ Here are some common useful file formats:
 
     * `GeoJSON <https://gdal.org/drivers/vector/geojson.html>`_ (also `ESRIJSON <https://gdal.org/drivers/vector/esrijson.html>`_,
       `TopoJSON  <https://gdal.org/drivers/vector/topojson.html>`_)
-    * `FileGDB <https://gdal.org/drivers/vector/filegdb.html>`_ (ESRI File Geodatabase) and
-      `OpenFileGDB <https://gdal.org/drivers/vector/openfilegdb.html>`_ (ESRI File Geodatabase vector) -
-       Mosaic implements named reader :ref:`spark.read.format("geo_db")` (described in this doc).
-    * `ESRI Shapefile <https://gdal.org/drivers/vector/shapefile.html>`_ (ESRI Shapefile / DBF) -
-       Mosaic implements named reader :ref:`spark.read.format("shapefile")` (described in this doc).
-    * `netCDF <https://gdal.org/drivers/raster/netcdf.html>`_ (Network Common Data Form) -
-       Mosaic supports GDAL netCDF raster reader also.
-    * `XLSX <https://gdal.org/drivers/vector/xlsx.html>`_, `XLS <https://gdal.org/drivers/vector/xls.html>`_,
-       `ODS <https://gdal.org/drivers/vector/ods.html>`_ spreadsheets
+    * `FileGDB <https://gdal.org/drivers/vector/filegdb.html>`_ (ESRI File Geodatabase) and `OpenFileGDB <https://gdal.org/drivers/vector/openfilegdb.html>`_ (ESRI File Geodatabase vector) - Mosaic implements named reader :ref:`spark.read.format("geo_db")` (described in this doc).
+    * `ESRI Shapefile <https://gdal.org/drivers/vector/shapefile.html>`_ (ESRI Shapefile / DBF) - Mosaic implements named reader :ref:`spark.read.format("shapefile")` (described in this doc).
+    * `netCDF <https://gdal.org/drivers/raster/netcdf.html>`_ (Network Common Data Form) - Mosaic supports GDAL netCDF raster reader also.
+    * `XLSX <https://gdal.org/drivers/vector/xlsx.html>`_, `XLS <https://gdal.org/drivers/vector/xls.html>`_, `ODS <https://gdal.org/drivers/vector/ods.html>`_ spreadsheets
     * `TIGER <https://gdal.org/drivers/vector/tiger.html>`_ (U.S. Census TIGER/Line)
     * `PGDump <https://gdal.org/drivers/vector/pgdump.html>`_ (PostgreSQL Dump)
     * `KML <https://gdal.org/drivers/vector/kml.html>`_ (Keyhole Markup Language)
