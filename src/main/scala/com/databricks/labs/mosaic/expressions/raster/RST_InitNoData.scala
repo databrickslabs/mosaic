@@ -59,7 +59,7 @@ object RST_InitNoData extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster clipped by provided vector.
+          |_FUNC_(expr1) - Initializes the nodata value of the raster bands.
           |""".stripMargin
 
     override def example: String =

@@ -5,16 +5,17 @@ Spatial grid indexing
 Spatial grid indexing is the process of mapping a geometry (or a point) to one or more cells (or cell ID)
 from the selected spatial grid.
 
-The grid system can be specified by using the spark configuration `spark.databricks.labs.mosaic.index.system`
+The grid system can be specified by using the spark configuration :code:`spark.databricks.labs.mosaic.index.system`
 before enabling Mosaic.
 
 The valid values are:
-    * `H3` - Good all-rounder for any location on earth
-    * `BNG` - Local grid system Great Britain (EPSG:27700)
-    * `CUSTOM(minX,maxX,minY,maxY,splits,rootCellSizeX,rootCellSizeY)` - Can be used with any local or global CRS
-        * `minX`,`maxX`,`minY`,`maxY` can be positive or negative integers defining the grid bounds
-        * `splits` defines how many splits are applied to each cell for an increase in resolution step (usually 2 or 10)
-        * `rootCellSizeX`,`rootCellSizeY` define the size of the cells on resolution 0
+
+    * :code:`H3` - Good all-rounder for any location on earth
+    * :code:`BNG` - Local grid system Great Britain (EPSG:27700)
+    * :code:`CUSTOM(minX,maxX,minY,maxY,splits,rootCellSizeX,rootCellSizeY)` - Can be used with any local or global CRS
+        * :code:`minX`, :code:`maxX`, :code:`minY`, :code:`maxY` can be positive or negative integers defining the grid bounds
+        * :code:`splits` defines how many splits are applied to each cell for an increase in resolution step (usually 2 or 10)
+        * :code:`rootCellSizeX`, :code:`rootCellSizeY` define the size of the cells on resolution 0
 
 Example
 
@@ -34,8 +35,8 @@ grid_longlatascellid
 
 .. function:: grid_longlatascellid(lon, lat, resolution)
 
-    Returns the `resolution` grid index associated with
-    the input `lon` and `lat` coordinates.
+    Returns the :code:`resolution` grid index associated with
+    the input :code:`lon` and :code:`lat` coordinates.
 
     :param lon: Longitude
     :type lon: Column: DoubleType
@@ -114,8 +115,8 @@ grid_pointascellid
 
 .. function:: grid_pointascellid(geometry, resolution)
 
-    Returns the `resolution` grid index associated
-    with the input point geometry `geometry`.
+    Returns the :code:`resolution` grid index associated
+    with the input point geometry :code:`geometry`.
 
     :param geometry: Geometry
     :type geometry: Column
@@ -187,17 +188,15 @@ grid_pointascellid
    </div>
 
 
-
-
 grid_polyfill
 *************
 
 .. function:: grid_polyfill(geometry, resolution)
 
-    Returns the set of grid indices of which centroid is contained in the input `geometry` at `resolution`.
+    Returns the set of grid indices of which centroid is contained in the input :code:`geometry` at :code:`resolution`.
 
-    When using `H3 <https://h3geo.org/>` index system, this is equivalent to the
-    `H3 polyfill <https://h3geo.org/docs/api/regions/#polyfill>` method
+    When using `H3 <https://h3geo.org/>`_ index system, this is equivalent to the
+    `H3 polyfill <https://h3geo.org/docs/api/regions/#polyfill>`_ method
 
     :param geometry: Geometry
     :type geometry: Column
@@ -383,31 +382,31 @@ grid_boundary
 grid_tessellate
 ***************
 
-.. function:: grid_tessellate(geometry, resolution, keep_core_geometries)
+.. function:: grid_tessellate(geometry, resolution, <keep_core_geometries>)
 
-    Cuts the original `geometry` into several pieces along the grid index borders at the specified `resolution`.
+    Cuts the original :code:`geometry` into several pieces along the grid index borders at the specified :code:`resolution`.
 
-    Returns an array of Mosaic chips **covering** the input `geometry` at `resolution`.
+    Returns an array of Mosaic chips **covering** the input :code:`geometry` at :code:`resolution`.
 
     A Mosaic chip is a struct type composed of:
 
-    - `is_core`: Identifies if the chip is fully contained within the geometry: Boolean
+    - :code:`is_core`: Identifies if the chip is fully contained within the geometry: Boolean
 
-    - `index_id`: Index ID of the configured spatial indexing (default H3): Integer
+    - :code:`index_id`: Index ID of the configured spatial indexing (default H3): Integer
 
-    - `wkb`: Geometry in WKB format equal to the intersection of the index shape and the original `geometry`: Binary
+    - :code:`wkb`: Geometry in WKB format equal to the intersection of the index shape and the original :code:`geometry`: Binary
 
-    In contrast to :ref:`grid_tessellateexplode`, `grid_tessellate` does not explode the list of shapes.
+    In contrast to :ref:`grid_tessellateexplode`, :ref:`grid_tessellate` does not explode the list of shapes.
 
-    In contrast to :ref:`grid_polyfill`, `grid_tessellate` fully covers the original `geometry` even if the index centroid
+    In contrast to :ref:`grid_polyfill`, :ref:`grid_tessellate` fully covers the original :code:`geometry` even if the index centroid
     falls outside of the original geometry. This makes it suitable to index lines as well.
 
     :param geometry: Geometry
     :type geometry: Column
     :param resolution: Index resolution
-    :type resolution: Column: Integer
-    :param keep_core_geometries: Whether to keep the core geometries or set them to null
-    :type keep_core_geometries: Column: Boolean
+    :type resolution: Column (IntegerType)
+    :param keep_core_geometries: Whether to keep the core geometries or set them to null, default true
+    :type keep_core_geometries: Column (BooleanType)
     :rtype: Column: ArrayType[MosaicType]
 
     :example:
@@ -505,31 +504,31 @@ grid_tessellate
 grid_tessellateexplode
 **********************
 
-.. function:: grid_tessellateexplode(geometry, resolution, keep_core_geometries)
+.. function:: grid_tessellateexplode(geometry, resolution, <keep_core_geometries>)
 
-    Cuts the original `geometry` into several pieces along the grid index borders at the specified `resolution`.
+    Cuts the original :code:`geometry` into several pieces along the grid index borders at the specified :code:`resolution`.
 
-    Returns the set of Mosaic chips **covering** the input `geometry` at `resolution`.
+    Returns the set of Mosaic chips **covering** the input :code:`geometry` at :code:`resolution`.
 
     A Mosaic chip is a struct type composed of:
 
-    - `is_core`: Identifies if the chip is fully contained within the geometry: Boolean
+    - :code:`is_core`: Identifies if the chip is fully contained within the geometry: Boolean
 
-    - `index_id`: Index ID of the configured spatial indexing (default H3): Integer
+    - :code:`index_id`: Index ID of the configured spatial indexing (default H3): Integer
 
-    - `wkb`: Geometry in WKB format equal to the intersection of the index shape and the original `geometry`: Binary
+    - :code:`wkb`: Geometry in WKB format equal to the intersection of the index shape and the original :code:`geometry`: Binary
 
-    In contrast to :ref:`grid_tessellate`, `grid_tessellateexplode` generates one result row per chip.
+    In contrast to :ref:`grid_tessellate`, :ref:`grid_tessellateexplode` generates one result row per chip.
 
-    In contrast to :ref:`grid_polyfill`, `grid_tessellateexplode` fully covers the original `geometry` even if the index centroid
+    In contrast to :ref:`grid_polyfill`, :ref:`grid_tessellateexplode` fully covers the original :code:`geometry` even if the index centroid
     falls outside of the original geometry. This makes it suitable to index lines as well.
 
     :param geometry: Geometry
     :type geometry: Column
     :param resolution: Index resolution
-    :type resolution: Column: Integer
-    :param keep_core_geometries: Whether to keep the core geometries or set them to null
-    :type keep_core_geometries: Column: Boolean
+    :type resolution: Column (IntegerType)
+    :param keep_core_geometries: Whether to keep the core geometries or set them to null, default true
+    :type keep_core_geometries: Column (BooleanType)
     :rtype: Column: MosaicType
 
     :example:
@@ -676,8 +675,6 @@ grid_cellarea
     +--------------------+---------------+
     |  613177664827555839|     0.78595419|
     +--------------------+---------------+
-
-
 
 
 grid_cellkring
@@ -857,7 +854,8 @@ grid_cell_intersection
 
 .. function:: grid_cell_intersection(left_chip, right_chip)
 
-    Returns the chip representing the intersection of two chips based on the same grid cell
+    Returns the chip representing the intersection of two chips based on the same grid cell.
+    Also, see :ref:`grid_cell_intersection_agg` function.
 
     :param left_chip: Chip
     :type left_chip: Column: ChipType(LongType)
@@ -912,7 +910,8 @@ grid_cell_union
 
 .. function:: grid_cell_union(left_chip, right_chip)
 
-    Returns the chip representing the union of two chips based on the same grid cell
+    Returns the chip representing the union of two chips based on the same grid cell.
+    Also, see :ref:`grid_cell_union_agg` function.
 
     :param left_chip: Chip
     :type left_chip: Column: ChipType(LongType)
@@ -1489,44 +1488,3 @@ grid_geometrykloopexplode
 .. raw:: html
 
    </div>
-
-
-
-mosaic_explode [Deprecated]
-***************************
-
-.. function:: mosaic_explode(geometry, resolution, keep_core_geometries)
-
-    This is an alias for :ref:`grid_tessellateexplode`
-
-
-mosaicfill [Deprecated]
-************************
-
-.. function:: mosaicfill(geometry, resolution, keep_core_geometries)
-
-    This is an alias for :ref:`grid_tessellate`
-
-
-point_index_geom [Deprecated]
-******************************
-
-.. function:: point_index_geom(point, resolution)
-
-    This is an alias for :ref:`grid_pointascellid`
-
-
-point_index_lonlat [Deprecated]
-********************************
-
-.. function:: point_index_lonlat(point, resolution)
-
-    This is an alias for :ref:`grid_longlatascellid`
-
-
-polyfill [Deprecated]
-**********************
-
-.. function:: polyfill(geom, resolution)
-
-    This is an alias for :ref:`grid_polyfill`

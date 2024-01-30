@@ -25,7 +25,7 @@ object RST_NumBands extends WithExpressionInfo {
 
     override def name: String = "rst_numbands"
 
-    override def usage: String = "_FUNC_(expr1) - Returns number of bands in the raster."
+    override def usage: String = "_FUNC_(expr1) - Returns number of bands in the raster tile."
 
     override def example: String =
         """

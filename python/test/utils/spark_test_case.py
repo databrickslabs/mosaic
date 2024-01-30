@@ -10,6 +10,7 @@ import mosaic
 class SparkTestCase(unittest.TestCase):
     spark = None
     library_location = None
+    log4jref = None
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -21,12 +22,16 @@ class SparkTestCase(unittest.TestCase):
             SparkSession.builder.master("local[*]")
             .config("spark.jars", cls.library_location)
             .config("spark.driver.memory", "4g")
+            .config("spark.driver.extraJavaOptions", "-Dorg.apache.logging.log4j.level=FATAL")
+            .config("spark.executor.extraJavaOptions", "-Dorg.apache.logging.log4j.level=FATAL")
             .getOrCreate()
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
-        cls.spark.sparkContext.setLogLevel("WARN")
+        cls.spark.sparkContext.setLogLevel("FATAL")
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls.spark.sparkContext.setLogLevel("warn")
         cls.spark.stop()
+
+    def setUp(self) -> None:
+        self.spark.sparkContext.setLogLevel("FATAL")

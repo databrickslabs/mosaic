@@ -8,8 +8,13 @@ import java.nio.file.{Files, Paths}
 
 object PathUtils {
 
+    val NO_PATH_STRING = "no_path"
+
     def getCleanPath(path: String): String = {
-        val cleanPath = path.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
+        val cleanPath = path
+            .replace("file:/", "/")
+            .replace("dbfs:/Volumes", "/Volumes")
+            .replace("dbfs:/","/dbfs/")
         if (cleanPath.endsWith(".zip") || cleanPath.contains(".zip:")) {
             getZipPath(cleanPath)
         } else {
@@ -57,10 +62,12 @@ object PathUtils {
         result
     }
 
-    def copyToTmp(inPath: String): String = {
-        val cleanPath = getCleanPath(inPath)
-        val copyFromPath = inPath.replace("file:/", "/").replace("dbfs:/", "/dbfs/")
-        val driver = MosaicRasterGDAL.identifyDriver(cleanPath)
+    def copyToTmp(inPath: String): String = { 
+        val copyFromPath = inPath
+            .replace("file:/", "/")
+            .replace("dbfs:/Volumes", "/Volumes")
+            .replace("dbfs:/","/dbfs/")
+        val driver = MosaicRasterGDAL.identifyDriver(getCleanPath(inPath))
         val extension = if (inPath.endsWith(".zip")) "zip" else GDAL.getExtension(driver)
         val tmpPath = createTmpFilePath(extension)
         Files.copy(Paths.get(copyFromPath), Paths.get(tmpPath))

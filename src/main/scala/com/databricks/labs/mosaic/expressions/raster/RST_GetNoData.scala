@@ -44,15 +44,14 @@ object RST_GetNoData extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster clipped by provided vector.
+          |_FUNC_(expr1) - Returns no data values for raster tile bands.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(raster_tile);
-          |        {index_id, clipped_raster, parentPath, driver}
-          |        {index_id, clipped_raster, parentPath, driver}
+          |        [0.0, -9999.0, ...]
           |        ...
           |  """.stripMargin
 

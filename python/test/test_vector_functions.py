@@ -7,6 +7,9 @@ from .utils import MosaicTestCase
 
 
 class TestVectorFunctions(MosaicTestCase):
+    def setUp(self) -> None:
+        return super().setUp()
+    
     def test_st_point(self):
         expected = [
             "POINT (0 0)",
@@ -39,9 +42,10 @@ class TestVectorFunctions(MosaicTestCase):
             df.withColumn("st_area", api.st_area("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
             .withColumn("st_buffer", api.st_buffer("wkt", lit(1.1)))
-            .withColumn("st_buffer", api.st_bufferloop("wkt", lit(1.1), lit(1.2)))
+            .withColumn("st_bufferloop", api.st_bufferloop("wkt", lit(1.1), lit(1.2)))
             .withColumn("st_perimeter", api.st_perimeter("wkt"))
             .withColumn("st_convexhull", api.st_convexhull("wkt"))
+            .withColumn("st_concavehull", api.st_concavehull("wkt", lit(0.5)))
             .withColumn("st_dump", api.st_dump("wkt"))
             .withColumn("st_translate", api.st_translate("wkt", lit(1), lit(1)))
             .withColumn("st_scale", api.st_scale("wkt", lit(1), lit(1)))
@@ -165,10 +169,10 @@ class TestVectorFunctions(MosaicTestCase):
             .join(right_df, col("left_index.index_id") == col("right_index.index_id"))
             .groupBy("left_id", "right_id")
             .agg(
-                api.st_intersects_aggregate(
+                api.st_intersects_agg(
                     col("left_index"), col("right_index")
                 ).alias("agg_intersects"),
-                api.st_intersection_aggregate(
+                api.st_intersection_agg(
                     col("left_index"), col("right_index")
                 ).alias("agg_intersection"),
                 first("left_geom").alias("left_geom"),

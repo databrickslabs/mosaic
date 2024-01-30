@@ -13,8 +13,8 @@ trait ST_SetSRIDBehaviors extends QueryTest {
 
     def setSRIDBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("FATAL")
-        val sc = spark
         val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val sc = spark
         import mc.functions._
         import sc.implicits._
         mc.register(spark)

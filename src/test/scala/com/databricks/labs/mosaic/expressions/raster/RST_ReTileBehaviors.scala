@@ -10,6 +10,7 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_ReTileBehaviors extends QueryTest {
 
     def retileBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark

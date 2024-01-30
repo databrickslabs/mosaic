@@ -78,8 +78,8 @@ test_that("aggregate vector functions behave as intended", {
   sdf.intersection <- join(sdf.l, sdf.r, sdf.l$left_index == sdf.r$right_index, "inner")
   sdf.intersection <- summarize(
     groupBy(sdf.intersection, sdf.intersection$left_id, sdf.intersection$right_id),
-    agg_intersects = st_intersects_aggregate(column("left_index"), column("right_index")),
-    agg_intersection = st_intersection_aggregate(column("left_index"), column("right_index")),
+    agg_intersects = st_intersects_agg(column("left_index"), column("right_index")),
+    agg_intersection = st_intersection_agg(column("left_index"), column("right_index")),
     left_geom = first(column("left_geom")),
     right_geom = first(column("right_geom"))
   )

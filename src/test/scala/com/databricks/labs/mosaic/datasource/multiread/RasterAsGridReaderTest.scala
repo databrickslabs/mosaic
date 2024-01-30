@@ -14,6 +14,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
     test("Read netcdf with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
+        spark.sparkContext.setLogLevel("FATAL")
         MosaicContext.build(H3IndexSystem, JTS)
 
         val netcdf = "/binary/netcdf-coral/"
@@ -35,6 +36,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
     test("Read grib with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
+        spark.sparkContext.setLogLevel("FATAL")
         MosaicContext.build(H3IndexSystem, JTS)
 
         val grib = "/binary/grib-cams/"
@@ -55,6 +57,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
     test("Read tif with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
+        spark.sparkContext.setLogLevel("FATAL")
         MosaicContext.build(H3IndexSystem, JTS)
 
         val tif = "/modis/"
@@ -73,6 +76,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
     test("Read zarr with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
+        spark.sparkContext.setLogLevel("FATAL")
         MosaicContext.build(H3IndexSystem, JTS)
 
         val zarr = "/binary/zarr-example/"

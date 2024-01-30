@@ -26,8 +26,28 @@ jobs:
       with:
         documentation_path: docs/source
         requirements_path: docs/docs-requirements.txt
+    - name: checkout v0.3.x archive
+      # Please do not change any step in here, even though it may look hacky
+      # This is the only way to emulate git archive --remote with actions/checkout
+      # git checkout gh-pages-v0.3.x is required to have a local branch for archiving
+      # git pull is optional, but it's a good practice to have the latest version
+      # git checkout gh-pages right after is required to go back to the working branch
+      # mkdir ./v0.3.x is required to create a directory for the archive
+      # git archive gh-pages-v0.3.x | tar -x -C ./v0.3.x is required to extract the archive
+      # in the right place
+      # git add --all is required to add the new files to the working branch
+      # git commit -am "Adding v0.3.x docs" is required to commit the changes
+      run: |
+        git checkout gh-pages-v0.3.x
+        git pull
+        git checkout gh-pages
+        mkdir ./v0.3.x
+        git archive gh-pages-v0.3.x | tar -x -C ./v0.3.x
+        git add --all
+        git commit -am "Adding v0.3.x docs"
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: gh-pages
+

@@ -42,7 +42,7 @@ object RST_RasterToWorldCoordX extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2, expr3) - Returns the x coordinate of the pixel in world coordinates using geo transform of the raster.
+          |_FUNC_(expr1, expr2, expr3) - Returns the x coordinate of the pixel in world coordinates using geo transform of the raster tile.
           |""".stripMargin
 
     override def example: String =

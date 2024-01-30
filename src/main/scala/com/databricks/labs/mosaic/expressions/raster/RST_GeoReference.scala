@@ -36,7 +36,7 @@ object RST_GeoReference extends WithExpressionInfo {
 
     override def name: String = "rst_georeference"
 
-    override def usage: String = "_FUNC_(expr1) - Extracts geo reference from a raster."
+    override def usage: String = "_FUNC_(expr1) - Extracts geo reference from a raster tile."
 
     override def example: String =
         """

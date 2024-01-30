@@ -20,8 +20,9 @@ trait ST_TransformBehaviors extends QueryTest {
     val geomFactory = new GeometryFactory()
 
     def reprojectGeometries(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        val sc = spark
+        spark.sparkContext.setLogLevel("FATAL")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val sc = spark
         import mc.functions._
         import sc.implicits._
         mc.register(spark)
