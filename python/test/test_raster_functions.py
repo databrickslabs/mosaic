@@ -1,4 +1,4 @@
-from pyspark.sql.functions import abs, col, first, lit, sqrt, array
+from pyspark.sql.functions import abs, col, first, lit, sqrt, array, element_at
 
 from .context import api, readers
 from .utils import MosaicTestCaseWithGDAL
@@ -114,13 +114,17 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         tessellate_result.write.format("noop").mode("overwrite").save()
         self.assertEqual(tessellate_result.count(), 140)
 
-        overlap_result = self.generate_singleband_raster_df().withColumn(
-            "rst_to_overlapping_tiles",
-            api.rst_to_overlapping_tiles("tile", lit(200), lit(200), lit(10)),
+        overlap_result = (
+            self.generate_singleband_raster_df()
+            .withColumn(
+                "rst_to_overlapping_tiles",
+                api.rst_to_overlapping_tiles("tile", lit(200), lit(200), lit(10)),
+            )
+            .withColumn("rst_subdatasets", api.rst_subdatasets("tile"))
         )
 
         overlap_result.write.format("noop").mode("overwrite").save()
-        self.assertEqual(overlap_result.count(), 87)
+        self.assertEqual(overlap_result.count(), 196)
 
     def test_raster_aggregator_functions(self):
         collection = (
@@ -139,7 +143,9 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
 
         self.assertEqual(merge_result.count(), 1)
-        self.assertEqual(collection.first()["extent"], merge_result.first()["extent"])
+        self.assertEqual(
+            collection.select("extent").first(), merge_result.select("extent").first()
+        )
 
         combine_avg_result = (
             collection.groupBy("path")
@@ -149,12 +155,12 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         self.assertEqual(combine_avg_result.count(), 1)
         self.assertEqual(
-            collection.first()["extent"], combine_avg_result.first()["extent"]
+            collection.select("extent").first(),
+            combine_avg_result.select("extent").first(),
         )
 
-    def test_netcdf(self):
-
-        target_resolution = 3
+    def test_netcdf_load_tessellate_clip_merge(self):
+        target_resolution = 1
 
         region_keys = ["NAME", "STATE", "BOROUGH", "BLOCK", "TRACT"]
 
@@ -163,60 +169,57 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .format("multi_read_ogr")
             .option("vsizip", "true")
             .option("chunkSize", "20")
-            .load("test/data/Blocks2020.zip")
+            .load("test/data/Blocks2020_subset.zip")
             .select(*region_keys, "geom_0", "geom_0_srid")
             .dropDuplicates()
             .withColumn("geom_0", api.st_simplify("geom_0", lit(0.001)))
-            .withColumn("geom_0", api.st_updatesrid("geom_0", col("geom_0_srid"),lit(4326)))
-            .withColumn("chip", api.grid_tessellateexplode("geom_0", lit(target_resolution)))
+            .withColumn(
+                "geom_0", api.st_updatesrid("geom_0", col("geom_0_srid"), lit(4326))
+            )
+            .withColumn(
+                "chip", api.grid_tessellateexplode("geom_0", lit(target_resolution))
+            )
             .select(*region_keys, "chip.*")
             .repartition(self.spark.sparkContext.defaultParallelism)
         )
 
         df = (
             self.spark.read.format("gdal")
-            .option("raster.read.strategy", "in-memory")
+            .option("raster.read.strategy", "retile_on_read")
             .load(
                 "test/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
             )
             .select(api.rst_separatebands("tile").alias("tile"))
-            .where("tile.seqNo = 21")
+            .withColumn(
+                "timestep",
+                element_at(
+                    api.rst_metadata("tile"), "NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX"
+                ),
+            )
+            .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
+            .where(col("timestep") == 21)
+            .withColumn(
+                "tile", api.rst_to_overlapping_tiles("tile", lit(20), lit(20), lit(10))
+            )
             .repartition(self.spark.sparkContext.defaultParallelism)
         )
 
-        prh_bands_geog = (
-            df
-            .select(
-                api.rst_setsrid("tile", lit(4326)).alias("tile"),
-                api.st_astext(api.rst_boundingbox("tile")).alias("bbox")
-            )
-            .withColumn("timestep", col("tile.seqNo"))
+        prh_bands_indexed = df.withColumn(
+            "tile", api.rst_tessellate("tile", lit(target_resolution))
         )
-
-        prh_bands_indexed = (
-            prh_bands_geog
-            .withColumn("tile", api.rst_tessellate("tile", lit(target_resolution)))
-        )
-
-        # (
-        #     prh_bands_indexed
-        #     .select("timestep", "tile.index_id",
-        #     api.st_astext(api.rst_boundingbox("tile")).alias("the_geom"))
-        #     .coalesce(1)
-        #     .write.format("csv").mode("overwrite")
-        #     .option("header", "true")
-        #     .save("test/data/prh_bands_indexed.csv")
-        # )
 
         clipped_precipitation = (
             prh_bands_indexed.alias("var")
-            .join(census_df.alias("aoi"), how="inner", on=col("var.tile.index_id")==col("aoi.index_id"))
-            .limit(5)
+            .join(
+                census_df.alias("aoi"),
+                how="inner",
+                on=col("var.tile.index_id") == col("aoi.index_id"),
+            )
             .withColumn("tile", api.rst_clip("var.tile", "aoi.wkb"))
         )
 
-        print(f"row count in `clipped_precipitation`: {clipped_precipitation.count()}")
+        merged_precipitation = clipped_precipitation.groupBy(*region_keys).agg(
+            api.rst_merge_agg("tile").alias("tile")
+        )
 
-
-
-
+        self.assertEqual(merged_precipitation.count(), 1)

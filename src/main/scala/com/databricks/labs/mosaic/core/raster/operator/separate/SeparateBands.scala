@@ -33,7 +33,8 @@ object SeparateBands {
 
             val isEmpty = result.isEmpty
 
-            result.raster.SetMetadataItem("BAND_INDEX", (i + 1).toString, "DATABRICKS_MOSAIC")
+            result.raster.SetMetadataItem("MOSAIC_BAND_INDEX", (i + 1).toString)
+            result.raster.GetDriver().CreateCopy(result.path, result.raster)
 
             if (isEmpty) dispose(result)
 

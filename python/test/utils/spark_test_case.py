@@ -20,6 +20,7 @@ class SparkTestCase(unittest.TestCase):
         cls.spark = (
             SparkSession.builder.master("local[*]")
             .config("spark.jars", cls.library_location)
+            .config("spark.driver.memory", "4g")
             .getOrCreate()
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")

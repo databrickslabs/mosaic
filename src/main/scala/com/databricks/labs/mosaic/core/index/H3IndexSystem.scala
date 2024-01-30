@@ -2,9 +2,8 @@ package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.model.Coordinates
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTIPOLYGON, POLYGON}
+import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum}
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POLYGON}
 import com.uber.h3core.H3Core
 import com.uber.h3core.util.GeoCoord
 import org.apache.spark.sql.types.LongType
@@ -12,6 +11,7 @@ import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
 
 import scala.collection.JavaConverters._
+//import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.collection.mutable
 import scala.util.{Success, Try}
 
@@ -86,9 +86,6 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
                 boundary.map(_.distance(centroid)).max
             case _ =>
                 indexGeom.flatten.flatMap(_.boundary.flatten).maxBy(_.getLength).getLength
-//                val parentExtent = (extents.map(_._1).min, extents.map(_._2).min, extents.map(_._3).max, extents.map(_._4).max)
-//                val diag = math.sqrt(math.pow(parentExtent._3 - parentExtent._1, 2) + math.pow(parentExtent._4 - parentExtent._2, 2))
-//                diag / 2
         }
     }
 

@@ -15,7 +15,7 @@ class GDALInstaller:
         self._temp_dir.cleanup()
 
     def copy_objects(self):
-        api.setup_gdal(self._temp_dir.name)
+        api.setup_gdal(self._temp_dir.name, jni_so_copy=True)
 
     def run_init_script(self):
         gdal_install_script_target = os.path.join(

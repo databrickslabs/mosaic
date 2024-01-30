@@ -28,7 +28,7 @@ class DisplayHandler:
 
     def display_dataframe(self, df: DataFrame):
         prettifier = self.PrettifierModule
-        pretty_jdf = (prettifier.prettified(df._jdf, self.ScalaOptionObject.apply(None)))
+        pretty_jdf = prettifier.prettified(df._jdf, self.ScalaOptionObject.apply(None))
         pretty_df = DataFrame(pretty_jdf, config.sql_context)
         self.dataframe_display_function(pretty_df)
 

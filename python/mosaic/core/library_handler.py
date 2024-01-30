@@ -81,7 +81,9 @@ class MosaicLibraryHandler:
         converters = self.sc._jvm.scala.collection.JavaConverters
 
         JarURI = JavaURI.create("file:" + self._jar_path)
-        dbr_version = self.spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion").split("-")[0]
+        dbr_version = self.spark.conf.get(
+            "spark.databricks.clusterUsageTags.sparkVersion"
+        ).split("-")[0]
 
         try:
             # This will fix the exception when running on Databricks Runtime 13.x+
@@ -98,7 +100,7 @@ class MosaicLibraryHandler:
             lib = JavaJarId(
                 JarURI,
                 ManagedLibraryId.defaultOrganization(),
-                NoVersionModule.simpleString()
+                NoVersionModule.simpleString(),
             )
 
         libSeq = converters.asScalaBufferConverter((lib,)).asScala().toSeq()

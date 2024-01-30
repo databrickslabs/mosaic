@@ -153,7 +153,8 @@ case class MosaicRasterGDAL(
       *   Returns the raster's subdatasets as a Map.
       */
     def subdatasets: Map[String, String] = {
-        val dict = raster.GetMetadata_Dict("SUBDATASETS")
+        val dict = Try(raster.GetMetadata_Dict("SUBDATASETS"))
+            .getOrElse(new java.util.Hashtable[String, String]())
         val subdatasetsMap = Option(dict)
             .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
             .getOrElse(Map.empty[String, String])

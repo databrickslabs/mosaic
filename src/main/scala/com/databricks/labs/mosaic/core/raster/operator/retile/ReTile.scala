@@ -32,10 +32,10 @@ object ReTile {
         val yTiles = Math.ceil(yR / tileHeight).toInt
 
         val tiles = for (x <- 0 until xTiles; y <- 0 until yTiles) yield {
-            val xMin = if (x == 0) x * tileWidth else x * tileWidth - 1
-            val yMin = if (y == 0) y * tileHeight else y * tileHeight - 1
-            val xOffset = if (xMin + tileWidth + 1 > xR) xR - xMin else tileWidth + 1
-            val yOffset = if (yMin + tileHeight + 1 > yR) yR - yMin else tileHeight + 1
+            val xMin = x * tileWidth
+            val yMin = y * tileHeight
+            val xOffset = if (xMin + tileWidth > xR) xR - xMin else tileWidth
+            val yOffset = if (yMin + tileHeight > yR) yR - yMin else tileHeight
 
             val fileExtension = raster.getRasterFileExtension
             val rasterPath = PathUtils.createTmpFilePath(fileExtension)
