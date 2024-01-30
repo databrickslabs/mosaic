@@ -147,8 +147,8 @@ Users can control various aspects of Mosaic's operation with the following Spark
 
     * :code:`"spark.databricks.labs.mosaic.jar.autoattach"` - Automatically attach the Mosaic JAR to the Databricks cluster (Optional, default is "true").
     * :code:`"spark.databricks.labs.mosaic.jar.path"` - Explicitly specify the path to the Mosaic JAR (Optional and not required at all in a standard Databricks environment).
-    * :code:`"spark.databricks.labs.mosaic.geometry.api"` - Explicitly specify the underlying geometry library to use for spatial operations. (Optional, default is "JTS").
-    * :code:`"spark.databricks.labs.mosaic.index.system"` - Explicitly specify the index system to use for optimized spatial joins. (Optional, default is "H3").
+    * :code:`"spark.databricks.labs.mosaic.geometry.api"` - Explicitly specify the underlying geometry library to use for spatial operations (Optional, default is "JTS").
+    * :code:`"spark.databricks.labs.mosaic.index.system"` - Explicitly specify the index system to use for optimized spatial joins (Optional, default is "H3").
 
 
 SQL usage
