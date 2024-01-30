@@ -3,7 +3,7 @@ source("data.R")
 test_that("scalar vector functions behave as intended", {
   sdf <- SparkR::createDataFrame(
     data.frame(
-      wkt = "POLYGON ((0 0, 0 2, 1 2, 1 0, 0 0))",
+      wkt = "POLYGON ((2 1, 1 2, 2 3, 2 1))",
       point_wkt = "POINT (1 1)"
     )
   )

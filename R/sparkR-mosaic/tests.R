@@ -1,6 +1,7 @@
 library(testthat)
 
 spark_location <- Sys.getenv("SPARK_HOME")
+lib_location <- Sys.getenv("MOSAIC_LIB_PATH")
 library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
 .libPaths(c(file.path(spark_location, "R", "lib"), .libPaths()))
 
@@ -12,7 +13,7 @@ install.packages(package_file, repos=NULL)
 library(sparkrMosaic)
 
 # find the mosaic jar in staging
-staging_dir <- "/home/runner/work/mosaic/mosaic/staging/"
+staging_dir <- if (lib_location == "") {"/home/runner/work/mosaic/mosaic/staging/"} else {lib_location}
 mosaic_jar <- list.files(staging_dir)
 mosaic_jar <- mosaic_jar[grep("jar-with-dependencies.jar", mosaic_jar, fixed=T)]
 print("Looking for mosaic jar in")
