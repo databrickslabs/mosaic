@@ -84,7 +84,9 @@ def rst_bandmetadata(raster_tile: ColumnOrName, band: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_bandmetadata", pyspark_to_java_column(raster_tile), pyspark_to_java_column(band)
+        "rst_bandmetadata",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(band),
     )
 
 
@@ -128,7 +130,9 @@ def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_clip", pyspark_to_java_column(raster_tile), pyspark_to_java_column(geometry)
+        "rst_clip",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(geometry),
     )
 
 
@@ -153,7 +157,7 @@ def rst_combineavg(raster_tiles: ColumnOrName) -> Column:
 
 
 def rst_derivedband(
-        raster_tile: ColumnOrName, python_func: ColumnOrName, func_name: ColumnOrName
+    raster_tile: ColumnOrName, python_func: ColumnOrName, func_name: ColumnOrName
 ) -> Column:
     """
     Creates a new band by applying the given python function to the input rasters.
@@ -429,7 +433,9 @@ def rst_numbands(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_ndvi(raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName) -> Column:
+def rst_ndvi(
+    raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName
+) -> Column:
     """
     Computes the NDVI of the raster.
     The result is Mosaic raster tile struct of the NDVI raster.
@@ -519,7 +525,9 @@ def rst_rastertogridavg(raster_tile: ColumnOrName, resolution: ColumnOrName) -> 
     )
 
 
-def rst_rastertogridcount(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Column:
+def rst_rastertogridcount(
+    raster_tile: ColumnOrName, resolution: ColumnOrName
+) -> Column:
     """
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
@@ -569,7 +577,9 @@ def rst_rastertogridmax(raster_tile: ColumnOrName, resolution: ColumnOrName) -> 
     )
 
 
-def rst_rastertogridmedian(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Column:
+def rst_rastertogridmedian(
+    raster_tile: ColumnOrName, resolution: ColumnOrName
+) -> Column:
     """
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
@@ -987,7 +997,9 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
     )
 
 
-def rst_fromcontent(raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1) -> Column:
+def rst_fromcontent(
+    raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1
+) -> Column:
     """
     Tiles the raster binary into tiles of the given size.
     :param raster_bin:
@@ -996,13 +1008,13 @@ def rst_fromcontent(raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: 
     :return:
     """
     if type(size_in_mb) == int:
-            size_in_mb = lit(size_in_mb)
+        size_in_mb = lit(size_in_mb)
 
     return config.mosaic_context.invoke_function(
         "rst_fromcontent",
         pyspark_to_java_column(raster_bin),
         pyspark_to_java_column(driver),
-        pyspark_to_java_column(size_in_mb)
+        pyspark_to_java_column(size_in_mb),
     )
 
 
@@ -1014,10 +1026,12 @@ def rst_fromfile(raster_path: ColumnOrName, size_in_mb: Any = -1) -> Column:
     :return:
     """
     if type(size_in_mb) == int:
-                size_in_mb = lit(size_in_mb)
+        size_in_mb = lit(size_in_mb)
 
     return config.mosaic_context.invoke_function(
-        "rst_fromfile", pyspark_to_java_column(raster_path), pyspark_to_java_column(size_in_mb)
+        "rst_fromfile",
+        pyspark_to_java_column(raster_path),
+        pyspark_to_java_column(size_in_mb),
     )
 
 

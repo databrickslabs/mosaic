@@ -45,9 +45,7 @@ def st_intersection_agg(leftIndex: ColumnOrName, rightIndex: ColumnOrName) -> Co
     )
 
 
-def st_intersects_agg(
-    leftIndex: ColumnOrName, rightIndex: ColumnOrName
-) -> Column:
+def st_intersects_agg(leftIndex: ColumnOrName, rightIndex: ColumnOrName) -> Column:
     """
     Tests if any `leftIndex` : `rightIndex` pairs intersect.
 
@@ -186,7 +184,9 @@ def rst_combineavg_agg(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_derivedband_agg(raster_tile: ColumnOrName, python_func: ColumnOrName, func_name: ColumnOrName) -> Column:
+def rst_derivedband_agg(
+    raster_tile: ColumnOrName, python_func: ColumnOrName, func_name: ColumnOrName
+) -> Column:
     """
     Returns the raster tile representing the aggregation of rasters using provided python function.
 

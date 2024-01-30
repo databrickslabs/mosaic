@@ -3,7 +3,6 @@ from dataclasses import dataclass
 import os
 import pkg_resources
 import requests
-import shutil
 
 __all__ = ["SetupMgr", "setup_fuse_install"]
 
@@ -56,24 +55,25 @@ class SetupMgr:
             self.override_mosaic_version
         ) <= set("=0123456789."):
             github_version = self.override_mosaic_version.replace("=", "")
-        github_version = mosaic_version # <- valid or None
-        pip_str = ''
+        github_version = mosaic_version  # <- valid or None
+        pip_str = ""
         release_version = None
 
         if (
-            self.override_mosaic_version is not None and
-            self.override_mosaic_version == 'main'
+            self.override_mosaic_version is not None
+            and self.override_mosaic_version == "main"
         ):
-            github_version = 'main'
-        elif (
-                self.override_mosaic_version is not None and
-                set(self.override_mosaic_version).issubset(set('=0123456789.'))
-        ):
-            github_version = self.override_mosaic_version.replace('=','')
+            github_version = "main"
+        elif self.override_mosaic_version is not None and set(
+            self.override_mosaic_version
+        ).issubset(set("=0123456789.")):
+            github_version = self.override_mosaic_version.replace("=", "")
         elif mosaic_version is None:
             github_version = "main"
 
-        GITHUB_CONTENT_URL_BASE = "https://raw.githubusercontent.com/databrickslabs/mosaic"
+        GITHUB_CONTENT_URL_BASE = (
+            "https://raw.githubusercontent.com/databrickslabs/mosaic"
+        )
         GITHUB_CONTENT_TAG_URL = f"{GITHUB_CONTENT_URL_BASE}/v_{github_version}"
         if github_version == "main":
             GITHUB_CONTENT_TAG_URL = f"{GITHUB_CONTENT_URL_BASE}/main"
@@ -85,19 +85,21 @@ class SetupMgr:
         script_out_path = f"{self.to_fuse_dir}/{self.script_out_name}"
         if with_script:
             # - start with the unconfigured script
-            script_url = f'{GITHUB_CONTENT_TAG_URL}/scripts/{self.script_in_name}'
+            script_url = f"{GITHUB_CONTENT_TAG_URL}/scripts/{self.script_in_name}"
             script = None
             with requests.Session() as s:
                 script = s.get(script_url, allow_redirects=True).text
-            
+
             # - tokens used in script
-            SCRIPT_FUSE_DIR_TOKEN= "FUSE_DIR='__FUSE_DIR__'"                                # <- ' added
-            SCRIPT_GITHUB_VERSION_TOKEN = 'GITHUB_VERSION=__GITHUB_VERSION__'
-            SCRIPT_MOSAIC_PIP_VERSION_TOKEN = "MOSAIC_PIP_VERSION='__MOSAIC_PIP_VERSION__'" # <- ' added
-            SCRIPT_WITH_MOSAIC_TOKEN = 'WITH_MOSAIC=0'
-            SCRIPT_WITH_GDAL_TOKEN = 'WITH_GDAL=0'
-            SCRIPT_WITH_UBUNTUGIS_TOKEN ='WITH_UBUNTUGIS=0' 
-            SCRIPT_WITH_FUSE_SO_TOKEN = 'WITH_FUSE_SO=0'
+            SCRIPT_FUSE_DIR_TOKEN = "FUSE_DIR='__FUSE_DIR__'"  # <- ' added
+            SCRIPT_GITHUB_VERSION_TOKEN = "GITHUB_VERSION=__GITHUB_VERSION__"
+            SCRIPT_MOSAIC_PIP_VERSION_TOKEN = (
+                "MOSAIC_PIP_VERSION='__MOSAIC_PIP_VERSION__'"  # <- ' added
+            )
+            SCRIPT_WITH_MOSAIC_TOKEN = "WITH_MOSAIC=0"
+            SCRIPT_WITH_GDAL_TOKEN = "WITH_GDAL=0"
+            SCRIPT_WITH_UBUNTUGIS_TOKEN = "WITH_UBUNTUGIS=0"
+            SCRIPT_WITH_FUSE_SO_TOKEN = "WITH_FUSE_SO=0"
 
             # - set the github version in the script
             #   this will be used to download so files
@@ -113,7 +115,9 @@ class SetupMgr:
                 SCRIPT_FUSE_DIR_TOKEN,
                 SCRIPT_FUSE_DIR_TOKEN.replace("__FUSE_DIR__", self.to_fuse_dir),
             )
-    
+
+            script = script.replace("apt-add-repository", "apt-add-repository -y")
+
             # - are we configuring for mosaic pip?
             if self.with_mosaic_pip:
                 script = script.replace(
@@ -142,11 +146,11 @@ class SetupMgr:
 
             # - set the mosaic version for pip
             if (
-                self.override_mosaic_version is not None and
-                not self.override_mosaic_version == 'main'
+                self.override_mosaic_version is not None
+                and not self.override_mosaic_version == "main"
             ):
-                pip_str = f'=={self.override_mosaic_version}'
-                if any(c in self.override_mosaic_version for c in ['=','>','<']):
+                pip_str = f"=={self.override_mosaic_version}"
+                if any(c in self.override_mosaic_version for c in ["=", ">", "<"]):
                     pip_str = f"""{self.override_mosaic_version.replace("'","").replace('"','')}"""
                 else:
                     pip_str = f"=={self.override_mosaic_version}"
@@ -155,7 +159,8 @@ class SetupMgr:
             script = script.replace(
                 SCRIPT_MOSAIC_PIP_VERSION_TOKEN,
                 SCRIPT_MOSAIC_PIP_VERSION_TOKEN.replace(
-                    "__MOSAIC_PIP_VERSION__", pip_str)
+                    "__MOSAIC_PIP_VERSION__", pip_str
+                ),
             )
 
             # - write the configured init script
@@ -167,7 +172,7 @@ class SetupMgr:
         with_resources = self.jar_copy or self.jni_so_copy
         resource_statuses = {}
         if with_resources:
-            CHUNK_SIZE = 1024 * 1024 * 64 # 64MB
+            CHUNK_SIZE = 1024 * 1024 * 64  # 64MB
             # - handle jar copy
             if self.jar_copy:
                 # url and version details
@@ -175,33 +180,42 @@ class SetupMgr:
                     "https://github.com/databrickslabs/mosaic/releases"
                 )
                 resource_version = github_version
-                if github_version == 'main':
+                if github_version == "main":
                     latest = None
                     with requests.Session() as s:
-                        latest = str(s.get(f'{GITHUB_RELEASE_URL_BASE}/latest', allow_redirects=True).content)
+                        latest = str(
+                            s.get(
+                                f"{GITHUB_RELEASE_URL_BASE}/latest",
+                                allow_redirects=True,
+                            ).content
+                        )
                     resource_version = latest.split("/tag/v_")[1].split('"')[0]
                 # download jar
-                jar_filename = f'mosaic-{resource_version}-jar-with-dependencies.jar'
-                jar_path = f'{self.to_fuse_dir}/{jar_filename}'
+                jar_filename = f"mosaic-{resource_version}-jar-with-dependencies.jar"
+                jar_path = f"{self.to_fuse_dir}/{jar_filename}"
                 with requests.Session() as s:
                     r = s.get(
-                        f'{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}',
-                        stream=True
+                        f"{GITHUB_RELEASE_URL_BASE}/download/v_{resource_version}/{jar_filename}",
+                        stream=True,
                     )
-                    with open(jar_path, 'wb') as f:
+                    with open(jar_path, "wb") as f:
                         for ch in r.iter_content(chunk_size=CHUNK_SIZE):
                             f.write(ch)
                     resource_statuses[jar_filename] = r.status_code
             # - handle so copy
             if self.jni_so_copy:
                 with requests.Session() as s:
-                    for so_filename in ['libgdalalljni.so', 'libgdalalljni.so.30', 'libgdalalljni.so.30.0.3']:
-                        so_path = f'{self.to_fuse_dir}/{so_filename}'
+                    for so_filename in [
+                        "libgdalalljni.so",
+                        "libgdalalljni.so.30",
+                        "libgdalalljni.so.30.0.3",
+                    ]:
+                        so_path = f"{self.to_fuse_dir}/{so_filename}"
                         r = s.get(
-                            f'{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}',
-                            stream=True
+                            f"{GITHUB_CONTENT_TAG_URL}/resources/gdal/jammy/{so_filename}",
+                            stream=True,
                         )
-                        with open(so_path, 'wb') as f:
+                        with open(so_path, "wb") as f:
                             for ch in r.iter_content(chunk_size=CHUNK_SIZE):
                                 f.write(ch)
                         resource_statuses[so_filename] = r.status_code
@@ -225,18 +239,16 @@ class SetupMgr:
                 f"               more at https://docs.databricks.com/en/init-scripts/cluster-scoped.html"
             )
         if with_resources:
-          print(f"- Resource(s): copied")
-          print(resource_statuses)
+            print(f"- Resource(s): copied")
+            print(resource_statuses)
         print("\n")
 
-        if (
-            not any(resource_statuses) or
-            all(value == 200 for value in resource_statuses.values())
+        if not any(resource_statuses) or all(
+            value == 200 for value in resource_statuses.values()
         ):
             return True
         else:
             return False
-
 
 
 def setup_fuse_install(

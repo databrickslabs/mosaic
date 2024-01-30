@@ -8,7 +8,7 @@ from pyspark.sql.dataframe import DataFrame
 class MosaicTestCaseWithGDAL(MosaicTestCase):
     def setUp(self) -> None:
         return super().setUp()
-    
+
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()

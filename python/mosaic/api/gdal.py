@@ -47,7 +47,7 @@ def setup_gdal(
 
     Returns True unless resources fail to download.
     -------
-    """    
+    """
     setup_mgr = SetupMgr(
         to_fuse_dir,
         with_mosaic_pip=with_mosaic_pip,

@@ -7,7 +7,7 @@ from .utils import MosaicTestCaseWithGDAL
 class TestRasterFunctions(MosaicTestCaseWithGDAL):
     def setUp(self) -> None:
         return super().setUp()
-    
+
     def test_read_raster(self):
         result = self.generate_singleband_raster_df().first()
         self.assertEqual(result.length, 1067862)
@@ -172,7 +172,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .format("multi_read_ogr")
             .option("vsizip", "true")
             .option("chunkSize", "20")
-            .load("test/data/Blocks2020_subset.zip")
+            .load("test/data/Blocks2020.zip")
             .select(*region_keys, "geom_0", "geom_0_srid")
             .dropDuplicates()
             .withColumn("geom_0", api.st_simplify("geom_0", lit(0.001)))
