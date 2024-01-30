@@ -141,7 +141,7 @@ import com.databricks.labs.mosaic.JTS
 val mosaicContext = MosaicContext.build(H3, JTS)
 mosaicContext.register(spark)
 ```
-__Note: Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters, but not Shared Access due to API changes, more [here](https://docs.databricks.com/en/udf/index.html).__
+__Note: Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due to API changes, more [here](https://docs.databricks.com/en/udf/index.html).__
 
 ## Examples
 
