@@ -391,7 +391,7 @@ Here is an example UDF to count rows for a layer, supporting both zipped and non
       z_path = zip_path
       if zip_path and not zip_path.startswith("zip:"):
         z_path = f"zip://{zip_path}"
-      with fiona.open(in_path, vfs=zip_path, driver=driver, layer=layer) as in_file:
+      with fiona.open(in_path, vfs=z_path, driver=driver, layer=layer) as in_file:
         for item in in_file:
           cnt += 1
       return cnt
