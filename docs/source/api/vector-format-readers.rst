@@ -344,7 +344,7 @@ Here is an example UDFs to list layers, supporting both zipped and non-zipped.
       z_path = zip_path
       if zip_path and not zip_path.startswith("zip:"):
         z_path = f"zip://{zip_path}"
-      return fiona.listlayers(in_path, vfs=z_path, driver=driver, layer=layer)
+      return fiona.listlayers(in_path, vfs=z_path, driver=driver)
 
 We can call the UDF, e.g.
 
