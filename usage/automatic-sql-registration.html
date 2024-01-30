@@ -100,7 +100,8 @@ to your Spark / Databricks cluster to perform spatial queries or integrating Spa
 with a geospatial middleware component such as [Geoserver](<a class="reference external" href="https://geoserver.org/">https://geoserver.org/</a>).</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Mosaic 0.4.x SQL bindings for DBR 13 not yet available in Unity Catalog due to API changes.</p>
+<p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due
+to <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a> API changes, more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
 </div>
 <section id="pre-requisites">
 <h2>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this heading"></a></h2>
@@ -161,7 +162,7 @@ spark.sql.extensions<span class="w"> </span>com.databricks.labs.mosaic.sql.exten
 <section id="testing">
 <h2>Testing<a class="headerlink" href="#testing" title="Permalink to this heading"></a></h2>
 <p>To test the installation, create a new Python notebook and run the following commands (similar for <code class="code docutils literal notranslate"><span class="pre">grid_</span></code> and <code class="code docutils literal notranslate"><span class="pre">rst_</span></code>, not shown):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;SHOW FUNCTIONS&quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;startswith(function, &#39;st_&#39;)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;SHOW FUNCTIONS&quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;startswith(function, &#39;st_&#39;)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>You should see all the supported <code class="code docutils literal notranslate"><span class="pre">ST_</span></code> functions registered by Mosaic appear in the output.</p>
@@ -173,9 +174,10 @@ spark.sql.extensions<span class="w"> </span>com.databricks.labs.mosaic.sql.exten
 </figure>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>You may see some <code class="code docutils literal notranslate"><span class="pre">ST_</span></code> functions from other libraries, so pay close attention to the provider.</p>
+<p>You may see some <code class="code docutils literal notranslate"><span class="pre">ST_</span></code> functions from other libraries, so pay close attention to the provider;
+also, function auto-complete in the UI may not list custom registered SQL expressions.</p>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DESCRIBE FUNCTION st_buffer&quot;&quot;&quot;</span><span class="p">)</span>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DESCRIBE FUNCTION st_buffer&quot;&quot;&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <figure class="doc-figure align-default" id="id6">
@@ -184,11 +186,6 @@ spark.sql.extensions<span class="w"> </span>com.databricks.labs.mosaic.sql.exten
 <p><span class="caption-text">Fig 2. Describe Function Example</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters, but not Shared Access due to API changes,
-more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
-</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Issue 317: <a class="reference external" href="https://github.com/databrickslabs/mosaic/issues/317">https://github.com/databrickslabs/mosaic/issues/317</a>

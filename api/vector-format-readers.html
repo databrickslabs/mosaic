@@ -102,30 +102,13 @@
 Only the drivers that are built by default are supported.
 Here are some common useful file formats:</p>
 <blockquote>
-<div><ul>
+<div><ul class="simple">
 <li><p><a class="reference external" href="https://gdal.org/drivers/vector/geojson.html">GeoJSON</a> (also <a class="reference external" href="https://gdal.org/drivers/vector/esrijson.html">ESRIJSON</a>,
 <a class="reference external" href="https://gdal.org/drivers/vector/topojson.html">TopoJSON</a>)</p></li>
-<li><p><a class="reference external" href="https://gdal.org/drivers/vector/filegdb.html">FileGDB</a> (ESRI File Geodatabase) and
-<a class="reference external" href="https://gdal.org/drivers/vector/openfilegdb.html">OpenFileGDB</a> (ESRI File Geodatabase vector) -</p>
-<blockquote>
-<div><p>Mosaic implements named reader <a class="reference internal" href="#spark-read-format-geo-db"><span class="std std-ref">spark.read.format(“geo_db”)</span></a> (described in this doc).</p>
-</div></blockquote>
-</li>
-<li><dl class="simple">
-<dt><a class="reference external" href="https://gdal.org/drivers/vector/shapefile.html">ESRI Shapefile</a> (ESRI Shapefile / DBF) -</dt><dd><p>Mosaic implements named reader <a class="reference internal" href="#spark-read-format-shapefile"><span class="std std-ref">spark.read.format(“shapefile”)</span></a> (described in this doc).</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><a class="reference external" href="https://gdal.org/drivers/raster/netcdf.html">netCDF</a> (Network Common Data Form) -</dt><dd><p>Mosaic supports GDAL netCDF raster reader also.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><a class="reference external" href="https://gdal.org/drivers/vector/xlsx.html">XLSX</a>, <a class="reference external" href="https://gdal.org/drivers/vector/xls.html">XLS</a>,</dt><dd><p><a class="reference external" href="https://gdal.org/drivers/vector/ods.html">ODS</a> spreadsheets</p>
-</dd>
-</dl>
-</li>
+<li><p><a class="reference external" href="https://gdal.org/drivers/vector/filegdb.html">FileGDB</a> (ESRI File Geodatabase) and <a class="reference external" href="https://gdal.org/drivers/vector/openfilegdb.html">OpenFileGDB</a> (ESRI File Geodatabase vector) - Mosaic implements named reader <a class="reference internal" href="#spark-read-format-geo-db"><span class="std std-ref">spark.read.format(“geo_db”)</span></a> (described in this doc).</p></li>
+<li><p><a class="reference external" href="https://gdal.org/drivers/vector/shapefile.html">ESRI Shapefile</a> (ESRI Shapefile / DBF) - Mosaic implements named reader <a class="reference internal" href="#spark-read-format-shapefile"><span class="std std-ref">spark.read.format(“shapefile”)</span></a> (described in this doc).</p></li>
+<li><p><a class="reference external" href="https://gdal.org/drivers/raster/netcdf.html">netCDF</a> (Network Common Data Form) - Mosaic supports GDAL netCDF raster reader also.</p></li>
+<li><p><a class="reference external" href="https://gdal.org/drivers/vector/xlsx.html">XLSX</a>, <a class="reference external" href="https://gdal.org/drivers/vector/xls.html">XLS</a>, <a class="reference external" href="https://gdal.org/drivers/vector/ods.html">ODS</a> spreadsheets</p></li>
 <li><p><a class="reference external" href="https://gdal.org/drivers/vector/tiger.html">TIGER</a> (U.S. Census TIGER/Line)</p></li>
 <li><p><a class="reference external" href="https://gdal.org/drivers/vector/pgdump.html">PGDump</a> (PostgreSQL Dump)</p></li>
 <li><p><a class="reference external" href="https://gdal.org/drivers/vector/kml.html">KML</a> (Keyhole Markup Language)</p></li>
@@ -438,6 +421,213 @@ These must be supplied as a <code class="code docutils literal notranslate"><spa
 Also, you can supply function signature values as <code class="code docutils literal notranslate"><span class="pre">String</span></code>.</p>
 </div>
 </section>
+</section>
+<section id="vector-file-udfs">
+<h2>Vector File UDFs<a class="headerlink" href="#vector-file-udfs" title="Permalink to this heading"></a></h2>
+<p>It can be of use to perform various exploratory operations on vector file formats to help with processing.
+The following UDFs use <a class="reference external" href="https://fiona.readthedocs.io/en/stable/index.html">fiona</a> which is already provided
+as part of the dependencies of Mosaic python bindings.</p>
+<p>We are showing the zipped variation for a larger (800MB) shapefile.
+This is just one file for example purposes; you can have any number of files in real-world use.
+Here is a snippet for downloading.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%sh
+mkdir<span class="w"> </span>-p<span class="w"> </span>/dbfs/home/&lt;username&gt;/data/large_shapefiles
+wget<span class="w"> </span>-nv<span class="w"> </span>-P<span class="w"> </span>/dbfs/home/&lt;username&gt;/data/large_shapefiles<span class="w"> </span>-nc<span class="w"> </span>https://osmdata.openstreetmap.de/download/land-polygons-split-4326.zip
+ls<span class="w"> </span>-lh<span class="w"> </span>/dbfs/home/&lt;username&gt;/data/large_shapefiles
+</pre></div>
+</div>
+<p>Then we create a spark dataframe made up of metadata to drive the examples.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([</span>
+  <span class="p">{</span>
+    <span class="s1">&#39;rel_path&#39;</span><span class="p">:</span> <span class="s1">&#39;/land-polygons-split-4326/land_polygons.shp&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;driver&#39;</span><span class="p">:</span> <span class="s1">&#39;ESRI Shapefile&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;zip_path&#39;</span><span class="p">:</span> <span class="s1">&#39;/dbfs/home/&lt;username&gt;/data/large_shapefiles/land-polygons-split-4326.zip&#39;</span>
+  <span class="p">}</span>
+<span class="p">])</span>
+</pre></div>
+</div>
+<p>Here is an example UDFs to list layers, supporting both zipped and non-zipped.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="n">udf</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql.types</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="nd">@udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">ArrayType</span><span class="p">(</span><span class="n">StringType</span><span class="p">()))</span>
+<span class="k">def</span> <span class="nf">list_layers</span><span class="p">(</span><span class="n">in_path</span><span class="p">,</span> <span class="n">driver</span><span class="p">,</span> <span class="n">zip_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  List layer names (in index order).</span>
+<span class="sd">   - in_path: file location for read; when used with `zip_path`,</span>
+<span class="sd">      this will be the relative path within a zip to open</span>
+<span class="sd">   - driver: name of GDAL driver to use</span>
+<span class="sd">   - zip_path: follows format &#39;zip:///some/file.zip&#39; (Optional, default is None); zip gets opened something like:</span>
+<span class="sd">      `with fiona.open(&#39;/test/a.shp&#39;, vfs=&#39;zip:///tmp/dir1/test.zip&#39;, driver=&#39;&lt;driver&gt;&#39;) as f:`</span>
+<span class="sd">      Note: you can prepend &#39;zip://&#39; for the param or leave it off in this example</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="kn">import</span> <span class="nn">fiona</span>
+
+  <span class="n">z_path</span> <span class="o">=</span> <span class="n">zip_path</span>
+  <span class="k">if</span> <span class="n">zip_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">zip_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;zip:&quot;</span><span class="p">):</span>
+    <span class="n">z_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;zip://</span><span class="si">{</span><span class="n">zip_path</span><span class="si">}</span><span class="s2">&quot;</span>
+  <span class="k">return</span> <span class="n">fiona</span><span class="o">.</span><span class="n">listlayers</span><span class="p">(</span><span class="n">in_path</span><span class="p">,</span> <span class="n">vfs</span><span class="o">=</span><span class="n">z_path</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can call the UDF, e.g.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyspark.sql.functions</span> <span class="k">as</span> <span class="nn">F</span>
+
+<span class="n">display</span><span class="p">(</span>
+  <span class="n">df</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+      <span class="s2">&quot;layers&quot;</span><span class="p">,</span>
+      <span class="n">list_layers</span><span class="p">(</span><span class="s2">&quot;rel_path&quot;</span><span class="p">,</span> <span class="s2">&quot;driver&quot;</span><span class="p">,</span> <span class="s2">&quot;zip_path&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;num_layers&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="s2">&quot;layers&quot;</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="o">+--------------+--------------------+--------------------+---------------+----------+</span>
+<span class="o">|</span>        <span class="n">driver</span><span class="o">|</span>            <span class="n">rel_path</span><span class="o">|</span>            <span class="n">zip_path</span><span class="o">|</span>         <span class="n">layers</span><span class="o">|</span><span class="n">num_layers</span><span class="o">|</span>
+<span class="o">+--------------+--------------------+--------------------+---------------+----------+</span>
+<span class="o">|</span><span class="n">ESRI</span> <span class="n">Shapefile</span><span class="o">|/</span><span class="n">land</span><span class="o">-</span><span class="n">polygons</span><span class="o">-</span><span class="n">sp</span><span class="o">...|/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">home</span><span class="o">/...</span>      <span class="o">|</span><span class="p">[</span><span class="n">land_polygons</span><span class="p">]</span><span class="o">|</span>         <span class="mi">1</span><span class="o">|</span>
+<span class="o">+--------------+--------------------+--------------------+---------------+----------+</span>
+</pre></div>
+</div>
+<p>Here is an example UDF to count rows for a layer, supporting both zipped and non-zipped.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="n">udf</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql.types</span> <span class="kn">import</span> <span class="n">IntegerType</span>
+
+<span class="nd">@udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">IntegerType</span><span class="p">())</span>
+<span class="k">def</span> <span class="nf">count_vector_rows</span><span class="p">(</span><span class="n">in_path</span><span class="p">,</span> <span class="n">driver</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">zip_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Count rows for the provided vector file.</span>
+<span class="sd">   - in_path: file location for read; when used with `zip_path`,</span>
+<span class="sd">      this will be the relative path within a zip to open</span>
+<span class="sd">   - driver: name of GDAL driver to use</span>
+<span class="sd">   - layer: integer (zero-indexed) or string (name)</span>
+<span class="sd">   - zip_path: follows format &#39;zip:///some/file.zip&#39; (Optional, default is None); zip gets opened something like:</span>
+<span class="sd">      `with fiona.open(&#39;/test/a.shp&#39;, vfs=&#39;zip:///tmp/dir1/test.zip&#39;, driver=&#39;&lt;driver&gt;&#39;) as f:`</span>
+<span class="sd">      Note: you can prepend &#39;zip://&#39; for the param or leave it off in this example</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="kn">import</span> <span class="nn">fiona</span>
+
+  <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">z_path</span> <span class="o">=</span> <span class="n">zip_path</span>
+  <span class="k">if</span> <span class="n">zip_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">zip_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;zip:&quot;</span><span class="p">):</span>
+    <span class="n">z_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;zip://</span><span class="si">{</span><span class="n">zip_path</span><span class="si">}</span><span class="s2">&quot;</span>
+  <span class="k">with</span> <span class="n">fiona</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">in_path</span><span class="p">,</span> <span class="n">vfs</span><span class="o">=</span><span class="n">z_path</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span> <span class="n">layer</span><span class="o">=</span><span class="n">layer</span><span class="p">)</span> <span class="k">as</span> <span class="n">in_file</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">in_file</span><span class="p">:</span>
+      <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+  <span class="k">return</span> <span class="n">cnt</span>
+</pre></div>
+</div>
+<p>We can call the UDF, e.g.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyspark.sql.functions</span> <span class="k">as</span> <span class="nn">F</span>
+
+<span class="n">display</span><span class="p">(</span>
+  <span class="n">df</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+      <span class="s2">&quot;row_cnt&quot;</span><span class="p">,</span>
+      <span class="n">count_vector_rows</span><span class="p">(</span><span class="s2">&quot;rel_path&quot;</span><span class="p">,</span> <span class="s2">&quot;driver&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="s2">&quot;zip_path&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="o">+--------------+--------------------+--------------------+-------+</span>
+<span class="o">|</span>        <span class="n">driver</span><span class="o">|</span>            <span class="n">rel_path</span><span class="o">|</span>            <span class="n">zip_path</span><span class="o">|</span><span class="n">row_cnt</span><span class="o">|</span>
+<span class="o">+--------------+--------------------+--------------------+-------+</span>
+<span class="o">|</span><span class="n">ESRI</span> <span class="n">Shapefile</span><span class="o">|/</span><span class="n">land</span><span class="o">-</span><span class="n">polygons</span><span class="o">-</span><span class="n">sp</span><span class="o">...|/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">home</span><span class="o">/...</span>      <span class="o">|</span> <span class="mi">789972</span><span class="o">|</span>
+<span class="o">+--------------+--------------------+--------------------+-------+</span>
+</pre></div>
+</div>
+<p>Here is an example UDF to get spark friendly schema for a layer, supporting both zipped and non-zipped.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="n">udf</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql.types</span> <span class="kn">import</span> <span class="n">StringType</span>
+
+<span class="nd">@udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">StringType</span><span class="p">())</span>
+<span class="k">def</span> <span class="nf">layer_schema</span><span class="p">(</span><span class="n">in_path</span><span class="p">,</span> <span class="n">driver</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">zip_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Get the schema for the provided vector file layer.</span>
+<span class="sd">   - in_path: file location for read; when used with `zip_path`,</span>
+<span class="sd">      this will be the relative path within a zip to open</span>
+<span class="sd">   - driver: name of GDAL driver to use</span>
+<span class="sd">   - layer: integer (zero-indexed) or string (name)</span>
+<span class="sd">   - zip_path: follows format &#39;zip:///some/file.zip&#39; (Optional, default is None); zip gets opened something like:</span>
+<span class="sd">      `with fiona.open(&#39;/test/a.shp&#39;, vfs=&#39;zip:///tmp/dir1/test.zip&#39;, driver=&#39;&lt;driver&gt;&#39;) as f:`</span>
+<span class="sd">      Note: you can prepend &#39;zip://&#39; for the param or leave it off in this example</span>
+<span class="sd">  Returns layer schema json as string</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="kn">import</span> <span class="nn">fiona</span>
+  <span class="kn">import</span> <span class="nn">json</span>
+
+  <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">z_path</span> <span class="o">=</span> <span class="n">zip_path</span>
+  <span class="k">if</span> <span class="n">zip_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">zip_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;zip:&quot;</span><span class="p">):</span>
+    <span class="n">z_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;zip://</span><span class="si">{</span><span class="n">zip_path</span><span class="si">}</span><span class="s2">&quot;</span>
+  <span class="k">with</span> <span class="n">fiona</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">in_path</span><span class="p">,</span> <span class="n">vfs</span><span class="o">=</span><span class="n">z_path</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="n">driver</span><span class="p">,</span> <span class="n">layer</span><span class="o">=</span><span class="n">layer</span><span class="p">)</span> <span class="k">as</span> <span class="n">in_file</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">in_file</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>We can call the UDF, e.g.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyspark.sql.functions</span> <span class="k">as</span> <span class="nn">F</span>
+
+<span class="n">display</span><span class="p">(</span>
+  <span class="n">df</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+      <span class="s2">&quot;layer_schema&quot;</span><span class="p">,</span>
+      <span class="n">layer_schema</span><span class="p">(</span><span class="s2">&quot;rel_path&quot;</span><span class="p">,</span> <span class="s2">&quot;driver&quot;</span><span class="p">,</span> <span class="n">F</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="s2">&quot;zip_path&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="o">+--------------+--------------------+--------------------+--------------------+</span>
+<span class="o">|</span>        <span class="n">driver</span><span class="o">|</span>            <span class="n">rel_path</span><span class="o">|</span>            <span class="n">zip_path</span><span class="o">|</span>        <span class="n">layer_schema</span><span class="o">|</span>
+<span class="o">+--------------+--------------------+--------------------+--------------------+</span>
+<span class="o">|</span><span class="n">ESRI</span> <span class="n">Shapefile</span><span class="o">|/</span><span class="n">land</span><span class="o">-</span><span class="n">polygons</span><span class="o">-</span><span class="n">sp</span><span class="o">...|/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">home</span><span class="o">/...</span>      <span class="o">|</span><span class="p">{</span><span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;...|</span>
+<span class="o">+--------------+--------------------+--------------------+--------------------+</span>
+</pre></div>
+</div>
+<p>Also, it can be useful to standardize collections of zipped vector formats to ensure all are individually zipped to work
+with the provided APIs.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Option <cite>vsizip</cite> in the Mosaic GDAL APIs (different API than the above fiona UDF examples) is for individually zipped
+vector files (.e.g File Geodatabase or Shapefile), not collections. If you end up with mixed or unclear zipped files,
+you can test them with a UDF such as shown below.</p>
+</div>
+<p>Here is an example UDF to test for zip of zips.
+In this example, we can use <code class="code docutils literal notranslate"><span class="pre">zip_path</span></code> from <code class="code docutils literal notranslate"><span class="pre">df</span></code> because we left “zip://” out of the name.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="n">udf</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql.types</span> <span class="kn">import</span> <span class="n">BooleanType</span>
+
+<span class="nd">@udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">BooleanType</span><span class="p">())</span>
+<span class="k">def</span> <span class="nf">test_double_zip</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="w">  </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  Tests whether a zip contains zips, which is not supported by</span>
+<span class="sd">  Mosaic GDAL APIs.</span>
+<span class="sd">   - path: to check</span>
+<span class="sd">  Returns boolean</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="kn">import</span> <span class="nn">zipfile</span>
+
+  <span class="k">try</span><span class="p">:</span>
+    <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">zip</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">zip</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.zip&quot;</span><span class="p">):</span>
+          <span class="k">return</span> <span class="kc">True</span>
+      <span class="k">return</span> <span class="kc">False</span>
+  <span class="k">except</span><span class="p">:</span>
+    <span class="k">return</span> <span class="kc">False</span>
+</pre></div>
+</div>
+<p>We can call the UDF, e.g.</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">display</span><span class="p">(</span>
+  <span class="n">df</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+      <span class="s2">&quot;is_double_zip&quot;</span><span class="p">,</span>
+      <span class="n">test_double_zip</span><span class="p">(</span><span class="s2">&quot;zip_path&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="o">+--------------------+-------------+</span>
+<span class="o">|</span>            <span class="n">zip_path</span><span class="o">|</span><span class="n">is_double_zip</span><span class="o">|</span>
+<span class="o">+--------------------+-------------+</span>
+<span class="o">|/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">mjohns</span><span class="o">...|</span>        <span class="n">false</span><span class="o">|</span>
+<span class="o">+--------------------+-------------+</span>
+</pre></div>
+</div>
+<p>Though not shown here, you can then handle unzipping the “double” zips that return <cite>True</cite> by extending
+<code class="code docutils literal notranslate"><span class="pre">test_double_zip</span></code> UDF to perform unzips (with a provided out_dir) or through an additional UDF, e.g. using ZipFile
+<a class="reference external" href="https://docs.python.org/3/library/zipfile.html#zipfile.ZipFile.extractall">extractall</a> function.</p>
 </section>
 </section>
 

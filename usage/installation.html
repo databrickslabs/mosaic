@@ -118,8 +118,8 @@ Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Acce
 </div></blockquote>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Mosaic SQL expressions cannot yet be registered with <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a>
-due to API changes affecting DBRs &gt;= 13, more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
+<p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due
+to <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a> API changes, more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -158,7 +158,8 @@ or from within a Databricks notebook using the <code class="code docutils litera
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%pip<span class="w"> </span>install<span class="w"> </span>databricks-mosaic
 </pre></div>
 </div>
-<p>If you need to install Mosaic 0.3 series for DBR 12.2 LTS, e.g.</p>
+<p>When you install with <code class="code docutils literal notranslate"><span class="pre">%pip</span></code>, the JAR is availalbe from the Python WHL (see the “Enabling” section for more); also,
+if you need to install Mosaic 0.3 series for DBR 12.2 LTS, e.g.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;databricks-mosaic&lt;0.4,&gt;=0.3&quot;</span>
 </pre></div>
 </div>
@@ -206,11 +207,47 @@ or via a middleware layer such as Geoserver, perhaps) then you can configure
 </div></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>We recommend <code class="code docutils literal notranslate"><span class="pre">import</span> <span class="pre">mosaic</span> <span class="pre">as</span> <span class="pre">mos</span></code> to namespace the python api and avoid any conflicts with other similar functions.</p>
+<p>We recommend use of <cite>import mosaic as mos</cite> to namespace the python api and avoid any conflicts with other similar
+functions. By default, the python import will handle installing the JAR and registering Hive UDFs which is suitable
+for Assigned (vs Shared Access) clusters.</p>
 </div>
+<p>Unless you are specially adding the JAR to your cluster (outside <code class="code docutils literal notranslate"><span class="pre">%pip</span></code> or the WHL file), please always initialize
+with Python first, then you can initialize Scala (after the JAR has been auto-attached by python); otherwise, you don’t
+need to initialize Scala unless you are using that language binding. You can further configure Mosaic enable with spark
+confs as well as through extra params in Mosaic 0.4.x series <code class="code docutils literal notranslate"><span class="pre">enable_mosaic</span></code> function.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="enable_mosaic">
+<span class="sig-name descname"><span class="pre">enable_mosaic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#enable_mosaic" title="Permalink to this definition"></a></dt>
+<dd><p>Use this function at the start of your workflow to ensure all the required dependencies are installed and
+Mosaic is configured according to your needs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spark</strong> (<em>pyspark.sql.SparkSession</em>) – The active spark session.</p></li>
+<li><p><strong>dbutils</strong> (<em>dbruntime.dbutils.DBUtils</em>) – Specify dbutils object used for <code class="code docutils literal notranslate"><span class="pre">display</span></code> and <code class="code docutils literal notranslate"><span class="pre">displayHTML</span></code> functions, needed for Kepler integration (Optional, default is None).</p></li>
+<li><p><strong>log_info</strong> (<em>bool</em>) – True will try to setLogLevel to “info”, False will not (Optional, default is False).</p></li>
+<li><p><strong>jar_path</strong> (<em>str</em>) – If provided, sets <code class="code docutils literal notranslate"><span class="pre">&quot;spark.databricks.labs.mosaic.jar.path&quot;</span></code> (Optional, default is None).</p></li>
+<li><p><strong>jar_autoattach</strong> (<em>bool</em>) – False will not registers the JAR; sets <code class="code docutils literal notranslate"><span class="pre">&quot;spark.databricks.labs.mosaic.jar.autoattach&quot;</span></code> to False, True will register the JAR (Optional, default is True).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Users can control various aspects of Mosaic’s operation with the following Spark confs:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;spark.databricks.labs.mosaic.jar.autoattach&quot;</span></code> - Automatically attach the Mosaic JAR to the Databricks cluster (Optional, default is “true”).</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;spark.databricks.labs.mosaic.jar.path&quot;</span></code> - Explicitly specify the path to the Mosaic JAR (Optional and not required at all in a standard Databricks environment).</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;spark.databricks.labs.mosaic.geometry.api&quot;</span></code> - Explicitly specify the underlying geometry library to use for spatial operations (Optional, default is “JTS”).</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;spark.databricks.labs.mosaic.index.system&quot;</span></code> - Explicitly specify the index system to use for optimized spatial joins (Optional, default is “H3”).</p></li>
+</ul>
+</div></blockquote>
 <section id="sql-usage">
 <h3>SQL usage<a class="headerlink" href="#sql-usage" title="Permalink to this heading"></a></h3>
-<p>If you have not employed <a class="reference internal" href="automatic-sql-registration.html#automatic-sql-registration"><span class="std std-ref">Automatic SQL registration</span></a>, you will need to
+<p>If you have not employed <a class="reference internal" href="automatic-sql-registration.html#automatic-sql-registration"><span class="std std-ref">Automatic SQL registration</span></a> (on by default and handled by Python enable in notebook), you will need to
 register the Mosaic SQL functions in your SparkSession from a Scala notebook cell:</p>
 <div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nn">functions</span><span class="p">.</span><span class="nc">MosaicContext</span>
 <span class="k">import</span><span class="w"> </span><span class="nn">com</span><span class="p">.</span><span class="nn">databricks</span><span class="p">.</span><span class="nn">labs</span><span class="p">.</span><span class="nn">mosaic</span><span class="p">.</span><span class="nc">H3</span>
@@ -222,8 +259,8 @@ register the Mosaic SQL functions in your SparkSession from a Scala notebook cel
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters, but not Shared Access due to API changes,
-more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
+<p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due
+to <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a> API changes, more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
 </div>
 </section>
 </section>

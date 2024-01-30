@@ -134,8 +134,8 @@ Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Acce
 </div></blockquote>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Mosaic SQL expressions cannot yet be registered with <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a>
-due to API changes affecting DBRs &gt;= 13, more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
+<p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due
+to <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a> API changes, more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
