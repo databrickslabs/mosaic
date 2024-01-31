@@ -62,53 +62,53 @@ test_that("scalar vector functions behave as intended", {
   expect_equal(sdf_nrow(sdf), 1)
 
 })
-#
-# test_that("aggregate vector functions behave as intended", {
-#
-#   sdf <- sdf_sql(sc, "SELECT id as location_id FROM range(1)") %>%
-#     mutate(geometry = st_geomfromgeojson(inputGJ))
-#   expect_equal(sdf_nrow(sdf), 1)
-#
-#   sdf.l <- sdf %>%
-#     select(
-#       left_id = location_id,
-#       left_geom = geometry
-#     ) %>%
-#     mutate(left_index = mosaic_explode(left_geom, 11L))
-#
-#   sdf.r <- sdf %>%
-#     select(
-#       right_id = location_id,
-#       right_geom = geometry
-#     ) %>%
-#     mutate(right_geom = st_translate(
-#       right_geom,
-#       st_area(right_geom) * runif(n()) * 0.1,
-#       st_area(right_geom) * runif(n()) * 0.1)
-#     ) %>%
-#     mutate(right_index = mosaic_explode(right_geom, 11L))
-#
-#   sdf.intersection <- sdf.l %>%
-#     inner_join(sdf.r, by = c("left_index" = "right_index"), keep = TRUE) %>%
-#     dplyr::group_by(left_id, right_id) %>%
-#     dplyr::summarise(
-#       agg_intersects = st_intersects_agg(left_index, right_index),
-#       agg_intersection = st_intersection_agg(left_index, right_index),
-#       left_geom = max(left_geom, 1),
-#       right_geom = max(right_geom, 1)
-#     ) %>%
-#     mutate(
-#       flat_intersects = st_intersects(left_geom, right_geom),
-#       comparison_intersects = agg_intersects == flat_intersects,
-#       agg_area = st_area(agg_intersection),
-#       flat_intersection = st_intersection(left_geom, right_geom),
-#       flat_area = st_area(flat_intersection),
-#       comparison_intersection = abs(agg_area - flat_area) <= 1e-3
-#     )
-#
-#   expect_no_error(spark_write_source(sdf.intersection, "noop", mode = "overwrite"))
-#   expect_true(sdf.intersection %>% head(1) %>% sdf_collect %>% .$comparison_intersects)
-#   expect_true(sdf.intersection %>% head(1) %>% sdf_collect %>% .$comparison_intersection)
+
+test_that("aggregate vector functions behave as intended", {
+
+  sdf <- sdf_sql(sc, "SELECT id as location_id FROM range(1)") %>%
+    mutate(geometry = st_geomfromgeojson(inputGJ))
+  expect_equal(sdf_nrow(sdf), 1)
+
+  sdf.l <- sdf %>%
+    select(
+      left_id = location_id,
+      left_geom = geometry
+    ) %>%
+    mutate(left_index = mosaic_explode(left_geom, 11L))
+
+  sdf.r <- sdf %>%
+    select(
+      right_id = location_id,
+      right_geom = geometry
+    ) %>%
+    mutate(right_geom = st_translate(
+      right_geom,
+      st_area(right_geom) * runif(n()) * 0.1,
+      st_area(right_geom) * runif(n()) * 0.1)
+    ) %>%
+    mutate(right_index = mosaic_explode(right_geom, 11L))
+
+  sdf.intersection <- sdf.l %>%
+    inner_join(sdf.r, by = c("left_index" = "right_index"), keep = TRUE) %>%
+    dplyr::group_by(left_id, right_id) %>%
+    dplyr::summarise(
+      agg_intersects = st_intersects_agg(left_index, right_index),
+      agg_intersection = st_intersection_agg(left_index, right_index),
+      left_geom = max(left_geom, 1),
+      right_geom = max(right_geom, 1)
+    ) %>%
+    mutate(
+      flat_intersects = st_intersects(left_geom, right_geom),
+      comparison_intersects = agg_intersects == flat_intersects,
+      agg_area = st_area(agg_intersection),
+      flat_intersection = st_intersection(left_geom, right_geom),
+      flat_area = st_area(flat_intersection),
+      comparison_intersection = abs(agg_area - flat_area) <= 1e-3
+    )
+
+  expect_no_error(spark_write_source(sdf.intersection, "noop", mode = "overwrite"))
+  expect_true(sdf.intersection %>% head(1) %>% sdf_collect %>% .$comparison_intersects)
+  expect_true(sdf.intersection %>% head(1) %>% sdf_collect %>% .$comparison_intersection)
 
 
-# })
+})
