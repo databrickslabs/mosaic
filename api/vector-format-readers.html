@@ -446,7 +446,7 @@ ls<span class="w"> </span>-lh<span class="w"> </span>/dbfs/home/&lt;username&gt;
 <span class="p">])</span>
 </pre></div>
 </div>
-<p>Here is an example UDFs to list layers, supporting both zipped and non-zipped.</p>
+<p>Here is an example UDF to list layers, supporting both zipped and non-zipped.</p>
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="n">udf</span>
 <span class="kn">from</span> <span class="nn">pyspark.sql.types</span> <span class="kn">import</span> <span class="o">*</span>
 
@@ -621,7 +621,7 @@ In this example, we can use <code class="code docutils literal notranslate"><spa
 <span class="o">+--------------------+-------------+</span>
 <span class="o">|</span>            <span class="n">zip_path</span><span class="o">|</span><span class="n">is_double_zip</span><span class="o">|</span>
 <span class="o">+--------------------+-------------+</span>
-<span class="o">|/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">mjohns</span><span class="o">...|</span>        <span class="n">false</span><span class="o">|</span>
+<span class="o">|/</span><span class="n">dbfs</span><span class="o">/</span><span class="n">home</span><span class="o">/...</span>      <span class="o">|</span>        <span class="n">false</span><span class="o">|</span>
 <span class="o">+--------------------+-------------+</span>
 </pre></div>
 </div>
