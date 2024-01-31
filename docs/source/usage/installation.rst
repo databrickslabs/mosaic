@@ -22,10 +22,10 @@ Mosaic 0.4.x series issues an ERROR on standard, non-Photon clusters `ADB <https
 
 As of Mosaic 0.4.0 (subject to change in follow-on releases)
 
-   * `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Python, SQL, R, and Scala APIs.
-   * `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Scala API (JVM) with
-     Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_;
-     Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
+* `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_: Mosaic Python, SQL, R, and Scala APIs.
+* `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_: Mosaic Scala API (JVM) with
+  Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_;
+  Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
 
 .. note::
    As of Mosaic 0.4.0 (subject to change in follow-on releases)
@@ -33,7 +33,6 @@ As of Mosaic 0.4.0 (subject to change in follow-on releases)
    * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ enforces process isolation which is difficult
      to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from
      other supported languages in Shared Access Clusters.
-
    * Along the same principle of isolation, clusters (both assigned and shared access) can read
      `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`_ via relevant built-in readers and
      writers or via custom python calls which do not involve any custom JVM code.

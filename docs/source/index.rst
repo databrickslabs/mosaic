@@ -46,12 +46,12 @@ this will leverage the Databricks H3 expressions when using H3 grid system.
 
 Mosaic provides:
 
-   * easy conversion between common spatial data encodings (WKT, WKB and GeoJSON);
-   * constructors to easily generate new geometries from Spark native data types;
-   * many of the OGC SQL standard :code:`ST_` functions implemented as Spark Expressions for transforming, aggregating and joining spatial datasets;
-   * high performance through implementation of Spark code generation within the core Mosaic functions;
-   * optimisations for performing point-in-polygon joins using an approach we co-developed with Ordnance Survey (`blog post <https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html>`_); and
-   * the choice of a Scala, SQL and Python API.
+* easy conversion between common spatial data encodings (WKT, WKB and GeoJSON);
+* constructors to easily generate new geometries from Spark native data types;
+* many of the OGC SQL standard :code:`ST_` functions implemented as Spark Expressions for transforming, aggregating and joining spatial datasets;
+* high performance through implementation of Spark code generation within the core Mosaic functions;
+* optimisations for performing point-in-polygon joins using an approach we co-developed with Ordnance Survey (`blog post <https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html>`_); and
+* the choice of a Scala, SQL and Python API.
 
 .. note::
    For Mosaic versions < 0.4 please use the `0.3 docs <https://databrickslabs.github.io/mosaic/v0.3.x/index.html>`_.
@@ -79,10 +79,10 @@ Mosaic 0.4.x series issues an ERROR on standard, non-Photon clusters `ADB <https
 
 As of Mosaic 0.4.0 (subject to change in follow-on releases)
 
-   * `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_: Mosaic Python, SQL, R, and Scala APIs.
-                              * `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_ : Mosaic Scala API (JVM) with
-                                Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_;
-     Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
+* `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_: Mosaic Python, SQL, R, and Scala APIs.
+* `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_: Mosaic Scala API (JVM) with
+  Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_;
+  Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
 
 .. warning::
    Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due
@@ -94,7 +94,6 @@ As of Mosaic 0.4.0 (subject to change in follow-on releases)
    * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ enforces process isolation which is difficult
      to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from
      other supported languages in Shared Access Clusters.
-
    * Along the same principle of isolation, clusters (both Assigned and Shared Access) can read
      `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`_ via relevant built-in readers and
      writers or via custom python calls which do not involve any custom JVM code.
