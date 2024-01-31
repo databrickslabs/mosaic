@@ -321,7 +321,7 @@ Then we create a spark dataframe made up of metadata to drive the examples.
       }
     ])
 
-Here is an example UDFs to list layers, supporting both zipped and non-zipped.
+Here is an example UDF to list layers, supporting both zipped and non-zipped.
 
 .. code-block:: py
 
@@ -514,7 +514,7 @@ We can call the UDF, e.g.
     +--------------------+-------------+
     |            zip_path|is_double_zip|
     +--------------------+-------------+
-    |/dbfs/home/mjohns...|        false|
+    |/dbfs/home/...      |        false|
     +--------------------+-------------+
 
 Though not shown here, you can then handle unzipping the "double" zips that return `True` by extending
