@@ -67,9 +67,8 @@ We recommend using Databricks Runtime versions 13.3 LTS with Photon enabled.
 
 Mosaic 0.4.x series only supports DBR 13.x DBRs. If running on a different DBR it will throw an exception:
 
-.. error::
-   DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13.
-   You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.
+    DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13.
+    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.
 
 Mosaic 0.4.x series issues an ERROR on standard, non-Photon clusters `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ |
 `AWS <https://docs.databricks.com/runtime/index.html/>`_ |
