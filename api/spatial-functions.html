@@ -1901,7 +1901,7 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <dl class="py function">
 <dt class="sig sig-object py" id="st_x">
 <span class="sig-name descname"><span class="pre">st_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_x" title="Permalink to this definition"></a></dt>
-<dd><p>Returns the x coordinate of the input geometry.</p>
+<dd><p>Returns the x coordinate of the centroid point of the input geometry.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
@@ -2069,7 +2069,7 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <dl class="py function">
 <dt class="sig sig-object py" id="st_y">
 <span class="sig-name descname"><span class="pre">st_y</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_y" title="Permalink to this definition"></a></dt>
-<dd><p>Returns the y coordinate of the input geometry.</p>
+<dd><p>Returns the y coordinate of the centroid point of the input geometry.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Geometry</p>
@@ -2232,6 +2232,62 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </div>
 </div></div>
 </section>
+<section id="st-z">
+<h2>st_z<a class="headerlink" href="#st-z" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="st_z">
+<span class="sig-name descname"><span class="pre">st_z</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_z" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the z coordinate of an arbitrary point of the input geometry <cite>geom</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>col</strong> (<em>Column</em>) – Point Geometry</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Column: DoubleType</p>
+</dd>
+<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd></dl>
+
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-35-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-35-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-35-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-35-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-35-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-35-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-35-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-35-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-35-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-35-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;wkt&#39;</span><span class="p">:</span> <span class="s1">&#39;POINT (30 10 20)&#39;</span><span class="p">}])</span>
+<span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_z</span><span class="p">(</span><span class="s1">&#39;wkt&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="n">st_z</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span>        <span class="o">|</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span>             <span class="mf">20.0</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-35-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-35-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">&quot;POINT (30 10 20)&quot;</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">)</span>
+<span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_z</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="n">st_z</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="w">        </span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="w">             </span><span class="mf">20.0</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-35-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-35-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_z</span><span class="p">(</span><span class="ss">&quot;POINT (30 10 20)&quot;</span><span class="p">)</span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="n">st_z</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="w">        </span><span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+<span class="o">|</span><span class="w">             </span><span class="mi">20</span><span class="p">.</span><span class="mi">0</span><span class="o">|</span>
+<span class="o">+</span><span class="c1">-----------------+</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-35-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-35-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;POINT (30 10 20)&quot;</span><span class="p">))</span>
+<span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="nf">st_z</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">))),</span><span class="w"> </span><span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="nf">st_z</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="w">        </span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+<span class="o">|</span><span class="w">             </span><span class="m">20.0</span><span class="o">|</span>
+<span class="o">+-----------------+</span>
+</pre></div>
+</div>
+</div></div>
+</section>
 <section id="st-zmax">
 <h2>st_zmax<a class="headerlink" href="#st-zmax" title="Permalink to this heading"></a></h2>
 <dl class="py function">
@@ -2251,7 +2307,7 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-35-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-35-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-35-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-35-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-35-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-35-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-35-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-35-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-35-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-35-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;wkt&#39;</span><span class="p">:</span> <span class="s1">&#39;POINT (30 10 20)&#39;</span><span class="p">}])</span>
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-36-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-36-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-36-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-36-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-36-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-36-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-36-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-36-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-36-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-36-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;wkt&#39;</span><span class="p">:</span> <span class="s1">&#39;POINT (30 10 20)&#39;</span><span class="p">}])</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_zmax</span><span class="p">(</span><span class="s1">&#39;wkt&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+-----------------+</span>
 <span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
@@ -2260,7 +2316,7 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <span class="o">+-----------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-35-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-35-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">&quot;POINT (30 10 20)&quot;</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">)</span>
+</div><div aria-labelledby="tab-36-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-36-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">&quot;POINT (30 10 20)&quot;</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_zmax</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+-----------------+</span>
 <span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
@@ -2269,7 +2325,7 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <span class="o">+-----------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-35-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-35-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_zmax</span><span class="p">(</span><span class="ss">&quot;POINT (30 10 20)&quot;</span><span class="p">)</span>
+</div><div aria-labelledby="tab-36-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-36-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_zmax</span><span class="p">(</span><span class="ss">&quot;POINT (30 10 20)&quot;</span><span class="p">)</span>
 <span class="o">+</span><span class="c1">-----------------+</span>
 <span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
 <span class="o">+</span><span class="c1">-----------------+</span>
@@ -2277,7 +2333,7 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <span class="o">+</span><span class="c1">-----------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-35-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-35-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;POINT (30 10 20)&quot;</span><span class="p">))</span>
+</div><div aria-labelledby="tab-36-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-36-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;POINT (30 10 20)&quot;</span><span class="p">))</span>
 <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="nf">st_zmax</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">))),</span><span class="w"> </span><span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
 <span class="o">+-----------------+</span>
 <span class="o">|</span><span class="nf">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
@@ -2307,7 +2363,7 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-36-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-36-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-36-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-36-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-36-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-36-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-36-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-36-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-36-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-36-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;wkt&#39;</span><span class="p">:</span> <span class="s1">&#39;POINT (30 10 20)&#39;</span><span class="p">}])</span>
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-37-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-37-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-37-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-37-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button><button aria-controls="panel-37-U1FM" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-37-U1FM" name="U1FM" role="tab" tabindex="-1">SQL</button><button aria-controls="panel-37-Ug==" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-37-Ug==" name="Ug==" role="tab" tabindex="-1">R</button></div><div aria-labelledby="tab-37-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-37-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([{</span><span class="s1">&#39;wkt&#39;</span><span class="p">:</span> <span class="s1">&#39;POINT (30 10 20)&#39;</span><span class="p">}])</span>
 <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_zmin</span><span class="p">(</span><span class="s1">&#39;wkt&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+-----------------+</span>
 <span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
@@ -2316,7 +2372,7 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <span class="o">+-----------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-36-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-36-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">&quot;POINT (30 10 20)&quot;</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">)</span>
+</div><div aria-labelledby="tab-37-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-37-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">List</span><span class="p">((</span><span class="s">&quot;POINT (30 10 20)&quot;</span><span class="p">)).</span><span class="n">toDF</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="p">.</span><span class="n">select</span><span class="p">(</span><span class="n">st_zmin</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">))).</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+-----------------+</span>
 <span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
@@ -2325,7 +2381,7 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <span class="o">+-----------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-36-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-36-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_zmin</span><span class="p">(</span><span class="ss">&quot;POINT (30 10 20)&quot;</span><span class="p">)</span>
+</div><div aria-labelledby="tab-37-U1FM" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-37-U1FM" name="U1FM" role="tabpanel" tabindex="0"><div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="n">st_zmin</span><span class="p">(</span><span class="ss">&quot;POINT (30 10 20)&quot;</span><span class="p">)</span>
 <span class="o">+</span><span class="c1">-----------------+</span>
 <span class="o">|</span><span class="n">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
 <span class="o">+</span><span class="c1">-----------------+</span>
@@ -2333,7 +2389,7 @@ df.select(st_union(col(&#39;left&#39;), col(&#39;right&#39;))).show()
 <span class="o">+</span><span class="c1">-----------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-36-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-36-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;POINT (30 10 20)&quot;</span><span class="p">))</span>
+</div><div aria-labelledby="tab-37-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-37-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;POINT (30 10 20)&quot;</span><span class="p">))</span>
 <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="nf">st_zmin</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&quot;wkt&quot;</span><span class="p">))),</span><span class="w"> </span><span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
 <span class="o">+-----------------+</span>
 <span class="o">|</span><span class="nf">st_minmaxxyz</span><span class="p">(</span><span class="n">wkt</span><span class="p">)</span><span class="o">|</span>
