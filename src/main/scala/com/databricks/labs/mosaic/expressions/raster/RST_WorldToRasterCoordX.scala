@@ -37,7 +37,7 @@ object RST_WorldToRasterCoordX extends WithExpressionInfo {
 
     override def name: String = "rst_worldtorastercoordx"
 
-    override def usage: String = "_FUNC_(expr1, expr2, expr3) - Returns x coordinate (pixel, line) of the pixel."
+    override def usage: String = "_FUNC_(expr1, expr2, expr3) - Returns x coordinate (pixel, line) of the raster tile pixel coord."
 
     override def example: String =
         """

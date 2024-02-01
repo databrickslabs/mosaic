@@ -172,10 +172,10 @@ class TestVectorFunctions(MosaicTestCase):
             .join(right_df, col("left_index.index_id") == col("right_index.index_id"))
             .groupBy("left_id", "right_id")
             .agg(
-                api.st_intersects_aggregate(
+                api.st_intersects_agg(
                     col("left_index"), col("right_index")
                 ).alias("agg_intersects"),
-                api.st_intersection_aggregate(
+                api.st_intersection_agg(
                     col("left_index"), col("right_index")
                 ).alias("agg_intersection"),
                 first("left_geom").alias("left_geom"),

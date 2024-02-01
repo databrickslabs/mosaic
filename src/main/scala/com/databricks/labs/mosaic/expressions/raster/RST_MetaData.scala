@@ -25,7 +25,7 @@ object RST_MetaData extends WithExpressionInfo {
 
     override def name: String = "rst_metadata"
 
-    override def usage: String = "_FUNC_(expr1) - Extracts metadata from a raster dataset."
+    override def usage: String = "_FUNC_(expr1) - Extracts metadata from a raster tile dataset."
 
     override def example: String =
         """

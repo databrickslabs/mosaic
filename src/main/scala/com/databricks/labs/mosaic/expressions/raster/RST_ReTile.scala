@@ -43,7 +43,7 @@ object RST_ReTile extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2, expr3) - Returns a set of new rasters with the specified tile size (tileWidth x tileHeight).
+          |_FUNC_(expr1, expr2, expr3) - Returns a set of new raster tile with the specified size (tileWidth x tileHeight).
           |""".stripMargin
 
     override def example: String =

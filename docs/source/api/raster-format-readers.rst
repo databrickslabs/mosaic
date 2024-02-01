@@ -5,28 +5,31 @@ Raster Format Readers
 
 Intro
 #####
-Mosaic provides spark readers for the following raster formats:
+Mosaic provides spark readers for raster files supported by GDAL OGR drivers.
+Only the drivers that are built by default are supported.
+Here are some common useful file formats:
 
-    * GTiff (GeoTiff) using .tif file extension - https://gdal.org/drivers/raster/gtiff.html
-    * COG (Cloud Optimized GeoTiff) using .tif file extension - https://gdal.org/drivers/raster/cog.html
-    * HDF4 using .hdf file extension - https://gdal.org/drivers/raster/hdf4.html
-    * HDF5 using .h5 file extension - https://gdal.org/drivers/raster/hdf5.html
-    * NetCDF using .nc file extension - https://gdal.org/drivers/raster/netcdf.html
-    * JP2ECW using .jp2 file extension - https://gdal.org/drivers/raster/jp2ecw.html
-    * JP2KAK using .jp2 file extension - https://gdal.org/drivers/raster/jp2kak.html
-    * JP2OpenJPEG using .jp2 file extension - https://gdal.org/drivers/raster/jp2openjpeg.html
-    * PDF using .pdf file extension - https://gdal.org/drivers/raster/pdf.html
-    * PNG using .png file extension - https://gdal.org/drivers/raster/png.html
-    * VRT using .vrt file extension - https://gdal.org/drivers/raster/vrt.html
-    * XPM using .xpm file extension - https://gdal.org/drivers/raster/xpm.html
-    * GRIB using .grb file extension - https://gdal.org/drivers/raster/grib.html
-    * Zarr using .zarr file extension - https://gdal.org/drivers/raster/zarr.html
+    * `GTiff <https://gdal.org/drivers/raster/gtiff.html>`_ (GeoTiff) using .tif file extension
+    * `COG <https://gdal.org/drivers/raster/cog.html>`_ (Cloud Optimized GeoTiff) using .tif file extension
+    * `HDF4 <https://gdal.org/drivers/raster/hdf4.html>`_ using .hdf file extension
+    * `HDF5 <https://gdal.org/drivers/raster/hdf5.html>`_ using .h5 file extension
+    * `NetCDF <https://gdal.org/drivers/raster/netcdf.html>`_ using .nc file extension
+    * `JP2ECW <https://gdal.org/drivers/raster/jp2ecw.html>`_ using .jp2 file extension
+    * `JP2KAK <https://gdal.org/drivers/raster/jp2kak.html>`_ using .jp2 file extension
+    * `JP2OpenJPEG <https://gdal.org/drivers/raster/jp2openjpeg.html>`_ using .jp2 file extension
+    * `PDF <https://gdal.org/drivers/raster/pdf.html>`_ using .pdf file extension
+    * `PNG <https://gdal.org/drivers/raster/png.html>`_ using .png file extension
+    * `VRT <https://gdal.org/drivers/raster/vrt.html>`_ using .vrt file extension
+    * `XPM <https://gdal.org/drivers/raster/xpm.html>`_ using .xpm file extension
+    * `GRIB <https://gdal.org/drivers/raster/grib.html>`_ using .grb file extension
+    * `Zarr <https://gdal.org/drivers/raster/zarr.html>`_ using .zarr file extension
 
-Other formats are supported if supported by GDAL available drivers.
+For more information please refer to gdal `raster driver <https://gdal.org/drivers/raster/index.html>`_ documentation.
 
 Mosaic provides two flavors of the readers:
-    * spark.read.format("gdal") for reading 1 file per spark task
-    * mos.read().format("raster_to_grid") reader that automatically converts raster to grid.
+
+    * :code:`spark.read.format("gdal")` for reading 1 file per spark task
+    * :code:`mos.read().format("raster_to_grid")` reader that automatically converts raster to grid.
 
 
 spark.read.format("gdal")
@@ -47,10 +50,10 @@ The output of the reader is a DataFrame with the following columns:
 .. function:: spark.read.format("gdal").load(path)
 
     Loads a GDAL raster file and returns the result as a DataFrame.
-    It uses standard spark.read.format(*).option(*).load(*) pattern.
+    It uses standard :code:`spark.read.format(*).option(*).load(*)` pattern.
 
     :param path: path to the raster file on dbfs
-    :type path: *StringType
+    :type path: Column(StringType)
     :rtype: DataFrame
 
     :example:
@@ -80,6 +83,11 @@ The output of the reader is a DataFrame with the following columns:
         | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |  100 |  100 |        1 | {AREA_OR_POINT=Po...|                null| 4326|  +proj=longlat +da...|
         +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
 
+.. note::
+    Keyword options not identified in function signature are converted to a :code:`Map<String,String>`.
+    These must be supplied as a :code:`String`.
+    Also, you can supply function signature values as :code:`String`.
+
 .. warning::
     Issue 350: https://github.com/databrickslabs/mosaic/issues/350
     The raster reader 'driverName' option has to match the names provided in the above list.
@@ -91,7 +99,7 @@ mos.read().format("raster_to_grid")
 ***********************************
 Reads a GDAL raster file and converts it to a grid.
 It uses a pattern similar to standard spark.read.format(*).option(*).load(*) pattern.
-The only difference is that it uses mos.read() instead of spark.read().
+The only difference is that it uses :code:`mos.read()` instead of :code:`spark.read()`.
 The raster pixels are converted to grid cells using specified combiner operation (default is mean).
 If the raster pixels are larger than the grid cells, the cell values can be calculated using interpolation.
 The interpolation method used is Inverse Distance Weighting (IDW) where the distance function is a k_ring
@@ -112,10 +120,10 @@ The reader supports the following options:
 .. function:: mos.read().format("raster_to_grid").load(path)
 
     Loads a GDAL raster file and returns the result as a DataFrame.
-    It uses standard mos.read().format(*).option(*).load(*) pattern.
+    It uses standard :code:`mos.read().format(*).option(*).load(*)` pattern.
 
     :param path: path to the raster file on dbfs
-    :type path: *StringType
+    :type path: Column(StringType)
     :rtype: DataFrame
 
     :example:
@@ -160,6 +168,11 @@ The reader supports the following options:
         |       1|       3|0.2464000000000000|
         |       1|       4|0.2464000000000000|
         +--------+--------+------------------+
+
+.. note::
+    Keyword options not identified in function signature are converted to a :code:`Map<String,String>`.
+    These must be supplied as a :code:`String`.
+    Also, you can supply function signature values as :code:`String`.
 
 .. warning::
     Issue 350: https://github.com/databrickslabs/mosaic/issues/350

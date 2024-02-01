@@ -8,7 +8,7 @@ st_contains
 
 .. function:: st_contains(geom1, geom2)
 
-    Returns `true` if `geom1` 'spatially' contains `geom2`.
+    Returns :code:`true` if :code:`geom1` 'spatially' contains :code:`geom2`.
 
     :param geom1: Geometry
     :type geom1: Column
@@ -66,7 +66,8 @@ st_intersects
 
 .. function:: st_intersects(geom1, geom2)
 
-    Returns true if the geometry `geom1` intersects `geom2`.
+    Returns true if the geometry :code:`geom1` intersects :code:`geom2`.
+    Also, see :ref:`st_intersects_agg` function.
 
     :param geom1: Geometry
     :type geom1: Column
@@ -123,7 +124,7 @@ st_within
 
 .. function:: st_within(geom1, geom2)
 
-    Returns `true` if `geom1` 'spatially' is within `geom2`.
+    Returns :code:`true` if :code:`geom1` 'spatially' is within :code:`geom2`.
 
     :param geom1: Geometry
     :type geom1: Column

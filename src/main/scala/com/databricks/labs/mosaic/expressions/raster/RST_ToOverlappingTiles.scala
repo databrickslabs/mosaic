@@ -45,7 +45,7 @@ object RST_ToOverlappingTiles extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2, expr3, expr4) - Returns a set of new rasters with the specified tile size (tileWidth x tileHeight).
+          |_FUNC_(expr1, expr2, expr3, expr4) - Returns a set of new raster tiles with the specified tile size (tileWidth x tileHeight).
           |                                     The tiles will overlap by the specified amount.
           |""".stripMargin
 

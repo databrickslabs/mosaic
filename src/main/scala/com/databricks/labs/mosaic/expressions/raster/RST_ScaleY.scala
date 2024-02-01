@@ -29,7 +29,7 @@ object RST_ScaleY extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns scale Y in the raster.
+          |_FUNC_(expr1) - Returns scale Y in the raster tile.
           |""".stripMargin
 
     override def example: String =
