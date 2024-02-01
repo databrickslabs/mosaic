@@ -50,6 +50,7 @@ __all__ = [
     "st_zmax",
     "st_x",
     "st_y",
+    "st_z",
     "flatten_polygons",
     "grid_boundaryaswkb",
     "grid_boundary",
@@ -753,7 +754,7 @@ def st_updatesrid(
 
 def st_x(geom: ColumnOrName) -> Column:
     """
-    Returns the x coordinate of the input geometry `geom`.
+    Returns the x coordinate of the centroid point of the input geometry `geom`.
 
     Parameters
     ----------
@@ -769,7 +770,7 @@ def st_x(geom: ColumnOrName) -> Column:
 
 def st_y(geom: ColumnOrName) -> Column:
     """
-    Returns the y coordinate of the input geometry `geom`.
+    Returns the y coordinate of the centroid point of the input geometry `geom`.
 
     Parameters
     ----------
@@ -781,6 +782,22 @@ def st_y(geom: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function("st_y", pyspark_to_java_column(geom))
+
+
+def st_z(geom: ColumnOrName) -> Column:
+    """
+    Returns the z coordinate of an arbitrary point of the input geometry `geom`.
+
+    Parameters
+    ----------
+    geom : Column
+
+    Returns
+    -------
+    Column (DoubleType)
+
+    """
+    return config.mosaic_context.invoke_function("st_z", pyspark_to_java_column(geom))
 
 
 def st_geometrytype(geom: ColumnOrName) -> Column:

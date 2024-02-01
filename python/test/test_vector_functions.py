@@ -1,6 +1,6 @@
 import random
 
-from pyspark.sql.functions import abs, col, first, lit, sqrt
+from pyspark.sql.functions import abs, col, concat, first, lit, sqrt
 
 from .context import api
 from .utils import MosaicTestCase
@@ -26,6 +26,25 @@ class TestVectorFunctions(MosaicTestCase):
             .collect()
         )
         self.assertListEqual([rw.points for rw in result], expected)
+
+    def test_st_z(self):
+        expected = [
+            0,
+            1,
+        ]
+        result = (
+            self.spark.range(2)
+            .select(col("id").cast("double"))
+            .withColumn(
+                "points",
+                api.st_geomfromwkt(
+                    concat(lit("POINT (9 9 "), "id", lit(")"))
+                ),
+            )
+            .withColumn("z", api.st_z("points"))
+            .collect()
+        )
+        self.assertListEqual([rw.z for rw in result], expected)
 
     def test_st_bindings_happy_flow(self):
         # Checks that the python bindings do not throw exceptions

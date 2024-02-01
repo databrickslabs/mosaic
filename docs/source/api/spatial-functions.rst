@@ -1721,7 +1721,7 @@ st_x
 
 .. function:: st_x(col)
 
-    Returns the x coordinate of the input geometry.
+    Returns the x coordinate of the centroid point of the input geometry.
 
     :param col: Geometry
     :type col: Column
@@ -1880,7 +1880,7 @@ st_y
 ****
 .. function:: st_y(col)
 
-    Returns the y coordinate of the input geometry.
+    Returns the y coordinate of the centroid point of the input geometry.
 
     :param col: Geometry
     :type col: Column
@@ -2034,6 +2034,59 @@ st_ymin
     +-----------------+
     |             10.0|
     +-----------------+
+
+
+st_z
+****
+.. function:: st_z(col)
+
+    Returns the z coordinate of an arbitrary point of the input geometry `geom`.
+
+    :param col: Point Geometry
+    :type col: Column
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df = spark.createDataFrame([{'wkt': 'POINT (30 10 20)'}])
+     df.select(st_z('wkt')).show()
+     +-----------------+
+     |st_z(wkt)        |
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: scala
+
+     val df = List(("POINT (30 10 20)")).toDF("wkt")
+     df.select(st_z(col("wkt"))).show()
+     +-----------------+
+     |st_z(wkt)        |
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: sql
+
+     SELECT st_z("POINT (30 10 20)")
+     +-----------------+
+     |st_z(wkt)        |
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: r R
+
+     df <- createDataFrame(data.frame(wkt = "POINT (30 10 20)"))
+     showDF(select(df, st_z(column("wkt"))), truncate=F)
+     +-----------------+
+     |st_z(wkt)        |
+     +-----------------+
+     |             20.0|
+     +-----------------+
 
 
 st_zmax
