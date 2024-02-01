@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automatic SQL registration &mdash; Mosaic</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/fonts.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Models" href="../models/models.html" />
+    <link rel="prev" title="Kepler visualizations" href="kepler.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">API Documentation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="usage.html">Usage</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-gdal.html">GDAL Installation guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid-indexes.html">Using grid index systems in Mosaic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid-indexes-bng.html">BNG - British National Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kepler.html">Kepler visualizations</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Automatic SQL registration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../literature/videos.html">Mosaic Videos and Talks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mosaic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="usage.html">Usage</a></li>
+      <li class="breadcrumb-item active">Automatic SQL registration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/usage/automatic-sql-registration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="automatic-sql-registration">
+<h1>Automatic SQL registration<a class="headerlink" href="#automatic-sql-registration" title="Permalink to this heading"></a></h1>
+<p>If you are looking to use only the SQL functions exposed by Mosaic, without the need
+to execute any Python or Scala set-up code, this can be achieved through the automatic SQL
+registration process described on this page.</p>
+<p>An example of when this might be useful would be connecting a business intelligence tool
+to your Spark / Databricks cluster to perform spatial queries or integrating Spark
+with a geospatial middleware component such as [Geoserver](<a class="reference external" href="https://geoserver.org/">https://geoserver.org/</a>).</p>
+<section id="pre-requisites">
+<h2>Pre-requisites<a class="headerlink" href="#pre-requisites" title="Permalink to this heading"></a></h2>
+<p>In order to use Mosaic, you must have access to a Databricks cluster running
+Databricks Runtime 10.0 or higher (11.2 with photon or higher is recommended).
+If you have cluster creation permissions in your Databricks
+workspace, you can create a cluster using the instructions
+<a class="reference external" href="https://docs.databricks.com/clusters/create.html#use-the-cluster-ui">here</a>.</p>
+<p>You will also need “Can Manage” permissions on this cluster in order to attach init script
+to your cluster. A workspace administrator will be able to grant
+these permissions and more information about cluster permissions can be found
+in our documentation
+<a class="reference external" href="https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions">here</a>.</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>To install Mosaic on your Databricks cluster, take the following steps:</p>
+<ol class="arabic">
+<li><p>Upload Mosaic jar to a dedicated dbfs location. E.g. dbfs:/FileStore/mosaic/jars/.</p></li>
+<li><p>Create an init script that fetches the mosaic jar and copies it to databricks/jars.</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%sh
+
+<span class="c1"># Create init script directory for Mosaic</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span>/dbfs/FileStore/mosaic/scripts
+
+<span class="c1"># Create init script</span>
+cat<span class="w"> </span>&gt;<span class="w"> </span>/dbfs/FileStore/mosaic/scripts/mosaic-init.sh<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<span class="s">#!/bin/bash</span>
+<span class="s">#</span>
+<span class="s"># File: mosaic-init.sh</span>
+<span class="s"># On cluster startup, this script will copy the Mosaic jars to the cluster&#39;s default jar directory.</span>
+
+<span class="s">cp /dbfs/FileStore/mosaic/jars/*.jar /databricks/jars</span>
+
+<span class="s">EOF</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Configure the init script for the cluster following the instructions <a class="reference external" href="https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script">here</a>.</p></li>
+<li><p>Add the following spark configuration values for your cluster following the instructions <a class="reference external" href="https://docs.databricks.com/clusters/configure.html#spark-configuration">here</a>.</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># H3 or BNG</span>
+spark.databricks.labs.mosaic.index.system<span class="w"> </span>H3
+<span class="c1"># JTS only</span>
+spark.databricks.labs.mosaic.geometry.api<span class="w"> </span>JTS
+<span class="c1"># MosaicSQL or MosaicSQLDefault, MosaicSQLDefault corresponds to (H3, JTS)</span>
+spark.sql.extensions<span class="w"> </span>com.databricks.labs.mosaic.sql.extensions.MosaicSQL
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this heading"></a></h2>
+<p>To test the installation, create a new Python notebook and run the following command:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;show functions&quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s2">&quot;startswith(function, &#39;st_&#39;)&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You should see all the supported functions registered by Mosaic appear in the output.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Issue 317: <a class="reference external" href="https://github.com/databrickslabs/mosaic/issues/317">https://github.com/databrickslabs/mosaic/issues/317</a>
+Mosaic jar needs to be installed via init script and not through the cluster UI.
+Automatic SQL registration needs to happen at the cluster start up time when Spark context is created.
+Cluster UI installed libraries are made available too late and the Automatic SQL registration
+will not work, but there is no way to print an Error message in that case.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Issue 297: <a class="reference external" href="https://github.com/databrickslabs/mosaic/issues/297">https://github.com/databrickslabs/mosaic/issues/297</a>
+Since Mosaic V0.3.6 Automatic SQL Registration can fail with the following error message:
+“java.lang.Exception: spark.databricks.labs.mosaic.raster.api”. This is due to a missing key in the spark
+configuration. The issue has been fixed since Mosaic V0.3.10. For releases between V0.3.6 and V0.3.10
+please add the following configuration to your cluster spark configs: (spark.databricks.labs.mosaic.raster.api, “GDAL”),
+or alternatively in python/scala code: spark.conf.set(“spark.databricks.labs.mosaic.raster.api”, “GDAL”)</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="kepler.html" class="btn btn-neutral float-left" title="Kepler visualizations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../models/models.html" class="btn btn-neutral float-right" title="Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Databricks Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
