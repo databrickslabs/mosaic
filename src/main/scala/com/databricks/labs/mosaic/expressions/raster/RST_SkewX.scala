@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the skew x of the raster. */
 case class RST_SkewX(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_SkewX](raster, DoubleType, returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_SkewX](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = DoubleType
 
     /** Returns the skew x of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

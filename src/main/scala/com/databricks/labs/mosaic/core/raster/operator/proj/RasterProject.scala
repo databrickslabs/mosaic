@@ -15,8 +15,7 @@ object RasterProject {
     /**
       * Projects a raster to a new CRS. The method handles all the abstractions
       * over GDAL Warp. It uses cubic resampling to ensure that the output is
-      * smooth. It also uses COMPRESS=DEFLATE to ensure that the output is
-      * compressed.
+      * smooth.
       *
       * @param raster
       *   The raster to project.
@@ -33,11 +32,11 @@ object RasterProject {
         // Note that Null is the right value here
         val authName = destCRS.GetAuthorityName(null)
         val authCode = destCRS.GetAuthorityCode(null)
-
+        
         val result = GDALWarp.executeWarp(
           resultFileName,
           Seq(raster),
-          command = s"gdalwarp -of $outShortName -t_srs $authName:$authCode -r cubic -overwrite -co COMPRESS=DEFLATE"
+          command = s"gdalwarp -t_srs $authName:$authCode"
         )
 
         result

@@ -16,9 +16,11 @@ case class RST_WorldToRasterCoordY(
     x: Expression,
     y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_WorldToRasterCoordY](raster, x, y, IntegerType, returnsRaster = false, expressionConfig)
+) extends Raster2ArgExpression[RST_WorldToRasterCoordY](raster, x, y, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: IntegerType = IntegerType
 
     /**
       * Returns the y coordinate of the raster by applying GeoTransform. This

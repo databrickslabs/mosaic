@@ -16,9 +16,11 @@ import java.util.{Vector => JVector}
 
 /** Returns the summary info the raster. */
 case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Summary](raster, StringType, returnsRaster = false, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_Summary](raster, returnsRaster = false, expressionConfig: MosaicExpressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = StringType
 
     /** Returns the summary info the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

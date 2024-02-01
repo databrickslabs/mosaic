@@ -106,19 +106,22 @@ case class MosaicRasterTile(
       *   An instance of [[InternalRow]].
       */
     def serialize(
-        rasterDataType: DataType = BinaryType,
-        checkpointLocation: String = ""
+        rasterDataType: DataType
     ): InternalRow = {
         val parentPathUTF8 = UTF8String.fromString(parentPath)
         val driverUTF8 = UTF8String.fromString(driver)
-        val encodedRaster = encodeRaster(rasterDataType, checkpointLocation)
+        val encodedRaster = encodeRaster(rasterDataType)
         if (Option(index).isDefined) {
             if (index.isLeft) InternalRow.fromSeq(
               Seq(index.left.get, encodedRaster, parentPathUTF8, driverUTF8)
             )
-            else InternalRow.fromSeq(
-              Seq(UTF8String.fromString(index.right.get), encodedRaster, parentPathUTF8, driverUTF8)
-            )
+            else {
+                // Copy from tmp to checkpoint.
+                // Have to use GDAL Driver to do this since sidecar files are not copied by spark.
+                InternalRow.fromSeq(
+                    Seq(UTF8String.fromString(index.right.get), encodedRaster, parentPathUTF8, driverUTF8)
+                )
+            }
         } else {
             InternalRow.fromSeq(Seq(null, encodedRaster, parentPathUTF8, driverUTF8))
         }
@@ -132,10 +135,9 @@ case class MosaicRasterTile(
       *   An instance of [[Array]] of [[Byte]] representing WKB.
       */
     private def encodeRaster(
-        rasterDataType: DataType = BinaryType,
-        checkpointLocation: String = ""
+        rasterDataType: DataType = BinaryType
     ): Any = {
-        GDAL.writeRasters(Seq(raster), checkpointLocation, rasterDataType).head
+        GDAL.writeRasters(Seq(raster), rasterDataType).head
     }
 
 }
@@ -153,12 +155,12 @@ object MosaicRasterTile {
       * @return
       *   An instance of [[MosaicRasterTile]].
       */
-    def deserialize(row: InternalRow, idDataType: DataType): MosaicRasterTile = {
+    def deserialize(row: InternalRow, idDataType: DataType, rasterType: DataType): MosaicRasterTile = {
         val index = row.get(0, idDataType)
-        val rasterBytes = row.get(1, BinaryType)
+        val rawRaster = row.get(1, rasterType)
         val parentPath = row.get(2, StringType).toString
         val driver = row.get(3, StringType).toString
-        val raster = GDAL.readRaster(rasterBytes, parentPath, driver, BinaryType)
+        val raster = GDAL.readRaster(rawRaster, parentPath, driver, rasterType)
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {
             if (index.isInstanceOf[Long]) {

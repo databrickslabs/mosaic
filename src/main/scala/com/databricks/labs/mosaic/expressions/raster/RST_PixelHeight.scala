@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the pixel height of the raster. */
 case class RST_PixelHeight(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_PixelHeight](raster, DoubleType, returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_PixelHeight](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = DoubleType
 
     /** Returns the pixel height of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

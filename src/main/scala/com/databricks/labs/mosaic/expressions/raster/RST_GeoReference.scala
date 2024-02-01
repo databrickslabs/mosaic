@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the georeference of the raster. */
 case class RST_GeoReference(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_GeoReference](raster, MapType(StringType, DoubleType), returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_GeoReference](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = MapType(StringType, DoubleType)
 
     /** Returns the georeference of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

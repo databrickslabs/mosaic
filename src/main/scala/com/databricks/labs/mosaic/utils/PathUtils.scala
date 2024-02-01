@@ -1,7 +1,5 @@
 package com.databricks.labs.mosaic.utils
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.functions.MosaicContext
 
 import java.nio.file.{Files, Paths}
@@ -10,11 +8,15 @@ object PathUtils {
 
     val NO_PATH_STRING = "no_path"
 
-    def getCleanPath(path: String): String = {
-        val cleanPath = path
+    def replaceDBFSTokens(path: String): String = {
+        path
             .replace("file:/", "/")
             .replace("dbfs:/Volumes", "/Volumes")
-            .replace("dbfs:/","/dbfs/")
+            .replace("dbfs:/", "/dbfs/")
+    }
+
+    def getCleanPath(path: String): String = {
+        val cleanPath = replaceDBFSTokens(path)
         if (cleanPath.endsWith(".zip") || cleanPath.contains(".zip:")) {
             getZipPath(cleanPath)
         } else {
@@ -61,17 +63,51 @@ object PathUtils {
         if (filePath.endsWith("\"")) result = result.dropRight(1)
         result
     }
+    
+    def getStemRegex(path: String): String = {
+        val cleanPath = replaceDBFSTokens(path)
+        val fileName = Paths.get(cleanPath).getFileName.toString
+        val stemName = fileName.substring(0, fileName.lastIndexOf("."))
+        val stemEscaped = stemName.replace(".", "\\.")
+        val stemRegex = s"$stemEscaped\\..*".r
+        stemRegex.toString
+    }
 
-    def copyToTmp(inPath: String): String = { 
-        val copyFromPath = inPath
-            .replace("file:/", "/")
-            .replace("dbfs:/Volumes", "/Volumes")
-            .replace("dbfs:/","/dbfs/")
-        val driver = MosaicRasterGDAL.identifyDriver(getCleanPath(inPath))
-        val extension = if (inPath.endsWith(".zip")) "zip" else GDAL.getExtension(driver)
-        val tmpPath = createTmpFilePath(extension)
-        Files.copy(Paths.get(copyFromPath), Paths.get(tmpPath))
-        tmpPath
+    def copyToTmp(inPath: String): String = {
+        val copyFromPath = replaceDBFSTokens(inPath)
+        val inPathDir = Paths.get(copyFromPath).getParent.toString
+        
+        val fullFileName = copyFromPath.split("/").last
+        val stemRegex = getStemRegex(inPath)
+
+        wildcardCopy(inPathDir, MosaicContext.tmpDir, stemRegex.toString)
+
+        s"${MosaicContext.tmpDir}/$fullFileName"
+    }
+
+    def wildcardCopy(inDirPath: String, outDirPath: String, pattern: String): Unit = {
+        import org.apache.commons.io.FileUtils
+        val copyFromPath = replaceDBFSTokens(inDirPath)
+        val copyToPath = replaceDBFSTokens(outDirPath)
+
+        val toCopy = Files
+            .list(Paths.get(copyFromPath))
+            .filter(_.getFileName.toString.matches(pattern))
+
+        toCopy.forEach(path => {
+            val destination = Paths.get(copyToPath, path.getFileName.toString)
+            //noinspection SimplifyBooleanMatch
+            Files.isDirectory(path) match {
+                case true => FileUtils.copyDirectory(path.toFile, destination.toFile)
+                case false => Files.copy(path, destination)
+            }
+        })
+    }
+    
+    def parseUnzippedPathFromExtracted(lastExtracted: String, extension: String): String = {
+        val trimmed = lastExtracted.replace("extracting: ", "").replace(" ", "")
+        val indexOfFormat = trimmed.indexOf(s".$extension/")
+        trimmed.substring(0, indexOfFormat + extension.length + 1)
     }
 
 }

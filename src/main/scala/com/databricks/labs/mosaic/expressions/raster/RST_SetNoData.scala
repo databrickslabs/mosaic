@@ -12,21 +12,23 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
+import org.apache.spark.sql.types.DataType
 
 /** Returns a raster with the specified no data values. */
 case class RST_SetNoData(
-    rastersExpr: Expression,
+    tileExpr: Expression,
     noDataExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends Raster1ArgExpression[RST_SetNoData](
-      rastersExpr,
+      tileExpr,
       noDataExpr,
-      RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
 
     /**
       * Returns a raster with the specified no data values.

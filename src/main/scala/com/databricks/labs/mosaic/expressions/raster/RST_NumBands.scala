@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the number of bands in the raster. */
 case class RST_NumBands(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_NumBands](raster, IntegerType, returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_NumBands](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = IntegerType
 
     /** Returns the number of bands in the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.numBands

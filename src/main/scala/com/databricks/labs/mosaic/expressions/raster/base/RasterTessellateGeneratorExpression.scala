@@ -23,7 +23,7 @@ import scala.reflect.ClassTag
   * checkpoint directory. The files are written as GeoTiffs. Subdatasets are not
   * supported, please flatten beforehand.
   *
-  * @param rasterExpr
+  * @param tileExpr
   *   The expression for the raster. If the raster is stored on disc, the path
   *   to the raster is provided. If the raster is stored in memory, the bytes of
   *   the raster are provided.
@@ -33,7 +33,7 @@ import scala.reflect.ClassTag
   *   The type of the extending class.
   */
 abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
-    rasterExpr: Expression,
+    tileExpr: Expression,
     resolutionExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
@@ -55,7 +55,8 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * needs to be wrapped in a StructType. The actually type is that of the
       * structs element.
       */
-    override def elementSchema: StructType = StructType(Array(StructField("element", RasterTileType(indexSystem.getCellIdDataType))))
+    override def elementSchema: StructType =
+        StructType(Array(StructField("element", RasterTileType(indexSystem.getCellIdDataType, tileExpr))))
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -71,17 +72,15 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
 
+        val rasterType = RasterTileType(tileExpr).rasterType
         val tile = MosaicRasterTile
-            .deserialize(
-              rasterExpr.eval(input).asInstanceOf[InternalRow],
-              indexSystem.getCellIdDataType
-            )
+            .deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], indexSystem.getCellIdDataType, rasterType)
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
         val generatedChips = rasterGenerator(tile, inResolution)
             .map(chip => chip.formatCellId(indexSystem))
 
         val rows = generatedChips
-            .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize())))
+            .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize(rasterType))))
 
         RasterCleaner.dispose(tile)
         generatedChips.foreach(chip => RasterCleaner.dispose(chip))

@@ -14,9 +14,11 @@ import scala.util.Try
 
 /** Returns the SRID of the raster. */
 case class RST_SRID(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_SRID](raster, IntegerType, returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_SRID](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = IntegerType
 
     /** Returns the SRID of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

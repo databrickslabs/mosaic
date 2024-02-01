@@ -35,7 +35,9 @@ trait RST_CombineAvgBehaviors extends QueryTest {
         rastersInMemory.union(rastersInMemory)
             .createOrReplaceTempView("source")
 
-        noException should be thrownBy spark.sql("""
+        //noException should be thrownBy
+
+        spark.sql("""
                     |select rst_combineavg(collect_set(tiles)) as tiles
                     |from (
                     |  select path, rst_tessellate(tile, 2) as tiles

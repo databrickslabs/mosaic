@@ -17,9 +17,11 @@ case class RST_RasterToWorldCoord(
     x: Expression,
     y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_RasterToWorldCoord](raster, x, y, StringType, returnsRaster = false, expressionConfig = expressionConfig)
+) extends Raster2ArgExpression[RST_RasterToWorldCoord](raster, x, y, returnsRaster = false, expressionConfig = expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = StringType
 
     /**
       * Returns the world coordinates of the raster (x,y) pixel by applying

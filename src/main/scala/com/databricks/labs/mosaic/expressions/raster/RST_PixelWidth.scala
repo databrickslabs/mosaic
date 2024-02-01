@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the pixel width of the raster. */
 case class RST_PixelWidth(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_PixelWidth](raster, DoubleType, returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_PixelWidth](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = DoubleType
 
     /** Returns the pixel width of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

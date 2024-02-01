@@ -9,19 +9,21 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.types.DataType
 
 /** Returns a raster that is a result of merging an array of rasters. */
 case class RST_Merge(
-    rastersExpr: Expression,
+    tileExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterArrayExpression[RST_Merge](
-      rastersExpr,
-      RasterTileType(expressionConfig.getCellIdType),
+      tileExpr,
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
 
     /**
       * Merges an array of rasters.

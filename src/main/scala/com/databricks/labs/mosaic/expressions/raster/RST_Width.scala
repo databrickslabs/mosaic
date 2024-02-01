@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the width of the raster. */
 case class RST_Width(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Width](raster, IntegerType, returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_Width](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = IntegerType
 
     /** Returns the width of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.xSize

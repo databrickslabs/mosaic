@@ -14,9 +14,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the upper left x of the raster. */
 case class RST_Max(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Max](raster, ArrayType(DoubleType), returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_Max](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = ArrayType(DoubleType)
 
     /** Returns the upper left x of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

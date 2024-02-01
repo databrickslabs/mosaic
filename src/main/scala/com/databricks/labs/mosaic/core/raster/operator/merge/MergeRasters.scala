@@ -17,27 +17,27 @@ object MergeRasters {
       *   A MosaicRaster object.
       */
     def merge(rasters: Seq[MosaicRasterGDAL]): MosaicRasterGDAL = {
-        val outShortName = rasters.head.getRaster.GetDriver.getShortName
+        val outOptions = rasters.head.getWriteOptions
 
         val vrtPath = PathUtils.createTmpFilePath("vrt")
-        val rasterPath = PathUtils.createTmpFilePath("tif")
+        val rasterPath = PathUtils.createTmpFilePath(outOptions.extension)
 
         val vrtRaster = GDALBuildVRT.executeVRT(
-            vrtPath,
-            rasters,
-            command = s"gdalbuildvrt -resolution highest"
+          vrtPath,
+          rasters,
+          command = s"gdalbuildvrt -resolution highest"
         )
 
         val result = GDALTranslate.executeTranslate(
-            rasterPath,
-            vrtRaster,
-            command = s"gdal_translate -r bilinear -of $outShortName -co COMPRESS=DEFLATE"
+          rasterPath,
+          vrtRaster,
+          command = s"gdal_translate",
+          outOptions
         )
 
         dispose(vrtRaster)
 
         result
     }
-
 
 }

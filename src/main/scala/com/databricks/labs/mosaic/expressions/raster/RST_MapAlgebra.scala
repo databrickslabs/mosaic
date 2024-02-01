@@ -11,22 +11,24 @@ import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.types.DataType
 import org.apache.spark.unsafe.types.UTF8String
 
 /** The expression for map algebra. */
 case class RST_MapAlgebra(
-    rastersExpr: Expression,
+    tileExpr: Expression,
     jsonSpecExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterArray1ArgExpression[RST_MapAlgebra](
-      rastersExpr,
+      tileExpr,
       jsonSpecExpr,
-      RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
 
     /**
       * Map Algebra.

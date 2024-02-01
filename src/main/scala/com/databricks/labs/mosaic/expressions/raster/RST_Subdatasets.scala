@@ -13,12 +13,13 @@ import org.apache.spark.sql.types._
 case class RST_Subdatasets(raster: Expression, expressionConfig: MosaicExpressionConfig)
     extends RasterExpression[RST_Subdatasets](
       raster,
-      MapType(StringType, StringType),
       returnsRaster = false,
       expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = MapType(StringType, StringType)
 
     /** Returns the subdatasets of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = buildMapString(tile.getRaster.subdatasets)

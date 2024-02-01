@@ -25,12 +25,13 @@ case class RST_BandMetaData(raster: Expression, band: Expression, expressionConf
     extends RasterBandExpression[RST_BandMetaData](
       raster,
       band,
-      MapType(StringType, StringType),
       returnsRaster = false,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = MapType(StringType, StringType)
 
     /**
       * @param raster

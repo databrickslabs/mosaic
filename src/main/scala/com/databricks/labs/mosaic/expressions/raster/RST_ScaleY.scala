@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the scale y of the raster. */
 case class RST_ScaleY(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_ScaleY](raster, DoubleType, returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_ScaleY](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = DoubleType
 
     /** Returns the scale y of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

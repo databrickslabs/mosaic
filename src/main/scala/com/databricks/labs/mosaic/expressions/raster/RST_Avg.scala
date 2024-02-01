@@ -13,10 +13,12 @@ import org.apache.spark.sql.types._
 
 
 /** Returns the upper left x of the raster. */
-case class RST_Avg(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Avg](raster, ArrayType(DoubleType), returnsRaster = false, expressionConfig)
+case class RST_Avg(tileExpr: Expression, expressionConfig: MosaicExpressionConfig)
+    extends RasterExpression[RST_Avg](tileExpr, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = ArrayType(DoubleType)
 
     /** Returns the upper left x of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

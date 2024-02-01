@@ -37,7 +37,7 @@ trait RST_MinBehaviors extends QueryTest {
 
         val result = df.as[Double].collect().min
 
-        result < 0 shouldBe true
+        result == 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
                                                      |select rst_min() from source

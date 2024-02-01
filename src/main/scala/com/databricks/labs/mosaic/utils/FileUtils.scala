@@ -22,10 +22,10 @@ object FileUtils {
         bytes
     }
 
-    def createMosaicTempDir(): String = {
-        val tempRoot = Paths.get("/mosaic_tmp/")
+    def createMosaicTempDir(prefix: String = ""): String = {
+        val tempRoot = Paths.get(s"$prefix/mosaic_tmp/")
         if (!Files.exists(tempRoot)) {
-            Files.createDirectory(tempRoot)
+            Files.createDirectories(tempRoot)
         }
         val tempDir = Files.createTempDirectory(tempRoot, "mosaic")
         tempDir.toFile.getAbsolutePath

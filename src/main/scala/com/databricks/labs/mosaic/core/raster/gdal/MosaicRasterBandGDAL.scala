@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.gdal
 
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import org.gdal.gdal.Band
 import org.gdal.gdalconst.gdalconstConstants
 
@@ -254,5 +255,81 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       *   Returns true if the band is a no data mask.
       */
     def isNoDataMask: Boolean = band.GetMaskFlags() == gdalconstConstants.GMF_NODATA
+
+    def convolve(kernel: Array[Array[Double]]): Unit = {
+        val kernelWidth = kernel.head.length
+        val kernelHeight = kernel.length
+        val blockSize = MosaicGDAL.defaultBlockSize
+        val strideX = kernelWidth / 2
+        val strideY = kernelHeight / 2
+
+        val block = Array.ofDim[Double](blockSize * blockSize)
+        val maskBlock = Array.ofDim[Double](blockSize * blockSize)
+        val result = Array.ofDim[Double](blockSize * blockSize)
+
+        for (yOffset <- 0 until ySize by blockSize - strideY) {
+            for (xOffset <- 0 until xSize by blockSize - strideX) {
+                val xSize = Math.min(blockSize, this.xSize - xOffset)
+                val ySize = Math.min(blockSize, this.ySize - yOffset)
+
+                band.ReadRaster(xOffset, yOffset, xSize, ySize, block)
+                band.GetMaskBand().ReadRaster(xOffset, yOffset, xSize, ySize, maskBlock)
+
+                val currentBlock = GDALBlock[Double](block, maskBlock, noDataValue, xOffset, yOffset, xSize, ySize, Padding.NoPadding)
+
+                for (y <- 0 until ySize) {
+                    for (x <- 0 until xSize) {
+                        result(y * xSize + x) = currentBlock.convolveAt(x, y, kernel)
+                    }
+                }
+
+                band.WriteRaster(xOffset, yOffset, xSize, ySize, block)
+            }
+        }
+    }
+
+    def filter(kernelSize: Int, operation: String, outputBand: Band): Unit = {
+        require(kernelSize % 2 == 1, "Kernel size must be odd")
+
+        val blockSize = MosaicGDAL.blockSize
+        val stride = kernelSize / 2
+
+        for (yOffset <- 0 until ySize by blockSize) {
+            for (xOffset <- 0 until xSize by blockSize) {
+
+                val currentBlock = GDALBlock(
+                  this,
+                  stride,
+                  xOffset,
+                  yOffset,
+                  blockSize
+                )
+
+                val result = Array.ofDim[Double](currentBlock.block.length)
+
+                for (y <- 0 until currentBlock.height) {
+                    for (x <- 0 until currentBlock.width) {
+                        result(y * currentBlock.width + x) = operation match {
+                            case "avg"    => currentBlock.avgFilterAt(x, y, kernelSize)
+                            case "min"    => currentBlock.minFilterAt(x, y, kernelSize)
+                            case "max"    => currentBlock.maxFilterAt(x, y, kernelSize)
+                            case "median" => currentBlock.medianFilterAt(x, y, kernelSize)
+                            case "mode"   => currentBlock.modeFilterAt(x, y, kernelSize)
+                            case _        => throw new Exception("Invalid operation")
+                        }
+                    }
+                }
+
+                val trimmedResult = currentBlock.copy(block = result).trimBlock(stride)
+
+                outputBand.WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.block)
+                outputBand.FlushCache()
+                outputBand.GetMaskBand().WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.maskBlock)
+                outputBand.GetMaskBand().FlushCache()
+
+            }
+        }
+
+    }
 
 }

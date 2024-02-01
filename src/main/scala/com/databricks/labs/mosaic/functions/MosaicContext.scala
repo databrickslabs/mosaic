@@ -8,20 +8,19 @@ import com.databricks.labs.mosaic.core.types.ChipType
 import com.databricks.labs.mosaic.datasource.multiread.MosaicDataFrameReader
 import com.databricks.labs.mosaic.expressions.constructors._
 import com.databricks.labs.mosaic.expressions.format._
-import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.geometry.ST_MinMaxXYZ._
+import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.index._
 import com.databricks.labs.mosaic.expressions.raster._
 import com.databricks.labs.mosaic.expressions.util.TrySql
-import com.databricks.labs.mosaic.functions.MosaicContext.mosaicVersion
 import com.databricks.labs.mosaic.utils.FileUtils
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{LongType, StringType}
+import org.apache.spark.sql.{Column, SparkSession}
 
 import scala.reflect.runtime.universe
 
@@ -270,6 +269,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_Height](expressionConfig)
         mosaicRegistry.registerExpression[RST_InitNoData](expressionConfig)
         mosaicRegistry.registerExpression[RST_IsEmpty](expressionConfig)
+        mosaicRegistry.registerExpression[RST_MakeTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_Max](expressionConfig)
         mosaicRegistry.registerExpression[RST_Min](expressionConfig)
         mosaicRegistry.registerExpression[RST_Median](expressionConfig)
@@ -655,6 +655,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_combineavg(rasterArray: Column): Column = ColumnAdapter(RST_CombineAvg(rasterArray.expr, expressionConfig))
         def rst_derivedband(raster: Column, pythonFunc: Column, funcName: Column): Column =
             ColumnAdapter(RST_DerivedBand(raster.expr, pythonFunc.expr, funcName.expr, expressionConfig))
+        def rst_filter(raster: Column, kernelSize: Column, operation: Column): Column =
+            ColumnAdapter(RST_Filter(raster.expr, kernelSize.expr, operation.expr, expressionConfig))
+        def rst_filter(raster: Column, kernelSize: Int, operation: String): Column =
+            ColumnAdapter(RST_Filter(raster.expr, lit(kernelSize).expr, lit(operation).expr, expressionConfig))
         def rst_georeference(raster: Column): Column = ColumnAdapter(RST_GeoReference(raster.expr, expressionConfig))
         def rst_getnodata(raster: Column): Column = ColumnAdapter(RST_GetNoData(raster.expr, expressionConfig))
         def rst_getsubdataset(raster: Column, subdatasetName: Column): Column =
@@ -664,6 +668,20 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_height(raster: Column): Column = ColumnAdapter(RST_Height(raster.expr, expressionConfig))
         def rst_initnodata(raster: Column): Column = ColumnAdapter(RST_InitNoData(raster.expr, expressionConfig))
         def rst_isempty(raster: Column): Column = ColumnAdapter(RST_IsEmpty(raster.expr, expressionConfig))
+        def rst_maketiles(input: Column, driver: Column, size: Column, withCheckpoint: Column): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, driver.expr, size.expr, withCheckpoint.expr, expressionConfig))
+        def rst_maketiles(input: Column, driver: String, size: Int, withCheckpoint: Boolean): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, lit(driver).expr, lit(size).expr, lit(withCheckpoint).expr, expressionConfig))
+        def rst_maketiles(input: Column): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, lit(MOSAIC_NO_DRIVER).expr, lit(-1).expr, lit(false).expr, expressionConfig))
+        def rst_maketiles(input: Column, size: Int): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, lit(MOSAIC_NO_DRIVER).expr, lit(size).expr, lit(false).expr, expressionConfig))
+        def rst_maketiles(input: Column, driver: String): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, lit(driver).expr, lit(-1).expr, lit(false).expr, expressionConfig))
+        def rst_maketiles(input: Column, driver: String, withCheckpoint: Boolean): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, lit(driver).expr, lit(-1).expr, lit(withCheckpoint).expr, expressionConfig))
+        def rst_maketiles(input: Column, size: Int, withCheckpoint: Boolean): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, lit(MOSAIC_NO_DRIVER).expr, lit(size).expr, lit(withCheckpoint).expr, expressionConfig))
         def rst_max(raster: Column): Column = ColumnAdapter(RST_Max(raster.expr, expressionConfig))
         def rst_min(raster: Column): Column = ColumnAdapter(RST_Min(raster.expr, expressionConfig))
         def rst_median(raster: Column): Column = ColumnAdapter(RST_Median(raster.expr, expressionConfig))

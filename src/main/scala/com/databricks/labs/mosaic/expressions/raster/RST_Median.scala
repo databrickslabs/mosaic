@@ -1,8 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALCalc, GDALInfo, GDALWarp}
+import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALWarp
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
@@ -16,9 +15,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the upper left x of the raster. */
 case class RST_Median(rasterExpr: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Median](rasterExpr, ArrayType(DoubleType), returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_Median](rasterExpr, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = ArrayType(DoubleType)
 
     /** Returns the upper left x of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

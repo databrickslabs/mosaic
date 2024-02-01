@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the metadata of the raster. */
 case class RST_MetaData(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_MetaData](raster, MapType(StringType, StringType), returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_MetaData](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = MapType(StringType, StringType)
 
     /** Returns the metadata of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = buildMapString(tile.getRaster.metadata)

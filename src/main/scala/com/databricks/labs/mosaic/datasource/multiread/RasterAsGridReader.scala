@@ -65,36 +65,32 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         val retiledDf = retileRaster(rasterDf, config)
 
-        val loadedDf = rasterDf
+        val loadedDf = retiledDf
             .withColumn(
               "tile",
-                rst_tessellate(col("tile"), lit(resolution))
+              rst_tessellate(col("tile"), lit(resolution))
             )
             .repartition(nPartitions)
+            .groupBy("tile.index_id")
+            .agg(rst_combineavg_agg(col("tile")).alias("tile"))
             .withColumn(
               "grid_measures",
-              rasterToGridCombiner(col("tile"), lit(resolution))
+              rasterToGridCombiner(col("tile"))
             )
             .select(
               "grid_measures",
               "tile"
             )
             .select(
-              posexplode(col("grid_measures")).as(Seq("band_id", "grid_measures"))
+              posexplode(col("grid_measures")).as(Seq("band_id", "measure")),
+              col("tile").getField("index_id").alias("cell_id")
             )
             .repartition(nPartitions)
             .select(
               col("band_id"),
-              explode(col("grid_measures")).alias("grid_measures")
+              col("cell_id"),
+              col("measure")
             )
-            .repartition(nPartitions)
-            .select(
-              col("band_id"),
-              col("grid_measures").getItem("cellID").alias("cell_id"),
-              col("grid_measures").getItem("measure").alias("measure")
-            )
-            .groupBy("band_id", "cell_id")
-            .agg(avg("measure").alias("measure"))
 
         kRingResample(loadedDf, config)
 
@@ -203,15 +199,15 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       * @return
       *   The raster to grid function.
       */
-    private def getRasterToGridFunc(combiner: String): (Column, Column) => Column = {
+    private def getRasterToGridFunc(combiner: String): Column => Column = {
         combiner match {
-            case "mean"    => rst_rastertogridavg
-            case "min"     => rst_rastertogridmin
-            case "max"     => rst_rastertogridmax
-            case "median"  => rst_rastertogridmedian
-            case "count"   => rst_rastertogridcount
-            case "average" => rst_rastertogridavg
-            case "avg"     => rst_rastertogridavg
+            case "mean"    => rst_avg
+            case "min"     => rst_min
+            case "max"     => rst_max
+            case "median"  => rst_median
+            case "count"   => rst_pixelcount
+            case "average" => rst_avg
+            case "avg"     => rst_avg
             case _         => throw new Error("Combiner not supported")
         }
     }
@@ -232,7 +228,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
           "combiner" -> this.extraOptions.getOrElse("combiner", "mean"),
           "retile" -> this.extraOptions.getOrElse("retile", "false"),
           "tileSize" -> this.extraOptions.getOrElse("tileSize", "-1"),
-          "sizeInMB" -> this.extraOptions.getOrElse("sizeInMB", ""),
+          "sizeInMB" -> this.extraOptions.getOrElse("sizeInMB", "-1"),
           "kRingInterpolate" -> this.extraOptions.getOrElse("kRingInterpolate", "0")
         )
     }

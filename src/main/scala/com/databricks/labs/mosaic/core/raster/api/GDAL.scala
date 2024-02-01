@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterBandGDAL, Mosaic
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.transform.RasterTransform
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.gdal.MosaicGDAL.configureGDAL
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
@@ -114,6 +115,8 @@ object GDAL {
                 } else {
                     raster
                 }
+            case _ =>
+                throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
         }
     }
 
@@ -122,19 +125,17 @@ object GDAL {
       *
       * @param generatedRasters
       *   The rasters to write.
-      * @param checkpointPath
-      *   The path to write the rasters to.
       * @return
       *   Returns the paths of the written rasters.
       */
-    def writeRasters(generatedRasters: Seq[MosaicRasterGDAL], checkpointPath: String, rasterDT: DataType): Seq[Any] = {
+    def writeRasters(generatedRasters: Seq[MosaicRasterGDAL], rasterDT: DataType): Seq[Any] = {
         generatedRasters.map(raster =>
             if (raster != null) {
                 rasterDT match {
                     case StringType =>
                         val uuid = UUID.randomUUID().toString
                         val extension = GDAL.getExtension(raster.getDriversShortName)
-                        val writePath = s"$checkpointPath/$uuid.$extension"
+                        val writePath = s"${MosaicGDAL.checkpointPath}/$uuid.$extension"
                         val outPath = raster.writeToPath(writePath)
                         RasterCleaner.dispose(raster)
                         UTF8String.fromString(outPath)

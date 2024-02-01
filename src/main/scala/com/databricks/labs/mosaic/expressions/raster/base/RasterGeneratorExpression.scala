@@ -22,7 +22,7 @@ import scala.reflect.ClassTag
   * rasters based on the input raster. The new rasters are written in the
   * checkpoint directory. The files are written as GeoTiffs. Subdatasets are not
   * supported, please flatten beforehand.
-  * @param rasterExpr
+  * @param tileExpr
   *   The expression for the raster. If the raster is stored on disc, the path
   *   to the raster is provided. If the raster is stored in memory, the bytes of
   *   the raster are provided.
@@ -32,13 +32,13 @@ import scala.reflect.ClassTag
   *   The type of the extending class.
   */
 abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
-    rasterExpr: Expression,
+    tileExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
       with NullIntolerant
       with Serializable {
 
-    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
@@ -72,11 +72,12 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
-        val tile = MosaicRasterTile.deserialize(rasterExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType)
+        val rasterType = RasterTileType(tileExpr).rasterType
+        val tile = MosaicRasterTile.deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType, rasterType)
         val generatedRasters = rasterGenerator(tile)
 
         // Writing rasters disposes of the written raster
-        val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize())
+        val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize(rasterType))
         generatedRasters.foreach(gr => RasterCleaner.dispose(gr))
         RasterCleaner.dispose(tile)
 

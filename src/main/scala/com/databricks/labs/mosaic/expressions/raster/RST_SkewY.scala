@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the skew y of the raster. */
 case class RST_SkewY(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_SkewY](raster, DoubleType, returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_SkewY](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = DoubleType
 
     /** Returns the skew y of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

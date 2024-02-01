@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
@@ -11,14 +10,14 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
-/** The expression for clipping a raster by a vector. */
-case class RST_Clip(
+/** The expression for applying kernel filter on a raster. */
+case class RST_Convolve(
     rastersExpr: Expression,
-    geometryExpr: Expression,
+    kernelExpr: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster1ArgExpression[RST_Clip](
+) extends Raster1ArgExpression[RST_Convolve](
       rastersExpr,
-      geometryExpr,
+      kernelExpr,
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
@@ -40,36 +39,35 @@ case class RST_Clip(
       *   The clipped raster.
       */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-        val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
-        val geomCRS = geometry.getSpatialReferenceOSR
+        val kernel = arg1.asInstanceOf[Array[Array[Double]]]
         tile.copy(
-          raster = RasterClipByVector.clip(tile.getRaster, geometry, geomCRS, geometryAPI)
+          raster = tile.getRaster.convolve(kernel)
         )
     }
 
 }
 
 /** Expression info required for the expression registration for spark SQL. */
-object RST_Clip extends WithExpressionInfo {
+object RST_Convolve extends WithExpressionInfo {
 
-    override def name: String = "rst_clip"
+    override def name: String = "rst_convolve"
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster clipped by provided vector.
+          |_FUNC_(expr1) - Returns a raster with the kernel filter applied.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(raster, vector);
+          |      > SELECT _FUNC_(raster, kernel);
           |        {index_id, clipped_raster, parentPath, driver}
           |        {index_id, clipped_raster, parentPath, driver}
           |        ...
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Clip](2, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_Convolve](2, expressionConfig)
     }
 
 }

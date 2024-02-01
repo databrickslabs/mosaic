@@ -1,24 +1,26 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
-import com.databricks.labs.mosaic.expressions.raster.base.Raster1ArgExpression
+import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.unsafe.types.UTF8String
 
-/** The expression for clipping a raster by a vector. */
-case class RST_Clip(
+/** The expression for applying NxN filter on a raster. */
+case class RST_Filter(
     rastersExpr: Expression,
-    geometryExpr: Expression,
+    kernelSizeExpr: Expression,
+    operationExpr: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster1ArgExpression[RST_Clip](
+) extends Raster2ArgExpression[RST_Filter](
       rastersExpr,
-      geometryExpr,
+      kernelSizeExpr,
+      operationExpr,
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
@@ -39,37 +41,37 @@ case class RST_Clip(
       * @return
       *   The clipped raster.
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-        val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
-        val geomCRS = geometry.getSpatialReferenceOSR
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
+        val n = arg1.asInstanceOf[Int]
+        val operation = arg2.asInstanceOf[UTF8String].toString
         tile.copy(
-          raster = RasterClipByVector.clip(tile.getRaster, geometry, geomCRS, geometryAPI)
+          raster = tile.getRaster.filter(n, operation)
         )
     }
 
 }
 
 /** Expression info required for the expression registration for spark SQL. */
-object RST_Clip extends WithExpressionInfo {
+object RST_Filter extends WithExpressionInfo {
 
-    override def name: String = "rst_clip"
+    override def name: String = "rst_filter"
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster clipped by provided vector.
+          |_FUNC_(expr1) - Returns a raster with the filter applied.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(raster, vector);
+          |      > SELECT _FUNC_(raster, kernelSize, operation);
           |        {index_id, clipped_raster, parentPath, driver}
           |        {index_id, clipped_raster, parentPath, driver}
           |        ...
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Clip](2, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_Filter](3, expressionConfig)
     }
 
 }

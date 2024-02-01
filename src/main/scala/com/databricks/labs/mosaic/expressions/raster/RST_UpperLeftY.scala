@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the upper left y of the raster. */
 case class RST_UpperLeftY(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_UpperLeftY](raster, DoubleType, returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_UpperLeftY](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = DoubleType
 
     /** Returns the upper left y of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {

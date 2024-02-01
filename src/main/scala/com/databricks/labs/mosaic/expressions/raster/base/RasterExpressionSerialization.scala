@@ -35,11 +35,9 @@ trait RasterExpressionSerialization {
     ): Any = {
         if (returnsRaster) {
             val tile = data.asInstanceOf[MosaicRasterTile]
-            val checkpoint = expressionConfig.getRasterCheckpoint
-            val rasterType = outputDataType.asInstanceOf[StructType].fields(1).dataType
             val result = tile
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(rasterType, checkpoint)
+                .serialize(outputDataType)
             RasterCleaner.dispose(tile)
             result
         } else {

@@ -34,7 +34,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
             .take(1)
 
     }
-
+    
     test("Read grib with GDALFileFormat") {
         assume(System.getProperty("os.name") == "Linux")
 
@@ -43,25 +43,22 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
         noException should be thrownBy spark.read
             .format("gdal")
-            .option("extensions", "grib")
-            .option("raster_storage", "disk")
-            .option("extensions", "grib")
+            .option("extensions", "grb")
+            .option("raster.read.strategy", "retile_on_read")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("gdal")
-            .option("extensions", "grib")
-            .option("raster_storage", "disk")
-            .option("extensions", "grib")
+            .option("extensions", "grb")
+            .option("raster.read.strategy", "retile_on_read")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("gdal")
-            .option("extensions", "grib")
-            .option("raster_storage", "disk")
-            .option("extensions", "grib")
+            .option("extensions", "grb")
+            .option("raster.read.strategy", "retile_on_read")
             .load(filePath)
             .select("metadata")
             .take(1)
@@ -92,7 +89,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
             .select("metadata")
             .take(1)
 
-        noException should be thrownBy spark.read
+       noException should be thrownBy spark.read
             .format("gdal")
             .option(MOSAIC_RASTER_READ_STRATEGY, "retile_on_read")
             .load(filePath)

@@ -1,19 +1,16 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRasterWriteOptions}
 import com.databricks.labs.mosaic.utils.SysUtils
 
 /** GDALCalc is a helper object for executing GDAL Calc commands. */
 object GDALCalc {
 
     val gdal_calc: String = {
-        val calcPath = SysUtils.runCommand("find / -iname gdal_calc.py")._1.split("\n").headOption.getOrElse("")
-        if (calcPath.isEmpty) {
-            throw new RuntimeException("Could not find gdal_calc.py.")
-        }
-        if (calcPath == "ERROR") {
-            "/usr/lib/python3/dist-packages/osgeo_utils/gdal_calc.py"
+        val calcPath = SysUtils.runCommand("""find / -maxdepth 20 -iname gdal_calc.py""")._1.split("\n").headOption.getOrElse("")
+        if (calcPath.isEmpty || calcPath.startsWith("ERROR")) {
+            "/usr/local/lib/python3.10/dist-packages/osgeo_utils/gdal_calc.py"
         } else {
             calcPath
         }
@@ -30,11 +27,13 @@ object GDALCalc {
       */
     def executeCalc(gdalCalcCommand: String, resultPath: String): MosaicRasterGDAL = {
         require(gdalCalcCommand.startsWith("gdal_calc"), "Not a valid GDAL Calc command.")
-        val toRun = gdalCalcCommand.replace("gdal_calc", gdal_calc)
+        val effectiveCommand = OperatorOptions.appendOptions(gdalCalcCommand, MosaicRasterWriteOptions.GTiff)
+        val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
         val commandRes = SysUtils.runCommand(s"python3 $toRun")
-        if (commandRes._1 == "ERROR") {
+        if (commandRes._1.startsWith("ERROR")) {
             throw new RuntimeException(s"""
                                           |GDAL Calc command failed:
+                                          |$toRun
                                           |STDOUT:
                                           |${commandRes._2}
                                           |STDERR:

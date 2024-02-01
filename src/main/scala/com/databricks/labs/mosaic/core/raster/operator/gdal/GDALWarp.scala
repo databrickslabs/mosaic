@@ -23,7 +23,8 @@ object GDALWarp {
     def executeWarp(outputPath: String, rasters: Seq[MosaicRasterGDAL], command: String): MosaicRasterGDAL = {
         require(command.startsWith("gdalwarp"), "Not a valid GDAL Warp command.")
         // Test: gdal.ParseCommandLine(command)
-        val warpOptionsVec = OperatorOptions.parseOptions(command)
+        val effectiveCommand = OperatorOptions.appendOptions(command, rasters.head.getWriteOptions)
+        val warpOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val warpOptions = new WarpOptions(warpOptionsVec)
         val result = gdal.Warp(outputPath, rasters.map(_.getRaster).toArray, warpOptions)
         // TODO: Figure out multiple parents, should this be an array?
@@ -31,7 +32,7 @@ object GDALWarp {
         if (result == null) {
             throw new Exception(s"""
                                    |Warp failed.
-                                   |Command: $command
+                                   |Command: $effectiveCommand
                                    |Error: ${gdal.GetLastErrorMsg}
                                    |""".stripMargin)
         }
