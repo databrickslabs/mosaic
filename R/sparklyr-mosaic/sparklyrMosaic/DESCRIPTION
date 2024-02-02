@@ -17,6 +17,7 @@ Collate:
 Imports:
   sparklyr
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    sparklyr.nested (>= 0.0.4),
     readr (>= 2.1.5)
 Config/testthat/edition: 3
