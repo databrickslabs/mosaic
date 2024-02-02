@@ -12,7 +12,9 @@ class TestGDALInstall(SparkTestCase):
         except Exception:
             self.fail("Copying objects with `setup_gdal()` raised an exception.")
 
-        self.assertEqual(len(installer.list_files()), 4)  # <-  init script and shared objs
+        self.assertEqual(
+            len(installer.list_files()), 4
+        )  # <-  init script and shared objs
 
         try:
             installer_result = installer.run_init_script()

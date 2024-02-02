@@ -1,5 +1,3 @@
-source("data.R")
-
 test_that("scalar vector functions behave as intended", {
   sdf <- SparkR::createDataFrame(
     data.frame(

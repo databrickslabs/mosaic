@@ -1,16 +1,14 @@
+options(warn = -1)
+
 library(testthat)
-
-if(length(getOption("repos")) < 1) {
-  options(repos = c(
-    CRAN = "https://cloud.r-project.org"
-  ))
-}
-
-install.packages("sparklyr", repos="")
+library(dplyr)
+library(readr)
 library(sparklyr)
+library(sparklyr.nested)
 
 spark_home <- Sys.getenv("SPARK_HOME")
 spark_home_set(spark_home)
+
 install.packages("sparklyrMosaic_0.4.0.tar.gz", repos = NULL)
 library(sparklyrMosaic)
 

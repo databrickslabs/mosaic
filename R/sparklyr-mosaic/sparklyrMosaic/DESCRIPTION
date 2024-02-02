@@ -18,4 +18,5 @@ Imports:
   sparklyr
 Suggests:
     testthat (>= 3.0.0)
+    readr (>= 2.1.5)
 Config/testthat/edition: 3

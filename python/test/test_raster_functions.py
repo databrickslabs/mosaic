@@ -183,7 +183,6 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                 "chip", api.grid_tessellateexplode("geom_0", lit(target_resolution))
             )
             .select(*region_keys, "chip.*")
-            .repartition(self.spark.sparkContext.defaultParallelism)
         )
 
         df = (
