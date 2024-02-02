@@ -1,4 +1,6 @@
+options(warn = -1)
 library(testthat)
+library(readr)
 
 spark_location <- Sys.getenv("SPARK_HOME")
 library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
