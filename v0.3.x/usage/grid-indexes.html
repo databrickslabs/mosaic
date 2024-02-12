@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Using grid index systems in Mosaic &mdash; Mosaic</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/fonts.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="BNG - British National Grid" href="grid-indexes-bng.html" />
+    <link rel="prev" title="GDAL Installation guide" href="install-gdal.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Mosaic
+              <img src="../_static/mosaic_logo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">API Documentation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="usage.html">Usage</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-gdal.html">GDAL Installation guide</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Using grid index systems in Mosaic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid-indexes-bng.html">BNG - British National Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kepler.html">Kepler visualizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="automatic-sql-registration.html">Automatic SQL registration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../models/models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../literature/videos.html">Mosaic Videos and Talks</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Mosaic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="usage.html">Usage</a></li>
+      <li class="breadcrumb-item active">Using grid index systems in Mosaic</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/usage/grid-indexes.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Using-grid-index-systems-in-Mosaic">
+<h1>Using grid index systems in Mosaic<a class="headerlink" href="#Using-grid-index-systems-in-Mosaic" title="Permalink to this heading"></a></h1>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from pyspark.sql.functions import *
+from mosaic import enable_mosaic
+enable_mosaic(spark, dbutils)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style scoped>
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout"></div></div>
+</div>
+<p>Set operations over big geospatial datasets become very expensive without some form of spatial indexing.</p>
+<p>Spatial indexes not only allow operations like point-in-polygon joins to be partitioned but, if only approximate results are required, can be used to reduce these to deterministic SQL joins directly on the indexes.</p>
+<p><img alt="example h3 point-in-poly image" src="https://databricks.com/wp-content/uploads/2021/01/blog-geospatial-3.jpg" /></p>
+<p>The workflow for a point-in-poly spatial join might look like the following:</p>
+<section id="1.-Read-the-source-point-and-polygon-datasets.">
+<h2>1. Read the source point and polygon datasets.<a class="headerlink" href="#1.-Read-the-source-point-and-polygon-datasets." title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>drop_cols = [
+  &quot;rate_code_id&quot;, &quot;store_and_fwd_flag&quot;, &quot;dropoff_longitude&quot;,
+  &quot;dropoff_latitude&quot;, &quot;payment_type&quot;, &quot;fare_amount&quot;,
+  &quot;extra&quot;, &quot;mta_tax&quot;, &quot;tip_amount&quot;, &quot;tolls_amount&quot;,
+  &quot;total_amount&quot;
+]
+
+trips = (
+  spark.table(&quot;delta.`/databricks-datasets/nyctaxi/tables/nyctaxi_yellow`&quot;)
+  .drop(*drop_cols)
+  .limit(5_000_000)
+  .repartition(sc.defaultParallelism * 20)
+)
+
+trips.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style scoped>
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">+---------+-------------------+-------------------+---------------+-------------+----------------+---------------+
+vendor_id|    pickup_datetime|   dropoff_datetime|passenger_count|trip_distance|pickup_longitude|pickup_latitude|
++---------+-------------------+-------------------+---------------+-------------+----------------+---------------+
+      CMT|2009-01-01 20:07:33|2009-01-01 20:12:28|              1|          0.8|      -74.001041|         40.731|
+      CMT|2009-01-06 15:29:12|2009-01-06 15:51:57|              2|          3.3|      -73.996489|      40.725742|
+      CMT|2010-02-14 17:42:16|2010-02-14 17:55:03|              1|          3.4|      -74.002949|      40.734254|
+      CMT|2010-02-11 18:19:01|2010-02-11 18:27:54|              1|          1.5|      -73.998133|      40.682463|
+      VTS|2009-04-29 12:26:00|2009-04-29 12:35:00|              3|         2.05|      -74.001332|       40.72006|
+      VTS|2009-04-24 15:03:00|2009-04-24 15:23:00|              2|         2.89|      -73.989952|      40.734625|
+      CMT|2010-02-28 13:55:44|2010-02-28 14:02:37|              1|          1.2|      -74.006015|      40.735279|
+      VTS|2009-09-27 08:46:00|2009-09-27 08:59:00|              1|         3.97|      -74.000148|      40.717468|
+      CMT|2010-02-18 09:48:52|2010-02-18 10:08:38|              1|          3.0|      -73.995177|      40.725297|
+      CMT|2009-04-09 20:33:44|2009-04-09 20:39:33|              2|          0.6|      -73.990133|      40.729321|
+      CMT|2010-02-13 22:41:10|2010-02-13 23:07:04|              1|          4.2|      -74.009175|      40.706284|
+      CMT|2009-01-25 20:06:51|2009-01-25 20:12:37|              1|          1.3|      -74.007384|      40.717929|
+      VTS|2010-02-27 18:19:00|2010-02-27 18:38:00|              1|          4.2|      -74.011512|      40.710588|
+      VTS|2010-02-15 10:17:00|2010-02-15 10:24:00|              1|         1.74|      -74.016442|      40.711617|
+      CMT|2009-12-26 18:45:49|2009-12-26 18:59:08|              1|          4.8|       -74.01014|      40.712263|
+      CMT|2009-12-06 01:00:07|2009-12-06 01:11:41|              2|          4.2|      -74.002505|      40.729001|
+      VTS|2009-10-04 14:36:00|2009-10-04 14:42:00|              1|         1.13|      -74.006767|      40.718942|
+      CMT|2009-01-18 00:20:50|2009-01-18 00:36:29|              3|          2.1|      -73.993258|      40.721401|
+      VTS|2009-05-18 13:24:00|2009-05-18 13:33:00|              1|         1.91|      -73.992785|      40.730412|
+      VTS|2009-11-11 21:51:00|2009-11-11 22:13:00|              5|         4.71|      -74.010065|      40.733383|
++---------+-------------------+-------------------+---------------+-------------+----------------+---------------+
+only showing top 20 rows
+
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import st_geomfromgeojson
+
+user = spark.sql(&quot;select current_user() as user&quot;).collect()[0][&quot;user&quot;]
+
+neighbourhoods = (
+  spark.read.format(&quot;json&quot;)
+  .load(f&quot;dbfs:/FileStore/shared_uploads/{user}/NYC_Taxi_Zones.geojson&quot;)
+  .repartition(sc.defaultParallelism)
+  .withColumn(&quot;geometry&quot;, st_geomfromgeojson(to_json(col(&quot;geometry&quot;))))
+  .select(&quot;properties.*&quot;, &quot;geometry&quot;)
+  .drop(&quot;shape_area&quot;, &quot;shape_leng&quot;)
+)
+
+neighbourhoods.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style scoped>
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">+-------------+-----------+--------+-------------------+--------------------+
+      borough|location_id|objectid|               zone|            geometry|
++-------------+-----------+--------+-------------------+--------------------+
+     Brooklyn|        123|     123|          Homecrest|{6, 4326, [[[-73....|
+    Manhattan|        153|     153|        Marble Hill|{6, 4326, [[[-73....|
+     Brooklyn|        112|     112|         Greenpoint|{6, 4326, [[[-73....|
+    Manhattan|        233|     233|UN/Turtle Bay South|{6, 4326, [[[-73....|
+    Manhattan|         43|      43|       Central Park|{6, 4326, [[[-73....|
+       Queens|        201|     201|      Rockaway Park|{6, 4326, [[[-73....|
+       Queens|        131|     131|    Jamaica Estates|{6, 4326, [[[-73....|
+     Brooklyn|        111|     111|Green-Wood Cemetery|{6, 4326, [[[-73....|
+       Queens|        226|     226|          Sunnyside|{6, 4326, [[[-73....|
+       Queens|        129|     129|    Jackson Heights|{6, 4326, [[[-73....|
+    Manhattan|        120|     120|    Highbridge Park|{6, 4326, [[[-73....|
+     Brooklyn|         76|      76|      East New York|{6, 4326, [[[-73....|
+    Manhattan|         24|      24|       Bloomingdale|{6, 4326, [[[-73....|
+    Manhattan|        202|     202|   Roosevelt Island|{6, 4326, [[[-73....|
+    Manhattan|        100|     100|   Garment District|{6, 4326, [[[-73....|
+Staten Island|        251|     251|        Westerleigh|{6, 4326, [[[-74....|
+    Manhattan|         74|      74|  East Harlem North|{6, 4326, [[[-73....|
+       Queens|         98|      98|      Fresh Meadows|{6, 4326, [[[-73....|
+    Manhattan|        211|     211|               SoHo|{6, 4326, [[[-74....|
+        Bronx|        174|     174|            Norwood|{6, 4326, [[[-73....|
++-------------+-----------+--------+-------------------+--------------------+
+only showing top 20 rows
+
+</div></div>
+</div>
+</section>
+<section id="2.-Compute-the-resolution-of-index-required-to-optimize-the-join.">
+<h2>2. Compute the resolution of index required to optimize the join.<a class="headerlink" href="#2.-Compute-the-resolution-of-index-required-to-optimize-the-join." title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import MosaicFrame
+
+neighbourhoods_mdf = MosaicFrame(neighbourhoods, &quot;geometry&quot;)
+help(neighbourhoods_mdf.get_optimal_resolution)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style scoped>
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">Help on method get_optimal_resolution in module mosaic.core.mosaic_frame:
+
+get_optimal_resolution(sample_rows: Union[int, NoneType] = None, sample_fraction: Union[float, NoneType] = None) -&gt; int method of mosaic.core.mosaic_frame.MosaicFrame instance
+    Analyzes the geometries in the currently selected geometry column and proposes an optimal
+    grid-index resolution.
+
+    Provide either `sample_rows` or `sample_fraction` parameters to control how much data is passed to the analyzer.
+    (Providing too little data to the analyzer may result in a `NotEnoughGeometriesException`)
+
+    Parameters
+    ----------
+    sample_rows: int, optional
+        The number of rows to sample.
+    sample_fraction: float, optional
+        The proportion of rows to sample.
+
+    Returns
+    -------
+    int
+        The recommended grid-index resolution to apply to this MosaicFrame.
+
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>(resolution := neighbourhoods_mdf.get_optimal_resolution(sample_fraction=1.))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style scoped>
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">Out[15]: 9</div></div>
+</div>
+</section>
+<section id="3.-Apply-the-index-to-the-set-of-points-in-your-left-hand-dataframe.">
+<h2>3. Apply the index to the set of points in your left-hand dataframe.<a class="headerlink" href="#3.-Apply-the-index-to-the-set-of-points-in-your-left-hand-dataframe." title="Permalink to this heading"></a></h2>
+<p>This will generate an index value that corresponds to the grid ‘cell’ that this point occupies.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import grid_longlatascellid
+indexed_trips = trips.withColumn(&quot;ix&quot;, grid_longlatascellid(lon=&quot;pickup_longitude&quot;, lat=&quot;pickup_latitude&quot;, resolution=lit(resolution)))
+indexed_trips.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style scoped>
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">+---------+-------------------+-------------------+---------------+-------------+----------------+---------------+------------------+
+vendor_id|    pickup_datetime|   dropoff_datetime|passenger_count|trip_distance|pickup_longitude|pickup_latitude|                ix|
++---------+-------------------+-------------------+---------------+-------------+----------------+---------------+------------------+
+      DDS|2009-01-17 18:49:57|2009-01-17 18:56:29|              3|          1.2|      -74.004043|      40.733409|617733151092113407|
+      DDS|2009-12-01 00:47:52|2009-12-01 01:00:16|              1|          3.4|      -73.991702|      40.726342|617733151087132671|
+      CMT|2009-02-09 16:50:21|2009-02-09 17:02:47|              1|          2.6|      -73.999673|      40.733586|617733123805806591|
+      CMT|2009-12-07 07:15:47|2009-12-07 07:32:07|              1|          3.8|       -74.01211|      40.716893|617733151084773375|
+      VTS|2009-10-16 22:02:00|2009-10-16 22:08:00|              1|          1.1|      -74.010903|       40.71624|617733151084773375|
+      VTS|2009-12-23 22:13:00|2009-12-23 22:18:00|              1|         0.37|      -74.002343|       40.73366|617733151092113407|
+      VTS|2009-12-12 01:24:00|2009-12-12 01:38:00|              2|         3.55|      -74.002565|      40.728188|617733151091326975|
+      CMT|2009-12-07 13:10:37|2009-12-07 13:13:45|              1|          0.5|      -73.999184|       40.73428|617733123805806591|
+      CMT|2009-11-08 22:20:44|2009-11-08 22:31:23|              1|          1.9|      -74.003029|      40.733385|617733151092113407|
+      VTS|2009-12-27 20:01:00|2009-12-27 20:04:00|              1|         1.04|      -74.000227|      40.732603|617733151092375551|
+      VTS|2009-02-13 14:33:00|2009-02-13 14:50:00|              3|         1.59|      -74.006535|      40.732303|617733151092637695|
+      CMT|2009-11-15 21:13:32|2009-11-15 21:25:56|              3|          3.0|      -73.998795|      40.730621|617733151092375551|
+      VTS|2009-01-08 18:13:00|2009-01-08 18:33:00|              2|         4.18|        -74.0079|      40.712012|617733151021334527|
+      CMT|2009-11-30 13:30:13|2009-11-30 13:41:55|              1|          1.6|      -74.004487|      40.734072|617733151092637695|
+      CMT|2009-01-11 20:02:22|2009-01-11 20:08:15|              1|          1.0|      -74.004493|      40.713349|617733151020810239|
+      CMT|2009-12-30 18:46:08|2009-12-30 19:02:23|              1|          2.3|      -74.010798|      40.716717|617733151084773375|
+      CMT|2009-11-18 21:50:12|2009-11-18 22:05:19|              1|          5.8|      -73.992515|      40.694106|617733151038111743|
+      VTS|2009-11-21 12:51:00|2009-11-21 13:27:00|              1|        14.18|        -73.9923|      40.715218|617733151109414911|
+      CMT|2009-01-20 09:34:49|2009-01-20 09:37:15|              1|          0.4|        -74.0027|      40.733479|617733151092113407|
+      VTS|2009-01-03 07:07:00|2009-01-03 07:18:00|              1|         7.81|      -73.994358|      40.690345|617733151037325311|
++---------+-------------------+-------------------+---------------+-------------+----------------+---------------+------------------+
+only showing top 20 rows
+
+</div></div>
+</div>
+</section>
+<section id="4.-Compute-the-set-of-indices-that-fully-covers-each-polygon-in-the-right-hand-dataframe">
+<h2>4. Compute the set of indices that fully covers each polygon in the right-hand dataframe<a class="headerlink" href="#4.-Compute-the-set-of-indices-that-fully-covers-each-polygon-in-the-right-hand-dataframe" title="Permalink to this heading"></a></h2>
+<p>This is commonly referred to as a polyfill operation.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from mosaic import grid_polyfill
+
+indexed_neighbourhoods = (
+  neighbourhoods
+  .select(&quot;*&quot;, grid_polyfill(&quot;geometry&quot;, lit(resolution)).alias(&quot;ix_set&quot;))
+  .drop(&quot;geometry&quot;)
+)
+
+indexed_neighbourhoods.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style scoped>
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">+-------------+-----------+--------+-------------------+--------------------+
+      borough|location_id|objectid|               zone|              ix_set|
++-------------+-----------+--------+-------------------+--------------------+
+     Brooklyn|        123|     123|          Homecrest|[6177331514226769...|
+    Manhattan|        153|     153|        Marble Hill|[6177331229858201...|
+     Brooklyn|        112|     112|         Greenpoint|[6177331237832622...|
+    Manhattan|        233|     233|UN/Turtle Bay South|[6177331238679347...|
+    Manhattan|         43|      43|       Central Park|[6177331225792348...|
+       Queens|        201|     201|      Rockaway Park|[6177331357831659...|
+       Queens|        131|     131|    Jamaica Estates|[6177331242658693...|
+     Brooklyn|        111|     111|Green-Wood Cemetery|[6177331522277212...|
+       Queens|        226|     226|          Sunnyside|[6177331238566625...|
+       Queens|        129|     129|    Jackson Heights|[6177331243222302...|
+    Manhattan|        120|     120|    Highbridge Park|[6177331231976325...|
+     Brooklyn|         76|      76|      East New York|[6177331236938711...|
+    Manhattan|         24|      24|       Bloomingdale|[6177331226458193...|
+    Manhattan|        202|     202|   Roosevelt Island|[6177331237777571...|
+    Manhattan|        100|     100|   Garment District|[6177331509717893...|
+Staten Island|        251|     251|        Westerleigh|[6177331466128588...|
+    Manhattan|         74|      74|  East Harlem North|[6177331226508001...|
+       Queens|         98|      98|      Fresh Meadows|[6177331242448977...|
+    Manhattan|        211|     211|               SoHo|[6177331510784819...|
+        Bronx|        174|     174|            Norwood|[6177331205497159...|
++-------------+-----------+--------+-------------------+--------------------+
+only showing top 20 rows
+
+</div></div>
+</div>
+</section>
+<section id="5.-‘Explode’-the-polygon-index-dataframe,-such-that-each-polygon-index-becomes-a-row-in-a-new-dataframe.">
+<h2>5. ‘Explode’ the polygon index dataframe, such that each polygon index becomes a row in a new dataframe.<a class="headerlink" href="#5.-‘Explode’-the-polygon-index-dataframe,-such-that-each-polygon-index-becomes-a-row-in-a-new-dataframe." title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>exploded_indexed_neighbourhoods = (
+  indexed_neighbourhoods
+  .withColumn(&quot;ix&quot;, explode(&quot;ix_set&quot;))
+  .drop(&quot;ix_set&quot;)
+)
+
+exploded_indexed_neighbourhoods.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style scoped>
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">+--------+-----------+--------+---------+------------------+
+ borough|location_id|objectid|     zone|                ix|
++--------+-----------+--------+---------+------------------+
+Brooklyn|        123|     123|Homecrest|617733151422676991|
+Brooklyn|        123|     123|Homecrest|617733151503417343|
+Brooklyn|        123|     123|Homecrest|617733151502893055|
+Brooklyn|        123|     123|Homecrest|617733151502368767|
+Brooklyn|        123|     123|Homecrest|617733151492407295|
+Brooklyn|        123|     123|Homecrest|617733151488737279|
+Brooklyn|        123|     123|Homecrest|617733151484542975|
+Brooklyn|        123|     123|Homecrest|617733151484018687|
+Brooklyn|        123|     123|Homecrest|617733151483494399|
+Brooklyn|        123|     123|Homecrest|617733151425560575|
+Brooklyn|        123|     123|Homecrest|617733151424511999|
+Brooklyn|        123|     123|Homecrest|617733151423463423|
+Brooklyn|        123|     123|Homecrest|617733151511019519|
+Brooklyn|        123|     123|Homecrest|617733151505776639|
+Brooklyn|        123|     123|Homecrest|617733151505252351|
+Brooklyn|        123|     123|Homecrest|617733151504203775|
+Brooklyn|        123|     123|Homecrest|617733151503679487|
+Brooklyn|        123|     123|Homecrest|617733151503155199|
+Brooklyn|        123|     123|Homecrest|617733151502630911|
+Brooklyn|        123|     123|Homecrest|617733151502106623|
++--------+-----------+--------+---------+------------------+
+only showing top 20 rows
+
+</div></div>
+</div>
+</section>
+<section id="6.-Join-the-new-left--and-right-hand-dataframes-directly-on-the-index.">
+<h2>6. Join the new left- and right-hand dataframes directly on the index.<a class="headerlink" href="#6.-Join-the-new-left--and-right-hand-dataframes-directly-on-the-index." title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>joined_df = (
+  indexed_trips.alias(&quot;t&quot;)
+  .join(exploded_indexed_neighbourhoods.alias(&quot;n&quot;), on=&quot;ix&quot;, how=&quot;inner&quot;))
+joined_df.count()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<style scoped>
+  .ansiout {
+    display: block;
+    unicode-bidi: embed;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    font-family: "Source Code Pro", "Menlo", monospace;;
+    font-size: 13px;
+    color: #555;
+    margin-left: 4px;
+    line-height: 19px;
+  }
+</style>
+<div class="ansiout">Out[25]: 4934937</div></div>
+</div>
+</section>
+<section id="Final-notes">
+<h2>Final notes<a class="headerlink" href="#Final-notes" title="Permalink to this heading"></a></h2>
+<p>Mosaic provides support for Uber’s H3 spatial indexing library as a core part of the API, but we plan to add support for other index systems, including S2 and British National Grid in due course.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install-gdal.html" class="btn btn-neutral float-left" title="GDAL Installation guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="grid-indexes-bng.html" class="btn btn-neutral float-right" title="BNG - British National Grid" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Databricks Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
