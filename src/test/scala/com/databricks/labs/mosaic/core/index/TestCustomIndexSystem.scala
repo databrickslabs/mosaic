@@ -137,15 +137,15 @@ class TestCustomIndexSystem extends AnyFunSuite {
         val resolutionMask = 0x01.toLong << 56
 
         val geom = JTS.geometry("POLYGON ((0 0, 50 0, 50 50, 0 50, 0 0))", "WKT")
-        grid.polyfill(geom, 1, Some(JTS)).toSet shouldBe Set(0 | resolutionMask)
+        grid.polyfill(geom, 1, JTS).toSet shouldBe Set(0 | resolutionMask)
 
         // Geometry which cell center does not fall into does not get selected
         val geomSmall = JTS.geometry("POLYGON ((30 30, 40 30, 40 40, 30 40, 30 30))", "WKT")
-        grid.polyfill(geomSmall, 1, Some(JTS)).toSet shouldBe Set()
+        grid.polyfill(geomSmall, 1, JTS).toSet shouldBe Set()
 
         // Small geometry for which the cell center falls within should be detected
         val geomCentered = JTS.geometry("POLYGON ((24 24, 26 24, 26 26, 24 26, 24 24))", "WKT")
-        grid.polyfill(geomCentered, 1, Some(JTS)).toSet shouldBe Set(0 | resolutionMask)
+        grid.polyfill(geomCentered, 1, JTS).toSet shouldBe Set(0 | resolutionMask)
 
     }
 
@@ -164,15 +164,15 @@ class TestCustomIndexSystem extends AnyFunSuite {
         grid.getCellPositionFromCoordinates(1.0, 1.0, resolution) shouldBe (4, 4, 36)
 
         val geom = JTS.geometry("POLYGON ((0 0, 25 0, 25 25, 0 25, 0 0))", "WKT")
-        grid.polyfill(geom, resolution, Some(JTS)).toSet shouldBe Set(36 | resolutionMask)
+        grid.polyfill(geom, resolution, JTS).toSet shouldBe Set(36 | resolutionMask)
 
         // Geometry which cell center does not fall into does not get selected
         val geomSmall = JTS.geometry("POLYGON ((0 0, 5 0, 5 5, 0 5, 0 0))", "WKT")
-        grid.polyfill(geomSmall, resolution, Some(JTS)).toSet shouldBe Set()
+        grid.polyfill(geomSmall, resolution, JTS).toSet shouldBe Set()
 
         // Small geometry for which the cell center falls within should be detected
         val geomCentered = JTS.geometry("POLYGON ((12 12, 13 12, 13 13, 12 13, 12 12))", "WKT")
-        grid.polyfill(geomCentered, resolution, Some(JTS)).toSet shouldBe Set(36 | resolutionMask)
+        grid.polyfill(geomCentered, resolution, JTS).toSet shouldBe Set(36 | resolutionMask)
 
     }
 
@@ -192,7 +192,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
         grid.getCellPositionFromCoordinates(1.0, 1.0, resolution) shouldBe (4, 4, 36)
 
         val geom = JTS.geometry("POLYGON ((-95 9, -50 9, -50 32, -95 32, -95 9))", "WKT")
-        grid.polyfill(geom, resolution, Some(JTS)).toSet shouldBe Set(34 | resolutionMask)
+        grid.polyfill(geom, resolution, JTS).toSet shouldBe Set(34 | resolutionMask)
 
     }
 
@@ -204,7 +204,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
         // Small geometry that spans multiple cels should be detected
         val geomMultiCell = JTS.geometry("POLYGON ((24 24, 76 24, 76 76, 24 76, 24 24))", "WKT")
-        grid.polyfill(geomMultiCell, 1, Some(JTS)).toSet shouldBe Set(
+        grid.polyfill(geomMultiCell, 1, JTS).toSet shouldBe Set(
             0 | resolutionMask,
             1 | resolutionMask,
             2 | resolutionMask,
@@ -213,7 +213,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
 
         // Small geometry that spans multiple cels should be detected
         val geomAlmostMultiCell = JTS.geometry("POLYGON ((25 25, 75 25, 75 75, 25 75, 25 25))", "WKT")
-        grid.polyfill(geomAlmostMultiCell, 1, Some(JTS)).toSet shouldBe Set()
+        grid.polyfill(geomAlmostMultiCell, 1, JTS).toSet shouldBe Set()
     }
 
 
@@ -223,7 +223,7 @@ class TestCustomIndexSystem extends AnyFunSuite {
         val grid = CustomIndexSystem(conf)
 
         val geom = JTS.geometry("POLYGON ((528435.784 6142513.9146, 528428.2785999998 6142513.0317, 528419.4486999996 6142513.9146, 528408.8529000003 6142513.9146, 528401.5744000003 6142515.895300001, 528396.9325000001 6142520.537, 528394.2835999997 6142526.718, 528393.4006000003 6142532.4574, 528395.608 6142538.6383, 528397.8154999996 6142540.845799999, 528402.2304999996 6142541.728800001, 528405.3208999997 6142542.1702, 528409.7357999999 6142543.053200001, 528414.5922999997 6142543.4947, 528418.5657000002 6142545.702199999, 528422.9807000002 6142548.7927, 528424.3051000005 6142552.766100001, 528429.1616000002 6142554.9736, 528433.1349999998 6142556.739499999, 528436.2254999997 6142555.8566, 528441.5234000003 6142554.090600001, 528445.3328999998 6142546.090700001, 528449.0288000004 6142536.872300001, 528448.6368000004 6142527.072899999, 528442.8479000004 6142517.8881, 528435.784 6142513.9146))", "WKT")
-        assert(grid.polyfill(geom, 4, Some(JTS)).nonEmpty)
+        assert(grid.polyfill(geom, 4, JTS).nonEmpty)
 
     }
 }

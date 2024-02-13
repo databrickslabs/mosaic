@@ -3,7 +3,6 @@ from mosaic.utils import scala_utils
 
 
 class SpatialKNN:
-
     """
     SpatialKNN is a distributed KNN model that uses a spatial index to reduce the number of candidate records to
     consider for each query record. The model is built on top of the Spark DataFrame API and is designed to be

@@ -7,6 +7,8 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
+import scala.util.{Failure, Success, Try}
+
 /**
   * A case class modeling an instance of a mosaic raster tile.
   *
@@ -36,6 +38,7 @@ case class MosaicRasterTile(
 
     /**
       * Indicates whether the raster is present.
+      *
       * @return
       *   True if the raster is present, false otherwise.
       */
@@ -46,7 +49,6 @@ case class MosaicRasterTile(
       *
       * @param indexSystem
       *   Index system to use for formatting.
-      *
       * @return
       *   MosaicChip with formatted index ID.
       */
@@ -55,13 +57,13 @@ case class MosaicRasterTile(
         (indexSystem.getCellIdDataType, index) match {
             case (_: LongType, Left(_))       => this
             case (_: StringType, Right(_))    => this
-            case (_: LongType, Right(value))  => MosaicRasterTile(
+            case (_: LongType, Right(value))  => new MosaicRasterTile(
                   index = Left(indexSystem.parse(value)),
                   raster = raster,
                   parentPath = parentPath,
                   driver = driver
                 )
-            case (_: StringType, Left(value)) => MosaicRasterTile(
+            case (_: StringType, Left(value)) => new MosaicRasterTile(
                   index = Right(indexSystem.format(value)),
                   raster = raster,
                   parentPath = parentPath,
@@ -76,7 +78,6 @@ case class MosaicRasterTile(
       *
       * @param indexSystem
       *   Index system to use for formatting.
-      *
       * @return
       *   MosaicChip with formatted index ID.
       */
@@ -88,6 +89,7 @@ case class MosaicRasterTile(
 
     /**
       * Formats the index ID as the string type.
+      *
       * @param indexSystem
       *   Index system to use for formatting.
       * @return
@@ -138,6 +140,11 @@ case class MosaicRasterTile(
         GDAL.writeRasters(Seq(raster), checkpointLocation, rasterDataType).head
     }
 
+    def getSequenceNumber: Int =
+        Try(raster.getRaster.GetMetadataItem("BAND_INDEX", "DATABRICKS_MOSAIC")) match {
+            case Success(value) => value.toInt
+            case Failure(_)     => -1
+        }
 }
 
 /** Companion object. */
@@ -162,12 +169,12 @@ object MosaicRasterTile {
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {
             if (index.isInstanceOf[Long]) {
-                MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, parentPath, driver)
+                new MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, parentPath, driver)
             } else {
-                MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, parentPath, driver)
+                new MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, parentPath, driver)
             }
         } else {
-            MosaicRasterTile(null, raster, parentPath, driver)
+            new MosaicRasterTile(null, raster, parentPath, driver)
         }
 
     }

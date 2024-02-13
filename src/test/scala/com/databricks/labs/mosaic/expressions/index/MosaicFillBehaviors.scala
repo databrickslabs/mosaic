@@ -3,13 +3,15 @@ package com.databricks.labs.mosaic.expressions.index
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
+import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.functions.{size => arrayColumnSize}
 import org.apache.spark.sql.types._
 import org.scalatest.matchers.should.Matchers._
+
+import scala.util.{Failure, Success, Try}
 
 //noinspection ScalaDeprecation
 trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
@@ -183,10 +185,14 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         import sc.implicits._
         import mc.functions._
 
-        val geom = Seq("POLYGON ((5.26 52.72, 5.20 52.71, 5.21 52.75, 5.26 52.75, 5.26 52.72))").toDF("wkt")
-        val mosaics = geom
+        val geom = Seq("POLYGON ((-3.26 52.72, -3.20 52.71, -3.21 52.75, -3.26 52.75, -3.26 52.72))").toDF("wkt")
+        val geomProjected = Try(mc.getIndexSystem.crsID) match {
+            case Success(crsID) => geom.select(st_updatesrid(col("wkt"), lit(4326), lit(crsID)).alias("wkt"))
+            case Failure(_) => geom
+        }
+        val mosaics = geomProjected
             .select(
-              grid_tessellate(col("wkt"), 3).alias("tessellation")
+              grid_tessellate( col("wkt"), 3).alias("tessellation")
             )
             .select(arrayColumnSize($"tessellation.chips").alias("number_of_chips"))
             .select($"number_of_chips")

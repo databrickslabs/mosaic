@@ -45,6 +45,8 @@ __all__ = [
     "rst_rotation",
     "rst_scalex",
     "rst_scaley",
+    "rst_separatebands",
+    "rst_setsrid",
     "rst_setnodata",
     "rst_skewx",
     "rst_skewy",
@@ -82,7 +84,9 @@ def rst_bandmetadata(raster_tile: ColumnOrName, band: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_bandmetadata", pyspark_to_java_column(raster_tile), pyspark_to_java_column(band)
+        "rst_bandmetadata",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(band),
     )
 
 
@@ -126,7 +130,9 @@ def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_clip", pyspark_to_java_column(raster_tile), pyspark_to_java_column(geometry)
+        "rst_clip",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(geometry),
     )
 
 
@@ -150,7 +156,9 @@ def rst_combineavg(raster_tiles: ColumnOrName) -> Column:
     )
 
 
-def rst_derivedband(raster_tile: ColumnOrName, python_func: ColumnOrName, func_name: ColumnOrName) -> Column:
+def rst_derivedband(
+    raster_tile: ColumnOrName, python_func: ColumnOrName, func_name: ColumnOrName
+) -> Column:
     """
     Creates a new band by applying the given python function to the input rasters.
     The result is a raster tile.
@@ -425,7 +433,9 @@ def rst_numbands(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_ndvi(raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName) -> Column:
+def rst_ndvi(
+    raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName
+) -> Column:
     """
     Computes the NDVI of the raster.
     The result is Mosaic raster tile struct of the NDVI raster.
@@ -515,7 +525,9 @@ def rst_rastertogridavg(raster_tile: ColumnOrName, resolution: ColumnOrName) -> 
     )
 
 
-def rst_rastertogridcount(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Column:
+def rst_rastertogridcount(
+    raster_tile: ColumnOrName, resolution: ColumnOrName
+) -> Column:
     """
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
@@ -565,7 +577,9 @@ def rst_rastertogridmax(raster_tile: ColumnOrName, resolution: ColumnOrName) -> 
     )
 
 
-def rst_rastertogridmedian(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Column:
+def rst_rastertogridmedian(
+    raster_tile: ColumnOrName, resolution: ColumnOrName
+) -> Column:
     """
     The result is a 2D array of cells, where each cell is a struct of (cellID, value).
     For getting the output of cellID->value pairs, please use explode() function twice.
@@ -784,6 +798,28 @@ def rst_scaley(raster_tile: ColumnOrName) -> Column:
     )
 
 
+def rst_separatebands(raster_tile: ColumnOrName) -> Column:
+    """
+    Returns a set of new single-band rasters, one for each band in the input raster.
+    Result set is automatically exploded.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column (MosaicTile)
+        The single-band raster tiles, exploded.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_separatebands",
+        pyspark_to_java_column(raster_tile),
+    )
+
+
 def rst_setnodata(raster_tile: ColumnOrName, nodata: ColumnOrName) -> Column:
     """
     Sets the nodata value of the band.
@@ -845,6 +881,28 @@ def rst_skewy(raster_tile: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_skewy", pyspark_to_java_column(raster_tile)
+    )
+
+
+def rst_setsrid(raster_tile: ColumnOrName, srid: ColumnOrName) -> Column:
+    """
+    Sets the SRID of the raster.
+    The SRID is the EPSG code of the raster.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    srid : Column (IntegerType)
+        EPSG authority code for the file's projection.
+    Returns
+    -------
+    Column (MosaicRasterTile)
+        The updated raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_setsrid", pyspark_to_java_column(raster_tile), pyspark_to_java_column(srid)
     )
 
 
@@ -939,7 +997,9 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
     )
 
 
-def rst_fromcontent(raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1) -> Column:
+def rst_fromcontent(
+    raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1
+) -> Column:
     """
     Tiles the raster binary into tiles of the given size.
     :param raster_bin:
@@ -948,13 +1008,13 @@ def rst_fromcontent(raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: 
     :return:
     """
     if type(size_in_mb) == int:
-            size_in_mb = lit(size_in_mb)
+        size_in_mb = lit(size_in_mb)
 
     return config.mosaic_context.invoke_function(
         "rst_fromcontent",
         pyspark_to_java_column(raster_bin),
         pyspark_to_java_column(driver),
-        pyspark_to_java_column(size_in_mb)
+        pyspark_to_java_column(size_in_mb),
     )
 
 
@@ -966,10 +1026,12 @@ def rst_fromfile(raster_path: ColumnOrName, size_in_mb: Any = -1) -> Column:
     :return:
     """
     if type(size_in_mb) == int:
-                size_in_mb = lit(size_in_mb)
-    
+        size_in_mb = lit(size_in_mb)
+
     return config.mosaic_context.invoke_function(
-        "rst_fromfile", pyspark_to_java_column(raster_path), pyspark_to_java_column(size_in_mb)
+        "rst_fromfile",
+        pyspark_to_java_column(raster_path),
+        pyspark_to_java_column(size_in_mb),
     )
 
 

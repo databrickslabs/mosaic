@@ -32,7 +32,7 @@ case class ST_IntersectionAgg(
     private[geometry] def getCellGeom(row: InternalRow, dt: DataType) = {
         dt.asInstanceOf[StructType].fields.find(_.name == "index_id").map(_.dataType) match {
             case Some(LongType)   => indexSystem.indexToGeometry(row.getLong(1), geometryAPI)
-            case Some(StringType) => indexSystem.indexToGeometry(row.getString(1), geometryAPI)
+            case Some(StringType) => indexSystem.indexToGeometry(indexSystem.parse(row.getString(1)), geometryAPI)
             case _                => throw new Error("Unsupported format for chips.")
         }
     }

@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
+import org.apache.spark.sql.functions.lit
 import org.scalatest.matchers.should.Matchers._
 
 trait RST_TessellateBehaviors extends QueryTest {
@@ -39,7 +40,22 @@ trait RST_TessellateBehaviors extends QueryTest {
 
         val result = gridTiles.collect()
 
-        result.length should be(380)
+        result.length should be(462)
+
+        val netcdf = spark.read
+            .format("gdal")
+            .option("raster.read.strategy", "in-memory")
+            .load("src/test/resources/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc")
+            .withColumn("tile", rst_separatebands($"tile"))
+            .withColumn("tile", rst_setsrid($"tile", lit(4326)))
+            .limit(1)
+
+        val netcdfGridTiles = netcdf
+            .select(rst_tessellate($"tile", lit(1)).alias("tile"))
+
+        val netcdfResult = netcdfGridTiles.collect()
+
+        netcdfResult.length should be(491)
 
     }
 

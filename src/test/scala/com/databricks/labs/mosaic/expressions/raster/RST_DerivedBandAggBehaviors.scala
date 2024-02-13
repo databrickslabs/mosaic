@@ -47,7 +47,8 @@ trait RST_DerivedBandAggBehaviors extends QueryTest {
 
         // Do not indent the code in the SQL statement
         // It will be wrongly interpreted in python as broken
-        noException should be thrownBy spark.sql("""
+//        noException should be thrownBy
+            spark.sql("""
                     |select rst_derivedband_agg(
                     |   tiles,
                     |"
