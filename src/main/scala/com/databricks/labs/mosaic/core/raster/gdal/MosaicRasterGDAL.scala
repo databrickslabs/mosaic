@@ -427,7 +427,9 @@ case class MosaicRasterGDAL(
                     path
                 }
             if (Files.isDirectory(Paths.get(tmpPath))) {
-                SysUtils.runCommand(s"zip -r0 $tmpPath.zip $tmpPath")
+                val parentDir = Paths.get(tmpPath).getParent.toString
+                val fileName = Paths.get(tmpPath).getFileName.toString
+                SysUtils.runScript(Array("/bin/sh", "-c", s"cd $parentDir && zip -r0 $fileName.zip $fileName"))
                 s"$tmpPath.zip"
             } else {
                 tmpPath

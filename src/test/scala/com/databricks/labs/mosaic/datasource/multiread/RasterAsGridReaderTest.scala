@@ -41,10 +41,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         val netcdf = "/binary/netcdf-coral/"
         val filePath = getClass.getResource(netcdf).getPath
 
-        //noException should be thrownBy 
-
-
-        MosaicContext.read
+        noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
             .option("retile", "true")
             .option("tileSize", "10")
