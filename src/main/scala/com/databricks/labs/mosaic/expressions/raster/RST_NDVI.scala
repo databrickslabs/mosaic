@@ -55,7 +55,7 @@ object RST_NDVI extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2, expr3) - Returns a raster contains NDVI index computed by bands provided by red_index and nir_index.
+          |_FUNC_(expr1, expr2, expr3) - NDVI index computed by raster tile red_index and nir_index bands.
           |""".stripMargin
 
     override def example: String =

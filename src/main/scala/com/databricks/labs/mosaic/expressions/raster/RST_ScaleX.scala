@@ -31,7 +31,7 @@ object RST_ScaleX extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns scale X in the raster.
+          |_FUNC_(expr1) - Returns scale X in the raster tile.
           |""".stripMargin
 
     override def example: String =

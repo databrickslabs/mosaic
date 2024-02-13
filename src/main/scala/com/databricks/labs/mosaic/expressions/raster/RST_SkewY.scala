@@ -31,7 +31,7 @@ object RST_SkewY extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns skew Y in the raster.
+          |_FUNC_(expr1) - Returns skew Y in the raster tile.
           |""".stripMargin
 
     override def example: String =

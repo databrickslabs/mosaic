@@ -31,7 +31,7 @@ object RST_Subdatasets extends WithExpressionInfo {
 
     override def name: String = "rst_subdatasets"
 
-    override def usage: String = "_FUNC_(expr1) - Extracts subdataset paths and descriptions from a raster dataset."
+    override def usage: String = "_FUNC_(expr1) - Extracts subdataset paths and descriptions from a raster tile dataset."
 
     override def example: String =
         """

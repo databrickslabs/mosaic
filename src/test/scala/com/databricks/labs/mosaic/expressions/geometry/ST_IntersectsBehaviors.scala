@@ -27,7 +27,7 @@ trait ST_IntersectsBehaviors extends QueryTest {
         val left = boroughs
             .select(
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), resolution).alias("left_index"),
+              grid_tessellateexplode(col("wkt"), resolution).alias("left_index"),
               col("wkt").alias("left_wkt")
             )
 
@@ -38,7 +38,7 @@ trait ST_IntersectsBehaviors extends QueryTest {
             )
             .select(
               col("id").alias("right_id"),
-              mosaic_explode(col("wkt"), resolution).alias("right_index"),
+              grid_tessellateexplode(col("wkt"), resolution).alias("right_index"),
               col("wkt").alias("right_wkt")
             )
 
@@ -52,7 +52,7 @@ trait ST_IntersectsBehaviors extends QueryTest {
               "right_id"
             )
             .agg(
-              st_intersects_aggregate(col("left_index"), col("right_index")).alias("agg_intersects"),
+              st_intersects_agg(col("left_index"), col("right_index")).alias("agg_intersects"),
               first("left_wkt").alias("left_wkt"),
               first("right_wkt").alias("right_wkt")
             )
@@ -71,22 +71,13 @@ trait ST_IntersectsBehaviors extends QueryTest {
         right.createOrReplaceTempView("right")
 
         val result2 = spark.sql("""
-                                  |SELECT ST_INTERSECTS_AGGREGATE(LEFT_INDEX, RIGHT_INDEX)
-                                  |FROM LEFT
-                                  |INNER JOIN RIGHT ON LEFT_INDEX.INDEX_ID == RIGHT_INDEX.INDEX_ID
-                                  |GROUP BY LEFT_ID, RIGHT_ID
-                                  |""".stripMargin)
-
-        result2.collect().length should be > 0
-
-        val result3 = spark.sql("""
                                   |SELECT ST_INTERSECTS_AGG(LEFT_INDEX, RIGHT_INDEX)
                                   |FROM LEFT
                                   |INNER JOIN RIGHT ON LEFT_INDEX.INDEX_ID == RIGHT_INDEX.INDEX_ID
                                   |GROUP BY LEFT_ID, RIGHT_ID
                                   |""".stripMargin)
 
-        result3.collect().length should be > 0
+        result2.collect().length should be > 0
 
         noException should be thrownBy st_intersects_agg(lit("POLYGON (1 1, 2 2, 3 3, 1 1)"), lit("POLYGON (1 1, 2 2, 3 3, 1 1)"))
     }
@@ -141,7 +132,7 @@ trait ST_IntersectsBehaviors extends QueryTest {
 
         val results = chips
             .groupBy("row_id")
-            .agg(st_intersects_aggregate(col("left_index"), col("right_index")).alias("flag"))
+            .agg(st_intersects_agg(col("left_index"), col("right_index")).alias("flag"))
 
         results.select("flag").as[Boolean].collect() should contain theSameElementsAs Seq(true, true, true, true, false)
     }
@@ -158,7 +149,7 @@ trait ST_IntersectsBehaviors extends QueryTest {
             .select(
               col("wkt"),
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), resolution).alias("left_index"),
+              grid_tessellateexplode(col("wkt"), resolution).alias("left_index"),
               col("wkt").alias("left_wkt")
             )
 
@@ -180,7 +171,7 @@ trait ST_IntersectsBehaviors extends QueryTest {
               "right_id"
             )
             .agg(
-              st_intersects_aggregate(col("left_index"), col("right_index")).alias("agg_intersects"),
+              st_intersects_agg(col("left_index"), col("right_index")).alias("agg_intersects"),
               first("left_wkt").alias("left_wkt"),
               first("right_wkt").alias("right_wkt")
             )

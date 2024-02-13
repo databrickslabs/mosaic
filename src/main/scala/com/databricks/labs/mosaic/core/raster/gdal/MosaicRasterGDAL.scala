@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL.readRaster
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader, RasterWriter}
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
@@ -19,7 +20,7 @@ import org.locationtech.proj4j.CRSFactory
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.util.{Locale, Vector => JVector}
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /** GDAL implementation of the MosaicRaster trait. */
 //noinspection DuplicatedCode
@@ -168,7 +169,8 @@ case class MosaicRasterGDAL(
       *   Returns the raster's subdatasets as a Map.
       */
     def subdatasets: Map[String, String] = {
-        val dict = raster.GetMetadata_Dict("SUBDATASETS")
+        val dict = Try(raster.GetMetadata_Dict("SUBDATASETS"))
+            .getOrElse(new java.util.Hashtable[String, String]())
         val subdatasetsMap = Option(dict)
             .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
             .getOrElse(Map.empty[String, String])
@@ -199,6 +201,25 @@ case class MosaicRasterGDAL(
             .last
             .toInt
     }
+
+
+    /**
+      * @return
+      *   Sets the raster's SRID. This is the EPSG code of the raster's CRS.
+      */
+    def setSRID(srid: Int): MosaicRasterGDAL = {
+        val srs = new osr.SpatialReference()
+        srs.ImportFromEPSG(srid)
+        raster.SetSpatialRef(srs)
+        val driver = raster.GetDriver()
+        val newPath = PathUtils.createTmpFilePath(GDAL.getExtension(driverShortName))
+        driver.CreateCopy(newPath, raster)
+        val newRaster = MosaicRasterGDAL.openRaster(newPath, Some(driverShortName))
+        dispose(this)
+        MosaicRasterGDAL(newRaster, newPath, parentPath, driverShortName, -1)
+    }
+
+
 
     /**
       * @return
@@ -231,7 +252,13 @@ case class MosaicRasterGDAL(
       * @return
       *   Returns the raster's number of bands.
       */
-    def numBands: Int = raster.GetRasterCount()
+    def numBands: Int = {
+        val bandCount = Try(raster.GetRasterCount())
+        bandCount match {
+            case Success(value) => value
+            case Failure(_)     => 0
+        }
+    }
 
     // noinspection ZeroIndexToHead
     /**
@@ -311,10 +338,16 @@ case class MosaicRasterGDAL(
       *   compute since it requires reading the raster and computing statistics.
       */
     def isEmpty: Boolean = {
-        if (subdatasets.nonEmpty) {
-            false
+        val bands = getBands
+        if (bands.isEmpty) {
+            subdatasets
+                .values
+                .filter(_.toLowerCase(Locale.ROOT).startsWith(driverShortName.toLowerCase(Locale.ROOT)))
+                .flatMap(readRaster(_, path).getBands)
+                .takeWhile(_.isEmpty)
+                .nonEmpty
         } else {
-            getValidCount.values.sum == 0
+            bands.takeWhile(_.isEmpty).nonEmpty
         }
     }
 

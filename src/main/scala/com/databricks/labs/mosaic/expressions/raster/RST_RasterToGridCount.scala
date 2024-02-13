@@ -34,7 +34,7 @@ object RST_RasterToGridCount extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the number of pixels per cell for each band of the raster.
+          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the number of pixels per cell for each band of the raster tile.
           |                       The output type is array<array<struct<index: long, measure: int>>>.
           |                       Raster mask is taken into account and only valid pixels are used for the calculation.
           |""".stripMargin

@@ -17,6 +17,8 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
     // Passthrough if not redefined
     def isValid(cellID: Long): Boolean = true
 
+    def isCylindrical: Boolean = false
+
     def crsID: Int
 
     /**
@@ -145,6 +147,8 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       */
     def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double
 
+    def alignToGrid(geometry: MosaicGeometry): MosaicGeometry = geometry
+
     /**
       * Returns a set of indices that represent the input geometry. Depending on
       * the index system this set may include only indices whose centroids fall
@@ -159,7 +163,7 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       * @return
       *   A set of indices representing the input geometry.
       */
-    def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI] = None): Seq[Long]
+    def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Seq[Long]
 
     /**
       * @see
@@ -217,16 +221,6 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       *   An instance of [[MosaicGeometry]] corresponding to index.
       */
     def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry
-
-    /**
-      * Get the geometry corresponding to the index with the input id.
-      *
-      * @param index
-      *   Id of the index whose geometry should be returned.
-      * @return
-      *   An instance of [[MosaicGeometry]] corresponding to index.
-      */
-    def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry
 
     /**
       * Get the index ID corresponding to the provided coordinates.

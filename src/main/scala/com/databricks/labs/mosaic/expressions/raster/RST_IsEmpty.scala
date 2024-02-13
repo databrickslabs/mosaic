@@ -32,7 +32,7 @@ object RST_IsEmpty extends WithExpressionInfo {
 
     override def name: String = "rst_isempty"
 
-    override def usage: String = "_FUNC_(expr1) - Returns true if the raster is empty."
+    override def usage: String = "_FUNC_(expr1) - Returns true if the raster tile is empty."
 
     override def example: String =
         """

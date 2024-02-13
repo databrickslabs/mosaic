@@ -8,9 +8,12 @@ import com.databricks.labs.mosaic.utils.SysUtils
 object GDALCalc {
 
     val gdal_calc: String = {
-        val calcPath = SysUtils.runCommand("""find / -maxdepth 20 -iname gdal_calc.py""")._1.split("\n").headOption.getOrElse("")
-        if (calcPath.isEmpty || calcPath.startsWith("ERROR")) {
-            "/usr/local/lib/python3.10/dist-packages/osgeo_utils/gdal_calc.py"
+        val calcPath = SysUtils.runCommand("which gdal_calc.py")._1.split("\n").headOption.getOrElse("")
+        if (calcPath.isEmpty) {
+            throw new RuntimeException("Could not find gdal_calc.py.")
+        }
+        if (calcPath == "ERROR") {
+            "/usr/lib/python3/dist-packages/osgeo_utils/gdal_calc.py"
         } else {
             calcPath
         }

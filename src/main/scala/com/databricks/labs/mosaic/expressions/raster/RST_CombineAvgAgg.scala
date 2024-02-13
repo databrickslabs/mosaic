@@ -122,7 +122,7 @@ object RST_CombineAvgAgg {
           db.orNull,
           "rst_combine_avg_agg",
           """
-            |    _FUNC_(tiles)) - Combines rasters into a single raster using average.
+            |    _FUNC_(tiles)) - Aggregate to combine raster tiles using an average of pixels.
             """.stripMargin,
           "",
           """

@@ -40,7 +40,7 @@ object RST_Summary extends WithExpressionInfo {
 
     override def name: String = "rst_summary"
 
-    override def usage: String = "_FUNC_(expr1) - Generates GDAL summary for the raster."
+    override def usage: String = "_FUNC_(expr1) - Generates GDAL summary for the raster tile."
 
     override def example: String =
         """

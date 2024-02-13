@@ -133,7 +133,7 @@ object RST_DerivedBandAgg {
           db.orNull,
           "rst_derived_band_agg",
           """
-            |    _FUNC_(tiles)) - Combines rasters into a single raster using provided python function.
+            |    _FUNC_(tiles)) - Aggregate which combines raster tiles using provided python function.
             """.stripMargin,
           "",
           """

@@ -1,10 +1,11 @@
-from pkg_resources import working_set, Requirement
-from test.context import api
-
 import os
 import shutil
 import subprocess
 import tempfile
+from pkg_resources import working_set, Requirement
+
+from test.context import api
+
 
 class GDALInstaller:
     def __init__(self):
@@ -17,9 +18,10 @@ class GDALInstaller:
 
     def do_op(self) -> bool:
         return api.setup_gdal(
-            to_fuse_dir = self._temp_dir, 
+            to_fuse_dir=self._temp_dir,
             override_mosaic_version="main",
-            script_out_name=self.GDAL_INIT_SCRIPT_FILENAME
+            script_out_name=self.GDAL_INIT_SCRIPT_FILENAME,
+            jni_so_copy=True,
         )
 
     def run_init_script(self) -> int:
@@ -33,7 +35,7 @@ class GDALInstaller:
             env=dict(os.environ, DATABRICKS_ROOT_VIRTUALENV_ENV=self._site_packages),
         )
         return result.returncode
-    
+
     def list_files(self) -> list[str]:
         return os.listdir(self._temp_dir)
 

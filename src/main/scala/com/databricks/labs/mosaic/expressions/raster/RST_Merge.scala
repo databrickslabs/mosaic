@@ -49,7 +49,7 @@ object RST_Merge extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster that is a result of merging an array of rasters.
+          |_FUNC_(expr1) - Merge (mosaic) an array of raster tile columns.
           |""".stripMargin
 
     override def example: String =

@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.geometry
 
+import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.geometry.geometrycollection.MosaicGeometryCollectionJTS
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
@@ -53,6 +54,16 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         val centroid = geom.getCentroid
         centroid.setSRID(geom.getSRID)
         MosaicPointJTS(centroid)
+    }
+
+    override def getAnyPoint: MosaicPointJTS = {
+        // while this doesn't return the centroid but an arbitrary point via getCoordinate in JTS, 
+        // inlike getCentroid this supports a Z coordinate.
+
+        val coord = geom.getCoordinate
+        val gf = new GeometryFactory()
+        val point = gf.createPoint(coord)
+        MosaicPointJTS(point)
     }
 
     override def isEmpty: Boolean = geom.isEmpty
@@ -211,6 +222,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def transformCRSXY(sridTo: Int): MosaicGeometryJTS = super.transformCRSXY(sridTo, None).asInstanceOf[MosaicGeometryJTS]
 
+    override def getAPI: GeometryAPI = JTS
 }
 
 object MosaicGeometryJTS extends GeometryReader {

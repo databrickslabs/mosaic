@@ -9,7 +9,7 @@ from mosaic.utils.types import ColumnOrName
 ######################
 
 
-__all__ = ["st_intersects", "st_contains"]
+__all__ = ["st_intersects", "st_contains", "st_within"]
 
 
 def st_intersects(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:

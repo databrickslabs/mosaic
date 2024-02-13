@@ -41,7 +41,7 @@ object RasterTessellate {
                     (false, MosaicRasterTile(cell.index, null, "", ""))
                 } else {
                     val cellRaster = tmpRaster.getRasterForCell(cellID, indexSystem, geometryAPI)
-                    val isValidRaster = cellRaster.getValidCount.values.sum > 0 && !cellRaster.isEmpty
+                    val isValidRaster = !cellRaster.isEmpty
                     (
                       isValidRaster,
                       MosaicRasterTile(cell.index, cellRaster, raster.getParentPath, raster.getDriversShortName)

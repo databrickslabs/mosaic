@@ -27,7 +27,7 @@ object RST_Width extends WithExpressionInfo {
 
     override def name: String = "rst_width"
 
-    override def usage: String = "_FUNC_(expr1) - Returns width of the raster."
+    override def usage: String = "_FUNC_(expr1) - Returns width of the raster tile."
 
     override def example: String =
         """

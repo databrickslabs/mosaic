@@ -49,7 +49,7 @@ We recommend using Databricks Runtime versions 13.3 LTS with Photon enabled.
 
 > DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13. You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.
 
-As of the 0.4.0 release, Mosaic issues the following ERROR when initialized on a cluster that is neither Photon Runtime nor Databricks Runtime ML [[ADB](https://learn.microsoft.com/en-us/azure/databricks/runtime/) | [AWS](https://docs.databricks.com/runtime/index.html) | [GCP](https://docs.gcp.databricks.com/runtime/index.html)]:
+:warning: **Mosaic 0.4.x series issues the following ERROR on a standard, non-Photon cluster [[ADB](https://learn.microsoft.com/en-us/azure/databricks/runtime/) | [AWS](https://docs.databricks.com/runtime/index.html) | [GCP](https://docs.gcp.databricks.com/runtime/index.html)]:**
 
 > DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.
 
@@ -57,9 +57,9 @@ __Language Bindings__
 
 As of Mosaic 0.4.0 (subject to change in follow-on releases)...
 
-* _No Mosaic SQL expressions cannot yet be registered with [Unity Catalog](https://www.databricks.com/product/unity-catalog) due to API changes affecting DBRs >= 13._
-* [Assigned Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Python, R, and Scala APIs.
+* [Assigned Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Python, SQL, R, and Scala APIs.
 * [Shared Access Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Scala API (JVM) with Admin [allowlisting](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html); _Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters._ 
+  * Mosaic SQL expressions cannot yet be registered with [Unity Catalog](https://www.databricks.com/product/unity-catalog) due to API changes affecting DBRs >= 13, more [here](https://docs.databricks.com/en/udf/index.html).
 
 __Additional Notes:__ 
 
@@ -93,11 +93,11 @@ as a [cluster library](https://docs.databricks.com/libraries/cluster-libraries.h
 %pip install databricks-mosaic
 ```
 
-Then enable it with
+Then enable Mosaic (and namespace it in python) with
 
 ```python
-from mosaic import enable_mosaic
-enable_mosaic(spark, dbutils)
+import mosaic as mos
+mos.enable_mosaic(spark, dbutils)
 ```
 
 ### Scala
@@ -141,19 +141,20 @@ import com.databricks.labs.mosaic.JTS
 val mosaicContext = MosaicContext.build(H3, JTS)
 mosaicContext.register(spark)
 ```
-__Note: Mosaic 0.4.x SQL bindings for DBR 13 not yet available in Unity Catalog due to API changes.__
+__Note: Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due to API changes, more [here](https://docs.databricks.com/en/udf/index.html).__
 
 ## Examples
 
 Here are some example notebooks, check the language links for latest [[Python](/notebooks/examples/python/) | [Scala](/notebooks/examples/scala/) | [SQL](/notebooks/examples/sql/) | [R](/notebooks/examples/R/)]: 
 
-| Example | Description | Links |
-| --- | --- | --- |
-| __Quick Start__ | Example of performing spatial point-in-polygon joins on the NYC Taxi dataset | [python](/notebooks/examples/python/QuickstartNotebook.ipynb), [scala](notebooks/examples/scala/QuickstartNotebook.ipynb), [R](notebooks/examples/R/QuickstartNotebook.r), [SQL](notebooks/examples/sql/QuickstartNotebook.ipynb) | 
-| Shapefiles | Examples of reading multiple shapefiles | [python](notebooks/examples/python/Shapefiles/) |
-| Spatial KNN | Runnable notebook-based example using Mosaic [SpatialKNN](https://databrickslabs.github.io/mosaic/models/spatial-knn.html) model | [python](notebooks/examples/python/SpatialKNN) |
-| NetCDF |  Read multiple NetCDFs, process through various data engineering steps before analyzing and rendering | [python](notebooks/examples/python/NetCDF/) |
-| STS Transfers | Detecting Ship-to-Ship transfers at scale by leveraging Mosaic to process AIS data. | [python](notebooks/examples/python/Ship2ShipTransfers), [blog](https://medium.com/@timo.roest/ship-to-ship-transfer-detection-b370dd9d43e8) |
+| Example | Description | Links                                                                                                                                                                                                                                        |
+| --- | --- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| __Quick Start__ | Example of performing spatial point-in-polygon joins on the NYC Taxi dataset | [python](/notebooks/examples/python/Quickstart/QuickstartNotebook.ipynb), [scala](notebooks/examples/scala/QuickstartNotebook.ipynb), [R](notebooks/examples/R/QuickstartNotebook.r), [SQL](notebooks/examples/sql/QuickstartNotebook.ipynb) | 
+| Shapefiles | Examples of reading multiple shapefiles | [python](notebooks/examples/python/Shapefiles/)                                                                                                                                                                                              |
+| Spatial KNN | Runnable notebook-based example using Mosaic [SpatialKNN](https://databrickslabs.github.io/mosaic/models/spatial-knn.html) model | [python](notebooks/examples/python/SpatialKNN)                                                                                                                                                                                               |
+| NetCDF |  Read multiple NetCDFs, process through various data engineering steps before analyzing and rendering | [python](notebooks/examples/python/NetCDF/)                                                                                                                                                                                                  |
+| STS Transfers | Detecting Ship-to-Ship transfers at scale by leveraging Mosaic to process AIS data. | [python](notebooks/examples/python/Ship2ShipTransfers), [blog](https://medium.com/@timo.roest/ship-to-ship-transfer-detection-b370dd9d43e8)                                                                                                  |
+| EO Gridded STAC | End-to-end Earth Observation series showing downloading Sentinel-2 STAC assets for Alaska from [MSFT Planetary Computer](https://planetarycomputer.microsoft.com/), tiling them to H3 global grid, band stacking, NDVI, merging (mosaicing), clipping, and applying a [Segment Anything Model](https://huggingface.co/facebook/sam-vit-huge)  | [python](notebooks/examples/python/EarthObservation/EOGriddedSTAC)                                                                                                                                                                           |
 
 You can import those examples in Databricks workspace using [these instructions](https://docs.databricks.com/en/notebooks/index.html).
 

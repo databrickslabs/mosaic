@@ -1,6 +1,6 @@
 import random
 
-from pyspark.sql.functions import abs, col, first, lit, sqrt
+from pyspark.sql.functions import abs, col, concat, first, lit, sqrt
 
 from .context import api
 from .utils import MosaicTestCase
@@ -9,7 +9,7 @@ from .utils import MosaicTestCase
 class TestVectorFunctions(MosaicTestCase):
     def setUp(self) -> None:
         return super().setUp()
-    
+
     def test_st_point(self):
         expected = [
             "POINT (0 0)",
@@ -27,6 +27,25 @@ class TestVectorFunctions(MosaicTestCase):
         )
         self.assertListEqual([rw.points for rw in result], expected)
 
+    def test_st_z(self):
+        expected = [
+            0,
+            1,
+        ]
+        result = (
+            self.spark.range(2)
+            .select(col("id").cast("double"))
+            .withColumn(
+                "points",
+                api.st_geomfromwkt(
+                    concat(lit("POINT (9 9 "), "id", lit(")"))
+                ),
+            )
+            .withColumn("z", api.st_z("points"))
+            .collect()
+        )
+        self.assertListEqual([rw.z for rw in result], expected)
+
     def test_st_bindings_happy_flow(self):
         # Checks that the python bindings do not throw exceptions
         # Not testing the logic, since that is tested in Scala
@@ -42,7 +61,7 @@ class TestVectorFunctions(MosaicTestCase):
             df.withColumn("st_area", api.st_area("wkt"))
             .withColumn("st_length", api.st_length("wkt"))
             .withColumn("st_buffer", api.st_buffer("wkt", lit(1.1)))
-            .withColumn("st_buffer", api.st_bufferloop("wkt", lit(1.1), lit(1.2)))
+            .withColumn("st_bufferloop", api.st_bufferloop("wkt", lit(1.1), lit(1.2)))
             .withColumn("st_perimeter", api.st_perimeter("wkt"))
             .withColumn("st_convexhull", api.st_convexhull("wkt"))
             .withColumn("st_concavehull", api.st_concavehull("wkt", lit(0.5)))
@@ -169,12 +188,12 @@ class TestVectorFunctions(MosaicTestCase):
             .join(right_df, col("left_index.index_id") == col("right_index.index_id"))
             .groupBy("left_id", "right_id")
             .agg(
-                api.st_intersects_aggregate(
-                    col("left_index"), col("right_index")
-                ).alias("agg_intersects"),
-                api.st_intersection_aggregate(
-                    col("left_index"), col("right_index")
-                ).alias("agg_intersection"),
+                api.st_intersects_agg(col("left_index"), col("right_index")).alias(
+                    "agg_intersects"
+                ),
+                api.st_intersection_agg(col("left_index"), col("right_index")).alias(
+                    "agg_intersection"
+                ),
                 first("left_geom").alias("left_geom"),
                 first("right_geom").alias("right_geom"),
             )

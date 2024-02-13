@@ -182,11 +182,11 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       * @return
       *   A set of indices representing the input geometry.
       */
-    override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = {
-        require(geometryAPI.isDefined, "GeometryAPI cannot be None for BNG Index System.")
+    override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Seq[Long] = {
+//        require(geometryAPI.isDefined, "GeometryAPI cannot be None for BNG Index System.")
         @tailrec
         def visit(queue: Set[Long], visited: Set[Long], result: Set[Long]): Set[Long] = {
-            val visits = queue.map(index => (index, geometry.contains(indexToGeometry(index, geometryAPI.get).getCentroid)))
+            val visits = queue.map(index => (index, geometry.contains(indexToGeometry(index, geometryAPI).getCentroid)))
             val matches = visits.filter(_._2)
             val newVisited = visited ++ visits.map(_._1)
             val newQueue = matches.flatMap(c => kLoop(c._1, 1).filterNot(newVisited.contains))
@@ -370,19 +370,6 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
       *   A set of supported resolutions.
       */
     override def resolutions: Set[Int] = Set(1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6)
-
-    /**
-      * Get the geometry corresponding to the index with the input id.
-      *
-      * @param index
-      *   Id of the index whose geometry should be returned.
-      * @return
-      *   An instance of [[MosaicGeometry]] corresponding to index.
-      */
-    override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = {
-        val indexId = parse(index)
-        indexToGeometry(indexId, geometryAPI)
-    }
 
     /**
       * Provides a long representation from a string representation of a BNG

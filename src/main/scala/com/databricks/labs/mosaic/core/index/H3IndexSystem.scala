@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.model.Coordinates
+import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POLYGON}
 import com.uber.h3core.H3Core
 import com.uber.h3core.util.GeoCoord
@@ -11,6 +11,7 @@ import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
 
 import scala.collection.JavaConverters._
+//import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 import scala.collection.mutable
 import scala.util.{Success, Try}
 
@@ -25,6 +26,8 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     override def crsID: Int = 4326
 
     val name = "H3"
+
+    override def isCylindrical: Boolean = true
 
     // An instance of H3Core to be used for IndexSystem implementation.
     @transient private val h3: H3Core = H3Core.newInstance()
@@ -74,12 +77,16 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       *   when performing polyfill.
       */
     override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = {
-        val centroid = geometry.getCentroid
+        val centroid = geometry.getCentroid.mapXY((x, y) => if (x > 180) (-180 + x % 180, y) else if (x < -180) (180 - x % 180, y) else (x, y)).getCentroid
         val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
         val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
-        val boundary = indexGeom.getShellPoints.head // first shell is always in head
-        val indexGeomCentroid = indexGeom.getCentroid
-        boundary.map(_.distance(indexGeomCentroid)).max
+        GeometryTypeEnum.fromString(indexGeom.getGeometryType) match {
+            case POLYGON =>
+                val boundary = indexGeom.getShellPoints.head // first shell is always in head
+                boundary.map(_.distance(centroid)).max
+            case _ =>
+                indexGeom.flatten.flatMap(_.boundary.flatten).maxBy(_.getLength).getLength
+        }
     }
 
     /**
@@ -97,11 +104,20 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
 
-        val geom =
-            if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
+        val geom = if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
             else makeSafeGeometry(extended, geometryAPI)
+
         geom.setSpatialReference(crsID)
         geom
+    }
+
+    override def alignToGrid(geometry: MosaicGeometry): MosaicGeometry = {
+        val extent = geometry.getAPI.geographicExtent(crsID)
+        val width = extent.minMaxCoord("X", "MAX") - extent.minMaxCoord("X", "MIN")
+        val central = geometry.intersection(extent)
+        val left = geometry.intersection(extent.translate(-width, 0)).translate(width, 0)
+        val right = geometry.intersection(extent.translate(width, 0)).translate(-width, 0)
+        central.union(left).union(right)
     }
 
     /**
@@ -115,9 +131,9 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       * @return
       *   A set of indices representing the input geometry.
       */
-    override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI] = None): Seq[Long] = {
-        if (geometry.isEmpty) Seq.empty[Long]
-        else {
+    override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Seq[Long] = {
+
+        def geomToIndices(geometry: MosaicGeometry): Seq[Long] = {
             val shellPoints = geometry.getShellPoints
             val holePoints = geometry.getHolePoints
             (for (i <- 0 until geometry.getNumGeometries) yield {
@@ -127,6 +143,13 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
                 val indices = h3.polyfill(boundary, holes, resolution)
                 indices.asScala.map(_.toLong)
             }).flatten
+        }
+
+        if (geometry.isEmpty) Seq.empty[Long]
+        else {
+            // split the geometry across the meridian
+            val westernHemi = geometryAPI.createBbox(-180.0, -90.0, 0.0, 90.0)
+            geomToIndices(geometry.intersection(westernHemi)) ++ geomToIndices(geometry.difference(westernHemi))
         }
     }
 
@@ -191,26 +214,6 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       *   A set of supported resolutions.
       */
     override def resolutions: Set[Int] = (0 to 15).toSet
-
-    /**
-      * Get the geometry corresponding to the index with the input id.
-      *
-      * @param index
-      *   Id of the index whose geometry should be returned.
-      * @return
-      *   An instance of [[MosaicGeometry]] corresponding to index.
-      */
-    override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = {
-        val boundary = h3.h3ToGeoBoundary(index).asScala
-        val extended = boundary ++ List(boundary.head)
-
-        val geom =
-            if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
-            else makeSafeGeometry(extended, geometryAPI)
-
-        geom.setSpatialReference(crsID)
-        geom
-    }
 
     override def format(id: Long): String = {
         val geo = h3.h3ToGeo(id)
@@ -393,14 +396,17 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
         val unsafeGeometry = makeUnsafeGeometry(coordinates, geometryAPI)
 
+        makeSafeGeometry(geometryAPI, unsafeGeometry)
+    }
+
+    private def makeSafeGeometry(geometryAPI: GeometryAPI, unsafeGeometry: MosaicGeometry) = {
         if (crossesAntiMeridian(unsafeGeometry)) {
             val shiftedGeometry = unsafeGeometry.mapXY(shiftEast)
-            val westGeom = shiftedGeometry.intersection(makeEastBBox(geometryAPI: GeometryAPI))
-            val eastGeom = shiftedGeometry.intersection(makeShiftedWestBBox(geometryAPI: GeometryAPI)).mapXY(shiftWest)
+            val westGeom = shiftedGeometry.intersection(makeEastBBox(geometryAPI))
+            val eastGeom = shiftedGeometry.intersection(makeShiftedWestBBox(geometryAPI)).mapXY(shiftWest)
             westGeom.union(eastGeom)
         } else {
             unsafeGeometry
         }
     }
-
 }

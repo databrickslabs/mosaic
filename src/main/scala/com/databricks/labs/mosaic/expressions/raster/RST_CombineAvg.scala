@@ -45,7 +45,7 @@ object RST_CombineAvg extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster that is a result of combining an array of rasters using average of pixels.
+          |_FUNC_(expr1) - Combine an array of raster tiles using average of pixels.
           |""".stripMargin
 
     override def example: String =

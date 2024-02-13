@@ -27,7 +27,7 @@ object RST_Height extends WithExpressionInfo {
 
     override def name: String = "rst_height"
 
-    override def usage: String = "_FUNC_(expr1) - Returns height of the raster."
+    override def usage: String = "_FUNC_(expr1) - Returns height of the raster tile."
 
     override def example: String =
         """

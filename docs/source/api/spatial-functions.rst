@@ -124,7 +124,7 @@ st_buffer
 
 .. function:: st_buffer(col, radius)
 
-    Buffer the input geometry by radius `radius` and return a new, buffered geometry.
+    Buffer the input geometry by radius :code:`radius` and return a new, buffered geometry.
 
     :param col: Geometry
     :type col: Column
@@ -179,7 +179,7 @@ st_bufferloop
 
 .. function:: st_bufferloop(col, innerRadius, outerRadius)
 
-    Returns a difference between st_buffer(col, outerRadius) and st_buffer(col, innerRadius).
+    Returns a difference between :code:`st_buffer(col, outerRadius)` and :code:`st_buffer(col, innerRadius)`.
     The resulting geometry is a loop with a width of outerRadius - innerRadius.
 
     :param col: Geometry
@@ -236,60 +236,8 @@ st_bufferloop
 .. figure:: ../images/st_bufferloop/geom.png
    :figclass: doc-figure
 
-   Fig 1. ST_BufferLoop(geom, 0.02, 0.04)
+   Fig 1. ST_BufferLoop(wkt, 0.02, 0.04)
 
-st_centroid2D [Deprecated]
-**************************
-
-.. function:: st_centroid2D(col)
-
-    Returns the x and y coordinates representing the centroid of the input geometry.
-
-    :param col: Geometry
-    :type col: Column
-    :rtype: Column: StructType[x: DoubleType, y: DoubleType]
-
-    :example:
-
-.. tabs::
-   .. code-tab:: py
-
-    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    df.select(st_centroid2D('wkt')).show()
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
-
-   .. code-tab:: scala
-
-    val df = List(("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("wkt")
-    df.select(st_centroid2D(col("wkt"))).show()
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
-
-   .. code-tab:: sql
-
-    SELECT st_centroid2D("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
-
-   .. code-tab:: r R
-
-    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    showDF(select(df, st_centroid2D(column("wkt"))), truncate=F)
-    +---------------------------------------+
-    |st_centroid(wkt)                       |
-    +---------------------------------------+
-    |{25.454545454545453, 26.96969696969697}|
-    +---------------------------------------+
 
 st_centroid
 *************
@@ -343,6 +291,69 @@ st_centroid
     +---------------------------------------------+
     |POINT (25.454545454545453, 26.96969696969697)|
     +---------------------------------------------+
+
+
+st_concavehull
+*************
+
+.. function:: st_concavehull(col, concavity, <has_holes>)
+
+    Compute the concave hull of a geometry or multi-geometry object. It uses concavity and has_holes to determine
+    the concave hull. Param concavity is the fraction of the difference between the longest and shortest edge lengths in
+    the Delaunay Triangulation. If set to 1, this is the same as the convex hull. If set to 0, it produces
+    maximum concaveness. Param has_holes is a boolean that determines whether the concave hull can have holes. If set to
+    true, the concave hull can have holes. If set to false, the concave hull will not have holes.
+
+    :param col: The input geometry
+    :type col: Column
+    :param concavity: The concavity of the hull
+    :type concavity: Column (DoubleType)
+    :param has_holes:  Whether the hull has holes, default false
+    :type has_holes: Column (BooleanType)
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df = spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+    df.select(st_concavehull('wkt'), lit(0.1))).show(1, False)
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                     |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+   .. code-tab:: scala
+
+    val df = List(("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))")).toDF("wkt")
+    df.select(st_concavehull(col("wkt"), lit(0.1))).show(false)
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                     |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT st_convexhull("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))", 0.1)
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                     |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
+   .. code-tab:: r R
+
+    df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    showDF(select(df, st_concavehull(column("wkt"), lit(0.1))))
+    +---------------------------------------------+
+    |st_concavehull(wkt, 0.1)                     |
+    +---------------------------------------------+
+    |POLYGON ((10 40, 20 20, 30 10, 40 30, 10 40))|
+    +---------------------------------------------+
+
 
 st_convexhull
 *************
@@ -470,8 +481,8 @@ st_dimension
 .. tabs::
    .. code-tab:: py
 
-    >>> df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
-    >>> df.select(st_dimension('wkt')).show()
+    df = spark.createDataFrame([{'wkt': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+    df.select(st_dimension('wkt')).show()
     +-----------------+
     |st_dimension(wkt)|
     +-----------------+
@@ -480,8 +491,8 @@ st_dimension
 
    .. code-tab:: scala
 
-    >>> val df = List("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))").toDF("wkt")
-    >>> df.select(st_dimension(col("wkt"))).show()
+    val df = List("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))").toDF("wkt")
+    df.select(st_dimension(col("wkt"))).show()
     +-----------------+
     |st_dimension(wkt)|
     +-----------------+
@@ -490,7 +501,7 @@ st_dimension
 
    .. code-tab:: sql
 
-    >>> SELECT st_dimension("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    SELECT st_dimension("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     +-----------------+
     |st_dimension(wkt)|
     +-----------------+
@@ -499,8 +510,8 @@ st_dimension
 
    .. code-tab:: r R
 
-    >>> df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
-    >>> showDF(select(df, st_dimension(column("wkt"))))
+    df <- createDataFrame(data.frame(wkt = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+    showDF(select(df, st_dimension(column("wkt"))))
     +-----------------+
     |st_dimension(wkt)|
     +-----------------+
@@ -513,7 +524,7 @@ st_distance
 
 .. function:: st_distance(geom1, geom2)
 
-    Compute the euclidean distance between `geom1` and `geom2`.
+    Compute the euclidean distance between :code:`geom1` and :code:`geom2`.
 
     :param geom1: Geometry
     :type geom1: Column
@@ -636,7 +647,8 @@ st_envelope
 .. function:: st_envelope(col)
 
     Returns the minimum bounding box of the input geometry, as a geometry.
-    This bounding box is defined by the rectangular polygon with corner points `(x_min, y_min)`, `(x_max, y_min)`, `(x_min, y_max)`, `(x_max, y_max)`.
+    This bounding box is defined by the rectangular polygon with corner points :code:`(x_min, y_min)`,
+    :code:`(x_max, y_min)`, :code:`(x_min, y_max)`, :code:`(x_max, y_max)`.
 
     :param col: Geometry
     :type col: Column
@@ -804,16 +816,16 @@ st_haversine
 st_hasvalidcoordinates
 **********************
 
-.. function:: st_hasvalidcoordinates(geom, crs, which)
+.. function:: st_hasvalidcoordinates(col, crs, which)
 
-    Checks if all points in `geom` are valid with respect to crs bounds.
+    Checks if all points in :code:`geom` are valid with respect to crs bounds.
     CRS bounds can be provided either as bounds or as reprojected_bounds.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param crs: CRS name (EPSG ID), e.g. "EPSG:2192"
     :type crs: Column
-    :param which: Check against geographic `"bounds"` or geometric `"reprojected_bounds"` bounds.
+    :param which: Check against geographic :code:`"bounds"` or geometric :code:`"reprojected_bounds"` bounds.
     :type which: Column
     :rtype: Column: IntegerType
 
@@ -865,7 +877,8 @@ st_intersection
 
 .. function:: st_intersection(geom1, geom2)
 
-    Returns a geometry representing the intersection of `left_geom` and `right_geom`.
+    Returns a geometry representing the intersection of :code:`left_geom` and :code:`right_geom`.
+    Also, see :ref:`st_intersection_agg` function.
 
     :param geom1: Geometry
     :type geom1: Column
@@ -921,7 +934,7 @@ st_isvalid
 
 .. function:: st_isvalid(col)
 
-    Returns `true` if the geometry is valid.
+    Returns :code:`true` if the geometry is valid.
 
     :param col: Geometry
     :type col: Column
@@ -1002,10 +1015,6 @@ st_isvalid
     |          false|
     +---------------+
 
-.. note:: Validity assertions will be dependent on the chosen geometry API.
-    The assertions used in the ESRI geometry API (JTS is the default) follow the definitions in the
-    "Simple feature access - Part 1" document (OGC 06-103r4) for each geometry type.
-
 
 st_length
 ************
@@ -1071,7 +1080,7 @@ st_numpoints
 
 .. function:: st_numpoints(col)
 
-    Returns the number of points in `geom`.
+    Returns the number of points in :code:`geom`.
 
     :param col: Geometry
     :type col: Column
@@ -1180,12 +1189,12 @@ st_perimeter
 st_rotate
 *********
 
-.. function:: st_rotate(geom, td)
+.. function:: st_rotate(col, td)
 
-    Rotates `geom` using the rotational factor `td`.
+    Rotates :code:`geom` using the rotational factor :code:`td`.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param td: Rotation (in radians)
     :type td: Column (DoubleType)
     :rtype: Column
@@ -1239,12 +1248,12 @@ st_rotate
 st_scale
 ********
 
-.. function:: st_scale(geom, xd, yd)
+.. function:: st_scale(col, xd, yd)
 
-    Scales `geom` using the scaling factors `xd` and `yd`.
+    Scales :code:`geom` using the scaling factors :code:`xd` and :code:`yd`.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param xd: Scale factor in the x-direction
     :type xd: Column (DoubleType)
     :param yd: Scale factor in the y-direction
@@ -1297,13 +1306,13 @@ st_scale
 st_setsrid
 **********
 
-.. function:: st_setsrid(geom, srid)
+.. function:: st_setsrid(col, srid)
 
-    Sets the Coordinate Reference System well-known identifier (SRID) for `geom`.
+    Sets the Coordinate Reference System well-known identifier (SRID) for :code:`geom`.
 
-    :param geom: Geometry
-    :type geom: Column
-    :param srid: The spatial reference identifier of `geom`, expressed as an integer, e.g. `4326` for EPSG:4326 / WGS84
+    :param col: Geometry
+    :type col: Column
+    :param srid: The spatial reference identifier of :code:`geom`, expressed as an integer, e.g. :code:`4326` for EPSG:4326 / WGS84
     :type srid: Column (IntegerType)
     :rtype: Column
 
@@ -1350,19 +1359,19 @@ st_setsrid
     +---------------------------------+
 
 .. note::
-    ST_SetSRID does not transform the coordinates of `geom`,
+    :ref:`st_setsrid` does not transform the coordinates of :code:`geom`,
     rather it tells Mosaic the SRID in which the current coordinates are expressed.
-    ST_SetSRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.
+    :ref:`st_setsrid` can only operate on geometries encoded in GeoJSON.
 
 st_simplify
 ***********
 
-.. function:: st_simplify(geom, tol)
+.. function:: st_simplify(col, tol)
 
     Returns the simplified geometry.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param tol: Tolerance
     :type tol: Column
     :rtype: Column: Geometry
@@ -1409,18 +1418,16 @@ st_simplify
     | LINESTRING (0 1, 1 2, 3 0) |
     +----------------------------+
 
-.. note::
-    The specified tolerance will be ignored by the ESRI geometry API.
 
 st_srid
 *******
 
-.. function:: st_srid(geom)
+.. function:: st_srid(col)
 
-    Looks up the Coordinate Reference System well-known identifier (SRID) for `geom`.
+    Looks up the Coordinate Reference System well-known identifier (SRID) for :code:`geom`.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :rtype: Column
 
     :example:
@@ -1470,19 +1477,21 @@ st_srid
     +------------+
 
 .. note::
-    ST_SRID can only operate on geometries encoded in GeoJSON or the Mosaic internal format.
+    :ref:`st_srid` can only operate on geometries encoded in GeoJSON.
 
 
 st_transform
 ************
 
-.. function:: st_transform(geom, srid)
+.. function:: st_transform(col, srid)
 
-    Transforms the horizontal (XY) coordinates of `geom` from the current reference system to that described by `srid`.
+    Transforms the horizontal (XY) coordinates of :code:`geom` from the current reference system to that described by :code:`srid`.
 
-    :param geom: Geometry
-    :type geom: Column
-    :param srid: Target spatial reference system for `geom`, expressed as an integer, e.g. `3857` for EPSG:3857 / Pseudo-Mercator
+
+
+    :param col: Geometry
+    :type col: Column
+    :param srid: Target spatial reference system for :code:`geom`, expressed as an integer, e.g. :code:`3857` for EPSG:3857 / Pseudo-Mercator
     :type srid: Column (IntegerType)
     :rtype: Column
 
@@ -1493,7 +1502,7 @@ st_transform
 
     df = (
       spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
-      .withColumn('geom', st_setsrid(st_geomfromwkt('wkt'), lit(4326)))
+      .withColumn('geom', st_setsrid(st_asgeojson('wkt'), lit(4326)))
     )
     df.select(st_astext(st_transform('geom', lit(3857)))).show(1, False)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1505,7 +1514,7 @@ st_transform
    .. code-tab:: scala
 
     val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
-      .withColumn("geom", st_setsrid(st_geomfromwkt(col("wkt")), lit(4326)))
+      .withColumn("geom", st_setsrid(st_asgeojson(col("wkt")), lit(4326)))
     df.select(st_astext(st_transform(col("geom"), lit(3857)))).show(1, false)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |
@@ -1515,7 +1524,7 @@ st_transform
 
    .. code-tab:: sql
 
-    select st_astext(st_transform(st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326), 3857))
+    select st_astext(st_transform(st_setsrid(st_asgeojson("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326) as geom, 3857))
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1525,7 +1534,7 @@ st_transform
    .. code-tab:: r R
 
     df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
-    df <- withColumn(df, 'geom', st_setsrid(st_geomfromwkt(column('wkt')), lit(4326L)))
+    df <- withColumn(df, 'geom', st_setsrid(st_asgeojson(column('wkt')), lit(4326L)))
     >>>
     showDF(select(df, st_astext(st_transform(column('geom'), lit(3857L)))), truncate=F)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -1535,19 +1544,21 @@ st_transform
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. note::
-    If `geom` does not have an associated SRID, use ST_SetSRID to set this before calling ST_Transform.
-
+    If :code:`geom` does not have an associated SRID, use :ref:`st_setsrid` to set this before calling :ref:`st_transform`.
+    **Changed in 0.4 series** :ref:`st_srid`, :ref:`st_setsrid`, and :ref:`st_transform` only operate on
+    GeoJSON (columnar) data, so be sure to call :ref:`st_asgeojson` to convert from WKT and WKB. You can convert
+    back after the transform, e.g. using :ref:`st_astext` or :ref:`st_asbinary`.
 
 
 st_translate
 ************
 
-.. function:: st_translate(geom, xd, yd)
+.. function:: st_translate(col, xd, yd)
 
-    Translates `geom` to a new location using the distance parameters `xd` and `yd`.
+    Translates :code:`geom` to a new location using the distance parameters :code:`xd` and :code:`yd`.
 
-    :param geom: Geometry
-    :type geom: Column
+    :param col: Geometry
+    :type col: Column
     :param xd: Offset in the x-direction
     :type xd: Column (DoubleType)
     :param yd: Offset in the y-direction
@@ -1602,6 +1613,7 @@ st_union
 .. function:: st_union(left_geom, right_geom)
 
     Returns the point set union of the input geometries.
+    Also, see :ref:`st_union_agg` function.
 
     :param left_geom: Geometry
     :type left_geom: Column
@@ -1709,7 +1721,7 @@ st_x
 
 .. function:: st_x(col)
 
-    Returns the x coordinate of the input geometry.
+    Returns the x coordinate of the centroid point of the input geometry.
 
     :param col: Geometry
     :type col: Column
@@ -1868,7 +1880,7 @@ st_y
 ****
 .. function:: st_y(col)
 
-    Returns the y coordinate of the input geometry.
+    Returns the y coordinate of the centroid point of the input geometry.
 
     :param col: Geometry
     :type col: Column
@@ -2022,6 +2034,59 @@ st_ymin
     +-----------------+
     |             10.0|
     +-----------------+
+
+
+st_z
+****
+.. function:: st_z(col)
+
+    Returns the z coordinate of an arbitrary point of the input geometry `geom`.
+
+    :param col: Point Geometry
+    :type col: Column
+    :rtype: Column: DoubleType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df = spark.createDataFrame([{'wkt': 'POINT (30 10 20)'}])
+     df.select(st_z('wkt')).show()
+     +-----------------+
+     |st_z(wkt)        |
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: scala
+
+     val df = List(("POINT (30 10 20)")).toDF("wkt")
+     df.select(st_z(col("wkt"))).show()
+     +-----------------+
+     |st_z(wkt)        |
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: sql
+
+     SELECT st_z("POINT (30 10 20)")
+     +-----------------+
+     |st_z(wkt)        |
+     +-----------------+
+     |             20.0|
+     +-----------------+
+
+    .. code-tab:: r R
+
+     df <- createDataFrame(data.frame(wkt = "POINT (30 10 20)"))
+     showDF(select(df, st_z(column("wkt"))), truncate=F)
+     +-----------------+
+     |st_z(wkt)        |
+     +-----------------+
+     |             20.0|
+     +-----------------+
 
 
 st_zmax

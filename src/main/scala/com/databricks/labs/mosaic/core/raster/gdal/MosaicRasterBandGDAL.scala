@@ -256,6 +256,15 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       */
     def isNoDataMask: Boolean = band.GetMaskFlags() == gdalconstConstants.GMF_NODATA
 
+    /**
+      * @return
+      *   Returns true if the band is empty.
+      */
+    def isEmpty: Boolean = {
+        val stats = band.AsMDArray().GetStatistics()
+        stats.getValid_count == 0
+    }
+
     def convolve(kernel: Array[Array[Double]]): Unit = {
         val kernelWidth = kernel.head.length
         val kernelHeight = kernel.length
