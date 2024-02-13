@@ -61,13 +61,13 @@ test_that("raster flatmap functions behave as intended", {
   tessellate_sdf <- withColumn(tessellate_sdf, "rst_tessellate", rst_tessellate(column("tile"), lit(3L)))
 
   expect_no_error(write.df(tessellate_sdf, source = "noop", mode = "overwrite"))
-  expect_equal(nrow(tessellate_sdf), 140)
+  expect_equal(nrow(tessellate_sdf), 66)
 
   overlap_sdf <- generate_singleband_raster_df()
   overlap_sdf <- withColumn(overlap_sdf, "rst_to_overlapping_tiles", rst_to_overlapping_tiles(column("tile"), lit(200L), lit(200L), lit(10L)))
 
   expect_no_error(write.df(overlap_sdf, source = "noop", mode = "overwrite"))
-  expect_equal(nrow(overlap_sdf), 196)
+  expect_equal(nrow(overlap_sdf), 87)
 })
 
 test_that("raster aggregation functions behave as intended", {

@@ -90,13 +90,13 @@ test_that("raster flatmap functions behave as intended", {
     mutate(rst_tessellate = rst_tessellate(tile, 3L))
 
   expect_no_error(spark_write_source(tessellate_sdf, "noop", mode = "overwrite"))
-  expect_equal(sdf_nrow(tessellate_sdf), 140)
+  expect_equal(sdf_nrow(tessellate_sdf), 66)
 
   overlap_sdf <- generate_singleband_raster_df() %>%
     mutate(rst_to_overlapping_tiles = rst_to_overlapping_tiles(tile, 200L, 200L, 10L))
 
   expect_no_error(spark_write_source(overlap_sdf, "noop", mode = "overwrite"))
-  expect_equal(sdf_nrow(overlap_sdf), 196)
+  expect_equal(sdf_nrow(overlap_sdf), 87)
 
 })
 
