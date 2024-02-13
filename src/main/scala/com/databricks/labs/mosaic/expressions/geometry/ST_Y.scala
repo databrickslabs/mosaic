@@ -44,7 +44,7 @@ object ST_Y extends WithExpressionInfo {
     override def name: String = "st_y"
 
     override def usage: String =
-        "_FUNC_(expr1) - Returns y coordinate of a point or y coordinate of the centroid if the geometry isnt a point."
+        "_FUNC_(expr1) - Returns y coordinate of a point or y coordinate of the centroid if the geometry isn't a point."
 
     override def example: String =
         """

@@ -1,9 +1,7 @@
-source("data.R")
-
 test_that("scalar vector functions behave as intended", {
-  sdf <- SparkR::createDataFrame(
+  sdf <- createDataFrame(
     data.frame(
-      wkt = "POLYGON ((0 0, 0 2, 1 2, 1 0, 0 0))",
+      wkt = "POLYGON ((2 1, 1 2, 2 3, 2 1))",
       point_wkt = "POINT (1 1)"
     )
   )
@@ -52,14 +50,16 @@ test_that("scalar vector functions behave as intended", {
   sdf <- withColumn(sdf, "mosaic_explode", mosaic_explode(column("wkt"), lit(1L)))
   sdf <- withColumn(sdf, "mosaicfill", mosaicfill(column("wkt"), lit(1L)))
 
-  expect_no_error(SparkR::write.df(sdf, source = "noop", mode = "overwrite"))
+  expect_no_error(write.df(sdf, source = "noop", mode = "overwrite"))
   expect_equal(nrow(sdf), 1)
 
 })
 
 test_that("aggregate vector functions behave as intended", {
 
-  sdf <- SparkR::sql("SELECT id as location_id FROM range(1)")
+  sdf <- sql("SELECT id as location_id FROM range(1)")
+
+  inputGJ <- read_file("data/boroughs.geojson")
   sdf <- withColumn(sdf, "geometry", st_geomfromgeojson(lit(inputGJ)))
   expect_equal(nrow(sdf), 1)
 

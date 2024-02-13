@@ -11,6 +11,7 @@ import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, MosaicChip
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 
 import scala.annotation.tailrec
+import scala.util.{Failure, Success, Try}
 
 /**
   * Single abstracted logic for mosaic fill via [[IndexSystem]]. [[IndexSystem]]
@@ -66,22 +67,33 @@ object Mosaic {
     ): Seq[MosaicChip] = {
 
         val radius = indexSystem.getBufferRadius(geometry, resolution, geometryAPI)
-
         // do not modify the radius
         val carvedGeometry = geometry.buffer(-radius)
+
+
         // add 1% to the radius to ensure union of carved and border geometries does not have holes inside the original geometry areas
         val borderGeometry =
             if (carvedGeometry.isEmpty) {
-                geometry.buffer(radius * 1.01).simplify(0.01 * radius)
+                geometry
+                    .buffer(radius * 1.01)
+                    .simplify(0.01 * radius)
             } else {
-                geometry.boundary.buffer(radius * 1.01).simplify(0.01 * radius)
+                geometry.boundary
+                    .buffer(radius * 1.01)
+                    .simplify(0.01 * radius)
             }
 
-        val coreIndices = indexSystem.polyfill(carvedGeometry, resolution, Some(geometryAPI))
-        val borderIndices = indexSystem.polyfill(borderGeometry, resolution, Some(geometryAPI)).diff(coreIndices)
+        // check that the resulting geometry is within the bounds of
+        // the coordinate system (otherwise behaviour will be unpredictable)
+        val originalGeometryConstrained = indexSystem.alignToGrid(geometry)
+        val carvedGeometryConstrained = indexSystem.alignToGrid(carvedGeometry)
+        val borderGeometryConstrained = indexSystem.alignToGrid(borderGeometry)
+
+        val coreIndices = indexSystem.polyfill(carvedGeometryConstrained, resolution, geometryAPI)
+        val borderIndices = indexSystem.polyfill(borderGeometryConstrained, resolution, geometryAPI).diff(coreIndices)
 
         val coreChips = indexSystem.getCoreChips(coreIndices, keepCoreGeom, geometryAPI)
-        val borderChips = indexSystem.getBorderChips(geometry, borderIndices, keepCoreGeom, geometryAPI)
+        val borderChips = indexSystem.getBorderChips(originalGeometryConstrained, borderIndices, keepCoreGeom, geometryAPI)
 
         coreChips ++ borderChips
     }

@@ -1,6 +1,5 @@
 import re
 
-import h3
 import pandas as pd
 from IPython.core.magic import Magics, cell_magic, magics_class
 from keplergl import KeplerGl
@@ -24,7 +23,6 @@ from mosaic.utils.kepler_config import mosaic_kepler_config
 
 @magics_class
 class MosaicKepler(Magics):
-
     """
     A magic command for visualizing data in KeplerGl.
     """

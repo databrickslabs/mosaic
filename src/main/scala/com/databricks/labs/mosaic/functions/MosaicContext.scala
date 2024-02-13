@@ -181,6 +181,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[ST_Within](expressionConfig)
         mosaicRegistry.registerExpression[ST_X](expressionConfig)
         mosaicRegistry.registerExpression[ST_Y](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Z](expressionConfig)
         mosaicRegistry.registerExpression[ST_Haversine](expressionConfig)
 
         // noinspection ScalaDeprecation
@@ -286,6 +287,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_RasterToWorldCoordX](expressionConfig)
         mosaicRegistry.registerExpression[RST_RasterToWorldCoordY](expressionConfig)
         mosaicRegistry.registerExpression[RST_ReTile](expressionConfig)
+        mosaicRegistry.registerExpression[RST_SeparateBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_Rotation](expressionConfig)
         mosaicRegistry.registerExpression[RST_ScaleX](expressionConfig)
         mosaicRegistry.registerExpression[RST_ScaleY](expressionConfig)
@@ -293,6 +295,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_SkewX](expressionConfig)
         mosaicRegistry.registerExpression[RST_SkewY](expressionConfig)
         mosaicRegistry.registerExpression[RST_SRID](expressionConfig)
+        mosaicRegistry.registerExpression[RST_SetSRID](expressionConfig)
         mosaicRegistry.registerExpression[RST_Subdatasets](expressionConfig)
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
@@ -604,6 +607,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_Translate(geom1.expr, xd.expr, yd.expr, expressionConfig))
         def st_x(geom: Column): Column = ColumnAdapter(ST_X(geom.expr, expressionConfig))
         def st_y(geom: Column): Column = ColumnAdapter(ST_Y(geom.expr, expressionConfig))
+        def st_z(geom: Column): Column = ColumnAdapter(ST_Z(geom.expr, expressionConfig))
         def st_xmax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "X", "MAX"))
         def st_xmin(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "X", "MIN"))
         def st_ymax(geom: Column): Column = ColumnAdapter(ST_MinMaxXYZ(geom.expr, expressionConfig, "Y", "MAX"))
@@ -704,6 +708,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_ReTile(raster.expr, tileWidth.expr, tileHeight.expr, expressionConfig))
         def rst_retile(raster: Column, tileWidth: Int, tileHeight: Int): Column =
             ColumnAdapter(RST_ReTile(raster.expr, lit(tileWidth).expr, lit(tileHeight).expr, expressionConfig))
+        def rst_separatebands(raster: Column): Column =
+            ColumnAdapter(RST_SeparateBands(raster.expr, expressionConfig))
         def rst_rotation(raster: Column): Column = ColumnAdapter(RST_Rotation(raster.expr, expressionConfig))
         def rst_scalex(raster: Column): Column = ColumnAdapter(RST_ScaleX(raster.expr, expressionConfig))
         def rst_scaley(raster: Column): Column = ColumnAdapter(RST_ScaleY(raster.expr, expressionConfig))
@@ -713,6 +719,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_skewx(raster: Column): Column = ColumnAdapter(RST_SkewX(raster.expr, expressionConfig))
         def rst_skewy(raster: Column): Column = ColumnAdapter(RST_SkewY(raster.expr, expressionConfig))
         def rst_srid(raster: Column): Column = ColumnAdapter(RST_SRID(raster.expr, expressionConfig))
+        def rst_setsrid(raster: Column, srid: Column): Column = ColumnAdapter(RST_SetSRID(raster.expr, srid.expr, expressionConfig))
         def rst_subdatasets(raster: Column): Column = ColumnAdapter(RST_Subdatasets(raster.expr, expressionConfig))
         def rst_summary(raster: Column): Column = ColumnAdapter(RST_Summary(raster.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Column): Column =

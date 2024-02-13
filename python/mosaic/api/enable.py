@@ -11,8 +11,11 @@ from mosaic.utils.notebook_utils import NotebookUtils
 
 
 def enable_mosaic(
-        spark: SparkSession, dbutils = None, log_info: bool = False,
-        jar_path: str = None, jar_autoattach: bool = True
+    spark: SparkSession,
+    dbutils=None,
+    log_info: bool = False,
+    jar_path: str = None,
+    jar_autoattach: bool = True,
 ) -> None:
     """
     Enable Mosaic functions.
@@ -30,20 +33,20 @@ def enable_mosaic(
             Logging cannot be adjusted with Unity Catalog Shared Access clusters;
             if you try to do so, will throw a Py4JSecurityException.
              - True will try to setLogLevel to 'info'
-             - False will not; Default is False 
+             - False will not; Default is False
     jar_path : str
             Convenience when you need to change the JAR path for Unity Catalog
             Volumes with Shared Access clusters
-              - Default is None; if provided, sets 
-                "spark.databricks.labs.mosaic.jar.path" 
+              - Default is None; if provided, sets
+                "spark.databricks.labs.mosaic.jar.path"
     jar_autoattach : bool
             Convenience when you need to turn off JAR auto-attach for Unity
-            Catalog Volumes with Shared Access clusters. 
+            Catalog Volumes with Shared Access clusters.
               - False will not registers the JAR; sets
                 "spark.databricks.labs.mosaic.jar.autoattach" to "false"
               - True will register the JAR; Default is True
 
-              
+
     Returns
     -------
 
@@ -62,7 +65,7 @@ def enable_mosaic(
        Explicitly specify the index system to use for optimized spatial joins. (Optional)
 
     """
-    # Set spark session, conditionally: 
+    # Set spark session, conditionally:
     # - set conf for jar autoattach
     # - set conf for jar path
     # - set log level to 'info'
@@ -73,9 +76,9 @@ def enable_mosaic(
         spark.conf.set("spark.databricks.labs.mosaic.jar.path", jar_path)
         print(f"...set 'spark.databricks.labs.mosaic.jar.path' to '{jar_path}'")
     if log_info:
-        spark.sparkContext.setLogLevel('info')
+        spark.sparkContext.setLogLevel("info")
     config.mosaic_spark = spark
-    _ = MosaicLibraryHandler(config.mosaic_spark, log_info = log_info)
+    _ = MosaicLibraryHandler(config.mosaic_spark, log_info=log_info)
     config.mosaic_context = MosaicContext(config.mosaic_spark)
 
     # Register SQL functions

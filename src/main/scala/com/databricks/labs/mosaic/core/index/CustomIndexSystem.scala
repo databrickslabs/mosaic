@@ -142,8 +142,8 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
       * @return
       *   A set of indices representing the input geometry.
       */
-    override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = {
-        require(geometryAPI.isDefined, "GeometryAPI cannot be None.")
+    override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Seq[Long] = {
+//        require(geometryAPI.isDefined, "GeometryAPI cannot be None.")
         if (geometry.isEmpty) {
             return Seq[Long]()
         }
@@ -170,7 +170,7 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
 
         val result = cellCenters
             // Select only cells which center falls within the geometry
-            .filter(cell => geometry.contains(geometryAPI.get.fromGeoCoord(Coordinates(cell._2, cell._1))))
+            .filter(cell => geometry.contains(geometryAPI.fromGeoCoord(Coordinates(cell._2, cell._1))))
 
             // Extract cellIDs only
             .map(cell => pointToIndex(cell._1, cell._2, resolution))
@@ -229,18 +229,6 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
         val p3 = geometryAPI.fromCoords(Seq(x + edgeSizeX, y + edgeSizeY))
         val p4 = geometryAPI.fromCoords(Seq(x, y + edgeSizeY))
         geometryAPI.geometry(Seq(p1, p2, p3, p4, p1), POLYGON)
-    }
-
-    /**
-      * Get the geometry corresponding to the index with the input id.
-      *
-      * @param index
-      *   Id of the index whose geometry should be returned.
-      * @return
-      *   An instance of [[MosaicGeometry]] corresponding to index.
-      */
-    override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = {
-        indexToGeometry(index.toLong, geometryAPI)
     }
 
     /**

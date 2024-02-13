@@ -11,7 +11,7 @@ class MosaicLibraryHandler:
     _jar_path = None
     _jar_filename = None
     _auto_attached_enabled = None
-   
+
     def __init__(self, spark, log_info: bool = True):
         self.spark = spark
         self.sc = spark.sparkContext
@@ -21,7 +21,7 @@ class MosaicLibraryHandler:
             LOGGER = log4jLogger.LogManager.getLogger(__class__.__name__)
 
         if self.auto_attach_enabled:
-            jar_path = self.mosaic_library_location 
+            jar_path = self.mosaic_library_location
             LOGGER and LOGGER.info(f"Looking for Mosaic JAR at {jar_path}.")
             if not os.path.exists(jar_path):
                 raise FileNotFoundError(
@@ -36,7 +36,7 @@ class MosaicLibraryHandler:
             try:
                 result = (
                     self.spark.conf.get("spark.databricks.labs.mosaic.jar.autoattach")
-                    == 'true'
+                    == "true"
                 )
             except Py4JJavaError as e:
                 result = True
@@ -99,7 +99,7 @@ class MosaicLibraryHandler:
             lib = JavaJarId(
                 JarURI,
                 ManagedLibraryId.defaultOrganization(),
-                NoVersionModule.simpleString()
+                NoVersionModule.simpleString(),
             )
 
         libSeq = converters.asScalaBufferConverter((lib,)).asScala().toSeq()

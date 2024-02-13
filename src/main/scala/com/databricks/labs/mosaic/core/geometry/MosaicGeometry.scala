@@ -41,6 +41,8 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def getCentroid: MosaicPoint
 
+    def getAnyPoint: MosaicPoint
+
     def getDimension: Int
 
     def isEmpty: Boolean
@@ -185,5 +187,7 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
             crsBounds.lowerLeft.getY <= point.getY && point.getY <= crsBounds.upperRight.getY
         )
     }
+
+    def getAPI: GeometryAPI
 
 }

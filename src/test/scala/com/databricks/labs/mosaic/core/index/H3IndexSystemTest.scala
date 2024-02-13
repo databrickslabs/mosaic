@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.index
 
+import com.databricks.labs.mosaic.core.Mosaic.mosaicFill
 import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometryJTS
 import com.databricks.labs.mosaic.core.index.H3IndexSystem.indexToGeometry
@@ -20,15 +21,25 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
         val indexRes = H3IndexSystem.pointToIndex(10, 10, 10)
         noException shouldBe thrownBy { H3IndexSystem.format(indexRes) }
         noException shouldBe thrownBy { H3IndexSystem.getResolutionStr(10) }
-        noException shouldBe thrownBy { H3IndexSystem.indexToGeometry(H3IndexSystem.format(indexRes), JTS) }
+        noException shouldBe thrownBy { H3IndexSystem.indexToGeometry(H3IndexSystem.parse(H3IndexSystem.format(indexRes)), JTS) }
         an[IllegalArgumentException] shouldBe thrownBy { H3IndexSystem.getResolution(true) }
         an[IllegalStateException] shouldBe thrownBy { H3IndexSystem.getResolution("-1") }
     }
 
     test("H3IndexSystem polyfill signatures") {
         val geomJTS = MosaicGeometryJTS.fromWKT("POLYGON((1 2, 2 2, 2 1, 1 1, 1 2))")
-        noException shouldBe thrownBy { H3IndexSystem.polyfill(geomJTS, 10) }
-        noException shouldBe thrownBy { H3IndexSystem.polyfill(geomJTS, 10, Some(JTS)) }
+        val wrappedGeomJTS = MosaicGeometryJTS.fromWKT("POLYGON((179 2, 181 2, 181 1, 179 1, 179 2))")
+        noException shouldBe thrownBy { H3IndexSystem.polyfill(geomJTS, 10, JTS) }
+        noException shouldBe thrownBy { H3IndexSystem.polyfill(wrappedGeomJTS, 10, JTS) }
+        val expected = MosaicGeometryJTS.fromWKT("MULTIPOLYGON(((179 2, 180 2, 180 1, 179 1, 179 2)), ((-179 2, -180 2, -180 1, -179 1, -179 2)))")
+        val actualIndexes = mosaicFill(wrappedGeomJTS, 6, keepCoreGeom = true, H3IndexSystem, JTS)
+        val actual = actualIndexes.map(_.geom)
+            .reduce(_ union _)
+        actual.getArea - expected.getArea shouldEqual 0.0 +- 0.0001
+        actual.minMaxCoord("x", "min") shouldEqual expected.minMaxCoord("x", "min")
+        actual.minMaxCoord("x", "max") shouldEqual expected.minMaxCoord("x", "max")
+        actual.minMaxCoord("y", "min") shouldEqual expected.minMaxCoord("y", "min")
+        actual.minMaxCoord("y", "max") shouldEqual expected.minMaxCoord("y", "max")
     }
 
     test("H3IndexSystem inherited methods") {
@@ -138,7 +149,7 @@ class H3IndexSystemTest extends AnyFunSuite with Tolerance {
                 geoms.foldLeft(0.0)((acc, geom) => acc + geom.getArea) shouldBe ((180.0 * 360.0) +- 0.0001)
             })
             testCellsStr.foreach(cells => {
-                val geoms = cells.map(indexToGeometry(_, api))
+                val geoms = cells.map(H3IndexSystem.parse).map(indexToGeometry(_, api))
                 geoms.foreach(geom => geom.isValid shouldBe true)
                 geoms.foldLeft(0.0)((acc, geom) => acc + geom.getArea) shouldBe ((180.0 * 360.0) +- 0.0001)
             })

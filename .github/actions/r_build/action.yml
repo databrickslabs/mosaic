@@ -7,6 +7,18 @@ runs:
       shell: bash
       run: |
         sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev
+    - name: Configure python interpreter
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+    - name: Install python dependencies
+      shell: bash
+      run: |
+        # - install pip libs
+        #   note: gdal requires the extra args
+        cd python
+        pip install build wheel pyspark==${{ matrix.spark }} numpy==${{ matrix.numpy }}
+        pip install --no-build-isolation --no-cache-dir --force-reinstall gdal==${{ matrix.gdal }}
     - name: Create download location for Spark
       shell: bash
       run: |
