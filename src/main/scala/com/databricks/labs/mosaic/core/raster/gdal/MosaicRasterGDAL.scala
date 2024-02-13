@@ -677,7 +677,7 @@ object MosaicRasterGDAL extends RasterReader {
                     // the way we zip using uuid is not compatible with GDAL
                     // we need to unzip and read the file if it was zipped by us
                     val parentDir = Paths.get(zippedPath).getParent
-                    val prompt = SysUtils.runScript(Array("/bin/sh", "-c", s"cd $parentDir && unzip -o $zippedPath -d /"))
+                    val prompt = SysUtils.runScript(Array("/bin/sh", "-c", s"cd $parentDir && unzip -o $zippedPath -d $parentDir"))
                     // zipped files will have the old uuid name of the raster
                     // we need to get the last extracted file name, but the last extracted file name is not the raster name
                     // we can't list folders due to concurrent writes

@@ -22,7 +22,7 @@ object FileUtils {
         bytes
     }
 
-    def createMosaicTempDir(prefix: String = ""): String = {
+    def createMosaicTempDir(prefix: String = "/tmp"): String = {
         val tempRoot = Paths.get(s"$prefix/mosaic_tmp/")
         if (!Files.exists(tempRoot)) {
             Files.createDirectories(tempRoot)
