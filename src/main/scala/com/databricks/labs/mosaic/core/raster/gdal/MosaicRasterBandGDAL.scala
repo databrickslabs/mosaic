@@ -236,9 +236,8 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       *   Returns true if the band is empty.
       */
     def isEmpty: Boolean = {
-        val minMaxVals = Array.fill[Double](2)(0)
-        band.ComputeRasterMinMax(minMaxVals, 0)
-        minMaxVals.head == minMaxVals.last && minMaxVals.head == noDataValue
+        val stats = band.AsMDArray().GetStatistics()
+        stats.getValid_count == 0
     }
 
 }

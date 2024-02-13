@@ -115,7 +115,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
 
         tessellate_result.write.format("noop").mode("overwrite").save()
-        self.assertEqual(tessellate_result.count(), 140)
+        self.assertEqual(tessellate_result.count(), 66)
 
         overlap_result = (
             self.generate_singleband_raster_df()
@@ -127,7 +127,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
 
         overlap_result.write.format("noop").mode("overwrite").save()
-        self.assertEqual(overlap_result.count(), 196)
+        self.assertEqual(overlap_result.count(), 87)
 
     def test_raster_aggregator_functions(self):
         collection = (
