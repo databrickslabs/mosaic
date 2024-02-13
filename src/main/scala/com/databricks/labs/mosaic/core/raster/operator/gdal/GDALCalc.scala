@@ -8,7 +8,7 @@ import com.databricks.labs.mosaic.utils.SysUtils
 object GDALCalc {
 
     val gdal_calc: String = {
-        val calcPath = SysUtils.runCommand("find / -iname gdal_calc.py")._1.split("\n").headOption.getOrElse("")
+        val calcPath = SysUtils.runCommand("which gdal_calc.py")._1.split("\n").headOption.getOrElse("")
         if (calcPath.isEmpty) {
             throw new RuntimeException("Could not find gdal_calc.py.")
         }

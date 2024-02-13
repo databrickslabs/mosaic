@@ -214,7 +214,7 @@ main <- function(scala_file_path){
   closeAllConnections()
   
   # supplementary files
-  sparkr_supplementary_files <- c("sparkR-mosaic/enableMosaic.R")
+  sparkr_supplementary_files <- c("sparkR-mosaic/enableMosaic.R", "sparkR-mosaic/enableGDAL.R")
   copy_supplementary_file(sparkr_supplementary_files, "sparkR-mosaic/sparkrMosaic/R")
   
   ##########################
@@ -226,8 +226,8 @@ main <- function(scala_file_path){
   closeAllConnections()
 
   # supplementary files
-  sparkr_supplementary_files <- c("sparklyr-mosaic/enableMosaic.R", "sparklyr-mosaic/sparkFunctions.R")
-  copy_supplementary_file(sparkr_supplementary_files, "sparklyr-mosaic/sparklyrMosaic/R/")
+  sparklyr_supplementary_files <- c("sparklyr-mosaic/enableMosaic.R", "sparklyr-mosaic/sparkFunctions.R", "sparklyr-mosaic/enableGDAL.R")
+  copy_supplementary_file(sparklyr_supplementary_files, "sparklyr-mosaic/sparklyrMosaic/R/")
 }
 
 
