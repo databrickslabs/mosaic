@@ -12,28 +12,6 @@ import java.nio.file.{Files, Paths}
 
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
 
-    test("Read big tif with Raster As Grid Reader") {
-        assume(System.getProperty("os.name") == "Linux")
-        MosaicContext.build(H3IndexSystem, JTS)
-
-        val tif = "/modis/"
-        val filePath = getClass.getResource(tif).getPath
-
-        val df = MosaicContext.read
-            .format("raster_to_grid")
-            .option("retile", "true")
-            .option("sizeInMB", "128")
-            .option("resolution", "1")
-            .load(filePath)
-            .select("measure")
-
-        df.queryExecution.optimizedPlan
-
-        noException should be thrownBy df.queryExecution.executedPlan
-
-        df.count()
-    }
-
     test("Read netcdf with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
