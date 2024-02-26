@@ -100,7 +100,7 @@
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code>: Can be a Spark dataset or a string representing a table/view name</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">column_name</span></code>: The column that needs to be plotted, can be either a geometry column (<code class="docutils literal notranslate"><span class="pre">WKT</span></code>, <code class="docutils literal notranslate"><span class="pre">WKB</span></code> or Mosaic internal format) or a column containing a spatial grid index ID</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_type</span></code>: The type of data to be plotted. Valid values are <code class="docutils literal notranslate"><span class="pre">geometry</span></code> (if SRID=4326), <code class="docutils literal notranslate"><span class="pre">geometry(&lt;SRID&gt;)</span></code> (where <code class="docutils literal notranslate"><span class="pre">&lt;SRID&gt;</span></code> is the SRID used by the geometry column) and <code class="docutils literal notranslate"><span class="pre">h3</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">feature_type</span></code>: The type of data to be plotted. Valid values are <code class="docutils literal notranslate"><span class="pre">geometry</span></code> (if SRID=4326), <code class="docutils literal notranslate"><span class="pre">geometry(&lt;SRID&gt;)</span></code> (where <code class="docutils literal notranslate"><span class="pre">&lt;SRID&gt;</span></code> is the SRID used by the geometry column), <code class="docutils literal notranslate"><span class="pre">geometry(bng)</span></code>, <code class="docutils literal notranslate"><span class="pre">geometry(osgb36)</span></code>, <code class="docutils literal notranslate"><span class="pre">bng</span></code> and <code class="docutils literal notranslate"><span class="pre">h3</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">limit</span></code>: The maximum number of objects to plot. The default limit is <code class="docutils literal notranslate"><span class="pre">1000</span></code></p></li>
 </ol>
 <p>Usage:</p>
@@ -115,7 +115,7 @@ dataset column_name feature_type [limit]
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>%pip install databricks-mosaic --quiet
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">pip</span> <span class="n">install</span> <span class="n">databricks</span><span class="o">-</span><span class="n">mosaic</span> <span class="o">--</span><span class="n">quiet</span>
 </pre></div>
 </div>
 </div>
@@ -145,9 +145,9 @@ Python interpreter will be restarted.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>from pyspark.sql.functions import *
-import mosaic as mos
-mos.enable_mosaic(spark, dbutils)
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">mosaic</span> <span class="k">as</span> <span class="nn">mos</span>
+<span class="n">mos</span><span class="o">.</span><span class="n">enable_mosaic</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">dbutils</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -177,11 +177,11 @@ mos.enable_mosaic(spark, dbutils)
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>import requests
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">requests</span>
 
-req = requests.get(&#39;https://data.cityofnewyork.us/api/geospatial/d3c5-ddgc?method=export&amp;format=GeoJSON&#39;)
-with open(&#39;/dbfs/tmp/nyc_taxi_zones.geojson&#39;, &#39;wb&#39;) as f:
-  f.write(req.content)
+<span class="n">req</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://data.cityofnewyork.us/api/geospatial/d3c5-ddgc?method=export&amp;format=GeoJSON&#39;</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/dbfs/tmp/nyc_taxi_zones.geojson&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+  <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -209,30 +209,30 @@ with open(&#39;/dbfs/tmp/nyc_taxi_zones.geojson&#39;, &#39;wb&#39;) as f:
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>neighbourhoods = (
-  spark.read
-    .option(&quot;multiline&quot;, &quot;true&quot;)
-    .format(&quot;json&quot;)
-    .load(&quot;dbfs:/tmp/nyc_taxi_zones.geojson&quot;)
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">neighbourhoods</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="n">spark</span><span class="o">.</span><span class="n">read</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;multiline&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/tmp/nyc_taxi_zones.geojson&quot;</span><span class="p">)</span>
 
-    # Extract geoJSON values for shapes
-    .select(&quot;type&quot;, explode(col(&quot;features&quot;)).alias(&quot;feature&quot;))
-    .select(&quot;type&quot;, col(&quot;feature.properties&quot;).alias(&quot;properties&quot;), to_json(col(&quot;feature.geometry&quot;)).alias(&quot;geom_json&quot;))
+    <span class="c1"># Extract geoJSON values for shapes</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="n">explode</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;features&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;feature&quot;</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="n">col</span><span class="p">(</span><span class="s2">&quot;feature.properties&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">),</span> <span class="n">to_json</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;feature.geometry&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;geom_json&quot;</span><span class="p">))</span>
 
-    # Mosaic internal representation
-    .withColumn(&quot;geom_internal&quot;, mos.st_geomfromgeojson(&quot;geom_json&quot;))
+    <span class="c1"># Mosaic internal representation</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;geom_internal&quot;</span><span class="p">,</span> <span class="n">mos</span><span class="o">.</span><span class="n">st_geomfromgeojson</span><span class="p">(</span><span class="s2">&quot;geom_json&quot;</span><span class="p">))</span>
 
-    # WKT representation
-    .withColumn(&quot;geom_wkt&quot;, mos.st_aswkt(col(&quot;geom_internal&quot;)))
+    <span class="c1"># WKT representation</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;geom_wkt&quot;</span><span class="p">,</span> <span class="n">mos</span><span class="o">.</span><span class="n">st_aswkt</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;geom_internal&quot;</span><span class="p">)))</span>
 
-    # WKB representation
-    .withColumn(&quot;geom_wkb&quot;, mos.st_aswkb(col(&quot;geom_internal&quot;)))
+    <span class="c1"># WKB representation</span>
+    <span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;geom_wkb&quot;</span><span class="p">,</span> <span class="n">mos</span><span class="o">.</span><span class="n">st_aswkb</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;geom_internal&quot;</span><span class="p">)))</span>
 
-   # Limit to only 1 shape
-   .limit(1)
-)
+   <span class="c1"># Limit to only 1 shape</span>
+   <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
 
-neighbourhoods.show()
+<span class="n">neighbourhoods</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -271,8 +271,8 @@ FeatureCollection|{EWR, 1, 1, 0.000...|{&#34;coordinates&#34;:[[...|{6, 4326, [[
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>%%mosaic_kepler
-neighbourhoods &quot;geom_internal&quot; &quot;geometry&quot;
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="n">mosaic_kepler</span>
+<span class="n">neighbourhoods</span> <span class="s2">&quot;geom_internal&quot;</span> <span class="s2">&quot;geometry&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -331,8 +331,8 @@ neighbourhoods &quot;geom_internal&quot; &quot;geometry&quot;
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>%%mosaic_kepler
-neighbourhoods &quot;geom_wkt&quot; &quot;geometry&quot;
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="n">mosaic_kepler</span>
+<span class="n">neighbourhoods</span> <span class="s2">&quot;geom_wkt&quot;</span> <span class="s2">&quot;geometry&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -391,8 +391,8 @@ neighbourhoods &quot;geom_wkt&quot; &quot;geometry&quot;
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>%%mosaic_kepler
-neighbourhoods &quot;geom_wkb&quot; &quot;geometry&quot;
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="n">mosaic_kepler</span>
+<span class="n">neighbourhoods</span> <span class="s2">&quot;geom_wkb&quot;</span> <span class="s2">&quot;geometry&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -452,7 +452,7 @@ neighbourhoods &quot;geom_wkb&quot; &quot;geometry&quot;
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>neighbourhoods.createOrReplaceTempView(&quot;temp_view_neighbourhoods&quot;)
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">neighbourhoods</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="s2">&quot;temp_view_neighbourhoods&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -480,8 +480,8 @@ neighbourhoods &quot;geom_wkb&quot; &quot;geometry&quot;
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>%%mosaic_kepler
-&quot;temp_view_neighbourhoods&quot; &quot;geom_wkt&quot; &quot;geometry&quot;
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="n">mosaic_kepler</span>
+<span class="s2">&quot;temp_view_neighbourhoods&quot;</span> <span class="s2">&quot;geom_wkt&quot;</span> <span class="s2">&quot;geometry&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -540,13 +540,13 @@ neighbourhoods &quot;geom_wkb&quot; &quot;geometry&quot;
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>neighbourhood_chips = (neighbourhoods
-                       .limit(1)
-                       .select(mos.grid_tessellateexplode(&quot;geom_internal&quot;, lit(9)))
-                       .select(&quot;index.*&quot;)
-                    )
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">neighbourhood_chips</span> <span class="o">=</span> <span class="p">(</span><span class="n">neighbourhoods</span>
+                       <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                       <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">mos</span><span class="o">.</span><span class="n">grid_tessellateexplode</span><span class="p">(</span><span class="s2">&quot;geom_internal&quot;</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">9</span><span class="p">)))</span>
+                       <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;index.*&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
 
-neighbourhood_chips.show()
+<span class="n">neighbourhood_chips</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -600,8 +600,8 @@ only showing top 20 rows
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>%%mosaic_kepler
-neighbourhood_chips &quot;index_id&quot; &quot;h3&quot;
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="n">mosaic_kepler</span>
+<span class="n">neighbourhood_chips</span> <span class="s2">&quot;index_id&quot;</span> <span class="s2">&quot;h3&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -660,8 +660,8 @@ neighbourhood_chips &quot;index_id&quot; &quot;h3&quot;
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre><span></span>%%mosaic_kepler
-neighbourhood_chips &quot;wkb&quot; &quot;geometry&quot;
+<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="n">mosaic_kepler</span>
+<span class="n">neighbourhood_chips</span> <span class="s2">&quot;wkb&quot;</span> <span class="s2">&quot;geometry&quot;</span>
 </pre></div>
 </div>
 </div>
