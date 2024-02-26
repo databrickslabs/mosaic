@@ -22,6 +22,7 @@ package object mosaic {
     val MOSAIC_GDAL_NATIVE = "spark.databricks.labs.mosaic.gdal.native"
     val MOSAIC_RASTER_CHECKPOINT = "spark.databricks.labs.mosaic.raster.checkpoint"
     val MOSAIC_RASTER_CHECKPOINT_DEFAULT = "/dbfs/tmp/mosaic/raster/checkpoint"
+    val MOSAIC_RASTER_TMP_PREFIX = "spark.databricks.labs.mosaic.raster.tmp.prefix"
     val MOSAIC_RASTER_BLOCKSIZE = "spark.databricks.labs.mosaic.raster.blocksize"
     val MOSAIC_RASTER_BLOCKSIZE_DEFAULT = "128"
 

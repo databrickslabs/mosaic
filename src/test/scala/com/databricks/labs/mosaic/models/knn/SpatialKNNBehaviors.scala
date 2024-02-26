@@ -29,7 +29,7 @@ trait SpatialKNNBehaviors { this: AnyFlatSpec =>
 
         val boroughs: DataFrame = getBoroughs(mc)
 
-        val tempLocation = MosaicContext.tmpDir
+        val tempLocation = MosaicContext.tmpDir(null)
         spark.sparkContext.setCheckpointDir(tempLocation)
         spark.sparkContext.setLogLevel("ERROR")
 
@@ -94,7 +94,7 @@ trait SpatialKNNBehaviors { this: AnyFlatSpec =>
 
         val boroughs: DataFrame = getBoroughs(mc)
 
-        val tempLocation = MosaicContext.tmpDir
+        val tempLocation = MosaicContext.tmpDir(null)
         spark.sparkContext.setCheckpointDir(tempLocation)
         spark.sparkContext.setLogLevel("ERROR")
 

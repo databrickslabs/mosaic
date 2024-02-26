@@ -33,6 +33,7 @@ class SparkTestCase(unittest.TestCase):
             .getOrCreate()
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
+        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.tmp.prefix", "/")
         cls.spark.sparkContext.setLogLevel("FATAL")
 
     @classmethod

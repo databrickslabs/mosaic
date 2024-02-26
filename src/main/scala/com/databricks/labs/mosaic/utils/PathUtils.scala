@@ -49,7 +49,7 @@ object PathUtils {
     }
 
     def createTmpFilePath(extension: String): String = {
-        val tmpDir = MosaicContext.tmpDir
+        val tmpDir = MosaicContext.tmpDir(null)
         val uuid = java.util.UUID.randomUUID.toString
         val outPath = s"$tmpDir/raster_${uuid.replace("-", "_")}.$extension"
         Files.createDirectories(Paths.get(outPath).getParent)
@@ -80,9 +80,9 @@ object PathUtils {
         val fullFileName = copyFromPath.split("/").last
         val stemRegex = getStemRegex(inPath)
 
-        wildcardCopy(inPathDir, MosaicContext.tmpDir, stemRegex.toString)
+        wildcardCopy(inPathDir, MosaicContext.tmpDir(null), stemRegex.toString)
 
-        s"${MosaicContext.tmpDir}/$fullFileName"
+        s"${MosaicContext.tmpDir(null)}/$fullFileName"
     }
 
     def wildcardCopy(inDirPath: String, outDirPath: String, pattern: String): Unit = {

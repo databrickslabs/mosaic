@@ -1025,10 +1025,20 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
 object MosaicContext extends Logging {
 
-    val tmpDir: String = FileUtils.createMosaicTempDir()
+    var _tmpDir: String = ""
     val mosaicVersion: String = "0.4.0"
 
     private var instance: Option[MosaicContext] = None
+    
+    def tmpDir(mosaicConfig: MosaicExpressionConfig): String = {
+        if (_tmpDir == "" || mosaicConfig == null) {
+            val prefix = mosaicConfig.getTmpPrefix
+            _tmpDir = FileUtils.createMosaicTempDir(prefix)
+            _tmpDir
+        } else {
+            _tmpDir
+        }
+    }
 
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {
         instance = Some(new MosaicContext(indexSystem, geometryAPI))
