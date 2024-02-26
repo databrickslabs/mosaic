@@ -36,8 +36,7 @@ object RasterTileType {
           Array(
             StructField("index_id", idType),
             StructField("raster", rasterType),
-            StructField("parentPath", StringType),
-            StructField("driver", StringType)
+            StructField("metadata", MapType(StringType, StringType))
           )
         )
     }

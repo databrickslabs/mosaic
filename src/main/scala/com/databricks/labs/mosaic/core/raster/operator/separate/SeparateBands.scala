@@ -5,7 +5,10 @@ import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.utils.PathUtils
 
-/** ReTile is a helper object for splitting multi-band rasters into single-band-per-row. */
+/**
+  * ReTile is a helper object for splitting multi-band rasters into
+  * single-band-per-row.
+  */
 object SeparateBands {
 
     /**
@@ -24,11 +27,13 @@ object SeparateBands {
             val fileExtension = raster.getRasterFileExtension
             val rasterPath = PathUtils.createTmpFilePath(fileExtension)
             val shortDriver = raster.getDriversShortName
+            val outOptions = raster.getWriteOptions
 
             val result = GDALTranslate.executeTranslate(
               rasterPath,
               raster,
-              command = s"gdal_translate -of $shortDriver -b ${i + 1} -co COMPRESS=DEFLATE"
+              command = s"gdal_translate -of $shortDriver -b ${i + 1}",
+              writeOptions = outOptions
             )
 
             val isEmpty = result.isEmpty
@@ -38,13 +43,13 @@ object SeparateBands {
 
             if (isEmpty) dispose(result)
 
-            (isEmpty, result, i)
+            (isEmpty, result.copy(createInfo = result.createInfo ++ Map("bandIndex" -> (i + 1).toString)), i)
 
         }
 
         val (_, valid) = tiles.partition(_._1)
 
-        valid.map(t => new MosaicRasterTile(null, t._2, raster.getParentPath, raster.getDriversShortName))
+        valid.map(t => new MosaicRasterTile(null, t._2))
 
     }
 

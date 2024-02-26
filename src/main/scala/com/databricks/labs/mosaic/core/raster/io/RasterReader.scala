@@ -20,14 +20,16 @@ trait RasterReader extends Logging {
       * @example
       *   Raster: path = "/path/to/file.tif" Subdataset: path =
       *   "FORMAT:/path/to/file.tif:subdataset"
-      * @param path
-      *   The path to the raster file.
-      * @param parentPath
-      *   The path of the parent raster file.
+      * @param createInfo
+      *   The create info for the raster. This should contain the following
+      *   keys:
+      *   - path: The path to the raster file.
+      *   - parentPath: The path of the parent raster file.
+      *   - driver: Optional: The driver short name of the raster file
       * @return
       *   A MosaicRaster object.
       */
-    def readRaster(path: String, parentPath: String): MosaicRasterGDAL
+    def readRaster(createInfo: Map[String, String]): MosaicRasterGDAL
 
     /**
       * Reads a raster from an in memory buffer. Use the buffer bytes to produce
@@ -35,30 +37,32 @@ trait RasterReader extends Logging {
       *
       * @param contentBytes
       *   The file bytes.
-      * @param parentPath
-      *   The path of the parent raster file.
-      * @param driverShortName
-      *   The driver short name of the raster file.
+      * @param createInfo
+      *   The create info for the raster. This should contain the following
+      *   keys:
+      *   - parentPath: The path of the parent raster file.
+      *   - driver: The driver short name of the raster file
       * @return
       *   A MosaicRaster object.
       */
-    def readRaster(contentBytes: Array[Byte], parentPath: String, driverShortName: String): MosaicRasterGDAL
+    def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL
 
     /**
       * Reads a raster band from a file system path. Reads a subdataset band if
       * the path is to a subdataset.
+      *
       * @example
       *   Raster: path = "/path/to/file.tif" Subdataset: path =
       *   "FORMAT:/path/to/file.tif:subdataset"
-      * @param path
-      *   The path to the raster file.
-      * @param bandIndex
-      *   The band index to read.
-      * @param parentPath
-      *   The path of the parent raster file.
+      * @param createInfo
+      *   The create info for the raster. This should contain the following
+      *   keys:
+      *   - path: The path to the raster file.
+      *   - parentPath: The path of the parent raster file.
+      *   - driver: Optional: The driver short name of the raster file
       * @return
       *   A MosaicRaster object.
       */
-    def readBand(path: String, bandIndex: Int, parentPath: String): MosaicRasterBandGDAL
+    def readBand(bandIndex: Int, createInfo: Map[String, String]): MosaicRasterBandGDAL
 
 }

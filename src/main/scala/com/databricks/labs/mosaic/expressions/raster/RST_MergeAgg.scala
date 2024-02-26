@@ -80,11 +80,8 @@ case class RST_MergeAgg(
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
             var merged = MergeRasters.merge(tiles.map(_.getRaster)).flushCache()
-            // TODO: should parent path be an array?
-            val parentPath = tiles.head.getParentPath
-            val driver = tiles.head.getDriver
 
-            val result = MosaicRasterTile(idx, merged, parentPath, driver)
+            val result = MosaicRasterTile(idx, merged)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
                 .serialize(BinaryType)
 

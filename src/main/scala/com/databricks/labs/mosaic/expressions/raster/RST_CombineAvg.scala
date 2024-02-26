@@ -28,12 +28,7 @@ case class RST_CombineAvg(
     /** Combines the rasters using average of pixels. */
     override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-        MosaicRasterTile(
-          index,
-          CombineAVG.compute(tiles.map(_.getRaster)),
-          tiles.head.getParentPath,
-          tiles.head.getDriver
-        )
+        MosaicRasterTile(index, CombineAVG.compute(tiles.map(_.getRaster)))
     }
 
 }

@@ -79,11 +79,8 @@ case class RST_CombineAvgAgg(
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
             var combined = CombineAVG.compute(tiles.map(_.getRaster)).flushCache()
-            // TODO: should parent path be an array?
-            val parentPath = tiles.head.getParentPath
-            val driver = tiles.head.getDriver
 
-            val result = MosaicRasterTile(idx, combined, parentPath, driver)
+            val result = MosaicRasterTile(idx, combined)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
                 .serialize(tileType)
 

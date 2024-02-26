@@ -125,8 +125,9 @@ case class RST_MakeTiles(
 
         if (targetSize <= 0 && inputSize <= Integer.MAX_VALUE) {
             // - no split required
-            val raster = GDAL.readRaster(rawInput, PathUtils.NO_PATH_STRING, driver, inputExpr.dataType)
-            val tile = MosaicRasterTile(null, raster, PathUtils.NO_PATH_STRING, driver)
+            val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver)
+            val raster = GDAL.readRaster(rawInput, createInfo, inputExpr.dataType)
+            val tile = MosaicRasterTile(null, raster)
             val row = tile.formatCellId(indexSystem).serialize(tileType)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)

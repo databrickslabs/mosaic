@@ -47,6 +47,7 @@ object MosaicGDAL extends Logging {
     /** Configures the GDAL environment. */
     def configureGDAL(mosaicConfig: MosaicExpressionConfig): Unit = {
         val CPL_TMPDIR = MosaicContext.tmpDir
+        val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir
         gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
         gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
         gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)

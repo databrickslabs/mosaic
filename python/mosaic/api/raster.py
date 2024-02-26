@@ -55,6 +55,7 @@ __all__ = [
     "rst_subdivide",
     "rst_summary",
     "rst_tessellate",
+    "rst_transform",
     "rst_to_overlapping_tiles",
     "rst_tryopen",
     "rst_upperleftx",
@@ -994,6 +995,32 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
         "rst_tessellate",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(resolution),
+    )
+
+
+def rst_transform(raster_tile: ColumnOrName, srid: ColumnOrName) -> Column:
+    """
+    Transforms the raster to the given SRID.
+    The result is a Mosaic raster tile struct of the transformed raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    srid : Column (IntegerType)
+        EPSG authority code for the file's projection.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_transform",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(srid),
     )
 
 

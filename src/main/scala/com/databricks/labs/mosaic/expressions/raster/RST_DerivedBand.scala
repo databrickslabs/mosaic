@@ -37,9 +37,7 @@ case class RST_DerivedBand(
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
         MosaicRasterTile(
           index,
-          PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName),
-          tiles.head.getParentPath,
-          tiles.head.getDriver
+          PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
         )
     }
 

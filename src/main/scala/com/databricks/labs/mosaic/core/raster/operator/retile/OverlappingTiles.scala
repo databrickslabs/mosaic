@@ -69,7 +69,7 @@ object OverlappingTiles {
 
         val (_, valid) = tiles.flatten.partition(_._1)
 
-        valid.map(t => MosaicRasterTile(null, t._2, raster.getParentPath, raster.getDriversShortName))
+        valid.map(t => MosaicRasterTile(null, t._2))
 
     }
 

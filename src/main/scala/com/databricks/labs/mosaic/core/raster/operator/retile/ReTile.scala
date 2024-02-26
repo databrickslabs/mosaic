@@ -58,7 +58,7 @@ object ReTile {
 
         val (_, valid) = tiles.partition(_._1)
 
-        valid.map(t => MosaicRasterTile(null, t._2, raster.getParentPath, raster.getDriversShortName))
+        valid.map(t => MosaicRasterTile(null, t._2))
 
     }
 

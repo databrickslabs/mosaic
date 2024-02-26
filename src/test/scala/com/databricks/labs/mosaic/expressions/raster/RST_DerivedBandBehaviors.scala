@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.functions.{collect_set, lit}
+import org.apache.spark.sql.functions.{collect_list, lit}
 import org.scalatest.matchers.should.Matchers._
 
 trait RST_DerivedBandBehaviors extends QueryTest {
@@ -40,7 +40,7 @@ trait RST_DerivedBandBehaviors extends QueryTest {
             .select("path", "tiles")
             .groupBy("path")
             .agg(
-                rst_derivedband(collect_set($"tiles"), lit(pyFuncCode), lit(funcName)).as("tiles")
+                rst_derivedband(collect_list($"tiles"), lit(pyFuncCode), lit(funcName)).as("tiles")
             )
             .select("tiles")
 
@@ -52,7 +52,7 @@ trait RST_DerivedBandBehaviors extends QueryTest {
         noException should be thrownBy spark.sql(
             """
               |select rst_derivedband(
-              |   collect_set(tiles),
+              |   collect_list(tiles),
               |"
               |import numpy as np
               |def multiply(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize,raster_ysize, buf_radius, gt, **kwargs):

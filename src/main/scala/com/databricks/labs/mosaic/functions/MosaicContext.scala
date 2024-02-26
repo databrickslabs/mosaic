@@ -305,6 +305,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_Subdatasets](expressionConfig)
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Transform](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromContent](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromFile](expressionConfig)
         mosaicRegistry.registerExpression[RST_ToOverlappingTiles](expressionConfig)
@@ -749,6 +750,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_summary(raster: Column): Column = ColumnAdapter(RST_Summary(raster.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Column): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
+        def rst_transform(raster: Column, srid: Column): Column =
+            ColumnAdapter(RST_Transform(raster.expr, srid.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver: Column): Column =

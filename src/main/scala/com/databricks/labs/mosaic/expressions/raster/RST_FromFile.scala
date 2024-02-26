@@ -15,7 +15,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, Literal, NullIntolerant}
-import org.apache.spark.sql.types.{BinaryType, DataType, IntegerType, StringType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
@@ -66,8 +66,9 @@ case class RST_FromFile(
         val driver = MosaicRasterGDAL.identifyDriver(path)
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         if (targetSize <= 0 && Files.size(Paths.get(readPath)) <= Integer.MAX_VALUE) {
-            var raster = MosaicRasterGDAL.readRaster(readPath, path)
-            var tile = MosaicRasterTile(null, raster, path, raster.getDriversShortName)
+            val createInfo = Map("path" -> readPath, "parentPath" -> path)
+            var raster = MosaicRasterGDAL.readRaster(createInfo)
+            var tile = MosaicRasterTile(null, raster)
             val row = tile.formatCellId(indexSystem).serialize(tileType)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)

@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic.core.raster.operator.gdal
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRasterWriteOptions}
 import com.databricks.labs.mosaic.utils.SysUtils
+import org.gdal.gdal.gdal
 
 /** GDALCalc is a helper object for executing GDAL Calc commands. */
 object GDALCalc {
@@ -33,18 +34,26 @@ object GDALCalc {
         val effectiveCommand = OperatorOptions.appendOptions(gdalCalcCommand, MosaicRasterWriteOptions.GTiff)
         val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
         val commandRes = SysUtils.runCommand(s"python3 $toRun")
-        if (commandRes._1.startsWith("ERROR")) {
-            throw new RuntimeException(s"""
-                                          |GDAL Calc command failed:
-                                          |$toRun
-                                          |STDOUT:
-                                          |${commandRes._2}
-                                          |STDERR:
-                                          |${commandRes._3}
-                                          |""".stripMargin)
-        }
+        val errorMsg = gdal.GetLastErrorMsg
         val result = GDAL.raster(resultPath, resultPath)
-        result
+        val createInfo = Map(
+          "path" -> resultPath,
+          "parentPath" -> resultPath,
+          "driver" -> "GTiff",
+          "last_command" -> effectiveCommand,
+          "last_error" -> errorMsg,
+          "all_parents" -> resultPath,
+          "full_error" -> s"""
+                             |GDAL Calc command failed:
+                             |GDAL err:
+                             |$errorMsg
+                             |STDOUT:
+                             |${commandRes._2}
+                             |STDERR:
+                             |${commandRes._3}
+                             |""".stripMargin
+        )
+        result.copy(createInfo = createInfo)
     }
 
 }

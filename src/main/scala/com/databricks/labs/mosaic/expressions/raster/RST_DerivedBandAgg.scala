@@ -89,11 +89,8 @@ case class RST_DerivedBandAgg(
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
 
             var combined = PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
-            // TODO: should parent path be an array?
-            val parentPath = tiles.head.getParentPath
-            val driver = tiles.head.getDriver
 
-            val result = MosaicRasterTile(idx, combined, parentPath, driver)
+            val result = MosaicRasterTile(idx, combined)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
                 .serialize(BinaryType)
 

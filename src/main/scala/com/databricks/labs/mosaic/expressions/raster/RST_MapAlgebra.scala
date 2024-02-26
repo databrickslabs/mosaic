@@ -45,12 +45,8 @@ case class RST_MapAlgebra(
         val resultPath = PathUtils.createTmpFilePath(extension)
         val command = parseSpec(jsonSpec, resultPath, tiles)
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-        MosaicRasterTile(
-          index,
-          GDALCalc.executeCalc(command, resultPath),
-          resultPath,
-          tiles.head.getDriver
-        )
+        val result = GDALCalc.executeCalc(command, resultPath)
+        MosaicRasterTile(index, result)
     }
 
     def parseSpec(jsonSpec: String, resultPath: String, tiles: Seq[MosaicRasterTile]): String = {

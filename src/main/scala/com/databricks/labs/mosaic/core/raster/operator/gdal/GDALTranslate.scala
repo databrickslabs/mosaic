@@ -31,15 +31,19 @@ object GDALTranslate {
         val translateOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val translateOptions = new TranslateOptions(translateOptionsVec)
         val result = gdal.Translate(outputPath, raster.getRaster, translateOptions)
-        if (result == null) {
-            throw new Exception(s"""
-                                   |Translate failed.
-                                   |Command: $effectiveCommand
-                                   |Error: ${gdal.GetLastErrorMsg}
-                                   |""".stripMargin)
-        }
+        val errorMsg = gdal.GetLastErrorMsg
         val size = Files.size(Paths.get(outputPath))
-        raster.copy(raster = result, path = outputPath, memSize = size, driverShortName = writeOptions.format).flushCache()
+        val createInfo = Map(
+          "path" -> outputPath,
+          "parentPath" -> raster.getParentPath,
+          "driver" -> writeOptions.format,
+          "last_command" -> effectiveCommand,
+          "last_error" -> errorMsg,
+          "all_parents" -> raster.getParentPath
+        )
+        raster
+            .copy(raster = result, createInfo = createInfo, memSize = size)
+            .flushCache()
     }
 
 }

@@ -4,23 +4,31 @@ import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
-import com.databricks.labs.mosaic.expressions.raster.buildMapString
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 
-/** An object defining the in memory read strategy for the GDAL file format. */
-object ReadInMemory extends ReadStrategy {
+import java.nio.file.{Files, Paths}
+
+/** An object defining the retiling read strategy for the GDAL file format. */
+object ReadAsPath extends ReadStrategy {
+
+    val tileDataType: DataType = StringType
 
     // noinspection DuplicatedCode
     /**
       * Returns the schema of the GDAL file format.
       * @note
-      *   Different read strategies can have different schemas.
+      *   Different read strategies can have different schemas. This is because
+      *   the schema is defined by the read strategy. For retiling we always use
+      *   checkpoint location. In this case rasters are stored off spark rows.
+      *   If you need the tiles in memory please load them from path stored in
+      *   the tile returned by the reader.
       *
       * @param options
       *   Options passed to the reader.
@@ -40,8 +48,9 @@ object ReadInMemory extends ReadStrategy {
         parentSchema: StructType,
         sparkSession: SparkSession
     ): StructType = {
+        val trimmedSchema = parentSchema.filter(field => field.name != CONTENT && field.name != LENGTH)
         val indexSystem = IndexSystemFactory.getIndexSystem(sparkSession)
-        StructType(parentSchema.filter(_.name != CONTENT))
+        StructType(trimmedSchema)
             .add(StructField(UUID, LongType, nullable = false))
             .add(StructField(X_SIZE, IntegerType, nullable = false))
             .add(StructField(Y_SIZE, IntegerType, nullable = false))
@@ -49,9 +58,11 @@ object ReadInMemory extends ReadStrategy {
             .add(StructField(METADATA, MapType(StringType, StringType), nullable = false))
             .add(StructField(SUBDATASETS, MapType(StringType, StringType), nullable = false))
             .add(StructField(SRID, IntegerType, nullable = false))
-            // Note, for in memory reads the rasters are stored in the tile.
-            // For that we use Binary Columns.
-            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, BinaryType), nullable = false))
+            .add(StructField(LENGTH, LongType, nullable = false))
+            // Note that for retiling we always use checkpoint location.
+            // In this case rasters are stored off spark rows.
+            // If you need the tiles in memory please load them from path stored in the tile returned by the reader.
+            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, tileDataType), nullable = false))
     }
 
     /**
@@ -66,6 +77,7 @@ object ReadInMemory extends ReadStrategy {
       *   Options passed to the reader.
       * @param indexSystem
       *   Index system.
+      *
       * @return
       *   Iterator of internal rows.
       */
@@ -77,37 +89,36 @@ object ReadInMemory extends ReadStrategy {
         indexSystem: IndexSystem
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
-        val readPath = PathUtils.getCleanPath(inPath)
-        val contentBytes: Array[Byte] = readContent(fs, status)
-        val createInfo = Map(
-            "path" -> readPath,
-            "parentPath" -> inPath
-        )
-        val raster = MosaicRasterGDAL.readRaster(createInfo)
         val uuid = getUUID(status)
 
-        val fields = requiredSchema.fieldNames.filter(_ != TILE).map {
+        val tmpPath = PathUtils.copyToTmp(inPath)
+        val createInfo = Map("path" -> tmpPath, "parentPath" -> inPath)
+        val raster = MosaicRasterGDAL.readRaster(createInfo)
+        val tile = MosaicRasterTile(null, raster)
+        
+        val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
+        val fields = trimmedSchema.fieldNames.map {
             case PATH              => status.getPath.toString
-            case LENGTH            => status.getLen
             case MODIFICATION_TIME => status.getModificationTime
             case UUID              => uuid
-            case X_SIZE            => raster.xSize
-            case Y_SIZE            => raster.ySize
-            case BAND_COUNT        => raster.numBands
-            case METADATA          => raster.metadata
-            case SUBDATASETS       => raster.subdatasets
-            case SRID              => raster.SRID
+            case X_SIZE            => tile.getRaster.xSize
+            case Y_SIZE            => tile.getRaster.ySize
+            case BAND_COUNT        => tile.getRaster.numBands
+            case METADATA          => tile.getRaster.metadata
+            case SUBDATASETS       => tile.getRaster.subdatasets
+            case SRID              => tile.getRaster.SRID
+            case LENGTH            => tile.getRaster.getMemSize
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
-        val mapData = buildMapString(raster.createInfo)
-        val rasterTileSer = InternalRow.fromSeq(
-          Seq(null, contentBytes, mapData)
-        )
-        val row = Utils.createRow(
-          fields ++ Seq(rasterTileSer)
-        )
-        RasterCleaner.dispose(raster)
-        Seq(row).iterator
+        // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
+        val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType)))
+        RasterCleaner.dispose(tile)
+        
+        val rows = Seq(row)
+
+        Files.deleteIfExists(Paths.get(tmpPath))
+
+        rows.iterator
     }
 
 }

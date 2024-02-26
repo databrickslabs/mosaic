@@ -26,12 +26,16 @@ import scala.util.{Failure, Success, Try}
 //noinspection DuplicatedCode
 case class MosaicRasterGDAL(
     raster: Dataset,
-    path: String,
-    parentPath: String,
-    driverShortName: String,
+    createInfo: Map[String, String],
     memSize: Long
 ) extends RasterWriter
       with RasterCleaner {
+
+    def path: String = createInfo("path")
+
+    def parentPath: String = createInfo("parentPath")
+
+    def driverShortName: Option[String] = createInfo.get("driver")
 
     def getWriteOptions: MosaicRasterWriteOptions = MosaicRasterWriteOptions(this)
 
@@ -72,7 +76,9 @@ case class MosaicRasterGDAL(
       * @return
       *   The raster's driver short name.
       */
-    def getDriversShortName: String = driverShortName
+    def getDriversShortName: String = driverShortName.getOrElse(
+      Try(raster.GetDriver().getShortName).getOrElse("NONE")
+    )
 
     /**
       * @return
@@ -114,7 +120,7 @@ case class MosaicRasterGDAL(
     def pixelDiagSize: Double = math.sqrt(pixelXSize * pixelXSize + pixelYSize * pixelYSize)
 
     /** @return Returns file extension. */
-    def getRasterFileExtension: String = GDAL.getExtension(driverShortName)
+    def getRasterFileExtension: String = GDAL.getExtension(getDriversShortName)
 
     /** @return Returns the raster's bands as a Seq. */
     def getBands: Seq[MosaicRasterBandGDAL] = (1 to numBands).map(getBand)
@@ -141,7 +147,7 @@ case class MosaicRasterGDAL(
       *   A MosaicRaster object.
       */
     def openRaster(path: String): Dataset = {
-        MosaicRasterGDAL.openRaster(path, Some(driverShortName))
+        MosaicRasterGDAL.openRaster(path, driverShortName)
     }
 
     /**
@@ -202,7 +208,6 @@ case class MosaicRasterGDAL(
             .toInt
     }
 
-
     /**
       * @return
       *   Sets the raster's SRID. This is the EPSG code of the raster's CRS.
@@ -212,14 +217,17 @@ case class MosaicRasterGDAL(
         srs.ImportFromEPSG(srid)
         raster.SetSpatialRef(srs)
         val driver = raster.GetDriver()
-        val newPath = PathUtils.createTmpFilePath(GDAL.getExtension(driverShortName))
+        val newPath = PathUtils.createTmpFilePath(GDAL.getExtension(getDriversShortName))
         driver.CreateCopy(newPath, raster)
-        val newRaster = MosaicRasterGDAL.openRaster(newPath, Some(driverShortName))
+        val newRaster = MosaicRasterGDAL.openRaster(newPath, driverShortName)
         dispose(this)
-        MosaicRasterGDAL(newRaster, newPath, parentPath, driverShortName, -1)
+        val createInfo = Map(
+          "path" -> newPath,
+          "parentPath" -> parentPath,
+          "driver" -> getDriversShortName
+        )
+        MosaicRasterGDAL(newRaster, createInfo, -1)
     }
-
-
 
     /**
       * @return
@@ -340,10 +348,9 @@ case class MosaicRasterGDAL(
     def isEmpty: Boolean = {
         val bands = getBands
         if (bands.isEmpty) {
-            subdatasets
-                .values
-                .filter(_.toLowerCase(Locale.ROOT).startsWith(driverShortName.toLowerCase(Locale.ROOT)))
-                .flatMap(readRaster(_, path).getBands)
+            subdatasets.values
+                .filter(_.toLowerCase(Locale.ROOT).startsWith(getDriversShortName.toLowerCase(Locale.ROOT)))
+                .flatMap(bp => readRaster(createInfo + ("path" -> bp)).getBands)
                 .takeWhile(_.isEmpty)
                 .nonEmpty
         } else {
@@ -381,7 +388,7 @@ case class MosaicRasterGDAL(
         val cleanPath = filePath.replace("/vsizip/", "")
         val zipPath = if (cleanPath.endsWith("zip")) cleanPath else s"$cleanPath.zip"
         if (path != PathUtils.getCleanPath(parentPath)) {
-            Try(gdal.GetDriverByName(driverShortName).Delete(path))
+            Try(gdal.GetDriverByName(getDriversShortName).Delete(path))
             Try(Files.deleteIfExists(Paths.get(cleanPath)))
             Try(Files.deleteIfExists(Paths.get(path)))
             Try(Files.deleteIfExists(Paths.get(filePath)))
@@ -502,7 +509,7 @@ case class MosaicRasterGDAL(
       * usable again.
       */
     def refresh(): MosaicRasterGDAL = {
-        MosaicRasterGDAL(openRaster(path), path, parentPath, driverShortName, memSize)
+        MosaicRasterGDAL(openRaster(path), createInfo, memSize)
     }
 
     /**
@@ -555,22 +562,35 @@ case class MosaicRasterGDAL(
       *   Returns the raster's subdataset with given name.
       */
     def getSubdataset(subsetName: String): MosaicRasterGDAL = {
-        val path = subdatasets.getOrElse(
-          s"${subsetName}_tmp",
-          throw new Exception(s"""
-                                 |Subdataset $subsetName not found!
-                                 |Available subdatasets:
-                                 |     ${subdatasets.keys.filterNot(_.startsWith("SUBDATASET_")).mkString(", ")}
-                                 |     """.stripMargin)
-        )
-        val sanitized = PathUtils.getCleanPath(path)
+        val path = subdatasets.get(s"${subsetName}_tmp")
+        val gdalError = gdal.GetLastErrorMsg()
+        val error = path match {
+            case Some(_) => ""
+            case None =>
+                s"""
+                   |Subdataset $subsetName not found!
+                   |Available subdatasets:
+                   |     ${subdatasets.keys.filterNot(_.startsWith("SUBDATASET_")).mkString(", ")}
+                   |     """.stripMargin
+        }
+        val sanitized = PathUtils.getCleanPath(path.getOrElse(PathUtils.NO_PATH_STRING))
         val subdatasetPath = PathUtils.getSubdatasetPath(sanitized)
 
         val ds = openRaster(subdatasetPath)
         // Avoid costly IO to compute MEM size here
         // It will be available when the raster is serialized for next operation
         // If value is needed then it will be computed when getMemSize is called
-        MosaicRasterGDAL(ds, path, parentPath, driverShortName, -1)
+        val createInfo = Map(
+          "path" -> path.getOrElse(PathUtils.NO_PATH_STRING),
+          "parentPath" -> parentPath,
+          "driver" -> getDriversShortName,
+          "last_error" ->
+              s"""
+                 |GDAL Error: $gdalError
+                 |$error
+                 |""".stripMargin
+        )
+        MosaicRasterGDAL(ds, createInfo, -1)
     }
 
     def convolve(kernel: Array[Array[Double]]): MosaicRasterGDAL = {
@@ -584,7 +604,13 @@ case class MosaicRasterGDAL(
             band.convolve(kernel)
         }
 
-        MosaicRasterGDAL(outputRaster, resultRasterPath, parentPath, driverShortName, -1)
+        val createInfo = Map(
+          "path" -> resultRasterPath,
+          "parentPath" -> parentPath,
+          "driver" -> getDriversShortName
+        )
+
+        MosaicRasterGDAL(outputRaster, createInfo, -1)
 
     }
 
@@ -604,7 +630,13 @@ case class MosaicRasterGDAL(
             band.filter(kernelSize, operation, outputBand)
         }
 
-        val result = MosaicRasterGDAL(outputRaster, resultRasterPath, parentPath, driverShortName, this.memSize)
+        val createInfo = Map(
+          "path" -> resultRasterPath,
+          "parentPath" -> parentPath,
+          "driver" -> getDriversShortName
+        )
+
+        val result = MosaicRasterGDAL(outputRaster, createInfo, this.memSize)
         result.flushCache()
     }
 
@@ -659,25 +691,44 @@ object MosaicRasterGDAL extends RasterReader {
       * @example
       *   Raster: path = "file:///path/to/file.tif" Subdataset: path =
       *   "file:///path/to/file.tif:subdataset"
-      * @param inPath
-      *   The path to the raster file.
+      * @param createInfo
+      *   The create info for the raster. This should contain the following
+      *   keys:
+      *   - path: The path to the raster file.
+      *   - parentPath: The path of the parent raster file.
       * @return
       *   A MosaicRaster object.
       */
-    override def readRaster(inPath: String, parentPath: String): MosaicRasterGDAL = {
+    override def readRaster(createInfo: Map[String, String]): MosaicRasterGDAL = {
+        val inPath = createInfo("path")
         val isSubdataset = PathUtils.isSubdataset(inPath)
         val path = PathUtils.getCleanPath(inPath)
         val readPath =
             if (isSubdataset) PathUtils.getSubdatasetPath(path)
             else PathUtils.getZipPath(path)
         val dataset = openRaster(readPath, None)
-        val driverShortName = dataset.GetDriver().getShortName
-
+        val error =
+            if (dataset == null) {
+                val error = gdal.GetLastErrorMsg()
+                s"""
+                Error reading raster from path: $readPath
+                Error: $error
+            """
+            } else ""
+        val driverShortName = Try(dataset.GetDriver().getShortName).getOrElse("NONE")
         // Avoid costly IO to compute MEM size here
         // It will be available when the raster is serialized for next operation
         // If value is needed then it will be computed when getMemSize is called
         // We cannot just use memSize value of the parent due to the fact that the raster could be a subdataset
-        val raster = MosaicRasterGDAL(dataset, path, parentPath, driverShortName, -1)
+        val raster = MosaicRasterGDAL(
+          dataset,
+          createInfo ++
+              Map(
+                "driver" -> driverShortName,
+                "last_error" -> error
+              ),
+          -1
+        )
         raster
     }
 
@@ -685,17 +736,19 @@ object MosaicRasterGDAL extends RasterReader {
       * Reads a raster from a byte array.
       * @param contentBytes
       *   The byte array containing the raster data.
-      * @param driverShortName
-      *   The driver short name of the raster.
+      * @param createInfo
+      *   Mosaic creation info of the raster. Note: This is not the same as the
+      *   metadata of the raster. This is not the same as GDAL creation options.
       * @return
       *   A MosaicRaster object.
       */
-    override def readRaster(contentBytes: Array[Byte], parentPath: String, driverShortName: String): MosaicRasterGDAL = {
+    override def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL = {
         if (Option(contentBytes).isEmpty || contentBytes.isEmpty) {
-            MosaicRasterGDAL(null, "", parentPath, "", -1)
+            MosaicRasterGDAL(null, createInfo, -1)
         } else {
             // This is a temp UUID for purposes of reading the raster through GDAL from memory
             // The stable UUID is kept in metadata of the raster
+            val driverShortName = createInfo("driver")
             val extension = GDAL.getExtension(driverShortName)
             val tmpPath = PathUtils.createTmpFilePath(extension)
             Files.write(Paths.get(tmpPath), contentBytes)
@@ -721,12 +774,12 @@ object MosaicRasterGDAL extends RasterReader {
                     if (dataset == null) {
                         throw new Exception(s"Error reading raster from bytes: ${prompt._3}")
                     }
-                    MosaicRasterGDAL(dataset, unzippedPath, parentPath, driverShortName, contentBytes.length)
+                    MosaicRasterGDAL(dataset, createInfo + ("path" -> unzippedPath), contentBytes.length)
                 } else {
-                    MosaicRasterGDAL(ds, readPath, parentPath, driverShortName, contentBytes.length)
+                    MosaicRasterGDAL(ds, createInfo + ("path" -> readPath), contentBytes.length)
                 }
             } else {
-                MosaicRasterGDAL(dataset, tmpPath, parentPath, driverShortName, contentBytes.length)
+                MosaicRasterGDAL(dataset, createInfo + ("path" -> tmpPath), contentBytes.length)
             }
         }
     }
@@ -738,15 +791,19 @@ object MosaicRasterGDAL extends RasterReader {
       * @example
       *   Raster: path = "file:///path/to/file.tif" Subdataset: path =
       *   "file:///path/to/file.tif:subdataset"
-      * @param path
-      *   The path to the raster file.
+      * @param createInfo
+      *   The create info for the raster. This should contain the following
+      *   keys:
+      *   - path: The path to the raster file.
+      *   - parentPath: The path of the parent raster file.
+      *   - driver: Optional: The driver short name of the raster file
       * @param bandIndex
       *   The band index to read.
       * @return
       *   A MosaicRaster object.
       */
-    override def readBand(path: String, bandIndex: Int, parentPath: String): MosaicRasterBandGDAL = {
-        val raster = readRaster(path, parentPath)
+    override def readBand(bandIndex: Int, createInfo: Map[String, String]): MosaicRasterBandGDAL = {
+        val raster = readRaster(createInfo)
         // TODO: Raster and Band are coupled, this can cause a pointer leak
         raster.getBand(bandIndex)
     }

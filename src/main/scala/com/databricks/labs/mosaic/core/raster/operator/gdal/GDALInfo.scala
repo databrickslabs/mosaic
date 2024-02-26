@@ -25,14 +25,14 @@ object GDALInfo {
         val gdalInfo = gdal.GDALInfo(raster.getRaster, infoOptions)
 
         if (gdalInfo == null) {
-            throw new Exception(s"""
-                                   |GDAL Info failed.
-                                   |Command: $command
-                                   |Error: ${gdal.GetLastErrorMsg}
-                                   |""".stripMargin)
+            s"""
+               |GDAL Info failed.
+               |Command: $command
+               |Error: ${gdal.GetLastErrorMsg}
+               |""".stripMargin
+        } else {
+            gdalInfo
         }
-
-        gdalInfo
     }
 
 }
