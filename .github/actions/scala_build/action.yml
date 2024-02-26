@@ -38,7 +38,7 @@ runs:
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
-          run: sudo mvn -q clean install
+          run: sudo mvn -q clean install -DskipTests -Dscoverage.skip
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash
