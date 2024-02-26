@@ -1031,7 +1031,7 @@ object MosaicContext extends Logging {
     private var instance: Option[MosaicContext] = None
     
     def tmpDir(mosaicConfig: MosaicExpressionConfig): String = {
-        if (_tmpDir == "" || mosaicConfig == null) {
+        if (_tmpDir == "" || mosaicConfig != null) {
             val prefix = mosaicConfig.getTmpPrefix
             _tmpDir = FileUtils.createMosaicTempDir(prefix)
             _tmpDir
