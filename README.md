@@ -10,6 +10,7 @@ An extension to the [Apache Spark](https://spark.apache.org/) framework that all
 [![docs](https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml/badge.svg)](https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/databrickslabs/mosaic.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/databrickslabs/mosaic/context:python)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![lines of code](https://tokei.rs/b1/github/databrickslabs/mosaic)]([https://codecov.io/github/databrickslabs/mosaic](https://github.com/databrickslabs/mosaic))
 
 
 ## Why Mosaic?
