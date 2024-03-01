@@ -34,36 +34,6 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
             .take(1)
 
     }
-    
-    test("Read grib with GDALFileFormat") {
-        assume(System.getProperty("os.name") == "Linux")
-
-        val grib = "/binary/grib-cams/"
-        val filePath = getClass.getResource(grib).getPath
-
-        noException should be thrownBy spark.read
-            .format("gdal")
-            .option("extensions", "grb")
-            .option("raster.read.strategy", "retile_on_read")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy spark.read
-            .format("gdal")
-            .option("extensions", "grb")
-            .option("raster.read.strategy", "retile_on_read")
-            .load(filePath)
-            .take(1)
-
-        noException should be thrownBy spark.read
-            .format("gdal")
-            .option("extensions", "grb")
-            .option("raster.read.strategy", "retile_on_read")
-            .load(filePath)
-            .select("metadata")
-            .take(1)
-
-    }
 
     test("Read tif with GDALFileFormat") {
         assume(System.getProperty("os.name") == "Linux")
@@ -82,14 +52,16 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
             .load(filePath)
             .take(1)
 
-        noException should be thrownBy spark.read
+        // noException should be thrownBy
+
+        spark.read
             .format("gdal")
             .option("driverName", "TIF")
             .load(filePath)
             .select("metadata")
             .take(1)
 
-       noException should be thrownBy spark.read
+        noException should be thrownBy spark.read
             .format("gdal")
             .option(MOSAIC_RASTER_READ_STRATEGY, "retile_on_read")
             .load(filePath)
@@ -135,6 +107,36 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
         noException should be thrownBy Utils.createRow(Array(1.toByte))
         noException should be thrownBy Utils.createRow(Array("1"))
         noException should be thrownBy Utils.createRow(Array(Map("key" -> "value")))
+
+    }
+
+    test("Read grib with GDALFileFormat") {
+        assume(System.getProperty("os.name") == "Linux")
+
+        val grib = "/binary/grib-cams/"
+        val filePath = getClass.getResource(grib).getPath
+
+        noException should be thrownBy spark.read
+            .format("gdal")
+            .option("extensions", "grb")
+            .option("raster.read.strategy", "retile_on_read")
+            .load(filePath)
+            .take(1)
+
+        noException should be thrownBy spark.read
+            .format("gdal")
+            .option("extensions", "grb")
+            .option("raster.read.strategy", "retile_on_read")
+            .load(filePath)
+            .take(1)
+
+        noException should be thrownBy spark.read
+            .format("gdal")
+            .option("extensions", "grb")
+            .option("raster.read.strategy", "retile_on_read")
+            .load(filePath)
+            .select("metadata")
+            .take(1)
 
     }
 
