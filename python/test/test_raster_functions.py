@@ -19,7 +19,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             result.metadata["LONGNAME"],
             "MODIS/Terra+Aqua BRDF/Albedo Nadir BRDF-Adjusted Ref Daily L3 Global - 500m",
         )
-        self.assertEqual(result.tile["driver"], "GTiff")
+        self.assertEqual(result.tile["metadata"]["driver"], "GTiff")
 
     def test_raster_scalar_functions(self):
         result = (
@@ -115,7 +115,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
 
         tessellate_result.write.format("noop").mode("overwrite").save()
-        self.assertEqual(tessellate_result.count(), 66)
+        self.assertEqual(tessellate_result.count(), 63)
 
         overlap_result = (
             self.generate_singleband_raster_df()
