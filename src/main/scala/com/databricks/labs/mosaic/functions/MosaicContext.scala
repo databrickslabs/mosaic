@@ -682,15 +682,17 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_maketiles(input: Column, driver: String, size: Int, withCheckpoint: Boolean): Column =
             ColumnAdapter(RST_MakeTiles(input.expr, lit(driver).expr, lit(size).expr, lit(withCheckpoint).expr, expressionConfig))
         def rst_maketiles(input: Column): Column =
-            ColumnAdapter(RST_MakeTiles(input.expr, lit(MOSAIC_NO_DRIVER).expr, lit(-1).expr, lit(false).expr, expressionConfig))
+            ColumnAdapter(RST_MakeTiles(input.expr, lit("no_driver").expr, lit(-1).expr, lit(false).expr, expressionConfig))
         def rst_maketiles(input: Column, size: Int): Column =
-            ColumnAdapter(RST_MakeTiles(input.expr, lit(MOSAIC_NO_DRIVER).expr, lit(size).expr, lit(false).expr, expressionConfig))
+            ColumnAdapter(RST_MakeTiles(input.expr, lit("no_driver").expr, lit(size).expr, lit(false).expr, expressionConfig))
         def rst_maketiles(input: Column, driver: String): Column =
             ColumnAdapter(RST_MakeTiles(input.expr, lit(driver).expr, lit(-1).expr, lit(false).expr, expressionConfig))
+        def rst_maketiles(input: Column, driver: String, size: Int): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, lit(driver).expr, lit(size).expr, lit(false).expr, expressionConfig))
         def rst_maketiles(input: Column, driver: String, withCheckpoint: Boolean): Column =
             ColumnAdapter(RST_MakeTiles(input.expr, lit(driver).expr, lit(-1).expr, lit(withCheckpoint).expr, expressionConfig))
         def rst_maketiles(input: Column, size: Int, withCheckpoint: Boolean): Column =
-            ColumnAdapter(RST_MakeTiles(input.expr, lit(MOSAIC_NO_DRIVER).expr, lit(size).expr, lit(withCheckpoint).expr, expressionConfig))
+            ColumnAdapter(RST_MakeTiles(input.expr, lit("no_driver").expr, lit(size).expr, lit(withCheckpoint).expr, expressionConfig))
         def rst_max(raster: Column): Column = ColumnAdapter(RST_Max(raster.expr, expressionConfig))
         def rst_min(raster: Column): Column = ColumnAdapter(RST_Min(raster.expr, expressionConfig))
         def rst_median(raster: Column): Column = ColumnAdapter(RST_Median(raster.expr, expressionConfig))
