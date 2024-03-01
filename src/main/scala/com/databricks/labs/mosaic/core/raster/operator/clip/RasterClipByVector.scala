@@ -49,7 +49,7 @@ object RasterClipByVector {
         val result = GDALWarp.executeWarp(
           resultFileName,
           Seq(raster),
-          command = s"gdalwarp -wo CUTLINE_ALL_TOUCHED=TRUE -wo SOURCE_EXTRA=3 -cutline $shapeFileName -crop_to_cutline"
+          command = s"gdalwarp -wo CUTLINE_ALL_TOUCHED=TRUE -cutline $shapeFileName -crop_to_cutline"
         )
 
         VectorClipper.cleanUpClipper(shapeFileName)
