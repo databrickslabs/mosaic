@@ -20,8 +20,11 @@ class SparkTestCase(unittest.TestCase):
 
         pwd_dir = os.getcwd()
         tmp_dir = f"{pwd_dir}/mosaic_test/"
+        check_dir = f"{pwd_dir}/checkpoint"
         if not os.path.exists(tmp_dir):
             os.makedirs(tmp_dir)
+        if not os.path.exists(check_dir):
+            os.makedirs(check_dir)
 
         cls.spark = (
             SparkSession.builder.master("local[*]")
@@ -39,6 +42,7 @@ class SparkTestCase(unittest.TestCase):
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
         cls.spark.conf.set("spark.databricks.labs.mosaic.raster.tmp.prefix", tmp_dir)
+        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", check_dir)
         cls.spark.sparkContext.setLogLevel("FATAL")
 
     @classmethod
