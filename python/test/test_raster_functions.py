@@ -187,11 +187,12 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         df = (
             self.spark.read.format("gdal")
-            .option("raster.read.strategy", "retile_on_read")
+            .option("raster.read.strategy", "in_memory")
             .load(
                 "test/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
             )
             .select(api.rst_separatebands("tile").alias("tile"))
+            .repartition(self.spark.sparkContext.defaultParallelism)
             .withColumn(
                 "timestep",
                 element_at(

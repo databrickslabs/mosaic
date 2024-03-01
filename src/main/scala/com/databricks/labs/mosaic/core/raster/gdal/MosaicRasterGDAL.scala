@@ -76,9 +76,10 @@ case class MosaicRasterGDAL(
       * @return
       *   The raster's driver short name.
       */
-    def getDriversShortName: String = driverShortName.getOrElse(
-      Try(raster.GetDriver().getShortName).getOrElse("NONE")
-    )
+    def getDriversShortName: String =
+        driverShortName.getOrElse(
+          Try(raster.GetDriver().getShortName).getOrElse("NONE")
+        )
 
     /**
       * @return
@@ -469,7 +470,8 @@ case class MosaicRasterGDAL(
             if (Files.isDirectory(Paths.get(tmpPath))) {
                 val parentDir = Paths.get(tmpPath).getParent.toString
                 val fileName = Paths.get(tmpPath).getFileName.toString
-                SysUtils.runScript(Array("/bin/sh", "-c", s"cd $parentDir && zip -r0 $fileName.zip $fileName"))
+                val prompt = SysUtils.runScript(Array("/bin/sh", "-c", s"cd $parentDir && zip -r0 $fileName.zip $fileName"))
+                if (prompt._3.nonEmpty) throw new Exception(s"Error zipping file: ${prompt._3}. Please verify that zip is installed. Run 'apt install zip'.")
                 s"$tmpPath.zip"
             } else {
                 tmpPath
@@ -566,12 +568,11 @@ case class MosaicRasterGDAL(
         val gdalError = gdal.GetLastErrorMsg()
         val error = path match {
             case Some(_) => ""
-            case None =>
-                s"""
-                   |Subdataset $subsetName not found!
-                   |Available subdatasets:
-                   |     ${subdatasets.keys.filterNot(_.startsWith("SUBDATASET_")).mkString(", ")}
-                   |     """.stripMargin
+            case None    => s"""
+                            |Subdataset $subsetName not found!
+                            |Available subdatasets:
+                            |     ${subdatasets.keys.filterNot(_.startsWith("SUBDATASET_")).mkString(", ")}
+                            |     """.stripMargin
         }
         val sanitized = PathUtils.getCleanPath(path.getOrElse(PathUtils.NO_PATH_STRING))
         val subdatasetPath = PathUtils.getSubdatasetPath(sanitized)
@@ -584,11 +585,13 @@ case class MosaicRasterGDAL(
           "path" -> path.getOrElse(PathUtils.NO_PATH_STRING),
           "parentPath" -> parentPath,
           "driver" -> getDriversShortName,
-          "last_error" ->
-              s"""
-                 |GDAL Error: $gdalError
-                 |$error
-                 |""".stripMargin
+          "last_error" -> {
+              if (gdalError.nonEmpty || error.nonEmpty) s"""
+                                                           |GDAL Error: $gdalError
+                                                           |$error
+                                                           |""".stripMargin
+              else ""
+          }
         )
         MosaicRasterGDAL(ds, createInfo, -1)
     }
