@@ -21,6 +21,8 @@ print(paste("Looking for mosaic jar in", mosaic_jar_path))
 
 config <- sparklyr::spark_config()
 config$`sparklyr.jars.default` <- c(mosaic_jar_path)
+config$`spark.databricks.labs.mosaic.raster.tmp.prefix` <- paste0(getwd(), "/mosaic_tmp", sep="")
+config$`spark.databricks.labs.mosaic.raster.checkpoint` <- paste0(getwd(), "/mosaic_checkpoint", sep="")
 
 sc <- spark_connect(master="local[*]", config=config)
 enableMosaic(sc)

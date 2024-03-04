@@ -21,11 +21,15 @@ print("Looking for mosaic jar in")
 mosaic_jar_path <- paste0(staging_dir, mosaic_jar)
 print(mosaic_jar_path)
 
+pwd <- getwd()
 spark <- sparkR.session(
   master = "local[*]"
-  ,sparkJars = mosaic_jar_path
+  ,sparkJars = mosaic_jar_path,
+  sparkConfig = list(
+    spark.databricks.labs.mosaic.raster.tmp.prefix = paste0(pwd, "/mosaic_tmp", sep="")
+    ,spark.databricks.labs.mosaic.raster.checkpoint = paste0(pwd, "/mosaic_checkpoint", sep="")
+  )
 )
-
 enableMosaic()
 
 testthat::test_local(path="./sparkrMosaic")
