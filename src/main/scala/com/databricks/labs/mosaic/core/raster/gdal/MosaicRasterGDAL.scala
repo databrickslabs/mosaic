@@ -411,6 +411,9 @@ case class MosaicRasterGDAL(
     def getMemSize: Long = {
         if (memSize == -1) {
             val toRead = if (path.startsWith("/vsizip/")) path.replace("/vsizip/", "") else path
+            if (Files.notExists(Paths.get(toRead))) {
+                throw new Exception(s"File not found: ${gdal.GetLastErrorMsg()}")
+            }
             Files.size(Paths.get(toRead))
         } else {
             memSize

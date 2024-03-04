@@ -51,9 +51,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
             .option("driverName", "TIF")
             .load(filePath)
             .take(1)
-
-        // noException should be thrownBy
-
+        
         spark.read
             .format("gdal")
             .option("driverName", "TIF")
@@ -61,7 +59,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
             .select("metadata")
             .take(1)
 
-        noException should be thrownBy spark.read
+       spark.read
             .format("gdal")
             .option(MOSAIC_RASTER_READ_STRATEGY, "retile_on_read")
             .load(filePath)
@@ -116,7 +114,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
         val grib = "/binary/grib-cams/"
         val filePath = getClass.getResource(grib).getPath
 
-        noException should be thrownBy spark.read
+       spark.read
             .format("gdal")
             .option("extensions", "grb")
             .option("raster.read.strategy", "retile_on_read")
@@ -130,7 +128,7 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
             .load(filePath)
             .take(1)
 
-        noException should be thrownBy spark.read
+        spark.read
             .format("gdal")
             .option("extensions", "grb")
             .option("raster.read.strategy", "retile_on_read")
