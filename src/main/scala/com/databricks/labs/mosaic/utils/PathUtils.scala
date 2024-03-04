@@ -2,7 +2,8 @@ package com.databricks.labs.mosaic.utils
 
 import com.databricks.labs.mosaic.functions.MosaicContext
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
+import scala.jdk.CollectionConverters._
 
 object PathUtils {
 
@@ -63,7 +64,7 @@ object PathUtils {
         if (filePath.endsWith("\"")) result = result.dropRight(1)
         result
     }
-    
+
     def getStemRegex(path: String): String = {
         val cleanPath = replaceDBFSTokens(path)
         val fileName = Paths.get(cleanPath).getFileName.toString
@@ -72,15 +73,25 @@ object PathUtils {
         val stemRegex = s"$stemEscaped\\..*".r
         stemRegex.toString
     }
+    
+    def copyToTmpWithRetry(inPath: String, retries: Int = 3): String = {
+        var tmpPath = copyToTmp(inPath)
+        var i = 0
+        while (Files.notExists(Paths.get(tmpPath)) && i < retries) {
+            tmpPath = copyToTmp(inPath)
+            i += 1
+        }
+        tmpPath
+    }
 
     def copyToTmp(inPath: String): String = {
         val copyFromPath = replaceDBFSTokens(inPath)
         val inPathDir = Paths.get(copyFromPath).getParent.toString
-        
+
         val fullFileName = copyFromPath.split("/").last
         val stemRegex = getStemRegex(inPath)
 
-        wildcardCopy(inPathDir, MosaicContext.tmpDir(null), stemRegex.toString)
+        wildcardCopy(inPathDir, MosaicContext.tmpDir(null), stemRegex)
 
         s"${MosaicContext.tmpDir(null)}/$fullFileName"
     }
@@ -93,17 +104,17 @@ object PathUtils {
         val toCopy = Files
             .list(Paths.get(copyFromPath))
             .filter(_.getFileName.toString.matches(pattern))
-
-        toCopy.forEach(path => {
+            .collect(java.util.stream.Collectors.toList[Path])
+            .asScala
+        
+        for (path <- toCopy) {
             val destination = Paths.get(copyToPath, path.getFileName.toString)
-            //noinspection SimplifyBooleanMatch
-            Files.isDirectory(path) match {
-                case true => FileUtils.copyDirectory(path.toFile, destination.toFile)
-                case false => Files.copy(path, destination)
-            }
-        })
+            // noinspection SimplifyBooleanMatch
+            if (Files.isDirectory(path)) FileUtils.copyDirectory(path.toFile, destination.toFile)
+            else FileUtils.copyFile(path.toFile, destination.toFile)
+        }
     }
-    
+
     def parseUnzippedPathFromExtracted(lastExtracted: String, extension: String): String = {
         val trimmed = lastExtracted.replace("extracting: ", "").replace(" ", "")
         val indexOfFormat = trimmed.indexOf(s".$extension/")

@@ -93,7 +93,7 @@ object ReTileOnRead extends ReadStrategy {
         val uuid = getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
 
-        val tmpPath = PathUtils.copyToTmp(inPath)
+        var tmpPath = PathUtils.copyToTmpWithRetry(inPath, 5)
         val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
 
         val rows = tiles.map(tile => {
