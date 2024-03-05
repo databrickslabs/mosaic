@@ -57,7 +57,6 @@ case class GDALBlock[T: ClassTag](
         }
     }
 
-    // TODO: Test and fix, not tested, other filters work.
     def convolveAt(x: Int, y: Int, kernel: Array[Array[Double]]): Double = {
         val kernelWidth = kernel.head.length
         val kernelHeight = kernel.length
@@ -70,7 +69,7 @@ case class GDALBlock[T: ClassTag](
                 val yIndex = y + (i - kernelCenterY)
                 if (xIndex >= 0 && xIndex < width && yIndex >= 0 && yIndex < height) {
                     val maskValue = maskAt(xIndex, yIndex)
-                    val value = rasterElementAt(xIndex, yIndex)
+                    val value = elementAt(xIndex, yIndex)
                     if (maskValue != 0.0 && num.toDouble(value) != noDataValue) {
                         sum += num.toDouble(value) * kernel(i)(j)
                     }

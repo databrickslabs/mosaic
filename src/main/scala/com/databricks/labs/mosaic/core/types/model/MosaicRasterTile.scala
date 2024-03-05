@@ -100,14 +100,15 @@ case class MosaicRasterTile(
         rasterDataType: DataType
     ): InternalRow = {
         val encodedRaster = encodeRaster(rasterDataType)
-        val mapData = buildMapString(raster.createInfo)
+        val path = if (rasterDataType == StringType) encodedRaster.toString else raster.createInfo("path")
+        val parentPath = if (raster.createInfo("parentPath").isEmpty) raster.createInfo("path") else raster.createInfo("parentPath")
+        val newCreateInfo = raster.createInfo + ("path" -> path, "parentPath" -> parentPath)
+        val mapData = buildMapString(newCreateInfo)
         if (Option(index).isDefined) {
             if (index.isLeft) InternalRow.fromSeq(
               Seq(index.left.get, encodedRaster, mapData)
             )
             else {
-                // Copy from tmp to checkpoint.
-                // Have to use GDAL Driver to do this since sidecar files are not copied by spark.
                 InternalRow.fromSeq(
                   Seq(UTF8String.fromString(index.right.get), encodedRaster, mapData)
                 )

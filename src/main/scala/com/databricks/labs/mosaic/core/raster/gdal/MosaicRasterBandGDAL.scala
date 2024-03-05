@@ -265,34 +265,48 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
         stats.getValid_count == 0
     }
 
-    def convolve(kernel: Array[Array[Double]]): Unit = {
-        val kernelWidth = kernel.head.length
-        val kernelHeight = kernel.length
-        val blockSize = MosaicGDAL.defaultBlockSize
-        val strideX = kernelWidth / 2
-        val strideY = kernelHeight / 2
+    /**
+      * Applies a kernel filter to the band. It assumes the kernel is square and
+      * has an odd number of rows and columns.
+      *
+      * @param kernel
+      *   The kernel to apply to the band.
+      * @return
+      *   The band with the kernel filter applied.
+      */
+    def convolve(kernel: Array[Array[Double]], outputBand: Band): Unit = {
+        val kernelSize = kernel.length
+        require(kernelSize % 2 == 1, "Kernel size must be odd")
 
-        val block = Array.ofDim[Double](blockSize * blockSize)
-        val maskBlock = Array.ofDim[Double](blockSize * blockSize)
-        val result = Array.ofDim[Double](blockSize * blockSize)
+        val blockSize = MosaicGDAL.blockSize
+        val stride = kernelSize / 2
 
-        for (yOffset <- 0 until ySize by blockSize - strideY) {
-            for (xOffset <- 0 until xSize by blockSize - strideX) {
-                val xSize = Math.min(blockSize, this.xSize - xOffset)
-                val ySize = Math.min(blockSize, this.ySize - yOffset)
+        for (yOffset <- 0 until ySize by blockSize) {
+            for (xOffset <- 0 until xSize by blockSize) {
 
-                band.ReadRaster(xOffset, yOffset, xSize, ySize, block)
-                band.GetMaskBand().ReadRaster(xOffset, yOffset, xSize, ySize, maskBlock)
+                val currentBlock = GDALBlock(
+                    this,
+                    stride,
+                    xOffset,
+                    yOffset,
+                    blockSize
+                )
 
-                val currentBlock = GDALBlock[Double](block, maskBlock, noDataValue, xOffset, yOffset, xSize, ySize, Padding.NoPadding)
+                val result = Array.ofDim[Double](currentBlock.block.length)
 
-                for (y <- 0 until ySize) {
-                    for (x <- 0 until xSize) {
-                        result(y * xSize + x) = currentBlock.convolveAt(x, y, kernel)
+                for (y <- 0 until currentBlock.height) {
+                    for (x <- 0 until currentBlock.width) {
+                        result(y * currentBlock.width + x) = currentBlock.convolveAt(x, y, kernel)
                     }
                 }
 
-                band.WriteRaster(xOffset, yOffset, xSize, ySize, block)
+                val trimmedResult = currentBlock.copy(block = result).trimBlock(stride)
+
+                outputBand.WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.block)
+                outputBand.FlushCache()
+                outputBand.GetMaskBand().WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.maskBlock)
+                outputBand.GetMaskBand().FlushCache()
+
             }
         }
     }

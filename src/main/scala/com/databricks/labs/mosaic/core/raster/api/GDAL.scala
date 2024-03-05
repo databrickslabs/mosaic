@@ -101,7 +101,6 @@ object GDAL {
     ): MosaicRasterGDAL = {
         inputDT match {
             case StringType =>
-                val path = inputRaster.asInstanceOf[UTF8String].toString
                 MosaicRasterGDAL.readRaster(createInfo)
             case BinaryType =>
                 val bytes = inputRaster.asInstanceOf[Array[Byte]]

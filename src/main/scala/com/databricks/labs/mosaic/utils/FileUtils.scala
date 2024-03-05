@@ -7,7 +7,8 @@ object FileUtils {
 
     def readBytes(path: String): Array[Byte] = {
         val bufferSize = 1024 * 1024 // 1MB
-        val inputStream = new BufferedInputStream(new FileInputStream(path))
+        val cleanPath = PathUtils.replaceDBFSTokens(path)
+        val inputStream = new BufferedInputStream(new FileInputStream(cleanPath))
         val buffer = new Array[Byte](bufferSize)
 
         var bytesRead = 0

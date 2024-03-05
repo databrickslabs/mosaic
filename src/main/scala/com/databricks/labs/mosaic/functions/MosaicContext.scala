@@ -263,7 +263,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_BoundingBox](expressionConfig)
         mosaicRegistry.registerExpression[RST_Clip](expressionConfig)
         mosaicRegistry.registerExpression[RST_CombineAvg](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Convolve](expressionConfig)
         mosaicRegistry.registerExpression[RST_DerivedBand](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Filter](expressionConfig)
         mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
         mosaicRegistry.registerExpression[RST_GetNoData](expressionConfig)
         mosaicRegistry.registerExpression[RST_GetSubdataset](expressionConfig)
@@ -660,6 +662,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_BandMetaData(raster.expr, lit(band).expr, expressionConfig))
         def rst_boundingbox(raster: Column): Column = ColumnAdapter(RST_BoundingBox(raster.expr, expressionConfig))
         def rst_clip(raster: Column, geometry: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, expressionConfig))
+        def rst_convolve(raster: Column, kernel: Column): Column =
+            ColumnAdapter(RST_Convolve(raster.expr, kernel.expr, expressionConfig))
         def rst_pixelcount(raster: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, expressionConfig))
         def rst_combineavg(rasterArray: Column): Column = ColumnAdapter(RST_CombineAvg(rasterArray.expr, expressionConfig))
         def rst_derivedband(raster: Column, pythonFunc: Column, funcName: Column): Column =

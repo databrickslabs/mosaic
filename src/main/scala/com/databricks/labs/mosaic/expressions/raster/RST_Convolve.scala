@@ -9,6 +9,8 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.util.ArrayData
+import org.apache.spark.sql.types._
 
 /** The expression for applying kernel filter on a raster. */
 case class RST_Convolve(
@@ -39,7 +41,14 @@ case class RST_Convolve(
       *   The clipped raster.
       */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-        val kernel = arg1.asInstanceOf[Array[Array[Double]]]
+        val kernel = arg1.asInstanceOf[ArrayData].array.map(_.asInstanceOf[ArrayData].array.map(
+          el => kernelExpr.dataType match {
+              case ArrayType(ArrayType(DoubleType, false), false) => el.asInstanceOf[Double]
+              case ArrayType(ArrayType(DecimalType(), false), false) => el.asInstanceOf[java.math.BigDecimal].doubleValue()
+              case ArrayType(ArrayType(IntegerType, false), false) => el.asInstanceOf[Int].toDouble
+              case _ => throw new IllegalArgumentException(s"Unsupported kernel type: ${kernelExpr.dataType}")
+          }
+        ))
         tile.copy(
           raster = tile.getRaster.convolve(kernel)
         )

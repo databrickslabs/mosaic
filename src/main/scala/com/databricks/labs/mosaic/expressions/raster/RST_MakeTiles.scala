@@ -97,7 +97,8 @@ case class RST_MakeTiles(
     private def getInputSize(rawInput: Any): Long = {
         if (inputExpr.dataType == StringType) {
             val path = rawInput.asInstanceOf[UTF8String].toString
-            Files.size(Paths.get(path))
+            val cleanPath = PathUtils.replaceDBFSTokens(path)
+            Files.size(Paths.get(cleanPath))
         } else {
             val bytes = rawInput.asInstanceOf[Array[Byte]]
             bytes.length
@@ -114,7 +115,7 @@ case class RST_MakeTiles(
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
-        
+
         val tileType = dataType.asInstanceOf[StructType].find(_.name == "raster").get.dataType
 
         val rawDriver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
@@ -122,10 +123,11 @@ case class RST_MakeTiles(
         val driver = getDriver(rawInput, rawDriver)
         val targetSize = sizeInMBExpr.eval(input).asInstanceOf[Int]
         val inputSize = getInputSize(rawInput)
+        val path = if (inputExpr.dataType == StringType) rawInput.asInstanceOf[UTF8String].toString else PathUtils.NO_PATH_STRING
 
         if (targetSize <= 0 && inputSize <= Integer.MAX_VALUE) {
             // - no split required
-            val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver)
+            val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver, "path" -> path)
             val raster = GDAL.readRaster(rawInput, createInfo, inputExpr.dataType)
             val tile = MosaicRasterTile(null, raster)
             val row = tile.formatCellId(indexSystem).serialize(tileType)
@@ -136,9 +138,15 @@ case class RST_MakeTiles(
             // target size is > 0 and raster size > target size
             // - write the initial raster to file (unsplit)
             // - createDirectories in case of context isolation
-            val rasterPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
-            Files.createDirectories(Paths.get(rasterPath).getParent)
-            Files.write(Paths.get(rasterPath), rawInput.asInstanceOf[Array[Byte]])
+            val rasterPath =
+                if (inputExpr.dataType == StringType) {
+                    PathUtils.copyToTmpWithRetry(path, 5)
+                } else {
+                    val rasterPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
+                    Files.createDirectories(Paths.get(rasterPath).getParent)
+                    Files.write(Paths.get(rasterPath), rawInput.asInstanceOf[Array[Byte]])
+                    rasterPath
+                }
             val size = if (targetSize <= 0) 64 else targetSize
             var tiles = ReTileOnRead.localSubdivide(rasterPath, PathUtils.NO_PATH_STRING, size)
             val rows = tiles.map(_.formatCellId(indexSystem).serialize(tileType))
@@ -180,7 +188,7 @@ object RST_MakeTiles extends WithExpressionInfo {
             def checkChkpnt(chkpnt: Expression) = Try(chkpnt.eval().asInstanceOf[Boolean]).isSuccess
             def checkDriver(driver: Expression) = Try(driver.eval().asInstanceOf[UTF8String].toString).isSuccess
             val noSize = new Literal(-1, IntegerType)
-            val noDriver = new Literal(MOSAIC_NO_DRIVER, StringType)
+            val noDriver = new Literal(UTF8String.fromString(MOSAIC_NO_DRIVER), StringType)
             val noCheckpoint = new Literal(false, BooleanType)
 
             children match {

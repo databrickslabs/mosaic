@@ -601,13 +601,18 @@ case class MosaicRasterGDAL(
 
     def convolve(kernel: Array[Array[Double]]): MosaicRasterGDAL = {
         val resultRasterPath = PathUtils.createTmpFilePath(getRasterFileExtension)
-        val outputRaster = this.raster
-            .GetDriver()
-            .Create(resultRasterPath, this.xSize, this.ySize, this.numBands, this.raster.GetRasterBand(1).getDataType)
 
+        this.raster
+            .GetDriver()
+            .CreateCopy(resultRasterPath, this.raster, 1)
+            .delete()
+
+        val outputRaster = gdal.Open(resultRasterPath, GF_Write)
+        
         for (bandIndex <- 1 to this.numBands) {
             val band = this.getBand(bandIndex)
-            band.convolve(kernel)
+            val outputBand = outputRaster.GetRasterBand(bandIndex)
+            band.convolve(kernel, outputBand)
         }
 
         val createInfo = Map(
@@ -616,8 +621,8 @@ case class MosaicRasterGDAL(
           "driver" -> getDriversShortName
         )
 
-        MosaicRasterGDAL(outputRaster, createInfo, -1)
-
+        val result = MosaicRasterGDAL(outputRaster, createInfo, this.memSize)
+        result.flushCache()
     }
 
     def filter(kernelSize: Int, operation: String): MosaicRasterGDAL = {

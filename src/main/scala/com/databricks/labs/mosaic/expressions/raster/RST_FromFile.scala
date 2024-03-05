@@ -65,7 +65,8 @@ case class RST_FromFile(
         val readPath = PathUtils.getCleanPath(path)
         val driver = MosaicRasterGDAL.identifyDriver(path)
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
-        if (targetSize <= 0 && Files.size(Paths.get(readPath)) <= Integer.MAX_VALUE) {
+        val currentSize = Files.size(Paths.get(PathUtils.replaceDBFSTokens(readPath)))
+        if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
             val createInfo = Map("path" -> readPath, "parentPath" -> path)
             var raster = MosaicRasterGDAL.readRaster(createInfo)
             var tile = MosaicRasterTile(null, raster)
