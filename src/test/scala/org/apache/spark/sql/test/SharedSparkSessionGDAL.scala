@@ -1,12 +1,12 @@
 package org.apache.spark.sql.test
 
-import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
+import com.databricks.labs.mosaic.utils.FileUtils
+import com.databricks.labs.mosaic.{MOSAIC_GDAL_NATIVE, MOSAIC_RASTER_CHECKPOINT}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
 
-import java.nio.file.Files
 import scala.util.Try
 
 trait SharedSparkSessionGDAL extends SharedSparkSession {
@@ -18,9 +18,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     override def createSparkSession: TestSparkSession = {
         val conf = sparkConf
-        conf.set(MOSAIC_RASTER_CHECKPOINT, Files.createTempDirectory("mosaic").toFile.getAbsolutePath)
+        conf.set(MOSAIC_RASTER_CHECKPOINT, FileUtils.createMosaicTempDir(prefix = "/mnt/"))
         SparkSession.cleanupAnyExistingSession()
-        val session = new TestSparkSession(conf)
+        val session = new MosaicTestSparkSession(conf)
         session.sparkContext.setLogLevel("FATAL")
         Try {
             MosaicGDAL.enableGDAL(session)
@@ -33,5 +33,5 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         MosaicGDAL.enableGDAL(this.spark)
         gdal.AllRegister()
     }
-    
+
 }

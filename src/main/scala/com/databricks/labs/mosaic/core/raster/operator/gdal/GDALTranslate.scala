@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRasterWriteOptions}
 import org.gdal.gdal.{TranslateOptions, gdal}
 
 import java.nio.file.{Files, Paths}
@@ -20,21 +20,30 @@ object GDALTranslate {
       * @return
       *   A MosaicRaster object.
       */
-    def executeTranslate(outputPath: String, raster: MosaicRasterGDAL, command: String): MosaicRasterGDAL = {
+    def executeTranslate(
+        outputPath: String,
+        raster: MosaicRasterGDAL,
+        command: String,
+        writeOptions: MosaicRasterWriteOptions
+    ): MosaicRasterGDAL = {
         require(command.startsWith("gdal_translate"), "Not a valid GDAL Translate command.")
-        val translateOptionsVec = OperatorOptions.parseOptions(command)
+        val effectiveCommand = OperatorOptions.appendOptions(command, writeOptions)
+        val translateOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val translateOptions = new TranslateOptions(translateOptionsVec)
         val result = gdal.Translate(outputPath, raster.getRaster, translateOptions)
-        if (result == null) {
-            throw new Exception(
-                s"""
-                   |Translate failed.
-                   |Command: $command
-                   |Error: ${gdal.GetLastErrorMsg}
-                   |""".stripMargin)
-        }
+        val errorMsg = gdal.GetLastErrorMsg
         val size = Files.size(Paths.get(outputPath))
-        raster.copy(raster = result, path = outputPath, memSize = size).flushCache()
+        val createInfo = Map(
+          "path" -> outputPath,
+          "parentPath" -> raster.getParentPath,
+          "driver" -> writeOptions.format,
+          "last_command" -> effectiveCommand,
+          "last_error" -> errorMsg,
+          "all_parents" -> raster.getParentPath
+        )
+        raster
+            .copy(raster = result, createInfo = createInfo, memSize = size)
+            .flushCache()
     }
 
 }

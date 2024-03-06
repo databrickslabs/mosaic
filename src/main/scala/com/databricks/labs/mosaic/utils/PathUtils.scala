@@ -1,20 +1,23 @@
 package com.databricks.labs.mosaic.utils
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.functions.MosaicContext
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
+import scala.jdk.CollectionConverters._
 
 object PathUtils {
 
     val NO_PATH_STRING = "no_path"
 
-    def getCleanPath(path: String): String = {
-        val cleanPath = path
+    def replaceDBFSTokens(path: String): String = {
+        path
             .replace("file:/", "/")
             .replace("dbfs:/Volumes", "/Volumes")
-            .replace("dbfs:/","/dbfs/")
+            .replace("dbfs:/", "/dbfs/")
+    }
+
+    def getCleanPath(path: String): String = {
+        val cleanPath = replaceDBFSTokens(path)
         if (cleanPath.endsWith(".zip") || cleanPath.contains(".zip:")) {
             getZipPath(cleanPath)
         } else {
@@ -47,7 +50,7 @@ object PathUtils {
     }
 
     def createTmpFilePath(extension: String): String = {
-        val tmpDir = MosaicContext.tmpDir
+        val tmpDir = MosaicContext.tmpDir(null)
         val uuid = java.util.UUID.randomUUID.toString
         val outPath = s"$tmpDir/raster_${uuid.replace("-", "_")}.$extension"
         Files.createDirectories(Paths.get(outPath).getParent)
@@ -62,16 +65,60 @@ object PathUtils {
         result
     }
 
-    def copyToTmp(inPath: String): String = { 
-        val copyFromPath = inPath
-            .replace("file:/", "/")
-            .replace("dbfs:/Volumes", "/Volumes")
-            .replace("dbfs:/","/dbfs/")
-        val driver = MosaicRasterGDAL.identifyDriver(getCleanPath(inPath))
-        val extension = if (inPath.endsWith(".zip")) "zip" else GDAL.getExtension(driver)
-        val tmpPath = createTmpFilePath(extension)
-        Files.copy(Paths.get(copyFromPath), Paths.get(tmpPath))
+    def getStemRegex(path: String): String = {
+        val cleanPath = replaceDBFSTokens(path)
+        val fileName = Paths.get(cleanPath).getFileName.toString
+        val stemName = fileName.substring(0, fileName.lastIndexOf("."))
+        val stemEscaped = stemName.replace(".", "\\.")
+        val stemRegex = s"$stemEscaped\\..*".r
+        stemRegex.toString
+    }
+    
+    def copyToTmpWithRetry(inPath: String, retries: Int = 3): String = {
+        var tmpPath = copyToTmp(inPath)
+        var i = 0
+        while (Files.notExists(Paths.get(tmpPath)) && i < retries) {
+            tmpPath = copyToTmp(inPath)
+            i += 1
+        }
         tmpPath
+    }
+
+    def copyToTmp(inPath: String): String = {
+        val copyFromPath = replaceDBFSTokens(inPath)
+        val inPathDir = Paths.get(copyFromPath).getParent.toString
+
+        val fullFileName = copyFromPath.split("/").last
+        val stemRegex = getStemRegex(inPath)
+
+        wildcardCopy(inPathDir, MosaicContext.tmpDir(null), stemRegex)
+
+        s"${MosaicContext.tmpDir(null)}/$fullFileName"
+    }
+
+    def wildcardCopy(inDirPath: String, outDirPath: String, pattern: String): Unit = {
+        import org.apache.commons.io.FileUtils
+        val copyFromPath = replaceDBFSTokens(inDirPath)
+        val copyToPath = replaceDBFSTokens(outDirPath)
+
+        val toCopy = Files
+            .list(Paths.get(copyFromPath))
+            .filter(_.getFileName.toString.matches(pattern))
+            .collect(java.util.stream.Collectors.toList[Path])
+            .asScala
+        
+        for (path <- toCopy) {
+            val destination = Paths.get(copyToPath, path.getFileName.toString)
+            // noinspection SimplifyBooleanMatch
+            if (Files.isDirectory(path)) FileUtils.copyDirectory(path.toFile, destination.toFile)
+            else FileUtils.copyFile(path.toFile, destination.toFile)
+        }
+    }
+
+    def parseUnzippedPathFromExtracted(lastExtracted: String, extension: String): String = {
+        val trimmed = lastExtracted.replace("extracting: ", "").replace(" ", "")
+        val indexOfFormat = trimmed.indexOf(s".$extension/")
+        trimmed.substring(0, indexOfFormat + extension.length + 1)
     }
 
 }

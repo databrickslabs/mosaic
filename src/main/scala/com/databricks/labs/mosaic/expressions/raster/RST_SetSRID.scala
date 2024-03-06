@@ -1,8 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
-import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
@@ -11,6 +9,7 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.types.DataType
 
 /** The expression for clipping a raster by a vector. */
 case class RST_SetSRID(
@@ -19,13 +18,14 @@ case class RST_SetSRID(
     expressionConfig: MosaicExpressionConfig
 ) extends Raster1ArgExpression[RST_SetSRID](
       rastersExpr,
-    sridExpr,
-      RasterTileType(expressionConfig.getCellIdType),
+      sridExpr,
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, rastersExpr)
 
     val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
 

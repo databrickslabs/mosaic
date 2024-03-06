@@ -37,9 +37,7 @@ class TestVectorFunctions(MosaicTestCase):
             .select(col("id").cast("double"))
             .withColumn(
                 "points",
-                api.st_geomfromwkt(
-                    concat(lit("POINT (9 9 "), "id", lit(")"))
-                ),
+                api.st_geomfromwkt(concat(lit("POINT (9 9 "), "id", lit(")"))),
             )
             .withColumn("z", api.st_z("points"))
             .collect()

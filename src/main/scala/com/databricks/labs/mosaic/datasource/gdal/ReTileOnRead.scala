@@ -19,11 +19,17 @@ import java.nio.file.{Files, Paths}
 /** An object defining the retiling read strategy for the GDAL file format. */
 object ReTileOnRead extends ReadStrategy {
 
+    val tileDataType: DataType = StringType
+
     // noinspection DuplicatedCode
     /**
       * Returns the schema of the GDAL file format.
       * @note
-      *   Different read strategies can have different schemas.
+      *   Different read strategies can have different schemas. This is because
+      *   the schema is defined by the read strategy. For retiling we always use
+      *   checkpoint location. In this case rasters are stored off spark rows.
+      *   If you need the tiles in memory please load them from path stored in
+      *   the tile returned by the reader.
       *
       * @param options
       *   Options passed to the reader.
@@ -54,7 +60,10 @@ object ReTileOnRead extends ReadStrategy {
             .add(StructField(SUBDATASETS, MapType(StringType, StringType), nullable = false))
             .add(StructField(SRID, IntegerType, nullable = false))
             .add(StructField(LENGTH, LongType, nullable = false))
-            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType), nullable = false))
+            // Note that for retiling we always use checkpoint location.
+            // In this case rasters are stored off spark rows.
+            // If you need the tiles in memory please load them from path stored in the tile returned by the reader.
+            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, tileDataType), nullable = false))
     }
 
     /**
@@ -84,7 +93,7 @@ object ReTileOnRead extends ReadStrategy {
         val uuid = getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
 
-        val tmpPath = PathUtils.copyToTmp(inPath)
+        var tmpPath = PathUtils.copyToTmpWithRetry(inPath, 5)
         val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
 
         val rows = tiles.map(tile => {
@@ -103,7 +112,7 @@ object ReTileOnRead extends ReadStrategy {
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
             // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize()))
+            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType)))
             RasterCleaner.dispose(tile)
             row
         })
@@ -125,8 +134,9 @@ object ReTileOnRead extends ReadStrategy {
       */
     def localSubdivide(inPath: String, parentPath: String, sizeInMB: Int): Seq[MosaicRasterTile] = {
         val cleanPath = PathUtils.getCleanPath(inPath)
-        val raster = MosaicRasterGDAL.readRaster(cleanPath, parentPath)
-        val inTile = new MosaicRasterTile(null, raster, parentPath, raster.getDriversShortName)
+        val createInfo = Map("path" -> cleanPath, "parentPath" -> parentPath)
+        val raster = MosaicRasterGDAL.readRaster(createInfo)
+        val inTile = new MosaicRasterTile(null, raster)
         val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)
         RasterCleaner.dispose(raster)
         RasterCleaner.dispose(inTile)

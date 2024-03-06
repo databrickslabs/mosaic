@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -20,8 +21,6 @@ import scala.reflect.ClassTag
   *   The expression for the raster. If the raster is stored on disc, the path
   *   to the raster is provided. If the raster is stored in memory, the bytes of
   *   the raster are provided.
-  * @param outputType
-  *   The output type of the result.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -29,7 +28,6 @@ import scala.reflect.ClassTag
   */
 abstract class RasterExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
-    outputType: DataType,
     returnsRaster: Boolean,
     expressionConfig: MosaicExpressionConfig
 ) extends UnaryExpression
@@ -42,9 +40,6 @@ abstract class RasterExpression[T <: Expression: ClassTag](
     protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
 
     override def child: Expression = rasterExpr
-
-    /** Output Data Type */
-    override def dataType: DataType = outputType
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -69,9 +64,14 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       */
     override def nullSafeEval(input: Any): Any = {
         GDAL.enable(expressionConfig)
-        val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], cellIdDataType)
+        val rasterType = RasterTileType(rasterExpr).rasterType
+        val tile = MosaicRasterTile.deserialize(
+          input.asInstanceOf[InternalRow],
+          cellIdDataType,
+          rasterType
+        )
         val result = rasterTransform(tile)
-        val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
+        val serialized = serialize(result, returnsRaster, rasterType, expressionConfig)
         RasterCleaner.dispose(tile)
         serialized
     }

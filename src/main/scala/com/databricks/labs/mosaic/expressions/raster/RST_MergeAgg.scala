@@ -20,7 +20,7 @@ import scala.collection.mutable.ArrayBuffer
 /** Merges rasters into a single raster. */
 //noinspection DuplicatedCode
 case class RST_MergeAgg(
-    rasterExpr: Expression,
+    tileExpr: Expression,
     expressionConfig: MosaicExpressionConfig,
     mutableAggBufferOffset: Int = 0,
     inputAggBufferOffset: Int = 0
@@ -29,9 +29,9 @@ case class RST_MergeAgg(
       with RasterExpressionSerialization {
 
     override lazy val deterministic: Boolean = true
-    override val child: Expression = rasterExpr
+    override val child: Expression = tileExpr
     override val nullable: Boolean = false
-    override val dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
+    override lazy val dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
     override def prettyName: String = "rst_merge_agg"
 
     private lazy val projection = UnsafeProjection.create(Array[DataType](ArrayType(elementType = dataType, containsNull = false)))
@@ -66,20 +66,24 @@ case class RST_MergeAgg(
 
             // This is a trick to get the rasters sorted by their parent path to ensure more consistent results
             // when merging rasters with large overlaps
+            val rasterType = RasterTileType(tileExpr).rasterType
             var tiles = buffer
-                .map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType))
+                .map(row =>
+                    MosaicRasterTile.deserialize(
+                      row.asInstanceOf[InternalRow],
+                      expressionConfig.getCellIdType,
+                      rasterType
+                    )
+                )
                 .sortBy(_.getParentPath)
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
             var merged = MergeRasters.merge(tiles.map(_.getRaster)).flushCache()
-            // TODO: should parent path be an array?
-            val parentPath = tiles.head.getParentPath
-            val driver = tiles.head.getDriver
 
-            val result = MosaicRasterTile(idx, merged, parentPath, driver)
+            val result = MosaicRasterTile(idx, merged)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(BinaryType, expressionConfig.getRasterCheckpoint)
+                .serialize(BinaryType)
 
             tiles.foreach(RasterCleaner.dispose(_))
             RasterCleaner.dispose(merged)
@@ -103,7 +107,7 @@ case class RST_MergeAgg(
         buffer
     }
 
-    override protected def withNewChildInternal(newChild: Expression): RST_MergeAgg = copy(rasterExpr = newChild)
+    override protected def withNewChildInternal(newChild: Expression): RST_MergeAgg = copy(tileExpr = newChild)
 
 }
 

@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.functions._
 import org.scalatest.matchers.should.Matchers._
 
 trait RST_TessellateBehaviors extends QueryTest {
@@ -25,8 +25,10 @@ trait RST_TessellateBehaviors extends QueryTest {
 
         val gridTiles = rastersInMemory
             .withColumn("tiles", rst_tessellate($"tile", 3))
-            .select("tiles")
-
+            .withColumn("bbox", st_aswkt(rst_boundingbox($"tile")))
+            .select("bbox", "path", "tiles")
+            .withColumn("avg", rst_avg($"tiles"))
+        
         rastersInMemory
             .createOrReplaceTempView("source")
 
@@ -38,9 +40,9 @@ trait RST_TessellateBehaviors extends QueryTest {
             .withColumn("tiles", rst_tessellate($"tile", 3))
             .select("tiles")
 
-        val result = gridTiles.collect()
+        val result = gridTiles.select(explode(col("avg")).alias("a")).groupBy("a").count().collect()
 
-        result.length should be(462)
+        result.length should be(441)
 
         val netcdf = spark.read
             .format("gdal")

@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions
 
-import org.apache.spark.sql.catalyst.util.{ArrayBasedMapBuilder, ArrayBasedMapData, ArrayData}
+import org.apache.spark.sql.catalyst.util.{ArrayBasedMapBuilder, ArrayBasedMapData, ArrayData, MapData}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -21,8 +21,8 @@ package object raster {
       *   The measure type of the resulting pixel value.
       *
       * @return
-      * The datatype to be used for serialization of the result of
-      * [[com.databricks.labs.mosaic.expressions.raster.base.RasterToGridExpression]].
+      *   The datatype to be used for serialization of the result of
+      *   [[com.databricks.labs.mosaic.expressions.raster.base.RasterToGridExpression]].
       */
     def RasterToGridType(cellIDType: DataType, measureType: DataType): DataType = {
         ArrayType(
@@ -47,6 +47,19 @@ package object raster {
         val mapBuilder = new ArrayBasedMapBuilder(StringType, StringType)
         mapBuilder.putAll(keys, values)
         mapBuilder.build()
+    }
+
+    /**
+      * Extracts a scala Map[String, String] from a spark map.
+      * @param mapData
+      *   The map to be used.
+      * @return
+      *   Deserialized map.
+      */
+    def extractMap(mapData: MapData): Map[String, String] = {
+        val keys = mapData.keyArray().toArray[UTF8String](StringType).map(_.toString)
+        val values = mapData.valueArray().toArray[UTF8String](StringType).map(_.toString)
+        keys.zip(values).toMap
     }
 
     /**

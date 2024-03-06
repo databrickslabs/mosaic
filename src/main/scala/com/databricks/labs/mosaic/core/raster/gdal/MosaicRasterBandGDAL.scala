@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.gdal
 
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import org.gdal.gdal.Band
 import org.gdal.gdalconst.gdalconstConstants
 
@@ -220,6 +221,30 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
     }
 
     /**
+      * Counts the number of pixels in the band. The mask is used to determine
+      * if a pixel is valid. If pixel value is noData or mask value is 0.0, the
+      * pixel is not counted.
+      *
+      * @return
+      *   Returns the band's pixel count.
+      */
+    def pixelCount: Int = {
+        val line = Array.ofDim[Double](band.GetXSize())
+        val maskLine = Array.ofDim[Double](band.GetXSize())
+        var count = 0
+        for (y <- 0 until band.GetYSize()) {
+            band.ReadRaster(0, y, band.GetXSize(), 1, line)
+            val maskRead = band.GetMaskBand().ReadRaster(0, y, band.GetXSize(), 1, maskLine)
+            if (maskRead != gdalconstConstants.CE_None) {
+                count = count + line.count(_ != noDataValue)
+            } else {
+                count = count + line.zip(maskLine).count { case (pixel, mask) => pixel != noDataValue && mask != 0.0 }
+            }
+        }
+        count
+    }
+
+    /**
       * @return
       *   Returns the band's mask flags.
       */
@@ -238,6 +263,96 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
     def isEmpty: Boolean = {
         val stats = band.AsMDArray().GetStatistics()
         stats.getValid_count == 0
+    }
+
+    /**
+      * Applies a kernel filter to the band. It assumes the kernel is square and
+      * has an odd number of rows and columns.
+      *
+      * @param kernel
+      *   The kernel to apply to the band.
+      * @return
+      *   The band with the kernel filter applied.
+      */
+    def convolve(kernel: Array[Array[Double]], outputBand: Band): Unit = {
+        val kernelSize = kernel.length
+        require(kernelSize % 2 == 1, "Kernel size must be odd")
+
+        val blockSize = MosaicGDAL.blockSize
+        val stride = kernelSize / 2
+
+        for (yOffset <- 0 until ySize by blockSize) {
+            for (xOffset <- 0 until xSize by blockSize) {
+
+                val currentBlock = GDALBlock(
+                    this,
+                    stride,
+                    xOffset,
+                    yOffset,
+                    blockSize
+                )
+
+                val result = Array.ofDim[Double](currentBlock.block.length)
+
+                for (y <- 0 until currentBlock.height) {
+                    for (x <- 0 until currentBlock.width) {
+                        result(y * currentBlock.width + x) = currentBlock.convolveAt(x, y, kernel)
+                    }
+                }
+
+                val trimmedResult = currentBlock.copy(block = result).trimBlock(stride)
+
+                outputBand.WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.block)
+                outputBand.FlushCache()
+                outputBand.GetMaskBand().WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.maskBlock)
+                outputBand.GetMaskBand().FlushCache()
+
+            }
+        }
+    }
+
+    def filter(kernelSize: Int, operation: String, outputBand: Band): Unit = {
+        require(kernelSize % 2 == 1, "Kernel size must be odd")
+
+        val blockSize = MosaicGDAL.blockSize
+        val stride = kernelSize / 2
+
+        for (yOffset <- 0 until ySize by blockSize) {
+            for (xOffset <- 0 until xSize by blockSize) {
+
+                val currentBlock = GDALBlock(
+                  this,
+                  stride,
+                  xOffset,
+                  yOffset,
+                  blockSize
+                )
+
+                val result = Array.ofDim[Double](currentBlock.block.length)
+
+                for (y <- 0 until currentBlock.height) {
+                    for (x <- 0 until currentBlock.width) {
+                        result(y * currentBlock.width + x) = operation match {
+                            case "avg"    => currentBlock.avgFilterAt(x, y, kernelSize)
+                            case "min"    => currentBlock.minFilterAt(x, y, kernelSize)
+                            case "max"    => currentBlock.maxFilterAt(x, y, kernelSize)
+                            case "median" => currentBlock.medianFilterAt(x, y, kernelSize)
+                            case "mode"   => currentBlock.modeFilterAt(x, y, kernelSize)
+                            case _        => throw new Exception("Invalid operation")
+                        }
+                    }
+                }
+
+                val trimmedResult = currentBlock.copy(block = result).trimBlock(stride)
+
+                outputBand.WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.block)
+                outputBand.FlushCache()
+                outputBand.GetMaskBand().WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.maskBlock)
+                outputBand.GetMaskBand().FlushCache()
+
+            }
+        }
+
     }
 
 }

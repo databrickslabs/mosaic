@@ -2,11 +2,12 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, TernaryExpression}
-import org.apache.spark.sql.types.{ArrayType, DataType}
+import org.apache.spark.sql.types.ArrayType
 
 import scala.reflect.ClassTag
 
@@ -18,8 +19,6 @@ import scala.reflect.ClassTag
   * @param rastersExpr
   *   The rasters expression. It is an array column containing rasters as either
   *   paths or as content byte arrays.
-  * @param outputType
-  *   The output type of the result.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -29,16 +28,12 @@ abstract class RasterArray2ArgExpression[T <: Expression: ClassTag](
     rastersExpr: Expression,
     arg1Expr: Expression,
     arg2Expr: Expression,
-    outputType: DataType,
     returnsRaster: Boolean,
     expressionConfig: MosaicExpressionConfig
 ) extends TernaryExpression
       with NullIntolerant
       with Serializable
       with RasterExpressionSerialization {
-
-    /** Output Data Type */
-    override def dataType: DataType = if (returnsRaster) rastersExpr.dataType.asInstanceOf[ArrayType].elementType else outputType
 
     override def first: Expression = rastersExpr
 
@@ -77,7 +72,8 @@ abstract class RasterArray2ArgExpression[T <: Expression: ClassTag](
         GDAL.enable(expressionConfig)
         val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
         val result = rasterTransform(tiles, arg1, arg2)
-        val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
+        val resultType = if (returnsRaster) RasterTileType(rastersExpr).rasterType else dataType
+        val serialized = serialize(result, returnsRaster, resultType, expressionConfig)
         tiles.foreach(t => RasterCleaner.dispose(t))
         serialized
     }

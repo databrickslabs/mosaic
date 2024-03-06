@@ -9,6 +9,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.types.DataType
 
 /** Returns the world coordinate of the raster. */
 case class RST_WorldToRasterCoord(
@@ -16,9 +17,11 @@ case class RST_WorldToRasterCoord(
     x: Expression,
     y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_WorldToRasterCoord](raster, x, y, PixelCoordsType, returnsRaster = false, expressionConfig)
+) extends Raster2ArgExpression[RST_WorldToRasterCoord](raster, x, y, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = PixelCoordsType
 
     /**
       * Returns the x and y of the raster by applying GeoTransform as a tuple of

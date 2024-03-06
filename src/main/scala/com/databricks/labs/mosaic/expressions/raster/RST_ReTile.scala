@@ -8,6 +8,7 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.types.DataType
 
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
@@ -21,6 +22,8 @@ case class RST_ReTile(
 ) extends RasterGeneratorExpression[RST_ReTile](rasterExpr, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = rasterExpr.dataType
 
     /**
       * Returns a set of new rasters with the specified tile size (tileWidth x

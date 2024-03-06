@@ -15,7 +15,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, Literal, NullIntolerant}
-import org.apache.spark.sql.types.{DataType, IntegerType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
@@ -32,8 +32,10 @@ case class RST_FromFile(
       with Serializable
       with NullIntolerant
       with CodegenFallback {
+    
+    val tileType: DataType = BinaryType
 
-    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileType)
 
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 
@@ -63,10 +65,12 @@ case class RST_FromFile(
         val readPath = PathUtils.getCleanPath(path)
         val driver = MosaicRasterGDAL.identifyDriver(path)
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
-        if (targetSize <= 0 && Files.size(Paths.get(readPath)) <= Integer.MAX_VALUE) {
-            var raster = MosaicRasterGDAL.readRaster(readPath, path)
-            var tile = MosaicRasterTile(null, raster, path, raster.getDriversShortName)
-            val row = tile.formatCellId(indexSystem).serialize()
+        val currentSize = Files.size(Paths.get(PathUtils.replaceDBFSTokens(readPath)))
+        if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
+            val createInfo = Map("path" -> readPath, "parentPath" -> path)
+            var raster = MosaicRasterGDAL.readRaster(createInfo)
+            var tile = MosaicRasterTile(null, raster)
+            val row = tile.formatCellId(indexSystem).serialize(tileType)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
             raster = null
@@ -79,7 +83,7 @@ case class RST_FromFile(
             Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
             val size = if (targetSize <= 0) 64 else targetSize
             var tiles = ReTileOnRead.localSubdivide(tmpPath, path, size)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize())
+            val rows = tiles.map(_.formatCellId(indexSystem).serialize(tileType))
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(tmpPath))
             tiles = null

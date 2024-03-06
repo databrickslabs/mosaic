@@ -5,7 +5,6 @@ from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
 from pyspark.sql.functions import lit
 from typing import Any
 
-
 #######################
 # Raster functions    #
 #######################
@@ -15,16 +14,19 @@ __all__ = [
     "rst_boundingbox",
     "rst_clip",
     "rst_combineavg",
+    "rst_convolve",
     "rst_derivedband",
     "rst_frombands",
     "rst_fromcontent",
     "rst_fromfile",
+    "rst_filter",
     "rst_georeference",
     "rst_getnodata",
     "rst_getsubdataset",
     "rst_height",
     "rst_initnodata",
     "rst_isempty",
+    "rst_maketiles",
     "rst_mapalgebra",
     "rst_memsize",
     "rst_merge",
@@ -55,6 +57,7 @@ __all__ = [
     "rst_subdivide",
     "rst_summary",
     "rst_tessellate",
+    "rst_transform",
     "rst_to_overlapping_tiles",
     "rst_tryopen",
     "rst_upperleftx",
@@ -153,6 +156,32 @@ def rst_combineavg(raster_tiles: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_combineavg", pyspark_to_java_column(raster_tiles)
+    )
+
+
+def rst_convolve(raster_tile: ColumnOrName, kernel: ColumnOrName) -> Column:
+    """
+    Applies a convolution filter to the raster.
+    The result is Mosaic raster tile struct column to the filtered raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    kernel : Column (ArrayType(ArrayType(DoubleType)))
+        The kernel to apply to the raster.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_convolve",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(kernel),
     )
 
 
@@ -313,6 +342,43 @@ def rst_isempty(raster_tile: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_isempty", pyspark_to_java_column(raster_tile)
+    )
+
+
+def rst_maketiles(input: ColumnOrName, driver: Any = "no_driver", size_in_mb: Any = -1,
+                  with_checkpoint: Any = False) -> Column:
+    """
+    Tiles the raster into tiles of the given size.
+    :param input: If the raster is stored on disc, the path
+        to the raster is provided. If the raster is stored in memory, the bytes of
+        the raster are provided.
+    :param driver: The driver to use for reading the raster. If not specified, the driver is
+        inferred from the file extension. If the input is a byte array, the driver
+        has to be specified.
+    :param size_in_mb: The size of the tiles in MB. If set to -1, the file is loaded and returned
+        as a single tile. If set to 0, the file is loaded and subdivided into
+        tiles of size 64MB. If set to a positive value, the file is loaded and
+        subdivided into tiles of the specified size. If the file is too big to fit
+        in memory, it is subdivided into tiles of size 64MB.
+    :param with_checkpoint: If set to true, the tiles are written to the checkpoint directory. If set
+        to false, the tiles are returned as a in-memory byte arrays.
+    :return: A collection of tiles of the raster.
+    """
+    if type(size_in_mb) == int:
+        size_in_mb = lit(size_in_mb)
+
+    if type(with_checkpoint) == bool:
+        with_checkpoint = lit(with_checkpoint)
+
+    if type(driver) == str:
+        driver = lit(driver)
+
+    return config.mosaic_context.invoke_function(
+        "rst_maketiles",
+        pyspark_to_java_column(input),
+        pyspark_to_java_column(driver),
+        pyspark_to_java_column(size_in_mb),
+        pyspark_to_java_column(with_checkpoint),
     )
 
 
@@ -630,7 +696,7 @@ def rst_rastertogridmin(raster_tile: ColumnOrName, resolution: ColumnOrName) -> 
 
 
 def rst_rastertoworldcoord(
-    raster_tile: ColumnOrName, x: ColumnOrName, y: ColumnOrName
+        raster_tile: ColumnOrName, x: ColumnOrName, y: ColumnOrName
 ) -> Column:
     """
     Computes the world coordinates of the raster pixel at the given x and y coordinates.
@@ -997,6 +1063,32 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
     )
 
 
+def rst_transform(raster_tile: ColumnOrName, srid: ColumnOrName) -> Column:
+    """
+    Transforms the raster to the given SRID.
+    The result is a Mosaic raster tile struct of the transformed raster.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    srid : Column (IntegerType)
+        EPSG authority code for the file's projection.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_transform",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(srid),
+    )
+
+
 def rst_fromcontent(
     raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1
 ) -> Column:
@@ -1032,6 +1124,28 @@ def rst_fromfile(raster_path: ColumnOrName, size_in_mb: Any = -1) -> Column:
         "rst_fromfile",
         pyspark_to_java_column(raster_path),
         pyspark_to_java_column(size_in_mb),
+    )
+
+
+def rst_filter(raster_tile: ColumnOrName, kernel_size: Any, operation: Any) -> Column:
+    """
+    Applies a filter to the raster.
+    :param raster_tile: Mosaic raster tile struct column.
+    :param kernel_size: The size of the kernel. Has to be odd.
+    :param operation: The operation to apply to the kernel.
+    :return: A new raster tile with the filter applied.
+    """
+    if type(kernel_size) == int:
+        kernel_size = lit(kernel_size)
+
+    if type(operation) == str:
+        operation = lit(operation)
+
+    return config.mosaic_context.invoke_function(
+        "rst_filter",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(kernel_size),
+        pyspark_to_java_column(operation),
     )
 
 

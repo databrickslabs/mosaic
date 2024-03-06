@@ -17,6 +17,7 @@ object FormatLookup {
         "CAD" -> "dwg",
         "CEOS" -> "ceos",
         "COASP" -> "coasp",
+        "COG" -> "tif",
         "COSAR" -> "cosar",
         "CPG" -> "cpg",
         "CSW" -> "csw",

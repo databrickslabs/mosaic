@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
-import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
+import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.utils.PathUtils
 
@@ -39,12 +39,13 @@ object ReTile {
 
             val fileExtension = raster.getRasterFileExtension
             val rasterPath = PathUtils.createTmpFilePath(fileExtension)
-            val shortDriver = raster.getDriversShortName
+            val outOptions = raster.getWriteOptions
 
             val result = GDALTranslate.executeTranslate(
               rasterPath,
               raster,
-              command = s"gdal_translate -of $shortDriver -srcwin $xMin $yMin $xOffset $yOffset -co COMPRESS=DEFLATE"
+              command = s"gdal_translate -srcwin $xMin $yMin $xOffset $yOffset",
+                outOptions
             )
 
             val isEmpty = result.isEmpty
@@ -57,7 +58,7 @@ object ReTile {
 
         val (_, valid) = tiles.partition(_._1)
 
-        valid.map(t => MosaicRasterTile(null, t._2, raster.getParentPath, raster.getDriversShortName))
+        valid.map(t => MosaicRasterTile(null, t._2))
 
     }
 

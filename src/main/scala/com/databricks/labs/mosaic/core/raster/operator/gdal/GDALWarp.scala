@@ -23,26 +23,22 @@ object GDALWarp {
     def executeWarp(outputPath: String, rasters: Seq[MosaicRasterGDAL], command: String): MosaicRasterGDAL = {
         require(command.startsWith("gdalwarp"), "Not a valid GDAL Warp command.")
         // Test: gdal.ParseCommandLine(command)
-        val warpOptionsVec = OperatorOptions.parseOptions(command)
+        val effectiveCommand = OperatorOptions.appendOptions(command, rasters.head.getWriteOptions)
+        val warpOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val warpOptions = new WarpOptions(warpOptionsVec)
         val result = gdal.Warp(outputPath, rasters.map(_.getRaster).toArray, warpOptions)
-        // TODO: Figure out multiple parents, should this be an array?
         // Format will always be the same as the first raster
-        if (result == null) {
-            throw new Exception(s"""
-                                   |Warp failed.
-                                   |Command: $command
-                                   |Error: ${gdal.GetLastErrorMsg}
-                                   |""".stripMargin)
-        }
+        val errorMsg = gdal.GetLastErrorMsg
         val size = Files.size(Paths.get(outputPath))
-        rasters.head
-            .copy(
-              raster = result,
-              path = outputPath,
-              memSize = size
-            )
-            .flushCache()
+        val createInfo = Map(
+          "path" -> outputPath,
+          "parentPath" -> rasters.head.getParentPath,
+          "driver" -> rasters.head.getWriteOptions.format,
+          "last_command" -> effectiveCommand,
+          "last_error" -> errorMsg,
+          "all_parents" -> rasters.map(_.getParentPath).mkString(";")
+        )
+        rasters.head.copy(raster = result, createInfo = createInfo, memSize = size).flushCache()
     }
 
 }

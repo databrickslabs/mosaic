@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.functions.collect_set
+import org.apache.spark.sql.functions.collect_list
 import org.scalatest.matchers.should.Matchers._
 
 trait RST_MergeBehaviors extends QueryTest {
@@ -29,7 +29,7 @@ trait RST_MergeBehaviors extends QueryTest {
             .select("path", "tile")
             .groupBy("path")
             .agg(
-              collect_set("tile").as("tiles")
+              collect_list("tile").as("tiles")
             )
             .select(
               rst_merge($"tiles").as("tile")
@@ -41,7 +41,7 @@ trait RST_MergeBehaviors extends QueryTest {
         spark.sql("""
                     |select rst_merge(tiles) as tile
                     |from (
-                    |  select collect_set(tile) as tiles
+                    |  select collect_list(tile) as tiles
                     |  from (
                     |    select path, rst_tessellate(tile, 3) as tile
                     |    from source
@@ -55,7 +55,7 @@ trait RST_MergeBehaviors extends QueryTest {
             .select("path", "tile")
             .groupBy("path")
             .agg(
-              collect_set("tile").as("tiles")
+              collect_list("tile").as("tiles")
             )
             .select(
               rst_merge($"tiles").as("tile")

@@ -19,10 +19,10 @@ object MergeBands {
       *   A MosaicRaster object.
       */
     def merge(rasters: Seq[MosaicRasterGDAL], resampling: String): MosaicRasterGDAL = {
-        val outShortName = rasters.head.getRaster.GetDriver.getShortName
+        val outOptions = rasters.head.getWriteOptions
 
         val vrtPath = PathUtils.createTmpFilePath("vrt")
-        val rasterPath = PathUtils.createTmpFilePath("tif")
+        val rasterPath = PathUtils.createTmpFilePath(outOptions.extension)
 
         val vrtRaster = GDALBuildVRT.executeVRT(
           vrtPath,
@@ -33,7 +33,8 @@ object MergeBands {
         val result = GDALTranslate.executeTranslate(
           rasterPath,
           vrtRaster,
-          command = s"gdal_translate -r $resampling -of $outShortName -co COMPRESS=DEFLATE"
+          command = s"gdal_translate -r $resampling",
+          outOptions
         )
 
         dispose(vrtRaster)
@@ -55,10 +56,10 @@ object MergeBands {
       *   A MosaicRaster object.
       */
     def merge(rasters: Seq[MosaicRasterGDAL], pixel: (Double, Double), resampling: String): MosaicRasterGDAL = {
-        val outShortName = rasters.head.getRaster.GetDriver.getShortName
+        val outOptions = rasters.head.getWriteOptions
 
         val vrtPath = PathUtils.createTmpFilePath("vrt")
-        val rasterPath = PathUtils.createTmpFilePath("tif")
+        val rasterPath = PathUtils.createTmpFilePath(outOptions.extension)
 
         val vrtRaster = GDALBuildVRT.executeVRT(
           vrtPath,
@@ -69,7 +70,8 @@ object MergeBands {
         val result = GDALTranslate.executeTranslate(
           rasterPath,
           vrtRaster,
-          command = s"gdalwarp -r $resampling -of $outShortName -co COMPRESS=DEFLATE -overwrite"
+          command = s"gdalwarp -r $resampling",
+          outOptions
         )
 
         dispose(vrtRaster)

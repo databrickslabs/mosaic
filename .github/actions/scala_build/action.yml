@@ -27,7 +27,7 @@ runs:
             sudo apt-get update -y
             # - install natives
             sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
-            sudo apt-get install -y gdal-bin libgdal-dev python3-numpy python3-gdal
+            sudo apt-get install -y gdal-bin libgdal-dev python3-numpy python3-gdal zip unzip
             # - install pip libs
             pip install --upgrade pip
             pip install gdal==${{ matrix.gdal }}

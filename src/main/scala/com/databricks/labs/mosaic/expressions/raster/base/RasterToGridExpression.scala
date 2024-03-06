@@ -37,10 +37,12 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     resolution: Expression,
     measureType: DataType,
     expressionConfig: MosaicExpressionConfig
-) extends Raster1ArgExpression[T](rasterExpr, resolution, RasterToGridType(expressionConfig.getCellIdType, measureType), returnsRaster = false, expressionConfig)
+) extends Raster1ArgExpression[T](rasterExpr, resolution, returnsRaster = false, expressionConfig)
       with RasterGridExpression
       with NullIntolerant
       with Serializable {
+
+    override def dataType: DataType = RasterToGridType(expressionConfig.getCellIdType, measureType)
 
     /** The index system to be used. */
     val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)

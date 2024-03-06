@@ -8,20 +8,20 @@ import com.databricks.labs.mosaic.core.types.ChipType
 import com.databricks.labs.mosaic.datasource.multiread.MosaicDataFrameReader
 import com.databricks.labs.mosaic.expressions.constructors._
 import com.databricks.labs.mosaic.expressions.format._
-import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.geometry.ST_MinMaxXYZ._
+import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.index._
 import com.databricks.labs.mosaic.expressions.raster._
 import com.databricks.labs.mosaic.expressions.util.TrySql
+import com.databricks.labs.mosaic.utils.FileUtils
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{LongType, StringType}
+import org.apache.spark.sql.{Column, SparkSession}
 
-import java.nio.file.Files
 import scala.reflect.runtime.universe
 
 //noinspection DuplicatedCode
@@ -258,17 +258,24 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         )
 
         /** RasterAPI dependent functions */
+        mosaicRegistry.registerExpression[RST_Avg](expressionConfig)
         mosaicRegistry.registerExpression[RST_BandMetaData](expressionConfig)
         mosaicRegistry.registerExpression[RST_BoundingBox](expressionConfig)
         mosaicRegistry.registerExpression[RST_Clip](expressionConfig)
         mosaicRegistry.registerExpression[RST_CombineAvg](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Convolve](expressionConfig)
         mosaicRegistry.registerExpression[RST_DerivedBand](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Filter](expressionConfig)
         mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
         mosaicRegistry.registerExpression[RST_GetNoData](expressionConfig)
         mosaicRegistry.registerExpression[RST_GetSubdataset](expressionConfig)
         mosaicRegistry.registerExpression[RST_Height](expressionConfig)
         mosaicRegistry.registerExpression[RST_InitNoData](expressionConfig)
         mosaicRegistry.registerExpression[RST_IsEmpty](expressionConfig)
+        mosaicRegistry.registerExpression[RST_MakeTiles](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Max](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Min](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Median](expressionConfig)
         mosaicRegistry.registerExpression[RST_MemSize](expressionConfig)
         mosaicRegistry.registerExpression[RST_Merge](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromBands](expressionConfig)
@@ -278,6 +285,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_NumBands](expressionConfig)
         mosaicRegistry.registerExpression[RST_PixelWidth](expressionConfig)
         mosaicRegistry.registerExpression[RST_PixelHeight](expressionConfig)
+        mosaicRegistry.registerExpression[RST_PixelCount](expressionConfig)
         mosaicRegistry.registerExpression[RST_RasterToGridAvg](expressionConfig)
         mosaicRegistry.registerExpression[RST_RasterToGridMax](expressionConfig)
         mosaicRegistry.registerExpression[RST_RasterToGridMin](expressionConfig)
@@ -299,6 +307,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_Subdatasets](expressionConfig)
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Transform](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromContent](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromFile](expressionConfig)
         mosaicRegistry.registerExpression[RST_ToOverlappingTiles](expressionConfig)
@@ -653,9 +662,16 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_BandMetaData(raster.expr, lit(band).expr, expressionConfig))
         def rst_boundingbox(raster: Column): Column = ColumnAdapter(RST_BoundingBox(raster.expr, expressionConfig))
         def rst_clip(raster: Column, geometry: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, expressionConfig))
+        def rst_convolve(raster: Column, kernel: Column): Column =
+            ColumnAdapter(RST_Convolve(raster.expr, kernel.expr, expressionConfig))
+        def rst_pixelcount(raster: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, expressionConfig))
         def rst_combineavg(rasterArray: Column): Column = ColumnAdapter(RST_CombineAvg(rasterArray.expr, expressionConfig))
         def rst_derivedband(raster: Column, pythonFunc: Column, funcName: Column): Column =
             ColumnAdapter(RST_DerivedBand(raster.expr, pythonFunc.expr, funcName.expr, expressionConfig))
+        def rst_filter(raster: Column, kernelSize: Column, operation: Column): Column =
+            ColumnAdapter(RST_Filter(raster.expr, kernelSize.expr, operation.expr, expressionConfig))
+        def rst_filter(raster: Column, kernelSize: Int, operation: String): Column =
+            ColumnAdapter(RST_Filter(raster.expr, lit(kernelSize).expr, lit(operation).expr, expressionConfig))
         def rst_georeference(raster: Column): Column = ColumnAdapter(RST_GeoReference(raster.expr, expressionConfig))
         def rst_getnodata(raster: Column): Column = ColumnAdapter(RST_GetNoData(raster.expr, expressionConfig))
         def rst_getsubdataset(raster: Column, subdatasetName: Column): Column =
@@ -665,6 +681,18 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_height(raster: Column): Column = ColumnAdapter(RST_Height(raster.expr, expressionConfig))
         def rst_initnodata(raster: Column): Column = ColumnAdapter(RST_InitNoData(raster.expr, expressionConfig))
         def rst_isempty(raster: Column): Column = ColumnAdapter(RST_IsEmpty(raster.expr, expressionConfig))
+        def rst_maketiles(input: Column, driver: Column, size: Column, withCheckpoint: Column): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, driver.expr, size.expr, withCheckpoint.expr, expressionConfig))
+        def rst_maketiles(input: Column, driver: String, size: Int, withCheckpoint: Boolean): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, lit(driver).expr, lit(size).expr, lit(withCheckpoint).expr, expressionConfig))
+        def rst_maketiles(input: Column, driver: String, size: Int): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, lit(driver).expr, lit(size).expr, lit(false).expr, expressionConfig))
+        def rst_maketiles(input: Column): Column =
+            ColumnAdapter(RST_MakeTiles(input.expr, lit("no_driver").expr, lit(-1).expr, lit(false).expr, expressionConfig))
+        def rst_max(raster: Column): Column = ColumnAdapter(RST_Max(raster.expr, expressionConfig))
+        def rst_min(raster: Column): Column = ColumnAdapter(RST_Min(raster.expr, expressionConfig))
+        def rst_median(raster: Column): Column = ColumnAdapter(RST_Median(raster.expr, expressionConfig))
+        def rst_avg(raster: Column): Column = ColumnAdapter(RST_Avg(raster.expr, expressionConfig))
         def rst_memsize(raster: Column): Column = ColumnAdapter(RST_MemSize(raster.expr, expressionConfig))
         def rst_frombands(bandsArray: Column): Column = ColumnAdapter(RST_FromBands(bandsArray.expr, expressionConfig))
         def rst_merge(rasterArray: Column): Column = ColumnAdapter(RST_Merge(rasterArray.expr, expressionConfig))
@@ -720,6 +748,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_summary(raster: Column): Column = ColumnAdapter(RST_Summary(raster.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Column): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
+        def rst_transform(raster: Column, srid: Column): Column =
+            ColumnAdapter(RST_Transform(raster.expr, srid.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver: Column): Column =
@@ -993,11 +1023,20 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
 object MosaicContext extends Logging {
 
-    val tmpDir: String = Files.createTempDirectory("mosaic").toAbsolutePath.toString
-
+    var _tmpDir: String = ""
     val mosaicVersion: String = "0.4.0"
 
     private var instance: Option[MosaicContext] = None
+    
+    def tmpDir(mosaicConfig: MosaicExpressionConfig): String = {
+        if (_tmpDir == "" || mosaicConfig != null) {
+            val prefix = mosaicConfig.getTmpPrefix
+            _tmpDir = FileUtils.createMosaicTempDir(prefix)
+            _tmpDir
+        } else {
+            _tmpDir
+        }
+    }
 
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {
         instance = Some(new MosaicContext(indexSystem, geometryAPI))
@@ -1043,7 +1082,7 @@ object MosaicContext extends Logging {
         }
 
         if (!isML && !isPhoton && !isTest) {
-            val msg = """|DEPRECATION ERROR: 
+            val msg = """|DEPRECATION ERROR:
                          |  Please use a Databricks:
                          |      - Photon-enabled Runtime for performance benefits
                          |      - Runtime ML for spatial AI benefits

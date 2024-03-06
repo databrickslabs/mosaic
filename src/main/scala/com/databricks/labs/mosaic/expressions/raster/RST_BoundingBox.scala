@@ -15,9 +15,11 @@ import org.apache.spark.sql.types._
 case class RST_BoundingBox(
     raster: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends RasterExpression[RST_BoundingBox](raster, BinaryType, returnsRaster = false, expressionConfig = expressionConfig)
+) extends RasterExpression[RST_BoundingBox](raster, returnsRaster = false, expressionConfig = expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = BinaryType
 
     /**
       * Computes the bounding box of the raster. The bbox is returned as a WKB

@@ -21,12 +21,17 @@ package object mosaic {
     val MOSAIC_GDAL_PREFIX = "spark.databricks.labs.mosaic.gdal."
     val MOSAIC_GDAL_NATIVE = "spark.databricks.labs.mosaic.gdal.native"
     val MOSAIC_RASTER_CHECKPOINT = "spark.databricks.labs.mosaic.raster.checkpoint"
-    val MOSAIC_RASTER_CHECKPOINT_DEFAULT = "dbfs:/tmp/mosaic/raster/checkpoint"
+    val MOSAIC_RASTER_CHECKPOINT_DEFAULT = "/dbfs/tmp/mosaic/raster/checkpoint"
+    val MOSAIC_RASTER_TMP_PREFIX = "spark.databricks.labs.mosaic.raster.tmp.prefix"
+    val MOSAIC_RASTER_BLOCKSIZE = "spark.databricks.labs.mosaic.raster.blocksize"
+    val MOSAIC_RASTER_BLOCKSIZE_DEFAULT = "128"
 
     val MOSAIC_RASTER_READ_STRATEGY = "raster.read.strategy"
     val MOSAIC_RASTER_READ_IN_MEMORY = "in_memory"
     val MOSAIC_RASTER_READ_AS_PATH = "as_path"
     val MOSAIC_RASTER_RE_TILE_ON_READ = "retile_on_read"
+
+    val MOSAIC_NO_DRIVER = "no_driver"
 
 
     def read: MosaicDataFrameReader = new MosaicDataFrameReader(SparkSession.builder().getOrCreate())

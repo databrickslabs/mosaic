@@ -24,7 +24,7 @@ import scala.collection.mutable.ArrayBuffer
   */
 //noinspection DuplicatedCode
 case class RST_DerivedBandAgg(
-    rasterExpr: Expression,
+    tileExpr: Expression,
     pythonFuncExpr: Expression,
     funcNameExpr: Expression,
     expressionConfig: MosaicExpressionConfig,
@@ -36,13 +36,13 @@ case class RST_DerivedBandAgg(
 
     override lazy val deterministic: Boolean = true
     override val nullable: Boolean = false
-    override val dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
+    override lazy val dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
     override def prettyName: String = "rst_combine_avg_agg"
 
     private lazy val projection = UnsafeProjection.create(Array[DataType](ArrayType(elementType = dataType, containsNull = false)))
     private lazy val row = new UnsafeRow(1)
 
-    override def first: Expression = rasterExpr
+    override def first: Expression = tileExpr
     override def second: Expression = pythonFuncExpr
     override def third: Expression = funcNameExpr
 
@@ -74,21 +74,25 @@ case class RST_DerivedBandAgg(
             // This works for Literals only
             val pythonFunc = pythonFuncExpr.eval(null).asInstanceOf[UTF8String].toString
             val funcName = funcNameExpr.eval(null).asInstanceOf[UTF8String].toString
+            val rasterType = RasterTileType(tileExpr).rasterType
 
             // Do do move the expression
-            var tiles = buffer.map(row => MosaicRasterTile.deserialize(row.asInstanceOf[InternalRow], expressionConfig.getCellIdType))
+            var tiles = buffer.map(row =>
+                MosaicRasterTile.deserialize(
+                  row.asInstanceOf[InternalRow],
+                  expressionConfig.getCellIdType,
+                  rasterType
+                )
+            )
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
 
             var combined = PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
-            // TODO: should parent path be an array?
-            val parentPath = tiles.head.getParentPath
-            val driver = tiles.head.getDriver
 
-            val result = MosaicRasterTile(idx, combined, parentPath, driver)
+            val result = MosaicRasterTile(idx, combined)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(BinaryType, expressionConfig.getRasterCheckpoint)
+                .serialize(BinaryType)
 
             tiles.foreach(RasterCleaner.dispose(_))
             RasterCleaner.dispose(result)
@@ -113,7 +117,7 @@ case class RST_DerivedBandAgg(
     }
 
     override protected def withNewChildrenInternal(newFirst: Expression, newSecond: Expression, newThird: Expression): RST_DerivedBandAgg =
-        copy(rasterExpr = newFirst, pythonFuncExpr = newSecond, funcNameExpr = newThird)
+        copy(tileExpr = newFirst, pythonFuncExpr = newSecond, funcNameExpr = newThird)
 
 }
 

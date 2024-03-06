@@ -48,12 +48,13 @@ object OverlappingTiles {
 
                 val fileExtension = GDAL.getExtension(tile.getDriver)
                 val rasterPath = PathUtils.createTmpFilePath(fileExtension)
-                val shortName = raster.getRaster.GetDriver.getShortName
+                val outOptions = raster.getWriteOptions
 
                 val result = GDALTranslate.executeTranslate(
                   rasterPath,
                   raster,
-                  command = s"gdal_translate -of $shortName -srcwin $xOff $yOff $width $height"
+                  command = s"gdal_translate -srcwin $xOff $yOff $width $height",
+                  outOptions
                 )
 
                 val isEmpty = result.isEmpty
@@ -68,7 +69,7 @@ object OverlappingTiles {
 
         val (_, valid) = tiles.flatten.partition(_._1)
 
-        valid.map(t => MosaicRasterTile(null, t._2, raster.getParentPath, raster.getDriversShortName))
+        valid.map(t => MosaicRasterTile(null, t._2))
 
     }
 

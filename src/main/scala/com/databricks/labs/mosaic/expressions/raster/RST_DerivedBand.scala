@@ -9,24 +9,26 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.types.DataType
 import org.apache.spark.unsafe.types.UTF8String
 
 /** Expression for combining rasters using average of pixels. */
 case class RST_DerivedBand(
-    rastersExpr: Expression,
+    tileExpr: Expression,
     pythonFuncExpr: Expression,
     funcNameExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterArray2ArgExpression[RST_DerivedBand](
-      rastersExpr,
+      tileExpr,
       pythonFuncExpr,
       funcNameExpr,
-      RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
 
     /** Combines the rasters using average of pixels. */
     override def rasterTransform(tiles: Seq[MosaicRasterTile], arg1: Any, arg2: Any): Any = {
@@ -35,9 +37,7 @@ case class RST_DerivedBand(
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
         MosaicRasterTile(
           index,
-          PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName),
-          tiles.head.getParentPath,
-          tiles.head.getDriver
+          PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
         )
     }
 

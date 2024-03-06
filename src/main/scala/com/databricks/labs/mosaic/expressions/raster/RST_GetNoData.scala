@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
-import org.apache.spark.sql.types.{ArrayType, DoubleType}
+import org.apache.spark.sql.types.{ArrayType, DataType, DoubleType}
 
 /** The expression for extracting the no data value of a raster. */
 case class RST_GetNoData(
@@ -16,12 +16,13 @@ case class RST_GetNoData(
     expressionConfig: MosaicExpressionConfig
 ) extends RasterExpression[RST_GetNoData](
       rastersExpr,
-      ArrayType(DoubleType),
       returnsRaster = false,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = ArrayType(DoubleType)
 
     /**
       * Extracts the no data value of a raster.

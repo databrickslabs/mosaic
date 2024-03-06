@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -22,8 +23,6 @@ import scala.reflect.ClassTag
   *   The expression for the first argument.
   * @param arg2Expr
   *   The expression for the second argument.
-  * @param outputType
-  *   The output type of the result.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -33,7 +32,6 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
     arg1Expr: Expression,
     arg2Expr: Expression,
-    outputType: DataType,
     returnsRaster: Boolean,
     expressionConfig: MosaicExpressionConfig
 ) extends TernaryExpression
@@ -46,9 +44,6 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
     override def second: Expression = arg1Expr
 
     override def third: Expression = arg2Expr
-
-    /** Output Data Type */
-    override def dataType: DataType = outputType
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -83,9 +78,14 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
     // noinspection DuplicatedCode
     override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
         GDAL.enable(expressionConfig)
-        val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
+        val rasterType = RasterTileType(rasterExpr).rasterType
+        val tile = MosaicRasterTile.deserialize(
+            input.asInstanceOf[InternalRow],
+            expressionConfig.getCellIdType,
+            rasterType
+        )
         val result = rasterTransform(tile, arg1, arg2)
-        val serialized = serialize(result, returnsRaster, outputType, expressionConfig)
+        val serialized = serialize(result, returnsRaster, rasterType, expressionConfig)
         // passed by name makes things re-evaluated
         RasterCleaner.dispose(tile)
         serialized

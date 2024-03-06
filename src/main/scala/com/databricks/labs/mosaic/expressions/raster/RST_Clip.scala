@@ -19,12 +19,13 @@ case class RST_Clip(
 ) extends Raster1ArgExpression[RST_Clip](
       rastersExpr,
       geometryExpr,
-      RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: org.apache.spark.sql.types.DataType = RasterTileType(expressionConfig.getCellIdType, rastersExpr)
 
     val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
 

@@ -15,7 +15,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, Literal, NullIntolerant}
-import org.apache.spark.sql.types.{DataType, IntegerType, StringType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
 import java.nio.file.{Files, Paths}
@@ -25,7 +25,7 @@ import java.nio.file.{Files, Paths}
   * expression in the expression tree for a raster tile.
   */
 case class RST_FromContent(
-    rasterExpr: Expression,
+    contentExpr: Expression,
     driverExpr: Expression,
     sizeInMB: Expression,
     expressionConfig: MosaicExpressionConfig
@@ -33,8 +33,10 @@ case class RST_FromContent(
       with Serializable
       with NullIntolerant
       with CodegenFallback {
+    
+    val tileType: DataType = BinaryType
 
-    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType)
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileType)
 
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 
@@ -46,12 +48,13 @@ case class RST_FromContent(
 
     override def inline: Boolean = false
 
-    override def children: Seq[Expression] = Seq(rasterExpr, driverExpr, sizeInMB)
+    override def children: Seq[Expression] = Seq(contentExpr, driverExpr, sizeInMB)
 
     override def elementSchema: StructType = StructType(Array(StructField("tile", dataType)))
 
     /**
-      * subdivides raster binary content into tiles of the specified size (in MB).
+      * subdivides raster binary content into tiles of the specified size (in
+      * MB).
       * @param input
       *   The input file path.
       * @return
@@ -61,13 +64,14 @@ case class RST_FromContent(
         GDAL.enable(expressionConfig)
         val driver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val ext = GDAL.getExtension(driver)
-        var rasterArr = rasterExpr.eval(input).asInstanceOf[Array[Byte]]
+        var rasterArr = contentExpr.eval(input).asInstanceOf[Array[Byte]]
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         if (targetSize <= 0 || rasterArr.length <= targetSize) {
             // - no split required
-            var raster = MosaicRasterGDAL.readRaster(rasterArr, PathUtils.NO_PATH_STRING, driver)
-            var tile = MosaicRasterTile(null, raster, PathUtils.NO_PATH_STRING, driver)
-            val row = tile.formatCellId(indexSystem).serialize()
+            val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver)
+            var raster = MosaicRasterGDAL.readRaster(rasterArr, createInfo)
+            var tile = MosaicRasterTile(null, raster)
+            val row = tile.formatCellId(indexSystem).serialize(tileType)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
             rasterArr = null
@@ -84,7 +88,7 @@ case class RST_FromContent(
 
             // split to tiles up to specifed threshold
             var tiles = ReTileOnRead.localSubdivide(rasterPath, PathUtils.NO_PATH_STRING, targetSize)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize())
+            val rows = tiles.map(_.formatCellId(indexSystem).serialize(tileType))
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(rasterPath))
             rasterArr = null
@@ -118,10 +122,10 @@ object RST_FromContent extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        (children: Seq[Expression]) => {
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
+        {
             val sizeExpr = if (children.length < 3) new Literal(-1, IntegerType) else children(2)
-            RST_FromContent(children(0), children(1), sizeExpr, expressionConfig)
+            RST_FromContent(children.head, children(1), sizeExpr, expressionConfig)
         }
     }
 

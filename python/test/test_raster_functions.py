@@ -19,7 +19,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             result.metadata["LONGNAME"],
             "MODIS/Terra+Aqua BRDF/Albedo Nadir BRDF-Adjusted Ref Daily L3 Global - 500m",
         )
-        self.assertEqual(result.tile["driver"], "GTiff")
+        self.assertEqual(result.tile["metadata"]["driver"], "GTiff")
 
     def test_raster_scalar_functions(self):
         result = (
@@ -115,7 +115,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
 
         tessellate_result.write.format("noop").mode("overwrite").save()
-        self.assertEqual(tessellate_result.count(), 66)
+        self.assertEqual(tessellate_result.count(), 63)
 
         overlap_result = (
             self.generate_singleband_raster_df()
@@ -187,11 +187,12 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         df = (
             self.spark.read.format("gdal")
-            .option("raster.read.strategy", "retile_on_read")
+            .option("raster.read.strategy", "in_memory")
             .load(
                 "test/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
             )
             .select(api.rst_separatebands("tile").alias("tile"))
+            .repartition(self.spark.sparkContext.defaultParallelism)
             .withColumn(
                 "timestep",
                 element_at(

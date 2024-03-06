@@ -2,12 +2,12 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, NullIntolerant}
-import org.apache.spark.sql.types.DataType
 
 import scala.reflect.ClassTag
 
@@ -21,8 +21,6 @@ import scala.reflect.ClassTag
   *   containing the raster file content.
   * @param arg1Expr
   *   The expression for the first argument.
-  * @param outputType
-  *   The output type of the result.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -31,7 +29,6 @@ import scala.reflect.ClassTag
 abstract class Raster1ArgExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
     arg1Expr: Expression,
-    outputType: DataType,
     returnsRaster: Boolean,
     expressionConfig: MosaicExpressionConfig
 ) extends BinaryExpression
@@ -42,9 +39,6 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
     override def left: Expression = rasterExpr
 
     override def right: Expression = arg1Expr
-
-    /** Output Data Type */
-    override def dataType: DataType = outputType
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -75,10 +69,15 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
     // noinspection DuplicatedCode
     override def nullSafeEval(input: Any, arg1: Any): Any = {
         GDAL.enable(expressionConfig)
-        val tile = MosaicRasterTile.deserialize(input.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
+        val rasterType = RasterTileType(rasterExpr).rasterType
+        val tile = MosaicRasterTile.deserialize(
+          input.asInstanceOf[InternalRow],
+          expressionConfig.getCellIdType,
+          rasterType
+        )
         val raster = tile.getRaster
         val result = rasterTransform(tile, arg1)
-        val serialized = serialize(result, returnsRaster, outputType, expressionConfig)
+        val serialized = serialize(result, returnsRaster, rasterType, expressionConfig)
         RasterCleaner.dispose(raster)
         RasterCleaner.dispose(result)
         serialized

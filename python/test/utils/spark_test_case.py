@@ -18,6 +18,14 @@ class SparkTestCase(unittest.TestCase):
         if not os.path.exists(cls.library_location):
             cls.library_location = f"{mosaic.__path__[0]}/lib/mosaic-{version('databricks-mosaic')}-SNAPSHOT-jar-with-dependencies.jar"
 
+        pwd_dir = os.getcwd()
+        tmp_dir = f"{pwd_dir}/mosaic_test/"
+        check_dir = f"{pwd_dir}/checkpoint"
+        if not os.path.exists(tmp_dir):
+            os.makedirs(tmp_dir)
+        if not os.path.exists(check_dir):
+            os.makedirs(check_dir)
+
         cls.spark = (
             SparkSession.builder.master("local[*]")
             .config("spark.jars", cls.library_location)
@@ -33,6 +41,8 @@ class SparkTestCase(unittest.TestCase):
             .getOrCreate()
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
+        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.tmp.prefix", tmp_dir)
+        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", check_dir)
         cls.spark.sparkContext.setLogLevel("FATAL")
 
     @classmethod

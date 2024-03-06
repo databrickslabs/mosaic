@@ -6,12 +6,12 @@ import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
+import com.databricks.labs.mosaic.expressions.raster.buildMapString
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
 
 /** An object defining the in memory read strategy for the GDAL file format. */
 object ReadInMemory extends ReadStrategy {
@@ -49,7 +49,9 @@ object ReadInMemory extends ReadStrategy {
             .add(StructField(METADATA, MapType(StringType, StringType), nullable = false))
             .add(StructField(SUBDATASETS, MapType(StringType, StringType), nullable = false))
             .add(StructField(SRID, IntegerType, nullable = false))
-            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType), nullable = false))
+            // Note, for in memory reads the rasters are stored in the tile.
+            // For that we use Binary Columns.
+            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, BinaryType), nullable = false))
     }
 
     /**
@@ -76,9 +78,12 @@ object ReadInMemory extends ReadStrategy {
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
         val readPath = PathUtils.getCleanPath(inPath)
-        val driverShortName = MosaicRasterGDAL.identifyDriver(readPath)
         val contentBytes: Array[Byte] = readContent(fs, status)
-        val raster = MosaicRasterGDAL.readRaster(readPath, inPath)
+        val createInfo = Map(
+            "path" -> readPath,
+            "parentPath" -> inPath
+        )
+        val raster = MosaicRasterGDAL.readRaster(createInfo)
         val uuid = getUUID(status)
 
         val fields = requiredSchema.fieldNames.filter(_ != TILE).map {
@@ -94,8 +99,9 @@ object ReadInMemory extends ReadStrategy {
             case SRID              => raster.SRID
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
+        val mapData = buildMapString(raster.createInfo)
         val rasterTileSer = InternalRow.fromSeq(
-          Seq(null, contentBytes, UTF8String.fromString(inPath), UTF8String.fromString(driverShortName), null)
+          Seq(null, contentBytes, mapData)
         )
         val row = Utils.createRow(
           fields ++ Seq(rasterTileSer)

@@ -9,23 +9,25 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.types.DataType
 
 /** The expression for computing NDVI index. */
 case class RST_NDVI(
-    rastersExpr: Expression,
+    tileExpr: Expression,
     redIndex: Expression,
     nirIndex: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends Raster2ArgExpression[RST_NDVI](
-      rastersExpr,
+      tileExpr,
       redIndex,
       nirIndex,
-    RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
 
     /**
       * Computes NDVI index.

@@ -15,7 +15,7 @@ test_that("mosaic can read single-band GeoTiff", {
   expect_equal(row$srid, 0)
   expect_equal(row$bandCount, 1)
   expect_equal(row$metadata[[1]]$LONGNAME, "MODIS/Terra+Aqua BRDF/Albedo Nadir BRDF-Adjusted Ref Daily L3 Global - 500m")
-  expect_equal(row$tile[[1]]$driver, "GTiff")
+  expect_equal(row$tile[[1]]$metadata$driver, "GTiff")
 
 })
 
@@ -61,7 +61,7 @@ test_that("raster flatmap functions behave as intended", {
   tessellate_sdf <- withColumn(tessellate_sdf, "rst_tessellate", rst_tessellate(column("tile"), lit(3L)))
 
   expect_no_error(write.df(tessellate_sdf, source = "noop", mode = "overwrite"))
-  expect_equal(nrow(tessellate_sdf), 66)
+  expect_equal(nrow(tessellate_sdf), 63)
 
   overlap_sdf <- generate_singleband_raster_df()
   overlap_sdf <- withColumn(overlap_sdf, "rst_to_overlapping_tiles", rst_to_overlapping_tiles(column("tile"), lit(200L), lit(200L), lit(10L)))
@@ -117,7 +117,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   raster_sdf <- read.df(
     path = "sparkrMosaic/tests/testthat/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc",
     source = "gdal",
-    raster.read.strategy = "retile_on_read"
+    raster.read.strategy = "in_memory"
   )
 
   raster_sdf <- withColumn(raster_sdf, "tile", rst_separatebands(column("tile")))

@@ -1,11 +1,12 @@
 package com.databricks.labs.mosaic.gdal
 
+import com.databricks.labs.mosaic.MOSAIC_RASTER_BLOCKSIZE_DEFAULT
 import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
+import org.gdal.osr.SpatialReference
 
-import java.io.{BufferedInputStream, File, PrintWriter}
 import java.nio.file.{Files, Paths}
 import scala.language.postfixOps
 import scala.util.Try
@@ -22,9 +23,22 @@ object MosaicGDAL extends Logging {
     private val libjniso3003Path = "/usr/lib/libgdalalljni.so.30.0.3"
     private val libogdisoPath = "/usr/lib/ogdi/4.1/libgdal.so"
 
+    val defaultBlockSize = 1024
+    val vrtBlockSize = 128 // This is a must value for VRTs before GDAL 3.7
+    var blockSize: Int = MOSAIC_RASTER_BLOCKSIZE_DEFAULT.toInt
+
     // noinspection ScalaWeakerAccess
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
     var isEnabled = false
+    var checkpointPath: String = _
+
+    // Only use this with GDAL rasters
+    val WSG84: SpatialReference = {
+        val wsg84 = new SpatialReference()
+        wsg84.ImportFromEPSG(4326)
+        wsg84.SetAxisMappingStrategy(org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
+        wsg84
+    }
 
     /** Returns true if GDAL is enabled. */
     def wasEnabled(spark: SparkSession): Boolean =
@@ -32,16 +46,33 @@ object MosaicGDAL extends Logging {
 
     /** Configures the GDAL environment. */
     def configureGDAL(mosaicConfig: MosaicExpressionConfig): Unit = {
-        val CPL_TMPDIR = MosaicContext.tmpDir
-        val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir
+        val CPL_TMPDIR = MosaicContext.tmpDir(mosaicConfig)
+        val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir(mosaicConfig)
         gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
-        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
         gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)
         gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", GDAL_PAM_PROXY_DIR)
         gdal.SetConfigOption("GDAL_PAM_ENABLED", "YES")
         gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "NO")
         gdal.SetConfigOption("CPL_LOG", s"$CPL_TMPDIR/gdal.log")
+        gdal.SetConfigOption("GDAL_CACHEMAX", "512")
+        gdal.SetConfigOption("GDAL_NUM_THREADS", "ALL_CPUS")
         mosaicConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
+        setBlockSize(mosaicConfig)
+        checkpointPath = mosaicConfig.getRasterCheckpoint
+    }
+
+    def setBlockSize(mosaicConfig: MosaicExpressionConfig): Unit = {
+        val blockSize = mosaicConfig.getRasterBlockSize
+        if (blockSize > 0) {
+            this.blockSize = blockSize
+        }
+    }
+
+    def setBlockSize(size: Int): Unit = {
+        if (size > 0) {
+            this.blockSize = size
+        }
     }
 
     /** Enables the GDAL environment. */
@@ -91,18 +122,19 @@ object MosaicGDAL extends Logging {
         }
     }
 
-    /** Reads the resource bytes. */
-    private def readResourceBytes(name: String): Array[Byte] = {
-        val bis = new BufferedInputStream(getClass.getResourceAsStream(name))
-        try { Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray }
-        finally bis.close()
-    }
+//    /** Reads the resource bytes. */
+//    private def readResourceBytes(name: String): Array[Byte] = {
+//        val bis = new BufferedInputStream(getClass.getResourceAsStream(name))
+//        try { Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray }
+//        finally bis.close()
+//    }
 
-    /** Reads the resource lines. */
-    // noinspection SameParameterValue
-    private def readResourceLines(name: String): Array[String] = {
-        val bytes = readResourceBytes(name)
-        val lines = new String(bytes).split("\n")
-        lines
-    }
+//    /** Reads the resource lines. */
+//    // noinspection SameParameterValue
+//    private def readResourceLines(name: String): Array[String] = {
+//        val bytes = readResourceBytes(name)
+//        val lines = new String(bytes).split("\n")
+//        lines
+//    }
+
 }

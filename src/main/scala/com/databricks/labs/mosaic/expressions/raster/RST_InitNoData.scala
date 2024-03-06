@@ -11,19 +11,21 @@ import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.types.DataType
 
 /** The expression that initializes no data values of a raster. */
 case class RST_InitNoData(
-    rastersExpr: Expression,
+    tileExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterExpression[RST_InitNoData](
-      rastersExpr,
-      RasterTileType(expressionConfig.getCellIdType),
+      tileExpr,
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
 
     /**
       * Initializes no data values of a raster.

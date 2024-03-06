@@ -2,11 +2,12 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.types.{ArrayType, DataType}
+import org.apache.spark.sql.types.ArrayType
 
 import scala.reflect.ClassTag
 
@@ -27,7 +28,6 @@ import scala.reflect.ClassTag
   */
 abstract class RasterArrayExpression[T <: Expression: ClassTag](
     rastersExpr: Expression,
-    outputType: DataType,
     returnsRaster: Boolean,
     expressionConfig: MosaicExpressionConfig
 ) extends UnaryExpression
@@ -36,9 +36,6 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       with RasterExpressionSerialization {
 
     override def child: Expression = rastersExpr
-
-    /** Output Data Type */
-    override def dataType: DataType = if (returnsRaster) rastersExpr.dataType.asInstanceOf[ArrayType].elementType else outputType
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -67,7 +64,8 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
         GDAL.enable(expressionConfig)
         val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
         val result = rasterTransform(tiles)
-        val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
+        val resultType = if (returnsRaster) RasterTileType(rastersExpr).rasterType else dataType
+        val serialized = serialize(result, returnsRaster, resultType, expressionConfig)
         tiles.foreach(t => RasterCleaner.dispose(t))
         serialized
     }

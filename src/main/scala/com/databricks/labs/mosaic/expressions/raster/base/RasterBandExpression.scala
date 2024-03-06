@@ -3,12 +3,12 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterBandGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, NullIntolerant}
-import org.apache.spark.sql.types.DataType
 
 import scala.reflect.ClassTag
 
@@ -23,8 +23,6 @@ import scala.reflect.ClassTag
   *   MOSAIC_RASTER_STORAGE is set to MOSAIC_RASTER_STORAGE_BYTE.
   * @param bandExpr
   *   The expression for the band index.
-  * @param outputType
-  *   The output type of the result.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -33,7 +31,6 @@ import scala.reflect.ClassTag
 abstract class RasterBandExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
     bandExpr: Expression,
-    outputType: DataType,
     returnsRaster: Boolean,
     expressionConfig: MosaicExpressionConfig
 ) extends BinaryExpression
@@ -44,9 +41,6 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
     override def left: Expression = rasterExpr
 
     override def right: Expression = bandExpr
-
-    /** Output Data Type */
-    override def dataType: DataType = outputType
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -79,13 +73,18 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
     // noinspection DuplicatedCode
     override def nullSafeEval(inputRaster: Any, inputBand: Any): Any = {
         GDAL.enable(expressionConfig)
-        val tile = MosaicRasterTile.deserialize(inputRaster.asInstanceOf[InternalRow], expressionConfig.getCellIdType)
+        val rasterType = RasterTileType(rasterExpr).rasterType
+        val tile = MosaicRasterTile.deserialize(
+            inputRaster.asInstanceOf[InternalRow],
+            expressionConfig.getCellIdType,
+            rasterType
+        )
         val bandIndex = inputBand.asInstanceOf[Int]
 
         val band = tile.getRaster.getBand(bandIndex)
         val result = bandTransform(tile, band)
 
-        val serialized = serialize(result, returnsRaster, dataType, expressionConfig)
+        val serialized = serialize(result, returnsRaster, rasterType, expressionConfig)
         RasterCleaner.dispose(tile)
         serialized
     }

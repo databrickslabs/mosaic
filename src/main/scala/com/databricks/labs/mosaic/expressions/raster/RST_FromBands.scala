@@ -9,6 +9,7 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.types.ArrayType
 
 /** The expression for stacking and resampling input bands. */
 case class RST_FromBands(
@@ -16,12 +17,17 @@ case class RST_FromBands(
     expressionConfig: MosaicExpressionConfig
 ) extends RasterArrayExpression[RST_FromBands](
       bandsExpr,
-      RasterTileType(expressionConfig.getCellIdType),
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: org.apache.spark.sql.types.DataType =
+        RasterTileType(
+          expressionConfig.getCellIdType,
+          RasterTileType(bandsExpr).rasterType
+        )
 
     /**
       * Stacks and resamples input bands.

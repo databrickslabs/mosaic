@@ -11,9 +11,11 @@ import org.apache.spark.sql.types._
 
 /** Returns the rotation angle of the raster. */
 case class RST_Rotation(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Rotation](raster, DoubleType, returnsRaster = false, expressionConfig)
+    extends RasterExpression[RST_Rotation](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = DoubleType
 
     /** Returns the rotation angle of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
