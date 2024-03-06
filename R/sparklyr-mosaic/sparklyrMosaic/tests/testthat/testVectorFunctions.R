@@ -15,6 +15,7 @@ test_that("scalar vector functions behave as intended", {
     st_length = st_length(wkt),
     st_perimeter = st_perimeter(wkt),
     st_buffer = st_buffer(wkt, as.double(1.1)),
+    st_buffer_optparams = st_buffer(wkt, as.double(1.1), "endcap=square quad_segs=2"),
     st_bufferloop = st_bufferloop(wkt, as.double(1.1), as.double(1.2)),
     st_convexhull = st_convexhull(wkt),
     st_dump = st_dump(wkt),

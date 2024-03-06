@@ -2,13 +2,15 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
-import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector1ArgExpression
+import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
+import org.apache.spark.unsafe.types.UTF8String
+import org.apache.spark.sql.functions._
 
 /**
   * SQL expression that returns the input geometry buffered by the radius.
@@ -16,6 +18,10 @@ import org.apache.spark.sql.types.DataType
   *   Expression containing the geometry.
   * @param radiusExpr
   *   The radius of the buffer.
+  * @param bufferStyleParametersExpr
+  *   'quad_segs=# endcap=round|flat|square' where "#" is the number of line
+  *   segments used to approximate a quarter circle (default is 8); and endcap
+  *   style for line features is one of listed (default="round")
   * @param expressionConfig
   *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
   *   arguments for the expression (expressionConfigs).
@@ -23,19 +29,21 @@ import org.apache.spark.sql.types.DataType
 case class ST_Buffer(
     inputGeom: Expression,
     radiusExpr: Expression,
+    bufferStyleParametersExpr: Expression = lit("").expr,
     expressionConfig: MosaicExpressionConfig
-) extends UnaryVector1ArgExpression[ST_Buffer](inputGeom, radiusExpr, returnsGeometry = true, expressionConfig) {
+) extends UnaryVector2ArgExpression[ST_Buffer](inputGeom, radiusExpr, bufferStyleParametersExpr, returnsGeometry = true, expressionConfig) {
 
     override def dataType: DataType = inputGeom.dataType
 
-    override def geometryTransform(geometry: MosaicGeometry, arg: Any): Any = {
-        val radius = arg.asInstanceOf[Double]
-        geometry.buffer(radius)
+    override def geometryTransform(geometry: MosaicGeometry, arg1: Any, arg2: Any): Any = {
+        val radius = arg1.asInstanceOf[Double]
+        val bufferStyleParameters = arg2.asInstanceOf[UTF8String].toString
+        geometry.buffer(radius, bufferStyleParameters)
     }
 
-    override def geometryCodeGen(geometryRef: String, argRef: String, ctx: CodegenContext): (String, String) = {
+    override def geometryCodeGen(geometryRef: String, argRef1: String, argRef2: String, ctx: CodegenContext): (String, String) = {
         val resultRef = ctx.freshName("result")
-        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.buffer($argRef);"""
+        val code = s"""$mosaicGeomClass $resultRef = $geometryRef.buffer($argRef1, $argRef2.toString());"""
         (code, resultRef)
     }
 
@@ -56,7 +64,11 @@ object ST_Buffer extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
-        ST_Buffer(children.head, Column(children(1)).cast("double").expr, expressionConfig)
+        if (children.size == 2) {
+            ST_Buffer(children.head, Column(children(1)).cast("double").expr, lit("").expr, expressionConfig)
+        } else if (children.size == 3) {
+            ST_Buffer(children.head, Column(children(1)).cast("double").expr, Column(children(2)).cast("string").expr, expressionConfig)
+        } else throw new Exception("unexpected number of arguments")
     }
 
 }

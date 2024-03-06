@@ -125,11 +125,17 @@ st_buffer
 .. function:: st_buffer(col, radius)
 
     Buffer the input geometry by radius :code:`radius` and return a new, buffered geometry.
+    The optional parameter buffer_style_parameters='quad_segs=# endcap=round|flat|square' where "#"
+    is the number of line segments used to approximate a quarter circle (default is 8); and endcap
+    style for line features is one of listed (default="round")
+    
 
     :param col: Geometry
     :type col: Column
     :param radius: Double
     :type radius: Column (DoubleType)
+    :param buffer_style_parameters: String
+    :type buffer_style_parameters: Column (StringType)
     :rtype: Column: Geometry
 
     :example:
@@ -1535,7 +1541,7 @@ st_transform
 
     df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
     df <- withColumn(df, 'geom', st_setsrid(st_asgeojson(column('wkt')), lit(4326L)))
-    >>>
+
     showDF(select(df, st_astext(st_transform(column('geom'), lit(3857L)))), truncate=F)
     +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |convert_to(st_transform(geom, 3857))                                                                                                                                      |

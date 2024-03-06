@@ -561,10 +561,14 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         /** Spatial functions */
         def flatten_polygons(geom: Column): Column = ColumnAdapter(FlattenPolygons(geom.expr, geometryAPI.name))
         def st_area(geom: Column): Column = ColumnAdapter(ST_Area(geom.expr, expressionConfig))
-        def st_buffer(geom: Column, radius: Column): Column =
-            ColumnAdapter(ST_Buffer(geom.expr, radius.cast("double").expr, expressionConfig))
-        def st_buffer(geom: Column, radius: Double): Column =
-            ColumnAdapter(ST_Buffer(geom.expr, lit(radius).cast("double").expr, expressionConfig))
+        def st_buffer(geom: Column, radius: Column): Column = st_buffer(geom, radius, lit(""))
+        def st_buffer(geom: Column, radius: Double): Column = st_buffer(geom, lit(radius), lit(""))
+        def st_buffer(geom: Column, radius: Column, buffer_style_parameters: Column): Column =
+            ColumnAdapter(ST_Buffer(geom.expr, radius.cast("double").expr, buffer_style_parameters.cast("string").expr, expressionConfig))
+        def st_buffer(geom: Column, radius: Double, buffer_style_parameters: Column): Column =
+            ColumnAdapter(
+              ST_Buffer(geom.expr, lit(radius).cast("double").expr, lit(buffer_style_parameters).cast("string").expr, expressionConfig)
+            )
         def st_bufferloop(geom: Column, r1: Column, r2: Column): Column =
             ColumnAdapter(ST_BufferLoop(geom.expr, r1.cast("double").expr, r2.cast("double").expr, expressionConfig))
         def st_bufferloop(geom: Column, r1: Double, r2: Double): Column =

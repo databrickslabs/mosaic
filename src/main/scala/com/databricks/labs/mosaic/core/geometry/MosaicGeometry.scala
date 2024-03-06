@@ -59,6 +59,8 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def buffer(distance: Double): MosaicGeometry
 
+    def buffer(distance: Double, bufferStyleParameters: String = ""): MosaicGeometry
+
     def bufferCapStyle(distance: Double, capStyle: String): MosaicGeometry
 
     def simplify(tolerance: Double): MosaicGeometry

@@ -197,7 +197,11 @@ def st_concavehull(
     )
 
 
-def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
+def st_buffer(
+        geom: ColumnOrName,
+        radius: ColumnOrName,
+        buffer_style_parameters: Any = "",
+) -> Column:
     """
     Compute the buffered geometry based on geom and radius.
 
@@ -207,6 +211,11 @@ def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
         The input geometry
     radius : Column
         The radius of buffering
+    buffer_style_parameters : Column
+        "quad_segs=# endcap=round|flat|square" where "#" is the number of line segments used to
+        approximate a quarter circle (default is 8); and endcap style for line features is one of
+        listed (default="round")
+
 
     Returns
     -------
@@ -214,8 +223,15 @@ def st_buffer(geom: ColumnOrName, radius: ColumnOrName) -> Column:
         A geometry
 
     """
+
+    if isinstance(buffer_style_parameters, str):
+        buffer_style_parameters = lit(buffer_style_parameters)
+
     return config.mosaic_context.invoke_function(
-        "st_buffer", pyspark_to_java_column(geom), pyspark_to_java_column(radius)
+        "st_buffer",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(radius),
+        pyspark_to_java_column(buffer_style_parameters),
     )
 
 
