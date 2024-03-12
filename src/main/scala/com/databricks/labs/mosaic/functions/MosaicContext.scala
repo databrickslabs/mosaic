@@ -23,6 +23,7 @@ import org.apache.spark.sql.types.{LongType, StringType}
 import org.apache.spark.sql.{Column, SparkSession}
 
 import scala.reflect.runtime.universe
+import scala.util.Try
 
 //noinspection DuplicatedCode
 class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends Serializable with Logging {
@@ -321,6 +322,16 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_WorldToRasterCoordY](expressionConfig)
 
         /** Aggregators */
+        registry.registerFunction(
+          FunctionIdentifier("st_asgeojsontile_agg", database),
+          ST_AsGeojsonTileAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_AsGeojsonTileAgg(exprs(0), exprs(1), expressionConfig, 0, 0)
+        )
+        registry.registerFunction(
+          FunctionIdentifier("st_asmvttile_agg", database),
+          ST_AsMVTTileAgg.registryExpressionInfo(database),
+          (exprs: Seq[Expression]) => ST_AsMVTTileAgg(exprs(0), exprs(1), exprs(2), expressionConfig, 0, 0)
+        )
         registry.registerFunction(
           FunctionIdentifier("st_intersection_aggregate", database),
           ST_IntersectionAgg.registryExpressionInfo(database),
@@ -666,8 +677,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_BandMetaData(raster.expr, lit(band).expr, expressionConfig))
         def rst_boundingbox(raster: Column): Column = ColumnAdapter(RST_BoundingBox(raster.expr, expressionConfig))
         def rst_clip(raster: Column, geometry: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, expressionConfig))
-        def rst_convolve(raster: Column, kernel: Column): Column =
-            ColumnAdapter(RST_Convolve(raster.expr, kernel.expr, expressionConfig))
+        def rst_convolve(raster: Column, kernel: Column): Column = ColumnAdapter(RST_Convolve(raster.expr, kernel.expr, expressionConfig))
         def rst_pixelcount(raster: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, expressionConfig))
         def rst_combineavg(rasterArray: Column): Column = ColumnAdapter(RST_CombineAvg(rasterArray.expr, expressionConfig))
         def rst_derivedband(raster: Column, pythonFunc: Column, funcName: Column): Column =
@@ -736,8 +746,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_ReTile(raster.expr, tileWidth.expr, tileHeight.expr, expressionConfig))
         def rst_retile(raster: Column, tileWidth: Int, tileHeight: Int): Column =
             ColumnAdapter(RST_ReTile(raster.expr, lit(tileWidth).expr, lit(tileHeight).expr, expressionConfig))
-        def rst_separatebands(raster: Column): Column =
-            ColumnAdapter(RST_SeparateBands(raster.expr, expressionConfig))
+        def rst_separatebands(raster: Column): Column = ColumnAdapter(RST_SeparateBands(raster.expr, expressionConfig))
         def rst_rotation(raster: Column): Column = ColumnAdapter(RST_Rotation(raster.expr, expressionConfig))
         def rst_scalex(raster: Column): Column = ColumnAdapter(RST_ScaleX(raster.expr, expressionConfig))
         def rst_scaley(raster: Column): Column = ColumnAdapter(RST_ScaleY(raster.expr, expressionConfig))
@@ -752,8 +761,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_summary(raster: Column): Column = ColumnAdapter(RST_Summary(raster.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Column): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, expressionConfig))
-        def rst_transform(raster: Column, srid: Column): Column =
-            ColumnAdapter(RST_Transform(raster.expr, srid.expr, expressionConfig))
+        def rst_transform(raster: Column, srid: Column): Column = ColumnAdapter(RST_Transform(raster.expr, srid.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver: Column): Column =
@@ -795,14 +803,21 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_WorldToRasterCoordY(raster.expr, lit(x).expr, lit(y).expr, expressionConfig))
 
         /** Aggregators */
+
+        def st_asgeojsontile_agg(geom: Column, attributes: Column): Column =
+            ColumnAdapter(ST_AsGeojsonTileAgg(geom.expr, attributes.expr, expressionConfig, 0, 0).toAggregateExpression(isDistinct = false))
+        def st_asmvttile_agg(geom: Column, attributes: Column, zxyID: Column): Column =
+            ColumnAdapter(
+              ST_AsMVTTileAgg(geom.expr, attributes.expr, zxyID.expr, expressionConfig, 0, 0).toAggregateExpression(isDistinct = false)
+            )
         def st_intersects_agg(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(
-                ST_IntersectsAgg(leftIndex.expr, rightIndex.expr, geometryAPI.name).toAggregateExpression(isDistinct = false)
+              ST_IntersectsAgg(leftIndex.expr, rightIndex.expr, geometryAPI.name).toAggregateExpression(isDistinct = false)
             )
         def st_intersection_agg(leftIndex: Column, rightIndex: Column): Column =
             ColumnAdapter(
-                ST_IntersectionAgg(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem, 0, 0)
-                    .toAggregateExpression(isDistinct = false)
+              ST_IntersectionAgg(leftIndex.expr, rightIndex.expr, geometryAPI.name, indexSystem, 0, 0)
+                  .toAggregateExpression(isDistinct = false)
             )
         def st_union_agg(geom: Column): Column =
             ColumnAdapter(ST_UnionAgg(geom.expr, geometryAPI.name).toAggregateExpression(isDistinct = false))
@@ -1031,10 +1046,10 @@ object MosaicContext extends Logging {
     val mosaicVersion: String = "0.4.0"
 
     private var instance: Option[MosaicContext] = None
-    
+
     def tmpDir(mosaicConfig: MosaicExpressionConfig): String = {
         if (_tmpDir == "" || mosaicConfig != null) {
-            val prefix = mosaicConfig.getTmpPrefix
+            val prefix = Try { mosaicConfig.getTmpPrefix }.toOption.getOrElse("")
             _tmpDir = FileUtils.createMosaicTempDir(prefix)
             _tmpDir
         } else {
