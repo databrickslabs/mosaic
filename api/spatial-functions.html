@@ -223,12 +223,16 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="st_buffer">
 <span class="sig-name descname"><span class="pre">st_buffer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#st_buffer" title="Permalink to this definition"></a></dt>
-<dd><p>Buffer the input geometry by radius <code class="code docutils literal notranslate"><span class="pre">radius</span></code> and return a new, buffered geometry.</p>
+<dd><p>Buffer the input geometry by radius <code class="code docutils literal notranslate"><span class="pre">radius</span></code> and return a new, buffered geometry.
+The optional parameter buffer_style_parameters=’quad_segs=# endcap=round|flat|square’ where “#”
+is the number of line segments used to approximate a quarter circle (default is 8); and endcap
+style for line features is one of listed (default=”round”)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>col</strong> (<em>Column</em>) – Geometry</p></li>
 <li><p><strong>radius</strong> (<em>Column</em><em> (</em><em>DoubleType</em><em>)</em>) – Double</p></li>
+<li><p><strong>buffer_style_parameters</strong> (<em>Column</em><em> (</em><em>StringType</em><em>)</em>) – String</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1702,7 +1706,7 @@ df.select(st_simplify(&#39;wkt&#39;, 1.0)).show()
 </div>
 </div><div aria-labelledby="tab-25-Ug==" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-25-Ug==" name="Ug==" role="tabpanel" tabindex="0"><div class="highlight-r notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">createDataFrame</span><span class="p">(</span><span class="nf">data.frame</span><span class="p">(</span><span class="n">wkt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;MULTIPOINT ((10 40), (40 30), (20 20), (30 10))&quot;</span><span class="p">))</span>
 <span class="n">df</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">withColumn</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="s">&#39;geom&#39;</span><span class="p">,</span><span class="w"> </span><span class="nf">st_setsrid</span><span class="p">(</span><span class="nf">st_asgeojson</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&#39;wkt&#39;</span><span class="p">)),</span><span class="w"> </span><span class="nf">lit</span><span class="p">(</span><span class="m">4326L</span><span class="p">)))</span>
-<span class="o">&gt;&gt;&gt;</span>
+
 <span class="nf">showDF</span><span class="p">(</span><span class="nf">select</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="w"> </span><span class="nf">st_astext</span><span class="p">(</span><span class="nf">st_transform</span><span class="p">(</span><span class="nf">column</span><span class="p">(</span><span class="s">&#39;geom&#39;</span><span class="p">),</span><span class="w"> </span><span class="nf">lit</span><span class="p">(</span><span class="m">3857L</span><span class="p">)))),</span><span class="w"> </span><span class="n">truncate</span><span class="o">=</span><span class="bp">F</span><span class="p">)</span>
 <span class="o">+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+</span>
 <span class="o">|</span><span class="nf">convert_to</span><span class="p">(</span><span class="nf">st_transform</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span><span class="w"> </span><span class="m">3857</span><span class="p">))</span><span class="w">                                                                                                                                      </span><span class="o">|</span>
