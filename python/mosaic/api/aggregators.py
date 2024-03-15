@@ -9,6 +9,8 @@ from mosaic.utils.types import ColumnOrName
 #######################
 
 __all__ = [
+    "st_asgeojsontile_agg",
+    "st_asmvttile_agg",
     "st_union_agg",
     "grid_cell_union_agg",
     "grid_cell_intersection_agg",
@@ -42,6 +44,55 @@ def st_intersection_agg(leftIndex: ColumnOrName, rightIndex: ColumnOrName) -> Co
         "st_intersection_agg",
         pyspark_to_java_column(leftIndex),
         pyspark_to_java_column(rightIndex),
+    )
+
+
+def st_asgeojsontile_agg(geom: ColumnOrName, attributes: ColumnOrName) -> Column:
+    """
+    Returns the aggregated GeoJSON tile.
+
+    Parameters
+    ----------
+    geom : Column
+        The geometry column to aggregate.
+    attributes : Column
+        The attributes column to aggregate.
+
+    Returns
+    -------
+    Column
+        The aggregated GeoJSON tile.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_asgeojsontile_agg",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(attributes)
+    )
+
+
+def st_asmvttile_agg(geom: ColumnOrName, attributes: ColumnOrName, zxyID: ColumnOrName) -> Column:
+    """
+    Returns the aggregated MVT tile.
+
+    Parameters
+    ----------
+    geom : Column
+        The geometry column to aggregate.
+    attributes : Column
+        The attributes column to aggregate.
+    zxyID : Column
+        The zxyID column to aggregate.
+
+    Returns
+    -------
+    Column
+        The aggregated MVT tile.
+    """
+    return config.mosaic_context.invoke_function(
+        "st_asmvttile_agg",
+        pyspark_to_java_column(geom),
+        pyspark_to_java_column(attributes),
+        pyspark_to_java_column(zxyID)
     )
 
 
