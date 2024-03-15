@@ -1,3 +1,17 @@
+## v0.4.1 [DBR 13.3 LTS]
+- Fixed python bindings for MosaicAnalyzer functions.
+- Added tiller functions, ST_AsGeoJSONTile and ST_AsMVTTile, for creating GeoJSON and MVT tiles as aggregations of geometries.
+- Added filter and convolve functions for raster data.
+- Raster tile schema changed to be <tile:struct<index_id:bigint, tile:binary, metadata:map<string, string>>.
+- Raster tile metadata will contain driver, parentPath and path.
+- Raster tile metadata will contain warnings and errors in case of failures.
+- All raster functions ensure rasters are TILED and not STRIPED when appropriate.
+- GDAL cache memory has been decreased to 512MB to reduce memory usage and competition with Spark.
+- Add RST_MakeTiles that allows for different raster creations.
+- Rasters can now be passed as file pointers using checkpoint location.
+- Added logic to handle zarr format for raster data.
+- Added RST_SeparateBands to separate bands from a raster for NetCDF and Zarr formats.
+
 ## v0.4.0 [DBR 13.3 LTS]
 - First release for DBR 13.3 LTS which is Ubuntu Jammy and Spark 3.4.1. Not backwards compatible, meaning it will not run on prior DBRs; requires either a Photon DBR or a ML Runtime (__Standard, non-Photon DBR no longer allowed__).
 - New `setup_fuse_install` function to meet various requirements arising with Unity Catalog + Shared Access clusters; removed the scala equivalent function, making artifact setup and install python-first for scala and Spark SQL. 
