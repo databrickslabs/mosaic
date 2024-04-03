@@ -1738,7 +1738,7 @@ st_updatesrid
 
 .. function:: st_updatesrid(geom, srcSRID, destSRID)
 
-    Updates the SRID of the input geometry `geom` from `srcSRID` to `destSRID`.
+    Updates the SRID of the input geometry :cdoe:`geom` from :code:`srcSRID` to :code:`destSRID`.
     Geometry can be any supported [WKT, WKB, GeoJSON, Mosaic Internal Geometry].
     Transformed geometry in the provided format is returned.
 

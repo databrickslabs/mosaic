@@ -9,8 +9,8 @@ st_asgeojsontile_agg
 .. function:: st_asgeojsontile_agg(geom, attributes)
 
     Generates GeoJSON vector tiles from a group by statement over aggregated geometry column.
-    "Geom" column is WKB, WKT, or GeoJSON.
-    "Attributes" column is a spark struct; it requires minimally "id".
+    :code:`geom` column is WKB, WKT, or GeoJSON.
+    :code:`attributes` column is a spark struct; it requires minimally "id".
 
     :param geom: A grouped column containing geometries.
     :type geom: Column
@@ -62,11 +62,11 @@ st_asmvttile_agg
 .. function:: st_asmvttile_agg(geom, attributes, zxyID)
 
     Generates Mapbox Vector Tiles from a group by statement over aggregated geometry column.
-    "Geom" column is Mosaic Internal Geometry, e.g. using ST_GeomFrom[WKB|WKT|GeoJSON]. 
+    :code:`Geom` column is Mosaic Internal Geometry, e.g. using ST_GeomFrom[WKB|WKT|GeoJSON]. 
     The geometry that you work on requires an SRID, recommend using ST_UpdateSRID, 
       e.g. from 4326 to 3857 (required SRID).
-    "Attributes" column is a spark struct; it requires minimally "id".
-    "zxyID" column is a string.
+    :code:`Attributes` column is a spark struct; it requires minimally "id".
+    :code:`zxyID` column is a string.
 
     :param geom: A grouped column containing geometries.
     :type geom: Column
