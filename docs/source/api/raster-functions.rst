@@ -13,15 +13,66 @@ Please see :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for 
     * Mosaic also provides a scalable retiling function that can be used to retile raster data in case of bottlenecking
       due to large files.
     * All raster functions respect the :code:`rst_` prefix naming convention.
-    * Mosaic is operating using raster tile objects only since 0.3.11. Tile objects are created using functions such as
-      :code:`rst_fromfile` or :code:`rst_fromcontent`. These functions are used as places to start when working with
-      initial data. If you use :code:`spark.read.format("gdal")` tiles are automatically generated for you.
+    * Mosaic operates using raster tile objects. Tile objects are created using functions such as
+      :ref:`rst_fromfile` or :ref:`rst_fromcontent`. These functions are used as places to start when working with
+      initial data. If you use :code:`spark.read.format("gdal")` tiles are automatically generated for you. 
+    * **Changed in 0.4.1** Mosaic raster tile schema changed to the following: 
+      :code:`<tile:struct<index_id:bigint, tile:binary, metadata:map<string, string>>`. All APIs that use tiles now follow
+      this schema. Also, a new functions :ref:`rst_maketiles` is available that allows for single tile schema to handle
+      either a path (string) raster similar to :ref:`rst_fromfile` or a binary raster similar to :ref:`rst_fromcontent`; 
+      however, a key difference is that :ref:`rst_maketiles` supports optional checkpointing for increased performance benefits.
+    * In 0.4.1, there are a new set of raster apis that have not yet had python bindings generated; however you can still 
+      call the functions with pyspark function :code:`selectExpr`, e.g. :code:`selectExpr("rst_avg(...)")` which invokes the sql 
+      registered expression. The calls are: :ref:`rst_avg`, :ref:`rst_max`, :ref:`rst_min`, :ref:`rst_median`, and :ref:`rst_pixelcount`. 
     * Also, scala does not have a :code:`df.display()` method while python does. In practice you would most often call
       :code:`display(df)` in scala for a prettier output, but for brevity, we write :code:`df.show` in scala.
 
 .. note:: For mosaic versions > 0.4.0 you can use the revamped setup_gdal function or new setup_fuse_install.
     These functions will configure an init script in your preferred Workspace, Volume, or DBFS location to install GDAL
     on your cluster. See :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for more details.
+
+rst_avg
+*******
+
+.. function:: rst_avg(tile)
+
+    Returns an array containing mean values for each band.
+    The python bindings are available through sql, 
+    e.g. :code:`selectExpr("rst_avg(tile)")`
+
+    :param tile: A column containing the raster tile. 
+    :type tile: Column (RasterTileType)
+    :rtype: Column: ArrayType(DoubleType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: python
+
+    df.selectExpr("rst_avg(tile)"").limit(1).display()
+    +---------------+
+    | rst_avg(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_avg(col("tile"))).limit(1).show
+    +---------------+
+    | rst_avg(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_avg(tile) FROM table LIMIT 1
+    +---------------+
+    | rst_avg(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
 
 rst_bandmetadata
 ****************
@@ -31,7 +82,7 @@ rst_bandmetadata
     Extract the metadata describing the raster band.
     Metadata is return as a map of key value pairs.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile. 
     :type tile: Column (RasterTileType)
     :param band: The band number to extract metadata for.
     :type band: Column (IntegerType)
@@ -95,7 +146,7 @@ rst_boundingbox
 
     Returns the bounding box of the raster as a polygon geometry.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: StructType(DoubleType, DoubleType, DoubleType, DoubleType)
 
@@ -179,6 +230,91 @@ rst_clip
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
+rst_convolve
+************
+
+.. function:: rst_convolve(tile, kernel)
+
+    Applies a convolution filter to the raster.
+    The result is Mosaic raster tile struct column to the filtered raster.
+    If used, the result is stored in the configured checkpoint directory.
+    The :code:`kernel` can be Array of Array of either Double, Integer, or Decimal; 
+    ultimately all is cast to Double. Assumes the kernel is square and has an odd number 
+    of rows and columns. Kernel uses the configured GDAL :code:`blockSize`` with a stride being
+    :code:`kernelSize/2`.
+    
+    :param tile: A column containing raster tile.
+    :type tile: Column (RasterTileType)
+    :param kernel: The kernel to apply to the raster.
+    :type kernel: Column (ArrayType(ArrayType(DoubleType)))
+    :rtype: Column: RasterTileType
+
+    For clarity, this is ultimately the execution of the kernel.
+
+    .. code-block:: text
+        def convolveAt(x: Int, y: Int, kernel: Array[Array[Double]]): Double = {
+            val kernelWidth = kernel.head.length
+            val kernelHeight = kernel.length
+            val kernelCenterX = kernelWidth / 2
+            val kernelCenterY = kernelHeight / 2
+            var sum = 0.0
+            for (i <- 0 until kernelHeight) {
+                for (j <- 0 until kernelWidth) {
+                    val xIndex = x + (j - kernelCenterX)
+                    val yIndex = y + (i - kernelCenterY)
+                    if (xIndex >= 0 && xIndex < width && yIndex >= 0 && yIndex < height) {
+                        val maskValue = maskAt(xIndex, yIndex)
+                        val value = elementAt(xIndex, yIndex)
+                        if (maskValue != 0.0 && num.toDouble(value) != noDataValue) {
+                            sum += num.toDouble(value) * kernel(i)(j)
+                        }
+                    }
+                }
+            }
+            sum
+        }
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+    df.withColumn("convolve_arr", array(
+            array(lit(1.0), lit(2.0), lit(3.0)), 
+            array(lit(3.0), lit(2.0), lit(1.0)), 
+            array(lit(1.0), lit(3.0), lit(2.0))))
+        .select(rst_convolve("tile", "convolve_arr").display()
+     +--------------------------------------------------------------------------+
+     | rst_convole(tile,convolve_arr)                                           |
+     +--------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                     |
+     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     +--------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+    df.withColumn("convolve_arr", array(
+            array(lit(1.0), lit(2.0), lit(3.0)), 
+            array(lit(3.0), lit(2.0), lit(1.0)), 
+            array(lit(1.0), lit(3.0), lit(2.0))))
+        .select(rst_convolve(col("tile"), col("convolve_arr")).show
+     +--------------------------------------------------------------------------+
+     | rst_convole(tile,convolve_arr)                                           |
+     +--------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                     |
+     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     +--------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_convolve(tile, convolve_arr) FROM table LIMIT 1
+     +--------------------------------------------------------------------------+
+     | rst_convolve(tile,convolve_arr)                                                                   |
+     +--------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                     |
+     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     +--------------------------------------------------------------------------+
+
 rst_combineavg
 **************
 
@@ -231,7 +367,6 @@ rst_combineavg
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
-
 
 rst_derivedband
 **************
@@ -316,6 +451,54 @@ rst_derivedband
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
+rst_filter
+**********
+
+.. function:: rst_filter(tile,kernel_size,operation)
+
+    Applies a filter to the raster.
+    Returns a new raster tile with the filter applied.
+    :code:`kernel_size` is the number of pixels to compare; it must be odd.
+    :code:`operation` is the op to apply, e.g. 'avg', 'median', 'mode', 'max', 'min'.
+
+    :param tile: Mosaic raster tile struct column.
+    :type tile: Column (RasterTileType)
+    :param kernel_size: The size of the kernel. Has to be odd.
+    :type kernel_size: Column (IntegerType)
+    :param operation: The operation to apply to the kernel.
+    :type operation: Column (StringType)
+    :rtype: Column (RasterTileType) 
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.select(rst_filter('tile', lit(3), lit("mode"))).limit(1).display()
+     +-----------------------------------------------------------------------------------------------------------------------------+
+     | rst_filter(tile,3,mode)                                                                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.select(rst_filter(col("tile"), lit(3), lit("mode"))).limit(1).show
+     +-----------------------------------------------------------------------------------------------------------------------------+
+     | rst_filter(tile,3,mode)                                                                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+
+
+    .. code-tab:: sql
+
+     SELECT rst_filter(tile,3,"mode") FROM table LIMIT 1
+     +-----------------------------------------------------------------------------------------------------------------------------+
+     | rst_filter(tile,3,mode)                                                                                                     |
+     +-----------------------------------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     +-----------------------------------------------------------------------------------------------------------------------------+
 
 rst_frombands
 **************
@@ -498,7 +681,7 @@ rst_georeference
     GT(4) column rotation (typically zero).
     GT(5) n-s pixel resolution / pixel height (negative value for a north-up image).
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: MapType(StringType, DoubleType)
 
@@ -542,7 +725,7 @@ rest_getnodata
 
     Returns the nodata value of the raster tile bands.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -586,7 +769,7 @@ rst_getsubdataset
     The name is the last identifier in the subdataset path (FORMAT:PATH:NAME).
     The subdataset name must be a valid subdataset name for the raster.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param name: A column containing the name of the subdataset to return.
     :type name: Column (StringType)
@@ -629,7 +812,7 @@ rst_height
 
     Returns the height of the raster tile in pixels.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: IntegerType
 
@@ -723,7 +906,7 @@ rst_isempty
 
     Returns true if the raster tile is empty.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: BooleanType
 
@@ -760,9 +943,79 @@ rst_isempty
     |false               |
     +--------------------+
 
+rst_maketiles
+*************
+
+.. function:: rst_maketiles(input, driver, size, withCheckpoint)
+
+    Tiles the raster into tiles of the given size.
+    If the raster is stored on disk, :code:`input` is the path to the raster,
+    similar to :ref:`rst_fromfile`. 
+    If the raster is stored in memory, :code:`input` is the bytes of the raster,
+    similar to :ref:`rst_fromcontent`.
+    If not specified, :code:`driver` is inferred from the file extension; if the
+    input is a byte array, the driver has to be specified.
+    If :code:`size` is set to -1, the file is loaded and returned as a single 
+    tile; if set to 0, the file is loaded and subdivided into tiles of size 64MB; if set
+    to a positive value, the file is loaded and subdivided into tiles of the 
+    specified size; if the file is too big to fit in memory, it is subdivided 
+    into tiles of size 64MB.
+    If :code:`with_checkpoint` set to true, the tiles are written to the checkpoint
+    directory; if set to false, the tiles are returned as a in-memory byte arrays.
+
+    :param input: path (StringType) or content (BinaryType)
+    :type input: Column
+    :param driver: The driver to use for reading the raster. 
+    :type driver: Column(StringType)
+    :param size_in_mb: The size of the tiles in MB. 
+    :type size_in_mb: Column(IntegerType)
+    :param with_checkpoint: whether to use configured checkpoint location.
+    :type with_checkpoint: Column(BooleanType)
+    :rtype: Column: RasterTileType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     spark.read.format("binaryFile").load(dbfs_dir)\
+     .select(rst_maketiles("path")).limit(1).display()
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAMAAA (truncated)","metadata":{         |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     spark.read.format("binaryFile").load(dbfs_dir)
+     .select(rst_maketiles(col("path"))).limit(1).show
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAMAAA (truncated)","metadata":{         |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_maketiles(path) FROM table LIMIT 1
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAMAAA (truncated)","metadata":{         |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+.. note::
+    In initially enabled, checkpointing will remain on for tiles originating from this function, 
+    meaning follow-on calls will also use checkpointing after first enabled. To switch away 
+    from checkpointing down the line, you could call :ref:`rst_fromfile` using the checkpointed
+    locations as the :code:`path` input.
 
 rst_mapalgebra
-********
+**************
 
 .. function:: rst_mapalgebra(tile, json_spec)
 
@@ -818,6 +1071,91 @@ rst_mapalgebra
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
+rst_max
+*******
+
+.. function:: rst_max(tile)
+
+    Returns an array containing maximum values for each band.
+    The python bindings are available through sql, 
+    e.g. :code:`selectExpr("rst_max(tile)")`
+
+    :param tile: A column containing the raster tile. 
+    :type tile: Column (RasterTileType)
+    :rtype: Column: ArrayType(DoubleType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: python
+
+    df.selectExpr("rst_max(tile)"").limit(1).display()
+    +---------------+
+    | rst_max(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_max(col("tile"))).limit(1).show
+    +---------------+
+    | rst_max(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_max(tile) FROM table LIMIT 1
+    +---------------+
+    | rst_max(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
+
+rst_median
+**********
+
+.. function:: rst_median(tile)
+
+    Returns an array containing median values for each band.
+    The python bindings are available through sql, 
+    e.g. :code:`selectExpr("rst_median(tile)")`
+
+    :param tile: A column containing the raster tile. 
+    :type tile: Column (RasterTileType)
+    :rtype: Column: ArrayType(DoubleType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: python
+
+    df.selectExpr("rst_median(tile)"").limit(1).display()
+    +---------------+
+    | rst_median(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_median(col("tile"))).limit(1).show
+    +---------------+
+    | rst_median(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_median(tile) FROM table LIMIT 1
+    +---------------+
+    | rst_median(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
 
 rst_memsize
 *************
@@ -826,7 +1164,7 @@ rst_memsize
 
     Returns size of the raster tile in bytes.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: LongType
 
@@ -917,7 +1255,6 @@ rst_merge
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
-
 rst_metadata
 *************
 
@@ -926,7 +1263,7 @@ rst_metadata
     Extract the metadata describing the raster tile.
     Metadata is return as a map of key value pairs.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: MapType(StringType, StringType)
 
@@ -987,6 +1324,49 @@ rst_metadata
     | "NC_GLOBAL#cdm_data_type": "Grid"}                                                                                 |
     +--------------------------------------------------------------------------------------------------------------------+
 
+rst_min
+*******
+
+.. function:: rst_min(tile)
+
+    Returns an array containing minimum values for each band.
+    The python bindings are available through sql, 
+    e.g. :code:`selectExpr("rst_min(tile)")`
+
+    :param tile: A column containing the raster tile. 
+    :type tile: Column (RasterTileType)
+    :rtype: Column: ArrayType(DoubleType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: python
+
+    df.selectExpr("rst_min(tile)"").limit(1).display()
+    +---------------+
+    | rst_min(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_min(col("tile"))).limit(1).show
+    +---------------+
+    | rst_min(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_min(tile) FROM table LIMIT 1
+    +---------------+
+    | rst_min(tile) |
+    +---------------+
+    |        [42.0] |
+    +---------------+
+
 rst_ndvi
 ********
 
@@ -1044,7 +1424,7 @@ rst_numbands
 
     Returns number of bands in the raster tile.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: IntegerType
 
@@ -1081,6 +1461,49 @@ rst_numbands
     | 1                   |
     +---------------------+
 
+rst_pixelcount
+***************
+
+.. function:: rst_pixelcount(tile)
+
+    Returns an array containing valid pixel count values for each band.
+    The python bindings are available through sql, 
+    e.g. :code:`selectExpr("rst_pixelcount(tile)")`
+    
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :rtype: Column: ArrayType(LongType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df.select(mos.rst_pixelcount('tile')).display()
+    +----------------------+
+    | rst_pixelcount(tile) |
+    +----------------------+
+    |          [120560172] |
+    +----------------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_pixelcount(col("tile"))).show
+    +----------------------+
+    | rst_pixelcount(tile) |
+    +----------------------+
+    |          [120560172] |
+    +----------------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_pixelcount(tile) FROM table
+    +----------------------+
+    | rst_pixelcount(tile) |
+    +----------------------+
+    |          [120560172] |
+    +----------------------+
+
 rst_pixelheight
 ***************
 
@@ -1088,7 +1511,7 @@ rst_pixelheight
 
     Returns the height of the pixel in the raster tile derived via GeoTransform.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -1132,7 +1555,7 @@ rst_pixelwidth
 
     Returns the width of the pixel in the raster tile derived via GeoTransform.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -1179,7 +1602,7 @@ rst_rastertogridavg
     CellID can be LongType or StringType depending on the configuration of MosaicContext.
     The value/measure for each cell is the average of the pixel values in the cell.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: A resolution of the grid index system.
     :type resolution: Column (IntegerType)
@@ -1248,7 +1671,7 @@ rst_rastertogridcount
     CellID can be LongType or StringType depending on the configuration of MosaicContext.
     The value/measure for each cell is the average of the pixel values in the cell.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: A resolution of the grid index system.
     :type resolution: Column (IntegerType)
@@ -1317,7 +1740,7 @@ rst_rastertogridmax
     CellID can be LongType or StringType depending on the configuration of MosaicContext.
     The value/measure for each cell is the maximum pixel value.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: A resolution of the grid index system.
     :type resolution: Column (IntegerType)
@@ -1386,7 +1809,7 @@ rst_rastertogridmedian
     CellID can be LongType or StringType depending on the configuration of MosaicContext.
     The value/measure for each cell is the median pixel value.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: A resolution of the grid index system.
     :type resolution: Column (IntegerType)
@@ -1455,7 +1878,7 @@ rst_rastertogridmin
     CellID can be LongType or StringType depending on the configuration of MosaicContext.
     The value/measure for each cell is the median pixel value.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: A resolution of the grid index system.
     :type resolution: Column (IntegerType)
@@ -1523,7 +1946,7 @@ rst_rastertoworldcoord
     The result is a WKT point geometry.
     The coordinates are computed using the GeoTransform of the raster to respect the projection.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param x: x coordinate of the pixel.
     :type x: Column (IntegerType)
@@ -1569,7 +1992,7 @@ rst_rastertoworldcoordx
     Computes the world coordinates of the raster tile at the given x and y pixel coordinates.
     The result is the X coordinate of the point after applying the GeoTransform of the raster.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param x: x coordinate of the pixel.
     :type x: Column (IntegerType)
@@ -1615,7 +2038,7 @@ rst_rastertoworldcoordy
     Computes the world coordinates of the raster tile at the given x and y pixel coordinates.
     The result is the X coordinate of the point after applying the GeoTransform of the raster.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param x: x coordinate of the pixel.
     :type x: Column (IntegerType)
@@ -1663,7 +2086,7 @@ rst_retile
     The results are the paths to the new rasters.
     The result set is automatically exploded.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param width: The width of the tiles.
     :type width: Column (IntegerType)
@@ -1713,7 +2136,7 @@ rst_rotation
     The rotation is the angle between the X axis and the North axis.
     The rotation is computed using the GeoTransform of the raster.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -1757,7 +2180,7 @@ rst_scalex
 
     Computes the scale of the raster tile in the X direction.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -1798,7 +2221,7 @@ rst_scaley
 
     Computes the scale of the raster tile in the Y direction.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -1832,6 +2255,55 @@ rst_scaley
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
 
+rst_separatebands
+*****************
+
+.. function:: rst_separatebands(tile)
+
+    Returns a set of new single-band rasters, one for each band in the input raster.
+    Result set is automatically exploded based on how many bands exist.
+    Prior to the explode, you may want to maintain a column in the dataframe with a raster identifier.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :rtype: Column: (RasterTileType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df.select(mos.rst_separatebands('tile')).display()
+    +--------------------------------------------------------------------------------------------------------------------------------+
+    | tile                                                                                                                           |
+    +--------------------------------------------------------------------------------------------------------------------------------+
+    | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                                                                           |
+    |  "metadata":{"path":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
+    |              "last_command":"gdal_translate -of GTiff -b 1 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}                     |
+    +--------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_separatebands(col("tile"))).show
+    +--------------------------------------------------------------------------------------------------------------------------------+
+    | tile                                                                                                                           |
+    +--------------------------------------------------------------------------------------------------------------------------------+
+    | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                                                                           |
+    |  "metadata":{"path":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
+    |              "last_command":"gdal_translate -of GTiff -b 1 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}                     |
+    +--------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_separatebands(tile) FROM table
+    +--------------------------------------------------------------------------------------------------------------------------------+
+    | tile                                                                                                                           |
+    +--------------------------------------------------------------------------------------------------------------------------------+
+    | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                                                                           |
+    |  "metadata":{"path":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
+    |              "last_command":"gdal_translate -of GTiff -b 1 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}                     |
+    +--------------------------------------------------------------------------------------------------------------------------------+
+
 rst_setnodata
 **********************
 
@@ -1842,7 +2314,7 @@ rst_setnodata
     The same nodata value is set for all bands of the raster if a single value is passed.
     If an array of values is passed, the nodata value is set for each band of the raster.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param nodata: The nodata value to set.
     :type nodata: Column (DoubleType) / ArrayType(DoubleType)
@@ -1889,7 +2361,7 @@ rst_skewx
 
     Computes the skew of the raster tile in the X direction.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -1930,7 +2402,7 @@ rst_skewy
 
     Computes the skew of the raster tile in the Y direction.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -1974,7 +2446,7 @@ rst_srid
 
     .. note:: For complex CRS definition the EPSG code may default to 0.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -2017,7 +2489,7 @@ rst_subdatasets
     The subdatasets are the paths to the subdatasets of the raster.
     The result is a map of the subdataset path to the subdatasets and the description of the subdatasets.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: MapType(StringType, StringType)
 
@@ -2073,7 +2545,7 @@ rst_subdivide
 
     .. note:: The size of the tiles is approximate. Due to compressions and other effects we cannot guarantee the size of the tiles in MB.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param size_in_MB: The size of the tiles in MB.
     :type size_in_MB: Column (IntegerType)
@@ -2122,7 +2594,7 @@ rst_summary
     The logic is produced by gdalinfo procedure.
     The result is stored as JSON.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: MapType(StringType, StringType)
 
@@ -2271,6 +2743,58 @@ rst_tooverlappingtiles
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
+rst_transform
+**********************
+
+.. function:: rst_transform(tile,srid)
+
+    Transforms the raster to the given SRID.
+    The result is a Mosaic raster tile struct of the transformed raster.
+    If using checkpointing, the result will be stored there.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :param srid: EPSG authority code for the file's projection.
+    :type srid: Column (IntegerType)
+    :rtype: Column: (RasterTileType)
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.select(mos.rst_transform('tile', lit(4326))).display()
+     +----------------------------------------------------------------------------------------------------+
+     | rst_transform(tile,4326)                                                                           |
+     +----------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
+     |  "last_command":"gdalwarp -t_srs EPSG:4326 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
+     +----------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.select(rst_transform(col("tile"), lit(4326))).show
+     +----------------------------------------------------------------------------------------------------+
+     | rst_transform(tile,4326)                                                                           |
+     +----------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
+     |  "last_command":"gdalwarp -t_srs EPSG:4326 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
+     +----------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_transform(tile,4326) FROM table
+     +----------------------------------------------------------------------------------------------------+
+     | rst_transform(tile,4326)                                                                           |
+     +----------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
+     |  "last_command":"gdalwarp -t_srs EPSG:4326 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
+     +----------------------------------------------------------------------------------------------------+
+
+
 rst_tryopen
 **********************
 
@@ -2320,7 +2844,7 @@ rst_upperleftx
     Computes the upper left X coordinate of the raster tile.
     The value is computed based on GeoTransform.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -2362,7 +2886,7 @@ rst_upperlefty
     Computes the upper left Y coordinate of the raster tile.
     The value is computed based on GeoTransform.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -2404,7 +2928,7 @@ rst_width
     Computes the width of the raster tile in pixels.
 
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: IntegerType
 
@@ -2448,7 +2972,7 @@ rst_worldtorastercoord
     The world coordinates are the coordinates in the CRS of the raster.
     The coordinates are resolved using GeoTransform.
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param xworld: X world coordinate.
     :type xworld: Column (DoubleType)
@@ -2498,7 +3022,7 @@ rst_worldtorastercoordx
     This method returns the X coordinate.
 
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param xworld: X world coordinate.
     :type xworld: Column (DoubleType)
@@ -2548,7 +3072,7 @@ rst_worldtorastercoordy
     This method returns the Y coordinate.
 
 
-    :param tile: A column containing the raster tile. For < 0.3.11 string representing the path to a raster file or byte array.A column containing the path to a raster file.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param xworld: X world coordinate.
     :type xworld: Column (DoubleType)

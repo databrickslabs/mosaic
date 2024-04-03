@@ -2,6 +2,115 @@
 Spatial aggregation functions
 =============================
 
+
+st_asgeojsontile_agg
+********************
+
+.. function:: st_asgeojsontile_agg(geom, attributes)
+
+    Generates GeoJSON vector tiles from a group by statement over aggregated geometry column.
+    "Geom" column is WKB, WKT, or GeoJSON.
+    "Attributes" column is a spark struct; it requires minimally "id".
+
+    :param geom: A grouped column containing geometries.
+    :type geom: Column
+    :param attributes: the attributes column to aggregate.
+    :type attributes: Column(StructType)
+    :rtype: Column
+
+ :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.groupBy()\
+       .agg(mos.st_asgeojsontile_agg("geom", struct("id"))).limit(1).display()
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asgeojsontile_agg(geom, struct(id))                                                                         |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {"type": "FeatureCollection", "name": "tiles", "crs": {                                                        |
+     |     "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } }, "features": [ ... ] }         |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.groupBy()
+       .agg(st_asgeojsontile_agg(col("geom"), struct(col("id"))).limit(1).show
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asgeojsontile_agg(geom, struct(id))                                                                         |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {"type": "FeatureCollection", "name": "tiles", "crs": {                                                        |
+     |     "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } }, "features": [ ... ] }         |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT st_asgeojsontile_agg(geom, struct(id))
+     FROM table
+     GROUP BY 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asgeojsontile_agg(geom, struct(id))                                                                         |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {"type": "FeatureCollection", "name": "tiles", "crs": {                                                        |
+     |     "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } }, "features": [ ... ] }         |
+     +----------------------------------------------------------------------------------------------------------------+
+
+
+st_asmvttile_agg
+********************
+
+.. function:: st_asmvttile_agg(geom, attributes, zxyID)
+
+    Generates Mapbox Vector Tiles from a group by statement over aggregated geometry column.
+    "Geom" column is Mosaic Internal Geometry, e.g. using ST_GeomFrom[WKB|WKT|GeoJSON]. 
+    The geometry that you work on requires an SRID, recommend using ST_UpdateSRID, 
+      e.g. from 4326 to 3857 (required SRID).
+    "Attributes" column is a spark struct; it requires minimally "id".
+    "zxyID" column is a string.
+
+    :param geom: A grouped column containing geometries.
+    :type geom: Column
+    :param attributes: the attributes column to aggregate.
+    :type attributes: Column(StructType)
+    :param zxyID: the zxyID column to aggregate.
+    :type attributes: Column(StringType)
+    :rtype: Column
+
+ :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.groupBy()\
+       .agg(mos.st_asmvttile_agg("geom_3857", struct("id"), "zxyID")).limit(1).display()
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asmvttile_agg(geom_3857, struct(id), zxyID)                                                                 |
+     +----------------------------------------------------------------------------------------------------------------+
+     | H4sIAAAAAAAAA5Ny5GItycxJLRZSFmJiYJBgVpLmfKXxwySIgYmZg5mJkZGRgYGRiZGFFYgZ+KWYMlOUuDQavk05e+ntl1fCGg0KFUwA...    |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.groupBy()
+       .agg(st_asmvttiletile_agg(col("geom_3857"), struct(col("id")), col("zxyID")).limit(1).show
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asmvttile_agg(geom_3857, struct(id), zxyID)                                                                 |
+     +----------------------------------------------------------------------------------------------------------------+
+     | H4sIAAAAAAAAA5Ny5GItycxJLRZSFmJiYJBgVpLmfKXxwySIgYmZg5mJkZGRgYGRiZGFFYgZ+KWYMlOUuDQavk05e+ntl1fCGg0KFUwA...    |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT st_asmvttile_agg(geom_3857, struct(id), zxyID)
+     FROM table
+     GROUP BY 1
+    +----------------------------------------------------------------------------------------------------------------+
+     | st_asmvttile_agg(geom_3857, struct(id), zxyID)                                                                 |
+     +----------------------------------------------------------------------------------------------------------------+
+     | H4sIAAAAAAAAA5Ny5GItycxJLRZSFmJiYJBgVpLmfKXxwySIgYmZg5mJkZGRgYGRiZGFFYgZ+KWYMlOUuDQavk05e+ntl1fCGg0KFUwA...    |
+     +----------------------------------------------------------------------------------------------------------------+
+
+
 rst_combineavg_agg
 *****************
 
