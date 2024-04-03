@@ -62,10 +62,10 @@ st_asmvttile_agg
 .. function:: st_asmvttile_agg(geom, attributes, zxyID)
 
     Generates Mapbox Vector Tiles from a group by statement over aggregated geometry column.
-    :code:`Geom` column is Mosaic Internal Geometry, e.g. using ST_GeomFrom[WKB|WKT|GeoJSON]. 
+    :code:`geom` column is Mosaic Internal Geometry, e.g. using ST_GeomFrom[WKB|WKT|GeoJSON]. 
     The geometry that you work on requires an SRID, recommend using ST_UpdateSRID, 
       e.g. from 4326 to 3857 (required SRID).
-    :code:`Attributes` column is a spark struct; it requires minimally "id".
+    :code:`attributes` column is a spark struct; it requires minimally "id".
     :code:`zxyID` column is a string.
 
     :param geom: A grouped column containing geometries.
