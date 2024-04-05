@@ -2,24 +2,141 @@
 Spatial aggregation functions
 =============================
 
+
+st_asgeojsontile_agg
+********************
+
+.. function:: st_asgeojsontile_agg(geom, attributes)
+
+    Generates GeoJSON vector tiles from a group by statement over aggregated geometry column.
+
+    - :code:`geom` column is WKB, WKT, or GeoJSON.
+    - :code:`attributes` column is a Spark struct; it requires minimally "id".
+
+    :param geom: A grouped column containing geometries.
+    :type geom: Column
+    :param attributes: The attributes column to aggregate.
+    :type attributes: Column(StructType)
+    :rtype: Column
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.groupBy()\
+       .agg(mos.st_asgeojsontile_agg("geom", struct("id"))).limit(1).display()
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asgeojsontile_agg(geom, struct(id))                                                                         |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {"type": "FeatureCollection", "name": "tiles", "crs": {                                                        |
+     |     "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } }, "features": [ ... ] }         |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.groupBy()
+       .agg(st_asgeojsontile_agg(col("geom"), struct(col("id"))).limit(1).show
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asgeojsontile_agg(geom, struct(id))                                                                         |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {"type": "FeatureCollection", "name": "tiles", "crs": {                                                        |
+     |     "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } }, "features": [ ... ] }         |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT st_asgeojsontile_agg(geom, struct(id))
+     FROM table
+     GROUP BY 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asgeojsontile_agg(geom, struct(id))                                                                         |
+     +----------------------------------------------------------------------------------------------------------------+
+     | {"type": "FeatureCollection", "name": "tiles", "crs": {                                                        |
+     |     "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } }, "features": [ ... ] }         |
+     +----------------------------------------------------------------------------------------------------------------+
+
+
+st_asmvttile_agg
+********************
+
+.. function:: st_asmvttile_agg(geom, attributes, zxyID)
+
+    Generates Mapbox Vector Tiles from a group by statement over aggregated geometry column.
+
+    :param geom: A grouped column containing geometries.
+    :type geom: Column
+    :param attributes: the attributes column to aggregate.
+    :type attributes: Column(StructType)
+    :param zxyID: the zxyID column to aggregate.
+    :type attributes: Column(StringType)
+    :rtype: Column
+
+.. note::
+  Notes
+    - :code:`geom` column must be represented using the Mosaic Internal Geometry,
+      e.g. using :code:`ST_GeomFrom[WKB|WKT|GeoJSON]`.
+
+      - The geometry used in this operation must have an SRID set.
+        Use e.g. :code:`ST_SetSRID` or :code:`ST_UpdateSRID` to achieve this.
+      - MVT tiles require the SRID to be set to EPSG::3857.
+    - :code:`attributes` column is a Spark struct; it requires at least an "id" member.
+..
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.groupBy()\
+       .agg(mos.st_asmvttile_agg("geom_3857", struct("id"), "zxyID")).limit(1).display()
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asmvttile_agg(geom_3857, struct(id), zxyID)                                                                 |
+     +----------------------------------------------------------------------------------------------------------------+
+     | H4sIAAAAAAAAA5Ny5GItycxJLRZSFmJiYJBgVpLmfKXxwySIgYmZg5mJkZGRgYGRiZGFFYgZ+KWYMlOUuDQavk05e+ntl1fCGg0KFUwA...    |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.groupBy()
+       .agg(st_asmvttiletile_agg(col("geom_3857"), struct(col("id")), col("zxyID")).limit(1).show
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asmvttile_agg(geom_3857, struct(id), zxyID)                                                                 |
+     +----------------------------------------------------------------------------------------------------------------+
+     | H4sIAAAAAAAAA5Ny5GItycxJLRZSFmJiYJBgVpLmfKXxwySIgYmZg5mJkZGRgYGRiZGFFYgZ+KWYMlOUuDQavk05e+ntl1fCGg0KFUwA...    |
+     +----------------------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT st_asmvttile_agg(geom_3857, struct(id), zxyID)
+     FROM table
+     GROUP BY 1
+     +----------------------------------------------------------------------------------------------------------------+
+     | st_asmvttile_agg(geom_3857, struct(id), zxyID)                                                                 |
+     +----------------------------------------------------------------------------------------------------------------+
+     | H4sIAAAAAAAAA5Ny5GItycxJLRZSFmJiYJBgVpLmfKXxwySIgYmZg5mJkZGRgYGRiZGFFYgZ+KWYMlOUuDQavk05e+ntl1fCGg0KFUwA...    |
+     +----------------------------------------------------------------------------------------------------------------+
+
+
 rst_combineavg_agg
-*****************
+******************
 
 .. function:: rst_combineavg_agg(tile)
 
-    Combines a group by statement over aggregated raster tiles by averaging the pixel values.
-    The rasters must have the same extent, number of bands, and pixel type.
-    The rasters must have the same pixel size and coordinate reference system.
-    The output raster will have the same extent as the input rasters.
-    The output raster will have the same number of bands as the input rasters.
-    The output raster will have the same pixel type as the input rasters.
-    The output raster will have the same pixel size as the input rasters.
-    The output raster will have the same coordinate reference system as the input rasters.
+    Aggregates raster tiles by averaging pixel values.
 
     :param tile: A grouped column containing raster tiles.
     :type tile: Column (RasterTileType)
     :rtype: Column: RasterTileType
 
+.. note::
+
+  Notes
+    - Each :code:`tile` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
+    - The output raster will have the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input tiles.
+
+    Also, see :ref:`rst_combineavg_agg` function.
+..
     :example:
 
 .. tabs::
@@ -56,18 +173,11 @@ rst_combineavg_agg
 
 
 rst_derivedband_agg
-*****************
+*******************
 
 .. function:: rst_derivedband_agg(tile, python_func, func_name)
 
     Combines a group by statement over aggregated raster tiles by using the provided python function.
-    The rasters must have the same extent, number of bands, and pixel type.
-    The rasters must have the same pixel size and coordinate reference system.
-    The output raster will have the same extent as the input rasters.
-    The output raster will have the same number of bands as the input rasters.
-    The output raster will have the same pixel type as the input rasters.
-    The output raster will have the same pixel size as the input rasters.
-    The output raster will have the same coordinate reference system as the input rasters.
 
     :param tile: A grouped column containing raster tile(s).
     :type tile: Column (RasterTileType)
@@ -76,6 +186,12 @@ rst_derivedband_agg
     :param func_name: name of the function to evaluate in python.
     :type func_name: Column (StringType)
     :rtype: Column: RasterTileType
+
+.. note::
+  Notes
+    - Input raster tiles in :code:`tile` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
+    - The output raster will have the same the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input raster tiles.
+..
 
     :example:
 
@@ -148,28 +264,38 @@ rst_derivedband_agg
 
 
 rst_merge_agg
-************
+*************
 
 .. function:: rst_merge_agg(tile)
 
-    Combines a grouped aggregate of raster tiles into a single raster.
-    The rasters do not need to have the same extent.
-    The rasters must have the same coordinate reference system.
-    The rasters are combined using gdalwarp.
-    The noData value needs to be initialised; if not, the non valid pixels may introduce artifacts in the output raster.
-    The rasters are stacked in the order they are provided.
-    This order is randomized since this is an aggregation function.
-    If the order of rasters is important please first collect rasters and sort them by metadata information and then use
-    rst_merge function.
-    The output raster will have the extent covering all input rasters.
-    The output raster will have the same number of bands as the input rasters.
-    The output raster will have the same pixel type as the input rasters.
-    The output raster will have the same pixel size as the highest resolution input rasters.
-    The output raster will have the same coordinate reference system as the input rasters.
+    Aggregates raster tiles into a single raster.
 
     :param tile: A column containing raster tiles.
     :type tile: Column (RasterTileType)
     :rtype: Column: RasterTileType
+
+.. note::
+  Notes
+
+  Input tiles in :code:`tile`:
+    - are not required to have the same extent.
+    - must have the same coordinate reference system.
+    - must have the same pixel data type.
+    - will be combined using the :code:`gdalwarp` command.
+    - require a :code:`noData` value to have been initialised (if this is not the case, the non valid pixels may introduce artifacts in the output raster).
+    - will be stacked in the order they are provided.
+      - This order is randomized since this is an aggregation function.
+      - If the order of rasters is important please first collect rasters and sort them by metadata information and then use rst_merge function.
+
+  The resulting output raster will have:
+    - an extent that covers all of the input tiles;
+    - the same number of bands as the input tiles;
+    - the same pixel type as the input tiles;
+    - the same pixel size as the highest resolution input tiles; and
+    - the same coordinate reference system as the input tiles.
+
+  See also :ref:`rst_merge` function.
+..
 
     :example:
 
@@ -206,8 +332,8 @@ rst_merge_agg
      +----------------------------------------------------------------------------------------------------------------+
 
 
-st_intersects_aggregate
-***********************
+st_intersects_agg
+*****************
 
 .. function:: st_intersects_agg(leftIndex, rightIndex)
 
@@ -297,7 +423,7 @@ st_intersects_aggregate
 
 
 st_intersection_agg
-*************************
+*******************
 
 .. function:: st_intersection_agg(leftIndex, rightIndex)
 
@@ -441,7 +567,7 @@ st_union_agg
     +-------------------------------------------------------------------------+
 
 grid_cell_intersection_agg
-************
+**************************
 
 .. function:: grid_cell_intersection_agg(chips)
 
@@ -495,7 +621,7 @@ grid_cell_intersection_agg
     +--------------------------------------------------------+
 
 grid_cell_union_agg
-************
+*******************
 
 .. function:: grid_cell_union_agg(chips)
 
