@@ -1,0 +1,126 @@
+.doc-figure {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 75%;
+}
+
+.doc-figure-full {
+    width: 100%;
+}
+
+.doc-figure-float-left {
+    display: block;
+    float: left !important;
+    width: 50%;
+}
+
+.figure-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.mosaic-logo {
+    display: block;
+    margin-left: 10%;
+    margin-right: 10%;
+    margin-bottom: 2%;
+    width: 80%;
+}
+
+.wy-nav-content {
+    max-width: 70% !important;
+}
+
+.icon-home .logo {
+    filter: invert(66%) sepia(76%) saturate(752%) hue-rotate(317deg) brightness(95%) contrast(94%);
+}
+
+.package-health {
+    margin-bottom: 2%;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+li {
+    list-style: disc;
+}
+
+.output_area img {
+    height: 20px;
+}
+
+.video-tile {
+    width: 440px;
+    float: left;
+    padding: 10px;
+    background: rgba(251, 181, 58, 0.46);
+    margin-right: 20px;
+    margin-top: 20px;
+}
+
+.video-tile p {
+    margin: 0 0 5px 0;
+}
+
+.video-title {
+    height: 82px;
+}
+
+.video-description {
+    padding: 10px;
+    height: 300px;
+    overflow: auto;
+    margin-bottom: 20px;
+}
+
+.video-tile ul {
+    width: fit-content;
+    margin: auto !important;
+    margin-top: 15px !important;
+}
+
+.linkedin-badge a {
+    display: inline-block;
+    margin: 0 5px;
+}
+
+.linkedin-badge a img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50px;
+    box-shadow: 0 0 0 1px #fff;
+    transition: all 0.2s ease-in-out;
+}
+
+.linkedin-badge a:hover img {
+    box-shadow: 0 0 0 1px #0077b5;
+}
+
+.linkedin-badge p {
+    margin: 0;
+    margin-top: -5px !important;
+    font-size: 18px;
+    line-height: 20px;
+    color: #000000;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+}
+
+.linkedin-badge {
+    display: inline-block;
+    margin: 0 5px;
+    text-align: center;
+}
+
+.video-spacing {
+    height: 50px;
+}
+
+.speakers-title {
+    float: left;
+}
