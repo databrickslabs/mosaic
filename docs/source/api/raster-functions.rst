@@ -205,115 +205,31 @@ rst_clip
 .. tabs::
     .. code-tab:: py
 
-     df.select(mos.rst_clip("tile", F.lit("POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))"))).limit(1).display()
-     +----------------------------------------------------------------------------------------------------------------+
-     | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                        |
-     +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-     +----------------------------------------------------------------------------------------------------------------+
+      df.select(mos.rst_clip("tile", F.lit("POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))"))).limit(1).display()
+      +----------------------------------------------------------------------------------------------------------------+
+      | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                        |
+      +----------------------------------------------------------------------------------------------------------------+
+      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
 
-     df.select(rst_clip(col("tile"), lit("POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))"))).limit(1).show
-     +----------------------------------------------------------------------------------------------------------------+
-    | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                         |
-    +-----------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }  |
-    +-----------------------------------------------------------------------------------------------------------------+
+      df.select(rst_clip(col("tile"), lit("POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))"))).limit(1).show
+      +----------------------------------------------------------------------------------------------------------------+
+      | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                         |
+      +-----------------------------------------------------------------------------------------------------------------+
+      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }  |
+      +-----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-     SELECT rst_clip(tile, "POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))") FROM table LIMIT 1
-     +----------------------------------------------------------------------------------------------------------------+
-     | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                        |
-     +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
-     +----------------------------------------------------------------------------------------------------------------+
+      SELECT rst_clip(tile, "POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))") FROM table LIMIT 1
+      +----------------------------------------------------------------------------------------------------------------+
+      | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                        |
+      +----------------------------------------------------------------------------------------------------------------+
+      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+      +----------------------------------------------------------------------------------------------------------------+
 
-rst_convolve
-************
-
-.. function:: rst_convolve(tile, kernel)
-
-    Applies a convolution filter to the raster.
-    The result is Mosaic raster tile struct column to the filtered raster.
-    If used, the result is stored in the configured checkpoint directory.
-    The :code:`kernel` can be Array of Array of either Double, Integer, or Decimal; 
-    ultimately all is cast to Double. Assumes the kernel is square and has an odd number 
-    of rows and columns. Kernel uses the configured GDAL :code:`blockSize`` with a stride being
-    :code:`kernelSize/2`.
-    
-    :param tile: A column containing raster tile.
-    :type tile: Column (RasterTileType)
-    :param kernel: The kernel to apply to the raster.
-    :type kernel: Column (ArrayType(ArrayType(DoubleType)))
-    :rtype: Column: RasterTileType
-
-    For clarity, this is ultimately the execution of the kernel.
-
-    .. code-block:: text
-        def convolveAt(x: Int, y: Int, kernel: Array[Array[Double]]): Double = {
-            val kernelWidth = kernel.head.length
-            val kernelHeight = kernel.length
-            val kernelCenterX = kernelWidth / 2
-            val kernelCenterY = kernelHeight / 2
-            var sum = 0.0
-            for (i <- 0 until kernelHeight) {
-                for (j <- 0 until kernelWidth) {
-                    val xIndex = x + (j - kernelCenterX)
-                    val yIndex = y + (i - kernelCenterY)
-                    if (xIndex >= 0 && xIndex < width && yIndex >= 0 && yIndex < height) {
-                        val maskValue = maskAt(xIndex, yIndex)
-                        val value = elementAt(xIndex, yIndex)
-                        if (maskValue != 0.0 && num.toDouble(value) != noDataValue) {
-                            sum += num.toDouble(value) * kernel(i)(j)
-                        }
-                    }
-                }
-            }
-            sum
-        }
-
-    :example:
-
-.. tabs::
-    .. code-tab:: py
-
-    df.withColumn("convolve_arr", array(
-            array(lit(1.0), lit(2.0), lit(3.0)), 
-            array(lit(3.0), lit(2.0), lit(1.0)), 
-            array(lit(1.0), lit(3.0), lit(2.0))))
-        .select(rst_convolve("tile", "convolve_arr").display()
-     +--------------------------------------------------------------------------+
-     | rst_convole(tile,convolve_arr)                                           |
-     +--------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                     |
-     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
-     +--------------------------------------------------------------------------+
-
-    .. code-tab:: scala
-
-    df.withColumn("convolve_arr", array(
-            array(lit(1.0), lit(2.0), lit(3.0)), 
-            array(lit(3.0), lit(2.0), lit(1.0)), 
-            array(lit(1.0), lit(3.0), lit(2.0))))
-        .select(rst_convolve(col("tile"), col("convolve_arr")).show
-     +--------------------------------------------------------------------------+
-     | rst_convole(tile,convolve_arr)                                           |
-     +--------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                     |
-     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
-     +--------------------------------------------------------------------------+
-
-    .. code-tab:: sql
-
-     SELECT rst_convolve(tile, convolve_arr) FROM table LIMIT 1
-     +--------------------------------------------------------------------------+
-     | rst_convolve(tile,convolve_arr)                                                                   |
-     +--------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                     |
-     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
-     +--------------------------------------------------------------------------+
 
 rst_combineavg
 **************
@@ -367,6 +283,95 @@ rst_combineavg
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
+
+rst_convolve
+************
+
+.. function:: rst_convolve(tile, kernel)
+
+    Applies a convolution filter to the raster.
+    The result is Mosaic raster tile struct column to the filtered raster.
+    If used, the result is stored in the configured checkpoint directory.
+    The :code:`kernel` can be Array of Array of either Double, Integer, or Decimal; 
+    ultimately all is cast to Double. Assumes the kernel is square and has an odd number 
+    of rows and columns. Kernel uses the configured GDAL :code:`blockSize`` with a stride being
+    :code:`kernelSize/2`.
+    
+    :param tile: A column containing raster tile.
+    :type tile: Column (RasterTileType)
+    :param kernel: The kernel to apply to the raster.
+    :type kernel: Column (ArrayType(ArrayType(DoubleType)))
+    :rtype: Column: RasterTileType
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+      df\
+        .withColumn("convolve_arr", array(
+          array(lit(1.0), lit(2.0), lit(3.0))
+          array(lit(3.0), lit(2.0), lit(1.0)),
+          array(lit(1.0), lit(3.0), lit(2.0)))\
+       .select(rst_convolve("tile", "convolve_arr").display()
+     +---------------------------------------------------------------------------+
+     | rst_convolve(tile,convolve_arr)                                           |
+     +---------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                      |
+     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
+     +---------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+      df
+        .withColumn("convolve_arr", array(
+          array(lit(1.0), lit(2.0), lit(3.0)),
+          array(lit(3.0), lit(2.0), lit(1.0)),
+          array(lit(1.0), lit(3.0), lit(2.0)))
+          )
+        .select(rst_convolve(col("tile"), col("convolve_arr")).show
+     +---------------------------------------------------------------------------+
+     | rst_convolve(tile,convolve_arr)                                           |
+     +---------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                      |
+     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
+     +---------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_convolve(tile, convolve_arr) FROM table LIMIT 1
+     +---------------------------------------------------------------------------+
+     | rst_convolve(tile,convolve_arr)                                           |
+     +---------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                      |
+     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
+     +---------------------------------------------------------------------------+
+
+For clarity, this is ultimately the execution of the kernel.
+
+    .. code-block:: scala
+
+        def convolveAt(x: Int, y: Int, kernel: Array[Array[Double]]): Double = {
+            val kernelWidth = kernel.head.length
+            val kernelHeight = kernel.length
+            val kernelCenterX = kernelWidth / 2
+            val kernelCenterY = kernelHeight / 2
+            var sum = 0.0
+            for (i <- 0 until kernelHeight) {
+                for (j <- 0 until kernelWidth) {
+                    val xIndex = x + (j - kernelCenterX)
+                    val yIndex = y + (i - kernelCenterY)
+                    if (xIndex >= 0 && xIndex < width && yIndex >= 0 && yIndex < height) {
+                        val maskValue = maskAt(xIndex, yIndex)
+                        val value = elementAt(xIndex, yIndex)
+                        if (maskValue != 0.0 && num.toDouble(value) != noDataValue) {
+                            sum += num.toDouble(value) * kernel(i)(j)
+                        }
+                    }
+                }
+            }
+            sum
+        }
 
 rst_derivedband
 **************
