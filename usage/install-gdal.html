@@ -205,6 +205,38 @@ with <cite>setup_gdal(with_ubuntugis=True)</cite></p>
 </div>
 </section>
 </section>
+<section id="gdal-configuration">
+<h2>GDAL Configuration<a class="headerlink" href="#gdal-configuration" title="Permalink to this heading"></a></h2>
+<p>Here are spark session configs available for raster, e.g. <code class="code docutils literal notranslate"><span class="pre">spark.conf.set(&quot;&lt;key&gt;&quot;,</span> <span class="pre">&quot;&lt;val&gt;&quot;)</span></code>.</p>
+<table class="docutils align-default" id="id4">
+<caption><span class="caption-text">Title</span><a class="headerlink" href="#id4" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Config</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Comments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>spark.databricks.labs.mosaic.raster.checkpoint</p></td>
+<td><p>“/dbfs/tmp/mosaic/raster/checkpoint”</p></td>
+<td><p>Checkpoint location, see <span class="xref std std-ref">rst_maketiles</span> for more</p></td>
+</tr>
+<tr class="row-odd"><td><p>spark.databricks.labs.mosaic.raster.tmp.prefix</p></td>
+<td><p>“” (will use “/tmp”)</p></td>
+<td><p>Local directory for workers</p></td>
+</tr>
+<tr class="row-even"><td><p>spark.databricks.labs.mosaic.raster.blocksize</p></td>
+<td><p>“128”</p></td>
+<td><p>Blocksize in pixels, see <span class="xref std std-ref">rst_convolve</span> and <span class="xref std std-ref">rst_filter</span> for more</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 
 

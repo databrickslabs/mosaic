@@ -109,3 +109,25 @@ code at the top of the notebook:
 .. note::
     You can configure init script from default ubuntu GDAL (3.4.1) to ubuntugis ppa @ https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa (3.4.3)
     with `setup_gdal(with_ubuntugis=True)`
+
+GDAL Configuration
+####################
+
+Here are spark session configs available for raster, e.g. :code:`spark.conf.set("<key>", "<val>")`.
+
+.. list-table:: Title
+   :widths: 25 25 50
+   :header-rows: 1
+
+   * - Config
+     - Default
+     - Comments
+   * - spark.databricks.labs.mosaic.raster.checkpoint
+     - "/dbfs/tmp/mosaic/raster/checkpoint"
+     - Checkpoint location, see :ref:`rst_maketiles` for more
+   * - spark.databricks.labs.mosaic.raster.tmp.prefix
+     - "" (will use "/tmp")
+     - Local directory for workers
+   * - spark.databricks.labs.mosaic.raster.blocksize
+     - "128"
+     - Blocksize in pixels, see :ref:`rst_convolve` and :ref:`rst_filter` for more
