@@ -300,7 +300,7 @@ st_centroid
 
 
 st_concavehull
-*************
+**************
 
 .. function:: st_concavehull(col, concavity, <has_holes>)
 
@@ -757,8 +757,67 @@ st_geometrytype
     +--------------------+
 
 
+st_hasvalidcoordinates
+**********************
+
+.. function:: st_hasvalidcoordinates(col, crs, which)
+
+    Checks if all points in :code:`geom` are valid with respect to crs bounds.
+    CRS bounds can be provided either as bounds or as reprojected_bounds.
+
+    :param col: Geometry
+    :type col: Column
+    :param crs: CRS name (EPSG ID), e.g. "EPSG:2192"
+    :type crs: Column
+    :param which: Check against geographic :code:`"bounds"` or geometric :code:`"reprojected_bounds"` bounds.
+    :type which: Column
+    :rtype: Column: IntegerType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df = spark.createDataFrame([{'wkt': 'POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))'}])
+    df.select(st_hasvalidcoordinates(col('wkt'), lit('EPSG:2192'), lit('bounds'))).show()
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: scala
+
+    val df = List(("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))")).toDF("wkt")
+    df.select(st_hasvalidcoordinates(col("wkt"), lit("EPSG:2192"), lit("bounds"))).show()
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT st_hasvalidcoordinates("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))", "EPSG:2192", "bounds")
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |                                          true|
+    +----------------------------------------------+
+
+   .. code-tab:: r R
+
+    df <- createDataFrame(data.frame(wkt = "POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))"))
+    showDF(select(df, st_hasvalidcoordinates(column("wkt"), lit("EPSG:2192"), lit("bounds"))), truncate=F)
+    +----------------------------------------------+
+    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
+    +----------------------------------------------+
+    |true                                          |
+    +----------------------------------------------+
+
+
 st_haversine
-***********
+************
 
 .. function:: st_haversine(lat1, lng1, lat2, lng2)
 
@@ -817,65 +876,6 @@ st_haversine
     +------------------------------------+
 
 .. note:: Results of this function are always expressed in km, while the input lat/lng pairs are expected to be in degrees. The radius used (in km) is 6371.0088.
-
-
-st_hasvalidcoordinates
-**********************
-
-.. function:: st_hasvalidcoordinates(col, crs, which)
-
-    Checks if all points in :code:`geom` are valid with respect to crs bounds.
-    CRS bounds can be provided either as bounds or as reprojected_bounds.
-
-    :param col: Geometry
-    :type col: Column
-    :param crs: CRS name (EPSG ID), e.g. "EPSG:2192"
-    :type crs: Column
-    :param which: Check against geographic :code:`"bounds"` or geometric :code:`"reprojected_bounds"` bounds.
-    :type which: Column
-    :rtype: Column: IntegerType
-
-    :example:
-
-.. tabs::
-   .. code-tab:: py
-
-    df = spark.createDataFrame([{'wkt': 'POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))'}])
-    df.select(st_hasvalidcoordinates(col('wkt'), lit('EPSG:2192'), lit('bounds'))).show()
-    +----------------------------------------------+
-    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
-    +----------------------------------------------+
-    |                                          true|
-    +----------------------------------------------+
-
-   .. code-tab:: scala
-
-    val df = List(("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))")).toDF("wkt")
-    df.select(st_hasvalidcoordinates(col("wkt"), lit("EPSG:2192"), lit("bounds"))).show()
-    +----------------------------------------------+
-    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
-    +----------------------------------------------+
-    |                                          true|
-    +----------------------------------------------+
-
-   .. code-tab:: sql
-
-    SELECT st_hasvalidcoordinates("POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))", "EPSG:2192", "bounds")
-    +----------------------------------------------+
-    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
-    +----------------------------------------------+
-    |                                          true|
-    +----------------------------------------------+
-
-   .. code-tab:: r R
-
-    df <- createDataFrame(data.frame(wkt = "POLYGON((5.84 45.64, 5.92 45.64, 5.89 45.81, 5.79 45.81, 5.84 45.64))"))
-    showDF(select(df, st_hasvalidcoordinates(column("wkt"), lit("EPSG:2192"), lit("bounds"))), truncate=F)
-    +----------------------------------------------+
-    |st_hasvalidcoordinates(wkt, EPSG:2192, bounds)|
-    +----------------------------------------------+
-    |true                                          |
-    +----------------------------------------------+
 
 
 st_intersection
@@ -1367,9 +1367,14 @@ st_setsrid
 .. note::
     :ref:`st_setsrid` does not transform the coordinates of :code:`geom`,
     rather it tells Mosaic the SRID in which the current coordinates are expressed.
-    **Changed in 0.4 series** :ref:`st_srid`, :ref:`st_setsrid`, and :ref:`st_transform` operate best on
+
+    **Changed in 0.4 series**
+
+    :ref:`st_srid`, :ref:`st_setsrid`, and :ref:`st_transform` operate best on
     Mosaic Internal Geometry across language bindings, so recommend calling :ref:`st_geomfromwkt` or :ref:`st_geomfromwkb`
-    to convert from WKT and WKB. You can convert back after the transform, e.g. using :ref:`st_astext` or :ref:`st_asbinary`.
+    to convert from WKT and WKB.
+
+    You can convert back after the transform, e.g. using :ref:`st_astext` or :ref:`st_asbinary`.
     Alternatively, you can use :ref:`st_updatesrid` to transform WKB, WKB, GeoJSON, or Mosaic Internal Geometry 
     by specifying the :code:`srcSRID` and :code:`dstSRID`.
 
@@ -1487,9 +1492,13 @@ st_srid
     +--------------+
 
 .. note::
-    **Changed in 0.4 series** :ref:`st_srid`, :ref:`st_setsrid`, and :ref:`st_transform` operate best on
+    **Changed in 0.4 series**
+
+    :ref:`st_srid`, :ref:`st_setsrid`, and :ref:`st_transform` operate best on
     Mosaic Internal Geometry across language bindings, so recommend calling :ref:`st_geomfromwkt` or :ref:`st_geomfromwkb`
-    to convert from WKT and WKB. You can convert back after the transform, e.g. using :ref:`st_astext` or :ref:`st_asbinary`.
+    to convert from WKT and WKB.
+
+    You can convert back after the transform, e.g. using :ref:`st_astext` or :ref:`st_asbinary`.
     Alternatively, you can use :ref:`st_updatesrid` to transform WKB, WKB, GeoJSON, or Mosaic Internal Geometry 
     by specifying the :code:`srcSRID` and :code:`dstSRID`.
 
@@ -1559,10 +1568,15 @@ st_transform
 
 .. note::
     If :code:`geom` does not have an associated SRID, use :ref:`st_setsrid` to set this before calling :ref:`st_transform`.
-    **Changed in 0.4 series** :ref:`st_srid`, :ref:`st_setsrid`, and :ref:`st_transform` operate best on
+
+    **Changed in 0.4 series**
+
+    :ref:`st_srid`, :ref:`st_setsrid`, and :ref:`st_transform` operate best on
     Mosaic Internal Geometry across language bindings, so recommend calling :ref:`st_geomfromwkt` or :ref:`st_geomfromwkb`
-    to convert from WKT and WKB. You can convert back after the transform, e.g. using :ref:`st_astext` or :ref:`st_asbinary`.
-    Alternatively, you can use :ref:`st_updatesrid` to transform WKB, WKB, GeoJSON, or Mosaic Internal Geometry 
+    to convert from WKT and WKB.
+
+    You can convert back after the transform, e.g. using :ref:`st_astext` or :ref:`st_asbinary`.
+    Alternatively, you can use :ref:`st_updatesrid` to transform WKB, WKB, GeoJSON, or Mosaic Internal Geometry
     by specifying the :code:`srcSRID` and :code:`dstSRID`.
 
 
@@ -1623,6 +1637,60 @@ st_translate
     |MULTIPOINT ((20 35), (50 25), (30 15), (40 5))|
     +----------------------------------------------+
 
+st_unaryunion
+*************
+
+.. function:: st_unaryunion(col)
+
+    Returns a geometry that represents the point set union of the given geometry
+
+    :param col: Geometry
+    :type col: Column
+    :rtype: Column: Geometry
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))'}])
+    df.select(st_unaryunion('wkt')).show()
+    +-------------------------------------------------------------------------+
+    | st_unaryunion(wkt, 2.0)                                                 |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    val df = List(("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")).toDF("wkt")
+    df.select(st_unaryunion(col("wkt"))).show()
+    +-------------------------------------------------------------------------+
+    | st_unaryunion(wkt, 2.0)                                                 |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT st_unaryunion("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
+    +-------------------------------------------------------------------------+
+    | st_unaryunion(wkt, 2.0)                                                 |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
+    showDF(select(df, st_unaryunion(column("wkt"))), truncate=F)
+    +-------------------------------------------------------------------------+
+    | st_unaryunion(wkt, 2.0)                                                 |
+    +-------------------------------------------------------------------------+
+    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
+    +-------------------------------------------------------------------------+
+
+
 st_union
 ********
 
@@ -1679,68 +1747,15 @@ st_union
     |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
     +-------------------------------------------------------------------------+
 
-st_unaryunion
-*************
-
-.. function:: st_unaryunion(col)
-
-    Returns a geometry that represents the point set union of the given geometry
-
-    :param col: Geometry
-    :type col: Column
-    :rtype: Column: Geometry
-
-    :example:
-
-.. tabs::
-   .. code-tab:: py
-
-    df = spark.createDataFrame([{'wkt': 'MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))'}])
-    df.select(st_unaryunion('wkt')).show()
-    +-------------------------------------------------------------------------+
-    | st_unaryunion(wkt, 2.0)                                                 |
-    +-------------------------------------------------------------------------+
-    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
-    +-------------------------------------------------------------------------+
-
-   .. code-tab:: scala
-
-    val df = List(("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")).toDF("wkt")
-    df.select(st_unaryunion(col("wkt"))).show()
-    +-------------------------------------------------------------------------+
-    | st_unaryunion(wkt, 2.0)                                                 |
-    +-------------------------------------------------------------------------+
-    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
-    +-------------------------------------------------------------------------+
-
-   .. code-tab:: sql
-
-    SELECT st_unaryunion("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
-    +-------------------------------------------------------------------------+
-    | st_unaryunion(wkt, 2.0)                                                 |
-    +-------------------------------------------------------------------------+
-    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
-    +-------------------------------------------------------------------------+
-
-   .. code-tab:: r R
-
-    df <- createDataFrame(data.frame(wkt = "MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))")
-    showDF(select(df, st_unaryunion(column("wkt"))), truncate=F)
-    +-------------------------------------------------------------------------+
-    | st_unaryunion(wkt, 2.0)                                                 |
-    +-------------------------------------------------------------------------+
-    |POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))|
-    +-------------------------------------------------------------------------+
-
-
 st_updatesrid
 *************
 
 .. function:: st_updatesrid(geom, srcSRID, destSRID)
 
-    Updates the SRID of the input geometry :cdoe:`geom` from :code:`srcSRID` to :code:`destSRID`.
+    Updates the SRID of the input geometry :code:`geom` from :code:`srcSRID` to :code:`destSRID`.
     Geometry can be any supported [WKT, WKB, GeoJSON, Mosaic Internal Geometry].
-    Transformed geometry in the provided format is returned.
+
+    Transformed geometry is returned in the same format provided.
 
     :param geom: Geometry to update the SRID
     :type geom: Column
