@@ -22,11 +22,10 @@ MOSAIC_PIP_VERSION='__MOSAIC_PIP_VERSION__'
 # CONDITIONAL LOGIC
 WITH_MOSAIC=0    # <- pip install mosaic?
 WITH_GDAL=0      # <- install gdal?
-WITH_UBUNTUGIS=0 # <- use ubuntugis ppa?
 WITH_FUSE_SO=0   # <- use fuse dir shared objects (vs wget) 
 
 # SPECIFIED VERSIONS 
-GDAL_VERSION=3.4.1     # <- ubuntugis is 3.4.3
+GDAL_VERSION=3.4.1
 
 # - optional: install GDAL
 if [ $WITH_GDAL == 1 ]
@@ -36,11 +35,6 @@ then
   sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-updates main universe multiverse restricted"
   sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-security main multiverse restricted universe"
   sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main multiverse restricted universe"
-  if [ $WITH_UBUNTUGIS == 1 ]
-  then
-    sudo add-apt-repository ppa:ubuntugis/ppa
-    GDAL_VERSION=3.4.3
-  fi
   sudo apt-get update -y
   
   # - install natives
