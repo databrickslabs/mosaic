@@ -20,7 +20,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     private val mc = MosaicContext.context()
     import mc.functions._
 
-    def getNPartitions(config: Map[String, String]): Int = {
+    private def getNPartitions(config: Map[String, String]): Int = {
         val shufflePartitions = sparkSession.conf.get("spark.sql.shuffle.partitions")
         val nPartitions = config.getOrElse("nPartitions", shufflePartitions).toInt
         nPartitions
@@ -148,13 +148,14 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val readSubdataset = config("readSubdataset").toBoolean
         val subdatasetName = config("subdatasetName")
 
-        if (readSubdataset) {
+        val resolved = if (readSubdataset) {
             pathsDf
                 .withColumn("subdatasets", rst_subdatasets(col("tile")))
                 .withColumn("tile", rst_getsubdataset(col("tile"), lit(subdatasetName)))
         } else {
             pathsDf.select(col("tile"))
         }
+        resolved.withColumn("tile", rst_separatebands(col("tile")))
     }
 
     /**
