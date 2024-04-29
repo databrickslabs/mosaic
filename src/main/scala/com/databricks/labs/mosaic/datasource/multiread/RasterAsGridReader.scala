@@ -155,7 +155,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         } else {
             pathsDf.select(col("tile"))
         }
-        resolved.withColumn("tile", rst_separatebands(col("tile")))
+        resolved
+            .withColumn("tile", rst_separatebands(col("tile")))
+            .where(rst_pixelcount(col("tile")).getItem(0) > 0)
     }
 
     /**
