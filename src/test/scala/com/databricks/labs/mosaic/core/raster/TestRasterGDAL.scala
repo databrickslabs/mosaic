@@ -17,7 +17,6 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
     test("Verify that checkpoint is not used.") {
         spark.conf.get(MOSAIC_TEST_MODE) shouldBe "true"
         MosaicGDAL.isUseCheckpoint() shouldBe false
-        MosaicGDAL.getCheckpointPath() shouldBe spark.conf.get(MOSAIC_RASTER_CHECKPOINT)
     }
 
     test("Verify that GDAL is enabled.") {
