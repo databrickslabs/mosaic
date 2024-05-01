@@ -1,7 +1,5 @@
 from .utils import SparkTestCase, GDALInstaller
 
-from pathlib import Path
-
 
 class TestGDALInstall(SparkTestCase):
     def setUp(self) -> None:
