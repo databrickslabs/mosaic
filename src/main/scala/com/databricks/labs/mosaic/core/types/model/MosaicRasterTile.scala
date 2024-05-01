@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.expressions.raster.{buildMapString, extractMap}
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
@@ -23,15 +24,15 @@ case class MosaicRasterTile(
     raster: MosaicRasterGDAL
 ) {
 
-    def parentPath: String = raster.createInfo("parentPath")
-
-    def driver: String = raster.createInfo("driver")
-
     def getIndex: Either[Long, String] = index
 
     def getParentPath: String = parentPath
 
+    def parentPath: String = raster.createInfo("parentPath")
+
     def getDriver: String = driver
+
+    def driver: String = raster.createInfo("driver")
 
     def getRaster: MosaicRasterGDAL = raster
 
@@ -49,7 +50,7 @@ case class MosaicRasterTile(
       * @param indexSystem
       *   Index system to use for formatting.
       * @return
-      *   MosaicChip with formatted index ID.
+      *   [[MosaicRasterTile]] with formatted index ID.
       */
     def formatCellId(indexSystem: IndexSystem): MosaicRasterTile = {
         if (Option(index).isEmpty) return this
@@ -68,7 +69,7 @@ case class MosaicRasterTile(
       * @param indexSystem
       *   Index system to use for formatting.
       * @return
-      *   MosaicChip with formatted index ID.
+      *   number variation of index id.
       */
     def cellIdAsLong(indexSystem: IndexSystem): Long =
         index match {
@@ -82,7 +83,7 @@ case class MosaicRasterTile(
       * @param indexSystem
       *   Index system to use for formatting.
       * @return
-      *   MosaicChip with formatted index ID.
+      *   string variation of index id.
       */
     def cellIdAsStr(indexSystem: IndexSystem): String =
         index match {
@@ -91,16 +92,28 @@ case class MosaicRasterTile(
         }
 
     /**
-      * Serialise to spark internal representation.
-      *
+      * Serialize to spark internal representation.
+      * - enforces spark config to turn checkpointing on for all functions in 0.4.2
+      * - more at [[com.databricks.labs.mosaic.gdal.MosaicGDAL]].
+      * @param rasterDataType
+      *    How to encode the raster.
+      *    - Options are [[StringType]] or [[BinaryType]]
+      *    - If checkpointing is used, [[StringType]] will be forced
       * @return
       *   An instance of [[InternalRow]].
       */
     def serialize(
         rasterDataType: DataType
     ): InternalRow = {
-        val encodedRaster = encodeRaster(rasterDataType)
-        val path = if (rasterDataType == StringType) encodedRaster.toString else raster.createInfo("path")
+
+        // 0.4.2 - override rasterDataType if checkpoint
+        var rasterDT = rasterDataType
+        if (MosaicGDAL.isUseCheckpoint() && rasterDataType != StringType) {
+            rasterDT = StringType
+        }
+        val encodedRaster = encodeRaster(rasterDT)
+
+        val path = if (rasterDT == StringType) encodedRaster.toString else raster.createInfo("path")
         val parentPath = if (raster.createInfo("parentPath").isEmpty) raster.createInfo("path") else raster.createInfo("parentPath")
         val newCreateInfo = raster.createInfo + ("path" -> path, "parentPath" -> parentPath)
         val mapData = buildMapString(newCreateInfo)
@@ -120,10 +133,12 @@ case class MosaicRasterTile(
     }
 
     /**
-      * Encodes the chip geometry as WKB.
-      *
+      * Encodes the raster according to the [[DataType]].
+      * @param rasterDataType
+      *   Specify [[BinaryType]] for byte array or [[StringType]] for path,
+      *   as used in checkpointing.
       * @return
-      *   An instance of [[Array]] of [[Byte]] representing WKB.
+      *   According to the [[DataType]].
       */
     private def encodeRaster(
         rasterDataType: DataType = BinaryType
@@ -144,7 +159,7 @@ object MosaicRasterTile {
 
     /**
       * Smart constructor based on Spark internal instance.
-      *
+      * - Can handle based on provided raster type.
       * @param row
       *   An instance of [[InternalRow]].
       * @param idDataType

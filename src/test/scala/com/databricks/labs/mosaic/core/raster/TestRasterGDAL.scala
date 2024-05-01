@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.raster
 
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_CHECKPOINT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
@@ -12,6 +13,12 @@ import scala.sys.process._
 import scala.util.Try
 
 class TestRasterGDAL extends SharedSparkSessionGDAL {
+
+    test("Verify that checkpoint is not used.") {
+        spark.conf.get(MOSAIC_TEST_MODE) shouldBe "true"
+        MosaicGDAL.isUseCheckpoint() shouldBe false
+        MosaicGDAL.getCheckpointPath() shouldBe spark.conf.get(MOSAIC_RASTER_CHECKPOINT)
+    }
 
     test("Verify that GDAL is enabled.") {
         assume(System.getProperty("os.name") == "Linux")
@@ -336,6 +343,13 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           inputMatrix(12)(13)
         ).max.toDouble
 
+    }
+
+    test("Verify that checkpoint is configured.") {
+        MosaicGDAL.enableGDALWithCheckpoint(spark, spark.conf.get(MOSAIC_RASTER_CHECKPOINT))
+        spark.conf.get(MOSAIC_TEST_MODE) shouldBe "true"
+        MosaicGDAL.isUseCheckpoint() shouldBe true
+        MosaicGDAL.getCheckpointPath() shouldBe spark.conf.get(MOSAIC_RASTER_CHECKPOINT)
     }
 
 }

@@ -82,15 +82,15 @@ case class RST_FromContent(
             // target size is > 0 and raster size > target size
             // - write the initial raster to file (unsplit)
             // - createDirectories in case of context isolation
-            val rasterPath = PathUtils.createTmpFilePath(ext)
-            Files.createDirectories(Paths.get(rasterPath).getParent)
-            Files.write(Paths.get(rasterPath), rasterArr)
+            val tmpPath = PathUtils.createTmpFilePath(ext)
+            Files.createDirectories(Paths.get(tmpPath).getParent)
+            Files.write(Paths.get(tmpPath), rasterArr)
 
             // split to tiles up to specifed threshold
-            var tiles = ReTileOnRead.localSubdivide(rasterPath, PathUtils.NO_PATH_STRING, targetSize)
+            var tiles = ReTileOnRead.localSubdivide(tmpPath, PathUtils.NO_PATH_STRING, targetSize)
             val rows = tiles.map(_.formatCellId(indexSystem).serialize(tileType))
             tiles.foreach(RasterCleaner.dispose(_))
-            Files.deleteIfExists(Paths.get(rasterPath))
+            Files.deleteIfExists(Paths.get(tmpPath))
             rasterArr = null
             tiles = null
             rows.map(row => InternalRow.fromSeq(Seq(row)))

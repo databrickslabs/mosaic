@@ -1,6 +1,6 @@
 Package: sparkrMosaic
 Title: SparkR bindings for Databricks Mosaic
-Version: 0.4.1
+Version: 0.4.2
 Authors@R:
     person("Robert", "Whiffin", , "robert.whiffin@databricks.com", role = c("aut", "cre")
            )

@@ -13,7 +13,7 @@ import org.scalatest.matchers.should.Matchers._
 trait GeometryKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
 
     def behavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -46,7 +46,7 @@ trait GeometryKLoopExplodeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
         val sc = spark

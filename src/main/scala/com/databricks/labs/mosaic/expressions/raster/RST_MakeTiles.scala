@@ -24,7 +24,12 @@ import scala.util.Try
 
 /**
   * Creates raster tiles from the input column.
-  *
+  * - spark config to turn checkpointing on for all functions in 0.4.2
+  * - this is the only function able to write raster to
+  *    checkpoint (even if the spark config is set to false).
+  * - can be useful when you want to start from the configured checkpoint
+  *   but work with binary payloads from there.
+ *  - more at [[com.databricks.labs.mosaic.gdal.MosaicGDAL]].
   * @param inputExpr
   *   The expression for the raster. If the raster is stored on disc, the path
   *   to the raster is provided. If the raster is stored in memory, the bytes of
@@ -138,20 +143,20 @@ case class RST_MakeTiles(
             // target size is > 0 and raster size > target size
             // - write the initial raster to file (unsplit)
             // - createDirectories in case of context isolation
-            val rasterPath =
+            val readPath =
                 if (inputExpr.dataType == StringType) {
                     PathUtils.copyToTmpWithRetry(path, 5)
                 } else {
-                    val rasterPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
-                    Files.createDirectories(Paths.get(rasterPath).getParent)
-                    Files.write(Paths.get(rasterPath), rawInput.asInstanceOf[Array[Byte]])
-                    rasterPath
+                    val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
+                    Files.createDirectories(Paths.get(tmpPath).getParent)
+                    Files.write(Paths.get(tmpPath), rawInput.asInstanceOf[Array[Byte]])
+                    tmpPath
                 }
             val size = if (targetSize <= 0) 64 else targetSize
-            var tiles = ReTileOnRead.localSubdivide(rasterPath, PathUtils.NO_PATH_STRING, size)
+            var tiles = ReTileOnRead.localSubdivide(readPath, PathUtils.NO_PATH_STRING, size)
             val rows = tiles.map(_.formatCellId(indexSystem).serialize(tileType))
             tiles.foreach(RasterCleaner.dispose(_))
-            Files.deleteIfExists(Paths.get(rasterPath))
+            Files.deleteIfExists(Paths.get(readPath))
             tiles = null
             rows.map(row => InternalRow.fromSeq(Seq(row)))
         }

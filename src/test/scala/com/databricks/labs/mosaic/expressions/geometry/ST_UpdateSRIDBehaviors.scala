@@ -12,7 +12,7 @@ import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper, no
 trait ST_UpdateSRIDBehaviors extends MosaicSpatialQueryTest {
 
     def updateSRIDBehaviour(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         val mc = mosaicContext
         import mc.functions._
@@ -63,7 +63,7 @@ trait ST_UpdateSRIDBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 

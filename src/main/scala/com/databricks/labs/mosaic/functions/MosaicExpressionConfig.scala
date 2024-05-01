@@ -28,11 +28,13 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
 
     def getGeometryAPI: String = configs.getOrElse(MOSAIC_GEOMETRY_API, JTS.name)
 
-    def getIndexSystem: String = configs.getOrElse(MOSAIC_INDEX_SYSTEM, H3.name)
-
     def getRasterCheckpoint: String = configs.getOrElse(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT)
 
+    def getRasterUseCheckpoint: String = configs.getOrElse(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT)
+
     def getCellIdType: DataType = IndexSystemFactory.getIndexSystem(getIndexSystem).cellIdType
+
+    def getIndexSystem: String = configs.getOrElse(MOSAIC_INDEX_SYSTEM, H3.name)
     
     def getRasterBlockSize: Int = configs.getOrElse(MOSAIC_RASTER_BLOCKSIZE, MOSAIC_RASTER_BLOCKSIZE_DEFAULT).toInt
     
@@ -57,6 +59,10 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
 
     def setRasterCheckpoint(checkpoint: String): MosaicExpressionConfig = {
         MosaicExpressionConfig(configs + (MOSAIC_RASTER_CHECKPOINT -> checkpoint))
+    }
+
+    def setRasterUseCheckpoint(checkpoint: String): MosaicExpressionConfig = {
+        MosaicExpressionConfig(configs + (MOSAIC_RASTER_USE_CHECKPOINT -> checkpoint))
     }
     
     def setTmpPrefix(prefix: String): MosaicExpressionConfig = {

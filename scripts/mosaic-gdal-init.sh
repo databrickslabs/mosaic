@@ -1,17 +1,19 @@
 #!/bin/bash
-# -- 
+# --
+# SCRIPT FOR 0.4.0 and 0.4.1
+# NOT USED in 0.4.2+
 # This is for Ubuntu 22.04 (Jammy)
 # [1] corresponds to DBR 13+
 # [2] jammy offers GDAL 3.4.1 (default)
-#     - optional: Ubuntugis offers GDAL 3.4.3,
-#       with additional ppa added
+#     - backported: ignoring ubuntugis
+#     - repo changed to incompatible version
 # [3] see Mosaic functions (python) to configure
 #     and pre-stage resources:
 #     - setup_fuse_install(...) and
 #     - setup_gdal(...)
 # [4] this script has conditional logic based on variables
 # Author: Michael Johns | mjohns@databricks.com
-# Last Modified: 05 JAN, 2024
+# Last Modified: 29 APR, 2024
 
 # TEMPLATE-BASED REPLACEMENT
 # - can also be manually specified
@@ -36,11 +38,6 @@ then
   sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-updates main universe multiverse restricted"
   sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-security main multiverse restricted universe"
   sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main multiverse restricted universe"
-  if [ $WITH_UBUNTUGIS == 1 ]
-  then
-    sudo add-apt-repository ppa:ubuntugis/ppa
-    GDAL_VERSION=3.4.3
-  fi
   sudo apt-get update -y
   
   # - install natives

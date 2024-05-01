@@ -9,7 +9,7 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_ScaleXBehaviors extends QueryTest {
 
     def scaleXBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark

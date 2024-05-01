@@ -65,5 +65,14 @@ class MosaicContext:
     def index_system(self):
         return self._index_system
 
-    def enable_gdal(self, spark: SparkSession):
-        return self._mosaicGDALObject.enableGDAL(spark._jsparkSession)
+    def enable_gdal(self, spark: SparkSession, with_checkpoint_path: str = None):
+        if with_checkpoint_path:
+            return self._mosaicGDALObject.enableGDALWithCheckpoint(spark._jsparkSession, with_checkpoint_path)
+        else:
+            return self._mosaicGDALObject.enableGDAL(spark._jsparkSession)
+
+    def is_use_checkpoint(self):
+        return self._mosaicGDALObject.isUseCheckpoint()
+
+    def get_checkpoint_path(self):
+        return self._mosaicGDALObject.getCheckpointPath()

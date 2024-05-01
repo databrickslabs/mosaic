@@ -32,22 +32,22 @@ class SparkTestCase(unittest.TestCase):
             .config("spark.driver.memory", "4g")
             .config(
                 "spark.driver.extraJavaOptions",
-                "-Dorg.apache.logging.log4j.level=FATAL",
+                "-Dorg.apache.logging.log4j.level=ERROR",
             )
             .config(
                 "spark.executor.extraJavaOptions",
-                "-Dorg.apache.logging.log4j.level=FATAL",
+                "-Dorg.apache.logging.log4j.level=ERROR",
             )
             .getOrCreate()
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
         cls.spark.conf.set("spark.databricks.labs.mosaic.raster.tmp.prefix", tmp_dir)
         cls.spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", check_dir)
-        cls.spark.sparkContext.setLogLevel("FATAL")
+        cls.spark.sparkContext.setLogLevel("ERROR")
 
     @classmethod
     def tearDownClass(cls) -> None:
         cls.spark.stop()
 
     def setUp(self) -> None:
-        self.spark.sparkContext.setLogLevel("FATAL")
+        self.spark.sparkContext.setLogLevel("ERROR")

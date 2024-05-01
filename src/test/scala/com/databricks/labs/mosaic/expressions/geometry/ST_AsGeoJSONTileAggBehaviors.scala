@@ -10,7 +10,7 @@ import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
 trait ST_AsGeoJSONTileAggBehaviors extends MosaicSpatialQueryTest {
 
     def behavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         val sc = spark

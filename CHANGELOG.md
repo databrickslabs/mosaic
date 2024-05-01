@@ -1,3 +1,15 @@
+## v0.4.2 [DBR 13.3 LTS]
+- Fixed 'raster_to_grid' reader tessellation issue with multiple bands.
+- Expanded support for fuse-based checkpointing (persisted raster storage), managed through:
+  - spark config 'spark.databricks.labs.mosaic.raster.use.checkpoint' in addition to 'spark.databricks.labs.mosaic.raster.checkpoint'.
+  - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`.
+  - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)` function.
+- Streamlines `setup_gdal` and `setup_fuse_install`:
+  - init script and resource copy logic fixed to repo "main" (.so) / "latest" (.jar).
+  - added apt-get lock handling for native installs.
+  - removed support for UbuntuGIS PPA as GDAL version no longer compatible with jammy default (3.4.x).
+- H3 python changed from "==3.7.0" to "<4.0,>=3.7" to pick up patches.
+
 ## v0.4.1 [DBR 13.3 LTS]
 - Fixed python bindings for MosaicAnalyzer functions.
 - Added tiller functions, ST_AsGeoJSONTile and ST_AsMVTTile, for creating GeoJSON and MVT tiles as aggregations of geometries.

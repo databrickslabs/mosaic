@@ -14,7 +14,7 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 trait ST_AreaBehaviors extends MosaicSpatialQueryTest {
 
     def areaBehavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         val sc = spark
@@ -45,7 +45,7 @@ trait ST_AreaBehaviors extends MosaicSpatialQueryTest {
     }
 
     def areaCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         val sc = spark
@@ -70,7 +70,7 @@ trait ST_AreaBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 

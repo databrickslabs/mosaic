@@ -1,13 +1,15 @@
 package com.databricks.labs.mosaic.gdal
 
-import com.databricks.labs.mosaic.MOSAIC_RASTER_BLOCKSIZE_DEFAULT
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
 import org.gdal.osr.SpatialReference
 
-import java.nio.file.{Files, Paths}
+import java.io.{File, FileNotFoundException}
+import java.nio.file.{Files, InvalidPathException, Paths}
 import scala.language.postfixOps
 import scala.util.Try
 
@@ -31,6 +33,7 @@ object MosaicGDAL extends Logging {
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
     var isEnabled = false
     var checkpointPath: String = _
+    var useCheckpoint: Boolean = _
 
     // Only use this with GDAL rasters
     val WSG84: SpatialReference = {
@@ -60,6 +63,9 @@ object MosaicGDAL extends Logging {
         mosaicConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
         setBlockSize(mosaicConfig)
         checkpointPath = mosaicConfig.getRasterCheckpoint
+        useCheckpoint = {
+            Try(mosaicConfig.getRasterUseCheckpoint.asInstanceOf[Boolean]).getOrElse(false)
+        }
     }
 
     def setBlockSize(mosaicConfig: MosaicExpressionConfig): Unit = {
@@ -98,6 +104,50 @@ object MosaicGDAL extends Logging {
         }
     }
 
+    /**
+      * Enables the GDAL environment with checkpointing.
+      * - alternative to setting spark configs prior to init.
+      * - can be called multiple times in a session as you want to change
+      *   checkpoint location.
+      * - sets [[MosaicExpressionConfig.setRasterCheckpoint]] to provided path.
+      * - sets [[MosaicExpressionConfig.setRasterUseCheckpoint]] to "true".
+      * @param spark
+      *   spark session to use.
+      * @param withCheckpointPath
+      *   path to set.
+      */
+    def enableGDALWithCheckpoint(spark: SparkSession, withCheckpointPath: String): Unit = {
+        // do some checks
+        val isTestMode = spark.conf.get(MOSAIC_TEST_MODE, "false").toBoolean
+        if (withCheckpointPath == null) {
+            val msg = "Null checkpoint path provided."
+            logError(msg)
+            throw new NullPointerException(msg)
+        } else if (!isTestMode && !PathUtils.isFuseLocation(withCheckpointPath)) {
+            val msg = "Checkpoint path must be a (non-local) fuse location."
+            logError(msg)
+            throw new InvalidPathException(withCheckpointPath, msg)
+        } else if (!Files.exists(Paths.get(withCheckpointPath))) {
+            if (withCheckpointPath.startsWith("/Volumes/")) {
+                val msg = "Volume checkpoint path doesn't exist and must be created through Databricks catalog."
+                logError(msg)
+                throw new FileNotFoundException(msg)
+            } else {
+                val dir = new File(withCheckpointPath)
+                dir.mkdirs
+            }
+        }
+
+        // enable checkpoint
+        checkpointPath = withCheckpointPath
+        useCheckpoint = true
+        logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides spark confs).")
+
+        // enable gdal
+        enableGDAL(spark)
+    }
+
+
     /** Loads the shared objects required for GDAL. */
     private def loadSharedObjects(): Unit = {
         loadOrNOOP(usrlibsoPath)
@@ -121,6 +171,12 @@ object MosaicGDAL extends Logging {
                 logWarning(s"Failed to load $path", t)
         }
     }
+
+    /** @return value of useCheckpoint. */
+    def isUseCheckpoint(): Boolean = this.useCheckpoint
+
+    /** return value of checkpointPath. */
+    def getCheckpointPath(): String = this.checkpointPath
 
 //    /** Reads the resource bytes. */
 //    private def readResourceBytes(name: String): Array[Byte] = {

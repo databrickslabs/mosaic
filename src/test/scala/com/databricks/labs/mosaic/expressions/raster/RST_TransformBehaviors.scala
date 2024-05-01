@@ -11,7 +11,7 @@ trait RST_TransformBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def behavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark

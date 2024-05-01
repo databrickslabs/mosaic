@@ -11,7 +11,7 @@ trait RST_GeoReferenceBehaviors extends QueryTest {
 
     //noinspection MapGetGet
     def geoReferenceBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark

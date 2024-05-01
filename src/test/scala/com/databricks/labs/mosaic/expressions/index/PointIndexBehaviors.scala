@@ -16,7 +16,7 @@ import org.scalatest.matchers.should.Matchers._
 trait PointIndexBehaviors extends MosaicSpatialQueryTest {
 
     def behaviorInt(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -49,7 +49,7 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
     }
 
     def behaviorString(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -92,7 +92,7 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
         import mc.functions._
@@ -144,7 +144,7 @@ trait PointIndexBehaviors extends MosaicSpatialQueryTest {
     }
 
     def issue_383(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
         import mc.functions._

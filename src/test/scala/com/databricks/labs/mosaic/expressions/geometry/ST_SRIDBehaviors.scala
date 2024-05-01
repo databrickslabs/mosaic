@@ -18,7 +18,7 @@ import scala.collection.JavaConverters._
 trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
 
     def SRIDBehaviour(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         val mc = mosaicContext
         import mc.functions._
@@ -63,7 +63,7 @@ trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
     }
 
     def SRIDCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         val mc = mosaicContext
         import mc.functions._
@@ -107,7 +107,7 @@ trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 
