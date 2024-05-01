@@ -58,6 +58,8 @@ case class MosaicRasterGDAL(
                 result
             }
         if (spatialRef == null) {
+            // Avoids null-CRS rasters
+            raster.SetSpatialRef(MosaicGDAL.WSG84)
             MosaicGDAL.WSG84
         } else {
             spatialRef
@@ -480,7 +482,9 @@ case class MosaicRasterGDAL(
                 tmpPath
             }
         }
-        val byteArray = FileUtils.readBytes(readPath)
+        // For corrupted files, return empty byte array
+        // We will have the reason for corruption in the last_error field
+        val byteArray = Try(FileUtils.readBytes(readPath)).getOrElse(Array.empty[Byte])
         if (dispose) RasterCleaner.dispose(this)
         if (readPath != PathUtils.getCleanPath(parentPath)) {
             Files.deleteIfExists(Paths.get(readPath))
@@ -608,7 +612,7 @@ case class MosaicRasterGDAL(
             .delete()
 
         val outputRaster = gdal.Open(resultRasterPath, GF_Write)
-        
+
         for (bandIndex <- 1 to this.numBands) {
             val band = this.getBand(bandIndex)
             val outputBand = outputRaster.GetRasterBand(bandIndex)

@@ -75,7 +75,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             .agg(rst_combineavg_agg(col("tile")).alias("tile"))
             .withColumn(
               "grid_measures",
-              rasterToGridCombiner(col("tile"))
+              // when tessellation fails the last_error will be populated
+              // we should surface up the error but we cant aggregate
+              // so we force a null value
+              when(col("tile.metadata.last_error").isNotNull, lit(null))
+                  .otherwise(rasterToGridCombiner(col("tile")))
             )
             .select(
               "grid_measures",
@@ -148,13 +152,14 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val readSubdataset = config("readSubdataset").toBoolean
         val subdatasetName = config("subdatasetName")
 
-        val resolved = if (readSubdataset) {
-            pathsDf
-                .withColumn("subdatasets", rst_subdatasets(col("tile")))
-                .withColumn("tile", rst_getsubdataset(col("tile"), lit(subdatasetName)))
-        } else {
-            pathsDf.select(col("tile"))
-        }
+        val resolved =
+            if (readSubdataset) {
+                pathsDf
+                    .withColumn("subdatasets", rst_subdatasets(col("tile")))
+                    .withColumn("tile", rst_getsubdataset(col("tile"), lit(subdatasetName)))
+            } else {
+                pathsDf.select(col("tile"))
+            }
         resolved
             .withColumn("tile", rst_separatebands(col("tile")))
             .where(rst_pixelcount(col("tile")).getItem(0) > 0)
