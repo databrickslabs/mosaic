@@ -23,3 +23,7 @@ jobs:
         uses: ./.github/actions/scala_build
       - name: upload artefacts
         uses: ./.github/actions/upload_artefacts
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
