@@ -43,9 +43,6 @@ runs:
           if: inputs.skip_tests == 'true'
           shell: bash
           run: sudo mvn -q clean install -DskipTests -Dscoverage.skip
-        - name: Publish test coverage
-          if: inputs.skip_tests == 'false'
-          uses: codecov/codecov-action@v1
         - name: Copy Scala artifacts to GH Actions run
           shell: bash
           run: |
