@@ -7,7 +7,7 @@ __all__ = ["setup_gdal", "enable_gdal", "is_use_checkpoint", "get_checkpoint_pat
 
 
 def setup_gdal(
-    to_fuse_dir: str = "/Workspace/Shared/geospatial/mosaic/gdal/jammy",
+    to_fuse_dir: str = "/Workspace/Shared/geospatial/mosaic/gdal/jammy/0.4.2",
     script_out_name: str = "mosaic-gdal-init.sh",
     jni_so_copy: bool = False,
     test_mode: bool = False
@@ -28,7 +28,7 @@ def setup_gdal(
     ----------
     to_fuse_dir : str
             Path to write out the init script for GDAL installation;
-            default is '/Workspace/Shared/geospatial/mosaic/gdal/jammy'.
+            default is '/Workspace/Shared/geospatial/mosaic/gdal/jammy/0.4.2'.
     script_out_name : str
             name of the script to be written;
             default is 'mosaic-gdal-init.sh'.

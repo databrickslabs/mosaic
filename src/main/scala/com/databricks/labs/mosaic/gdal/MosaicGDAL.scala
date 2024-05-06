@@ -137,14 +137,13 @@ object MosaicGDAL extends Logging {
                 dir.mkdirs
             }
         }
+        // [a] enable gdal from configs first
+        enableGDAL(spark)
 
-        // enable checkpoint
+        // [b] override checkpoint config afterwards
         checkpointPath = withCheckpointPath
         useCheckpoint = true
         logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides spark confs).")
-
-        // enable gdal
-        enableGDAL(spark)
     }
 
 
