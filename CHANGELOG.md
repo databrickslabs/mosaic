@@ -1,5 +1,5 @@
 ## v0.4.2 [DBR 13.3 LTS]
-- Fixed 'raster_to_grid' reader tessellation issue with multiple bands.
+- Fixed 'raster_to_grid' reader tessellation issue with multiple bands; also adding repartitioning for better performance.
 - Expanded support for fuse-based checkpointing (persisted raster storage), managed through:
   - spark config 'spark.databricks.labs.mosaic.raster.use.checkpoint' in addition to 'spark.databricks.labs.mosaic.raster.checkpoint'.
   - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`.

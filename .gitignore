@@ -160,3 +160,4 @@ spark-warehouse
 .Rproj.user
 docker/.m2/
 /python/notebooks/
+/scripts/m2/

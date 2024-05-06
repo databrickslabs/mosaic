@@ -120,7 +120,6 @@
             <artifactId>gdal</artifactId>
             <version>3.4.0</version>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -280,6 +279,60 @@
                 <spark.version>3.4.0</spark.version>
                 <mosaic.version>0.4.2</mosaic.version>
             </properties>
+        </profile>
+        <profile>
+            <!-- local testing `mvn test -PskipScoverage -DskipTests=false -Dsuite=...` -->
+            <id>skipScoverage</id>
+            <properties>
+                <scala.version>2.12.10</scala.version>
+                <scala.compat.version>2.12</scala.compat.version>
+                <spark.version>3.4.0</spark.version>
+                <mosaic.version>0.4.2</mosaic.version>
+                <maven.compiler.source>1.8</maven.compiler.source>
+                <maven.compiler.target>1.8</maven.compiler.target>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.scoverage</groupId>
+                        <artifactId>scoverage-maven-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <executions>
+                            <execution>
+                                <id>scoverage-report</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                    <goal>report-only</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration combine.self="override">
+                            <minimumCoverage>${minimum.coverage}</minimumCoverage>
+                            <failOnMinimumCoverage>false</failOnMinimumCoverage>
+                            <scalaVersion>${scala.version}</scalaVersion>
+                            <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.scalatest</groupId>
+                        <artifactId>scalatest-maven-plugin</artifactId>
+                        <version>2.0.0</version>
+                        <configuration combine.self="override">
+                            <reportsDirectory>${project.build.directory}/test-reports</reportsDirectory>
+                            <skipTests>false</skipTests>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>test</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
     <distributionManagement>
