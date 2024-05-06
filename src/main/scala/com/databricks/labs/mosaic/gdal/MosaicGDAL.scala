@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.gdal
 
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.internal.Logging
@@ -109,8 +109,8 @@ object MosaicGDAL extends Logging {
       * - alternative to setting spark configs prior to init.
       * - can be called multiple times in a session as you want to change
       *   checkpoint location.
-      * - sets [[MosaicExpressionConfig.setRasterCheckpoint]] to provided path.
-      * - sets [[MosaicExpressionConfig.setRasterUseCheckpoint]] to "true".
+      * - sets [[checkpointPath]] to provided path.
+      * - sets [[useCheckpoint]] to "true".
       * @param spark
       *   spark session to use.
       * @param withCheckpointPath
@@ -137,10 +137,17 @@ object MosaicGDAL extends Logging {
                 dir.mkdirs
             }
         }
-        // [a] enable gdal from configs first
+        // [a] set spark configs for checkpoint
+        // - will make sure the session is consistent with these settings.
+        spark.conf.set(MOSAIC_RASTER_CHECKPOINT, withCheckpointPath)
+        spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "true")
+
+        // [b] enable gdal from configs first
+        // - will be a noop if previously enabled.
         enableGDAL(spark)
 
-        // [b] override checkpoint config afterwards
+        // [c] override checkpoint config afterwards
+        // - when GDAL was previously enabled.
         checkpointPath = withCheckpointPath
         useCheckpoint = true
         logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides spark confs).")
@@ -172,10 +179,14 @@ object MosaicGDAL extends Logging {
     }
 
     /** @return value of useCheckpoint. */
-    def isUseCheckpoint(): Boolean = this.useCheckpoint
+    def isUseCheckpoint: Boolean = {
+        this.useCheckpoint
+    }
 
     /** return value of checkpointPath. */
-    def getCheckpointPath(): String = this.checkpointPath
+    def getCheckpointPath: String = {
+        this.checkpointPath
+    }
 
 //    /** Reads the resource bytes. */
 //    private def readResourceBytes(name: String): Array[Byte] = {

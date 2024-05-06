@@ -127,7 +127,7 @@ object GDAL {
                     case StringType =>
                         val uuid = UUID.randomUUID().toString
                         val extension = GDAL.getExtension(raster.getDriversShortName)
-                        val writePath = s"${MosaicGDAL.getCheckpointPath()}/$uuid.$extension"
+                        val writePath = s"${MosaicGDAL.getCheckpointPath}/$uuid.$extension"
                         val outPath = raster.writeToPath(writePath)
                         RasterCleaner.dispose(raster)
                         UTF8String.fromString(outPath)

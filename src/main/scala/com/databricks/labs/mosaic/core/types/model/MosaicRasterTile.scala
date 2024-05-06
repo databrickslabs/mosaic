@@ -108,10 +108,10 @@ case class MosaicRasterTile(
 
         // 0.4.2 - override rasterDataType if checkpoint
         var rasterDT = rasterDataType
-        if (MosaicGDAL.isUseCheckpoint() && rasterDataType != StringType) {
+        if (MosaicGDAL.isUseCheckpoint && rasterDataType != StringType) {
             rasterDT = StringType
         }
-        val encodedRaster = encodeRaster(rasterDT)
+        val encodedRaster = encodeRaster(rasterDataType=rasterDT)
 
         val path = if (rasterDT == StringType) encodedRaster.toString else raster.createInfo("path")
         val parentPath = if (raster.createInfo("parentPath").isEmpty) raster.createInfo("path") else raster.createInfo("parentPath")

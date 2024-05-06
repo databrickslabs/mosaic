@@ -35,7 +35,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
     test("Verify that checkpoint is not used.") {
         spark.conf.get(MOSAIC_TEST_MODE) shouldBe "true"
-        MosaicGDAL.isUseCheckpoint() shouldBe false
+        MosaicGDAL.isUseCheckpoint shouldBe false
     }
 
     test("Read raster metadata from GeoTIFF file.") {
@@ -347,8 +347,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
     test("Verify that checkpoint is configured.") {
         MosaicGDAL.enableGDALWithCheckpoint(spark, spark.conf.get(MOSAIC_RASTER_CHECKPOINT))
         spark.conf.get(MOSAIC_TEST_MODE) shouldBe "true"
-        MosaicGDAL.isUseCheckpoint() shouldBe true
-        MosaicGDAL.getCheckpointPath() shouldBe spark.conf.get(MOSAIC_RASTER_CHECKPOINT)
+        MosaicGDAL.isUseCheckpoint shouldBe true
+        MosaicGDAL.getCheckpointPath shouldBe spark.conf.get(MOSAIC_RASTER_CHECKPOINT)
     }
 
 }
