@@ -103,6 +103,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     ): Unit = {
         val registry = spark.sessionState.functionRegistry
         val mosaicRegistry = MosaicRegistry(registry, database)
+        expressionConfig.updateSparkConf() // any changes?
 
         /** IndexSystem and GeometryAPI Agnostic methods */
         registry.registerFunction(

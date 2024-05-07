@@ -6,7 +6,7 @@
 # - for IDE driven or Jupyter notebook testing
 # [3] if you want to run tests within the container shell
 # - [a] after launch type `unset JAVA_TOOL_OPTIONS` from the container
-# - [b] then can test e.g. `mvn -X test -Dsuites=com.databricks.labs.mosaic.core.raster.TestRasterGDAL` and
+# - [b] then can test e.g. `mvn -X test -DskipTests=false -Dsuites=com.databricks.labs.mosaic.core.raster.TestRasterGDAL` and
 #       `python3 -m unittest mosaic test/test_fuse_install.py` from python
 # ... don't need to specify -PskipCoverage (see settings.xml)
 docker run --platform linux/amd64 --name mosaic-dev --rm -p 5005:5005 -p 8888:8888 \

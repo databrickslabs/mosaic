@@ -95,36 +95,16 @@ def enable_gdal(spark: SparkSession, with_checkpoint_path: str = None) -> None:
 
 
 def is_use_checkpoint(spark: SparkSession) -> bool:
-    """
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-            The active spark session.
-
-    Returns
-    -------
-    Whether MosaicGDAL is configured to use checkpoint.
-    """
     sc = spark.sparkContext
     mosaicGDALObject = getattr(
         sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
     )
-    return mosaicGDALObject.isUseCheckpoint()
+    return getattr(mosaicGDALObject, "isUseCheckpoint")
 
 
 def get_checkpoint_path(spark: SparkSession) -> str:
-    """
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-            The active spark session.
-
-    Returns
-    -------
-    MosaicGDAL checkpoint path, default is from spark conf.
-    """
     sc = spark.sparkContext
     mosaicGDALObject = getattr(
         sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
     )
-    return mosaicGDALObject.getCheckpointPath()
+    return getattr(mosaicGDALObject, "getCheckpointPath")

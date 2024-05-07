@@ -50,6 +50,16 @@ object GDAL {
     /** @return Returns the name of the raster API. */
     def name: String = "GDAL"
 
+    /** @return Returns whether using checkpoint (assumes `enable` called) */
+    def isUseCheckpoint: Boolean = {
+        MosaicGDAL.isUseCheckpoint
+    }
+
+    /** @return Returns checkpoint path (assumes `enable` called) */
+    def getCheckpointPath: String = {
+        MosaicGDAL.getCheckpointPath
+    }
+
     def enable(spark: SparkSession): Unit = {
         val mosaicConfig = MosaicExpressionConfig(spark)
         enable(mosaicConfig)
@@ -127,7 +137,7 @@ object GDAL {
                     case StringType =>
                         val uuid = UUID.randomUUID().toString
                         val extension = GDAL.getExtension(raster.getDriversShortName)
-                        val writePath = s"${MosaicGDAL.getCheckpointPath}/$uuid.$extension"
+                        val writePath = s"${getCheckpointPath}/$uuid.$extension"
                         val outPath = raster.writeToPath(writePath)
                         RasterCleaner.dispose(raster)
                         UTF8String.fromString(outPath)

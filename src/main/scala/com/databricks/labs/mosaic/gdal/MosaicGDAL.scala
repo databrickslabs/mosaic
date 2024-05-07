@@ -62,9 +62,13 @@ object MosaicGDAL extends Logging {
         gdal.SetConfigOption("GDAL_NUM_THREADS", "ALL_CPUS")
         mosaicConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
         setBlockSize(mosaicConfig)
-        checkpointPath = mosaicConfig.getRasterCheckpoint
-        useCheckpoint = {
-            Try(mosaicConfig.getRasterUseCheckpoint.asInstanceOf[Boolean]).getOrElse(false)
+        configureCheckpoint(mosaicConfig)
+    }
+
+    def configureCheckpoint(mosaicConfig: MosaicExpressionConfig): Unit = {
+        this.checkpointPath = mosaicConfig.getRasterCheckpoint
+        this.useCheckpoint = {
+            Try(mosaicConfig.getRasterUseCheckpoint == "true").getOrElse(false)
         }
     }
 
@@ -83,11 +87,13 @@ object MosaicGDAL extends Logging {
 
     /** Enables the GDAL environment. */
     def enableGDAL(spark: SparkSession): Unit = {
+        // refresh configs in case spark had changes
+        val expressionConfig = MosaicExpressionConfig(spark)
+
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 isEnabled = true
                 loadSharedObjects()
-                val expressionConfig = MosaicExpressionConfig(spark)
                 configureGDAL(expressionConfig)
                 gdal.AllRegister()
                 spark.conf.set(GDAL_ENABLED, "true")
@@ -101,6 +107,8 @@ object MosaicGDAL extends Logging {
                     isEnabled = false
                     throw exception
             }
+        } else {
+            configureCheckpoint(expressionConfig)
         }
     }
 
@@ -117,7 +125,8 @@ object MosaicGDAL extends Logging {
       *   path to set.
       */
     def enableGDALWithCheckpoint(spark: SparkSession, withCheckpointPath: String): Unit = {
-        // do some checks
+        // [a] initial checks
+        // - will make dirs if conditions met
         val isTestMode = spark.conf.get(MOSAIC_TEST_MODE, "false").toBoolean
         if (withCheckpointPath == null) {
             val msg = "Null checkpoint path provided."
@@ -137,22 +146,27 @@ object MosaicGDAL extends Logging {
                 dir.mkdirs
             }
         }
-        // [a] set spark configs for checkpoint
+
+        // [b] set spark configs for checkpoint
         // - will make sure the session is consistent with these settings.
         spark.conf.set(MOSAIC_RASTER_CHECKPOINT, withCheckpointPath)
         spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "true")
 
-        // [b] enable gdal from configs first
-        // - will be a noop if previously enabled.
+        // [c] enable gdal from configs
         enableGDAL(spark)
+        logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides existing spark confs).")
 
-        // [c] override checkpoint config afterwards
-        // - when GDAL was previously enabled.
-        checkpointPath = withCheckpointPath
-        useCheckpoint = true
-        logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides spark confs).")
+        // [d] register functions again
+        // - will pick up the config changes.
+        // - In some (not all) testing, MosaicContext
+        //   might not have been built.
+        try {
+            MosaicContext.context().register(spark)
+            logInfo("Re-registered expressions in MosaicContext.")
+        } catch {
+            case t: Throwable => logWarning("Unable to re-register expressions with MosaicContext (is it initialized?)")
+        }
     }
-
 
     /** Loads the shared objects required for GDAL. */
     private def loadSharedObjects(): Unit = {
@@ -179,28 +193,9 @@ object MosaicGDAL extends Logging {
     }
 
     /** @return value of useCheckpoint. */
-    def isUseCheckpoint: Boolean = {
-        this.useCheckpoint
-    }
+    def isUseCheckpoint: Boolean = this.useCheckpoint
 
     /** return value of checkpointPath. */
-    def getCheckpointPath: String = {
-        this.checkpointPath
-    }
-
-//    /** Reads the resource bytes. */
-//    private def readResourceBytes(name: String): Array[Byte] = {
-//        val bis = new BufferedInputStream(getClass.getResourceAsStream(name))
-//        try { Stream.continually(bis.read()).takeWhile(-1 !=).map(_.toByte).toArray }
-//        finally bis.close()
-//    }
-
-//    /** Reads the resource lines. */
-//    // noinspection SameParameterValue
-//    private def readResourceLines(name: String): Array[String] = {
-//        val bytes = readResourceBytes(name)
-//        val lines = new String(bytes).split("\n")
-//        lines
-//    }
+    def getCheckpointPath: String = this.checkpointPath
 
 }

@@ -111,10 +111,16 @@ case class MosaicRasterTile(
         if (MosaicGDAL.isUseCheckpoint && rasterDataType != StringType) {
             rasterDT = StringType
         }
-        val encodedRaster = encodeRaster(rasterDataType=rasterDT)
+        val encodedRaster = encodeRaster(rasterDT)
 
-        val path = if (rasterDT == StringType) encodedRaster.toString else raster.createInfo("path")
-        val parentPath = if (raster.createInfo("parentPath").isEmpty) raster.createInfo("path") else raster.createInfo("parentPath")
+        val path = encodedRaster match {
+                case string: UTF8String => string.toString
+                case _ => raster.createInfo("path")
+        }
+        val parentPath = {
+            if (raster.createInfo("parentPath").isEmpty) raster.createInfo("path")
+            else raster.createInfo("parentPath")
+        }
         val newCreateInfo = raster.createInfo + ("path" -> path, "parentPath" -> parentPath)
         val mapData = buildMapString(newCreateInfo)
         if (Option(index).isDefined) {
@@ -129,7 +135,6 @@ case class MosaicRasterTile(
         } else {
             InternalRow.fromSeq(Seq(null, encodedRaster, mapData))
         }
-
     }
 
     /**
@@ -141,7 +146,7 @@ case class MosaicRasterTile(
       *   According to the [[DataType]].
       */
     private def encodeRaster(
-        rasterDataType: DataType = BinaryType
+        rasterDataType: DataType
     ): Any = {
         GDAL.writeRasters(Seq(raster), rasterDataType).head
     }

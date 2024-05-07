@@ -17,9 +17,19 @@ import org.apache.spark.sql.{RuntimeConfig, SparkSession}
 case class MosaicExpressionConfig(configs: Map[String, String]) {
 
     def updateSparkConf(): Unit = {
+        // populate initial set configs
         val spark = SparkSession.builder().getOrCreate()
         val sparkConf = spark.sparkContext.getConf
         configs.foreach { case (k, v) => sparkConf.set(k, v) }
+
+        // update defaults as well
+        this
+            .setGeometryAPI(spark.conf.get(MOSAIC_GEOMETRY_API, JTS.name))
+            .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))
+            .setRasterCheckpoint(spark.conf.get(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT))
+            .setRasterUseCheckpoint(spark.conf.get(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT))
+            .setTmpPrefix(spark.conf.get(MOSAIC_RASTER_TMP_PREFIX, "/tmp"))
+            .setGDALConf(spark.conf)
     }
 
     def getGDALConf: Map[String, String] = {

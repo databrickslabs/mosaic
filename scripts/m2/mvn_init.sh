@@ -19,7 +19,7 @@ cd /root/mosaic && mvn help:active-profiles
 # see settings.xml for overrides
 echo -e "\n::: [3] ... build JVM code version? :::\n"
 echo -e "        $(javac -version)"
-cd /root/mosaic && mvn clean package -DskipTests
+cd /root/mosaic && mvn package -DskipTests
 
 # [4] build python
 echo -e "\n::: [4] ... build python :::\n"
