@@ -170,19 +170,12 @@ object MosaicRasterTile {
       * @return
       *   An instance of [[MosaicRasterTile]].
       */
-    def deserialize(row: InternalRow, idDataType: DataType, rasterType: DataType): MosaicRasterTile = {
+    def deserialize(row: InternalRow, idDataType: DataType, rasterDataType: DataType): MosaicRasterTile = {
         val index = row.get(0, idDataType)
-        val rawRaster = Try(row.getBinary(1)).getOrElse(row.getUTF8String(1))
+        val rawRaster = row.get(1, rasterDataType)
         val createInfo = extractMap(row.getMap(2))
 
-        // handling due to checkpointing
-        val rasterDT: DataType = rawRaster match {
-            case _: UTF8String if rasterType == BinaryType => StringType
-            case _: Array[Byte] if rasterType == StringType => BinaryType
-            case _ => rasterType
-        }
-
-        val raster = GDAL.readRaster(rawRaster, createInfo, rasterDT)
+        val raster = GDAL.readRaster(rawRaster, createInfo, rasterDataType)
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {
             if (index.isInstanceOf[Long]) {
