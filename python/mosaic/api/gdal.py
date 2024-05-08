@@ -99,7 +99,7 @@ def is_use_checkpoint(spark: SparkSession) -> bool:
     mosaicGDALObject = getattr(
         sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
     )
-    return getattr(mosaicGDALObject, "isUseCheckpoint")
+    return mosaicGDALObject.isUseCheckpoint()
 
 
 def get_checkpoint_path(spark: SparkSession) -> str:
@@ -107,4 +107,4 @@ def get_checkpoint_path(spark: SparkSession) -> str:
     mosaicGDALObject = getattr(
         sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
     )
-    return getattr(mosaicGDALObject, "getCheckpointPath")
+    return mosaicGDALObject.getCheckpointPath()
