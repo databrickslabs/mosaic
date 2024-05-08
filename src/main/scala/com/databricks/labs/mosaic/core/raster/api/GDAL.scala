@@ -123,6 +123,15 @@ object GDAL {
         }
     }
 
+    private def writeRasterString(raster: MosaicRasterGDAL): UTF8String = {
+        val uuid = UUID.randomUUID().toString
+        val extension = GDAL.getExtension(raster.getDriversShortName)
+        val writePath = s"${getCheckpointPath}/$uuid.$extension"
+        val outPath = raster.writeToPath(writePath)
+        RasterCleaner.dispose(raster)
+        UTF8String.fromString(outPath)
+    }
+
     /**
       * Writes the given rasters to either a path or a byte array.
       *
@@ -139,17 +148,15 @@ object GDAL {
         generatedRasters.map(raster =>
             if (raster != null) {
                 rasterDT match {
-                    case StringType =>
-                        val uuid = UUID.randomUUID().toString
-                        val extension = GDAL.getExtension(raster.getDriversShortName)
-                        val writePath = s"${getCheckpointPath}/$uuid.$extension"
-                        val outPath = raster.writeToPath(writePath)
-                        RasterCleaner.dispose(raster)
-                        UTF8String.fromString(outPath)
+                    case StringType => writeRasterString(raster)
                     case BinaryType =>
-                        val bytes = raster.writeToBytes()
-                        RasterCleaner.dispose(raster)
-                        bytes
+                        try {
+                            val bytes = raster.writeToBytes()
+                            RasterCleaner.dispose(raster)
+                            bytes
+                        } catch {
+                            case _: ClassCastException => writeRasterString(raster)
+                        }
                 }
             } else {
                 null
