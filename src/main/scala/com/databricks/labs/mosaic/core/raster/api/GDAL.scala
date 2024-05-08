@@ -103,16 +103,21 @@ object GDAL {
             case StringType =>
                 MosaicRasterGDAL.readRaster(createInfo)
             case BinaryType =>
-                val bytes = inputRaster.asInstanceOf[Array[Byte]]
-                val raster = MosaicRasterGDAL.readRaster(bytes, createInfo)
-                // If the raster is coming as a byte array, we can't check for zip condition.
-                // We first try to read the raster directly, if it fails, we read it as a zip.
-                if (raster == null) {
-                    val parentPath = createInfo("parentPath")
-                    val zippedPath = s"/vsizip/$parentPath"
-                    MosaicRasterGDAL.readRaster(bytes, createInfo + ("path" -> zippedPath))
-                } else {
-                    raster
+                try {
+                    val bytes = inputRaster.asInstanceOf[Array[Byte]]
+                    val raster = MosaicRasterGDAL.readRaster(bytes, createInfo)
+                    // If the raster is coming as a byte array, we can't check for zip condition.
+                    // We first try to read the raster directly, if it fails, we read it as a zip.
+                    if (raster == null) {
+                        val parentPath = createInfo("parentPath")
+                        val zippedPath = s"/vsizip/$parentPath"
+                        MosaicRasterGDAL.readRaster(bytes, createInfo + ("path" -> zippedPath))
+                    } else {
+                        raster
+                    }
+                } catch {
+                    case _: ClassCastException =>
+                        MosaicRasterGDAL.readRaster(createInfo)
                 }
             case _          => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
         }

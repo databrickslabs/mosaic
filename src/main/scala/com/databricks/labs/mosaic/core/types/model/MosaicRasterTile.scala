@@ -174,8 +174,8 @@ object MosaicRasterTile {
         val index = row.get(0, idDataType)
         val rawRaster = row.get(1, rasterDataType)
         val createInfo = extractMap(row.getMap(2))
-
         val raster = GDAL.readRaster(rawRaster, createInfo, rasterDataType)
+
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {
             if (index.isInstanceOf[Long]) {
