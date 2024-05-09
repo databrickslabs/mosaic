@@ -99,42 +99,46 @@ object GDAL {
         createInfo: Map[String, String],
         inputDT: DataType
     ): MosaicRasterGDAL = {
-        inputDT match {
-            case _: StringType =>
-                val rasterObj = readSomeString(createInfo)
-                if (rasterObj.isEmpty) {
-                    MosaicRasterGDAL(null, createInfo, -1)
-                } else {
-                    rasterObj.get
-                }
-            case _: BinaryType =>
-                // [a] handle when raster is actually a string
-                if (inputRaster.isInstanceOf[UTF8String] || inputRaster.isInstanceOf[String]) {
+        if (inputRaster == null) {
+            MosaicRasterGDAL(null, createInfo, -1)
+        } else {
+            inputDT match {
+                case _: StringType =>
                     val rasterObj = readSomeString(createInfo)
                     if (rasterObj.isEmpty) {
                         MosaicRasterGDAL(null, createInfo, -1)
                     } else {
                         rasterObj.get
                     }
-                } else {
-                    val bytes = inputRaster.asInstanceOf[Array[Byte]]
-                    // [b] handle bytes + path
-                    val rasterObj = readSomeBinary(bytes, createInfo)
-                    if (rasterObj.isEmpty) {
-                        // [c] handle bytes + parent path
-                        val parentPath = createInfo("parentPath")
-                        val zippedPath = s"/vsizip/$parentPath"
-                        val zipRasterObj = readSomeBinary(bytes, createInfo + ("path" -> zippedPath))
-                        if (zipRasterObj.isEmpty) {
+                case _: BinaryType =>
+                    // [a] handle when raster is actually a string
+                    if (inputRaster.isInstanceOf[UTF8String] || inputRaster.isInstanceOf[String]) {
+                        val rasterObj = readSomeString(createInfo)
+                        if (rasterObj.isEmpty) {
                             MosaicRasterGDAL(null, createInfo, -1)
                         } else {
-                            zipRasterObj.get
+                            rasterObj.get
                         }
                     } else {
-                        rasterObj.get
+                        val bytes = inputRaster.asInstanceOf[Array[Byte]]
+                        // [b] handle bytes + path
+                        val rasterObj = readSomeBinary(bytes, createInfo)
+                        if (rasterObj.isEmpty) {
+                            // [c] handle bytes + parent path
+                            val parentPath = createInfo("parentPath")
+                            val zippedPath = s"/vsizip/$parentPath"
+                            val zipRasterObj = readSomeBinary(bytes, createInfo + ("path" -> zippedPath))
+                            if (zipRasterObj.isEmpty) {
+                                MosaicRasterGDAL(null, createInfo, -1)
+                            } else {
+                                zipRasterObj.get
+                            }
+                        } else {
+                            rasterObj.get
+                        }
                     }
-                }
-            case _          => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
+                case _ => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
+            }
         }
     }
 

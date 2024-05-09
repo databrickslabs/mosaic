@@ -167,12 +167,15 @@ object MosaicRasterTile {
       *   An instance of [[InternalRow]].
       * @param idDataType
       *   The data type of the index ID.
+      * @param rasterDataType
+      *   The data type of the tile's raster.
       * @return
       *   An instance of [[MosaicRasterTile]].
       */
     def deserialize(row: InternalRow, idDataType: DataType, rasterDataType: DataType): MosaicRasterTile = {
         val index = row.get(0, idDataType)
-        val rawRaster = row.get(1, rasterDataType)
+        // handle checkpoint related de-serialization
+        val rawRaster = Try(row.get(1, rasterDataType)).getOrElse(row.getUTF8String(1))
         val createInfo = extractMap(row.getMap(2))
         val raster = GDAL.readRaster(rawRaster, createInfo, rasterDataType)
 
@@ -186,7 +189,6 @@ object MosaicRasterTile {
         } else {
             new MosaicRasterTile(null, raster)
         }
-
     }
 
 }
