@@ -28,7 +28,10 @@ case class RST_MapAlgebra(
       with NullIntolerant
       with CodegenFallback {
 
-    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
+    override def dataType: DataType = {
+        GDAL.enable(expressionConfig)
+        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+    }
 
     /**
       * Map Algebra.

@@ -64,7 +64,7 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       */
     override def nullSafeEval(input: Any): Any = {
         GDAL.enable(expressionConfig)
-        val rasterType = RasterTileType(rasterExpr).rasterType
+        val rasterType = RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile.deserialize(
           input.asInstanceOf[InternalRow],
           cellIdDataType,

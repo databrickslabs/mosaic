@@ -51,7 +51,7 @@ object ReadInMemory extends ReadStrategy {
             .add(StructField(SRID, IntegerType, nullable = false))
             // Note, for in memory reads the rasters are stored in the tile.
             // For that we use Binary Columns.
-            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, BinaryType), nullable = false))
+            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, BinaryType, useCheckpoint = false), nullable = false))
     }
 
     /**

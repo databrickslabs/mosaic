@@ -35,7 +35,10 @@ case class RST_FromFile(
     
     val tileType: DataType = BinaryType
 
-    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileType)
+    override def dataType: DataType = {
+        GDAL.enable(expressionConfig)
+        RasterTileType(expressionConfig.getCellIdType, tileType, expressionConfig.isRasterUseCheckpoint)
+    }
 
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 

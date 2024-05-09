@@ -27,6 +27,8 @@ import scala.reflect.ClassTag
   *   The expression for the raster. If the raster is stored on disc, the path
   *   to the raster is provided. If the raster is stored in memory, the bytes of
   *   the raster are provided.
+  * @param resolutionExpr
+  *   The resolution of the index system to use for tessellation.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -55,8 +57,14 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * needs to be wrapped in a StructType. The actually type is that of the
       * structs element.
       */
-    override def elementSchema: StructType =
-        StructType(Array(StructField("element", RasterTileType(indexSystem.getCellIdDataType, tileExpr))))
+    override def elementSchema: StructType = {
+        StructType(
+            Array(StructField(
+                "element",
+                RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint))
+            )
+        )
+    }
 
     /**
       * The function to be overridden by the extending class. It is called when
@@ -71,8 +79,7 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
-
-        val rasterType = RasterTileType(tileExpr).rasterType
+        val rasterType = RasterTileType(tileExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile
             .deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], indexSystem.getCellIdDataType, rasterType)
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))

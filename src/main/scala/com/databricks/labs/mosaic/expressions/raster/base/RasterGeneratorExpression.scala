@@ -38,7 +38,10 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
       with NullIntolerant
       with Serializable {
 
-    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
+    override def dataType: DataType = {
+        GDAL.enable(expressionConfig)
+        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+    }
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
@@ -72,7 +75,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
-        val rasterType = RasterTileType(tileExpr).rasterType
+        val rasterType = RasterTileType(tileExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile.deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType, rasterType)
         val generatedRasters = rasterGenerator(tile)
 

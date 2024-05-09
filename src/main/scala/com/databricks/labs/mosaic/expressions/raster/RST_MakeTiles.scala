@@ -61,14 +61,17 @@ case class RST_MakeTiles(
       with NullIntolerant
       with CodegenFallback {
 
+    /** @return Returns StringType if either  */
     override def dataType: DataType = {
+        GDAL.enable(expressionConfig)
         require(withCheckpointExpr.isInstanceOf[Literal])
-        if (withCheckpointExpr.eval().asInstanceOf[Boolean]) {
+
+        if (withCheckpointExpr.eval().asInstanceOf[Boolean] || expressionConfig.isRasterUseCheckpoint) {
             // Raster is referenced via a path
-            RasterTileType(expressionConfig.getCellIdType, StringType)
+            RasterTileType(expressionConfig.getCellIdType, StringType, useCheckpoint = true)
         } else {
             // Raster is referenced via a byte array
-            RasterTileType(expressionConfig.getCellIdType, BinaryType)
+            RasterTileType(expressionConfig.getCellIdType, BinaryType, useCheckpoint = false)
         }
     }
 

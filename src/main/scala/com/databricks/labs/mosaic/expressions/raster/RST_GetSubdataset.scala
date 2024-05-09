@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
@@ -25,7 +26,10 @@ case class RST_GetSubdataset(
       with NullIntolerant
       with CodegenFallback {
 
-    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
+    override def dataType: DataType = {
+        GDAL.enable(expressionConfig)
+        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+    }
 
     /** Returns the subdatasets of the raster. */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {

@@ -73,7 +73,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
     // noinspection DuplicatedCode
     override def nullSafeEval(inputRaster: Any, inputBand: Any): Any = {
         GDAL.enable(expressionConfig)
-        val rasterType = RasterTileType(rasterExpr).rasterType
+        val rasterType = RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile.deserialize(
             inputRaster.asInstanceOf[InternalRow],
             expressionConfig.getCellIdType,

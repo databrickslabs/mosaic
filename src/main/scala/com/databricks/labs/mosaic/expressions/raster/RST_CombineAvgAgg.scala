@@ -31,11 +31,12 @@ case class RST_CombineAvgAgg(
 ) extends TypedImperativeAggregate[ArrayBuffer[Any]]
       with UnaryLike[Expression]
       with RasterExpressionSerialization {
-
+    GDAL.enable(expressionConfig)
     override lazy val deterministic: Boolean = true
     override val child: Expression = tileExpr
     override val nullable: Boolean = false
-    override lazy val dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
+    override lazy val dataType: DataType = RasterTileType(
+        expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
     lazy val tileType: DataType = dataType.asInstanceOf[RasterTileType].rasterType
     override def prettyName: String = "rst_combine_avg_agg"
     val cellIDType: DataType = expressionConfig.getCellIdType

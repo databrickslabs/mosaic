@@ -7,7 +7,6 @@ import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, NullIntolerant}
-import org.apache.spark.sql.types.ArrayType
 
 import scala.reflect.ClassTag
 
@@ -67,7 +66,7 @@ abstract class RasterArray1ArgExpression[T <: Expression: ClassTag](
         GDAL.enable(expressionConfig)
         val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
         val result = rasterTransform(tiles, arg1)
-        val resultType = if (returnsRaster) RasterTileType(rastersExpr).rasterType else dataType
+        val resultType = if (returnsRaster) RasterTileType(rastersExpr, expressionConfig.isRasterUseCheckpoint).rasterType else dataType
         val serialized = serialize(result, returnsRaster, resultType, expressionConfig)
         tiles.foreach(t => RasterCleaner.dispose(t))
         serialized

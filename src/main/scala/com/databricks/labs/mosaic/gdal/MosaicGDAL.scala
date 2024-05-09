@@ -67,9 +67,7 @@ object MosaicGDAL extends Logging {
 
     def configureCheckpoint(mosaicConfig: MosaicExpressionConfig): Unit = {
         this.checkpointPath = mosaicConfig.getRasterCheckpoint
-        this.useCheckpoint = {
-            Try(mosaicConfig.getRasterUseCheckpoint == "true").getOrElse(false)
-        }
+        this.useCheckpoint = mosaicConfig.isRasterUseCheckpoint
     }
 
     def setBlockSize(mosaicConfig: MosaicExpressionConfig): Unit = {
@@ -156,16 +154,15 @@ object MosaicGDAL extends Logging {
         enableGDAL(spark)
         logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides existing spark confs).")
 
-        // [d] register functions again
-        // - will pick up the config changes.
-        // - In some (not all) testing, MosaicContext
-        //   might not have been built.
-        try {
+        // [d] re-register expressions
+        // - needed to update the MosaicConfig used.
+        Try {
             MosaicContext.context().register(spark)
-            logInfo("Re-registered expressions in MosaicContext.")
-        } catch {
-            case t: Throwable => logWarning("Unable to re-register expressions with MosaicContext (is it initialized?)")
-        }
+            logInfo("... re-registered expressions")
+        }.getOrElse(
+          logWarning("...Unable to re-register expressions (is MosaicContext initialized?)")
+        )
+
     }
 
     /** Loads the shared objects required for GDAL. */

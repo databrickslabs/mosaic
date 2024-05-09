@@ -5,6 +5,8 @@ import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import org.apache.spark.sql.types.DataType
 import org.apache.spark.sql.{RuntimeConfig, SparkSession}
 
+import scala.util.Try
+
 /**
   * Mosaic Expression Config is a class that contains the configuration for the
   * Mosaic Expression. Singleton objects are not accessible outside the JVM, so
@@ -41,6 +43,10 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
     def getRasterCheckpoint: String = configs.getOrElse(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT)
 
     def getRasterUseCheckpoint: String = configs.getOrElse(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT)
+
+    def isRasterUseCheckpoint: Boolean = {
+        Try(getRasterUseCheckpoint == "true").getOrElse(false)
+    }
 
     def getCellIdType: DataType = IndexSystemFactory.getIndexSystem(getIndexSystem).cellIdType
 

@@ -25,6 +25,8 @@ import scala.reflect.ClassTag
   * @param rasterExpr
   *   The raster expression. It can be a path to a raster file or a byte array
   *   containing the raster file content.
+  * @param resolutionExpr
+  *    The resolution of the index system to use.
   * @param measureType
   *   The output type of the result.
   * @param expressionConfig
@@ -34,10 +36,10 @@ import scala.reflect.ClassTag
   */
 abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     rasterExpr: Expression,
-    resolution: Expression,
+    resolutionExpr: Expression,
     measureType: DataType,
     expressionConfig: MosaicExpressionConfig
-) extends Raster1ArgExpression[T](rasterExpr, resolution, returnsRaster = false, expressionConfig)
+) extends Raster1ArgExpression[T](rasterExpr, resolutionExpr, returnsRaster = false, expressionConfig)
       with RasterGridExpression
       with NullIntolerant
       with Serializable {

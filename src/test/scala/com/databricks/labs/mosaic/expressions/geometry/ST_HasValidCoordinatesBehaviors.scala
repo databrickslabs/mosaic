@@ -19,7 +19,7 @@ trait ST_HasValidCoordinatesBehaviors extends MosaicSpatialQueryTest {
 
     // noinspection AccessorLikeMethodIsUnit
     def hasValidCoordinatesBehaviours(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL") // <- these tests throw exceptions
+        spark.sparkContext.setLogLevel("FATAL") // <- otherwise asserted exceptions print
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)

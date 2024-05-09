@@ -23,6 +23,7 @@ case class RST_ReTile(
       with NullIntolerant
       with CodegenFallback {
 
+    /** @return provided raster data type (assumes that was handled for checkpointing.)*/
     override def dataType: DataType = rasterExpr.dataType
 
     /**

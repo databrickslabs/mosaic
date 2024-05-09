@@ -103,16 +103,9 @@ case class MosaicRasterTile(
       *   An instance of [[InternalRow]].
       */
     def serialize(rasterDataType: DataType): InternalRow = {
-
-        // 0.4.2 - override rasterDataType if checkpoint
-        val rasterDT: DataType = rasterDataType match {
-            case _: BinaryType if MosaicGDAL.isUseCheckpoint => StringType
-            case _ => rasterDataType
-        }
-
-        val encodedRaster = encodeRaster(rasterDT)
+        val encodedRaster = encodeRaster(rasterDataType)
         val path = encodedRaster match {
-                case string: UTF8String => string.toString
+                case uStr: UTF8String => uStr.toString
                 case _ => raster.createInfo("path")
         }
         val parentPath = {
@@ -175,7 +168,7 @@ object MosaicRasterTile {
     def deserialize(row: InternalRow, idDataType: DataType, rasterDataType: DataType): MosaicRasterTile = {
         val index = row.get(0, idDataType)
         // handle checkpoint related de-serialization
-        val rawRaster = Try(row.get(1, rasterDataType)).getOrElse(row.getUTF8String(1))
+        val rawRaster = row.get(1, rasterDataType)
         val createInfo = extractMap(row.getMap(2))
         val raster = GDAL.readRaster(rawRaster, createInfo, rasterDataType)
 
