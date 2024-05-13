@@ -27,6 +27,8 @@ class SetupMgr:
         #   volumes must be pre-generated in unity catalog
         os.makedirs(self.to_fuse_dir, exist_ok=True)
 
+        script_out_path = f"{self.to_fuse_dir}/{self.script_out_name}"
+
         # - start with the un-configured script (from repo)
         #   this is using a different (repo) folder in 0.4.2+ (to allow prior versions to work)
         GITHUB_CONTENT_TAG_URL = "https://raw.githubusercontent.com/databrickslabs/mosaic/main"
@@ -62,8 +64,8 @@ class SetupMgr:
             )
 
         # - write the configured init script
-        script_out_path = Path(self.to_fuse_dir) / self.script_out_name
-        script_out_path.write_text(script, encoding='utf-8')
+        with open(script_out_path, "w") as file:
+            file.write(script)
 
         # --- end of script config ---
 

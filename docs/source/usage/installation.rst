@@ -6,41 +6,39 @@ Supported platforms
 ###################
 
 .. warning::
-    For Mosaic <= 0.4.1 :code:`%pip install databricks-mosaic` will no longer install "as-is" in DBRs due to the fact that Mosaic
-    left geopandas unpinned in those versions. With geopandas 0.14.4, numpy dependency conflicts with the limits of
-    scikit-learn in DBRs. The workaround is :code:`%pip install geopandas==0.14.3 databricks-mosaic`.
-    Mosaic 0.4.2+ limits the geopandas version.
+    For Mosaic <= 0.4.1 **%pip install databricks-mosaic** will no longer install "as-is" in DBRs due to the fact that Mosaic
+    has thus far left geopandas unpinned. As of geopandas 0.14.4, numpy dependency is changed which conflicts
+    with the limits of scikit-learn in DBRs. The workaround is **%pip install geopandas==0.14.3 databricks-mosaic**.
+    Mosaic 0.4.2 release will pin the geopandas version.
 
 Mosaic 0.4.x series only supports DBR 13.x DBRs. If running on a different DBR it will throw an exception:
 
-   DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13.
-   You can specify :code:`%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.
+    DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13.
+    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.
 
 Mosaic 0.4.x series issues an ERROR on standard, non-Photon clusters `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ |
 `AWS <https://docs.databricks.com/runtime/index.html/>`_ |
 `GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_:
 
-   DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for
-   spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.
+    DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for
+    spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.
 
-As of Mosaic 0.4.0 / DBR 13.3 LTS (subject to change in follow-on releases):
+As of Mosaic 0.4.0 (subject to change in follow-on releases)
 
-* `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_
-   * Mosaic Python, SQL, R, and Scala APIs.
-* `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_
-   * Mosaic Scala API (JVM) with Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_.
-   * Mosaic Python bindings (to Mosaic Scala APIs) are blocked by Py4J Security on Shared Access Clusters.
-   * Mosaic SQL expressions cannot yet be registered due to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_.
-     API changes, more `here <https://docs.databricks.com/en/udf/index.html>`_.
+* `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_: Mosaic Python, SQL, R, and Scala APIs.
+* `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_: Mosaic Scala API (JVM) with
+  Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_;
+  Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
 
 .. note::
-   Mosaic is a custom JVM library that extends spark, which has the following implications in DBR 13.3 LTS:
+   As of Mosaic 0.4.0 (subject to change in follow-on releases)
 
    * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ enforces process isolation which is difficult
      to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from
      other supported languages in Shared Access Clusters.
-   * Clusters can read `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`_ via relevant
-     built-in (aka platform provided) readers and writers or via custom python calls which do not involve any custom JVM code.
+   * Along the same principle of isolation, clusters (both assigned and shared access) can read
+     `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`_ via relevant built-in readers and
+     writers or via custom python calls which do not involve any custom JVM code.
 
 If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
@@ -118,11 +116,9 @@ The mechanism for enabling the Mosaic functions varies by language:
     enableMosaic()
 
 .. note::
-    * We recommend use of :code:`import mosaic as mos` to namespace the python api and avoid any conflicts with other similar
-      functions. By default, the python import will handle installing the JAR and registering Spark Expressions which are
-      suitable for Assigned (vs Shared Access) clusters.
-    * It is possible to initialize python bindings without providing :code:`dbutils`; if you do this, :code:`%%mosaic_kepler`
-      won't be able to render maps in notebooks.
+    We recommend use of **import mosaic as mos** to namespace the python api and avoid any conflicts with other similar
+    functions. By default, the python import will handle installing the JAR and registering Spark Expressions which are
+    suitable for Assigned (vs Shared Access) clusters.
 
 Unless you are specially adding the JAR to your cluster (outside :code:`%pip` or the WHL file), please always initialize
 with Python first, then you can initialize Scala (after the JAR has been auto-attached by python); otherwise, you don't

@@ -32,8 +32,7 @@ The supported languages are Scala, Python, R, and SQL.
 
 ## How does it work?
 
-The Mosaic library is written in Scala (JVM) to guarantee maximum performance with Spark and when possible, 
-it uses code generation to give an extra performance boost.
+The Mosaic library is written in Scala (JVM) to guarantee maximum performance with Spark and when possible, it uses code generation to give an extra performance boost.
 
 __The other supported languages (Python, R and SQL) are thin wrappers around the Scala (JVM) code.__
 
@@ -45,9 +44,9 @@ Image1: Mosaic logical design.
 :warning: **geopandas 0.14.4 not supported**
 
 For Mosaic <= 0.4.1 `%pip install databricks-mosaic` will no longer install "as-is" in DBRs due to the fact that Mosaic
-left geopandas unpinned in those versions. With geopandas 0.14.4, numpy dependency conflicts with the limits of 
-scikit-learn in DBRs. The workaround is `%pip install geopandas==0.14.3 databricks-mosaic`. 
-Mosaic 0.4.2+ limits the geopandas version.
+has thus far left geopandas unpinned. As of geopandas 0.14.4, numpy dependency is changed which conflicts 
+with the limits of scikit-learn in DBRs. The workaround is `%pip install geopandas==0.14.3 databricks-mosaic`.
+Mosaic 0.4.2 release will pin the geopandas version.
 
 ### Mosaic 0.4.x Series [Latest]
 
@@ -63,21 +62,18 @@ We recommend using Databricks Runtime versions 13.3 LTS with Photon enabled.
 
 __Language Bindings__
 
-As of Mosaic 0.4.0 / DBR 13.3 LTS (subject to change in follow-on releases)...
+As of Mosaic 0.4.0 (subject to change in follow-on releases)...
 
-* [Assigned Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes)
-  * Mosaic Python, SQL, R, and Scala APIs.
-* [Shared Access Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes)
-  * Mosaic Scala API (JVM) with Admin [allowlisting](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html).
-  * Mosaic Python bindings (to Mosaic Scala APIs) are blocked by Py4J Security on Shared Access Clusters.
+* [Assigned Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Python, SQL, R, and Scala APIs.
+* [Shared Access Clusters](https://docs.databricks.com/en/compute/configure.html#access-modes): Mosaic Scala API (JVM) with Admin [allowlisting](https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html); _Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters._ 
   * Mosaic SQL expressions cannot yet be registered with [Unity Catalog](https://www.databricks.com/product/unity-catalog) due to API changes affecting DBRs >= 13, more [here](https://docs.databricks.com/en/udf/index.html).
 
 __Additional Notes:__ 
 
-Mosaic is a custom JVM library that extends spark, which has the following implications in DBR 13.3 LTS:
+As of Mosaic 0.4.0 (subject to change in follow-on releases)...
 
 1. [Unity Catalog](https://www.databricks.com/product/unity-catalog): Enforces process isolation which is difficult to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from other supported languages in Shared Access Clusters. 
-2. [Volumes](https://docs.databricks.com/en/connect/unity-catalog/volumes.html): Along the same principle of isolation, clusters can read Volumes via relevant built-in (aka platform provided) readers and writers or via custom python calls which do not involve any custom JVM code.
+2. [Volumes](https://docs.databricks.com/en/connect/unity-catalog/volumes.html): Along the same principle of isolation, clusters (both assigned and shared access) can read Volumes via relevant built-in readers and writers or via custom python calls which do not involve any custom JVM code.
 
 ### Mosaic 0.3.x Series
 
