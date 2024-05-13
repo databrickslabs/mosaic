@@ -11,7 +11,7 @@ to your Spark / Databricks cluster to perform spatial queries or integrating Spa
 with a geospatial middleware component such as [Geoserver](https://geoserver.org/).
 
 .. warning::
-    Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due
+    Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Spark Expressions), but not Shared Access due
     to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ API changes, more `here <https://docs.databricks.com/en/udf/index.html>`_.
 
 Pre-requisites

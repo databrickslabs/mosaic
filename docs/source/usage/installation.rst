@@ -5,8 +5,11 @@ Installation guide
 Supported platforms
 ###################
 
-.. note::
-    For Mosaic 0.4 series, we recommend DBR 13.3 LTS on Photon or ML Runtime clusters.
+.. warning::
+    For Mosaic <= 0.4.1 **%pip install databricks-mosaic** will no longer install "as-is" in DBRs due to the fact that Mosaic
+    has thus far left geopandas unpinned. As of geopandas 0.14.4, numpy dependency is changed which conflicts
+    with the limits of scikit-learn in DBRs. The workaround is **%pip install geopandas==0.14.3 databricks-mosaic**.
+    Mosaic 0.4.2 release will pin the geopandas version.
 
 Mosaic 0.4.x series only supports DBR 13.x DBRs. If running on a different DBR it will throw an exception:
 
@@ -113,9 +116,9 @@ The mechanism for enabling the Mosaic functions varies by language:
     enableMosaic()
 
 .. note::
-    We recommend use of `import mosaic as mos` to namespace the python api and avoid any conflicts with other similar
-    functions. By default, the python import will handle installing the JAR and registering Hive UDFs which is suitable
-    for Assigned (vs Shared Access) clusters.
+    We recommend use of **import mosaic as mos** to namespace the python api and avoid any conflicts with other similar
+    functions. By default, the python import will handle installing the JAR and registering Spark Expressions which are
+    suitable for Assigned (vs Shared Access) clusters.
 
 Unless you are specially adding the JAR to your cluster (outside :code:`%pip` or the WHL file), please always initialize
 with Python first, then you can initialize Scala (after the JAR has been auto-attached by python); otherwise, you don't
@@ -139,13 +142,27 @@ confs as well as through extra params in Mosaic 0.4.x series :code:`enable_mosai
     :type jar_autoattach: bool
     :rtype: None
 
-Users can control various aspects of Mosaic's operation with the following Spark confs:
+Users can control various aspects of Mosaic's operation with the following optional Spark session configs:
 
-    * :code:`"spark.databricks.labs.mosaic.jar.autoattach"` - Automatically attach the Mosaic JAR to the Databricks cluster (Optional, default is "true").
-    * :code:`"spark.databricks.labs.mosaic.jar.path"` - Explicitly specify the path to the Mosaic JAR (Optional and not required at all in a standard Databricks environment).
-    * :code:`"spark.databricks.labs.mosaic.geometry.api"` - Explicitly specify the underlying geometry library to use for spatial operations (Optional, default is "JTS").
-    * :code:`"spark.databricks.labs.mosaic.index.system"` - Explicitly specify the index system to use for optimized spatial joins (Optional, default is "H3").
+.. list-table::
+   :widths: 25 25 50
+   :header-rows: 1
 
+   * - Config
+     - Default
+     - Comments
+   * - spark.databricks.labs.mosaic.jar.autoattach
+     - "true"
+     - Automatically attach the Mosaic JAR to the Databricks cluster?
+   * - spark.databricks.labs.mosaic.jar.path
+     - "<jar_path>"
+     - Path to the Mosaic JAR, not required in standard installs
+   * - spark.databricks.labs.mosaic.geometry.api
+     - "JTS"
+     - Geometry library to use for spatial operations, only option in 0.4 series
+   * - spark.databricks.labs.mosaic.index.system
+     - "H3"
+     - Index system to use
 
 SQL usage
 *********
@@ -162,5 +179,5 @@ register the Mosaic SQL functions in your SparkSession from a Scala notebook cel
     mosaicContext.register(spark)
 
 .. warning::
-    Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due
+    Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Spark Expressions), but not Shared Access due
     to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ API changes, more `here <https://docs.databricks.com/en/udf/index.html>`_.

@@ -53,12 +53,14 @@ Mosaic provides:
 * optimisations for performing point-in-polygon joins using an approach we co-developed with Ordnance Survey (`blog post <https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html>`_); and
 * the choice of a Scala, SQL and Python API.
 
+.. warning::
+    For Mosaic <= 0.4.1 **%pip install databricks-mosaic** will no longer install "as-is" in DBRs due to the fact that Mosaic
+    has thus far left geopandas unpinned. As of geopandas 0.14.4, numpy dependency is changed which conflicts
+    with the limits of scikit-learn in DBRs. The workaround is **%pip install geopandas==0.14.3 databricks-mosaic**.
+    Mosaic 0.4.2 release will pin the geopandas version.
+
 .. note::
    For Mosaic versions < 0.4 please use the `0.3 docs <https://databrickslabs.github.io/mosaic/v0.3.x/index.html>`_.
-
-.. warning::
-   At times, it is useful to "hard refresh" pages to ensure your cached local version matches the latest live,
-   more `here <https://www.howtogeek.com/672607/how-to-hard-refresh-your-web-browser-to-bypass-your-cache/>`_.
 
 Version 0.4.x Series
 ====================
@@ -85,7 +87,7 @@ As of Mosaic 0.4.0 (subject to change in follow-on releases)
   Python bindings to Mosaic Scala APIs are blocked by Py4J Security on Shared Access Clusters.
 
 .. warning::
-   Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due
+   Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Spark Expressions), but not Shared Access due
    to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ API changes, more `here <https://docs.databricks.com/en/udf/index.html>`_.
 
 .. note::

@@ -8,11 +8,9 @@ import tempfile
 
 
 class FuseInstaller:
-    def __init__(self, with_mosaic_pip, with_gdal, jar_copy=False, jni_so_copy=False):
+    def __init__(self, jar_copy=False, jni_so_copy=False):
         self._site_packages = working_set.find(Requirement("keplergl")).location
         self._temp_dir = tempfile.mkdtemp()
-        self.with_mosaic_pip = with_mosaic_pip
-        self.with_gdal = with_gdal
         self.jar_copy = jar_copy
         self.jni_so_copy = jni_so_copy
         self.FUSE_INIT_SCRIPT_FILENAME = "mosaic-fuse-init.sh"
@@ -23,12 +21,10 @@ class FuseInstaller:
     def do_op(self) -> bool:
         return api.setup_fuse_install(
             self._temp_dir,
-            self.with_mosaic_pip,
-            self.with_gdal,
             jar_copy=self.jar_copy,
             jni_so_copy=self.jni_so_copy,
-            override_mosaic_version="main",
             script_out_name=self.FUSE_INIT_SCRIPT_FILENAME,
+            test_mode=True
         )
 
     def run_init_script(self) -> int:

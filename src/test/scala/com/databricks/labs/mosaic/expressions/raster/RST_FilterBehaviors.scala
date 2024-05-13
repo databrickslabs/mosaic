@@ -11,7 +11,7 @@ trait RST_FilterBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark
@@ -21,52 +21,52 @@ trait RST_FilterBehaviors extends QueryTest {
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
-            .load("src/test/resources/modis")
+            .load("src/test/resources/binary/geotiff-small/chicago_sp27.tif")
 
         val gridTiles = rastersInMemory
             .withColumn("result", rst_filter($"tile", 3, "mode"))
             .select("result")
             .collect()
 
-        gridTiles.length should be(7)
+        gridTiles.length should be(1)
 
         val gridTiles2 = rastersInMemory
             .withColumn("result", rst_filter($"tile", lit(3), lit("mode")))
             .select("result")
             .collect()
 
-        gridTiles2.length should be(7)
+        gridTiles2.length should be(1)
 
         val gridTiles3 = rastersInMemory
             .withColumn("result", rst_filter($"tile", lit(3), lit("avg")))
             .select("result")
             .collect()
 
-        gridTiles3.length should be(7)
+        gridTiles3.length should be(1)
 
         val gridTiles4 = rastersInMemory
             .withColumn("result", rst_filter($"tile", lit(3), lit("min")))
             .select("result")
             .collect()
 
-        gridTiles4.length should be(7)
+        gridTiles4.length should be(1)
 
         val gridTiles5 = rastersInMemory
             .withColumn("result", rst_filter($"tile", lit(3), lit("max")))
             .select("result")
             .collect()
 
-        gridTiles5.length should be(7)
+        gridTiles5.length should be(1)
 
         val gridTiles6 = rastersInMemory
             .withColumn("result", rst_filter($"tile", lit(3), lit("median")))
             .select("result")
             .collect()
 
-        gridTiles6.length should be(7)
+        gridTiles6.length should be(1)
 
         rastersInMemory.createOrReplaceTempView("source")
-        
+
         noException should be thrownBy spark
             .sql("""
                    |select rst_filter(tile, 3, 'mode') as tile from source

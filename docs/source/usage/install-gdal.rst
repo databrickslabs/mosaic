@@ -29,9 +29,8 @@ Mosaic requires GDAL to be installed on the cluster. The easiest way to do this 
 the :code:`setup_gdal` function.
 
 .. note::
-   - This is close in behavior to Mosaic < 0.4 series (prior to DBR 13), with new options
-     to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1).
-   - Param "to_fuse_dir" can be one of "/Volumes/..", "/Workspace/..", "/dbfs/..";
+   - This is close in behavior to Mosaic < 0.4 series (prior to DBR 13), it installs jammy default GDAL (3.4.1).
+   - Param **to_fuse_dir** can be one of **/Volumes/..**, **/Workspace/..**, **/dbfs/..**;
      however, you should consider :code:`setup_fuse_install()` for Volume based installs as that
      exposes more options, to include copying JAR and JNI Shared Objects.
 
@@ -43,19 +42,10 @@ the :code:`setup_gdal` function.
     :param to_fuse_dir: Path to write out the init script for GDAL installation;
                         default is "/Workspace/Shared/geospatial/mosaic/gdal/jammy".
     :type to_fuse_dir: str
-    :param with_mosaic_pip: Whether to configure a script that pip installs databricks-mosaic,
-                            fixed to the current version; default is False.
-    :type with_mosaic_pip: bool
-    :param with_ubuntugis: Whether to use ubuntugis ppa for GDAL instead of built-in;
-                           default is False.
-    :type with_ubuntugis: bool
-    :param script_out_name: name of the script to be written;
-                            default is "mosaic-gdal-init.sh".
+    :param script_out_name: Name of the script to be written; default is “mosaic-gdal-init.sh”.
     :type script_out_name: str
-    :param override_mosaic_version: String value to use to override the mosaic version to install,
-                                    e.g. "==0.4.0" or "<0.5,>=0.4"; default is None.
-    :type override_mosaic_version: str
-    :rtype: bool
+    :param jni_so_copy: Whether to copy shared object to fuse dir and config script to use; default is False.
+    :type jni_so_copy: bool
 
     :example:
 
@@ -69,9 +59,7 @@ the :code:`setup_gdal` function.
     +-----------------------------------------------------------------------------------------------------------+
     | ::: Install setup complete :::                                                                            |
     +-----------------------------------------------------------------------------------------------------------+
-    | - Settings: 'with_mosaic_pip'? False, 'with_gdal'? True, 'with_ubuntugis'? False                          |
-    |             'jar_copy'? False, 'jni_so_copy'? False, 'override_mosaic_version'? None                      |
-    | - Derived:  'mosaic_version'? 0.4.0, 'github_version'? 0.4.0, 'release_version'? None, 'pip_str'? ==0.4.0 |
+    | - Settings: 'jar_copy'? False, 'jni_so_copy'? False                      |
     | - Fuse Dir: '/Workspace/Shared/geospatial/mosaic/gdal/jammy'                                              |
     | - Init Script: configured and stored at 'mosaic-gdal-init.sh'; add to your cluster and restart,           |
     |               more at https://docs.databricks.com/en/init-scripts/cluster-scoped.html                     |
@@ -106,16 +94,13 @@ code at the top of the notebook:
     GDAL enabled.
     GDAL 3.4.1, released 2021/12/27
 
-.. note::
-    You can configure init script from default ubuntu GDAL (3.4.1) to ubuntugis ppa @ https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa (3.4.3)
-    with `setup_gdal(with_ubuntugis=True)`
 
 GDAL Configuration
 ####################
 
 Here are spark session configs available for raster, e.g. :code:`spark.conf.set("<key>", "<val>")`.
 
-.. list-table:: Title
+.. list-table::
    :widths: 25 25 50
    :header-rows: 1
 
@@ -124,10 +109,40 @@ Here are spark session configs available for raster, e.g. :code:`spark.conf.set(
      - Comments
    * - spark.databricks.labs.mosaic.raster.checkpoint
      - "/dbfs/tmp/mosaic/raster/checkpoint"
-     - Checkpoint location, see :ref:`rst_maketiles` for more
+     - Checkpoint location, e.g. :ref:`rst_maketiles`
+   * - spark.databricks.labs.mosaic.raster.use.checkpoint
+     - "false"
+     - Checkpoint for session, in 0.4.2+
    * - spark.databricks.labs.mosaic.raster.tmp.prefix
      - "" (will use "/tmp")
      - Local directory for workers
    * - spark.databricks.labs.mosaic.raster.blocksize
      - "128"
      - Blocksize in pixels, see :ref:`rst_convolve` and :ref:`rst_filter` for more
+
+GDAL is configured as follows in `MosaicGDAL <https://github.com/databrickslabs/mosaic/blob/main/src/main/scala/com/databricks/labs/mosaic/gdal/MosaicGDAL.scala>`__ class:
+
+.. list-table::
+   :widths: 50 50
+   :header-rows: 1
+
+   * - Config
+     - Value
+   * - GDAL_VRT_ENABLE_PYTHON
+     - "YES"
+   * - GDAL_DISABLE_READDIR_ON_OPEN
+     - "TRUE"
+   * - CPL_TMPDIR
+     - "<CPL_TMPDIR>"
+   * - GDAL_PAM_PROXY_DIR
+     - "<GDAL_PAM_PROXY_DIR>"
+   * - GDAL_PAM_ENABLED
+     - "YES"
+   * - CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE
+     - "NO"
+   * - CPL_LOG
+     - "<CPL_TMPDIR>/gdal.log"
+   * - GDAL_CACHEMAX
+     - "512"
+   * - GDAL_NUM_THREADS
+     - "ALL_CPUS"

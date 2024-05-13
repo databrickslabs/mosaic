@@ -278,7 +278,7 @@
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
                 <spark.version>3.4.0</spark.version>
-                <mosaic.version>0.4.1</mosaic.version>
+                <mosaic.version>0.4.2</mosaic.version>
             </properties>
         </profile>
     </profiles>

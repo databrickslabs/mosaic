@@ -83,6 +83,9 @@ The repository is structured as follows:
 
 ## Test & build Mosaic
 
+Given that DBR 13.3 is Ubuntu 22.04, we recommend using docker, 
+see [mosaic-docker.sh](https://github.com/databrickslabs/mosaic/blob/main/scripts/mosaic-docker.sh).
+
 ### Scala JAR
 
 We use the [Maven](https://maven.apache.org/install.html) build tool to manage and build the Mosaic scala project.
@@ -115,6 +118,8 @@ To build the docs:
 - Install the pandoc library (follow the instructions for your platform [here](https://pandoc.org/installing.html)).
 - Install the python requirements from `docs/docs-requirements.txt`.
 - Build the HTML documentation by running `make html` from `docs/`.
+  - For nbconvert you may have to symlink your jupyter share folder, 
+    e.g. `sudo ln -s /opt/homebrew/share/jupyter /usr/local/share`. 
 - You can locally host the docs by running the `reload.py` script in the `docs/source/` directory.
 
 ## Style
