@@ -8,7 +8,6 @@ An extension to the [Apache Spark](https://spark.apache.org/) framework that all
 [![codecov](https://codecov.io/gh/databrickslabs/mosaic/branch/main/graph/badge.svg?token=aEzZ8ITxdg)](https://codecov.io/gh/databrickslabs/mosaic)
 [![build](https://github.com/databrickslabs/mosaic/actions/workflows/build_main.yml/badge.svg)](https://github.com/databrickslabs/mosaic/actions?query=workflow%3A%22build+main%22)
 [![docs](https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml/badge.svg)](https://github.com/databrickslabs/mosaic/actions/workflows/docs.yml)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/databrickslabs/mosaic.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/databrickslabs/mosaic/context:python)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![lines of code](https://tokei.rs/b1/github/databrickslabs/mosaic)]([https://codecov.io/github/databrickslabs/mosaic](https://github.com/databrickslabs/mosaic))
 
@@ -41,6 +40,13 @@ __The other supported languages (Python, R and SQL) are thin wrappers around the
 Image1: Mosaic logical design.
 
 ## Getting started
+
+:warning: **geopandas 0.14.4 not supported**
+
+For Mosaic <= 0.4.1 `%pip install databricks-mosaic` will no longer install "as-is" in DBRs due to the fact that Mosaic
+has thus far left geopandas unpinned. As of geopandas 0.14.4, numpy dependency is changed which conflicts 
+with the limits of scikit-learn in DBRs. The workaround is `%pip install geopandas==0.14.3 databricks-mosaic`.
+Mosaic 0.4.2 release will pin the geopandas version.
 
 ### Mosaic 0.4.x Series [Latest]
 
@@ -142,7 +148,7 @@ import com.databricks.labs.mosaic.JTS
 val mosaicContext = MosaicContext.build(H3, JTS)
 mosaicContext.register(spark)
 ```
-__Note: Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due to API changes, more [here](https://docs.databricks.com/en/udf/index.html).__
+__Note: Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Spark Expressions), but not Shared Access due to API changes, more [here](https://docs.databricks.com/en/udf/index.html).__
 
 ## Examples
 

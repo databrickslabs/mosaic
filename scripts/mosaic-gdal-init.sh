@@ -24,11 +24,11 @@ MOSAIC_PIP_VERSION='__MOSAIC_PIP_VERSION__'
 # CONDITIONAL LOGIC
 WITH_MOSAIC=0    # <- pip install mosaic?
 WITH_GDAL=0      # <- install gdal?
-WITH_UBUNTUGIS=0 # <- use ubuntugis ppa?
-WITH_FUSE_SO=0   # <- use fuse dir shared objects (vs wget) 
+WITH_UBUNTUGIS=0 # <- use ubuntugis ppa, now ignored!
+WITH_FUSE_SO=0   # <- use fuse dir shared objects (vs wget)
 
-# SPECIFIED VERSIONS 
-GDAL_VERSION=3.4.1     # <- ubuntugis is 3.4.3
+# SPECIFIED VERSIONS
+GDAL_VERSION=3.4.1
 
 # - optional: install GDAL
 if [ $WITH_GDAL == 1 ]
@@ -57,7 +57,6 @@ then
     sudo cp -n $FUSE_DIR/libgdalalljni.so.30.0.3 /usr/lib
   else
     # copy from github
-    # TODO: in v0.4.1, include $GITHUB_VERSION
     GITHUB_REPO_PATH=databrickslabs/mosaic/main/resources/gdal/jammy
     sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so
     sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/$GITHUB_REPO_PATH/libgdalalljni.so.30

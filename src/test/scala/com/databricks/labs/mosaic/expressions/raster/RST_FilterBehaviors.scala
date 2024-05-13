@@ -66,7 +66,7 @@ trait RST_FilterBehaviors extends QueryTest {
         gridTiles6.length should be(1)
 
         rastersInMemory.createOrReplaceTempView("source")
-        
+
         noException should be thrownBy spark
             .sql("""
                    |select rst_filter(tile, 3, 'mode') as tile from source

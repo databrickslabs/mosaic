@@ -164,7 +164,7 @@ class SetupMgr:
         print("\n")
 
         if not any(resource_statuses) or all(
-            value == 200 for value in resource_statuses.values()
+                value == 200 for value in resource_statuses.values()
         ):
             return True
         else:
@@ -172,11 +172,11 @@ class SetupMgr:
 
 
 def setup_fuse_install(
-    to_fuse_dir: str,
-    script_out_name: str = "mosaic-fuse-init.sh",
-    jar_copy: bool = True,
-    jni_so_copy: bool = True,
-    test_mode: bool = False
+        to_fuse_dir: str,
+        script_out_name: str = "mosaic-fuse-init.sh",
+        jar_copy: bool = True,
+        jni_so_copy: bool = True,
+        test_mode: bool = False
 ) -> bool:
     """
     [1]  if `jar_copy=True`
