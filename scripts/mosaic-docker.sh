@@ -8,6 +8,8 @@
 # - [a] after launch type `unset JAVA_TOOL_OPTIONS` from the container
 # - [b] then can test e.g. `mvn -X test -DskipTests=false -Dsuites=com.databricks.labs.mosaic.core.raster.TestRasterGDAL` and
 #       `python3 -m unittest mosaic test/test_fuse_install.py` from python
+# - [c] you may need to run `mvn clean` occasionally, especially around initial setup as intellij is JDK 11
+#       and docker is JDK 8.
 # ... don't need to specify -PskipCoverage (see settings.xml)
 docker run --platform linux/amd64 --name mosaic-dev --rm -p 5005:5005 -p 8888:8888 \
 -v $PWD:/root/mosaic -e JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n" \

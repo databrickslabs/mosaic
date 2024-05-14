@@ -26,6 +26,7 @@ echo -e "\n::: [4] ... build python :::\n"
 pip install --upgrade pip
 cd /root/mosaic/python && pip install .
 pip install black build isort py4j requests
+pip install pyspark==3.4.1
 
 # [5] run gdal install script
 # - this is adapted from 0.4.2/mosaic-gdal-init.sh
