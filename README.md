@@ -74,10 +74,10 @@ As of Mosaic 0.4.0 / DBR 13.3 LTS (subject to change in follow-on releases)...
 
 __Additional Notes:__ 
 
-As of Mosaic 0.4.0 (subject to change in follow-on releases)...
+Mosaic is a custom JVM library that extends spark, which has the following implications in DBR 13.3 LTS:
 
 1. [Unity Catalog](https://www.databricks.com/product/unity-catalog): Enforces process isolation which is difficult to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from other supported languages in Shared Access Clusters. 
-2. [Volumes](https://docs.databricks.com/en/connect/unity-catalog/volumes.html): Along the same principle of isolation, clusters (both assigned and shared access) can read Volumes via relevant built-in readers and writers or via custom python calls which do not involve any custom JVM code.
+2. [Volumes](https://docs.databricks.com/en/connect/unity-catalog/volumes.html): Along the same principle of isolation, clusters can read Volumes via relevant built-in (aka platform provided) readers and writers or via custom python calls which do not involve any custom JVM code.
 
 ### Mosaic 0.3.x Series
 
