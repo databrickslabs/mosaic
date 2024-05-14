@@ -9,7 +9,7 @@ library(sparklyr.nested)
 spark_home <- Sys.getenv("SPARK_HOME")
 spark_home_set(spark_home)
 
-install.packages("sparklyrMosaic_0.4.1.tar.gz", repos = NULL)
+install.packages("sparklyrMosaic_0.4.2.tar.gz", repos = NULL)
 library(sparklyrMosaic)
 
 # find the mosaic jar in staging

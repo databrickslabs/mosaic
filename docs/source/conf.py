@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.abspath('../../python'))
 # -- Project information -----------------------------------------------------
 
 project = 'Mosaic'
-copyright = '2022, Databricks Inc'
-author = 'Stuart Lynn, Milos Colic, Erni Durdevic, Robert Whiffin, Timo Roest'
+copyright = '2024, Databricks Inc'
+author = 'Milos Colic, Stuart Lynn, Michael Johns, Robert Whiffin'
 
 # The full version, including alpha/beta/rc tags
-release = "v0.4.1"
+release = "v0.4.2"
 
 
 # -- General configuration ---------------------------------------------------

@@ -7,12 +7,10 @@ __all__ = ["setup_gdal", "enable_gdal"]
 
 
 def setup_gdal(
-    to_fuse_dir: str = "/Workspace/Shared/geospatial/mosaic/gdal/jammy",
-    with_mosaic_pip: bool = False,
-    with_ubuntugis: bool = False,
-    script_out_name: str = "mosaic-gdal-init.sh",
-    override_mosaic_version: str = None,
-    jni_so_copy: bool = False,
+        to_fuse_dir: str = "/Workspace/Shared/geospatial/mosaic/gdal/jammy/0.4.2",
+        script_out_name: str = "mosaic-gdal-init.sh",
+        jni_so_copy: bool = False,
+        test_mode: bool = False
 ) -> bool:
     """
     Prepare GDAL init script and shared objects required for GDAL to run on spark.
@@ -21,8 +19,8 @@ def setup_gdal(
     a cluster restart is required.
 
     Notes:
-      (a) This is close in behavior to Mosaic < 0.4 series (prior to DBR 13), with new options
-          to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1)
+      (a) This is close in behavior to Mosaic < 0.4 series (prior to DBR 13),
+          now using jammy default (3.4.1)
       (b) `to_fuse_dir` can be one of `/Volumes/..`, `/Workspace/..`, `/dbfs/..`;
            however, you should use `setup_fuse_install()` for Volume based installs
 
@@ -30,33 +28,26 @@ def setup_gdal(
     ----------
     to_fuse_dir : str
             Path to write out the init script for GDAL installation;
-            default is '/Workspace/Shared/geospatial/mosaic/gdal/jammy'.
-    with_mosaic_pip : bool
-            Whether to configure a script that pip installs databricks-mosaic,
-            fixed to the current version; default is False.
-     with_ubuntugis : bool
-            Whether to use ubuntugis ppa for GDAL instead of built-in;
-            default is False.
+            default is '/Workspace/Shared/geospatial/mosaic/gdal/jammy/0.4.2'.
     script_out_name : str
             name of the script to be written;
             default is 'mosaic-gdal-init.sh'.
-    override_mosaic_version: str
-            String value to use to override the mosaic version to install,
-            e.g. '==0.4.0' or '<0.5,>=0.4';
-            default is None.
+    jni_so_copy : bool
+            if True, copy shared object to fuse dir and config script to use;
+            default is False
+    test_mode : bool
+            Only for unit tests.
 
-    Returns True unless resources fail to download.
+    Returns
     -------
+    True unless resources fail to download.
     """
     setup_mgr = SetupMgr(
         to_fuse_dir,
-        with_mosaic_pip=with_mosaic_pip,
-        with_ubuntugis=with_ubuntugis,
         script_out_name=script_out_name,
-        override_mosaic_version=override_mosaic_version,
-        jni_so_copy=jni_so_copy,
+        jni_so_copy=jni_so_copy
     )
-    return setup_mgr.configure()
+    return setup_mgr.configure(test_mode=test_mode)
 
 
 def enable_gdal(spark: SparkSession) -> None:

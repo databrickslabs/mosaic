@@ -32,6 +32,7 @@ package object mosaic {
     val MOSAIC_RASTER_RE_TILE_ON_READ = "retile_on_read"
 
     val MOSAIC_NO_DRIVER = "no_driver"
+    val MOSAIC_TEST_MODE = "spark.databricks.labs.mosaic.test.mode"
 
 
     def read: MosaicDataFrameReader = new MosaicDataFrameReader(SparkSession.builder().getOrCreate())

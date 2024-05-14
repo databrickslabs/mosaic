@@ -1,3 +1,13 @@
+## v0.4.2 [DBR 13.3 LTS]
+- Geopandas now fixed to "<0.14.4,>=0.14" due to conflict with minimum numpy version in geopandas 0.14.4.
+- H3 python changed from "==3.7.0" to "<4.0,>=3.7" to pick up patches.
+- Fixed an issue with fallback logic when deserializing subdatasets from a zip.
+- Adjusted data used to speed up a long-running test.
+- Streamlines setup_gdal and setup_fuse_install:
+    - init script and resource copy logic fixed to repo "main" (.so) / "latest" (.jar).
+    - added apt-get lock handling for native installs.
+    - removed support for UbuntuGIS PPA as GDAL version no longer compatible with jammy default (3.4.x).
+
 ## v0.4.1 [DBR 13.3 LTS]
 - Fixed python bindings for MosaicAnalyzer functions.
 - Added tiller functions, ST_AsGeoJSONTile and ST_AsMVTTile, for creating GeoJSON and MVT tiles as aggregations of geometries.

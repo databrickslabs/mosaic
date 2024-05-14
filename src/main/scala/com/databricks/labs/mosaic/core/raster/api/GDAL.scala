@@ -82,39 +82,63 @@ object GDAL {
     }
 
     /**
-      * Reads a raster from the given input data. If it is a byte array, it will
-      * read the raster from the byte array. If it is a string, it will read the
-      * raster from the path. If the path is a zip file, it will read the raster
-      * from the zip file. If the path is a subdataset, it will read the raster
-      * from the subdataset.
-      *
-      * @param inputRaster
-      *   The path to the raster. This path has to be a path to a single raster.
-      *   Rasters with subdatasets are supported.
-      * @return
-      *   Returns a Raster object.
-      */
+     * Reads a raster from the given input data.
+     * - If it is a byte array, it will read the raster from the byte array.
+     * - If it is a string, it will read the raster from the path.
+     * - Path may be a zip file.
+     * - Path may be a subdataset.
+     *
+     * @param inputRaster
+     *   The raster, based on inputDT. Path based rasters with subdatasets
+     *   are supported.
+     * @param createInfo
+     *   Mosaic creation info of the raster. Note: This is not the same as the
+     *   metadata of the raster. This is not the same as GDAL creation options.
+     * @param inputDT
+     *  [[DataType]] for the raster, either [[StringType]] or [[BinaryType]].
+     * @return
+     *   Returns a [[MosaicRasterGDAL]] object.
+     */
     def readRaster(
-        inputRaster: Any,
-        createInfo: Map[String, String],
-        inputDT: DataType
-    ): MosaicRasterGDAL = {
-        inputDT match {
-            case StringType =>
-                MosaicRasterGDAL.readRaster(createInfo)
-            case BinaryType =>
-                val bytes = inputRaster.asInstanceOf[Array[Byte]]
-                val raster = MosaicRasterGDAL.readRaster(bytes, createInfo)
-                // If the raster is coming as a byte array, we can't check for zip condition.
-                // We first try to read the raster directly, if it fails, we read it as a zip.
-                if (raster == null) {
-                    val parentPath = createInfo("parentPath")
-                    val zippedPath = s"/vsizip/$parentPath"
-                    MosaicRasterGDAL.readRaster(bytes, createInfo + ("path" -> zippedPath))
-                } else {
-                    raster
-                }
-            case _          => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
+                      inputRaster: Any,
+                      createInfo: Map[String, String],
+                      inputDT: DataType
+                  ): MosaicRasterGDAL = {
+        if (inputRaster == null) {
+            MosaicRasterGDAL(null, createInfo, -1)
+        } else {
+            inputDT match {
+                case _: StringType =>
+                    MosaicRasterGDAL.readRaster(createInfo)
+                case _: BinaryType =>
+                    val bytes = inputRaster.asInstanceOf[Array[Byte]]
+                    try {
+                        val rasterObj = MosaicRasterGDAL.readRaster(bytes, createInfo)
+                        if (rasterObj.raster == null) {
+                            val rasterZipObj = readParentZipBinary(bytes, createInfo)
+                            if (rasterZipObj.raster == null) {
+                                rasterObj // <- return initial
+                            } else {
+                                rasterZipObj
+                            }
+                        } else {
+                            rasterObj
+                        }
+                    } catch {
+                        case _: Throwable => readParentZipBinary(bytes, createInfo)
+                    }
+                case _ => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
+            }
+        }
+    }
+
+    private def readParentZipBinary(bytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL = {
+        try {
+            val parentPath = createInfo("parentPath")
+            val zippedPath = s"/vsizip/$parentPath"
+            MosaicRasterGDAL.readRaster(bytes, createInfo + ("path" -> zippedPath))
+        } catch {
+            case _: Throwable => MosaicRasterGDAL(null, createInfo, -1)
         }
     }
 
