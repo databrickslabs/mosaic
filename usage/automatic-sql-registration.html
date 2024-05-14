@@ -100,7 +100,7 @@ to your Spark / Databricks cluster to perform spatial queries or integrating Spa
 with a geospatial middleware component such as [Geoserver](<a class="reference external" href="https://geoserver.org/">https://geoserver.org/</a>).</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Hive UDFs), but not Shared Access due
+<p>Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Spark Expressions), but not Shared Access due
 to <a class="reference external" href="https://www.databricks.com/product/unity-catalog">Unity Catalog</a> API changes, more <a class="reference external" href="https://docs.databricks.com/en/udf/index.html">here</a>.</p>
 </div>
 <section id="pre-requisites">
@@ -217,7 +217,7 @@ or alternatively in python/scala code: spark.conf.set(“spark.databricks.labs.m
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, Databricks Inc.</p>
+    <p>&#169; Copyright 2024, Databricks Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

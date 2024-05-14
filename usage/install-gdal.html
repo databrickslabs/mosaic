@@ -119,9 +119,8 @@ the <code class="code docutils literal notranslate"><span class="pre">setup_gdal
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p>This is close in behavior to Mosaic &lt; 0.4 series (prior to DBR 13), with new options
-to pip install Mosaic for either ubuntugis gdal (3.4.3) or jammy default (3.4.1).</p></li>
-<li><p>Param “to_fuse_dir” can be one of “/Volumes/..”, “/Workspace/..”, “/dbfs/..”;
+<li><p>This is close in behavior to Mosaic &lt; 0.4 series (prior to DBR 13), it installs jammy default GDAL (3.4.1).</p></li>
+<li><p>Param <strong>to_fuse_dir</strong> can be one of <strong>/Volumes/..</strong>, <strong>/Workspace/..</strong>, <strong>/dbfs/..</strong>;
 however, you should consider <code class="code docutils literal notranslate"><span class="pre">setup_fuse_install()</span></code> for Volume based installs as that
 exposes more options, to include copying JAR and JNI Shared Objects.</p></li>
 </ul>
@@ -136,21 +135,12 @@ All of the listed parameters are optional. You can have even more control with <
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>to_fuse_dir</strong> (<em>str</em>) – Path to write out the init script for GDAL installation;
 default is “/Workspace/Shared/geospatial/mosaic/gdal/jammy”.</p></li>
-<li><p><strong>with_mosaic_pip</strong> (<em>bool</em>) – Whether to configure a script that pip installs databricks-mosaic,
-fixed to the current version; default is False.</p></li>
-<li><p><strong>with_ubuntugis</strong> (<em>bool</em>) – Whether to use ubuntugis ppa for GDAL instead of built-in;
-default is False.</p></li>
-<li><p><strong>script_out_name</strong> (<em>str</em>) – name of the script to be written;
-default is “mosaic-gdal-init.sh”.</p></li>
-<li><p><strong>override_mosaic_version</strong> (<em>str</em>) – String value to use to override the mosaic version to install,
-e.g. “==0.4.0” or “&lt;0.5,&gt;=0.4”; default is None.</p></li>
+<li><p><strong>script_out_name</strong> (<em>str</em>) – Name of the script to be written; default is “mosaic-gdal-init.sh”.</p></li>
+<li><p><strong>jni_so_copy</strong> (<em>bool</em>) – Whether to copy shared object to fuse dir and config script to use; default is False.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-<dt class="field-odd">Example<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
+<dt class="field-even">Example<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
 </dl>
 </dd></dl>
 
@@ -162,9 +152,7 @@ mos.setup_gdal()
 +-----------------------------------------------------------------------------------------------------------+
 | ::: Install setup complete :::                                                                            |
 +-----------------------------------------------------------------------------------------------------------+
-| - Settings: &#39;with_mosaic_pip&#39;? False, &#39;with_gdal&#39;? True, &#39;with_ubuntugis&#39;? False                          |
-|             &#39;jar_copy&#39;? False, &#39;jni_so_copy&#39;? False, &#39;override_mosaic_version&#39;? None                      |
-| - Derived:  &#39;mosaic_version&#39;? 0.4.0, &#39;github_version&#39;? 0.4.0, &#39;release_version&#39;? None, &#39;pip_str&#39;? ==0.4.0 |
+| - Settings: &#39;jar_copy&#39;? False, &#39;jni_so_copy&#39;? False                      |
 | - Fuse Dir: &#39;/Workspace/Shared/geospatial/mosaic/gdal/jammy&#39;                                              |
 | - Init Script: configured and stored at &#39;mosaic-gdal-init.sh&#39;; add to your cluster and restart,           |
 |               more at https://docs.databricks.com/en/init-scripts/cluster-scoped.html                     |
@@ -198,18 +186,12 @@ code at the top of the notebook:</p>
 GDAL 3.4.1, released 2021/12/27
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>You can configure init script from default ubuntu GDAL (3.4.1) to ubuntugis ppa &#64; <a class="reference external" href="https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa">https://launchpad.net/~ubuntugis/+archive/ubuntu/ppa</a> (3.4.3)
-with <cite>setup_gdal(with_ubuntugis=True)</cite></p>
-</div>
 </section>
 </section>
 <section id="gdal-configuration">
 <h2>GDAL Configuration<a class="headerlink" href="#gdal-configuration" title="Permalink to this heading"></a></h2>
 <p>Here are spark session configs available for raster, e.g. <code class="code docutils literal notranslate"><span class="pre">spark.conf.set(&quot;&lt;key&gt;&quot;,</span> <span class="pre">&quot;&lt;val&gt;&quot;)</span></code>.</p>
-<table class="docutils align-default" id="id4">
-<caption><span class="caption-text">Title</span><a class="headerlink" href="#id4" title="Permalink to this table"></a></caption>
+<table class="docutils align-default">
 <colgroup>
 <col style="width: 25%" />
 <col style="width: 25%" />
@@ -224,15 +206,60 @@ with <cite>setup_gdal(with_ubuntugis=True)</cite></p>
 <tbody>
 <tr class="row-even"><td><p>spark.databricks.labs.mosaic.raster.checkpoint</p></td>
 <td><p>“/dbfs/tmp/mosaic/raster/checkpoint”</p></td>
-<td><p>Checkpoint location, see <span class="xref std std-ref">rst_maketiles</span> for more</p></td>
+<td><p>Checkpoint location, e.g. <span class="xref std std-ref">rst_maketiles</span></p></td>
 </tr>
-<tr class="row-odd"><td><p>spark.databricks.labs.mosaic.raster.tmp.prefix</p></td>
+<tr class="row-odd"><td><p>spark.databricks.labs.mosaic.raster.use.checkpoint</p></td>
+<td><p>“false”</p></td>
+<td><p>Checkpoint for session, in 0.4.2+</p></td>
+</tr>
+<tr class="row-even"><td><p>spark.databricks.labs.mosaic.raster.tmp.prefix</p></td>
 <td><p>“” (will use “/tmp”)</p></td>
 <td><p>Local directory for workers</p></td>
 </tr>
-<tr class="row-even"><td><p>spark.databricks.labs.mosaic.raster.blocksize</p></td>
+<tr class="row-odd"><td><p>spark.databricks.labs.mosaic.raster.blocksize</p></td>
 <td><p>“128”</p></td>
 <td><p>Blocksize in pixels, see <span class="xref std std-ref">rst_convolve</span> and <span class="xref std std-ref">rst_filter</span> for more</p></td>
+</tr>
+</tbody>
+</table>
+<p>GDAL is configured as follows in <a class="reference external" href="https://github.com/databrickslabs/mosaic/blob/main/src/main/scala/com/databricks/labs/mosaic/gdal/MosaicGDAL.scala">MosaicGDAL</a> class:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Config</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GDAL_VRT_ENABLE_PYTHON</p></td>
+<td><p>“YES”</p></td>
+</tr>
+<tr class="row-odd"><td><p>GDAL_DISABLE_READDIR_ON_OPEN</p></td>
+<td><p>“TRUE”</p></td>
+</tr>
+<tr class="row-even"><td><p>CPL_TMPDIR</p></td>
+<td><p>“&lt;CPL_TMPDIR&gt;”</p></td>
+</tr>
+<tr class="row-odd"><td><p>GDAL_PAM_PROXY_DIR</p></td>
+<td><p>“&lt;GDAL_PAM_PROXY_DIR&gt;”</p></td>
+</tr>
+<tr class="row-even"><td><p>GDAL_PAM_ENABLED</p></td>
+<td><p>“YES”</p></td>
+</tr>
+<tr class="row-odd"><td><p>CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE</p></td>
+<td><p>“NO”</p></td>
+</tr>
+<tr class="row-even"><td><p>CPL_LOG</p></td>
+<td><p>“&lt;CPL_TMPDIR&gt;/gdal.log”</p></td>
+</tr>
+<tr class="row-odd"><td><p>GDAL_CACHEMAX</p></td>
+<td><p>“512”</p></td>
+</tr>
+<tr class="row-even"><td><p>GDAL_NUM_THREADS</p></td>
+<td><p>“ALL_CPUS”</p></td>
 </tr>
 </tbody>
 </table>
@@ -250,7 +277,7 @@ with <cite>setup_gdal(with_ubuntugis=True)</cite></p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, Databricks Inc.</p>
+    <p>&#169; Copyright 2024, Databricks Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
