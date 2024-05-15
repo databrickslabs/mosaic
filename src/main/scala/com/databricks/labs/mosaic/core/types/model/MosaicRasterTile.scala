@@ -4,7 +4,6 @@ import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.expressions.raster.{buildMapString, extractMap}
-import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String

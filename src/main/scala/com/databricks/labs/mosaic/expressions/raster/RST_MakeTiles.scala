@@ -124,7 +124,8 @@ case class RST_MakeTiles(
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
 
-        val tileType = dataType.asInstanceOf[StructType].find(_.name == "raster").get.dataType
+//        val tileType = dataType.asInstanceOf[StructType].find(_.name == "raster").get.dataType
+        val rasterType = dataType.asInstanceOf[RasterTileType].rasterType
 
         val rawDriver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val rawInput = inputExpr.eval(input)
@@ -138,7 +139,7 @@ case class RST_MakeTiles(
             val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver, "path" -> path)
             val raster = GDAL.readRaster(rawInput, createInfo, inputExpr.dataType)
             val tile = MosaicRasterTile(null, raster)
-            val row = tile.formatCellId(indexSystem).serialize(tileType)
+            val row = tile.formatCellId(indexSystem).serialize(rasterType)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
             Seq(InternalRow.fromSeq(Seq(row)))
@@ -157,7 +158,7 @@ case class RST_MakeTiles(
                 }
             val size = if (targetSize <= 0) 64 else targetSize
             var tiles = ReTileOnRead.localSubdivide(readPath, PathUtils.NO_PATH_STRING, size)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize(tileType))
+            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType))
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(readPath))
             tiles = null

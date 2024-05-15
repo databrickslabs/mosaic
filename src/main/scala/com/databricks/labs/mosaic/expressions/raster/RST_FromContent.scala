@@ -33,12 +33,10 @@ case class RST_FromContent(
       with Serializable
       with NullIntolerant
       with CodegenFallback {
-    
-    val tileType: DataType = BinaryType
 
     override def dataType: DataType = {
         GDAL.enable(expressionConfig)
-        RasterTileType(expressionConfig.getCellIdType, tileType, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(expressionConfig.getCellIdType, BinaryType, expressionConfig.isRasterUseCheckpoint)
     }
 
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
@@ -65,6 +63,7 @@ case class RST_FromContent(
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
+        val rasterType = dataType.asInstanceOf[RasterTileType].rasterType
         val driver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val ext = GDAL.getExtension(driver)
         var rasterArr = contentExpr.eval(input).asInstanceOf[Array[Byte]]
@@ -74,7 +73,7 @@ case class RST_FromContent(
             val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver)
             var raster = MosaicRasterGDAL.readRaster(rasterArr, createInfo)
             var tile = MosaicRasterTile(null, raster)
-            val row = tile.formatCellId(indexSystem).serialize(tileType)
+            val row = tile.formatCellId(indexSystem).serialize(rasterType)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
             rasterArr = null
@@ -91,7 +90,7 @@ case class RST_FromContent(
 
             // split to tiles up to specifed threshold
             var tiles = ReTileOnRead.localSubdivide(tmpPath, PathUtils.NO_PATH_STRING, targetSize)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize(tileType))
+            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType))
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(tmpPath))
             rasterArr = null
