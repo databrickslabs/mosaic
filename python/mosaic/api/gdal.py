@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 
 import subprocess
 
-__all__ = ["setup_gdal", "enable_gdal"]
+__all__ = ["setup_gdal", "enable_gdal", "is_use_checkpoint", "get_checkpoint_path"]
 
 
 def setup_gdal(

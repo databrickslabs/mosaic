@@ -1,5 +1,7 @@
 package com.databricks.labs.mosaic.gdal
 
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
 import com.databricks.labs.mosaic.utils.PathUtils
@@ -106,6 +108,7 @@ object MosaicGDAL extends Logging {
                     throw exception
             }
         } else {
+            configureGDAL(expressionConfig)
             configureCheckpoint(expressionConfig)
         }
     }
@@ -150,19 +153,18 @@ object MosaicGDAL extends Logging {
         spark.conf.set(MOSAIC_RASTER_CHECKPOINT, withCheckpointPath)
         spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "true")
 
-        // [c] enable gdal from configs
+        // [c] Init MosaicContext
+        // - this is necessary to register with the latest context
+        // - may be a re-init of the Context which is ok
+        val expressionConfig = MosaicExpressionConfig(spark)
+        val indexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+        val geometryAPI =  GeometryAPI.apply(expressionConfig.getGeometryAPI)
+        MosaicContext.build(indexSystem, geometryAPI)
+
+
+        // [d] enable gdal from configs
         enableGDAL(spark)
         logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides existing spark confs).")
-
-        // [d] re-register expressions
-        // - needed to update the MosaicConfig used.
-        Try {
-            MosaicContext.context().register(spark)
-            logInfo("... re-registered expressions")
-        }.getOrElse(
-          logWarning("...Unable to re-register expressions (is MosaicContext initialized?)")
-        )
-
     }
 
     /** Loads the shared objects required for GDAL. */
