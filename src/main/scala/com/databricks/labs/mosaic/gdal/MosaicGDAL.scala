@@ -86,7 +86,13 @@ object MosaicGDAL extends Logging {
         }
     }
 
-    /** Enables the GDAL environment, called from driver. */
+    /**
+      * Enables the GDAL environment, called from driver.
+      * - see mosaic_context.py as well for use.
+      *
+      * @param spark
+      *   spark session to use.
+      */
     def enableGDAL(spark: SparkSession): Unit = {
         // refresh configs in case spark had changes
         val mosaicConfig = MosaicExpressionConfig(spark)
@@ -120,43 +126,87 @@ object MosaicGDAL extends Logging {
       *   checkpoint location.
       * - sets [[checkpointPath]] to provided path.
       * - sets [[useCheckpoint]] to "true".
+      * - see mosaic_context.py as well for use.
       * @param spark
       *   spark session to use.
       * @param withCheckpointPath
       *   path to set.
       */
     def enableGDALWithCheckpoint(spark: SparkSession, withCheckpointPath: String): Unit = {
-        // [a] initial checks
-        // - will make dirs if conditions met
+        // - set spark config to enable checkpointing
+        // - initial checks + update path
+        // - also inits MosaicContext
+        // - also enables GDAL and refreshes accessors
+        spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "true")
+        updateCheckpointPath(spark, withCheckpointPath)
+        logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides existing spark confs).")
+    }
+
+    /**
+      * Update the checkpoint path.
+      * - will make dirs if conditions met.
+      * - will make sure the session is consistent with these settings.
+      * - see mosaic_context.py as well for use.
+      *
+      * @param spark
+      *   spark session to use.
+      * @param path
+      *   supported cloud object path to use.
+      */
+    def updateCheckpointPath(spark: SparkSession, path: String): Unit = {
         val isTestMode = spark.conf.get(MOSAIC_TEST_MODE, "false").toBoolean
-        if (withCheckpointPath == null) {
+        if (path == null) {
             val msg = "Null checkpoint path provided."
             logError(msg)
             throw new NullPointerException(msg)
-        } else if (!isTestMode && !PathUtils.isFuseLocation(withCheckpointPath)) {
+        } else if (!isTestMode && !PathUtils.isFuseLocation(path)) {
             val msg = "Checkpoint path must be a (non-local) fuse location."
             logError(msg)
-            throw new InvalidPathException(withCheckpointPath, msg)
-        } else if (!Files.exists(Paths.get(withCheckpointPath))) {
-            if (withCheckpointPath.startsWith("/Volumes/")) {
+            throw new InvalidPathException(path, msg)
+        } else if (!Files.exists(Paths.get(path))) {
+            if (path.startsWith("/Volumes/")) {
                 val msg = "Volume checkpoint path doesn't exist and must be created through Databricks catalog."
                 logError(msg)
                 throw new FileNotFoundException(msg)
             } else {
-                val dir = new File(withCheckpointPath)
+                val dir = new File(path)
                 dir.mkdirs
             }
         }
+        spark.conf.set(MOSAIC_RASTER_CHECKPOINT, path)
+        updateMosaicContext(spark)
+    }
 
-        // [b] set spark configs for checkpoint
-        // - will make sure the session is consistent with these settings.
-        spark.conf.set(MOSAIC_RASTER_CHECKPOINT, withCheckpointPath)
+    /**
+      * Set spark config to disable checkpointing.
+      *  - will make sure the session is consistent with these settings.
+      *  - see mosaic_context.py as well for use.
+      *
+      * @param spark
+      *   spark session to use.
+      */
+    def setCheckpointOff(spark: SparkSession): Unit = {
+        spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "false")
+        updateMosaicContext(spark)
+    }
+
+    /**
+      * Set spark config to enable checkpointing.
+      *  - will make sure the session is consistent with these settings.
+      *  - see mosaic_context.py as well for use.
+      *
+      * @param spark
+      *    Spark session to use.
+      */
+    def setCheckpointOn(spark: SparkSession): Unit = {
         spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "true")
+        updateMosaicContext(spark)
+    }
 
-        // [c] Init MosaicContext
-        // - this is necessary to register with the latest context
-        // - may be a re-init of the Context which is ok
+    private def updateMosaicContext(spark: SparkSession): Unit = {
+        // - necessary to register with the latest context
         // - registers spark expressions with the new config
+        // - will make sure the session is consistent with these settings
         if (!MosaicContext.hasContext) {
             val mosaicConfig = MosaicExpressionConfig(spark)
             val indexSystem = IndexSystemFactory.getIndexSystem(mosaicConfig.getIndexSystem)
@@ -165,12 +215,7 @@ object MosaicGDAL extends Logging {
         }
         val mc = MosaicContext.context()
         mc.register(spark)
-
-        // [d] enable gdal from configs
-        // - may be a re-init which is ok
-        // - if so, will just update configs
         enableGDAL(spark)
-        logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides existing spark confs).")
     }
 
     /** Loads the shared objects required for GDAL. */

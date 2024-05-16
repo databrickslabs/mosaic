@@ -53,7 +53,8 @@ class MosaicContext:
         self._context = self._mosaicContextClass.build(IndexSystem, GeometryAPIClass())
 
     def invoke_function(self, name: str, *args: Any) -> MosaicColumn:
-        func = getattr(self._jmosaicContext().functions(), name)
+        self._refreshMosaicContext()  # <- refresh
+        func = getattr(self._context.functions(), name)
         return MosaicColumn(func(*args))
 
     @property
@@ -64,14 +65,23 @@ class MosaicContext:
     def index_system(self):
         return self._index_system
 
-    @property
-    def _jmosaicContext(self):
+    def _refreshMosaicContext(self):
         self._context = self._mosaicContextClass.context()
-        return self._context
 
     def enable_gdal(self, spark: SparkSession, with_checkpoint_path: str = None):
         if with_checkpoint_path:
             self._mosaicGDALObject.enableGDALWithCheckpoint(spark._jsparkSession, with_checkpoint_path)
         else:
             self._mosaicGDALObject.enableGDAL(spark._jsparkSession)
-        self._context = self._mosaicContextClass.context() # <- refresh context
+        self._refreshMosaicContext()  # <- refresh
+
+    def update_checkpoint_path(self, spark: SparkSession, path: str):
+        self._mosaicGDALObject.updateCheckpointPath(spark._jsparkSession, path)
+
+    def set_checkpoint_off(self, spark: SparkSession):
+        self._mosaicGDALObject.setCheckpointOff(spark._jsparkSession)
+
+    def set_checkpoint_on(self, spark: SparkSession):
+        self._mosaicGDALObject.setCheckpointOn(spark._jsparkSession)
+
+
