@@ -16,7 +16,7 @@ import scala.language.postfixOps
 import scala.util.Try
 
 //noinspection DuplicatedCode
-/** GDAL environment preparation and configuration. */
+/** GDAL environment preparation and configuration. Some functions only for driver. */
 object MosaicGDAL extends Logging {
 
     private val usrlibsoPath = "/usr/lib/libgdal.so"
@@ -36,6 +36,7 @@ object MosaicGDAL extends Logging {
     var isEnabled = false
     var checkpointPath: String = _
     var useCheckpoint: Boolean = _
+
 
     // Only use this with GDAL rasters
     val WSG84: SpatialReference = {
@@ -85,16 +86,16 @@ object MosaicGDAL extends Logging {
         }
     }
 
-    /** Enables the GDAL environment. */
+    /** Enables the GDAL environment, called from driver. */
     def enableGDAL(spark: SparkSession): Unit = {
         // refresh configs in case spark had changes
-        val expressionConfig = MosaicExpressionConfig(spark)
+        val mosaicConfig = MosaicExpressionConfig(spark)
 
         if (!wasEnabled(spark) && !isEnabled) {
             Try {
                 isEnabled = true
                 loadSharedObjects()
-                configureGDAL(expressionConfig)
+                configureGDAL(mosaicConfig)
                 gdal.AllRegister()
                 spark.conf.set(GDAL_ENABLED, "true")
             } match {
@@ -108,12 +109,12 @@ object MosaicGDAL extends Logging {
                     throw exception
             }
         } else {
-            configureGDAL(expressionConfig)
+            configureCheckpoint(mosaicConfig)
         }
     }
 
     /**
-      * Enables the GDAL environment with checkpointing.
+      * Enables the GDAL environment with checkpointing, called from driver.
       * - alternative to setting spark configs prior to init.
       * - can be called multiple times in a session as you want to change
       *   checkpoint location.
@@ -156,12 +157,14 @@ object MosaicGDAL extends Logging {
         // - this is necessary to register with the latest context
         // - may be a re-init of the Context which is ok
         // - registers spark expressions with the new config
-        val expressionConfig = MosaicExpressionConfig(spark)
-        val indexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
-        val geometryAPI =  GeometryAPI.apply(expressionConfig.getGeometryAPI)
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        if (!MosaicContext.hasContext) {
+            val mosaicConfig = MosaicExpressionConfig(spark)
+            val indexSystem = IndexSystemFactory.getIndexSystem(mosaicConfig.getIndexSystem)
+            val geometryAPI =  GeometryAPI.apply(mosaicConfig.getGeometryAPI)
+            MosaicContext.build(indexSystem, geometryAPI)
+        }
+        val mc = MosaicContext.context()
         mc.register(spark)
-
 
         // [d] enable gdal from configs
         // - may be a re-init which is ok

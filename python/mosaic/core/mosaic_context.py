@@ -50,11 +50,10 @@ class MosaicContext:
 
         IndexSystem = self._indexSystemFactory.getIndexSystem(self._index_system)
         GeometryAPIClass = getattr(self._mosaicPackageObject, self._geometry_api)
-
         self._context = self._mosaicContextClass.build(IndexSystem, GeometryAPIClass())
 
     def invoke_function(self, name: str, *args: Any) -> MosaicColumn:
-        func = getattr(self._context.functions(), name)
+        func = getattr(self._jmosaicContext().functions(), name)
         return MosaicColumn(func(*args))
 
     @property
@@ -67,10 +66,12 @@ class MosaicContext:
 
     @property
     def _jmosaicContext(self):
+        self._context = self._mosaicContextClass.context()
         return self._context
 
     def enable_gdal(self, spark: SparkSession, with_checkpoint_path: str = None):
         if with_checkpoint_path:
-            return self._mosaicGDALObject.enableGDALWithCheckpoint(spark._jsparkSession, with_checkpoint_path)
+            self._mosaicGDALObject.enableGDALWithCheckpoint(spark._jsparkSession, with_checkpoint_path)
         else:
-            return self._mosaicGDALObject.enableGDAL(spark._jsparkSession)
+            self._mosaicGDALObject.enableGDAL(spark._jsparkSession)
+        self._context = self._mosaicContextClass.context() # <- refresh context

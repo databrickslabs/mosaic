@@ -1,3 +1,13 @@
+## v0.4.3 [DBR 13.3 LTS]
+- Pyspark requirement removed from python setup.cfg as it is supplied by DBR
+- iPython dependency limited to "<8.11,>=7.4.2" for both DBR and keplergl-jupyter
+- Python version limited to "<3.11,>=3.10" for DBR
+- Fixes 'raster_to_grid' reader tessellation issue affecting some NetCDFs; also adding repartitioning for better performance. 
+- Expanded support for fuse-based checkpointing (persisted raster storage), managed through:
+  - spark config 'spark.databricks.labs.mosaic.raster.use.checkpoint' in addition to 'spark.databricks.labs.mosaic.raster.checkpoint'.
+  - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`.
+  - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path) function`.
+
 ## v0.4.2 [DBR 13.3 LTS]
 - Geopandas now fixed to "<0.14.4,>=0.14" due to conflict with minimum numpy version in geopandas 0.14.4.
 - H3 python changed from "==3.7.0" to "<4.0,>=3.7" to pick up patches.

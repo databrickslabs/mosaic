@@ -21,6 +21,10 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
     def updateSparkConf(): Unit = {
         // populate initial set configs
         val spark = SparkSession.builder().getOrCreate()
+        updateSparkConf(spark)
+    }
+
+    def updateSparkConf(spark: SparkSession): Unit = {
         val sparkConf = spark.sparkContext.getConf
         configs.foreach { case (k, v) => sparkConf.set(k, v) }
 
