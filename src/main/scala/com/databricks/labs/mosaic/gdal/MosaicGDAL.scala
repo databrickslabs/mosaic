@@ -109,7 +109,6 @@ object MosaicGDAL extends Logging {
             }
         } else {
             configureGDAL(expressionConfig)
-            configureCheckpoint(expressionConfig)
         }
     }
 
@@ -156,13 +155,17 @@ object MosaicGDAL extends Logging {
         // [c] Init MosaicContext
         // - this is necessary to register with the latest context
         // - may be a re-init of the Context which is ok
+        // - registers spark expressions with the new config
         val expressionConfig = MosaicExpressionConfig(spark)
         val indexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
         val geometryAPI =  GeometryAPI.apply(expressionConfig.getGeometryAPI)
-        MosaicContext.build(indexSystem, geometryAPI)
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(spark)
 
 
         // [d] enable gdal from configs
+        // - may be a re-init which is ok
+        // - if so, will just update configs
         enableGDAL(spark)
         logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides existing spark confs).")
     }
