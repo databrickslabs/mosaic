@@ -109,7 +109,7 @@ class MosaicContext:
         self._mosaicGDALObject.setCheckpointOn(spark._jsparkSession)
 
     #################################################################
-    ## PROPERTY GETTERS
+    # PROPERTY ACCESSORS + GETTERS
     #################################################################
 
     @property
@@ -120,14 +120,11 @@ class MosaicContext:
     def index_system(self):
         return self._index_system
 
-    @property
     def is_use_checkpoint(self) -> bool:
         return self._mosaicGDALObject.isUseCheckpoint()
 
-    @property
     def get_checkpoint_path(self) -> str:
         return self._mosaicGDALObject.getCheckpointPath()
 
-    @property
     def has_context(self) -> bool:
         return self._mosaicContextClass.hasContext()

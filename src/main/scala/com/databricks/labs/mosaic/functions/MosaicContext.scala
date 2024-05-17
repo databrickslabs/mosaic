@@ -549,6 +549,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
     }
 
+    def hasContext: Boolean = this.hasContext
+
     def getGeometryAPI: GeometryAPI = this.geometryAPI
 
     def getIndexSystem: IndexSystem = this.indexSystem
@@ -1056,7 +1058,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 object MosaicContext extends Logging {
 
     var _tmpDir: String = ""
-    val mosaicVersion: String = "0.4.2"
+    val mosaicVersion: String = "0.4.3"
 
     private var instance: Option[MosaicContext] = None
 

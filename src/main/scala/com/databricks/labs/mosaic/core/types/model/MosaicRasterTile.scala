@@ -92,8 +92,7 @@ case class MosaicRasterTile(
 
     /**
       * Serialize to spark internal representation.
-      * - enforces spark config to turn checkpointing on for all functions in 0.4.2
-      * - more at [[com.databricks.labs.mosaic.gdal.MosaicGDAL]].
+      *
       * @param rasterDataType
       *    How to encode the raster.
       *    - Options are [[StringType]] or [[BinaryType]]
@@ -129,6 +128,7 @@ case class MosaicRasterTile(
 
     /**
       * Encodes the raster according to the [[DataType]].
+      *
       * @param rasterDataType
       *   Specify [[BinaryType]] for byte array or [[StringType]] for path,
       *   as used in checkpointing.
@@ -155,6 +155,7 @@ object MosaicRasterTile {
     /**
       * Smart constructor based on Spark internal instance.
       * - Can handle based on provided raster type.
+      *
       * @param row
       *   An instance of [[InternalRow]].
       * @param idDataType

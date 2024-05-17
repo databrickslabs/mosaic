@@ -37,7 +37,7 @@ case class RST_CombineAvgAgg(
     override val nullable: Boolean = false
     override lazy val dataType: DataType = RasterTileType(
         expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
-    lazy val tileType: DataType = dataType.asInstanceOf[RasterTileType].rasterType
+    lazy val rasterType: DataType = dataType.asInstanceOf[RasterTileType].rasterType
     override def prettyName: String = "rst_combine_avg_agg"
     val cellIDType: DataType = expressionConfig.getCellIdType
 
@@ -74,7 +74,7 @@ case class RST_CombineAvgAgg(
         } else {
 
             // Do do move the expression
-            var tiles = buffer.map(row => deserializeTile(row.asInstanceOf[InternalRow], cellIDType, tileType))
+            var tiles = buffer.map(row => deserializeTile(row.asInstanceOf[InternalRow], cellIDType, rasterType))
             buffer.clear()
 
             // If merging multiple index rasters, the index value is dropped
@@ -83,7 +83,7 @@ case class RST_CombineAvgAgg(
 
             val result = MosaicRasterTile(idx, combined)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(tileType)
+                .serialize(rasterType)
 
             tiles.foreach(RasterCleaner.dispose)
             RasterCleaner.dispose(result)

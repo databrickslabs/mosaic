@@ -24,7 +24,7 @@ object PathUtils {
       * @param path
       */
     def cleanUpPath(path: String): Unit = {
-        // 0.4.2 - new function
+        // 0.4.3 - new function
         val isSD = isSubdataset(path)
         val filePath = if (isSD) fromSubdatasetPath(path) else path
         val pamFilePath = s"$filePath.aux.xml"
@@ -197,7 +197,7 @@ object PathUtils {
       *   True if path is in a fuse location.
       */
     def isFuseLocation(path: String): Boolean = {
-        // 0.4.2 - new function
+        // 0.4.3 - new function
         val p = getCleanPath(path)
         val isFuse = p match {
             case _ if (
