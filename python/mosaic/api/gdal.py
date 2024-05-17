@@ -1,9 +1,14 @@
 from .fuse import SetupMgr
+from mosaic.config import config
 from pyspark.sql import SparkSession
 
 import subprocess
 
-__all__ = ["setup_gdal", "enable_gdal", "is_use_checkpoint", "get_checkpoint_path"]
+__all__ = [
+    "setup_gdal", "enable_gdal",
+    "update_checkpoint_path", "set_checkpoint_on", "set_checkpoint_off",
+    "has_context", "is_use_checkpoint", "get_checkpoint_path"
+]
 
 
 def setup_gdal(
@@ -67,15 +72,7 @@ def enable_gdal(spark: SparkSession, with_checkpoint_path: str = None) -> None:
     -------
     """
     try:
-        sc = spark.sparkContext
-        mosaicGDALObject = getattr(
-            sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
-        )
-        if with_checkpoint_path:
-            mosaicGDALObject.enableGDALWithCheckpoint(spark._jsparkSession, with_checkpoint_path)
-        else:
-            mosaicGDALObject.enableGDAL(spark._jsparkSession)
-
+        config.mosaic_context.enable_gdal(spark, with_checkpoint_path=with_checkpoint_path)
         print("GDAL enabled.\n")
         if with_checkpoint_path:
             print(f"checkpoint path '{with_checkpoint_path}' configured for this session.")
@@ -94,17 +91,59 @@ def enable_gdal(spark: SparkSession, with_checkpoint_path: str = None) -> None:
         print("Error: " + str(e))
 
 
-def is_use_checkpoint(spark: SparkSession) -> bool:
-    sc = spark.sparkContext
-    mosaicGDALObject = getattr(
-        sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
-    )
-    return mosaicGDALObject.isUseCheckpoint()
+def update_checkpoint_path(spark: SparkSession, path: str):
+    """
+    Change the checkpoint location; does not adjust checkpoint on/off (stays as-is).
+    :param spark: session to use.
+    :param path: new path.
+    """
+    config.mosaic_context.update_checkpoint_path(spark,path)
 
 
-def get_checkpoint_path(spark: SparkSession) -> str:
-    sc = spark.sparkContext
-    mosaicGDALObject = getattr(
-        sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
-    )
-    return mosaicGDALObject.getCheckpointPath()
+def set_checkpoint_off(spark: SparkSession):
+    """
+    Turn off checkpointing.
+    :param spark: session to use.
+    """
+    config.mosaic_context.set_checkpoint_off(spark)
+
+
+def set_checkpoint_on(spark: SparkSession):
+    """
+    Turn on checkpointing, will use the configured path.
+    :param spark: session to use.
+    """
+    config.mosaic_context.set_checkpoint_on(spark)
+
+
+#################################################################
+## GETTERS
+#################################################################
+
+
+def has_context() -> bool:
+    """
+    This is run on the driver, assumes enable.py already invoked.
+    :return: True if the mosaic context has been initialized;
+             otherwise False.
+    """
+    try:
+        return config.mosaic_context.has_context()
+    except Exception as e:
+        return False
+
+
+def is_use_checkpoint() -> bool:
+    """
+    This is run on the driver, assumes enable.py already invoked.
+    :return: checkpoint on/off; otherwise exception.
+    """
+    return config.mosaic_context.is_use_checkpoint()
+
+
+def get_checkpoint_path() -> str:
+    """
+    This is run on the driver, assumes enable.py already invoked.
+    :return: checkpoint path or exception.
+    """
+    return config.mosaic_context.get_checkpoint_path()

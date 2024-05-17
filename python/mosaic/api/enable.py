@@ -77,19 +77,16 @@ def enable_mosaic(
         print(f"...set 'spark.databricks.labs.mosaic.jar.path' to '{jar_path}'")
     if log_info:
         spark.sparkContext.setLogLevel("info")
+
+    # Config global objects
     config.mosaic_spark = spark
     _ = MosaicLibraryHandler(config.mosaic_spark, log_info=log_info)
-    config.mosaic_context = MosaicContext(config.mosaic_spark)
+    config.mosaic_context = MosaicContext(spark)
+    config.mosaic_context.register(spark)
 
-    # Register SQL functions
-    optionClass = getattr(spark._sc._jvm.scala, "Option$")
-    optionModule = getattr(optionClass, "MODULE$")
-    config.mosaic_context._context.register(
-        spark._jsparkSession, optionModule.apply(None)
-    )
-
-    isSupported = config.mosaic_context._context.checkDBR(spark._jsparkSession)
-    if not isSupported:
+    _jcontext = config.mosaic_context.jContext()
+    is_supported = _jcontext.checkDBR(spark._jsparkSession)
+    if not is_supported:
         # unexpected - checkDBR returns true or throws exception
         print("""WARNING: checkDBR returned False.""")
 
