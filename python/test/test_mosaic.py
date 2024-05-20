@@ -1,5 +1,4 @@
 from pyspark.sql.functions import _to_java_column, col
-
 from .context import MosaicContext, MosaicLibraryHandler
 from .utils import SparkTestCase
 
@@ -7,6 +6,11 @@ from .utils import SparkTestCase
 class TestMosaicContext(SparkTestCase):
     def setUp(self) -> None:
         return super().setUp()
+
+    def test_has_context(self):
+        _ = MosaicLibraryHandler(self.spark)
+        context = MosaicContext(self.spark)
+        self.assertTrue(context.has_context(), "JVM context should be available after python init.")
 
     def test_invoke_function(self):
         _ = MosaicLibraryHandler(self.spark)

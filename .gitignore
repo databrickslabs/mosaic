@@ -161,3 +161,6 @@ spark-warehouse
 docker/.m2/
 /python/notebooks/
 /scripts/m2/
+/python/mosaic_test/
+/python/checkpoint/
+/python/checkpoint-new/

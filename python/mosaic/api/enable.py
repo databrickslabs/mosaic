@@ -72,17 +72,20 @@ def enable_mosaic(
     if not jar_autoattach:
         spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
         print("...set 'spark.databricks.labs.mosaic.jar.autoattach' to false")
+        config.jar_autoattach=False
     if jar_path is not None:
         spark.conf.set("spark.databricks.labs.mosaic.jar.path", jar_path)
         print(f"...set 'spark.databricks.labs.mosaic.jar.path' to '{jar_path}'")
+        config.jar_path=jar_path
     if log_info:
         spark.sparkContext.setLogLevel("info")
+        config.log_info=True
 
     # Config global objects
     config.mosaic_spark = spark
-    _ = MosaicLibraryHandler(config.mosaic_spark, log_info=log_info)
     config.mosaic_context = MosaicContext(spark)
-    config.mosaic_context.register(spark)
+    _ = MosaicLibraryHandler(spark, log_info=log_info)
+    config.mosaic_context.jRegister(spark)
 
     _jcontext = config.mosaic_context.jContext()
     is_supported = _jcontext.checkDBR(spark._jsparkSession)
@@ -101,3 +104,14 @@ def enable_mosaic(
         from mosaic.utils.kepler_magic import MosaicKepler
 
         config.ipython_hook.register_magics(MosaicKepler)
+
+
+def refresh_context():
+    """
+    Refresh mosaic context, using previously configured information.
+    - This is needed when spark configs change, such as for checkpointing.
+    """
+    # set global config objects
+    # - re-init mosaic context
+    config.mosaic_context.jContextReset()
+    config.mosaic_context = MosaicContext(config.mosaic_spark)

@@ -549,8 +549,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
     }
 
-    def hasContext: Boolean = this.hasContext
-
     def getGeometryAPI: GeometryAPI = this.geometryAPI
 
     def getIndexSystem: IndexSystem = this.indexSystem
@@ -1090,7 +1088,7 @@ object MosaicContext extends Logging {
             case None          => throw new Error("MosaicContext was not built.")
         }
 
-    def hasContext: Boolean =
+    def checkContext: Boolean =
         instance match {
             case Some(_) => true
             case None    => false

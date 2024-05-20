@@ -1,3 +1,4 @@
+from .enable import refresh_context
 from .fuse import SetupMgr
 from mosaic.config import config
 from pyspark.sql import SparkSession
@@ -72,7 +73,14 @@ def enable_gdal(spark: SparkSession, with_checkpoint_path: str = None) -> None:
     -------
     """
     try:
-        config.mosaic_context.enable_gdal(spark, with_checkpoint_path=with_checkpoint_path)
+        if with_checkpoint_path is not None:
+            spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "true")
+            spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", with_checkpoint_path)
+            refresh_context()
+            config.mosaic_context.jEnableGDAL(spark, with_checkpoint_path=with_checkpoint_path)
+        else:
+            config.mosaic_context.jEnableGDAL(spark)
+
         print("GDAL enabled.\n")
         if with_checkpoint_path:
             print(f"checkpoint path '{with_checkpoint_path}' configured for this session.")
@@ -97,7 +105,9 @@ def update_checkpoint_path(spark: SparkSession, path: str):
     :param spark: session to use.
     :param path: new path.
     """
-    config.mosaic_context.update_checkpoint_path(spark,path)
+    spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", path)
+    refresh_context()
+    config.mosaic_context.jUpdateCheckpointPath(spark,path)
 
 
 def set_checkpoint_off(spark: SparkSession):
@@ -105,7 +115,9 @@ def set_checkpoint_off(spark: SparkSession):
     Turn off checkpointing.
     :param spark: session to use.
     """
-    config.mosaic_context.set_checkpoint_off(spark)
+    spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "false")
+    refresh_context()
+    config.mosaic_context.jSetCheckpointOff(spark)
 
 
 def set_checkpoint_on(spark: SparkSession):
@@ -113,7 +125,9 @@ def set_checkpoint_on(spark: SparkSession):
     Turn on checkpointing, will use the configured path.
     :param spark: session to use.
     """
-    config.mosaic_context.set_checkpoint_on(spark)
+    spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "true")
+    refresh_context()
+    config.mosaic_context.jSetCheckpointOn(spark)
 
 
 #################################################################

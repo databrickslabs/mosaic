@@ -69,14 +69,14 @@ case class MosaicRasterGDAL(
     /////////////////////////////////////////
 
     /**
-     * For the provided geometry and CRS, get bounding box polygon.
-     * @param geometryAPI
-     *   Default is JTS.
-     * @param destCRS
-     *   CRS for the bbox, default is [[MosaicGDAL.WSG84]].
-     * @return
-     *   Returns [[MosaicGeometry]] representing bounding box polygon.
-     */
+      * For the provided geometry and CRS, get bounding box polygon.
+      * @param geometryAPI
+      *   Default is JTS.
+      * @param destCRS
+      *   CRS for the bbox, default is [[MosaicGDAL.WSG84]].
+      * @return
+      *   Returns [[MosaicGeometry]] representing bounding box polygon.
+      */
     def bbox(geometryAPI: GeometryAPI, destCRS: SpatialReference = MosaicGDAL.WSG84): MosaicGeometry = {
         val gt = getGeoTransform
 
@@ -116,12 +116,12 @@ case class MosaicRasterGDAL(
     def getGeoTransform: Array[Double] = raster.GetGeoTransform()
 
     /**
-     * @note
-     *   If memory size is -1 this will destroy the raster and you will need to
-     *   refresh it to use it again.
-     * @return
-     *   Returns the amount of memory occupied by the file in bytes.
-     */
+      * @note
+      *   If memory size is -1 this will destroy the raster and you will need to
+      *   refresh it to use it again.
+      * @return
+      *   Returns the amount of memory occupied by the file in bytes.
+      */
     def getMemSize: Long = {
         if (memSize == -1) {
             val toRead = if (path.startsWith("/vsizip/")) path.replace("/vsizip/", "") else path
@@ -136,13 +136,13 @@ case class MosaicRasterGDAL(
     }
 
     /**
-     * Get spatial reference.
-     * - may be already set on the raster
-     * - if not, load and detect it.
-     * - defaults to [[MosaicGDAL.WSG84]]
-     * @return
-     *   Raster's [[SpatialReference]] object.
-     */
+      * Get spatial reference.
+      * - may be already set on the raster
+      * - if not, load and detect it.
+      * - defaults to [[MosaicGDAL.WSG84]]
+      * @return
+      *   Raster's [[SpatialReference]] object.
+      */
     def getSpatialReference: SpatialReference = {
         val spatialRef =
             if (raster != null) {
@@ -211,12 +211,12 @@ case class MosaicRasterGDAL(
     def originY: Double = getGeoTransform(3)
 
     /**
-     * Opens a raster from a file system path.
-     * @param path
-     *   The path to the raster file.
-     * @return
-     *   A GDAL [[Dataset]] object.
-     */
+      * Opens a raster from a file system path.
+      * @param path
+      *   The path to the raster file.
+      * @return
+      *   A GDAL [[Dataset]] object.
+      */
     def pathAsDataset(path: String): Dataset = {
         MosaicRasterGDAL.pathAsDataset(path, driverShortName)
     }
@@ -291,13 +291,13 @@ case class MosaicRasterGDAL(
     /////////////////////////////////////////
 
     /**
-     * Applies a convolution filter to the raster.
-     * - operator applied per band.
-     * @param kernel
-     *   [[Array[Double]]] kernel to apply to the raster.
-     * @return
-     *   [[MosaicRasterGDAL]] object.
-     */
+      * Applies a convolution filter to the raster.
+      * - operator applied per band.
+      * @param kernel
+      *   [[Array[Double]]] kernel to apply to the raster.
+      * @return
+      *   [[MosaicRasterGDAL]] object.
+      */
     def convolve(kernel: Array[Array[Double]]): MosaicRasterGDAL = {
         val tmpPath = PathUtils.createTmpFilePath(getRasterFileExtension)
 
@@ -325,14 +325,14 @@ case class MosaicRasterGDAL(
     }
 
     /**
-     * Applies a filter to the raster.
-     * @param kernelSize
-     *   Number of pixels to compare; it must be odd.
-     * @param operation
-     *   Op to apply, e.g. ‘avg’, ‘median’, ‘mode’, ‘max’, ‘min’.
-     * @return
-     *   Returns a new [[MosaicRasterGDAL]] with the filter applied.
-     */
+      * Applies a filter to the raster.
+      * @param kernelSize
+      *   Number of pixels to compare; it must be odd.
+      * @param operation
+      *   Op to apply, e.g. ‘avg’, ‘median’, ‘mode’, ‘max’, ‘min’.
+      * @return
+      *   Returns a new [[MosaicRasterGDAL]] with the filter applied.
+      */
     def filter(kernelSize: Int, operation: String): MosaicRasterGDAL = {
         val tmpPath = PathUtils.createTmpFilePath(getRasterFileExtension)
 
@@ -390,12 +390,12 @@ case class MosaicRasterGDAL(
     /////////////////////////////////////////
 
     /**
-     * Get a particular subdataset by name.
-     * @param subsetName
-     *   The name of the subdataset to get.
-     * @return
-     *   Returns [[MosaicRasterGDAL]].
-     */
+      * Get a particular subdataset by name.
+      * @param subsetName
+      *   The name of the subdataset to get.
+      * @return
+      *   Returns [[MosaicRasterGDAL]].
+      */
     def getSubdataset(subsetName: String): MosaicRasterGDAL = {
         val sPath = subdatasets.get(s"${subsetName}_tmp")
         val gdalError = gdal.GetLastErrorMsg()
@@ -430,9 +430,9 @@ case class MosaicRasterGDAL(
     }
 
     /**
-     * Test if path is a subdataset.
-     * @return boolean
-     */
+      * Test if path is a subdataset.
+      * @return boolean
+      */
     def isSubDataset: Boolean = {
         val isSubdataset = PathUtils.isSubdataset(path)
         isSubdataset
@@ -465,11 +465,11 @@ case class MosaicRasterGDAL(
     /////////////////////////////////////////
 
     /**
-     * @param bandId
-     *   The band index to read.
-     * @return
-     *   Returns the raster's band as a [[MosaicRasterBandGDAL]] object.
-     */
+      * @param bandId
+      *   The band index to read.
+      * @return
+      *   Returns the raster's band as a [[MosaicRasterBandGDAL]] object.
+      */
     def getBand(bandId: Int): MosaicRasterBandGDAL = {
         if (bandId > 0 && numBands >= bandId) {
             MosaicRasterBandGDAL(raster.GetRasterBand(bandId), bandId)
@@ -514,13 +514,13 @@ case class MosaicRasterGDAL(
     /////////////////////////////////////////
 
     /**
-     * Cleans up the raster driver and references.
-     * - This will not clean up a file stored in a Databricks location,
-     *   meaning DBFS, Volumes, or Workspace paths are skipped.
-     * Unlinks the raster file. After this operation the raster object is no
-     * longer usable. To be used as last step in expression after writing to
-     * bytes.
-     */
+      * Cleans up the raster driver and references.
+      * - This will not clean up a file stored in a Databricks location,
+      *   meaning DBFS, Volumes, or Workspace paths are skipped.
+      * Unlinks the raster file. After this operation the raster object is no
+      * longer usable. To be used as last step in expression after writing to
+      * bytes.
+      */
     def cleanUp(): Unit = {
         // 0.4.2 - don't delete any fuse locations.
         if (!PathUtils.isFuseLocation(path) && path != PathUtils.getCleanPath(parentPath)) {
@@ -567,12 +567,12 @@ case class MosaicRasterGDAL(
     }
 
     /**
-     * Writes a raster to a byte array.
-     * @param dispose
-     *   Whether to dispose of the raster object, default is true.
-     * @return
-     *   A byte array containing the raster data.
-     */
+      * Writes a raster to a byte array.
+      * @param dispose
+      *   Whether to dispose of the raster object, default is true.
+      * @return
+      *   A byte array containing the raster data.
+      */
     def writeToBytes(dispose: Boolean = true): Array[Byte] = {
         val readPath = {
             val tmpPath =
@@ -609,15 +609,15 @@ case class MosaicRasterGDAL(
     }
 
     /**
-     * Writes a raster to a file system path. This method disposes of the
-     * raster object. If the raster is needed again, load it from the path.
-     * @param newPath
-     *   The path to the raster file.
-     * @param dispose
-     *   Whether to dispose of the raster object, default is true.
-     * @return
-     *  The path where written.
-     */
+      * Writes a raster to a file system path. This method disposes of the
+      * raster object. If the raster is needed again, load it from the path.
+      * @param newPath
+      *   The path to the raster file.
+      * @param dispose
+      *   Whether to dispose of the raster object, default is true.
+      * @return
+      *  The path where written.
+      */
     def writeToPath(newPath: String, dispose: Boolean = true): String = {
         if (isSubDataset) {
             val driver = raster.GetDriver()
@@ -695,15 +695,15 @@ object MosaicRasterGDAL extends RasterReader {
     }
 
     /**
-     * Opens a raster from a file system path with a given driver.
-     * @param path
-     *   The path to the raster file.
-     * @param driverShortName
-     *   The driver short name to use. If None, then GDAL will try to identify
-     *   the driver from the file extension
-     * @return
-     *   A GDAL [[Dataset]] object.
-     */
+      * Opens a raster from a file system path with a given driver.
+      * @param path
+      *   The path to the raster file.
+      * @param driverShortName
+      *   The driver short name to use. If None, then GDAL will try to identify
+      *   the driver from the file extension
+      * @return
+      *   A GDAL [[Dataset]] object.
+      */
     def pathAsDataset(path: String, driverShortName: Option[String]): Dataset = {
         driverShortName match {
             case Some(driverShortName) =>
@@ -715,18 +715,18 @@ object MosaicRasterGDAL extends RasterReader {
     }
 
     /**
-     * Reads a raster band from a file system path. Reads a subdataset band if
-     * the path is to a subdataset.
-     * @example
-     *   Raster: path = "/path/to/file.tif" Subdataset: path =
-     *   "FORMAT:/path/to/file.tif:subdataset"
-     * @param bandIndex
-     *   The band index to read (1+ indexed).
-     * @param createInfo
-     *   Map of create info for the raster.
-     * @return
-     *   A [[MosaicRasterGDAL]] object.
-     */
+      * Reads a raster band from a file system path. Reads a subdataset band if
+      * the path is to a subdataset.
+      * @example
+      *   Raster: path = "/path/to/file.tif" Subdataset: path =
+      *   "FORMAT:/path/to/file.tif:subdataset"
+      * @param bandIndex
+      *   The band index to read (1+ indexed).
+      * @param createInfo
+      *   Map of create info for the raster.
+      * @return
+      *   A [[MosaicRasterGDAL]] object.
+      */
     override def readBand(bandIndex: Int, createInfo: Map[String, String]): MosaicRasterBandGDAL = {
         val raster = readRaster(createInfo)
         // Note: Raster and Band are coupled, this can cause a pointer leak
@@ -786,16 +786,16 @@ object MosaicRasterGDAL extends RasterReader {
     }
 
     /**
-     * Reads a raster from a file system path. Reads a subdataset if the path
-     * is to a subdataset.
-     * @example
-     *   Raster: path = "/path/to/file.tif" Subdataset: path =
-     *   "FORMAT:/path/to/file.tif:subdataset"
-     * @param createInfo
-     *   Map of create info for the raster.
-     * @return
-     *   A [[MosaicRasterGDAL]] object.
-     */
+      * Reads a raster from a file system path. Reads a subdataset if the path
+      * is to a subdataset.
+      * @example
+      *   Raster: path = "/path/to/file.tif" Subdataset: path =
+      *   "FORMAT:/path/to/file.tif:subdataset"
+      * @param createInfo
+      *   Map of create info for the raster.
+      * @return
+      *   A [[MosaicRasterGDAL]] object.
+      */
     override def readRaster(createInfo: Map[String, String]): MosaicRasterGDAL = {
         val inPath = createInfo("path")
         val isSubdataset = PathUtils.isSubdataset(inPath)

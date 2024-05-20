@@ -207,7 +207,7 @@ object MosaicGDAL extends Logging {
         // - necessary to register with the latest context
         // - registers spark expressions with the new config
         // - will make sure the session is consistent with these settings
-        if (!MosaicContext.hasContext) {
+        if (!MosaicContext.checkContext) {
             val mosaicConfig = MosaicExpressionConfig(spark)
             val indexSystem = IndexSystemFactory.getIndexSystem(mosaicConfig.getIndexSystem)
             val geometryAPI =  GeometryAPI.apply(mosaicConfig.getGeometryAPI)

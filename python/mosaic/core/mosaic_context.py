@@ -6,6 +6,7 @@ from pyspark.sql.column import Column as MosaicColumn
 
 
 class MosaicContext:
+    _context = None
     _geometry_api: str
     _index_system: str
     _mosaicContextClass: JavaClass
@@ -42,26 +43,33 @@ class MosaicContext:
         # - access dynamically
         IndexSystem = self._indexSystemFactory.getIndexSystem(self._index_system)
         GeometryAPIClass = getattr(self._mosaicPackageObject, self._geometry_api)
-        _ = self._mosaicContextClass.build(IndexSystem, GeometryAPIClass())
+        self._context = self._mosaicContextClass.build(IndexSystem, GeometryAPIClass())
 
     def jContext(self):
         """
         :return: dynamic getter for jvm MosaicContext object
         """
-        return self._mosaicContextClass.context()
+        return self._context
+
+    def jContextReset(self):
+        """
+        Reset the MosaicContext jContext().
+        - This requires a re-init essentially.
+        - Needed sometimes for checkpointing.
+        """
+        self._mosaicContextClass.reset()
 
     def invoke_function(self, name: str, *args: Any) -> MosaicColumn:
         """
-        use jContext() to invoke function.
+        use jvm context to invoke function.
         :param name: name of function.
         :param args: any passed args.
         :return: MosaicColumn.
         """
-        _jcontext = self.jContext()
-        func = getattr(_jcontext.functions(), name)
+        func = getattr(self._context.functions(), name)
         return MosaicColumn(func(*args))
 
-    def register(self, spark: SparkSession):
+    def jRegister(self, spark: SparkSession):
         """
         Register SQL expressions.
         - the jvm functions for checkpointing handle after initial invoke
@@ -70,12 +78,10 @@ class MosaicContext:
         """
         optionClass = getattr(spark._sc._jvm.scala, "Option$")
         optionModule = getattr(optionClass, "MODULE$")
-        _jcontext = self.jContext()
-        _jcontext.register(
-            spark._jsparkSession, optionModule.apply(None)
-        )
+        self._context.register(spark._jsparkSession, optionModule.apply(None))
 
-    def enable_gdal(self, spark: SparkSession, with_checkpoint_path: str = None):
+
+    def jEnableGDAL(self, spark: SparkSession, with_checkpoint_path: str = None):
         """
         Enable GDAL, assumes regular enable already called.
         :param spark: session to use.
@@ -86,7 +92,8 @@ class MosaicContext:
         else:
             self._mosaicGDALObject.enableGDAL(spark._jsparkSession)
 
-    def update_checkpoint_path(self, spark: SparkSession, path: str):
+
+    def jUpdateCheckpointPath(self, spark: SparkSession, path: str):
         """
         Change the checkpoint location; does not adjust checkpoint on/off (stays as-is).
         :param spark: session to use.
@@ -94,14 +101,14 @@ class MosaicContext:
         """
         self._mosaicGDALObject.updateCheckpointPath(spark._jsparkSession, path)
 
-    def set_checkpoint_off(self, spark: SparkSession):
+    def jSetCheckpointOff(self, spark: SparkSession):
         """
         Turn off checkpointing.
         :param spark: session to use.
         """
         self._mosaicGDALObject.setCheckpointOff(spark._jsparkSession)
 
-    def set_checkpoint_on(self, spark: SparkSession):
+    def jSetCheckpointOn(self, spark: SparkSession):
         """
         Turn on checkpointing, will use the configured path.
         :param spark: session to use.
@@ -127,4 +134,4 @@ class MosaicContext:
         return self._mosaicGDALObject.getCheckpointPath()
 
     def has_context(self) -> bool:
-        return self._mosaicContextClass.hasContext()
+        return self._context is not None
