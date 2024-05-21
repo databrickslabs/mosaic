@@ -130,6 +130,19 @@ def set_checkpoint_on(spark: SparkSession):
     config.mosaic_context.jSetCheckpointOn(spark)
 
 
+def reset_checkpoint(spark: SparkSession):
+    """
+    Go back to defaults.
+    - spark conf unset for use checkpoint (off)
+    - spark conf unset for checkpoint path
+    :param spark: session to use.
+    """
+    spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "false")
+    spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", get_checkpoint_path_default())
+    refresh_context()
+    config.mosaic_context.jResetCheckpoint(spark)
+
+
 #################################################################
 # GETTERS
 #################################################################
@@ -161,3 +174,11 @@ def get_checkpoint_path() -> str:
     :return: checkpoint path or exception.
     """
     return config.mosaic_context.get_checkpoint_path()
+
+
+def get_checkpoint_path_default() -> str:
+    """
+    This is run on the driver, assumes enable.py already invoked.
+    :return: default checkpoint path.
+    """
+    return config.mosaic_context.get_checkpoint_path_default()

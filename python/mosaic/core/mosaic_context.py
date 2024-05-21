@@ -16,9 +16,8 @@ class MosaicContext:
 
     def __init__(self, spark: SparkSession):
         sc = spark.sparkContext
-        self._mosaicContextClass = getattr(
-            sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
-        )
+
+        self._mosaicContextClass = getattr(sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext")
         self._mosaicPackageRef = getattr(sc._jvm.com.databricks.labs.mosaic, "package$")
         self._mosaicPackageObject = getattr(self._mosaicPackageRef, "MODULE$")
         self._mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
@@ -58,6 +57,9 @@ class MosaicContext:
         - Needed sometimes for checkpointing.
         """
         self._mosaicContextClass.reset()
+        IndexSystem = self._indexSystemFactory.getIndexSystem(self._index_system)
+        GeometryAPIClass = getattr(self._mosaicPackageObject, self._geometry_api)
+        self._context = self._mosaicContextClass.build(IndexSystem, GeometryAPIClass())
 
     def invoke_function(self, name: str, *args: Any) -> MosaicColumn:
         """
@@ -80,6 +82,14 @@ class MosaicContext:
         optionModule = getattr(optionClass, "MODULE$")
         self._context.register(spark._jsparkSession, optionModule.apply(None))
 
+    def jResetCheckpoint(self, spark: SparkSession):
+        """
+        Go back to defaults.
+        - spark conf unset for use checkpoint (off)
+        - spark conf unset for checkpoint path
+        :param spark: session to use.
+        """
+        self._mosaicGDALObject.resetCheckpoint(spark._jsparkSession)
 
     def jEnableGDAL(self, spark: SparkSession, with_checkpoint_path: str = None):
         """
@@ -132,6 +142,9 @@ class MosaicContext:
 
     def get_checkpoint_path(self) -> str:
         return self._mosaicGDALObject.getCheckpointPath()
+
+    def get_checkpoint_path_default(self) -> str:
+        return self._mosaicGDALObject.getCheckpointPathDefault()
 
     def has_context(self) -> bool:
         return self._context is not None

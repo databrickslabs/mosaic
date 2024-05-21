@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.gdal
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.internal.Logging
@@ -143,6 +143,21 @@ object MosaicGDAL extends Logging {
     }
 
     /**
+      * Go back to defaults.
+      * - spark conf unset for use checkpoint (off).
+      * - spark conf unset for checkpoint path.
+      * - see mosaic_context.py as well for use.
+      *
+      * @param spark
+      *   spark session to use.
+      */
+    def resetCheckpoint(spark: SparkSession): Unit = {
+        spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT)
+        spark.conf.set(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT)
+        updateMosaicContext(spark)
+    }
+
+    /**
       * Update the checkpoint path.
       * - will make dirs if conditions met.
       * - will make sure the session is consistent with these settings.
@@ -245,7 +260,10 @@ object MosaicGDAL extends Logging {
     /** @return value of useCheckpoint. */
     def isUseCheckpoint: Boolean = this.useCheckpoint
 
-    /** return value of checkpointPath. */
+    /** @return value of checkpoint path. */
     def getCheckpointPath: String = this.checkpointPath
+
+    /** @return default value of checkpoint path. */
+    def getCheckpointPathDefault: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
 
 }

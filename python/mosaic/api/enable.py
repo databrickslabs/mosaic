@@ -111,7 +111,4 @@ def refresh_context():
     Refresh mosaic context, using previously configured information.
     - This is needed when spark configs change, such as for checkpointing.
     """
-    # set global config objects
-    # - re-init mosaic context
     config.mosaic_context.jContextReset()
-    config.mosaic_context = MosaicContext(config.mosaic_spark)
