@@ -8,7 +8,8 @@ import subprocess
 __all__ = [
     "setup_gdal", "enable_gdal",
     "update_checkpoint_path", "set_checkpoint_on", "set_checkpoint_off",
-    "has_context", "is_use_checkpoint", "get_checkpoint_path"
+    "has_context", "is_use_checkpoint", "get_checkpoint_path", "reset_checkpoint",
+    "get_checkpoint_path_default"
 ]
 
 
