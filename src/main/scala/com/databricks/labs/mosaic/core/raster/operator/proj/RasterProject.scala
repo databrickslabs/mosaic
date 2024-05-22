@@ -32,7 +32,15 @@ object RasterProject {
         // Note that Null is the right value here
         val authName = destCRS.GetAuthorityName(null)
         val authCode = destCRS.GetAuthorityCode(null)
-        
+
+        val srcAuthName = raster.getSpatialReference.GetAuthorityName(null)
+        val srcAuthCode = raster.getSpatialReference.GetAuthorityCode(null)
+
+        // There is no need to translate if the CRSs match
+        if (authName == srcAuthName && authCode == srcAuthCode) {
+            return raster
+        }
+
         val result = GDALWarp.executeWarp(
           resultFileName,
           Seq(raster),

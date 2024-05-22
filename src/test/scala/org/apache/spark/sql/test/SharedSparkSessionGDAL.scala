@@ -20,7 +20,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     override def createSparkSession: TestSparkSession = {
         val conf = sparkConf
-        conf.set(MOSAIC_RASTER_CHECKPOINT, FileUtils.createMosaicTempDir(prefix = "/mnt/"))
+        conf.set(MOSAIC_RASTER_CHECKPOINT, FileUtils.createMosaicTempDir(prefix = "/tmp/tmp"))
         SparkSession.cleanupAnyExistingSession()
         val session = new MosaicTestSparkSession(conf)
         session.sparkContext.setLogLevel("FATAL")
