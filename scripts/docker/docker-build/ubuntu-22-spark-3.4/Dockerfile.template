@@ -1,0 +1,115 @@
+FROM --platform=linux/amd64 ubuntu:22.04
+
+# refresh package info
+RUN apt-get update -y
+
+# Install OpenJDK 8
+RUN apt-get install -y openjdk-8-jdk --no-install-recommends
+
+# Install native dependencies
+RUN apt-get install -y python3-numpy unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
+
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+
+# Install dependencies
+RUN set -ex \
+    && deps=" \
+       python3-dev \
+       python3-numpy \
+       python3-pip \
+       python3-venv \
+       bash-completion \
+       libspatialite-dev \
+       libpq-dev \
+       libcurl4-gnutls-dev \
+       libxml2-dev \
+       libgeos-dev \
+       libnetcdf-dev \
+       libpoppler-dev \
+       libhdf4-alt-dev \
+       libhdf5-serial-dev \
+       libpoppler-private-dev \
+       sqlite3 \
+       libsqlite3-dev \
+       libtiff-dev \
+       wget \
+       curl \
+    " \
+    && buildDeps=" \
+       build-essential \
+       cmake \
+       swig \
+       ant \
+       pkg-config \
+    "\
+    && apt-get update -y && apt-get install -y $buildDeps $deps --no-install-recommends
+
+# Install the remaining components
+ENV ROOTDIR /usr/local
+ENV LD_LIBRARY_PATH /usr/local/lib
+ENV SPARK_VERSION %%SPARK_VERSION%%
+ENV GDAL_VERSION %%GDAL_VERSION%%
+ENV LIBPROJ_VERSION %%LIBPROJ_VERSION%%
+ENV CORES %%CORES%%
+
+WORKDIR $ROOTDIR/
+RUN mkdir -p $ROOTDIR/src
+
+# Install PROJ
+RUN wget -qO- https://download.osgeo.org/proj/proj-${LIBPROJ_VERSION}.tar.gz | \
+    tar -xzC $ROOTDIR/src/
+
+RUN cd src/proj-${LIBPROJ_VERSION} && ./configure && make -j${CORES} && make install \
+    && cd $ROOTDIR && rm -Rf src/proj*
+
+# Install GDAL
+RUN wget -qO- https://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz | \
+    tar -xzC $ROOTDIR/src/
+
+RUN cd src/gdal-${GDAL_VERSION} \
+    && ./configure --with-java=$JAVA_HOME \
+    && make -j${CORES} && make -j${CORES} install && ldconfig
+
+# Install Java bindings for GDAL
+RUN cd $ROOTDIR/src/gdal-${GDAL_VERSION}/swig/java && make -j${CORES} && make -j${CORES} install
+
+# Copy binaries to the location expected to be by Mosaic
+RUN ln -s $ROOTDIR/lib/libgdal.so /usr/lib/libgdal.so
+RUN ln -s $ROOTDIR/lib/libgdal.so.30 /usr/lib/libgdal.so.30
+RUN ln -s $ROOTDIR/lib/libgdal.so.30.0.3 /usr/lib/libgdal.so.30.0.3
+RUN mkdir -p /usr/lib/jni && ln -s $ROOTDIR/lib/libgdalalljni.so /usr/lib/jni/libgdalalljni.so.30
+RUN mkdir -p /usr/lib/ogdi && ln -s $ROOTDIR/lib/libgdal.so /usr/lib/ogdi/libgdal.so
+
+# Add Maven
+ARG MAVEN_VERSION=3.9.6
+ARG USER_HOME_DIR="/root"
+ARG BASE_URL=https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries
+ARG ARG SHA=706f01b20dec0305a822ab614d51f32b07ee11d0218175e55450242e49d2156386483b506b3a4e8a03ac8611bae96395fd5eec15f50d3013d5deed6d1ee18224
+
+RUN mkdir -p $ROOTDIR/share/maven $ROOTDIR/share/maven/ref \
+  && echo "Downlaoding maven" \
+  && curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+  \
+  && echo "Checking download hash" \
+  && echo "${SHA}  /tmp/apache-maven.tar.gz" | sha512sum -c - \
+  \
+  && echo "Unziping maven" \
+  && tar -xzf /tmp/apache-maven.tar.gz -C $ROOTDIR/share/maven --strip-components=1 \
+  \
+  && echo "Cleaning and setting links" \
+  && rm -f /tmp/apache-maven.tar.gz \
+  && ln -s $ROOTDIR/share/maven/bin/mvn $ROOTDIR/bin/mvn
+
+ENV MAVEN_HOME $ROOTDIR/share/maven
+ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
+
+# Python packages
+# - Adds additional needed packages
+RUN pip3 install pip --upgrade
+RUN pip3 install build wheel keplergl ipython pyspark==$SPARK_VERSION
+RUN pip3 install black build isort py4j requests
+RUN pip3 install gdal==$GDAL_VERSION
+
+# Clean up
+RUN apt-get purge -y --auto-remove $buildDeps \
+    && rm -rf /var/lib/apt/lists/*

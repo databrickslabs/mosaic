@@ -84,7 +84,7 @@ The repository is structured as follows:
 ## Test & build Mosaic
 
 Given that DBR 13.3 is Ubuntu 22.04, we recommend using docker, 
-see [mosaic-docker.sh](https://github.com/databrickslabs/mosaic/blob/main/scripts/mosaic-docker.sh).
+see [mosaic-docker.sh](https://github.com/databrickslabs/mosaic/blob/main/scripts/docker/mosaic-docker.sh).
 
 ### Scala JAR
 

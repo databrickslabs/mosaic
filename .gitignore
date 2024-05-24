@@ -164,3 +164,4 @@ docker/.m2/
 /python/mosaic_test/
 /python/checkpoint/
 /python/checkpoint-new/
+/scripts/docker/docker-build/ubuntu-22-spark-3.4/Dockerfile

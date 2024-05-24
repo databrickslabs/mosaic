@@ -5,7 +5,7 @@
     |
     | Default: ${user.home}/.m2/repository
     -->
-    <localRepository>/root/mosaic/scripts/m2</localRepository>
+    <localRepository>/root/mosaic/scripts/docker/m2</localRepository>
     <activeProfiles>
         <activeProfile>skipScoverage</activeProfile>
     </activeProfiles>

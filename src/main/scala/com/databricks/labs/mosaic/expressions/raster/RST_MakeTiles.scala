@@ -124,7 +124,6 @@ case class RST_MakeTiles(
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
 
-//        val tileType = dataType.asInstanceOf[StructType].find(_.name == "raster").get.dataType
         val rasterType = dataType.asInstanceOf[RasterTileType].rasterType
 
         val rawDriver = driverExpr.eval(input).asInstanceOf[UTF8String].toString

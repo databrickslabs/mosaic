@@ -256,7 +256,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.4.0</spark.version>
+                <spark.version>3.4.1</spark.version>
                 <mosaic.version>0.4.3</mosaic.version>
             </properties>
             <build>
@@ -291,7 +291,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.4.0</spark.version>
+                <spark.version>3.4.1</spark.version>
                 <mosaic.version>0.4.3</mosaic.version>
                 <maven.compiler.source>1.8</maven.compiler.source>
                 <maven.compiler.target>1.8</maven.compiler.target>
