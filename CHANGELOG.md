@@ -1,6 +1,6 @@
 ## v0.4.3 [DBR 13.3 LTS]
+- Pyspark requirement removed from python setup.cfg as it is supplied by DBR
 - Python version limited to "<3.11,>=3.10" for DBR
-- Pyspark version limited to 3.4.1 for DBR
 - iPython dependency limited to "<8.11,>=7.4.2" for both DBR and keplergl-jupyter 
 - Expanded support for fuse-based checkpointing (persisted raster storage), managed through:
   - spark config 'spark.databricks.labs.mosaic.raster.use.checkpoint' in addition to 'spark.databricks.labs.mosaic.raster.checkpoint'.

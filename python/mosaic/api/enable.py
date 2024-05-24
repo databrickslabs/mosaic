@@ -1,3 +1,5 @@
+import importlib.metadata
+import importlib.resources
 import warnings
 
 from IPython.core.getipython import get_ipython
@@ -82,9 +84,10 @@ def enable_mosaic(
         config.log_info=True
 
     # Config global objects
+    # - add MosaicContext after MosaicLibraryHandler
     config.mosaic_spark = spark
-    config.mosaic_context = MosaicContext(spark)
     _ = MosaicLibraryHandler(spark, log_info=log_info)
+    config.mosaic_context = MosaicContext(spark)
     config.mosaic_context.jRegister(spark)
 
     _jcontext = config.mosaic_context.jContext()
@@ -104,6 +107,26 @@ def enable_mosaic(
         from mosaic.utils.kepler_magic import MosaicKepler
 
         config.ipython_hook.register_magics(MosaicKepler)
+
+
+def get_install_version() -> str:
+    """
+    :return: mosaic version installed
+    """
+    return importlib.metadata.version("databricks-mosaic")
+
+
+def get_install_lib_dir(override_jar_filename=None) -> str:
+    """
+    This is looking for the library dir under site packages using the jar name.
+    :return: located library dir.
+    """
+    v = get_install_version()
+    jar_filename = f"mosaic-{v}-jar-with-dependencies.jar"
+    if override_jar_filename:
+        jar_filename = override_jar_filename
+    with importlib.resources.path("mosaic.lib", jar_filename) as p:
+        return p.parent.as_posix()
 
 
 def refresh_context():
