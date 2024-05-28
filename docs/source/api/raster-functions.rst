@@ -32,10 +32,7 @@ e.g. :code:`spark.read.format("gdal")`
 Updates to the raster features for 0.4.1
 ----------------------------------------
 
-  * In 0.4.1, there are a new set of raster apis that have not yet had python bindings generated; however you can still
-    call the functions with pyspark function :code:`selectExpr`, e.g. :code:`selectExpr("rst_avg(...)")` which invokes the sql
-    registered expression. The calls are: :ref:`rst_avg`, :ref:`rst_max`, :ref:`rst_min`, :ref:`rst_median`, and :ref:`rst_pixelcount`.
-  * Also, scala does not have a :code:`df.display()` method while python does. In practice you would most often call
+  * Scala does not have a :code:`df.display()` method while python does. In practice you would most often call
     :code:`display(df)` in scala for a prettier output, but for brevity, we write :code:`df.show` in scala.
 
 .. note:: For mosaic versions > 0.4.0 you can use the revamped setup_gdal function or new setup_fuse_install.
@@ -51,8 +48,6 @@ rst_avg
 .. function:: rst_avg(tile)
 
     Returns an array containing mean values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_avg(tile)")`
 
     :param tile: A column containing the raster tile. 
     :type tile: Column (RasterTileType)
@@ -63,7 +58,7 @@ rst_avg
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_avg(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_avg("tile")).limit(1).display()
     +---------------+
     | rst_avg(tile) |
     +---------------+
@@ -1182,8 +1177,6 @@ rst_max
 .. function:: rst_max(tile)
 
     Returns an array containing maximum values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_max(tile)")`
 
     :param tile: A column containing the raster tile. 
     :type tile: Column (RasterTileType)
@@ -1194,7 +1187,7 @@ rst_max
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_max(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_max("tile")).limit(1).display()
     +---------------+
     | rst_max(tile) |
     +---------------+
@@ -1225,8 +1218,6 @@ rst_median
 .. function:: rst_median(tile)
 
     Returns an array containing median values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_median(tile)")`
 
     :param tile: A column containing the raster tile. 
     :type tile: Column (RasterTileType)
@@ -1237,7 +1228,7 @@ rst_median
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_median(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_median("tile")).limit(1).display()
     +---------------+
     | rst_median(tile) |
     +---------------+
@@ -1445,8 +1436,6 @@ rst_min
 .. function:: rst_min(tile)
 
     Returns an array containing minimum values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_min(tile)")`
 
     :param tile: A column containing the raster tile. 
     :type tile: Column (RasterTileType)
@@ -1457,7 +1446,7 @@ rst_min
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_min(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_min("tile")).limit(1).display()
     +---------------+
     | rst_min(tile) |
     +---------------+
@@ -1587,8 +1576,6 @@ rst_pixelcount
 .. function:: rst_pixelcount(tile)
 
     Returns an array containing valid pixel count values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_pixelcount(tile)")`
     
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)

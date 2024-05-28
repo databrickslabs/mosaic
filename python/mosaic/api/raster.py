@@ -10,16 +10,17 @@ from typing import Any
 #######################
 
 __all__ = [
+    "rst_avg",
     "rst_bandmetadata",
     "rst_boundingbox",
     "rst_clip",
     "rst_combineavg",
     "rst_convolve",
     "rst_derivedband",
+    "rst_filter",
     "rst_frombands",
     "rst_fromcontent",
     "rst_fromfile",
-    "rst_filter",
     "rst_georeference",
     "rst_getnodata",
     "rst_getsubdataset",
@@ -28,11 +29,15 @@ __all__ = [
     "rst_isempty",
     "rst_maketiles",
     "rst_mapalgebra",
+    "rst_max",
+    "rst_median",
     "rst_memsize",
     "rst_merge",
     "rst_metadata",
+    "rst_min",
     "rst_ndvi",
     "rst_numbands",
+    "rst_pixelcount",
     "rst_pixelheight",
     "rst_pixelwidth",
     "rst_rastertogridavg",
@@ -40,16 +45,16 @@ __all__ = [
     "rst_rastertogridmax",
     "rst_rastertogridmedian",
     "rst_rastertogridmin",
+    "rst_rastertoworldcoord",
     "rst_rastertoworldcoordx",
     "rst_rastertoworldcoordy",
-    "rst_rastertoworldcoord",
     "rst_retile",
     "rst_rotation",
     "rst_scalex",
     "rst_scaley",
     "rst_separatebands",
-    "rst_setsrid",
     "rst_setnodata",
+    "rst_setsrid",
     "rst_skewx",
     "rst_skewy",
     "rst_srid",
@@ -63,10 +68,31 @@ __all__ = [
     "rst_upperleftx",
     "rst_upperlefty",
     "rst_width",
+    "rst_worldtorastercoord",
     "rst_worldtorastercoordx",
     "rst_worldtorastercoordy",
-    "rst_worldtorastercoord",
 ]
+
+
+def rst_avg(raster_tile: ColumnOrName) -> Column:
+    """
+    Returns an array containing mean value for each band.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column ArrayType(DoubleType)
+        mean value per band.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_avg",
+        pyspark_to_java_column(raster_tile)
+    )
 
 
 def rst_bandmetadata(raster_tile: ColumnOrName, band: ColumnOrName) -> Column:
@@ -212,6 +238,87 @@ def rst_derivedband(
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(python_func),
         pyspark_to_java_column(func_name),
+    )
+
+
+def rst_filter(raster_tile: ColumnOrName, kernel_size: Any, operation: Any) -> Column:
+    """
+    Applies a filter to the raster.
+    :param raster_tile: Mosaic raster tile struct column.
+    :param kernel_size: The size of the kernel. Has to be odd.
+    :param operation: The operation to apply to the kernel.
+    :return: A new raster tile with the filter applied.
+    """
+    if type(kernel_size) == int:
+        kernel_size = lit(kernel_size)
+
+    if type(operation) == str:
+        operation = lit(operation)
+
+    return config.mosaic_context.invoke_function(
+        "rst_filter",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(kernel_size),
+        pyspark_to_java_column(operation),
+    )
+
+
+def rst_frombands(bands: ColumnOrName) -> Column:
+    """
+    Stack an array of bands into a raster tile.
+    The result is Mosaic raster tile struct.
+    The result is stored in the checkpoint directory.
+
+    Parameters
+    ----------
+    bands : Column (ArrayType(RasterTileType))
+        Raster tiles of the bands to merge.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct of the band stacking.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_frombands", pyspark_to_java_column(bands)
+    )
+
+def rst_fromcontent(
+        raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1
+) -> Column:
+    """
+    Tiles the raster binary into tiles of the given size.
+    :param raster_bin:
+    :param driver:
+    :param size_in_mb:
+    :return:
+    """
+    if type(size_in_mb) == int:
+        size_in_mb = lit(size_in_mb)
+
+    return config.mosaic_context.invoke_function(
+        "rst_fromcontent",
+        pyspark_to_java_column(raster_bin),
+        pyspark_to_java_column(driver),
+        pyspark_to_java_column(size_in_mb),
+    )
+
+
+def rst_fromfile(raster_path: ColumnOrName, size_in_mb: Any = -1) -> Column:
+    """
+    Tiles the raster into tiles of the given size.
+    :param raster_path:
+    :param sizeInMB:
+    :return:
+    """
+    if type(size_in_mb) == int:
+        size_in_mb = lit(size_in_mb)
+
+    return config.mosaic_context.invoke_function(
+        "rst_fromfile",
+        pyspark_to_java_column(raster_path),
+        pyspark_to_java_column(size_in_mb),
     )
 
 
@@ -401,6 +508,48 @@ def rst_mapalgebra(raster_tile: ColumnOrName, json_spec: ColumnOrName) -> Column
     )
 
 
+def rst_max(raster_tile: ColumnOrName) -> Column:
+    """
+    Returns an array containing max value for each band.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column ArrayType(DoubleType)
+        max value per band.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_max",
+        pyspark_to_java_column(raster_tile)
+    )
+
+
+def rst_median(raster_tile: ColumnOrName) -> Column:
+    """
+    Returns an array containing median value for each band.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column ArrayType(DoubleType)
+        median value per band.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_median",
+        pyspark_to_java_column(raster_tile)
+    )
+
+
 def rst_memsize(raster_tile: ColumnOrName) -> Column:
     """
     Parameters
@@ -416,24 +565,6 @@ def rst_memsize(raster_tile: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_memsize", pyspark_to_java_column(raster_tile)
-    )
-
-
-def rst_metadata(raster_tile: ColumnOrName) -> Column:
-    """
-    Parameters
-    ----------
-    raster_tile : Column (RasterTileType)
-        Mosaic raster tile struct column.
-
-    Returns
-    -------
-    Column (MapType<StringType, StringType>)
-        The metadata of the raster as a map type, (key->value) pairs.
-
-    """
-    return config.mosaic_context.invoke_function(
-        "rst_metadata", pyspark_to_java_column(raster_tile)
     )
 
 
@@ -459,29 +590,7 @@ def rst_merge(raster_tiles: ColumnOrName) -> Column:
     )
 
 
-def rst_frombands(bands: ColumnOrName) -> Column:
-    """
-    Stack an array of bands into a raster tile.
-    The result is Mosaic raster tile struct.
-    The result is stored in the checkpoint directory.
-
-    Parameters
-    ----------
-    bands : Column (ArrayType(RasterTileType))
-        Raster tiles of the bands to merge.
-
-    Returns
-    -------
-    Column (RasterTileType)
-        Mosaic raster tile struct of the band stacking.
-
-    """
-    return config.mosaic_context.invoke_function(
-        "rst_frombands", pyspark_to_java_column(bands)
-    )
-
-
-def rst_numbands(raster_tile: ColumnOrName) -> Column:
+def rst_metadata(raster_tile: ColumnOrName) -> Column:
     """
     Parameters
     ----------
@@ -490,17 +599,38 @@ def rst_numbands(raster_tile: ColumnOrName) -> Column:
 
     Returns
     -------
-    Column (IntegerType)
-        The number of bands in the raster.
+    Column (MapType<StringType, StringType>)
+        The metadata of the raster as a map type, (key->value) pairs.
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_numbands", pyspark_to_java_column(raster_tile)
+        "rst_metadata", pyspark_to_java_column(raster_tile)
+    )
+
+
+def rst_min(raster_tile: ColumnOrName) -> Column:
+    """
+    Returns an array containing min value for each band.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column ArrayType(DoubleType)
+        min value per band.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_min",
+        pyspark_to_java_column(raster_tile)
     )
 
 
 def rst_ndvi(
-    raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName
+        raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName
 ) -> Column:
     """
     Computes the NDVI of the raster.
@@ -527,6 +657,41 @@ def rst_ndvi(
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(band1),
         pyspark_to_java_column(band2),
+    )
+
+def rst_numbands(raster_tile: ColumnOrName) -> Column:
+    """
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column (IntegerType)
+        The number of bands in the raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_numbands", pyspark_to_java_column(raster_tile)
+    )
+
+
+def rst_pixelcount(raster_tile: ColumnOrName) -> Column:
+    """
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column (ArrayType(LongType))
+        Array containing valid pixel count values for each band.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_pixelcount", pyspark_to_java_column(raster_tile)
     )
 
 
@@ -910,6 +1075,28 @@ def rst_setnodata(raster_tile: ColumnOrName, nodata: ColumnOrName) -> Column:
     )
 
 
+def rst_setsrid(raster_tile: ColumnOrName, srid: ColumnOrName) -> Column:
+    """
+    Sets the SRID of the raster.
+    The SRID is the EPSG code of the raster.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    srid : Column (IntegerType)
+        EPSG authority code for the file's projection.
+    Returns
+    -------
+    Column (MosaicRasterTile)
+        The updated raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_setsrid", pyspark_to_java_column(raster_tile), pyspark_to_java_column(srid)
+    )
+
+
 def rst_skewx(raster_tile: ColumnOrName) -> Column:
     """
     Computes the skew of the raster in the X direction.
@@ -947,28 +1134,6 @@ def rst_skewy(raster_tile: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_skewy", pyspark_to_java_column(raster_tile)
-    )
-
-
-def rst_setsrid(raster_tile: ColumnOrName, srid: ColumnOrName) -> Column:
-    """
-    Sets the SRID of the raster.
-    The SRID is the EPSG code of the raster.
-
-    Parameters
-    ----------
-    raster_tile : Column (RasterTileType)
-        Mosaic raster tile struct column.
-    srid : Column (IntegerType)
-        EPSG authority code for the file's projection.
-    Returns
-    -------
-    Column (MosaicRasterTile)
-        The updated raster.
-
-    """
-    return config.mosaic_context.invoke_function(
-        "rst_setsrid", pyspark_to_java_column(raster_tile), pyspark_to_java_column(srid)
     )
 
 
@@ -1012,6 +1177,31 @@ def rst_subdatasets(raster_tile: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_subdatasets", pyspark_to_java_column(raster_tile)
+    )
+
+
+def rst_subdivide(raster_tile: ColumnOrName, size_in_mb: ColumnOrName) -> Column:
+    """
+    Subdivides the raster into tiles that have to be smaller than the given size in MB.
+    All the tiles have the same aspect ratio as the original raster.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    size_in_mb : Column (IntegerType)
+        The size of the tiles in MB.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        A collection of tiles of the raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_subdivide",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(size_in_mb),
     )
 
 
@@ -1063,6 +1253,28 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
     )
 
 
+def rst_to_overlapping_tiles(
+        raster_tile: ColumnOrName,
+        width: ColumnOrName,
+        height: ColumnOrName,
+        overlap: ColumnOrName,
+) -> Column:
+    """
+    Tiles the raster into tiles of the given size.
+    :param raster_tile:
+    :param sizeInMB:
+    :return:
+    """
+
+    return config.mosaic_context.invoke_function(
+        "rst_to_overlapping_tiles",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(width),
+        pyspark_to_java_column(height),
+        pyspark_to_java_column(overlap),
+    )
+
+
 def rst_transform(raster_tile: ColumnOrName, srid: ColumnOrName) -> Column:
     """
     Transforms the raster to the given SRID.
@@ -1089,88 +1301,6 @@ def rst_transform(raster_tile: ColumnOrName, srid: ColumnOrName) -> Column:
     )
 
 
-def rst_fromcontent(
-    raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1
-) -> Column:
-    """
-    Tiles the raster binary into tiles of the given size.
-    :param raster_bin:
-    :param driver:
-    :param size_in_mb:
-    :return:
-    """
-    if type(size_in_mb) == int:
-        size_in_mb = lit(size_in_mb)
-
-    return config.mosaic_context.invoke_function(
-        "rst_fromcontent",
-        pyspark_to_java_column(raster_bin),
-        pyspark_to_java_column(driver),
-        pyspark_to_java_column(size_in_mb),
-    )
-
-
-def rst_fromfile(raster_path: ColumnOrName, size_in_mb: Any = -1) -> Column:
-    """
-    Tiles the raster into tiles of the given size.
-    :param raster_path:
-    :param sizeInMB:
-    :return:
-    """
-    if type(size_in_mb) == int:
-        size_in_mb = lit(size_in_mb)
-
-    return config.mosaic_context.invoke_function(
-        "rst_fromfile",
-        pyspark_to_java_column(raster_path),
-        pyspark_to_java_column(size_in_mb),
-    )
-
-
-def rst_filter(raster_tile: ColumnOrName, kernel_size: Any, operation: Any) -> Column:
-    """
-    Applies a filter to the raster.
-    :param raster_tile: Mosaic raster tile struct column.
-    :param kernel_size: The size of the kernel. Has to be odd.
-    :param operation: The operation to apply to the kernel.
-    :return: A new raster tile with the filter applied.
-    """
-    if type(kernel_size) == int:
-        kernel_size = lit(kernel_size)
-
-    if type(operation) == str:
-        operation = lit(operation)
-
-    return config.mosaic_context.invoke_function(
-        "rst_filter",
-        pyspark_to_java_column(raster_tile),
-        pyspark_to_java_column(kernel_size),
-        pyspark_to_java_column(operation),
-    )
-
-
-def rst_to_overlapping_tiles(
-    raster_tile: ColumnOrName,
-    width: ColumnOrName,
-    height: ColumnOrName,
-    overlap: ColumnOrName,
-) -> Column:
-    """
-    Tiles the raster into tiles of the given size.
-    :param raster_tile:
-    :param sizeInMB:
-    :return:
-    """
-
-    return config.mosaic_context.invoke_function(
-        "rst_to_overlapping_tiles",
-        pyspark_to_java_column(raster_tile),
-        pyspark_to_java_column(width),
-        pyspark_to_java_column(height),
-        pyspark_to_java_column(overlap),
-    )
-
-
 def rst_tryopen(raster_tile: ColumnOrName) -> Column:
     """
     Tries to open the raster and returns a flag indicating if the raster can be opened.
@@ -1188,31 +1318,6 @@ def rst_tryopen(raster_tile: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_tryopen", pyspark_to_java_column(raster_tile)
-    )
-
-
-def rst_subdivide(raster_tile: ColumnOrName, size_in_mb: ColumnOrName) -> Column:
-    """
-    Subdivides the raster into tiles that have to be smaller than the given size in MB.
-    All the tiles have the same aspect ratio as the original raster.
-
-    Parameters
-    ----------
-    raster_tile : Column (RasterTileType)
-        Mosaic raster tile struct column.
-    size_in_mb : Column (IntegerType)
-        The size of the tiles in MB.
-
-    Returns
-    -------
-    Column (RasterTileType)
-        A collection of tiles of the raster.
-
-    """
-    return config.mosaic_context.invoke_function(
-        "rst_subdivide",
-        pyspark_to_java_column(raster_tile),
-        pyspark_to_java_column(size_in_mb),
     )
 
 

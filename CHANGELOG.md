@@ -6,6 +6,7 @@
   - spark config 'spark.databricks.labs.mosaic.raster.use.checkpoint' in addition to 'spark.databricks.labs.mosaic.raster.checkpoint'.
   - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`.
   - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)`.
+- Python bindings added for `rst_avg`, `rst_max`, `rst_median`, `rst_min`, and `rst_pixelcount`. 
 
 ## v0.4.2 [DBR 13.3 LTS]
 - Geopandas now fixed to "<0.14.4,>=0.14" due to conflict with minimum numpy version in geopandas 0.14.4.
