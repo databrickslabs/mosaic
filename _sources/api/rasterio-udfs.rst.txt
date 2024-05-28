@@ -248,7 +248,6 @@ depending on your needs.
     def write_raster(raster, driver, file_id, fuse_dir):
         from io import BytesIO
         from pathlib import Path
-        from pyspark.sql.functions import udf
         from rasterio.io import MemoryFile
         import numpy as np
         import rasterio
