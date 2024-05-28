@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
-/** Returns the upper left x of the raster. */
+/** Returns an array containing valid pixel count values for each band. */
 case class RST_PixelCount(rasterExpr: Expression, expressionConfig: MosaicExpressionConfig)
     extends RasterExpression[RST_PixelCount](rasterExpr, returnsRaster = false, expressionConfig)
       with NullIntolerant
@@ -18,7 +18,7 @@ case class RST_PixelCount(rasterExpr: Expression, expressionConfig: MosaicExpres
 
     override def dataType: DataType = ArrayType(LongType)
 
-    /** Returns the upper left x of the raster. */
+    /** Returns an array containing valid pixel count values for each band. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
         val bandCount = tile.raster.raster.GetRasterCount()
         val pixelCount = (1 to bandCount).map(tile.raster.getBand(_).pixelCount)

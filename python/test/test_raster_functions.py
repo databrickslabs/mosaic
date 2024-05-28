@@ -44,6 +44,10 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                 "rst_combineavg",
                 api.rst_combineavg(array(col("tile_from_file"), col("rst_clip"))),
             )
+            .withColumn("rst_avg", api.rst_avg("tile"))
+            .withColumn("rst_max", api.rst_max("tile"))
+            .withColumn("rst_median", api.rst_median("tile"))
+            .withColumn("rst_min", api.rst_min("tile"))
             .withColumn("rst_frombands", api.rst_frombands(array("tile", "tile")))
             .withColumn("rst_georeference", api.rst_georeference("tile"))
             .withColumn("rst_getnodata", api.rst_getnodata("tile"))
@@ -58,6 +62,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn("rst_metadata", api.rst_metadata("tile"))
             .withColumn("rst_ndvi", api.rst_ndvi("tile", lit(1), lit(1)))
             .withColumn("rst_numbands", api.rst_numbands("tile"))
+            .withColumn("rst_pixelcount", api.rst_pixelcount("tile"))
             .withColumn("rst_pixelheight", api.rst_pixelheight("tile"))
             .withColumn("rst_pixelwidth", api.rst_pixelwidth("tile"))
             .withColumn("rst_rastertogridavg", api.rst_rastertogridavg("tile", lit(9)))
