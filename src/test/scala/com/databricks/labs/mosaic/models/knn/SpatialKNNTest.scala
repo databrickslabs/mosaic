@@ -21,7 +21,7 @@ class SpatialKNNTest extends AnyFlatSpec with SpatialKNNBehaviors with SparkSuit
             .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
             .set("spark.sql.parquet.compression.codec", "uncompressed")
         var spark = withConf(conf)
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         it should behave like noApproximation(MosaicContext.build(H3IndexSystem, JTS), spark)
 
         conf = new SparkConf(false)
@@ -32,7 +32,7 @@ class SpatialKNNTest extends AnyFlatSpec with SpatialKNNBehaviors with SparkSuit
             .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
             .set("spark.sql.parquet.compression.codec", "uncompressed")
         spark = withConf(conf)
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         it should behave like noApproximation(MosaicContext.build(BNGIndexSystem, JTS), spark)
 
     }

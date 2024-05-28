@@ -13,7 +13,7 @@ object RasterArrayUtils {
     def getTiles(input: Any, rastersExpr: Expression, expressionConfig: MosaicExpressionConfig): Seq[MosaicRasterTile] = {
         val rasterDT = rastersExpr.dataType.asInstanceOf[ArrayType].elementType
         val arrayData = input.asInstanceOf[ArrayData]
-        val rasterType = RasterTileType(rastersExpr).rasterType
+        val rasterType = RasterTileType(rastersExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val n = arrayData.numElements()
         (0 until n)
             .map(i =>

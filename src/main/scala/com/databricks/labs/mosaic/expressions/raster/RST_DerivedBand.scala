@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.pixel.PixelCombineRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
@@ -28,7 +29,10 @@ case class RST_DerivedBand(
       with NullIntolerant
       with CodegenFallback {
 
-    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
+    override def dataType: DataType = {
+        GDAL.enable(expressionConfig)
+        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+    }
 
     /** Combines the rasters using average of pixels. */
     override def rasterTransform(tiles: Seq[MosaicRasterTile], arg1: Any, arg2: Any): Any = {

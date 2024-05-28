@@ -62,7 +62,7 @@ object ReadAsPath extends ReadStrategy {
             // Note that for retiling we always use checkpoint location.
             // In this case rasters are stored off spark rows.
             // If you need the tiles in memory please load them from path stored in the tile returned by the reader.
-            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, tileDataType), nullable = false))
+            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, tileDataType, useCheckpoint = true), nullable = false))
     }
 
     /**

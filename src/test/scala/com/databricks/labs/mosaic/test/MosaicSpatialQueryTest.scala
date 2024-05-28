@@ -50,7 +50,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                 SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString,
                 "spark.sql.parquet.compression.codec" -> "uncompressed"
               ) {
-                  spark.sparkContext.setLogLevel("FATAL")
+                  spark.sparkContext.setLogLevel("ERROR")
                   withMosaicContext(geom, is) {
                       testFun
                   }
@@ -73,7 +73,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                 SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString,
                 "spark.sql.parquet.compression.codec" -> "uncompressed"
               ) {
-                  spark.sparkContext.setLogLevel("FATAL")
+                  spark.sparkContext.setLogLevel("ERROR")
                   withMosaicContext(geom, is) {
                       testFun
                   }
@@ -96,7 +96,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                     SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString,
                     "spark.sql.parquet.compression.codec" -> "uncompressed"
                   ) {
-                      spark.sparkContext.setLogLevel("FATAL")
+                      spark.sparkContext.setLogLevel("ERROR")
                       withMosaicContext(geom, is) {
                           testFun
                       }
@@ -119,7 +119,7 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                     SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString,
                     "spark.sql.parquet.compression.codec" -> "uncompressed"
                   ) {
-                      spark.sparkContext.setLogLevel("FATAL")
+                      spark.sparkContext.setLogLevel("ERROR")
                       withMosaicContext(geom, is) {
                           testFun
                       }

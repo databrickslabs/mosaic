@@ -14,7 +14,7 @@ import java.nio.file.{Files, Paths}
 trait ST_AsMVTTileAggBehaviors extends MosaicSpatialQueryTest {
 
     def behavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         val sc = spark

@@ -7,7 +7,6 @@ import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
-import org.apache.spark.sql.types.ArrayType
 
 import scala.reflect.ClassTag
 
@@ -19,8 +18,8 @@ import scala.reflect.ClassTag
   * @param rastersExpr
   *   The rasters expression. It is an array column containing rasters as either
   *   paths or as content byte arrays.
-  * @param outputType
-  *   The output type of the result.
+  * @param returnsRaster
+  *   Whether raster is returned.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -64,7 +63,7 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
         GDAL.enable(expressionConfig)
         val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
         val result = rasterTransform(tiles)
-        val resultType = if (returnsRaster) RasterTileType(rastersExpr).rasterType else dataType
+        val resultType = if (returnsRaster) RasterTileType(rastersExpr, expressionConfig.isRasterUseCheckpoint).rasterType else dataType
         val serialized = serialize(result, returnsRaster, resultType, expressionConfig)
         tiles.foreach(t => RasterCleaner.dispose(t))
         serialized

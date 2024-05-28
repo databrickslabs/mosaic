@@ -112,7 +112,7 @@ Here are spark session configs available for raster, e.g. :code:`spark.conf.set(
      - Checkpoint location, e.g. :ref:`rst_maketiles`
    * - spark.databricks.labs.mosaic.raster.use.checkpoint
      - "false"
-     - Checkpoint for session, in 0.4.2+
+     - Checkpoint for session, in 0.4.3+
    * - spark.databricks.labs.mosaic.raster.tmp.prefix
      - "" (will use "/tmp")
      - Local directory for workers

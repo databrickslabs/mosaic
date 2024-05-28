@@ -10,7 +10,7 @@ trait RST_IsEmptyBehaviors extends QueryTest {
 
     // noinspection AccessorLikeMethodIsUnit
     def isEmptyBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark

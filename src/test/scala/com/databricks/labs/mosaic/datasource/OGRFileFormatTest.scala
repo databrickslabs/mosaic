@@ -144,7 +144,7 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
     test("OGRFileFormat should handle partial schema: ISSUE 351") {
         assume(System.getProperty("os.name") == "Linux")
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(H3, JTS)
         import mc.functions._
 

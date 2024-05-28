@@ -8,7 +8,6 @@ import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, TernaryExpression}
-import org.apache.spark.sql.types.DataType
 
 import scala.reflect.ClassTag
 
@@ -78,7 +77,7 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
     // noinspection DuplicatedCode
     override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
         GDAL.enable(expressionConfig)
-        val rasterType = RasterTileType(rasterExpr).rasterType
+        val rasterType = RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile.deserialize(
             input.asInstanceOf[InternalRow],
             expressionConfig.getCellIdType,

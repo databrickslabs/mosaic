@@ -50,10 +50,18 @@ object GDAL {
     /** @return Returns the name of the raster API. */
     def name: String = "GDAL"
 
+    /** @return Returns whether using checkpoint (assumes `enable` called) */
+    def isUseCheckpoint: Boolean = MosaicGDAL.isUseCheckpoint
+
+    /** @return Returns checkpoint path (assumes `enable` called) */
+    def getCheckpointPath: String = MosaicGDAL.getCheckpointPath
+
     /**
       * Enables GDAL on the worker nodes. GDAL requires drivers to be registered
       * on the worker nodes. This method registers all the drivers on the worker
       * nodes.
+      * @param mosaicConfig
+      *   The [[MosaicExpressionConfig]] for the op.
       */
     def enable(mosaicConfig: MosaicExpressionConfig): Unit = {
         configureGDAL(mosaicConfig)
@@ -61,6 +69,13 @@ object GDAL {
         gdal.AllRegister()
     }
 
+    /**
+      * Enables GDAL on the worker nodes. GDAL requires drivers to be registered
+      * on the worker nodes. This method registers all the drivers on the worker
+      * nodes.
+      * @param spark
+      *   Spark session from which to populate the [[MosaicExpressionConfig]].
+      */
     def enable(spark: SparkSession): Unit = {
         val mosaicConfig = MosaicExpressionConfig(spark)
         enable(mosaicConfig)
@@ -147,6 +162,10 @@ object GDAL {
       *
       * @param generatedRasters
       *   The rasters to write.
+      * @param rasterDT
+      *   The type of raster to write.
+      *   - if string write to checkpoint
+      *   - otherwise, write to bytes
       * @return
       *   Returns the paths of the written rasters.
       */
@@ -155,12 +174,7 @@ object GDAL {
             if (raster != null) {
                 rasterDT match {
                     case StringType =>
-                        val uuid = UUID.randomUUID().toString
-                        val extension = GDAL.getExtension(raster.getDriversShortName)
-                        val writePath = s"${MosaicGDAL.checkpointPath}/$uuid.$extension"
-                        val outPath = raster.writeToPath(writePath)
-                        RasterCleaner.dispose(raster)
-                        UTF8String.fromString(outPath)
+                        writeRasterString(raster)
                     case BinaryType =>
                         val bytes = raster.writeToBytes()
                         RasterCleaner.dispose(raster)
@@ -172,6 +186,15 @@ object GDAL {
         )
     }
 
+    private def writeRasterString(raster: MosaicRasterGDAL): UTF8String = {
+        val uuid = UUID.randomUUID().toString
+        val extension = GDAL.getExtension(raster.getDriversShortName)
+        val writePath = s"${getCheckpointPath}/$uuid.$extension"
+        val outPath = raster.writeToPath(writePath)
+        RasterCleaner.dispose(raster)
+        UTF8String.fromString(outPath)
+    }
+
     /**
       * Reads a raster from the given path. Assume not zipped file. If zipped,
       * use raster(path, vsizip = true)
@@ -179,8 +202,10 @@ object GDAL {
       * @param path
       *   The path to the raster. This path has to be a path to a single raster.
       *   Rasters with subdatasets are supported.
+      * @param parentPath
+      *   Parent path can help with detecting driver.
       * @return
-      *   Returns a Raster object.
+      *   Returns a [[MosaicRasterGDAL]] object.
       */
     def raster(path: String, parentPath: String): MosaicRasterGDAL = {
         val createInfo = Map("path" -> path, "parentPath" -> parentPath)
@@ -193,8 +218,12 @@ object GDAL {
       *
       * @param content
       *   The byte array to read the raster from.
+      * @param parentPath
+      *   Parent path can help with detecting driver.
+      * @param driverShortName
+      *   Driver to use in reading.
       * @return
-      *   Returns a Raster object.
+      *   Returns a [[MosaicRasterGDAL]] object.
       */
     def raster(content: Array[Byte], parentPath: String, driverShortName: String): MosaicRasterGDAL = {
         val createInfo = Map("parentPath" -> parentPath, "driver" -> driverShortName)
@@ -210,8 +239,10 @@ object GDAL {
       *   Rasters with subdatasets are supported.
       * @param bandIndex
       *   The index of the band to read from the raster.
+      * @param parentPath
+      *   Parent path can help with detecting driver.
       * @return
-      *   Returns a Raster band object.
+      *   Returns a [[MosaicRasterBandGDAL]] object.
       */
     def band(path: String, bandIndex: Int, parentPath: String): MosaicRasterBandGDAL = {
         val createInfo = Map("path" -> path, "parentPath" -> parentPath)

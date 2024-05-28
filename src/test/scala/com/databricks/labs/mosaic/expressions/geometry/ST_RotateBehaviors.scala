@@ -14,7 +14,7 @@ import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper
 trait ST_RotateBehaviors extends QueryTest {
 
     def rotateBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
@@ -35,7 +35,7 @@ trait ST_RotateBehaviors extends QueryTest {
     }
 
     def rotateCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
@@ -64,7 +64,7 @@ trait ST_RotateBehaviors extends QueryTest {
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 

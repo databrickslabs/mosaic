@@ -1,24 +1,27 @@
 from test.context import api
-
+from test.context import config
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, to_json
-
 from mosaic import st_geomfromgeojson, st_point
-
 from .spark_test_case import SparkTestCase
 
 
 class MosaicTestCase(SparkTestCase):
+
     def setUp(self) -> None:
-        return super.setUp()
+        return super().setUp()
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         api.enable_mosaic(cls.spark)
 
-    def setUp(self) -> None:
-        return super().setUp()
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+
+    def get_context(self):
+        return config.mosaic_context
 
     def generate_input_single_linestring(self) -> DataFrame:
         return self.spark.createDataFrame(

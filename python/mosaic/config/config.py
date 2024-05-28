@@ -10,3 +10,6 @@ sql_context: SQLContext
 display_handler: DisplayHandler
 ipython_hook: InteractiveShell
 notebook_utils = None
+jar_path: str = None
+jar_autoattach: bool = True
+log_info: bool = False

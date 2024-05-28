@@ -4,9 +4,10 @@ import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterBandGDAL, Mosaic
 import org.apache.spark.internal.Logging
 
 /**
-  * RasterReader is a trait that defines the interface for reading raster data
-  * from a file system path. It is used by the RasterAPI to read raster and
-  * raster band data.
+  * RasterReader is a trait that defines the interface for loading raster data into
+  * tile struct from a file system path or contents. It is used by the RasterAPI to
+  * read raster and raster band data. MosaicRasterGDAL is the internal object generated
+  * from the data.
   * @note
   *   For subdatasets the path should be the path to the subdataset and not to
   *   the file.
@@ -14,55 +15,45 @@ import org.apache.spark.internal.Logging
 trait RasterReader extends Logging {
 
     /**
-      * Reads a raster from a file system path. Reads a subdataset if the path
-      * is to a subdataset.
-      *
-      * @example
-      *   Raster: path = "/path/to/file.tif" Subdataset: path =
-      *   "FORMAT:/path/to/file.tif:subdataset"
-      * @param createInfo
-      *   The create info for the raster. This should contain the following
-      *   keys:
-      *   - path: The path to the raster file.
-      *   - parentPath: The path of the parent raster file.
-      *   - driver: Optional: The driver short name of the raster file
-      * @return
-      *   A MosaicRaster object.
-      */
-    def readRaster(createInfo: Map[String, String]): MosaicRasterGDAL
+     * Reads a raster band from a file system path. Reads a subdataset band if
+     * the path is to a subdataset. Assumes "path" is a key in createInfo.
+     *
+     * @example
+     *   Raster: path = "/path/to/file.tif" Subdataset: path =
+     *   "FORMAT:/path/to/file.tif:subdataset"
+     * @param bandIndex
+     *  The band index to read (1+ indexed).
+     * @param createInfo
+     *   Map of create info for the raster.
+     * @return
+     *   A [[MosaicRasterBandGDAL]] object.
+     */
+    def readBand(bandIndex: Int, createInfo: Map[String, String]): MosaicRasterBandGDAL
 
     /**
-      * Reads a raster from an in memory buffer. Use the buffer bytes to produce
-      * a uuid of the raster.
-      *
-      * @param contentBytes
-      *   The file bytes.
-      * @param createInfo
-      *   The create info for the raster. This should contain the following
-      *   keys:
-      *   - parentPath: The path of the parent raster file.
-      *   - driver: The driver short name of the raster file
-      * @return
-      *   A MosaicRaster object.
-      */
+     * Reads a raster from a byte array. Expects "driver" in createInfo.
+     * @param contentBytes
+     *   The byte array containing the raster data.
+     * @param createInfo
+     *   Mosaic creation info of the raster. Note: This is not the same as the
+     *   metadata of the raster. This is not the same as GDAL creation options.
+     * @return
+     *   A [[MosaicRasterGDAL]] object.
+     */
     def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL
 
     /**
-      * Reads a raster band from a file system path. Reads a subdataset band if
-      * the path is to a subdataset.
+      * Reads a raster from a file system path. Reads a subdataset if the path
+      * is to a subdataset. Assumes "path" is a key in createInfo.
       *
       * @example
       *   Raster: path = "/path/to/file.tif" Subdataset: path =
       *   "FORMAT:/path/to/file.tif:subdataset"
       * @param createInfo
-      *   The create info for the raster. This should contain the following
-      *   keys:
-      *   - path: The path to the raster file.
-      *   - parentPath: The path of the parent raster file.
-      *   - driver: Optional: The driver short name of the raster file
+      *   Map of create info for the raster.
       * @return
-      *   A MosaicRaster object.
+      *   A [[MosaicRasterGDAL]] object.
       */
-    def readBand(bandIndex: Int, createInfo: Map[String, String]): MosaicRasterBandGDAL
+    def readRaster(createInfo: Map[String, String]): MosaicRasterGDAL
 
 }

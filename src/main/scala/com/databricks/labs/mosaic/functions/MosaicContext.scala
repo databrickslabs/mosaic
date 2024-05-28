@@ -75,19 +75,32 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         )
     }
 
+    /**
+      * Registers required parsers for SQL for Mosaic functionality.
+      * - uses spark from existing session.
+      * - called on driver.
+      */
     def register(): Unit = {
-        val spark = SparkSession.builder().getOrCreate()
         register(spark)
     }
 
+    /**
+     * Registers required parsers for SQL for Mosaic functionality.
+     * - uses spark from existing session.
+     * - called on driver.
+     *
+     * @param database
+     *   A database to which functions are added to. By default none is passed
+     *   resulting in functions being registered in default database.
+     */
     def register(database: String): Unit = {
-        val spark = SparkSession.builder().getOrCreate()
         spark.sql(s"create database if not exists $database")
         register(spark, Some(database))
     }
 
     /**
       * Registers required parsers for SQL for Mosaic functionality.
+      * - called on driver.
       *
       * @param spark
       *   SparkSession to which the parsers are registered to.
@@ -101,6 +114,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         spark: SparkSession,
         database: Option[String] = None
     ): Unit = {
+        expressionConfig.updateSparkConf(spark) // any changes?
         val registry = spark.sessionState.functionRegistry
         val mosaicRegistry = MosaicRegistry(registry, database)
 
@@ -550,7 +564,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
     }
 
     def shouldUseDatabricksH3(): Boolean = {
-        val spark = SparkSession.builder().getOrCreate()
         val isDatabricksH3Enabled = spark.conf.get(SPARK_DATABRICKS_GEO_H3_ENABLED, "false") == "true"
         indexSystem.name == H3.name && isDatabricksH3Enabled
     }
@@ -1043,7 +1056,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 object MosaicContext extends Logging {
 
     var _tmpDir: String = ""
-    val mosaicVersion: String = "0.4.2"
+    val mosaicVersion: String = "0.4.3"
 
     private var instance: Option[MosaicContext] = None
 
@@ -1073,6 +1086,12 @@ object MosaicContext extends Logging {
         instance match {
             case Some(context) => context
             case None          => throw new Error("MosaicContext was not built.")
+        }
+
+    def checkContext: Boolean =
+        instance match {
+            case Some(_) => true
+            case None    => false
         }
 
     def reset(): Unit = instance = None

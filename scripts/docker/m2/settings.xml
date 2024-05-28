@@ -1,0 +1,12 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 http://maven.apache.org/xsd/settings-1.2.0.xsd">
+    <!-- localRepository
+    | The path to the local repository maven will use to store artifacts.
+    |
+    | Default: ${user.home}/.m2/repository
+    -->
+    <localRepository>/root/mosaic/scripts/docker/m2</localRepository>
+    <activeProfiles>
+        <activeProfile>skipScoverage</activeProfile>
+    </activeProfiles>
+</settings>

@@ -12,7 +12,7 @@ import org.scalatest.matchers.should.Matchers._
 trait ConvertToBehaviors extends QueryTest {
 
     def checkInputTypeBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -58,7 +58,7 @@ trait ConvertToBehaviors extends QueryTest {
     }
 
     def passthroughBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -67,7 +67,7 @@ trait ConvertToBehaviors extends QueryTest {
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
         val wkts = getWKTRowsDf().select("wkt")

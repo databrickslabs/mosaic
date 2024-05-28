@@ -32,10 +32,11 @@ case class RST_FromFile(
       with Serializable
       with NullIntolerant
       with CodegenFallback {
-    
-    val tileType: DataType = BinaryType
 
-    override def dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileType)
+    override def dataType: DataType = {
+        GDAL.enable(expressionConfig)
+        RasterTileType(expressionConfig.getCellIdType, BinaryType, expressionConfig.isRasterUseCheckpoint)
+    }
 
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 
@@ -61,6 +62,7 @@ case class RST_FromFile(
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
+        val rasterType = dataType.asInstanceOf[RasterTileType].rasterType
         val path = rasterPathExpr.eval(input).asInstanceOf[UTF8String].toString
         val readPath = PathUtils.getCleanPath(path)
         val driver = MosaicRasterGDAL.identifyDriver(path)
@@ -70,7 +72,7 @@ case class RST_FromFile(
             val createInfo = Map("path" -> readPath, "parentPath" -> path)
             var raster = MosaicRasterGDAL.readRaster(createInfo)
             var tile = MosaicRasterTile(null, raster)
-            val row = tile.formatCellId(indexSystem).serialize(tileType)
+            val row = tile.formatCellId(indexSystem).serialize(rasterType)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
             raster = null
@@ -83,7 +85,7 @@ case class RST_FromFile(
             Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
             val size = if (targetSize <= 0) 64 else targetSize
             var tiles = ReTileOnRead.localSubdivide(tmpPath, path, size)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize(tileType))
+            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType))
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(tmpPath))
             tiles = null

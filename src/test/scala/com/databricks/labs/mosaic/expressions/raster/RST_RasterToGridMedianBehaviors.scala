@@ -10,7 +10,7 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_RasterToGridMedianBehaviors extends QueryTest {
 
     def rasterToGridMedianBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark

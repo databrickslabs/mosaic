@@ -24,7 +24,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
     def creationOfContext(mosaicContext: MosaicContext): Unit = {
         val indexSystem = mosaicContext.getIndexSystem
         val geometryAPI = mosaicContext.getGeometryAPI
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         MosaicContext.reset()
         an[Error] should be thrownBy MosaicContext.context
         val mc = MosaicContext.build(indexSystem, geometryAPI)
@@ -39,7 +39,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
     }
 
     def sqlRegistration(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         val indexSystem = mc.getIndexSystem
         import mc.functions._

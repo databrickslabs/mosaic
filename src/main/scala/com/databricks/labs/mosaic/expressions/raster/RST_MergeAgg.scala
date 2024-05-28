@@ -31,7 +31,10 @@ case class RST_MergeAgg(
     override lazy val deterministic: Boolean = true
     override val child: Expression = tileExpr
     override val nullable: Boolean = false
-    override lazy val dataType: DataType = RasterTileType(expressionConfig.getCellIdType, tileExpr)
+    override lazy val dataType: DataType = {
+        GDAL.enable(expressionConfig)
+        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+    }
     override def prettyName: String = "rst_merge_agg"
 
     private lazy val projection = UnsafeProjection.create(Array[DataType](ArrayType(elementType = dataType, containsNull = false)))
@@ -66,7 +69,7 @@ case class RST_MergeAgg(
 
             // This is a trick to get the rasters sorted by their parent path to ensure more consistent results
             // when merging rasters with large overlaps
-            val rasterType = RasterTileType(tileExpr).rasterType
+            val rasterType = RasterTileType(tileExpr, expressionConfig.isRasterUseCheckpoint).rasterType
             var tiles = buffer
                 .map(row =>
                     MosaicRasterTile.deserialize(

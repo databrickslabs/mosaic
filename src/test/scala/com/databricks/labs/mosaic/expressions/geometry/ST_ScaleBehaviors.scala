@@ -13,7 +13,7 @@ import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper
 trait ST_ScaleBehaviors extends QueryTest {
 
     def scaleBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
@@ -34,7 +34,7 @@ trait ST_ScaleBehaviors extends QueryTest {
     }
 
     def scaleCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
@@ -63,7 +63,7 @@ trait ST_ScaleBehaviors extends QueryTest {
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 

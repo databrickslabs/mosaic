@@ -14,7 +14,7 @@ import org.scalatest.matchers.should.Matchers._
 trait IndexGeometryBehaviors extends MosaicSpatialQueryTest {
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 

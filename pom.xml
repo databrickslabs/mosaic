@@ -147,27 +147,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.scoverage</groupId>
-                <artifactId>scoverage-maven-plugin</artifactId>
-                <version>2.0.2</version>
-                <executions>
-                    <execution>
-                        <id>scoverage-report</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>check</goal>
-                            <goal>report-only</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <minimumCoverage>${minimum.coverage}</minimumCoverage>
-                    <failOnMinimumCoverage>true</failOnMinimumCoverage>
-                    <scalaVersion>${scala.version}</scalaVersion>
-                    <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
-                </configuration>
-            </plugin>
-            <plugin>
                 <!-- see http://davidb.github.com/scala-maven-plugin -->
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
@@ -277,8 +256,45 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.4.0</spark.version>
-                <mosaic.version>0.4.2</mosaic.version>
+                <spark.version>3.4.1</spark.version>
+                <mosaic.version>0.4.3</mosaic.version>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.scoverage</groupId>
+                        <artifactId>scoverage-maven-plugin</artifactId>
+                        <version>2.0.2</version>
+                        <executions>
+                            <execution>
+                                <id>scoverage-report</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                    <goal>report-only</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <minimumCoverage>${minimum.coverage}</minimumCoverage>
+                            <failOnMinimumCoverage>true</failOnMinimumCoverage>
+                            <scalaVersion>${scala.version}</scalaVersion>
+                            <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- local testing `mvn test -PskipScoverage -DskipTests=false -Dsuite=...` -->
+            <id>skipScoverage</id>
+            <properties>
+                <scala.version>2.12.10</scala.version>
+                <scala.compat.version>2.12</scala.compat.version>
+                <spark.version>3.4.1</spark.version>
+                <mosaic.version>0.4.3</mosaic.version>
+                <maven.compiler.source>1.8</maven.compiler.source>
+                <maven.compiler.target>1.8</maven.compiler.target>
             </properties>
         </profile>
     </profiles>

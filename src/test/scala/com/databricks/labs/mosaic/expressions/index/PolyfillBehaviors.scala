@@ -13,7 +13,7 @@ import org.scalatest.matchers.should.Matchers._
 trait PolyfillBehaviors extends MosaicSpatialQueryTest {
 
     def polyfillOnComputedColumns(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -36,7 +36,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
     }
 
     def wktPolyfill(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -69,7 +69,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
     }
 
     def wkbPolyfill(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -101,7 +101,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
     }
 
     def hexPolyfill(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -133,7 +133,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
     }
 
     def coordsPolyfill(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -171,7 +171,7 @@ trait PolyfillBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         import sc.implicits._
         val mc = mosaicContext

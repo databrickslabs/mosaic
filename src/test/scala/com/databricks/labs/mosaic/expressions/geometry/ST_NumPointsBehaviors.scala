@@ -12,7 +12,7 @@ import org.scalatest.matchers.should.Matchers.{an, be, contain, convertToAnyShou
 trait ST_NumPointsBehaviors extends MosaicSpatialQueryTest {
 
     def numPointsBehaviour(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         val sc = spark
         import mc.functions._
@@ -41,7 +41,7 @@ trait ST_NumPointsBehaviors extends MosaicSpatialQueryTest {
     }
 
     def codegenCompilation(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         val sc = spark
         mc.register(sc)
@@ -64,7 +64,7 @@ trait ST_NumPointsBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 

@@ -3,6 +3,13 @@ import re
 import sys
 
 def main(version, snapshot):
+    """
+    TODO: Also need to adjust...
+    [1] /R/sparklyr-mosaic/tests.R
+        - e.g. "sparklyrMosaic_0.4.3.tar.gz"
+    [2] /src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala
+        - e.g. "mosaicVersion: String = "0.4.3"
+    """
     update_pom_version('../pom.xml', version + snapshot)
     update_python_version('../python/mosaic/__init__.py', version + snapshot)
     update_r_version('../R/sparkR-mosaic/sparkrMosaic/DESCRIPTION', version)

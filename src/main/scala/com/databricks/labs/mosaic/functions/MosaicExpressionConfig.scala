@@ -5,6 +5,8 @@ import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import org.apache.spark.sql.types.DataType
 import org.apache.spark.sql.{RuntimeConfig, SparkSession}
 
+import scala.util.Try
+
 /**
   * Mosaic Expression Config is a class that contains the configuration for the
   * Mosaic Expression. Singleton objects are not accessible outside the JVM, so
@@ -17,9 +19,23 @@ import org.apache.spark.sql.{RuntimeConfig, SparkSession}
 case class MosaicExpressionConfig(configs: Map[String, String]) {
 
     def updateSparkConf(): Unit = {
+        // populate initial set configs
         val spark = SparkSession.builder().getOrCreate()
+        updateSparkConf(spark)
+    }
+
+    def updateSparkConf(spark: SparkSession): Unit = {
         val sparkConf = spark.sparkContext.getConf
         configs.foreach { case (k, v) => sparkConf.set(k, v) }
+
+        // update defaults as well
+        this
+            .setGeometryAPI(spark.conf.get(MOSAIC_GEOMETRY_API, JTS.name))
+            .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))
+            .setRasterCheckpoint(spark.conf.get(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT))
+            .setRasterUseCheckpoint(spark.conf.get(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT))
+            .setTmpPrefix(spark.conf.get(MOSAIC_RASTER_TMP_PREFIX, "/tmp"))
+            .setGDALConf(spark.conf)
     }
 
     def getGDALConf: Map[String, String] = {
@@ -28,11 +44,17 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
 
     def getGeometryAPI: String = configs.getOrElse(MOSAIC_GEOMETRY_API, JTS.name)
 
-    def getIndexSystem: String = configs.getOrElse(MOSAIC_INDEX_SYSTEM, H3.name)
-
     def getRasterCheckpoint: String = configs.getOrElse(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT)
 
+    def getRasterUseCheckpoint: String = configs.getOrElse(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT)
+
+    def isRasterUseCheckpoint: Boolean = {
+        Try(getRasterUseCheckpoint == "true").getOrElse(false)
+    }
+
     def getCellIdType: DataType = IndexSystemFactory.getIndexSystem(getIndexSystem).cellIdType
+
+    def getIndexSystem: String = configs.getOrElse(MOSAIC_INDEX_SYSTEM, H3.name)
     
     def getRasterBlockSize: Int = configs.getOrElse(MOSAIC_RASTER_BLOCKSIZE, MOSAIC_RASTER_BLOCKSIZE_DEFAULT).toInt
     
@@ -58,6 +80,10 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
     def setRasterCheckpoint(checkpoint: String): MosaicExpressionConfig = {
         MosaicExpressionConfig(configs + (MOSAIC_RASTER_CHECKPOINT -> checkpoint))
     }
+
+    def setRasterUseCheckpoint(checkpoint: String): MosaicExpressionConfig = {
+        MosaicExpressionConfig(configs + (MOSAIC_RASTER_USE_CHECKPOINT -> checkpoint))
+    }
     
     def setTmpPrefix(prefix: String): MosaicExpressionConfig = {
         MosaicExpressionConfig(configs + (MOSAIC_RASTER_TMP_PREFIX -> prefix))
@@ -81,9 +107,9 @@ object MosaicExpressionConfig {
             .setGeometryAPI(spark.conf.get(MOSAIC_GEOMETRY_API, JTS.name))
             .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))
             .setRasterCheckpoint(spark.conf.get(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT))
+            .setRasterUseCheckpoint(spark.conf.get(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT))
             .setTmpPrefix(spark.conf.get(MOSAIC_RASTER_TMP_PREFIX, "/tmp"))
             .setGDALConf(spark.conf)
-
     }
 
 }
