@@ -80,8 +80,10 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
         val generatedRasters = rasterGenerator(tile)
 
         // Writing rasters disposes of the written raster
-        val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize(rasterType))
-        generatedRasters.foreach(gr => RasterCleaner.dispose(gr))
+        val rows = generatedRasters.map(
+            _.formatCellId(indexSystem).serialize(rasterType)
+        )
+//        generatedRasters.foreach(gr => RasterCleaner.dispose(gr))
         RasterCleaner.dispose(tile)
 
         rows.map(row => InternalRow.fromSeq(Seq(row)))
