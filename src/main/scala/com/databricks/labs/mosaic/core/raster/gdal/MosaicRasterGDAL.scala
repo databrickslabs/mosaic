@@ -522,8 +522,8 @@ case class MosaicRasterGDAL(
       * bytes.
       */
     def cleanUp(): Unit = {
-        // 0.4.2 - don't delete any fuse locations.
-        if (!PathUtils.isFuseLocation(path) && path != PathUtils.getCleanPath(parentPath)) {
+        // 0.4.4 - don't delete any checkpointing or fuse locations.
+        if (PathUtils.isTmpLocation(path)) {
             Try(gdal.GetDriverByName(getDriversShortName).Delete(path))
             PathUtils.cleanUpPath(path)
         }

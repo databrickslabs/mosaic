@@ -59,7 +59,7 @@ object RST_Transform extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Avg](1, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_Transform](2, expressionConfig)
     }
 
 }

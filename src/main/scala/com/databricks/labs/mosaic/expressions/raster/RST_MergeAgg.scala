@@ -86,7 +86,7 @@ case class RST_MergeAgg(
 
             val result = MosaicRasterTile(idx, merged)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(BinaryType)
+                .serialize(rasterType)
 
             tiles.foreach(RasterCleaner.dispose(_))
             RasterCleaner.dispose(merged)

@@ -30,12 +30,12 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                 "rst_boundingbox", api.st_buffer("rst_boundingbox", lit(-0.001))
             )
             .withColumn("rst_clip", api.rst_clip("tile", "rst_boundingbox"))
+            .withColumn("tile_from_file", api.rst_fromfile("path", lit(-1)))
             .withColumn(
                 "rst_combineavg",
-                api.rst_combineavg(array(col("tile"), col("rst_clip"))),
+                api.rst_combineavg(array(col("tile_from_file"), col("rst_clip"))),
             )
             .withColumn("rst_frombands", api.rst_frombands(array("tile", "tile")))
-            .withColumn("tile_from_file", api.rst_fromfile("path", lit(-1)))
             .withColumn("rst_georeference", api.rst_georeference("tile"))
             .withColumn("rst_getnodata", api.rst_getnodata("tile"))
             .withColumn("rst_subdatasets", api.rst_subdatasets("tile"))
@@ -77,6 +77,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn("rst_srid", api.rst_srid("tile"))
             .withColumn("rst_summary", api.rst_summary("tile"))
             # .withColumn("rst_tryopen", api.rst_tryopen(col("path"))) # needs an issue
+            .withColumn("rst_type", api.rst_type("tile"))
+            .withColumn("rst_updatetype", api.rst_updatetype("tile", lit("Int32")))
             .withColumn("rst_upperleftx", api.rst_upperleftx("tile"))
             .withColumn("rst_upperlefty", api.rst_upperlefty("tile"))
             .withColumn("rst_width", api.rst_width("tile"))

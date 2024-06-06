@@ -29,9 +29,9 @@ test_that("scalar raster functions behave as intended", {
     mutate(rst_boundingbox = rst_boundingbox(tile)) %>%
     mutate(rst_boundingbox = st_buffer(rst_boundingbox, -0.001)) %>%
     mutate(rst_clip = rst_clip(tile, rst_boundingbox)) %>%
-    mutate(rst_combineavg = rst_combineavg(array(tile, rst_clip))) %>%
-    mutate(rst_frombands = rst_frombands(array(tile, tile))) %>%
     mutate(rst_fromfile = rst_fromfile(path, -1L)) %>%
+    mutate(rst_combineavg = rst_combineavg(array(rst_fromfile, rst_clip))) %>%
+    mutate(rst_frombands = rst_frombands(array(tile, tile))) %>%
     mutate(rst_georeference = rst_georeference(tile)) %>%
     mutate(rst_getnodata = rst_getnodata(tile)) %>%
     mutate(rst_subdatasets = rst_subdatasets(tile)) %>%
@@ -63,6 +63,8 @@ test_that("scalar raster functions behave as intended", {
     mutate(rst_scaley = rst_scaley(tile)) %>%
     mutate(rst_srid = rst_srid(tile)) %>%
     mutate(rst_summary = rst_summary(tile)) %>%
+    mutate(rst_type = rst_type(tile)) %>%
+    mutate(rst_updatetype = rst_updatetype(tile, "Float32")) %>%
     mutate(rst_upperleftx = rst_upperleftx(tile)) %>%
     mutate(rst_upperlefty = rst_upperlefty(tile)) %>%
     mutate(rst_width = rst_width(tile)) %>%

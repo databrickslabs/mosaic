@@ -3008,6 +3008,99 @@ rst_tryopen
      | true                                                                                                             |
      +------------------------------------------------------------------------------------------------------------------+
 
+
+rst_type
+********
+
+.. function:: rst_type(tile)
+
+    Returns the data type of the raster's bands.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :rtype: Column: StringType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df.select(mos.rst_type('tile')).display()
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_type(tile)                                                                                                   |
+    +------------------------------------------------------------------------------------------------------------------+
+    | [Int16]                                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_type(col("tile"))).show
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_type(tile)                                                                                                   |
+    +------------------------------------------------------------------------------------------------------------------+
+    | [Int16]                                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_type(tile) FROM table
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_type(tile)                                                                                                   |
+    +------------------------------------------------------------------------------------------------------------------+
+    | [Int16]                                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+
+
+rst_updatetype
+**************
+
+.. function:: rst_updatetype(tile, newType)
+
+    Translates the raster to a new data type.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :param newType: Data type to translate the raster to.
+    :type newType: Column (StringType)
+    :rtype: Column: (RasterTileType)
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.select(mos.rst_updatetype('tile', lit('Float32'))).display()
+     +----------------------------------------------------------------------------------------------------+
+     | rst_updatetype(tile,Float32)                                                                       |
+     +----------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
+     |  "last_command":"gdaltranslate -ot Float32 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
+     +----------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.select(rst_updatetype(col("tile"), lit("Float32"))).show
+     +----------------------------------------------------------------------------------------------------+
+     | rst_updatetype(tile,Float32)                                                                       |
+     +----------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
+     |  "last_command":"gdaltranslate -ot Float32 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
+     +----------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_updatetype(tile, 'Float32') FROM table
+     +----------------------------------------------------------------------------------------------------+
+     | rst_updatetype(tile,Float32)                                                                       |
+     +----------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
+     |  "last_command":"gdaltranslate -ot Float32 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
+     +----------------------------------------------------------------------------------------------------+
+
+
 rst_upperleftx
 **********************
 

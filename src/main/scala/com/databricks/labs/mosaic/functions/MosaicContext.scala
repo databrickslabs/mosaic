@@ -323,11 +323,13 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_Summary](expressionConfig)
         mosaicRegistry.registerExpression[RST_Tessellate](expressionConfig)
         mosaicRegistry.registerExpression[RST_Transform](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Type](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromContent](expressionConfig)
         mosaicRegistry.registerExpression[RST_FromFile](expressionConfig)
         mosaicRegistry.registerExpression[RST_ToOverlappingTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_TryOpen](expressionConfig)
         mosaicRegistry.registerExpression[RST_Subdivide](expressionConfig)
+        mosaicRegistry.registerExpression[RST_UpdateType](expressionConfig)
         mosaicRegistry.registerExpression[RST_UpperLeftX](expressionConfig)
         mosaicRegistry.registerExpression[RST_UpperLeftY](expressionConfig)
         mosaicRegistry.registerExpression[RST_Width](expressionConfig)
@@ -777,6 +779,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_transform(raster: Column, srid: Column): Column = ColumnAdapter(RST_Transform(raster.expr, srid.expr, expressionConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, expressionConfig))
+        def rst_type(raster: Column): Column = ColumnAdapter(RST_Type(raster.expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver: Column): Column =
             ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(-1).expr, expressionConfig))
         def rst_fromcontent(raster: Column, driver: Column, sizeInMB: Column): Column =
@@ -799,6 +802,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_Subdivide(raster.expr, sizeInMB.expr, expressionConfig))
         def rst_subdivide(raster: Column, sizeInMB: Int): Column =
             ColumnAdapter(RST_Subdivide(raster.expr, lit(sizeInMB).expr, expressionConfig))
+        def rst_updatetype(raster: Column, dataType: Column): Column =
+            ColumnAdapter(RST_UpdateType(raster.expr, dataType.expr, expressionConfig))
+        def rst_updatetype(raster: Column, dataType: String): Column =
+            ColumnAdapter(RST_UpdateType(raster.expr, lit(dataType).expr, expressionConfig))
         def rst_upperleftx(raster: Column): Column = ColumnAdapter(RST_UpperLeftX(raster.expr, expressionConfig))
         def rst_upperlefty(raster: Column): Column = ColumnAdapter(RST_UpperLeftY(raster.expr, expressionConfig))
         def rst_width(raster: Column): Column = ColumnAdapter(RST_Width(raster.expr, expressionConfig))

@@ -55,7 +55,7 @@ object MosaicGDAL extends Logging {
         val CPL_TMPDIR = MosaicContext.tmpDir(mosaicConfig)
         val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir(mosaicConfig)
         gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
-        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
+        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
         gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)
         gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", GDAL_PAM_PROXY_DIR)
         gdal.SetConfigOption("GDAL_PAM_ENABLED", "YES")
