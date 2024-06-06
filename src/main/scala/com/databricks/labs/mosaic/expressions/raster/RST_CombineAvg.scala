@@ -24,15 +24,19 @@ case class RST_CombineAvg(
       with NullIntolerant
       with CodegenFallback {
 
+    GDAL.enable(expressionConfig)
+
+    // serialize data type
     override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
         RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
     }
 
     /** Combines the rasters using average of pixels. */
     override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
+        val manualMode = expressionConfig.isManualCleanupMode
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-        MosaicRasterTile(index, CombineAVG.compute(tiles.map(_.getRaster)))
+        val resultType = getRasterType(dataType)
+        MosaicRasterTile(index, CombineAVG.compute(tiles.map(_.getRaster), manualMode), resultType)
     }
 
 }

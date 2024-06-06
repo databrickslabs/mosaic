@@ -27,10 +27,11 @@ case class RST_Tessellate(
       */
     override def rasterGenerator(tile: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile] = {
         RasterTessellate.tessellate(
-          tile.getRaster,
-          resolution,
-          indexSystem,
-          geometryAPI
+            tile.getRaster,
+            resolution,
+            indexSystem,
+            geometryAPI,
+            expressionConfig.isManualCleanupMode
         )
     }
 

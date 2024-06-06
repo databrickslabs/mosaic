@@ -40,14 +40,18 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     measureType: DataType,
     expressionConfig: MosaicExpressionConfig
 ) extends Raster1ArgExpression[T](rasterExpr, resolutionExpr, returnsRaster = false, expressionConfig)
+      with RasterPathAware
       with RasterGridExpression
       with NullIntolerant
       with Serializable {
+
+    GDAL.enable(expressionConfig)
 
     override def dataType: DataType = RasterToGridType(expressionConfig.getCellIdType, measureType)
 
     /** The index system to be used. */
     val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+
     val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
 
     /**
@@ -65,7 +69,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
         val resolution = arg1.asInstanceOf[Int]
         val transformed = griddedPixels(tile.getRaster, indexSystem, resolution)
         val results = transformed.map(_.mapValues(valuesCombiner))
-        RasterCleaner.dispose(tile)
+        pathSafeDispose(tile, manualMode = expressionConfig.isManualCleanupMode)
         serialize(results)
     }
 

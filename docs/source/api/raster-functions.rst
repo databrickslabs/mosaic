@@ -192,7 +192,7 @@ rst_boundingbox
 rst_clip
 ********
 
-.. function:: rst_clip(tile, geometry)
+.. function:: rst_clip(tile, geometry, cutline_all_touched)
 
     Clips :code:`tile` with :code:`geometry`, provided in a supported encoding (WKB, WKT or GeoJSON).
 
@@ -200,14 +200,25 @@ rst_clip
     :type tile: Column (RasterTileType)
     :param geometry: A column containing the geometry to clip the raster to.
     :type geometry: Column (GeometryType)
+    :param cutline_all_touched: A column to specify pixels boundary behavior.
+    :type cutline_all_touched: Column (BooleanType)
     :rtype: Column: RasterTileType
 
 .. note::
   Notes
 
-    :code:`geometry` is expected to be:
-      - in the same coordinate reference system as the raster.
+    The :code:`geometry` parameter:
+      - Expected to be in the same coordinate reference system as the raster.
       - a polygon or a multipolygon.
+
+    The :code:`cutline_all_touched` parameter:
+      - Optional: default is true. this is a GDAL warp config for the operation.
+      - If set to true, the pixels touching the geometry are included in the clip,
+        regardless of half-in or half-out; this is important for tessellation behaviors.
+      - If set to false, only at least half-in pixels are included in the clip.
+
+    The actual GDAL command to clip looks something like the following (after some setup):
+      :code:`"gdalwarp -wo CUTLINE_ALL_TOUCHED=<TRUE|FALSE> -cutline <GEOMETRY> -crop_to_cutline"`
 
     The output raster tiles will have:
       - the same extent as the input geometry.
@@ -592,6 +603,8 @@ rst_fromcontent
 
     :param raster_bin: A column containing the raster data.
     :type raster_bin: Column (BinaryType)
+    :param driver: GDAL driver to use to open the raster.
+    :type driver: Column(StringType)
     :param size_in_MB: Optional parameter to specify the size of the raster tile in MB. Default is not to split the input.
     :type size_in_MB: Column (IntegerType)
     :rtype: Column: RasterTileType
@@ -1021,7 +1034,7 @@ rst_isempty
 rst_maketiles
 *************
 
-.. function:: rst_maketiles(input, driver, size, withCheckpoint)
+.. function:: rst_maketiles(input, driver, size, with_checkpoint)
 
     Tiles the raster into tiles of the given size, optionally writing them to disk in the process.
 
@@ -1048,13 +1061,15 @@ rst_maketiles
     - If the input is a byte array, the driver must be explicitly specified.
 
   :code:`size`
-    - If :code:`size` is set to -1, the file is loaded and returned as a single tile
-    - If set to 0, the file is loaded and subdivided into tiles of size 64MB
-    - If set to a positive value, the file is loaded and subdivided into tiles of the specified size
+    - Optional: default is -1.
+    - If :code:`size` is set to -1, the file is loaded and returned as a single tile.
+    - If set to 0, the file is loaded and subdivided into tiles of size 64MB.
+    - If set to a positive value, the file is loaded and subdivided into tiles of the specified size.
     - If the file is too big to fit in memory, it is subdivided into tiles of size 64MB.
 
   :code:`with_checkpoint`
-    - If :code:`with_checkpoint` set to true, the tiles are written to the checkpoint directory
+    - Optional: default is false.
+    - If :code:`with_checkpoint` set to true, the tiles are written to the checkpoint directory.
     - If set to false, the tiles are returned as in-memory byte arrays.
 
   Once enabled, checkpointing will remain enabled for tiles originating from this function,
@@ -1573,13 +1588,33 @@ rst_numbands
 rst_pixelcount
 ***************
 
-.. function:: rst_pixelcount(tile)
+.. function:: rst_pixelcount(tile, count_nodata, count_all)
 
-    Returns an array containing valid pixel count values for each band.
+    Returns an array containing pixel count values for each band; default excludes mask and nodata pixels.
     
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
+    :param count_nodata: A column to specify whether to count nodata pixels.
+    :type count_nodata: Column (BooleanType)
+    :param count_all: A column to specify whether to count all pixels.
+    :type count_all: Column (BooleanType)
     :rtype: Column: ArrayType(LongType)
+
+.. note::
+
+  Notes:
+
+  If pixel value is noData or mask value is 0.0, the pixel is not counted by default.
+
+  :code:`count_nodata`
+    - This is an optional param.
+    - if specified as true, include the noData (not mask) pixels in the count (default is false).
+
+  :code:`count_all`
+    - This is an optional param; as a positional arg, must also pass :code:`count_nodata`
+      (value of :code:`count_nodata` is ignored).
+    - if specified as true, simply return bandX * bandY in the count (default is false).
+..
 
     :example:
 
@@ -2501,6 +2536,49 @@ rst_setnodata
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
+
+rst_setsrid
+********
+
+.. function:: rst_setsrid(tile, srid)
+
+    Set the SRID of the raster tile as an EPSG code.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :param srid: The SRID to set
+    :type srid: Column (IntegerType)
+    :rtype: Column: (RasterTileType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df.select(mos.rst_setsrid('tile', F.lit(9122))).display()
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_setsrid(col("tile"), lit(9122))).show
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_setsrid(tile, 9122) FROM table
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
 
 rst_skewx
 *********

@@ -61,11 +61,15 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
       */
     override def nullSafeEval(input: Any): Any = {
         GDAL.enable(expressionConfig)
+        val manualMode =  expressionConfig.isManualCleanupMode
         val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
         val result = rasterTransform(tiles)
-        val resultType = if (returnsRaster) RasterTileType(rastersExpr, expressionConfig.isRasterUseCheckpoint).rasterType else dataType
+        val resultType = {
+            if (returnsRaster) getRasterType(RasterTileType(rastersExpr, expressionConfig.isRasterUseCheckpoint))
+            else dataType
+        }
         val serialized = serialize(result, returnsRaster, resultType, expressionConfig)
-        tiles.foreach(t => RasterCleaner.dispose(t))
+        tiles.foreach(t => pathSafeDispose(t, manualMode))
         serialized
     }
 

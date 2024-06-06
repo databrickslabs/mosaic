@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.utils
 
-import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
 
 import java.nio.file.{Files, Path, Paths}
 import scala.jdk.CollectionConverters._
@@ -88,8 +88,8 @@ object PathUtils {
       * @return
       *   The tmp path.
       */
-    def createTmpFilePath(extension: String): String = {
-        val tmpDir = MosaicContext.tmpDir(null)
+    def createTmpFilePath(extension: String, mosaicConfig: MosaicExpressionConfig = null): String = {
+        val tmpDir = MosaicContext.tmpDir(mosaicConfig)
         val uuid = java.util.UUID.randomUUID.toString
         val outPath = s"$tmpDir/raster_${uuid.replace("-", "_")}.$extension"
         Files.createDirectories(Paths.get(outPath).getParent)
@@ -198,15 +198,13 @@ object PathUtils {
       */
     def isFuseLocation(path: String): Boolean = {
         // 0.4.3 - new function
-        val p = getCleanPath(path)
-        val isFuse = p match {
-            case _ if (
+        getCleanPath(path) match {
+            case p if
                 p.startsWith(s"$DBFS_FUSE_TOKEN/") ||
                     p.startsWith(s"$VOLUMES_TOKEN/") ||
-                    p.startsWith(s"$WORKSPACE_TOKEN/")) => true
+                    p.startsWith(s"$WORKSPACE_TOKEN/") => true
             case _ => false
         }
-        isFuse
     }
 
     /**

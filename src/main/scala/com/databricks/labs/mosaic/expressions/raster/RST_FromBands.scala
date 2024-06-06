@@ -10,6 +10,7 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.types.DataType
 
 
 /** The expression for stacking and resampling input bands. */
@@ -24,11 +25,13 @@ case class RST_FromBands(
       with NullIntolerant
       with CodegenFallback {
 
-    override def dataType: org.apache.spark.sql.types.DataType = {
-        GDAL.enable(expressionConfig)
+    GDAL.enable(expressionConfig)
+
+    // serialize data type
+    override def dataType: DataType = {
         RasterTileType(
-          expressionConfig.getCellIdType,
-          RasterTileType(bandsExpr, expressionConfig.isRasterUseCheckpoint).rasterType,
+            expressionConfig.getCellIdType,
+            RasterTileType(bandsExpr, expressionConfig.isRasterUseCheckpoint).rasterType,
             expressionConfig.isRasterUseCheckpoint
         )
     }
@@ -41,7 +44,8 @@ case class RST_FromBands(
       *   The stacked and resampled raster.
       */
     override def rasterTransform(rasters: Seq[MosaicRasterTile]): Any = {
-        rasters.head.copy(raster = MergeBands.merge(rasters.map(_.getRaster), "bilinear"))
+        val manualMode = expressionConfig.isManualCleanupMode
+        rasters.head.copy(raster = MergeBands.merge(rasters.map(_.getRaster), "bilinear", manualMode))
     }
 
 }

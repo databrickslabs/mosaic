@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import org.gdal.gdal.{WarpOptions, gdal}
 
 import java.nio.file.{Files, Paths}
+import scala.util.Try
 
 /** GDALWarp is a wrapper for the GDAL Warp command. */
 object GDALWarp {
@@ -29,16 +30,17 @@ object GDALWarp {
         val result = gdal.Warp(outputPath, rasters.map(_.getRaster).toArray, warpOptions)
         // Format will always be the same as the first raster
         val errorMsg = gdal.GetLastErrorMsg
-        val size = Files.size(Paths.get(outputPath))
-        val createInfo = Map(
+        val size = Try(Files.size(Paths.get(outputPath))).getOrElse(-1L)
+        val clipCreateInfo = Map(
           "path" -> outputPath,
           "parentPath" -> rasters.head.getParentPath,
           "driver" -> rasters.head.getWriteOptions.format,
+          "mem_size" -> size.toString,
           "last_command" -> effectiveCommand,
           "last_error" -> errorMsg,
           "all_parents" -> rasters.map(_.getParentPath).mkString(";")
         )
-        rasters.head.copy(raster = result, createInfo = createInfo, memSize = size).flushCache()
+        rasters.head.copy(raster = result, createInfo = clipCreateInfo, memSize = size).flushCache()
     }
 
 }

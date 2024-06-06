@@ -41,7 +41,8 @@ trait ReadStrategy extends Serializable {
       *   Options passed to the reader.
       * @param indexSystem
       *   Index system.
-      *
+      * @param manualMode
+      *   skip file cleanup if true.
       * @return
       *   Iterator of internal rows.
       */
@@ -50,7 +51,8 @@ trait ReadStrategy extends Serializable {
         fs: FileSystem,
         requiredSchema: StructType,
         options: Map[String, String],
-        indexSystem: IndexSystem
+        indexSystem: IndexSystem,
+        manualMode: Boolean
     ): Iterator[InternalRow]
 
 }

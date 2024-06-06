@@ -25,6 +25,9 @@ package object mosaic {
     val MOSAIC_RASTER_USE_CHECKPOINT = "spark.databricks.labs.mosaic.raster.use.checkpoint"
     val MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT = "false"
     val MOSAIC_RASTER_TMP_PREFIX = "spark.databricks.labs.mosaic.raster.tmp.prefix"
+    val MOSAIC_RASTER_TMP_PREFIX_DEFAULT = "/tmp"
+    val MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES = "spark.databricks.labs.mosaic.raster.local.age.limit.minutes"
+    val MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT = "30"
     val MOSAIC_RASTER_BLOCKSIZE = "spark.databricks.labs.mosaic.raster.blocksize"
     val MOSAIC_RASTER_BLOCKSIZE_DEFAULT = "128"
 
@@ -35,7 +38,7 @@ package object mosaic {
 
     val MOSAIC_NO_DRIVER = "no_driver"
     val MOSAIC_TEST_MODE = "spark.databricks.labs.mosaic.test.mode"
-
+    val MOSAIC_MANUAL_CLEANUP_MODE = "spark.databricks.labs.mosaic.manual.cleanup.mode"
 
     def read: MosaicDataFrameReader = new MosaicDataFrameReader(SparkSession.builder().getOrCreate())
 

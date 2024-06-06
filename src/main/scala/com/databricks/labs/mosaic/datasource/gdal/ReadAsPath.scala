@@ -7,6 +7,7 @@ import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
+import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
@@ -16,8 +17,9 @@ import org.apache.spark.sql.types._
 import java.nio.file.{Files, Paths}
 
 /** An object defining the retiling read strategy for the GDAL file format. */
-object ReadAsPath extends ReadStrategy {
+object ReadAsPath extends ReadStrategy with RasterPathAware {
 
+    //serialize data type
     val tileDataType: DataType = StringType
 
     // noinspection DuplicatedCode
@@ -86,7 +88,8 @@ object ReadAsPath extends ReadStrategy {
         fs: FileSystem,
         requiredSchema: StructType,
         options: Map[String, String],
-        indexSystem: IndexSystem
+        indexSystem: IndexSystem,
+        manualMode: Boolean
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
@@ -94,7 +97,7 @@ object ReadAsPath extends ReadStrategy {
         val tmpPath = PathUtils.copyToTmp(inPath)
         val createInfo = Map("path" -> tmpPath, "parentPath" -> inPath)
         val raster = MosaicRasterGDAL.readRaster(createInfo)
-        val tile = MosaicRasterTile(null, raster)
+        val tile = MosaicRasterTile(null, raster, tileDataType)
         
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
@@ -111,13 +114,13 @@ object ReadAsPath extends ReadStrategy {
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
         // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-        val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType)))
-        RasterCleaner.dispose(tile)
-        
+        val row = Utils.createRow(fields ++ Seq(
+            tile.formatCellId(indexSystem).serialize(tileDataType, doDestroy = true, manualMode)))
+
+        pathSafeDispose(tile, manualMode)
+        if (!manualMode) Files.deleteIfExists(Paths.get(tmpPath))
+
         val rows = Seq(row)
-
-        Files.deleteIfExists(Paths.get(tmpPath))
-
         rows.iterator
     }
 

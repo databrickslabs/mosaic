@@ -1,26 +1,34 @@
 package com.databricks.labs.mosaic.core.raster.operator.pixel
 
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
-import com.databricks.labs.mosaic.gdal.MosaicGDAL.defaultBlockSize
+import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.utils.PathUtils
+import org.apache.spark.sql.types.{BinaryType, DataType}
 
 import java.io.File
 import scala.xml.{Elem, UnprefixedAttribute, XML}
 
 /** MergeRasters is a helper object for merging rasters. */
-object PixelCombineRasters {
+object PixelCombineRasters extends RasterPathAware {
+
+    val tileDataType: DataType = BinaryType
 
     /**
       * Merges the rasters into a single raster.
       *
       * @param rasters
       *   The rasters to merge.
+      * @param pythonFunc
+      *   Provided function.
+      * @param pythonFuncName
+      *   Function name.
+      * @param manualMode
+      *   Skip deletion of interim file writes, if any.
       * @return
       *   A MosaicRaster object.
       */
-    def combine(rasters: Seq[MosaicRasterGDAL], pythonFunc: String, pythonFuncName: String): MosaicRasterGDAL = {
+    def combine(rasters: Seq[MosaicRasterGDAL], pythonFunc: String, pythonFuncName: String, manualMode: Boolean): MosaicRasterGDAL = {
         val outOptions = rasters.head.getWriteOptions
 
         val vrtPath = PathUtils.createTmpFilePath("vrt")
@@ -42,7 +50,7 @@ object PixelCombineRasters {
           outOptions
         )
 
-        dispose(vrtRaster)
+        pathSafeDispose(vrtRaster, manualMode)
 
         result
     }

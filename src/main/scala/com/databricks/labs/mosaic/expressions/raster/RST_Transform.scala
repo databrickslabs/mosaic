@@ -13,7 +13,6 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 import org.gdal.osr.SpatialReference
 
-/** Returns the upper left x of the raster. */
 case class RST_Transform(
     tileExpr: Expression,
     srid: Expression,
@@ -27,12 +26,13 @@ case class RST_Transform(
       with NullIntolerant
       with CodegenFallback {
 
+    GDAL.enable(expressionConfig)
+
+    // serialized data type
     override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
         RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
     }
 
-    /** Returns the upper left x of the raster. */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         val srid = arg1.asInstanceOf[Int]
         val sReff = new SpatialReference()

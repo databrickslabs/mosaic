@@ -9,6 +9,7 @@ import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.InternalRow
@@ -29,12 +30,14 @@ case class RST_FromFile(
     sizeInMB: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
+      with RasterPathAware
       with Serializable
       with NullIntolerant
       with CodegenFallback {
 
+    GDAL.enable(expressionConfig)
+
     override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
         RasterTileType(expressionConfig.getCellIdType, BinaryType, expressionConfig.isRasterUseCheckpoint)
     }
 
@@ -62,21 +65,29 @@ case class RST_FromFile(
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
-        val rasterType = dataType.asInstanceOf[RasterTileType].rasterType
+        val manualMode = expressionConfig.isManualCleanupMode
+        val resultType = getRasterType(
+            RasterTileType(expressionConfig.getCellIdType, BinaryType, expressionConfig.isRasterUseCheckpoint))
+
         val path = rasterPathExpr.eval(input).asInstanceOf[UTF8String].toString
         val readPath = PathUtils.getCleanPath(path)
         val driver = MosaicRasterGDAL.identifyDriver(path)
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         val currentSize = Files.size(Paths.get(PathUtils.replaceDBFSTokens(readPath)))
+
         if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
             val createInfo = Map("path" -> readPath, "parentPath" -> path)
+
             var raster = MosaicRasterGDAL.readRaster(createInfo)
-            var tile = MosaicRasterTile(null, raster)
-            val row = tile.formatCellId(indexSystem).serialize(rasterType)
-            RasterCleaner.dispose(raster)
-            RasterCleaner.dispose(tile)
+            var result = MosaicRasterTile(null, raster, resultType).formatCellId(indexSystem)
+            val row = result.serialize(resultType, doDestroy = true, manualMode)
+
+            pathSafeDispose(result, manualMode)
+
             raster = null
-            tile = null
+            result = null
+
+            // do this for TraversableOnce[InternalRow]
             Seq(InternalRow.fromSeq(Seq(row)))
         } else {
             // If target size is <0 and we are here that means the file is too big to fit in memory
@@ -84,11 +95,16 @@ case class RST_FromFile(
             val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
             Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
             val size = if (targetSize <= 0) 64 else targetSize
-            var tiles = ReTileOnRead.localSubdivide(tmpPath, path, size)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType))
-            tiles.foreach(RasterCleaner.dispose(_))
-            Files.deleteIfExists(Paths.get(tmpPath))
-            tiles = null
+
+            var results = ReTileOnRead.localSubdivide(tmpPath, path, size, manualMode).map(_.formatCellId(indexSystem))
+            val rows = results.map(_.serialize(resultType, doDestroy = true, manualMode))
+
+            results.foreach(pathSafeDispose(_, manualMode))
+            if (!manualMode) Files.deleteIfExists(Paths.get(tmpPath))
+
+            results = null
+
+            // do this for TraversableOnce[InternalRow]
             rows.map(row => InternalRow.fromSeq(Seq(row)))
         }
     }

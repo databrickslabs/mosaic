@@ -1,16 +1,15 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import org.apache.spark.sql.types.{DataType, StructType}
+import org.apache.spark.sql.types.DataType
 
 /**
   * Base trait for raster serialization. It is used to serialize the result of
   * the expression.
   */
-trait RasterExpressionSerialization {
+trait RasterExpressionSerialization extends RasterPathAware {
 
     /**
       * Serializes the result of the expression. If the expression returns a
@@ -34,12 +33,12 @@ trait RasterExpressionSerialization {
         expressionConfig: MosaicExpressionConfig
     ): Any = {
         if (returnsRaster) {
+            val manualMode = expressionConfig.isManualCleanupMode
             val tile = data.asInstanceOf[MosaicRasterTile]
-            val result = tile
-                .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(outputDataType)
-            RasterCleaner.dispose(tile)
-            result
+            val result = tile.formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
+            val serialized = result.serialize(outputDataType, doDestroy = true, manualMode)
+            pathSafeDispose(result, manualMode)
+            serialized
         } else {
             data
         }

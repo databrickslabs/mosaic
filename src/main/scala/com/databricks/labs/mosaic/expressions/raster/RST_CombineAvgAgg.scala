@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.index.IndexSystemFactory
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.CombineAVG
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.{deserialize => deserializeTile}
-import com.databricks.labs.mosaic.expressions.raster.base.RasterExpressionSerialization
+import com.databricks.labs.mosaic.expressions.raster.base.{RasterExpressionSerialization, RasterPathAware}
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
@@ -24,25 +23,38 @@ import scala.collection.mutable.ArrayBuffer
   */
 //noinspection DuplicatedCode
 case class RST_CombineAvgAgg(
-    tileExpr: Expression,
+    rasterExpr: Expression,
     expressionConfig: MosaicExpressionConfig,
     mutableAggBufferOffset: Int = 0,
     inputAggBufferOffset: Int = 0
 ) extends TypedImperativeAggregate[ArrayBuffer[Any]]
+      with RasterPathAware
       with UnaryLike[Expression]
       with RasterExpressionSerialization {
+
     GDAL.enable(expressionConfig)
+
     override lazy val deterministic: Boolean = true
-    override val child: Expression = tileExpr
+
+    override val child: Expression = rasterExpr
+
     override val nullable: Boolean = false
-    override lazy val dataType: DataType = RasterTileType(
-        expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
-    lazy val rasterType: DataType = dataType.asInstanceOf[RasterTileType].rasterType
-    override def prettyName: String = "rst_combine_avg_agg"
-    val cellIDType: DataType = expressionConfig.getCellIdType
+
+    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+
+    protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
+
+    // serialize data type
+    // TODO: need to ensure that deserialize is just reading the raster... ??? deserializeDT?
+    override lazy val dataType: DataType = {
+        RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint)
+    }
 
     private lazy val projection = UnsafeProjection.create(Array[DataType](ArrayType(elementType = dataType, containsNull = false)))
+
     private lazy val row = new UnsafeRow(1)
+
+    override def prettyName: String = "rst_combine_avg_agg"
 
     override def update(buffer: ArrayBuffer[Any], input: InternalRow): ArrayBuffer[Any] = {
         val value = child.eval(input)
@@ -64,6 +76,7 @@ case class RST_CombineAvgAgg(
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
         GDAL.enable(expressionConfig)
+        val manualMode = expressionConfig.isManualCleanupMode
 
         if (buffer.isEmpty) {
             null
@@ -74,24 +87,27 @@ case class RST_CombineAvgAgg(
         } else {
 
             // Do do move the expression
-            var tiles = buffer.map(row => deserializeTile(row.asInstanceOf[InternalRow], cellIDType, rasterType))
+            var tiles = buffer.map(row => deserializeTile(
+                row.asInstanceOf[InternalRow], cellIdDataType)
+            )
             buffer.clear()
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-            var combined = CombineAVG.compute(tiles.map(_.getRaster)).flushCache()
+            var combined = CombineAVG.compute(tiles.map(_.getRaster), manualMode).flushCache()
 
-            val result = MosaicRasterTile(idx, combined)
-                .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(rasterType)
+            val resultType = getRasterType(dataType)
+            var result = MosaicRasterTile(idx, combined, resultType).formatCellId(indexSystem)
+            val serialized = result.serialize(resultType, doDestroy = true, manualMode)
 
-            tiles.foreach(RasterCleaner.dispose)
-            RasterCleaner.dispose(result)
+            tiles.foreach(t => pathSafeDispose(t, manualMode))
+            pathSafeDispose(result, manualMode)
 
             tiles = null
             combined = null
+            result = null
 
-            result
+            serialized
         }
     }
 
@@ -107,7 +123,7 @@ case class RST_CombineAvgAgg(
         buffer
     }
 
-    override protected def withNewChildInternal(newChild: Expression): RST_CombineAvgAgg = copy(tileExpr = newChild)
+    override protected def withNewChildInternal(newChild: Expression): RST_CombineAvgAgg = copy(rasterExpr = newChild)
 
 }
 

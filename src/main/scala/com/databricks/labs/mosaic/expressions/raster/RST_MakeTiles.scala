@@ -10,6 +10,7 @@ import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
+import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.InternalRow
@@ -24,7 +25,7 @@ import scala.util.Try
 
 /**
   * Creates raster tiles from the input column.
-  * - spark config to turn checkpointing on for all functions in 0.4.2
+  * - spark config to turn checkpointing on for all functions in 0.4.3
   * - this is the only function able to write raster to
   *    checkpoint (even if the spark config is set to false).
   * - can be useful when you want to start from the configured checkpoint
@@ -57,20 +58,21 @@ case class RST_MakeTiles(
     withCheckpointExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
+      with RasterPathAware
       with Serializable
       with NullIntolerant
       with CodegenFallback {
 
-    /** @return Returns StringType if either  */
-    override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
-        require(withCheckpointExpr.isInstanceOf[Literal])
+    GDAL.enable(expressionConfig)
 
+    // serialize data type
+    override def dataType: DataType = {
+        require(withCheckpointExpr.isInstanceOf[Literal])
         if (withCheckpointExpr.eval().asInstanceOf[Boolean] || expressionConfig.isRasterUseCheckpoint) {
-            // Raster is referenced via a path
+            // Raster will be serialized as a path
             RasterTileType(expressionConfig.getCellIdType, StringType, useCheckpoint = true)
         } else {
-            // Raster is referenced via a byte array
+            // Raster will be serialized as a byte array
             RasterTileType(expressionConfig.getCellIdType, BinaryType, useCheckpoint = false)
         }
     }
@@ -123,8 +125,8 @@ case class RST_MakeTiles(
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
-
-        val rasterType = dataType.asInstanceOf[RasterTileType].rasterType
+        val manualMode = expressionConfig.isManualCleanupMode
+        val resultType = getRasterType(dataType)
 
         val rawDriver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val rawInput = inputExpr.eval(input)
@@ -136,11 +138,15 @@ case class RST_MakeTiles(
         if (targetSize <= 0 && inputSize <= Integer.MAX_VALUE) {
             // - no split required
             val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver, "path" -> path)
-            val raster = GDAL.readRaster(rawInput, createInfo, inputExpr.dataType)
-            val tile = MosaicRasterTile(null, raster)
-            val row = tile.formatCellId(indexSystem).serialize(rasterType)
-            RasterCleaner.dispose(raster)
-            RasterCleaner.dispose(tile)
+            var raster = GDAL.readRaster(rawInput, createInfo, inputExpr.dataType)
+            var result = MosaicRasterTile(null, raster, inputExpr.dataType).formatCellId(indexSystem)
+            val row = result.serialize(resultType, doDestroy = true, manualMode)
+
+            pathSafeDispose(result, manualMode)
+            raster = null
+            result = null
+
+            // do this for TraversableOnce[InternalRow]
             Seq(InternalRow.fromSeq(Seq(row)))
         } else {
             // target size is > 0 and raster size > target size
@@ -156,11 +162,15 @@ case class RST_MakeTiles(
                     tmpPath
                 }
             val size = if (targetSize <= 0) 64 else targetSize
-            var tiles = ReTileOnRead.localSubdivide(readPath, PathUtils.NO_PATH_STRING, size)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType))
-            tiles.foreach(RasterCleaner.dispose(_))
-            Files.deleteIfExists(Paths.get(readPath))
-            tiles = null
+            var results = ReTileOnRead.localSubdivide(readPath, PathUtils.NO_PATH_STRING, size, manualMode).map(_.formatCellId(indexSystem))
+            val rows = results.map(_.serialize(resultType, doDestroy = true, manualMode))
+
+            results.foreach(pathSafeDispose(_, manualMode))
+            if (!manualMode) Files.deleteIfExists(Paths.get(readPath))
+
+            results = null
+
+            // do this for TraversableOnce[InternalRow]
             rows.map(row => InternalRow.fromSeq(Seq(row)))
         }
     }

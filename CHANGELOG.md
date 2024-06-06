@@ -1,12 +1,26 @@
 ## v0.4.3 [DBR 13.3 LTS]
 - Pyspark requirement removed from python setup.cfg as it is supplied by DBR
 - Python version limited to "<3.11,>=3.10" for DBR
-- iPython dependency limited to "<8.11,>=7.4.2" for both DBR and keplergl-jupyter 
+- iPython dependency limited to "<8.11,>=7.4.2" for both DBR and keplergl-jupyter
 - Expanded support for fuse-based checkpointing (persisted raster storage), managed through:
-  - spark config 'spark.databricks.labs.mosaic.raster.use.checkpoint' in addition to 'spark.databricks.labs.mosaic.raster.checkpoint'.
-  - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`.
-  - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)`.
-- Python bindings added for `rst_avg`, `rst_max`, `rst_median`, `rst_min`, and `rst_pixelcount`. 
+  - spark config `spark.databricks.labs.mosaic.raster.use.checkpoint` in addition to `spark.databricks.labs.mosaic.raster.checkpoint`
+  - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`  - additional functions include: 
+    `gdal.update_checkpoint_path`, `gdal.set_checkpoint_on`, `gdal.set_checkpoint_off`, and `gdal.reset_checkpoint`
+  - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)` (similar bindings to python as well)
+- `RST_PixelCount` now supports optional 'countNoDataMask' (default is `false`, can now be `true`) to optionally get full 
+   pixel counts where mask is 0.0 and noData is what is configured in the raster
+- Added `RST_Write` to save a generated 'tile' to a specified directory (e.g. fuse) location using its GDAL driver and raster data / path
+- Added `RST_GDALWarp` and `RST_GDALTransform` to execute arbitrary GDAL commands on a raster tile and return a raster tile
+- Improved raster_to_grid reader performance
+- `RST_Clip` GDAL Warp option `CUTLINE_ALL_TOUCHED` configurable (default is `true`, can now be `false`); also, setting 
+  SpatialReferenceSystem in the generated Shapefile Feature Layer (along with the WKB 'geometry' field as before)
+- Python bindings added for `RST_Avg`, `RST_Max`, `RST_Median`, `RST_Min`, and `RST_PixelCount`; also missing 'driver' 
+  param documented for `RST_FromContent`, missing docs added for `RST_SetSRID`, and standardized `RST_ToOverlappingTiles` 
+  (`RST_To_Overlapping_Tiles` deprecated)
+- Doc examples added:
+  - Executing arbitrary GDAL Warp and Transform ops in UDF when you need more complex operations than single command
+  - Generating GoogleMap (EPSG:3857) Tiles in UDF
+  - Pixel Upsampling / Downsampling UDFs
 
 ## v0.4.2 [DBR 13.3 LTS]
 - Geopandas now fixed to "<0.14.4,>=0.14" due to conflict with minimum numpy version in geopandas 0.14.4.

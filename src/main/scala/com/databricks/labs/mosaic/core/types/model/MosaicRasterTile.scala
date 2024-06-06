@@ -17,11 +17,16 @@ import scala.util.{Failure, Success, Try}
   *   Index ID.
   * @param raster
   *   Raster instance corresponding to the tile.
+  * @param rasterType
+  *   Preserve the type of the raster payload from deserialization,
+  *   will be [[StringType]] or [[BinaryType]].
   */
 case class MosaicRasterTile(
     index: Either[Long, String],
-    raster: MosaicRasterGDAL
+    raster: MosaicRasterGDAL,
+    rasterType: DataType
 ) {
+    def getRasterType: DataType = rasterType
 
     def getIndex: Either[Long, String] = index
 
@@ -97,11 +102,15 @@ case class MosaicRasterTile(
       *    How to encode the raster.
       *    - Options are [[StringType]] or [[BinaryType]]
       *    - If checkpointing is used, [[StringType]] will be forced
+      * @param doDestroy
+      *   Whether to destroy the internal object after serializing.
+      * @param manualMode
+      *   Skip deletion of interim file writes, if any.
       * @return
       *   An instance of [[InternalRow]].
       */
-    def serialize(rasterDataType: DataType): InternalRow = {
-        val encodedRaster = encodeRaster(rasterDataType)
+    def serialize(rasterDataType: DataType, doDestroy: Boolean, manualMode: Boolean): InternalRow = {
+        val encodedRaster = encodeRaster(rasterDataType, doDestroy, manualMode)
         val path = encodedRaster match {
                 case uStr: UTF8String => uStr.toString
                 case _ => raster.createInfo("path")
@@ -132,13 +141,17 @@ case class MosaicRasterTile(
       * @param rasterDataType
       *   Specify [[BinaryType]] for byte array or [[StringType]] for path,
       *   as used in checkpointing.
+      * @param doDestroy
+      *   Whether to destroy the internal object after serializing.
       * @return
       *   According to the [[DataType]].
       */
     private def encodeRaster(
-        rasterDataType: DataType
+        rasterDataType: DataType,
+        doDestroy: Boolean,
+        manualMode: Boolean
     ): Any = {
-        GDAL.writeRasters(Seq(raster), rasterDataType).head
+        GDAL.writeRasters(Seq(raster), rasterDataType, doDestroy, manualMode).head
     }
 
     def getSequenceNumber: Int =
@@ -153,34 +166,43 @@ case class MosaicRasterTile(
 object MosaicRasterTile {
 
     /**
-      * Smart constructor based on Spark internal instance.
-      * - Can handle based on provided raster type.
-      *
-      * @param row
-      *   An instance of [[InternalRow]].
-      * @param idDataType
-      *   The data type of the index ID.
-      * @param rasterDataType
-      *   The data type of the tile's raster.
-      * @return
-      *   An instance of [[MosaicRasterTile]].
-      */
-    def deserialize(row: InternalRow, idDataType: DataType, rasterDataType: DataType): MosaicRasterTile = {
+     * Smart constructor based on Spark internal instance.
+     * - Must infer raster data type
+     *
+     * @param row
+     *   An instance of [[InternalRow]].
+     * @param idDataType
+     *   The data type of the index ID.
+     * @return
+     *   An instance of [[MosaicRasterTile]].
+     */
+    def deserialize(row: InternalRow, idDataType: DataType): MosaicRasterTile = {
         val index = row.get(0, idDataType)
-        // handle checkpoint related de-serialization
-        val rawRaster = row.get(1, rasterDataType)
+        val rawRaster = Try(row.get(1, StringType)) match {
+            case Success(value) => value
+            case Failure(_) => row.get(1, BinaryType)
+        }
+        val rawRasterDataType = rawRaster match {
+            case _: UTF8String => StringType
+            case _ => BinaryType
+        }
+
+/*        //scalastyle:off println
+        println(s"...rawRasterDataType -> $rawRasterDataType")
+        //scalastyle:on println*/
+
         val createInfo = extractMap(row.getMap(2))
-        val raster = GDAL.readRaster(rawRaster, createInfo, rasterDataType)
+        val raster = GDAL.readRaster(rawRaster, createInfo, rawRasterDataType)
 
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {
             if (index.isInstanceOf[Long]) {
-                new MosaicRasterTile(Left(index.asInstanceOf[Long]), raster)
+                new MosaicRasterTile(Left(index.asInstanceOf[Long]), raster, rawRasterDataType)
             } else {
-                new MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster)
+                new MosaicRasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, rawRasterDataType)
             }
         } else {
-            new MosaicRasterTile(null, raster)
+            new MosaicRasterTile(null, raster, rawRasterDataType)
         }
     }
 

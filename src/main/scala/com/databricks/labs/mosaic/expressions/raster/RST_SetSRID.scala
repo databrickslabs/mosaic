@@ -26,8 +26,10 @@ case class RST_SetSRID(
       with NullIntolerant
       with CodegenFallback {
 
+    GDAL.enable(expressionConfig)
+
+    // serialize data type
     override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
         RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
     }
 

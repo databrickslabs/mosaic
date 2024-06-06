@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
@@ -10,11 +11,16 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_MaxBehaviors extends QueryTest {
 
     def behavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "false")
+
+        sc.conf.get(MOSAIC_TEST_MODE, "false") should be("true")
+
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
 
         val rastersInMemory = spark.read
             .format("gdal")

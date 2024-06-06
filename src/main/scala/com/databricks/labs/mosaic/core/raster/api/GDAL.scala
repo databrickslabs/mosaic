@@ -1,18 +1,24 @@
 package com.databricks.labs.mosaic.core.raster.api
 
+import com.databricks.labs.mosaic.MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES
 import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterBandGDAL, MosaicRasterGDAL}
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.transform.RasterTransform
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
-import com.databricks.labs.mosaic.gdal.MosaicGDAL.configureGDAL
+import com.databricks.labs.mosaic.gdal.MosaicGDAL.{configureGDAL, localAgeLimitMinutes, localRasterDir}
+import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.gdal
 import org.gdal.gdalconst.gdalconstConstants._
 
+import java.io.File
+import java.nio.file.{Files, Paths}
 import java.util.UUID
+import scala.sys.process._
+import scala.util.Try
+
 
 /**
   * GDAL Raster API. It uses [[MosaicRasterGDAL]] as the
@@ -140,7 +146,13 @@ object GDAL {
                             rasterObj
                         }
                     } catch {
-                        case _: Throwable => readParentZipBinary(bytes, createInfo)
+                        case _: Throwable =>
+                            try {
+                                readParentZipBinary(bytes, createInfo)
+                            } catch {
+                                case _: Throwable =>
+                                MosaicRasterGDAL.readRaster(createInfo)
+                            }
                     }
                 case _ => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
             }
@@ -166,19 +178,32 @@ object GDAL {
       *   The type of raster to write.
       *   - if string write to checkpoint
       *   - otherwise, write to bytes
+      * @param doDestroy
+      *   Whether to destroy the internal object after serializing.
+      * @param manualMode
+      *   Skip deletion of interim file writes, if any.
+      * @param overrideDir
+      *   Option String, default is None.
+      *   - if provided, where to write the raster.
+      *   - only used with rasterDT of [[StringType]]
       * @return
       *   Returns the paths of the written rasters.
       */
-    def writeRasters(generatedRasters: Seq[MosaicRasterGDAL], rasterDT: DataType): Seq[Any] = {
+    def writeRasters(
+                        generatedRasters: Seq[MosaicRasterGDAL],
+                        rasterDT: DataType,
+                        doDestroy: Boolean,
+                        manualMode: Boolean,
+                        overrideDir: Option[String] = None
+                    ): Seq[Any] = {
+
         generatedRasters.map(raster =>
             if (raster != null) {
                 rasterDT match {
                     case StringType =>
-                        writeRasterString(raster)
+                        writeRasterString(raster, doDestroy, manualMode, overrideDir=overrideDir)
                     case BinaryType =>
-                        val bytes = raster.writeToBytes()
-                        RasterCleaner.dispose(raster)
-                        bytes
+                        raster.writeToBytes(doDestroy, manualMode)
                 }
             } else {
                 null
@@ -186,12 +211,19 @@ object GDAL {
         )
     }
 
-    private def writeRasterString(raster: MosaicRasterGDAL): UTF8String = {
+    private def writeRasterString(
+                                     raster: MosaicRasterGDAL,
+                                     doDestroy: Boolean,
+                                     manualMode: Boolean,
+                                     overrideDir: Option[String] = None
+                                 ): UTF8String = {
         val uuid = UUID.randomUUID().toString
-        val extension = GDAL.getExtension(raster.getDriversShortName)
-        val writePath = s"${getCheckpointPath}/$uuid.$extension"
-        val outPath = raster.writeToPath(writePath)
-        RasterCleaner.dispose(raster)
+        val ext = GDAL.getExtension(raster.getDriversShortName)
+        val writePath = overrideDir match {
+            case Some(d) => s"$d/$uuid.$ext"
+            case _ => s"${getCheckpointPath}/$uuid.$ext"
+        }
+        val outPath = raster.writeToPath(writePath, doDestroy, manualMode)
         UTF8String.fromString(outPath)
     }
 
@@ -281,6 +313,69 @@ object GDAL {
     def fromWorldCoord(gt: Seq[Double], x: Double, y: Double): (Int, Int) = {
         val (xPixel, yPixel) = RasterTransform.fromWorldCoord(gt, x, y)
         (xPixel, yPixel)
+    }
+
+    /**
+      * Cleans up LOCAL rasters that are older than [[MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES]],
+      * e.g. 30 minutes from the configured local temp directory, e.g. "/tmp/mosaic_tmp";
+      * config uses [[MOSAIC_RASTER_TMP_PREFIX]] for the "/tmp" portion of the path.
+      * Cleaning up is destructive and should only be done when the raster is no longer needed,
+      * so this this function is invoked often from various local functions; instead of cleaning
+      * up a specified local path as in versions prior to 0.4.3, this will clean up ANY files
+      * meeting the local age limit threshold.
+      * @param manualMode
+      *   Skip deletion of interim file writes, if any (user taking on responsibility to clean).
+      * @returns
+      *   Returns an [[Option[String]] which may be populated with any error information.
+      */
+    def cleanUpManagedDir(manualMode: Boolean): Option[String] = {
+        if (!manualMode) cleanUpManualDir(localAgeLimitMinutes, localRasterDir, keepRoot = true)
+        else None
+    }
+
+    /**
+      * Cleanup the working directory using configured age in minutes, 0 for now, -1 for never.
+      * - can be manually invoked, e.g. from a notebook after a table has been generated
+      *   and it is safe to remove the interim files.
+      * - `manualMode` in other functions (causes deletes to be skipped), leaving you to option to
+      *   occasionally "manually" invoke this function to clean up the configured mosaic dir,
+      *   e.g. `/tmp/mosaic_tmp`.
+      * - doesn't do anything if this is a fuse location (/dbfs, /Volumes, /Workspace)
+      *
+      * @param ageMinutes
+      *   file age (relative to now) to trigger deletion.
+      * @param dir
+      *   directory [[String]] to delete (managed works at the configured local raster dir.
+      * @param keepRoot
+      *   do you want to ensure the directory is created?
+      */
+    def cleanUpManualDir(ageMinutes: Int, dir: String,
+                         keepRoot: Boolean = false, allowFuseDelete: Boolean = false): Option[String] = {
+        try {
+            val dirPath = Paths.get(dir)
+            if (
+                (allowFuseDelete || !PathUtils.isFuseLocation(dir)) &&
+                    Files.exists(dirPath) && Files.isDirectory(dirPath)) {
+                ageMinutes match {
+                    case now if now == 0 =>
+                        // run cmd and capture the output
+                        val err = new StringBuilder()
+                        val procLogger = ProcessLogger(_ => (), err append _)
+                        if (keepRoot) s"rm -rf $dir/*" ! procLogger
+                        else s"rm -rf $dir" ! procLogger
+                        if (err.length() > 0) Some(err.toString())
+                        else None
+                    case age if age > 0 =>
+                        FileUtils.deleteRecursivelyOlderThan(dirPath, age, keepRoot = keepRoot)
+                        None
+                    case _ => None
+                }
+            } else None
+        } catch {
+            case t: Throwable => Some(t.toString)
+        } finally {
+            if (keepRoot) Try(s"mkdir -p $dir".!)
+        }
     }
 
 }

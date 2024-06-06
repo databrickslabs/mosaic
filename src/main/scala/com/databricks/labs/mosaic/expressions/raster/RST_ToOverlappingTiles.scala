@@ -31,7 +31,7 @@ case class RST_ToOverlappingTiles(
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
         val overlapValue = overlapExpr.eval().asInstanceOf[Int]
-        OverlappingTiles.reTile(tile, tileWidthValue, tileHeightValue, overlapValue)
+        OverlappingTiles.reTile(tile, tileWidthValue, tileHeightValue, overlapValue, expressionConfig.isManualCleanupMode)
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, tileWidthExpr, tileHeightExpr, overlapExpr)
@@ -41,7 +41,7 @@ case class RST_ToOverlappingTiles(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_ToOverlappingTiles extends WithExpressionInfo {
 
-    override def name: String = "rst_to_overlapping_tiles"
+    override def name: String = "rst_tooverlappingtiles"
 
     override def usage: String =
         """

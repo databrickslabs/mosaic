@@ -22,10 +22,10 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         resultDriver should not be ""
         resultDriver should include("GDAL")
 
-        val sc = spark.sparkContext
-        val numExecutors = sc.getExecutorMemoryStatus.size - 1
+        val _sc = spark.sparkContext
+        val numExecutors = _sc.getExecutorMemoryStatus.size - 1
         val resultExecutors = Try(
-          sc.parallelize(1 to numExecutors)
+          _sc.parallelize(1 to numExecutors)
               .pipe(checkCmd)
               .collect
         ).getOrElse(Array[String]())
@@ -33,10 +33,11 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         resultExecutors.foreach(s => s should include("GDAL"))
     }
 
-    test("Verify that checkpoint is not used.") {
-        spark.conf.get(MOSAIC_TEST_MODE) shouldBe "true"
-        MosaicGDAL.isUseCheckpoint shouldBe false
-    }
+    //commenting out to allow toggling checkpoint on/off
+//    test("Verify that checkpoint is not used.") {
+//        spark.conf.get(MOSAIC_TEST_MODE) shouldBe "true"
+//        MosaicGDAL.isUseCheckpoint shouldBe false
+//    }
 
     test("Read raster metadata from GeoTIFF file.") {
         assume(System.getProperty("os.name") == "Linux")
@@ -136,7 +137,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         MosaicGDAL.setBlockSize(30)
 
-        val ds = gdalJNI.GetDriverByName("GTiff").Create("/tmp/mosaic_tmp/test.tif", 50, 50, 1, gdalconst.gdalconstConstants.GDT_Float32)
+        val ds = gdalJNI.GetDriverByName("GTiff").Create(s"$getMosaicTmpRootDir/test.tif", 50, 50, 1, gdalconst.gdalconstConstants.GDT_Float32)
 
         val values = 0 until 50 * 50
         ds.GetRasterBand(1).WriteRaster(0, 0, 50, 50, values.toArray)

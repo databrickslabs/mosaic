@@ -16,11 +16,11 @@ import org.apache.spark.unsafe.types.UTF8String
 
 /** The expression for map algebra. */
 case class RST_MapAlgebra(
-    tileExpr: Expression,
+    rasterExpr: Expression,
     jsonSpecExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterArray1ArgExpression[RST_MapAlgebra](
-      tileExpr,
+      rasterExpr,
       jsonSpecExpr,
       returnsRaster = true,
       expressionConfig = expressionConfig
@@ -28,9 +28,11 @@ case class RST_MapAlgebra(
       with NullIntolerant
       with CodegenFallback {
 
+    GDAL.enable(expressionConfig)
+
+    // serialize data type
     override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(expressionConfig.getCellIdType, rasterExpr, expressionConfig.isRasterUseCheckpoint)
     }
 
     /**
@@ -49,7 +51,8 @@ case class RST_MapAlgebra(
         val command = parseSpec(jsonSpec, resultPath, tiles)
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
         val result = GDALCalc.executeCalc(command, resultPath)
-        MosaicRasterTile(index, result)
+        val resultType = getRasterType(dataType)
+        MosaicRasterTile(index, result, resultType)
     }
 
     def parseSpec(jsonSpec: String, resultPath: String, tiles: Seq[MosaicRasterTile]): String = {

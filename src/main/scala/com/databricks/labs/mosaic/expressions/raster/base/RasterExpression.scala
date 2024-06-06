@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
@@ -21,6 +20,8 @@ import scala.reflect.ClassTag
   *   The expression for the raster. If the raster is stored on disc, the path
   *   to the raster is provided. If the raster is stored in memory, the bytes of
   *   the raster are provided.
+  * @param returnsRaster
+  *   for serialization handling.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -64,15 +65,17 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       */
     override def nullSafeEval(input: Any): Any = {
         GDAL.enable(expressionConfig)
-        val rasterType = RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile.deserialize(
-          input.asInstanceOf[InternalRow],
-          cellIdDataType,
-          rasterType
+            input.asInstanceOf[InternalRow],
+            cellIdDataType
         )
         val result = rasterTransform(tile)
-        val serialized = serialize(result, returnsRaster, rasterType, expressionConfig)
-        RasterCleaner.dispose(tile)
+        val resultType = {
+            if (returnsRaster) getRasterType(RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint))
+            else dataType
+        }
+        val serialized = serialize(result, returnsRaster, resultType, expressionConfig)
+        pathSafeDispose(tile, manualMode = expressionConfig.isManualCleanupMode)
         serialized
     }
 

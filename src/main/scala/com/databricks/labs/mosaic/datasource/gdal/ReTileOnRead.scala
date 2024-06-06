@@ -2,12 +2,12 @@ package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
+import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
@@ -17,7 +17,7 @@ import org.apache.spark.sql.types._
 import java.nio.file.{Files, Paths}
 
 /** An object defining the retiling read strategy for the GDAL file format. */
-object ReTileOnRead extends ReadStrategy {
+object ReTileOnRead extends ReadStrategy with RasterPathAware {
 
     val tileDataType: DataType = StringType
 
@@ -87,14 +87,15 @@ object ReTileOnRead extends ReadStrategy {
         fs: FileSystem,
         requiredSchema: StructType,
         options: Map[String, String],
-        indexSystem: IndexSystem
+        indexSystem: IndexSystem,
+        manualMode: Boolean
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
 
         var tmpPath = PathUtils.copyToTmpWithRetry(inPath, 5)
-        val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
+        val tiles = localSubdivide(tmpPath, inPath, sizeInMB, manualMode)
 
         val rows = tiles.map(tile => {
             val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
@@ -112,12 +113,15 @@ object ReTileOnRead extends ReadStrategy {
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
             // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType)))
-            RasterCleaner.dispose(tile)
+            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(
+                tileDataType, doDestroy = true, manualMode)))
+
+            pathSafeDispose(tile, manualMode)
+
             row
         })
 
-        Files.deleteIfExists(Paths.get(tmpPath))
+        if (!manualMode) Files.deleteIfExists(Paths.get(tmpPath))
 
         rows.iterator
     }
@@ -132,14 +136,15 @@ object ReTileOnRead extends ReadStrategy {
       * @return
       *   A tuple of the raster and the tiles.
       */
-    def localSubdivide(inPath: String, parentPath: String, sizeInMB: Int): Seq[MosaicRasterTile] = {
+    def localSubdivide(inPath: String, parentPath: String, sizeInMB: Int, manualMode: Boolean): Seq[MosaicRasterTile] = {
         val cleanPath = PathUtils.getCleanPath(inPath)
         val createInfo = Map("path" -> cleanPath, "parentPath" -> parentPath)
         val raster = MosaicRasterGDAL.readRaster(createInfo)
-        val inTile = new MosaicRasterTile(null, raster)
-        val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)
-        RasterCleaner.dispose(raster)
-        RasterCleaner.dispose(inTile)
+        val inTile = new MosaicRasterTile(null, raster, tileDataType)
+        val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB, manualMode)
+
+        pathSafeDispose(raster, manualMode)
+
         tiles
     }
 

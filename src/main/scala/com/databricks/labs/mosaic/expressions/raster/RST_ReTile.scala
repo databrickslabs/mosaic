@@ -33,7 +33,7 @@ case class RST_ReTile(
     override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
-        ReTile.reTile(tile, tileWidthValue, tileHeightValue)
+        ReTile.reTile(tile, tileWidthValue, tileHeightValue, expressionConfig.isManualCleanupMode)
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, tileWidthExpr, tileHeightExpr)

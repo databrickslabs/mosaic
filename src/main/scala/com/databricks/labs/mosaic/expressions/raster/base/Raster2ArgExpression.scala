@@ -22,6 +22,8 @@ import scala.reflect.ClassTag
   *   The expression for the first argument.
   * @param arg2Expr
   *   The expression for the second argument.
+  * @param returnsRaster
+  *   for serialization handling.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -77,16 +79,17 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
     // noinspection DuplicatedCode
     override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
         GDAL.enable(expressionConfig)
-        val rasterType = RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile.deserialize(
             input.asInstanceOf[InternalRow],
-            expressionConfig.getCellIdType,
-            rasterType
+            expressionConfig.getCellIdType
         )
         val result = rasterTransform(tile, arg1, arg2)
-        val serialized = serialize(result, returnsRaster, rasterType, expressionConfig)
-        // passed by name makes things re-evaluated
-        RasterCleaner.dispose(tile)
+        val resultType = {
+            if (returnsRaster) getRasterType(RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint))
+            else dataType
+        }
+        val serialized = serialize(result, returnsRaster, resultType, expressionConfig)
+        pathSafeDispose(tile, manualMode = expressionConfig.isManualCleanupMode)
         serialized
     }
 

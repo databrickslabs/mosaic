@@ -14,19 +14,21 @@ import org.apache.spark.sql.types.DataType
 
 /** Returns a raster that is a result of merging an array of rasters. */
 case class RST_Merge(
-    tileExpr: Expression,
+    rastersExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterArrayExpression[RST_Merge](
-      tileExpr,
+      rastersExpr,
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
+    GDAL.enable(expressionConfig)
+
+    // serialize data type
     override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
     }
 
     /**
@@ -37,9 +39,10 @@ case class RST_Merge(
       *   The merged raster.
       */
     override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
+        val manualMode = expressionConfig.isManualCleanupMode
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
         tiles.head.copy(
-          raster = MergeRasters.merge(tiles.map(_.getRaster)),
+          raster = MergeRasters.merge(tiles.map(_.getRaster), manualMode),
           index = index
         )
     }

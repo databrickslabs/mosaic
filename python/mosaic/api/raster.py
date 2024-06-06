@@ -63,7 +63,8 @@ __all__ = [
     "rst_summary",
     "rst_tessellate",
     "rst_transform",
-    "rst_to_overlapping_tiles",
+    "rst_tooverlappingtiles",
+    "rst_to_overlapping_tiles", # <- deprecated
     "rst_tryopen",
     "rst_upperleftx",
     "rst_upperlefty",
@@ -139,11 +140,10 @@ def rst_boundingbox(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName) -> Column:
+def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName, cutline_all_touched: Any = True) -> Column:
     """
     Clips the raster to the given supported geometry (WKT, WKB, GeoJSON).
     The result is Mosaic raster tile struct column to the clipped raster.
-    The result is stored in the checkpoint directory.
 
     Parameters
     ----------
@@ -151,6 +151,9 @@ def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName) -> Column:
         Mosaic raster tile struct column.
     geometry : Column (StringType)
         The geometry to clip the raster to.
+    cutline_all_touched : Column (BooleanType)
+        optional override to specify whether any pixels touching
+        cutline should be included vs half-in only, default is true
 
     Returns
     -------
@@ -158,10 +161,14 @@ def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName) -> Column:
         Mosaic raster tile struct column.
 
     """
+    if type(cutline_all_touched) == bool:
+        cutline_all_touched = lit(cutline_all_touched)
+
     return config.mosaic_context.invoke_function(
         "rst_clip",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(geometry),
+        pyspark_to_java_column(cutline_all_touched)
     )
 
 
@@ -677,21 +684,34 @@ def rst_numbands(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_pixelcount(raster_tile: ColumnOrName) -> Column:
+def rst_pixelcount(raster_tile: ColumnOrName, count_nodata: Any = False, count_all: Any = False) -> Column:
     """
     Parameters
     ----------
     raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
-
+    count_nodata : Column(BooleanType)
+        If false do not include noData pixels in count (default is false).
+    count_all : Column(BooleanType)
+        If true, simply return bandX * bandY (default is false).
     Returns
     -------
     Column (ArrayType(LongType))
         Array containing valid pixel count values for each band.
 
     """
+
+    if type(count_nodata) == bool:
+        count_nodata = lit(count_nodata)
+
+    if type(count_all) == bool:
+            count_all = lit(count_all)
+
     return config.mosaic_context.invoke_function(
-        "rst_pixelcount", pyspark_to_java_column(raster_tile)
+        "rst_pixelcount",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(count_nodata),
+        pyspark_to_java_column(count_all),
     )
 
 
@@ -1253,7 +1273,7 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
     )
 
 
-def rst_to_overlapping_tiles(
+def rst_tooverlappingtiles(
         raster_tile: ColumnOrName,
         width: ColumnOrName,
         height: ColumnOrName,
@@ -1267,12 +1287,22 @@ def rst_to_overlapping_tiles(
     """
 
     return config.mosaic_context.invoke_function(
-        "rst_to_overlapping_tiles",
+        "rst_tooverlappingtiles",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(width),
         pyspark_to_java_column(height),
         pyspark_to_java_column(overlap),
     )
+
+
+def rst_to_overlapping_tiles(
+        raster_tile: ColumnOrName,
+        width: ColumnOrName,
+        height: ColumnOrName,
+        overlap: ColumnOrName,
+    ) -> Column:
+
+    return rst_tooverlappingtiles(raster_tile, width, height, overlap)
 
 
 def rst_transform(raster_tile: ColumnOrName, srid: ColumnOrName) -> Column:

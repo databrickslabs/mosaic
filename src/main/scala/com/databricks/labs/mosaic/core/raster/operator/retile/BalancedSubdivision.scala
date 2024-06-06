@@ -75,17 +75,20 @@ object BalancedSubdivision {
       *   The raster to split.
       * @param sizeInMb
       *   The desired size of the split rasters in MB.
+      * @param manualMode
+      *   Skip deletion of interim file writes, if any.
       * @return
       *   A sequence of MosaicRaster objects.
       */
     def splitRaster(
         tile: MosaicRasterTile,
-        sizeInMb: Int
+        sizeInMb: Int,
+        manualMode: Boolean
     ): Seq[MosaicRasterTile] = {
         val numSplits = getNumSplits(tile.getRaster, sizeInMb)
         val (x, y) = tile.getRaster.getDimensions
         val (tileX, tileY) = getTileSize(x, y, numSplits)
-        ReTile.reTile(tile, tileX, tileY)
+        ReTile.reTile(tile, tileX, tileY, manualMode)
     }
 
 }

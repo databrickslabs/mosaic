@@ -2,9 +2,9 @@ package com.databricks.labs.mosaic.gdal
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT, MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT, MOSAIC_RASTER_TMP_PREFIX_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
@@ -34,8 +34,10 @@ object MosaicGDAL extends Logging {
     // noinspection ScalaWeakerAccess
     val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
     var isEnabled = false
-    var checkpointPath: String = _
-    var useCheckpoint: Boolean = _
+    var checkpointPath: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
+    var useCheckpoint: Boolean = MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT.toBoolean
+    var localRasterDir: String = s"$MOSAIC_RASTER_TMP_PREFIX_DEFAULT/mosaic_tmp"
+    var localAgeLimitMinutes: Int = MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT.toInt
 
 
     // Only use this with GDAL rasters
@@ -66,12 +68,27 @@ object MosaicGDAL extends Logging {
         mosaicConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
         setBlockSize(mosaicConfig)
         configureCheckpoint(mosaicConfig)
+        configureLocalRasterDir(mosaicConfig)
     }
 
     def configureCheckpoint(mosaicConfig: MosaicExpressionConfig): Unit = {
         this.checkpointPath = mosaicConfig.getRasterCheckpoint
         this.useCheckpoint = mosaicConfig.isRasterUseCheckpoint
     }
+
+    def configureLocalRasterDir(mosaicConfig: MosaicExpressionConfig): Unit = {
+        this.localAgeLimitMinutes = mosaicConfig.getLocalAgeLimitMinutes
+
+        // don't allow a fuse path
+        if (PathUtils.isFuseLocation(mosaicConfig.getTmpPrefix)) {
+            throw new Error(
+                s"configured tmp prefix '${mosaicConfig.getTmpPrefix}' must be local, " +
+                    s"not fuse mounts ('/dbfs/', '/Volumes/', or '/Workspace/')")
+        } else {
+            this.localRasterDir = s"${mosaicConfig.getTmpPrefix}/mosaic_tmp"
+        }
+    }
+
 
     def setBlockSize(mosaicConfig: MosaicExpressionConfig): Unit = {
         val blockSize = mosaicConfig.getRasterBlockSize
@@ -116,6 +133,7 @@ object MosaicGDAL extends Logging {
             }
         } else {
             configureCheckpoint(mosaicConfig)
+            configureLocalRasterDir(mosaicConfig)
         }
     }
 
@@ -266,4 +284,7 @@ object MosaicGDAL extends Logging {
     /** @return default value of checkpoint path. */
     def getCheckpointPathDefault: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
 
+    def getLocalRasterDir: String = this.localRasterDir
+
+    def getLocalAgeLimitMinutes: Int = this.localAgeLimitMinutes
 }

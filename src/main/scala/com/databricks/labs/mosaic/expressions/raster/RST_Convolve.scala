@@ -27,8 +27,10 @@ case class RST_Convolve(
       with NullIntolerant
       with CodegenFallback {
 
-    override def dataType: org.apache.spark.sql.types.DataType = {
-        GDAL.enable(expressionConfig)
+    GDAL.enable(expressionConfig)
+
+    //serialize data type
+    override def dataType: DataType = {
         RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
     }
 

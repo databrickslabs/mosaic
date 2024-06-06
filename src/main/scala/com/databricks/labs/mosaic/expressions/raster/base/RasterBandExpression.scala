@@ -23,6 +23,8 @@ import scala.reflect.ClassTag
   *   MOSAIC_RASTER_STORAGE is set to MOSAIC_RASTER_STORAGE_BYTE.
   * @param bandExpr
   *   The expression for the band index.
+  * @param returnsRaster
+  *   for serialization handling.
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -73,19 +75,20 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
     // noinspection DuplicatedCode
     override def nullSafeEval(inputRaster: Any, inputBand: Any): Any = {
         GDAL.enable(expressionConfig)
-        val rasterType = RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile.deserialize(
             inputRaster.asInstanceOf[InternalRow],
-            expressionConfig.getCellIdType,
-            rasterType
+            expressionConfig.getCellIdType
         )
         val bandIndex = inputBand.asInstanceOf[Int]
 
         val band = tile.getRaster.getBand(bandIndex)
         val result = bandTransform(tile, band)
-
-        val serialized = serialize(result, returnsRaster, rasterType, expressionConfig)
-        RasterCleaner.dispose(tile)
+        val resultType = {
+            if (returnsRaster) getRasterType(RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint))
+            else dataType
+        }
+        val serialized = serialize(result, returnsRaster, resultType, expressionConfig)
+        pathSafeDispose(tile, manualMode = expressionConfig.isManualCleanupMode)
         serialized
     }
 

@@ -24,7 +24,7 @@ trait RST_ToOverlappingTilesBehaviors extends QueryTest {
             .load("src/test/resources/modis")
 
         val gridTiles = rastersInMemory
-            .withColumn("tile", rst_to_overlapping_tiles($"tile", lit(500), lit(500), lit(10)))
+            .withColumn("tile", rst_tooverlappingtiles($"tile", lit(500), lit(500), lit(10)))
             .select("tile")
 
         rastersInMemory
@@ -32,7 +32,7 @@ trait RST_ToOverlappingTilesBehaviors extends QueryTest {
 
         noException should be thrownBy spark.sql(
             """
-              |select rst_to_overlapping_tiles(tile, 500, 500, 10)
+              |select rst_tooverlappingtiles(tile, 500, 500, 10)
               |  from source
               |""".stripMargin).take(1)
 

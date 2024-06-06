@@ -1,12 +1,14 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.utils.PathUtils
+import org.apache.spark.sql.types.{BinaryType, DataType}
 
 /** ReTile is a helper object for retiling rasters. */
 object ReTile {
+
+    val tileDataType: DataType = BinaryType
 
     /**
       * Retiles a raster into tiles. Empty tiles are discarded. The tile size is
@@ -18,13 +20,16 @@ object ReTile {
       *   The width of the tiles.
       * @param tileHeight
       *   The height of the tiles.
+      * @param manualMode
+      *   Skip deletion of interim file writes, if any.
       * @return
       *   A sequence of MosaicRasterTile objects.
       */
     def reTile(
         tile: MosaicRasterTile,
         tileWidth: Int,
-        tileHeight: Int
+        tileHeight: Int,
+        manualMode: Boolean
     ): Seq[MosaicRasterTile] = {
         val raster = tile.getRaster
         val (xR, yR) = raster.getDimensions
@@ -49,17 +54,14 @@ object ReTile {
             )
 
             val isEmpty = result.isEmpty
-
-            if (isEmpty) dispose(result)
+            if (isEmpty) result.safeCleanUpPath(rasterPath, allowThisPathDelete = true, manualMode)
 
             (isEmpty, result)
-
         }
 
         val (_, valid) = tiles.partition(_._1)
 
-        valid.map(t => MosaicRasterTile(null, t._2))
-
+        valid.map(t => MosaicRasterTile(null, t._2, tileDataType))
     }
 
 }

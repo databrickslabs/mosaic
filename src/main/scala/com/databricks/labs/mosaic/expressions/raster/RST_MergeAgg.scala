@@ -20,7 +20,7 @@ import scala.collection.mutable.ArrayBuffer
 /** Merges rasters into a single raster. */
 //noinspection DuplicatedCode
 case class RST_MergeAgg(
-    tileExpr: Expression,
+    rastersExpr: Expression,
     expressionConfig: MosaicExpressionConfig,
     mutableAggBufferOffset: Int = 0,
     inputAggBufferOffset: Int = 0
@@ -28,17 +28,24 @@ case class RST_MergeAgg(
       with UnaryLike[Expression]
       with RasterExpressionSerialization {
 
+    GDAL.enable(expressionConfig)
+
     override lazy val deterministic: Boolean = true
-    override val child: Expression = tileExpr
+
+    override val child: Expression = rastersExpr
+
     override val nullable: Boolean = false
+
+    // serialize data type
     override lazy val dataType: DataType = {
-        GDAL.enable(expressionConfig)
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
     }
-    override def prettyName: String = "rst_merge_agg"
 
     private lazy val projection = UnsafeProjection.create(Array[DataType](ArrayType(elementType = dataType, containsNull = false)))
+
     private lazy val row = new UnsafeRow(1)
+
+    override def prettyName: String = "rst_merge_agg"
 
     def update(buffer: ArrayBuffer[Any], input: InternalRow): ArrayBuffer[Any] = {
         val value = child.eval(input)
@@ -60,6 +67,7 @@ case class RST_MergeAgg(
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
         GDAL.enable(expressionConfig)
+        val manualMode = expressionConfig.isManualCleanupMode
 
         if (buffer.isEmpty) {
             null
@@ -69,32 +77,32 @@ case class RST_MergeAgg(
 
             // This is a trick to get the rasters sorted by their parent path to ensure more consistent results
             // when merging rasters with large overlaps
-            val rasterType = RasterTileType(tileExpr, expressionConfig.isRasterUseCheckpoint).rasterType
             var tiles = buffer
                 .map(row =>
                     MosaicRasterTile.deserialize(
                       row.asInstanceOf[InternalRow],
-                      expressionConfig.getCellIdType,
-                      rasterType
+                      expressionConfig.getCellIdType  //, rasterType // <- 0.4.3 infer type
                     )
                 )
                 .sortBy(_.getParentPath)
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-            var merged = MergeRasters.merge(tiles.map(_.getRaster)).flushCache()
+            var merged = MergeRasters.merge(tiles.map(_.getRaster), manualMode).flushCache()
 
-            val result = MosaicRasterTile(idx, merged)
-                .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(BinaryType)
+            val resultType = getRasterType(dataType)
+            var result = MosaicRasterTile(idx, merged, resultType).formatCellId(
+                IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
+            val serialized = result.serialize(resultType, doDestroy = true, manualMode)
 
-            tiles.foreach(RasterCleaner.dispose(_))
-            RasterCleaner.dispose(merged)
+            tiles.foreach(pathSafeDispose(_, manualMode))
+            pathSafeDispose(result, manualMode)
 
             tiles = null
             merged = null
+            result = null
 
-            result
+            serialized
         }
     }
 
@@ -110,7 +118,7 @@ case class RST_MergeAgg(
         buffer
     }
 
-    override protected def withNewChildInternal(newChild: Expression): RST_MergeAgg = copy(tileExpr = newChild)
+    override protected def withNewChildInternal(newChild: Expression): RST_MergeAgg = copy(rastersExpr = newChild)
 
 }
 
