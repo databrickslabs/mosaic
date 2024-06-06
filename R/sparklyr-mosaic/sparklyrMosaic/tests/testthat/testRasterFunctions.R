@@ -63,6 +63,8 @@ test_that("scalar raster functions behave as intended", {
     mutate(rst_scaley = rst_scaley(tile)) %>%
     mutate(rst_srid = rst_srid(tile)) %>%
     mutate(rst_summary = rst_summary(tile)) %>%
+    mutate(rst_type = rst_type(tile)) %>%
+    mutate(rst_updatetype = rst_updatetype(tile, "Float32")) %>%
     mutate(rst_upperleftx = rst_upperleftx(tile)) %>%
     mutate(rst_upperlefty = rst_upperlefty(tile)) %>%
     mutate(rst_width = rst_width(tile)) %>%

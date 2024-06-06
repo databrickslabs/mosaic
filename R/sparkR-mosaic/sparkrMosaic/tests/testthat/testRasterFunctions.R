@@ -34,6 +34,8 @@ test_that("scalar raster functions behave as intended", {
   sdf <- withColumn(sdf, "rst_scaley", rst_scaley(column("tile")))
   sdf <- withColumn(sdf, "rst_srid", rst_srid(column("tile")))
   sdf <- withColumn(sdf, "rst_summary", rst_summary(column("tile")))
+  sdf <- withColumn(sdf, "rst_type", rst_type(column("tile")))
+  sdf <- withColumn(sdf, "rst_updatetype", rst_updatetype(column("tile"), lit("Float32")))
   sdf <- withColumn(sdf, "rst_upperleftx", rst_upperleftx(column("tile")))
   sdf <- withColumn(sdf, "rst_upperlefty", rst_upperlefty(column("tile")))
   sdf <- withColumn(sdf, "rst_width", rst_width(column("tile")))
