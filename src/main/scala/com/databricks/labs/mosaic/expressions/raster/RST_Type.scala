@@ -35,14 +35,14 @@ object RST_Type extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns data type of the raster tile.
+          |_FUNC_(expr1) - Returns an array of data types for each band in the raster tile.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(raster_tile);
-          |        UInt16
+          |        [UInt16]
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {

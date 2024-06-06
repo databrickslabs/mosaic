@@ -329,6 +329,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_ToOverlappingTiles](expressionConfig)
         mosaicRegistry.registerExpression[RST_TryOpen](expressionConfig)
         mosaicRegistry.registerExpression[RST_Subdivide](expressionConfig)
+        mosaicRegistry.registerExpression[RST_UpdateType](expressionConfig)
         mosaicRegistry.registerExpression[RST_UpperLeftX](expressionConfig)
         mosaicRegistry.registerExpression[RST_UpperLeftY](expressionConfig)
         mosaicRegistry.registerExpression[RST_Width](expressionConfig)
@@ -801,6 +802,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_Subdivide(raster.expr, sizeInMB.expr, expressionConfig))
         def rst_subdivide(raster: Column, sizeInMB: Int): Column =
             ColumnAdapter(RST_Subdivide(raster.expr, lit(sizeInMB).expr, expressionConfig))
+        def rst_updatetype(raster: Column, dataType: Column): Column =
+            ColumnAdapter(RST_UpdateType(raster.expr, dataType.expr, expressionConfig))
+        def rst_updatetype(raster: Column, dataType: String): Column =
+            ColumnAdapter(RST_UpdateType(raster.expr, lit(dataType).expr, expressionConfig))
         def rst_upperleftx(raster: Column): Column = ColumnAdapter(RST_UpperLeftX(raster.expr, expressionConfig))
         def rst_upperlefty(raster: Column): Column = ColumnAdapter(RST_UpperLeftY(raster.expr, expressionConfig))
         def rst_width(raster: Column): Column = ColumnAdapter(RST_Width(raster.expr, expressionConfig))
