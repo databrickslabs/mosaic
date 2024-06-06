@@ -45,6 +45,7 @@ __all__ = [
     "rst_rastertoworldcoord",
     "rst_retile",
     "rst_rotation",
+    "rst_type",
     "rst_scalex",
     "rst_scaley",
     "rst_separatebands",
@@ -60,6 +61,7 @@ __all__ = [
     "rst_transform",
     "rst_to_overlapping_tiles",
     "rst_tryopen",
+    "rst_updatetype",
     "rst_upperleftx",
     "rst_upperlefty",
     "rst_width",
@@ -345,8 +347,12 @@ def rst_isempty(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_maketiles(input: ColumnOrName, driver: Any = "no_driver", size_in_mb: Any = -1,
-                  with_checkpoint: Any = False) -> Column:
+def rst_maketiles(
+    input: ColumnOrName,
+    driver: Any = "no_driver",
+    size_in_mb: Any = -1,
+    with_checkpoint: Any = False,
+) -> Column:
     """
     Tiles the raster into tiles of the given size.
     :param input: If the raster is stored on disc, the path
@@ -696,7 +702,7 @@ def rst_rastertogridmin(raster_tile: ColumnOrName, resolution: ColumnOrName) -> 
 
 
 def rst_rastertoworldcoord(
-        raster_tile: ColumnOrName, x: ColumnOrName, y: ColumnOrName
+    raster_tile: ColumnOrName, x: ColumnOrName, y: ColumnOrName
 ) -> Column:
     """
     Computes the world coordinates of the raster pixel at the given x and y coordinates.
@@ -1171,6 +1177,24 @@ def rst_to_overlapping_tiles(
     )
 
 
+def rst_type(raster_tile: ColumnOrName) -> Column:
+    """
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column (ArrayType[StringType])
+        The data type of each band of the raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_type", pyspark_to_java_column(raster_tile)
+    )
+
+
 def rst_tryopen(raster_tile: ColumnOrName) -> Column:
     """
     Tries to open the raster and returns a flag indicating if the raster can be opened.
@@ -1213,6 +1237,30 @@ def rst_subdivide(raster_tile: ColumnOrName, size_in_mb: ColumnOrName) -> Column
         "rst_subdivide",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(size_in_mb),
+    )
+
+
+def rst_updatetype(raster_tile: ColumnOrName, data_type: ColumnOrName) -> Column:
+    """
+    Updates the data type of the raster.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    data_type : Column (StringType)
+        The data type for the updated raster.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_updatetype",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(data_type),
     )
 
 
