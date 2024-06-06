@@ -6,8 +6,6 @@ import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
 import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.functions.col
-
 trait RST_MergeAggBehaviors extends QueryTest {
 
     // noinspection MapGetGet
