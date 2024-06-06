@@ -70,6 +70,25 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
+      *   Returns the band's data type as a string.
+      */
+    def dataTypeHuman: String = Try(band.getDataType).getOrElse(0) match {
+        case gdalconstConstants.GDT_Byte  => "Byte"
+        case gdalconstConstants.GDT_UInt16 => "UInt16"
+        case gdalconstConstants.GDT_Int16 => "Int16"
+        case gdalconstConstants.GDT_UInt32 => "UInt32"
+        case gdalconstConstants.GDT_Int32 => "Int32"
+        case gdalconstConstants.GDT_Float32 => "Float32"
+        case gdalconstConstants.GDT_Float64 => "Float64"
+        case gdalconstConstants.GDT_CInt16=> "ComplexInt16"
+        case gdalconstConstants.GDT_CInt32=> "ComplexInt32"
+        case gdalconstConstants.GDT_CFloat32=> "ComplexFloat32"
+        case gdalconstConstants.GDT_CFloat64=> "ComplexFloat64"
+        case _  => "Unknown"
+    }
+
+    /**
+      * @return
       *   Returns the band's x size.
       */
     def xSize: Int = Try(band.GetXSize).getOrElse(0)
