@@ -53,12 +53,12 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.proj4String shouldBe "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +R=6371007.181 +units=m +no_defs"
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
-        testRaster.getRaster.GetProjection()
+        testRaster.getDataset.GetProjection()
         noException should be thrownBy testRaster.getSpatialReference
         an[Exception] should be thrownBy testRaster.getBand(-1)
         an[Exception] should be thrownBy testRaster.getBand(Int.MaxValue)
 
-        testRaster.getRaster.delete()
+        testRaster.getDataset.delete()
     }
 
     test("Read raster metadata from a GRIdded Binary file.") {
@@ -76,7 +76,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-0.375, -0.375, 10.125, 10.125)
 
-        testRaster.getRaster.delete()
+        testRaster.getDataset.delete()
     }
 
     test("Read raster metadata from a NetCDF file.") {
@@ -102,8 +102,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-180.00000610436345, -89.99999847369712, 180.00000610436345, 89.99999847369712)
 
-        testRaster.getRaster.delete()
-        superRaster.getRaster.delete()
+        testRaster.getDataset.delete()
+        superRaster.getDataset.delete()
     }
 
     test("Raster pixel and extent sizes are correct.") {
@@ -127,7 +127,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.xMin - -8895604.157333 < 0.0000001 shouldBe true
         testRaster.yMin - 2223901.039333 < 0.0000001 shouldBe true
 
-        testRaster.getRaster.delete()
+        testRaster.getDataset.delete()
     }
 
     test("Raster filter operations are correct.") {
@@ -148,7 +148,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           "parentPath" -> "",
           "driver" -> "GTiff"
         )
-        var result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "avg").flushCache()
+        var result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "avg").withDatasetRefreshFromPath()
 
         var resultValues = result.getBand(1).values
 
@@ -175,7 +175,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // mode
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "mode").flushCache()
+        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "mode").withDatasetRefreshFromPath()
 
         resultValues = result.getBand(1).values
 
@@ -228,7 +228,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // median
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "median").flushCache()
+        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "median").withDatasetRefreshFromPath()
 
         resultValues = result.getBand(1).values
 
@@ -267,7 +267,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // min filter
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "min").flushCache()
+        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "min").withDatasetRefreshFromPath()
 
         resultValues = result.getBand(1).values
 
@@ -306,7 +306,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // max filter
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "max").flushCache()
+        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "max").withDatasetRefreshFromPath()
 
         resultValues = result.getBand(1).values
 

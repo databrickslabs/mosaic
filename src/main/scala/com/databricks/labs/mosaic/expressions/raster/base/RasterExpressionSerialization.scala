@@ -9,7 +9,7 @@ import org.apache.spark.sql.types.DataType
   * Base trait for raster serialization. It is used to serialize the result of
   * the expression.
   */
-trait RasterExpressionSerialization extends RasterPathAware {
+trait RasterExpressionSerialization {
 
     /**
       * Serializes the result of the expression. If the expression returns a
@@ -30,14 +30,14 @@ trait RasterExpressionSerialization extends RasterPathAware {
         data: Any,
         returnsRaster: Boolean,
         outputDataType: DataType,
+        doDestroy: Boolean,
         expressionConfig: MosaicExpressionConfig
     ): Any = {
         if (returnsRaster) {
-            val manualMode = expressionConfig.isManualCleanupMode
             val tile = data.asInstanceOf[MosaicRasterTile]
             val result = tile.formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-            val serialized = result.serialize(outputDataType, doDestroy = true, manualMode)
-            pathSafeDispose(result, manualMode)
+            val serialized = result.serialize(outputDataType, doDestroy)
+
             serialized
         } else {
             data

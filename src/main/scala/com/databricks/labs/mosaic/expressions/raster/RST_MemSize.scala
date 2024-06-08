@@ -9,6 +9,8 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
+import scala.util.Try
+
 /** Returns the memory size of the raster in bytes. */
 case class RST_MemSize(raster: Expression, expressionConfig: MosaicExpressionConfig)
     extends RasterExpression[RST_MemSize](raster, returnsRaster = false, expressionConfig)
@@ -18,7 +20,9 @@ case class RST_MemSize(raster: Expression, expressionConfig: MosaicExpressionCon
     override def dataType: DataType = LongType
 
     /** Returns the memory size of the raster in bytes. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.getMemSize
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        Try(tile.getRaster.getMemSize).getOrElse(-1)
+    }
 
 }
 

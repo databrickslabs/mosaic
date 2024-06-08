@@ -31,7 +31,7 @@ case class RST_ToOverlappingTiles(
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
         val overlapValue = overlapExpr.eval().asInstanceOf[Int]
-        OverlappingTiles.reTile(tile, tileWidthValue, tileHeightValue, overlapValue, expressionConfig.isManualCleanupMode)
+        OverlappingTiles.reTile(tile, tileWidthValue, tileHeightValue, overlapValue)
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, tileWidthExpr, tileHeightExpr, overlapExpr)

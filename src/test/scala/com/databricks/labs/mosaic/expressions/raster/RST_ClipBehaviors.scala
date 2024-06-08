@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.{MOSAIC_MANUAL_CLEANUP_MODE, MOSAIC_RASTER_LOC
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.utils.FileUtils
@@ -30,6 +31,8 @@ trait RST_ClipBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(sc)
         import mc.functions._
+
+        info(s"is CleanUpManager running? ${CleanUpManager.isCleanThreadAlive}")
 
         info(s"test on? ${sc.conf.get(MOSAIC_TEST_MODE, "false")}")
         info(s"manual cleanup on? ${sc.conf.get(MOSAIC_MANUAL_CLEANUP_MODE, "false")}")
@@ -66,10 +69,7 @@ trait RST_ClipBehaviors extends QueryTest {
             .select("pixels", "srid", "size", "tile", "pixel_height", "pixel_width", "content")
             .limit(1)
 
-//        df.write.format("noop").mode("overwrite").save()
-
         val base = df.first
-
         val p = base.getAs[mutable.WrappedArray[Long]](0)(0)
         val srid = base.get(1).asInstanceOf[Int]
         val sz = base.get(2)

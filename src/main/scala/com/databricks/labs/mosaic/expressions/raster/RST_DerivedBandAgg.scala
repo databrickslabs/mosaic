@@ -2,9 +2,11 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
 import com.databricks.labs.mosaic.core.raster.operator.pixel.PixelCombineRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpressionSerialization
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -75,8 +77,6 @@ case class RST_DerivedBandAgg(
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
         GDAL.enable(expressionConfig)
-        val manualMode = expressionConfig.isManualCleanupMode
-
         if (buffer.isEmpty) {
             null
         } else {
@@ -96,17 +96,15 @@ case class RST_DerivedBandAgg(
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
 
-            var combined = PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName, manualMode)
+            var combined = PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
             val resultType = getRasterType(dataType)
             var result = MosaicRasterTile(idx, combined, resultType)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
 
             // using serialize on the object vs from RasterExpressionSerialization
-            val serialized = result.serialize(resultType, doDestroy = true, manualMode)
+            val serialized = result.serialize(resultType, doDestroy = true)
 
-            tiles.foreach(pathSafeDispose(_, manualMode))
-            pathSafeDispose(result, manualMode)
-
+            tiles.foreach(destroy)
             tiles = null
             combined = null
             result = null

@@ -1,9 +1,10 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, TernaryExpression}
@@ -75,15 +76,18 @@ abstract class RasterArray2ArgExpression[T <: Expression: ClassTag](
       */
     override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
         GDAL.enable(expressionConfig)
-        val manualMode =  expressionConfig.isManualCleanupMode
-        val tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
-        val result = rasterTransform(tiles, arg1, arg2)
+        var tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
+        var result = rasterTransform(tiles, arg1, arg2)
         val resultType = {
-            if (returnsRaster) getRasterType(RasterTileType(rastersExpr, expressionConfig.isRasterUseCheckpoint))
+            if (returnsRaster) getRasterType(dataType)
             else dataType
         }
-        val serialized = serialize(result, returnsRaster, resultType, expressionConfig)
-        tiles.foreach(t => pathSafeDispose(t, manualMode))
+        val serialized = serialize(result, returnsRaster, resultType, doDestroy = true, expressionConfig)
+
+        tiles.foreach(destroy)
+        tiles = null
+        result = null
+
         serialized
     }
 

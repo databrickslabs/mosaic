@@ -11,7 +11,7 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, NullIntolerant}
-import org.apache.spark.sql.types.BooleanType
+import org.apache.spark.sql.types.{BooleanType, DataType}
 
 import scala.util.Try
 
@@ -31,10 +31,8 @@ case class RST_Clip(
       with NullIntolerant
       with CodegenFallback {
 
-    GDAL.enable(expressionConfig)
-
     // serialize data type
-    override def dataType: org.apache.spark.sql.types.DataType = {
+    override def dataType: DataType = {
         RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
     }
 
@@ -53,7 +51,6 @@ case class RST_Clip(
       *   The clipped raster.
       */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
-        GDAL.enable(expressionConfig)
         val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
         val geomCRS = geometry.getSpatialReferenceOSR
         val cutline = arg2.asInstanceOf[Boolean]

@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
@@ -28,8 +27,6 @@ case class RST_Filter(
     )
       with NullIntolerant
       with CodegenFallback {
-
-    GDAL.enable(expressionConfig)
 
     // serialize data type
     override def dataType: DataType = {

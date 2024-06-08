@@ -2,12 +2,11 @@ package com.databricks.labs.mosaic.core.raster.operator.merge
 
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
-import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.types.{BinaryType, DataType}
 
 /** MergeRasters is a helper object for merging rasters. */
-object MergeRasters extends RasterPathAware {
+object MergeRasters {
 
     val tileDataType: DataType = BinaryType
 
@@ -16,12 +15,10 @@ object MergeRasters extends RasterPathAware {
       *
       * @param rasters
       *   The rasters to merge.
-      * @param manualMode
-      *   Skip deletion of interim file writes, if any.
       * @return
       *   A MosaicRaster object.
       */
-    def merge(rasters: Seq[MosaicRasterGDAL], manualMode: Boolean): MosaicRasterGDAL = {
+    def merge(rasters: Seq[MosaicRasterGDAL]): MosaicRasterGDAL = {
         val outOptions = rasters.head.getWriteOptions
 
         val vrtPath = PathUtils.createTmpFilePath("vrt")
@@ -40,7 +37,7 @@ object MergeRasters extends RasterPathAware {
           outOptions
         )
 
-        pathSafeDispose(vrtRaster, manualMode)
+        vrtRaster.destroy() // after translate
 
         result
     }

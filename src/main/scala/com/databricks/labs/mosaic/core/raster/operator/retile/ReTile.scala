@@ -20,16 +20,13 @@ object ReTile {
       *   The width of the tiles.
       * @param tileHeight
       *   The height of the tiles.
-      * @param manualMode
-      *   Skip deletion of interim file writes, if any.
       * @return
       *   A sequence of MosaicRasterTile objects.
       */
     def reTile(
         tile: MosaicRasterTile,
         tileWidth: Int,
-        tileHeight: Int,
-        manualMode: Boolean
+        tileHeight: Int
     ): Seq[MosaicRasterTile] = {
         val raster = tile.getRaster
         val (xR, yR) = raster.getDimensions
@@ -54,7 +51,6 @@ object ReTile {
             )
 
             val isEmpty = result.isEmpty
-            if (isEmpty) result.safeCleanUpPath(rasterPath, allowThisPathDelete = true, manualMode)
 
             (isEmpty, result)
         }

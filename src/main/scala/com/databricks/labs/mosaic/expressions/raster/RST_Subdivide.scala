@@ -21,7 +21,7 @@ case class RST_Subdivide(
     /** Returns a set of new rasters with the specified tile size (In MB). */
     override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
         val targetSize = sizeInMB.eval().asInstanceOf[Int]
-        BalancedSubdivision.splitRaster(tile, targetSize, expressionConfig.isManualCleanupMode)
+        BalancedSubdivision.splitRaster(tile, targetSize)
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, sizeInMB)

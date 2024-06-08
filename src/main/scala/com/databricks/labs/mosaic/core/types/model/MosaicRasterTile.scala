@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic.core.types.model
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.expressions.raster.{buildMapString, extractMap}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
@@ -104,13 +105,11 @@ case class MosaicRasterTile(
       *    - If checkpointing is used, [[StringType]] will be forced
       * @param doDestroy
       *   Whether to destroy the internal object after serializing.
-      * @param manualMode
-      *   Skip deletion of interim file writes, if any.
       * @return
       *   An instance of [[InternalRow]].
       */
-    def serialize(rasterDataType: DataType, doDestroy: Boolean, manualMode: Boolean): InternalRow = {
-        val encodedRaster = encodeRaster(rasterDataType, doDestroy, manualMode)
+    def serialize(rasterDataType: DataType, doDestroy: Boolean): InternalRow = {
+        val encodedRaster = encodeRaster(rasterDataType, doDestroy)
         val path = encodedRaster match {
                 case uStr: UTF8String => uStr.toString
                 case _ => raster.createInfo("path")
@@ -141,28 +140,25 @@ case class MosaicRasterTile(
       * @param rasterDataType
       *   Specify [[BinaryType]] for byte array or [[StringType]] for path,
       *   as used in checkpointing.
-      * @param doDestroy
-      *   Whether to destroy the internal object after serializing.
       * @return
       *   According to the [[DataType]].
       */
     private def encodeRaster(
         rasterDataType: DataType,
         doDestroy: Boolean,
-        manualMode: Boolean
     ): Any = {
-        GDAL.writeRasters(Seq(raster), rasterDataType, doDestroy, manualMode).head
+        GDAL.writeRasters(Seq(raster), rasterDataType, doDestroy).head
     }
 
     def getSequenceNumber: Int =
-        Try(raster.getRaster.GetMetadataItem("BAND_INDEX", "DATABRICKS_MOSAIC")) match {
+        Try(raster.getDataset.GetMetadataItem("BAND_INDEX", "DATABRICKS_MOSAIC")) match {
             case Success(value) => value.toInt
             case Failure(_)     => -1
         }
 
 }
 
-/** Companion object. */
+/** singleton static object. */
 object MosaicRasterTile {
 
     /**
@@ -205,5 +201,40 @@ object MosaicRasterTile {
             new MosaicRasterTile(null, raster, rawRasterDataType)
         }
     }
+
+
+
+    /** returns rasterType from a passed DataType, handling RasterTileType as well as string + binary. */
+    def getRasterType(dataType: DataType): DataType = {
+        dataType match {
+            case tile: RasterTileType  => tile.rasterType
+            case _ => dataType
+        }
+    }
+
+    //    /** test if we have a path type [[StringType]] */
+    //    def isPathType(dataType: DataType): Boolean = {
+    //        getRasterType(dataType).isInstanceOf[StringType]
+    //    }
+    //
+    //    /** `isTypeDeleteSafe` tested for deleting files (wrapped in Try). */
+    //    def pathSafeDispose(tile: MosaicRasterTile, manualMode: Boolean): Unit = {
+    //        Try(pathSafeDispose(tile.getRaster, manualMode))
+    //    }
+    //
+    //    /** `isTypeDeleteSafe` tested for deleting files (wrapped in Try). */
+    //    def pathSafeDispose(raster: MosaicRasterGDAL, manualMode: Boolean): Unit = {
+    //        Try (RasterCleaner.destroy(raster))
+    //        doManagedCleanUp(manualMode)
+    //    }
+    //
+    //    /////////////////////////////////////////////////////////
+    //    // deserialize helpers
+    //    /////////////////////////////////////////////////////////
+    //
+    //    /** avoid checkpoint settings when deserializing, just want the actual type */
+    //    def getDeserializeRasterType(idType: DataType, rasterExpr: Expression): DataType = {
+    //        getRasterType(RasterTileType(idType, rasterExpr, useCheckpoint = false))
+    //    }
 
 }

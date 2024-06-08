@@ -30,8 +30,7 @@ case class RST_Tessellate(
             tile.getRaster,
             resolution,
             indexSystem,
-            geometryAPI,
-            expressionConfig.isManualCleanupMode
+            geometryAPI
         )
     }
 

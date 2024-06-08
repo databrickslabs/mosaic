@@ -7,13 +7,16 @@
   - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`  - additional functions include: 
     `gdal.update_checkpoint_path`, `gdal.set_checkpoint_on`, `gdal.set_checkpoint_off`, and `gdal.reset_checkpoint`
   - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)` (similar bindings to python as well)
-- `RST_PixelCount` now supports optional 'countNoDataMask' (default is `false`, can now be `true`) to optionally get full 
+- Local files are no longer immediately deleted (disposed) but are controlled through `spark.databricks.labs.mosaic.manual.cleanup.mode` and `spark.databricks.labs.mosaic.raster.local.age.limit.minutes` 
+  along with existing ability to specify the session local storage root dir with `spark.databricks.labs.mosaic.raster.tmp.prefix`
+- `RST_PixelCount` now supports optional 'countNoData' and 'countMask' (defaults are `false`, can now be `true`) to optionally get full 
    pixel counts where mask is 0.0 and noData is what is configured in the raster
 - Added `RST_Write` to save a generated 'tile' to a specified directory (e.g. fuse) location using its GDAL driver and raster data / path
 - Added `RST_GDALWarp` and `RST_GDALTransform` to execute arbitrary GDAL commands on a raster tile and return a raster tile
 - Improved raster_to_grid reader performance
 - `RST_Clip` GDAL Warp option `CUTLINE_ALL_TOUCHED` configurable (default is `true`, can now be `false`); also, setting 
   SpatialReferenceSystem in the generated Shapefile Feature Layer (along with the WKB 'geometry' field as before)
+- `RST_MemSize` now returns -1 if memory cannot be gotten from a raster
 - Python bindings added for `RST_Avg`, `RST_Max`, `RST_Median`, `RST_Min`, and `RST_PixelCount`; also missing 'driver' 
   param documented for `RST_FromContent`, missing docs added for `RST_SetSRID`, and standardized `RST_ToOverlappingTiles` 
   (`RST_To_Overlapping_Tiles` deprecated)

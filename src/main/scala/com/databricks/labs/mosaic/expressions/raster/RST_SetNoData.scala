@@ -28,8 +28,6 @@ case class RST_SetNoData(
       with NullIntolerant
       with CodegenFallback {
 
-    GDAL.enable(expressionConfig)
-
     // serialize data type
     override def dataType: DataType = {
         RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)

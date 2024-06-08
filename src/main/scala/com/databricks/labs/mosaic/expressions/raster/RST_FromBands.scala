@@ -25,8 +25,6 @@ case class RST_FromBands(
       with NullIntolerant
       with CodegenFallback {
 
-    GDAL.enable(expressionConfig)
-
     // serialize data type
     override def dataType: DataType = {
         RasterTileType(
@@ -44,8 +42,7 @@ case class RST_FromBands(
       *   The stacked and resampled raster.
       */
     override def rasterTransform(rasters: Seq[MosaicRasterTile]): Any = {
-        val manualMode = expressionConfig.isManualCleanupMode
-        rasters.head.copy(raster = MergeBands.merge(rasters.map(_.getRaster), "bilinear", manualMode))
+        rasters.head.copy(raster = MergeBands.merge(rasters.map(_.getRaster), "bilinear"))
     }
 
 }

@@ -34,7 +34,7 @@ case class RST_Median(rasterExpr: Expression, expressionConfig: MosaicExpression
           command = s"gdalwarp -r med -tr $width $height -of $outShortName"
         )
         // Max pixel is a hack since we get a 1x1 raster back
-        val maxValues = (1 to medRaster.raster.GetRasterCount()).map(medRaster.getBand(_).maxPixelValue)
+        val maxValues = (1 to medRaster.getDataset.GetRasterCount()).map(medRaster.getBand(_).maxPixelValue)
         ArrayData.toArrayData(maxValues.toArray)
     }
 

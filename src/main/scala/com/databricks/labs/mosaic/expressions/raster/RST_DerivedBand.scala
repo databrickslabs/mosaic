@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.pixel.PixelCombineRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterArray2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -29,8 +30,6 @@ case class RST_DerivedBand(
       with NullIntolerant
       with CodegenFallback {
 
-    GDAL.enable(expressionConfig)
-
     // serialize data type
     override def dataType: DataType = {
         RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
@@ -44,7 +43,7 @@ case class RST_DerivedBand(
         val resultType = getRasterType(dataType)
         MosaicRasterTile(
             index,
-            PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName, expressionConfig.isManualCleanupMode),
+            PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName),
             resultType
         )
     }

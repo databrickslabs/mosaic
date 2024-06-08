@@ -14,13 +14,11 @@ object CombineAVG {
       *
       * @param rasters
       *   The rasters to compute result for.
-      * @param manualMode
-      *   Skip deletion of interim file writes, if any.
       *
       * @return
       *   A new raster with average of input rasters.
       */
-    def compute(rasters: Seq[MosaicRasterGDAL], manualMode: Boolean): MosaicRasterGDAL = {
+    def compute(rasters: Seq[MosaicRasterGDAL]): MosaicRasterGDAL = {
 
         val pythonFunc = """
                            |import numpy as np
@@ -34,7 +32,7 @@ object CombineAVG {
                            |    np.divide(pixel_sum, div, out=out_ar, casting='unsafe')
                            |    np.clip(out_ar, stacked_array.min(), stacked_array.max(), out=out_ar)
                            |""".stripMargin
-        PixelCombineRasters.combine(rasters, pythonFunc, "average", manualMode)
+        PixelCombineRasters.combine(rasters, pythonFunc, "average")
     }
 
 }

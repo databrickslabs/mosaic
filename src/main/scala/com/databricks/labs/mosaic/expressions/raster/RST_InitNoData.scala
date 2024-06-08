@@ -26,7 +26,6 @@ case class RST_InitNoData(
       with CodegenFallback {
 
     override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
         RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
     }
 

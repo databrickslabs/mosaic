@@ -2,12 +2,11 @@ package com.databricks.labs.mosaic.core.raster.operator.merge
 
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
-import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.types.{BinaryType, DataType}
 
 /** MergeBands is a helper object for merging raster bands. */
-object MergeBands extends RasterPathAware {
+object MergeBands extends {
 
     val tileDataType: DataType = BinaryType
 
@@ -18,12 +17,10 @@ object MergeBands extends RasterPathAware {
       *   The rasters to merge.
       * @param resampling
       *   The resampling method to use.
-      * @param manualMode
-      *   Skip deletion of interim file writes, if any.
       * @return
       *   A MosaicRaster object.
       */
-    def merge(rasters: Seq[MosaicRasterGDAL], resampling: String, manualMode: Boolean): MosaicRasterGDAL = {
+    def merge(rasters: Seq[MosaicRasterGDAL], resampling: String): MosaicRasterGDAL = {
         val outOptions = rasters.head.getWriteOptions
 
         val vrtPath = PathUtils.createTmpFilePath("vrt")
@@ -42,7 +39,7 @@ object MergeBands extends RasterPathAware {
           outOptions
         )
 
-        pathSafeDispose(vrtRaster, manualMode)
+        vrtRaster.destroy()
 
         result
     }
@@ -57,12 +54,10 @@ object MergeBands extends RasterPathAware {
       *   The pixel size to use.
       * @param resampling
       *   The resampling method to use.
-      * @param manualMode
-      *   Skip deletion of interim file writes, if any.
       * @return
       *   A MosaicRaster object.
       */
-    def merge(rasters: Seq[MosaicRasterGDAL], pixel: (Double, Double), resampling: String, manualMode: Boolean): MosaicRasterGDAL = {
+    def merge(rasters: Seq[MosaicRasterGDAL], pixel: (Double, Double), resampling: String): MosaicRasterGDAL = {
         val outOptions = rasters.head.getWriteOptions
 
         val vrtPath = PathUtils.createTmpFilePath("vrt")
@@ -81,7 +76,7 @@ object MergeBands extends RasterPathAware {
           outOptions
         )
 
-        pathSafeDispose(vrtRaster, manualMode)
+        vrtRaster.destroy()
 
         result
     }

@@ -19,7 +19,7 @@ case class RST_ScaleY(raster: Expression, expressionConfig: MosaicExpressionConf
 
     /** Returns the scale y of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        tile.getRaster.getRaster.GetGeoTransform()(5)
+        tile.getRaster.getDataset.GetGeoTransform()(5)
     }
 
 }

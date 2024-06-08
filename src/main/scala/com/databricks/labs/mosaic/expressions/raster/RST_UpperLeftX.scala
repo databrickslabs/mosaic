@@ -19,7 +19,7 @@ case class RST_UpperLeftX(raster: Expression, expressionConfig: MosaicExpression
 
     /** Returns the upper left x of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        tile.getRaster.getRaster.GetGeoTransform()(0)
+        tile.getRaster.getDataset.GetGeoTransform()(0)
     }
 
 }

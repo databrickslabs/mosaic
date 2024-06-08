@@ -1,17 +1,15 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.types.{BinaryType, DataType}
 
 import scala.collection.immutable
 
 /** OverlappingTiles is a helper object for retiling rasters. */
-object OverlappingTiles extends RasterPathAware {
+object OverlappingTiles {
 
     //serialize data type
     val tileDataType: DataType = BinaryType
@@ -29,8 +27,6 @@ object OverlappingTiles extends RasterPathAware {
       *   The height of the tiles.
       * @param overlapPercentage
       *   The percentage of overlap between tiles.
-      * @param manualMode
-      *   Skip deletion of interim file writes, if any.
       * @return
       *   A sequence of MosaicRasterTile objects.
       */
@@ -38,8 +34,7 @@ object OverlappingTiles extends RasterPathAware {
         tile: MosaicRasterTile,
         tileWidth: Int,
         tileHeight: Int,
-        overlapPercentage: Int,
-        manualMode: Boolean
+        overlapPercentage: Int
     ): immutable.Seq[MosaicRasterTile] = {
         val raster = tile.getRaster
         val (xSize, ySize) = raster.getDimensions
@@ -66,7 +61,6 @@ object OverlappingTiles extends RasterPathAware {
                 )
 
                 val isEmpty = result.isEmpty
-                if (isEmpty) result.safeCleanUpPath(rasterPath, allowThisPathDelete = true, manualMode)
 
                 (isEmpty, result)
             }

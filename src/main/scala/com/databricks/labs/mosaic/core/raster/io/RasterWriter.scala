@@ -9,31 +9,28 @@ package com.databricks.labs.mosaic.core.raster.io
 trait RasterWriter {
 
     /**
-      * Writes a raster to a byte array.
-      *
-      * @param doDestroy
-      *   A boolean indicating if the raster object should be destroyed after writing.
-      *   - file paths handled separately.
-      * @param manualMode
-      *   Skip deletion of interim file writes, e.g. for subdatasets.
-      * @return
-      *   A byte array containing the raster data.
-      */
-    def writeToBytes(doDestroy: Boolean, manualMode: Boolean): Array[Byte]
+     * Writes a raster to a byte array.
+     *
+     * @param doDestroy
+     *   A boolean indicating if the raster object should be destroyed after writing.
+     *   - file paths handled separately.
+     * @return
+     *   A byte array containing the raster data.
+     */
+    def writeToBytes(doDestroy: Boolean): Array[Byte]
 
     /**
-      * Writes a raster to a specified file system path.
-      *
-      * @param newPath
-      *   The path to write the raster.
-      * @param doDestroy
-      *   A boolean indicating if the raster object should be destroyed after writing.
-      *   - file paths handled separately.
-      * @param manualMode
-      *   Skip deletion of interim file writes, if any.
-      * @return
-      *   The path where written (may differ, e.g. due to subdatasets).
-      */
-    def writeToPath(newPath: String, doDestroy: Boolean, manualMode: Boolean): String
+     * Writes a raster to a specified file system path.
+     *
+     * @param newPath
+     *   The path to write the raster.
+     * @param doDestroy
+     *   A boolean indicating if the raster object should be destroyed after writing.
+     *   - file paths handled separately.
+     *   Skip deletion of interim file writes, if any.
+     * @return
+     *   The path where written (may differ, e.g. due to subdatasets).
+     */
+    def writeToPath(newPath: String, doDestroy: Boolean): String
 
 }

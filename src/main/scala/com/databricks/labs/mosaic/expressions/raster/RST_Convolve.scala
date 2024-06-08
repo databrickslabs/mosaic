@@ -27,8 +27,6 @@ case class RST_Convolve(
       with NullIntolerant
       with CodegenFallback {
 
-    GDAL.enable(expressionConfig)
-
     //serialize data type
     override def dataType: DataType = {
         RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)

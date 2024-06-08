@@ -31,9 +31,9 @@ object MosaicRasterWriteOptions {
     val GTiff: MosaicRasterWriteOptions = MosaicRasterWriteOptions()
 
     def noGPCsNoTransform(raster: MosaicRasterGDAL): Boolean = {
-        val noGPCs = raster.getRaster.GetGCPCount == 0
-        val noGeoTransform = raster.getRaster.GetGeoTransform == null ||
-            (raster.getRaster.GetGeoTransform sameElements Array(0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
+        val noGPCs = raster.getDataset.GetGCPCount == 0
+        val noGeoTransform = raster.getDataset.GetGeoTransform == null ||
+            (raster.getDataset.GetGeoTransform sameElements Array(0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
         noGPCs && noGeoTransform
     }
 
@@ -41,7 +41,7 @@ object MosaicRasterWriteOptions {
 
     def apply(raster: MosaicRasterGDAL): MosaicRasterWriteOptions = {
         val compression = raster.getCompression
-        val format = raster.getRaster.GetDriver.getShortName
+        val format = raster.getDataset.GetDriver.getShortName
         val extension = raster.getRasterFileExtension
         val resampling = "nearest"
         val pixelSize = None

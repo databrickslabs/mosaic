@@ -19,9 +19,8 @@ case class RST_IsEmpty(raster: Expression, expressionConfig: MosaicExpressionCon
 
     /** Returns true if the raster is empty. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        var raster = tile.getRaster
+        val raster = tile.getRaster
         val result = (raster.ySize == 0 && raster.xSize == 0) || raster.isEmpty
-        raster = null
         result
     }
 

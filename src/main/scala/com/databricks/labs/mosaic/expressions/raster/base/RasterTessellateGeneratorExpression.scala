@@ -3,9 +3,10 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -39,7 +40,6 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
     resolutionExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
-      with RasterPathAware
       with NullIntolerant
       with Serializable {
 
@@ -80,18 +80,19 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
-        val manualMode = expressionConfig.isManualCleanupMode
-        val tile = MosaicRasterTile.deserialize(
+        var tile = MosaicRasterTile.deserialize(
                 rasterExpr.eval(input).asInstanceOf[InternalRow],
                 indexSystem.getCellIdDataType
             )
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
-        val genTiles = rasterGenerator(tile, inResolution).map(_.formatCellId(indexSystem))
+        var genTiles = rasterGenerator(tile, inResolution).map(_.formatCellId(indexSystem))
         val resultType = getRasterType(RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint))
         val rows = genTiles.map(t => InternalRow.fromSeq(Seq(t.formatCellId(indexSystem).serialize(
-            resultType, doDestroy = true, manualMode))))
-        pathSafeDispose(tile, manualMode)
-        genTiles.foreach(t => pathSafeDispose(t, manualMode))
+            resultType, doDestroy = true))))
+
+        destroy(tile)
+        tile = null
+        genTiles = null
 
         rows.iterator
     }

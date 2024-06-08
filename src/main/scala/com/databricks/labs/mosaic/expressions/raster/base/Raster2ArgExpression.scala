@@ -1,9 +1,10 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -79,17 +80,21 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
     // noinspection DuplicatedCode
     override def nullSafeEval(input: Any, arg1: Any, arg2: Any): Any = {
         GDAL.enable(expressionConfig)
-        val tile = MosaicRasterTile.deserialize(
+        var tile = MosaicRasterTile.deserialize(
             input.asInstanceOf[InternalRow],
             expressionConfig.getCellIdType
         )
-        val result = rasterTransform(tile, arg1, arg2)
+        var result = rasterTransform(tile, arg1, arg2)
         val resultType = {
-            if (returnsRaster) getRasterType(RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint))
+            if (returnsRaster) getRasterType(dataType)
             else dataType
         }
-        val serialized = serialize(result, returnsRaster, resultType, expressionConfig)
-        pathSafeDispose(tile, manualMode = expressionConfig.isManualCleanupMode)
+        val serialized = serialize(result, returnsRaster, resultType, doDestroy = true, expressionConfig)
+
+        destroy(tile)
+        tile = null
+        result = null
+
         serialized
     }
 

@@ -4,12 +4,12 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
-import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.InternalRow
@@ -30,7 +30,6 @@ case class RST_FromFile(
     sizeInMB: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
-      with RasterPathAware
       with Serializable
       with NullIntolerant
       with CodegenFallback {
@@ -65,7 +64,6 @@ case class RST_FromFile(
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
-        val manualMode = expressionConfig.isManualCleanupMode
         val resultType = getRasterType(
             RasterTileType(expressionConfig.getCellIdType, BinaryType, expressionConfig.isRasterUseCheckpoint))
 
@@ -80,9 +78,9 @@ case class RST_FromFile(
 
             var raster = MosaicRasterGDAL.readRaster(createInfo)
             var result = MosaicRasterTile(null, raster, resultType).formatCellId(indexSystem)
-            val row = result.serialize(resultType, doDestroy = true, manualMode)
+            val row = result.serialize(resultType, doDestroy = true)
 
-            pathSafeDispose(result, manualMode)
+            destroy(result)
 
             raster = null
             result = null
@@ -96,11 +94,10 @@ case class RST_FromFile(
             Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
             val size = if (targetSize <= 0) 64 else targetSize
 
-            var results = ReTileOnRead.localSubdivide(tmpPath, path, size, manualMode).map(_.formatCellId(indexSystem))
-            val rows = results.map(_.serialize(resultType, doDestroy = true, manualMode))
+            var results = ReTileOnRead.localSubdivide(tmpPath, path, size).map(_.formatCellId(indexSystem))
+            val rows = results.map(_.serialize(resultType, doDestroy = true))
 
-            results.foreach(pathSafeDispose(_, manualMode))
-            if (!manualMode) Files.deleteIfExists(Paths.get(tmpPath))
+            results.foreach(destroy)
 
             results = null
 

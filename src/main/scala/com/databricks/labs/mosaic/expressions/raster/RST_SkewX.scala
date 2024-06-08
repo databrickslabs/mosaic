@@ -19,7 +19,7 @@ case class RST_SkewX(raster: Expression, expressionConfig: MosaicExpressionConfi
 
     /** Returns the skew x of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        tile.getRaster.getRaster.GetGeoTransform()(2)
+        tile.getRaster.getDataset.GetGeoTransform()(2)
     }
 
 }

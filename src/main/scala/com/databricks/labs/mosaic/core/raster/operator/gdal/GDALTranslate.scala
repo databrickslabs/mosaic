@@ -30,7 +30,7 @@ object GDALTranslate {
         val effectiveCommand = OperatorOptions.appendOptions(command, writeOptions)
         val translateOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val translateOptions = new TranslateOptions(translateOptionsVec)
-        val result = gdal.Translate(outputPath, raster.getRaster, translateOptions)
+        val result = gdal.Translate(outputPath, raster.getDataset, translateOptions)
         val errorMsg = gdal.GetLastErrorMsg
         val size = Files.size(Paths.get(outputPath))
         val createInfo = Map(
@@ -42,8 +42,8 @@ object GDALTranslate {
           "all_parents" -> raster.getParentPath
         )
         raster
-            .copy(raster = result, createInfo = createInfo, memSize = size)
-            .flushCache()
+            .copy(result, createInfo, size)
+            .withDatasetRefreshFromPath()
     }
 
 }

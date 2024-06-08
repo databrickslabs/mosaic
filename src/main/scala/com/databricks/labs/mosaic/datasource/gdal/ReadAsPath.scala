@@ -2,22 +2,18 @@ package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
-import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 
-import java.nio.file.{Files, Paths}
-
 /** An object defining the retiling read strategy for the GDAL file format. */
-object ReadAsPath extends ReadStrategy with RasterPathAware {
+object ReadAsPath extends ReadStrategy {
 
     //serialize data type
     val tileDataType: DataType = StringType
@@ -89,7 +85,6 @@ object ReadAsPath extends ReadStrategy with RasterPathAware {
         requiredSchema: StructType,
         options: Map[String, String],
         indexSystem: IndexSystem,
-        manualMode: Boolean
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
@@ -115,10 +110,7 @@ object ReadAsPath extends ReadStrategy with RasterPathAware {
         }
         // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
         val row = Utils.createRow(fields ++ Seq(
-            tile.formatCellId(indexSystem).serialize(tileDataType, doDestroy = true, manualMode)))
-
-        pathSafeDispose(tile, manualMode)
-        if (!manualMode) Files.deleteIfExists(Paths.get(tmpPath))
+            tile.formatCellId(indexSystem).serialize(tileDataType, doDestroy = true)))
 
         val rows = Seq(row)
         rows.iterator

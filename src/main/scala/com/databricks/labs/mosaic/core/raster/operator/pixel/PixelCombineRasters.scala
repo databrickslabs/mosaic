@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.core.raster.operator.pixel
 
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
-import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.types.{BinaryType, DataType}
 
@@ -10,7 +9,7 @@ import java.io.File
 import scala.xml.{Elem, UnprefixedAttribute, XML}
 
 /** MergeRasters is a helper object for merging rasters. */
-object PixelCombineRasters extends RasterPathAware {
+object PixelCombineRasters {
 
     val tileDataType: DataType = BinaryType
 
@@ -23,12 +22,10 @@ object PixelCombineRasters extends RasterPathAware {
       *   Provided function.
       * @param pythonFuncName
       *   Function name.
-      * @param manualMode
-      *   Skip deletion of interim file writes, if any.
       * @return
       *   A MosaicRaster object.
       */
-    def combine(rasters: Seq[MosaicRasterGDAL], pythonFunc: String, pythonFuncName: String, manualMode: Boolean): MosaicRasterGDAL = {
+    def combine(rasters: Seq[MosaicRasterGDAL], pythonFunc: String, pythonFuncName: String): MosaicRasterGDAL = {
         val outOptions = rasters.head.getWriteOptions
 
         val vrtPath = PathUtils.createTmpFilePath("vrt")
@@ -39,18 +36,18 @@ object PixelCombineRasters extends RasterPathAware {
           rasters,
           command = s"gdalbuildvrt -resolution highest"
         )
-        vrtRaster.destroy()
+        vrtRaster.destroy() // post vrt
 
         addPixelFunction(vrtPath, pythonFunc, pythonFuncName)
 
         val result = GDALTranslate.executeTranslate(
           rasterPath,
-          vrtRaster.refresh(),
+          vrtRaster.withDatasetRefreshFromPath(),
           command = s"gdal_translate",
           outOptions
         )
 
-        pathSafeDispose(vrtRaster, manualMode)
+        vrtRaster.destroy() // post translate
 
         result
     }

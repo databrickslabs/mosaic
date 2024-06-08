@@ -41,8 +41,9 @@ case class RST_Write(
       with CodegenFallback {
 
     // serialize data type
+    // - don't use checkpoint because we are writing to a different location
+    // - type is StringType
     override def dataType: DataType = {
-        require(dirExpr.isInstanceOf[Literal])
         RasterTileType(expressionConfig.getCellIdType, StringType, useCheckpoint = false)
     }
 
@@ -63,6 +64,8 @@ case class RST_Write(
     }
 
     private def copyToArg1Dir(inTile: MosaicRasterTile, arg1: Any): MosaicRasterGDAL = {
+        require(dirExpr.isInstanceOf[Literal])
+
         val inRaster = inTile.getRaster
         val inPath = inRaster.createInfo("path")
         val inDriver = inRaster.createInfo("driver")
@@ -70,8 +73,7 @@ case class RST_Write(
                 Seq(inRaster),
                 StringType,
                 doDestroy = true,
-                overrideDir = Some(arg1.asInstanceOf[String]),
-                manualMode = expressionConfig.isManualCleanupMode
+                overrideDir = Some(arg1.asInstanceOf[String])
             )
             .head
             .toString

@@ -27,7 +27,7 @@ object GDALWarp {
         val effectiveCommand = OperatorOptions.appendOptions(command, rasters.head.getWriteOptions)
         val warpOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val warpOptions = new WarpOptions(warpOptionsVec)
-        val result = gdal.Warp(outputPath, rasters.map(_.getRaster).toArray, warpOptions)
+        val result = gdal.Warp(outputPath, rasters.map(_.getDataset).toArray, warpOptions)
         // Format will always be the same as the first raster
         val errorMsg = gdal.GetLastErrorMsg
         val size = Try(Files.size(Paths.get(outputPath))).getOrElse(-1L)
@@ -40,7 +40,8 @@ object GDALWarp {
           "last_error" -> errorMsg,
           "all_parents" -> rasters.map(_.getParentPath).mkString(";")
         )
-        rasters.head.copy(raster = result, createInfo = clipCreateInfo, memSize = size).flushCache()
+        rasters.head.copy(result, clipCreateInfo, size)
+            .withDatasetRefreshFromPath()
     }
 
 }

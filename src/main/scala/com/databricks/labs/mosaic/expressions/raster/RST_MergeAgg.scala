@@ -2,10 +2,11 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
 import com.databricks.labs.mosaic.core.raster.operator.merge.MergeRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpressionSerialization
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -13,7 +14,7 @@ import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate,
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnsafeProjection, UnsafeRow}
 import org.apache.spark.sql.catalyst.trees.UnaryLike
 import org.apache.spark.sql.catalyst.util.GenericArrayData
-import org.apache.spark.sql.types.{ArrayType, BinaryType, DataType}
+import org.apache.spark.sql.types.{ArrayType, DataType}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -67,7 +68,6 @@ case class RST_MergeAgg(
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
         GDAL.enable(expressionConfig)
-        val manualMode = expressionConfig.isManualCleanupMode
 
         if (buffer.isEmpty) {
             null
@@ -88,16 +88,14 @@ case class RST_MergeAgg(
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-            var merged = MergeRasters.merge(tiles.map(_.getRaster), manualMode).flushCache()
+            var merged = MergeRasters.merge(tiles.map(_.getRaster)).withDatasetRefreshFromPath()
 
             val resultType = getRasterType(dataType)
             var result = MosaicRasterTile(idx, merged, resultType).formatCellId(
                 IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-            val serialized = result.serialize(resultType, doDestroy = true, manualMode)
+            val serialized = result.serialize(resultType, doDestroy = true)
 
-            tiles.foreach(pathSafeDispose(_, manualMode))
-            pathSafeDispose(result, manualMode)
-
+            tiles.foreach(destroy)
             tiles = null
             merged = null
             result = null

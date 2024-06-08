@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALCalc
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterArray1ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -27,8 +28,6 @@ case class RST_MapAlgebra(
     )
       with NullIntolerant
       with CodegenFallback {
-
-    GDAL.enable(expressionConfig)
 
     // serialize data type
     override def dataType: DataType = {

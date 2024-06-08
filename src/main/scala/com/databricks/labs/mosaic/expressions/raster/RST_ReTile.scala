@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.operator.retile.ReTile
+import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterGeneratorExpression
@@ -24,7 +25,10 @@ case class RST_ReTile(
       with CodegenFallback {
 
     /** @return provided raster data type (assumes that was handled for checkpointing.)*/
-    override def dataType: DataType = rasterExpr.dataType
+    override def dataType: DataType = {
+        // 0.4.3 changed from `rasterExpr.rasterType`
+        RasterTileType(expressionConfig.getCellIdType, rasterExpr, expressionConfig.isRasterUseCheckpoint)
+    }
 
     /**
       * Returns a set of new rasters with the specified tile size (tileWidth x
@@ -33,7 +37,7 @@ case class RST_ReTile(
     override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
-        ReTile.reTile(tile, tileWidthValue, tileHeightValue, expressionConfig.isManualCleanupMode)
+        ReTile.reTile(tile, tileWidthValue, tileHeightValue)
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, tileWidthExpr, tileHeightExpr)

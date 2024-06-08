@@ -3,7 +3,6 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -40,10 +39,9 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     measureType: DataType,
     expressionConfig: MosaicExpressionConfig
 ) extends Raster1ArgExpression[T](rasterExpr, resolutionExpr, returnsRaster = false, expressionConfig)
-      with RasterPathAware
-      with RasterGridExpression
-      with NullIntolerant
-      with Serializable {
+    with RasterGridExpression
+    with NullIntolerant
+    with Serializable {
 
     GDAL.enable(expressionConfig)
 
@@ -69,7 +67,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
         val resolution = arg1.asInstanceOf[Int]
         val transformed = griddedPixels(tile.getRaster, indexSystem, resolution)
         val results = transformed.map(_.mapValues(valuesCombiner))
-        pathSafeDispose(tile, manualMode = expressionConfig.isManualCleanupMode)
+
         serialize(results)
     }
 

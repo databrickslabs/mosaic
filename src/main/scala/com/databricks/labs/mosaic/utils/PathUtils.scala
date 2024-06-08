@@ -18,13 +18,15 @@ object PathUtils {
 
     /**
       * Cleans up variations of path.
+      * - 0.4.3 recommend to let CleanUpManager handle local files based on
+      *   a session configured file / dir modification age-off policy.
       * - handles subdataset path
       * - handles "aux.xml" sidecar file
       * - handles zips, including "/vsizip/"
       * @param path
       */
+    @deprecated("0.4.3 recommend to let CleanUpManager handle")
     def cleanUpPath(path: String): Unit = {
-        // 0.4.3 - new function
         val isSD = isSubdataset(path)
         val filePath = if (isSD) fromSubdatasetPath(path) else path
         val pamFilePath = s"$filePath.aux.xml"

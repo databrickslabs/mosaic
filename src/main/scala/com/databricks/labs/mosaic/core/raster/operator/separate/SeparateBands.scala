@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.core.raster.operator.separate
 
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.expressions.raster.base.RasterPathAware
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.types.{BinaryType, DataType}
 
@@ -10,7 +9,7 @@ import org.apache.spark.sql.types.{BinaryType, DataType}
   * ReTile is a helper object for splitting multi-band rasters into
   * single-band-per-row.
   */
-object SeparateBands extends RasterPathAware {
+object SeparateBands {
 
     val tileDataType: DataType = BinaryType
 
@@ -23,8 +22,7 @@ object SeparateBands extends RasterPathAware {
       *   A sequence of MosaicRasterTile objects.
       */
     def separate(
-        tile: => MosaicRasterTile,
-        manualMode: Boolean
+        tile: => MosaicRasterTile
     ): Seq[MosaicRasterTile] = {
         val raster = tile.getRaster
         val tiles = for (i <- 0 until raster.numBands) yield {
@@ -41,10 +39,8 @@ object SeparateBands extends RasterPathAware {
             )
 
             val isEmpty = result.isEmpty
-            result.raster.SetMetadataItem("MOSAIC_BAND_INDEX", (i + 1).toString)
-            result.raster.GetDriver().CreateCopy(result.path, result.raster)
-
-            if (isEmpty) result.safeCleanUpPath(rasterPath, allowThisPathDelete = true, manualMode)
+            result.getDataset.SetMetadataItem("MOSAIC_BAND_INDEX", (i + 1).toString)
+            result.getDataset.GetDriver().CreateCopy(result.path, result.getDataset)
 
             (isEmpty, result.copy(createInfo = result.createInfo ++ Map("bandIndex" -> (i + 1).toString)), i)
         }

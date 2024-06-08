@@ -2,9 +2,12 @@ package com.databricks.labs.mosaic.gdal
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT, MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT, MOSAIC_RASTER_TMP_PREFIX_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.{
+    MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT,
+    MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT, MOSAIC_RASTER_TMP_PREFIX_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT,
+    MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
-import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
@@ -32,13 +35,13 @@ object MosaicGDAL extends Logging {
     var blockSize: Int = MOSAIC_RASTER_BLOCKSIZE_DEFAULT.toInt
 
     // noinspection ScalaWeakerAccess
-    val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
-    var isEnabled = false
-    var checkpointPath: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
-    var useCheckpoint: Boolean = MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT.toBoolean
-    var localRasterDir: String = s"$MOSAIC_RASTER_TMP_PREFIX_DEFAULT/mosaic_tmp"
-    var localAgeLimitMinutes: Int = MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT.toInt
-
+    private val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
+    private var enabled = false
+    private var checkpointPath: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
+    private var useCheckpoint: Boolean = MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT.toBoolean
+    private var localRasterDir: String = s"$MOSAIC_RASTER_TMP_PREFIX_DEFAULT/mosaic_tmp"
+    private var localAgeLimitMinutes: Int = MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT.toInt
+    private var manualMode: Boolean = true
 
     // Only use this with GDAL rasters
     val WSG84: SpatialReference = {
@@ -77,6 +80,7 @@ object MosaicGDAL extends Logging {
     }
 
     def configureLocalRasterDir(mosaicConfig: MosaicExpressionConfig): Unit = {
+        this.manualMode = mosaicConfig.isManualCleanupMode
         this.localAgeLimitMinutes = mosaicConfig.getLocalAgeLimitMinutes
 
         // don't allow a fuse path
@@ -114,9 +118,9 @@ object MosaicGDAL extends Logging {
         // refresh configs in case spark had changes
         val mosaicConfig = MosaicExpressionConfig(spark)
 
-        if (!wasEnabled(spark) && !isEnabled) {
+        if (!wasEnabled(spark) && !enabled) {
             Try {
-                isEnabled = true
+                enabled = true
                 loadSharedObjects()
                 configureGDAL(mosaicConfig)
                 gdal.AllRegister()
@@ -128,7 +132,7 @@ object MosaicGDAL extends Logging {
                     logError("Please run setup_gdal() to generate the init script for install GDAL install.")
                     logError("After the init script is generated, please restart the cluster with the init script to complete the setup.")
                     logError(s"Error: ${exception.getMessage}")
-                    isEnabled = false
+                    enabled = false
                     throw exception
             }
         } else {
@@ -275,16 +279,46 @@ object MosaicGDAL extends Logging {
         }
     }
 
-    /** @return value of useCheckpoint. */
+    /** @return if gdal enabled. */
+    def isEnabled: Boolean = this.enabled
+
+    /** @return if manual mode for cleanup (configured). */
+    def isManualMode: Boolean = this.manualMode
+
+    /** @return if using checkpoint (configured). */
     def isUseCheckpoint: Boolean = this.useCheckpoint
 
-    /** @return value of checkpoint path. */
+    /** @return value of checkpoint path (configured). */
     def getCheckpointPath: String = this.checkpointPath
 
     /** @return default value of checkpoint path. */
     def getCheckpointPathDefault: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
 
+    /** @return value of local dir (configured).  */
     def getLocalRasterDir: String = this.localRasterDir
 
+    /** @return file age limit for cleanup (configured). */
     def getLocalAgeLimitMinutes: Int = this.localAgeLimitMinutes
+
+    ////////////////////////////////////////////////
+    // Thread-safe Accessors
+    ////////////////////////////////////////////////
+
+    /** @return if gdal enabled. */
+    def isEnabledThreadSafe: Boolean = synchronized(this.enabled)
+
+    /** @return if manual mode for cleanup (configured). */
+    def isManualModeThreadSafe: Boolean = synchronized(this.manualMode)
+
+    /** @return if using checkpoint (configured). */
+    def isUseCheckpointThreadSafe: Boolean = synchronized(this.useCheckpoint)
+
+    /** @return value of checkpoint path (configured). */
+    def getCheckpointPathThreadSafe: String = synchronized(this.checkpointPath)
+
+    /** @return value of local dir (configured).  */
+    def getLocalRasterDirThreadSafe: String = synchronized(this.localRasterDir)
+
+    /** @return file age limit for cleanup (configured). */
+    def getLocalAgeLimitMinutesThreadSafe: Int = synchronized(this.localAgeLimitMinutes)
 }
