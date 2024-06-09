@@ -91,7 +91,7 @@ object VectorClipper {
       */
     def cleanUpClipper(shapeFileName: String): Unit = {
         Try(ogr.GetDriverByName("ESRI Shapefile").DeleteDataSource(shapeFileName))
-        Try(gdal.Unlink(shapeFileName))
+//        Try(gdal.Unlink(shapeFileName)) // 0.4.3 let cleanup manager unlink
     }
 
 }

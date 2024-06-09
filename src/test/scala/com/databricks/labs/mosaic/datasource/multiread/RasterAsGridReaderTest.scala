@@ -88,6 +88,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .load(filePath)
             .select("measure")
             .take(1)
+        info("... after median combiner")
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
@@ -98,6 +99,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .load(filePath)
             .select("measure")
             .take(1)
+        info("... after count combiner")
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
@@ -108,6 +110,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .load(filePath)
             .select("measure")
             .take(1)
+        info("... after average combiner")
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
@@ -118,6 +121,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .load(filePath)
             .select("measure")
             .take(1)
+        info("... after avg combiner")
 
         val paths = Files.list(Paths.get(filePath)).toArray.map(_.toString)
 
@@ -128,14 +132,17 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .load(paths: _*)
             .select("measure")
             .take(1)
+        info("... after count_+ combiner (exception)")
 
         an[Error] should be thrownBy MosaicContext.read
             .format("invalid")
             .load(paths: _*)
+        info("... after invalid paths format (exception)")
 
         an[Error] should be thrownBy MosaicContext.read
             .format("invalid")
             .load(filePath)
+        info("... after invalid path format (exception)")
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
@@ -143,6 +150,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("subdatasetName", "/group_with_attrs/F_order_array")
             .option("kRingInterpolate", "3")
             .load(filePath)
+        info("... after subdataset + kring interpolate")
 
     }
 

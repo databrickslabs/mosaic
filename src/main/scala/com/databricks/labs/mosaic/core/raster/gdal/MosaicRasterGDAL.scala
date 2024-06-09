@@ -124,19 +124,10 @@ case class MosaicRasterGDAL(
       */
     def getMemSize: Long = {
         if (dataset != null && memSize == -1) {
-                val toRead = if (path.startsWith("/vsizip/")) path.replace("/vsizip/", "") else path
-                if (Files.notExists(Paths.get(toRead))) {
-                    Try(getBytesCount) match {
-                        case Success(m) => m
-                        case _ => memSize
-                    }
-                } else {
-                    Files.size(Paths.get(toRead))
-                }
-        } else {
-            memSize
-        }
-
+            val toRead = if (path.startsWith("/vsizip/")) path.replace("/vsizip/", "") else path
+            if (Files.notExists(Paths.get(toRead))) getBytesCount
+            else Files.size(Paths.get(toRead))
+        } else memSize
     }
 
     /**
@@ -583,7 +574,7 @@ case class MosaicRasterGDAL(
             val tmpPath =
                 if (isSubDataset) {
                     val tmpPath = PathUtils.createTmpFilePath(getRasterFileExtension)
-                    writeToPath(tmpPath, doDestroy)
+                    writeToPath(tmpPath, doDestroy = false) // destroy 1x at end
                     tmpPath
                 } else {
                     this.path
@@ -599,19 +590,7 @@ case class MosaicRasterGDAL(
             }
         }
         val byteArray = FileUtils.readBytes(readPath)
-        if (readPath != PathUtils.getCleanPath(parentPath)) {
-            // 0.4.3 let manager cleanup separately
-            //this.safeCleanUpPath(readPath, allowThisPathDelete = false)
-            //Files.deleteIfExists(Paths.get(readPath))
-            if (readPath.endsWith(".zip")) {
-                val nonZipPath = readPath.replace(".zip", "")
-                if (Files.isDirectory(Paths.get(nonZipPath))) {
-                    SysUtils.runCommand(s"rm -rf $nonZipPath")
-                }
 
-                //Files.deleteIfExists(Paths.get(readPath.replace(".zip", "")))
-            }
-        }
         if (doDestroy) this.destroy()
         byteArray
     }

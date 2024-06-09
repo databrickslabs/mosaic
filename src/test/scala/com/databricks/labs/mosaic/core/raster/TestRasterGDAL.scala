@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster
 
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.{MOSAIC_NO_DRIVER, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
@@ -31,6 +31,22 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         ).getOrElse(Array[String]())
         resultExecutors.length should not be 0
         resultExecutors.foreach(s => s should include("GDAL"))
+    }
+
+    test("Verify memsize handling") {
+        val createInfo = Map(
+            "path" -> MOSAIC_NO_DRIVER, "parentPath" -> MOSAIC_NO_DRIVER, "driver" -> "GTiff")
+        val null_raster = MosaicRasterGDAL(null, createInfo, memSize = -1)
+        null_raster.getMemSize should be(-1)
+
+        val np_content = spark.read.format("binaryFile")
+            .load("src/test/resources/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
+            .select("content").first.get(0).asInstanceOf[Array[Byte]]
+        val np_ds = MosaicRasterGDAL.readRaster(np_content, createInfo).getDataset
+        val np_raster = MosaicRasterGDAL(np_ds, createInfo, -1)
+        np_raster.getMemSize > 0 should be(true)
+        info(s"np_content length? ${np_content.length}")
+        info(s"np_raster memsize? ${np_raster.getMemSize}")
     }
 
     //commenting out to allow toggling checkpoint on/off
