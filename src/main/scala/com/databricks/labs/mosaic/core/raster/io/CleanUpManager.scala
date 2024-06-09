@@ -51,8 +51,8 @@ private class CleanUpManager extends Thread {
         if (!isManualModeThreadSafe) {
             val ageLimit = getLocalAgeLimitMinutesThreadSafe
             val localDir = getLocalRasterDirThreadSafe
-            println(s"Thread ${Thread.currentThread().getName} initiating cleanup" +
-                s"- age limit? $ageLimit, dir? '$localDir' ...")
+            println(s"\n... Thread ${Thread.currentThread().getName} initiating cleanup " +
+                s"- age limit? $ageLimit, dir? '$localDir'\n")
             cleanUpManualDir(ageLimit, localDir, keepRoot = true)
         }  else None
     }
@@ -109,9 +109,7 @@ object CleanUpManager {
                 cleanThread = new CleanUpManager()
                 cleanThread.setName(THREAD_NAME)
                 cleanThread.start()
-        } else {
-                println(s"... already running $THREAD_NAME (no action needed)")
-            })
+        })
     }
     // scalastyle:on println
 

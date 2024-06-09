@@ -16,7 +16,8 @@
 - Improved raster_to_grid reader performance
 - `RST_Clip` GDAL Warp option `CUTLINE_ALL_TOUCHED` configurable (default is `true`, can now be `false`); also, setting 
   SpatialReferenceSystem in the generated Shapefile Feature Layer (along with the WKB 'geometry' field as before)
-- `RST_MemSize` now returns -1 if memory cannot be gotten from a raster
+- `RST_MemSize` now returns sum of pixels * datatype bytes as a fallback if size cannot be gotten from a raster file 
+  (e.g. with in-memory only handling), -1 if dataset is null; handling split conditions where size < 1 
 - Python bindings added for `RST_Avg`, `RST_Max`, `RST_Median`, `RST_Min`, and `RST_PixelCount`; also missing 'driver' 
   param documented for `RST_FromContent`, missing docs added for `RST_SetSRID`, and standardized `RST_ToOverlappingTiles` 
   (`RST_To_Overlapping_Tiles` deprecated)

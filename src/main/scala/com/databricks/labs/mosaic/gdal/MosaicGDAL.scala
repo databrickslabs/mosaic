@@ -2,10 +2,8 @@ package com.databricks.labs.mosaic.gdal
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
-import com.databricks.labs.mosaic.{
-    MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT,
-    MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT, MOSAIC_RASTER_TMP_PREFIX_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT,
-    MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT, MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT, MOSAIC_RASTER_TMP_PREFIX_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.internal.Logging
@@ -91,6 +89,9 @@ object MosaicGDAL extends Logging {
         } else {
             this.localRasterDir = s"${mosaicConfig.getTmpPrefix}/mosaic_tmp"
         }
+
+        // make sure cleanup manager thread is running
+        CleanUpManager.runCleanThread()
     }
 
 

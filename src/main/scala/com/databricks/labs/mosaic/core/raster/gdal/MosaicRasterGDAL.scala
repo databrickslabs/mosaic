@@ -116,21 +116,23 @@ case class MosaicRasterGDAL(
     def getGeoTransform: Array[Double] = this.dataset.GetGeoTransform()
 
     /**
-      * @note
-      *   If memory size is -1 this will destroy the raster and you will need to
-      *   refresh it to use it again.
+      * 0.4.3 file memory size or pixel size * datatype over bands; r
+      * returns -1 if those are unobtainable.
+      *
       * @return
-      *   Returns the amount of memory occupied by the file in bytes.
+      *   Returns the amount of memory occupied by the file in bytes or estimated size.
       */
     def getMemSize: Long = {
-        if (memSize == -1) {
-            val toRead = if (path.startsWith("/vsizip/")) path.replace("/vsizip/", "") else path
-            if (Files.notExists(Paths.get(toRead))) {
-                // TODO: 0.4.3 return -1 if file doesn't exist ???
-                throw new Exception(s"File not found: ${gdal.GetLastErrorMsg()}")
-            } else {
-                Files.size(Paths.get(toRead))
-            }
+        if (dataset != null && memSize == -1) {
+                val toRead = if (path.startsWith("/vsizip/")) path.replace("/vsizip/", "") else path
+                if (Files.notExists(Paths.get(toRead))) {
+                    Try(getBytesCount) match {
+                        case Success(m) => m
+                        case _ => memSize
+                    }
+                } else {
+                    Files.size(Paths.get(toRead))
+                }
         } else {
             memSize
         }
@@ -512,6 +514,16 @@ case class MosaicRasterGDAL(
                 i -> validCount
             })
             .toMap
+    }
+
+    /** @return Returns the total bytes based on pixels * datatype per band, can be alt to memsize. */
+    def getBytesCount: Long = {
+        (1 to numBands)
+            .map(i => this.dataset.GetRasterBand(i))
+            .map(b => Try(
+                b.GetXSize().toLong * b.GetYSize().toLong * gdal.GetDataTypeSize(b.getDataType).toLong
+            ).getOrElse(0L))
+            .sum
     }
 
     /////////////////////////////////////////

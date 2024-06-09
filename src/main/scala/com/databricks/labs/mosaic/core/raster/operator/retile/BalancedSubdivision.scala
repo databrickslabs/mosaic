@@ -3,6 +3,8 @@ package com.databricks.labs.mosaic.core.raster.operator.retile
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 
+import scala.util.Try
+
 /* ReTile is a helper object for retiling rasters. */
 object BalancedSubdivision {
 
@@ -11,6 +13,7 @@ object BalancedSubdivision {
       * determined by the size of the raster and the desired size of the split
       * rasters. The number of splits is always a power of 4. This is a
       * heuristic method only due to compressions and other factors.
+      * - 0.4.3 uses 0 as fallback.
       *
       * @param raster
       *   The raster to split.
@@ -20,11 +23,18 @@ object BalancedSubdivision {
       *   The number of splits.
       */
     def getNumSplits(raster: MosaicRasterGDAL, destSize: Int): Int = {
-        val size = raster.getMemSize
+        val testSize: Long  = raster.getMemSize
+        val size: Long = {
+            if (testSize > -1) testSize
+            else 0L
+        }
         var n = 1
-        while (true) {
-            n *= 4
-            if (size / n <= destSize * 1000 * 1000) return n
+        val destSizeBytes: Long = destSize * 1000L * 1000L
+        if (size > 0 && size > destSizeBytes) {
+            while (true) {
+                n *= 4
+                if (size / n <= destSizeBytes) return n
+            }
         }
         n
     }
