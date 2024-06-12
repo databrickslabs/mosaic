@@ -268,14 +268,15 @@ object MosaicGDAL extends Logging {
     }
 
     /** Loads the shared object if it exists. */
-    // noinspection ScalaStyle
     private def loadOrNOOP(path: String): Unit = {
         try {
             if (Files.exists(Paths.get(path))) System.load(path)
         } catch {
             case t: Throwable =>
+                // scalastyle:off println
                 println(t.toString)
                 println(s"Failed to load $path")
+                // scalastyle:on println
                 logWarning(s"Failed to load $path", t)
         }
     }

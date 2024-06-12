@@ -145,7 +145,7 @@ case class MosaicRasterTile(
       */
     private def encodeRaster(
         rasterDataType: DataType,
-        doDestroy: Boolean,
+        doDestroy: Boolean
     ): Any = {
         GDAL.writeRasters(Seq(raster), rasterDataType, doDestroy).head
     }

@@ -23,7 +23,6 @@ case class CellKLoop(cellId: Expression, k: Expression, indexSystem: IndexSystem
       with ExpectsInputTypes
       with NullIntolerant
       with CodegenFallback {
-  
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
 
     // noinspection DuplicatedCode

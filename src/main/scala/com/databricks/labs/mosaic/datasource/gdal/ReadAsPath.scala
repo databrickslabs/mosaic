@@ -84,7 +84,7 @@ object ReadAsPath extends ReadStrategy {
         fs: FileSystem,
         requiredSchema: StructType,
         options: Map[String, String],
-        indexSystem: IndexSystem,
+        indexSystem: IndexSystem
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
