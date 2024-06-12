@@ -21,7 +21,7 @@ trait RST_MapAlgebraBehaviors extends QueryTest {
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
-            .option("pathGlobFilter", "*_B01.TIF")
+            .option("pathGlobFilter", "*_B01.TIF") // B01
             .load("src/test/resources/modis")
 
         val gridTiles = rastersInMemory

@@ -20,6 +20,7 @@ trait RST_MakeTilesBehaviors extends QueryTest {
 
         val rastersInMemory = spark.read
             .format("binaryFile")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
         val gridTiles1 = rastersInMemory

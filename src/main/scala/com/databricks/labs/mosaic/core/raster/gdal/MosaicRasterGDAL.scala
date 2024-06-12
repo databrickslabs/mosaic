@@ -666,23 +666,23 @@ object MosaicRasterGDAL extends RasterReader{
 
     /**
       * Identifies the driver of a raster from a file system path.
-      * @param parentPath
+      * @param aPath
       *   The path to the raster file.
       * @return
       *   A string representing the driver short name.
       */
     def identifyDriver(parentPath: String): String = {
         val isSubdataset = PathUtils.isSubdataset(parentPath)
-        val aPath = PathUtils.getCleanPath(parentPath)
+        val path = PathUtils.getCleanPath(parentPath)
         val readPath =
-            if (isSubdataset) PathUtils.getSubdatasetPath(aPath)
-            else PathUtils.getZipPath(aPath)
+            if (isSubdataset) PathUtils.getSubdatasetPath(path)
+            else PathUtils.getZipPath(path)
         val driver = gdal.IdentifyDriverEx(readPath)
         val driverShortName = driver.getShortName
         driverShortName
     }
 
-    /**
+        /**
       * Opens a raster from a file system path with a given driver.
       * @param path
       *   The path to the raster file.

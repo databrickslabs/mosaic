@@ -4,11 +4,13 @@ import com.databricks.labs.mosaic.{MOSAIC_NO_DRIVER, MOSAIC_RASTER_CHECKPOINT, M
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.should.Matchers._
 import org.gdal.gdal.{gdal => gdalJNI}
 import org.gdal.gdalconst
 
+import java.nio.file.{Files, Paths}
 import scala.sys.process._
 import scala.util.Try
 
@@ -57,16 +59,21 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
     test("Read raster metadata from GeoTIFF file.") {
         assume(System.getProperty("os.name") == "Linux")
-        
+
         val createInfo = Map(
           "path" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
           "parentPath" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
         )
+        // 0.4.3 PAM file might still be around
+        info(s"path -> ${createInfo("path")}")
+        val cleanPath = PathUtils.getCleanPath(createInfo("path"))
+        Try(Files.deleteIfExists(Paths.get(s"$cleanPath.aux.xml")))
         val testRaster = MosaicRasterGDAL.readRaster(createInfo)
         testRaster.xSize shouldBe 2400
         testRaster.ySize shouldBe 2400
         testRaster.numBands shouldBe 1
         testRaster.proj4String shouldBe "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +R=6371007.181 +units=m +no_defs"
+
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
         testRaster.getDataset.GetProjection()

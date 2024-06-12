@@ -20,6 +20,7 @@ trait RST_FromBandsBehaviors extends QueryTest {
 
         val rastersInMemory = spark.read
             .format("binaryFile")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
         val gridTiles = rastersInMemory

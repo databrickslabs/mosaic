@@ -1,14 +1,15 @@
 package org.apache.spark.sql.test
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
-import com.databricks.labs.mosaic.utils.FileUtils
+import com.databricks.labs.mosaic.test.mocks.filePath
+import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
 import com.databricks.labs.mosaic.{MOSAIC_GDAL_NATIVE, MOSAIC_MANUAL_CLEANUP_MODE, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES, MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
 
+import java.nio.file.Paths
 import scala.util.Try
 
 trait SharedSparkSessionGDAL extends SharedSparkSession {
@@ -49,6 +50,12 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
         Try(MosaicGDAL.enableGDAL(sc))
         Try(gdal.AllRegister())
+
+        // clean-up sidecar files in modis, if any
+        // - 'target-class' dir as well as project 'resources' dir
+        PathUtils.cleanUpPAMFiles(
+            Paths.get(filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")).getParent.toString)
+        PathUtils.cleanUpPAMFiles("src/test/resources/modis/")
     }
 
     override def afterEach(): Unit = {

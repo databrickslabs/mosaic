@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.utils
 
 import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
-
 import java.nio.file.{Files, Path, Paths}
 import scala.jdk.CollectionConverters._
 import scala.util.Try
@@ -42,6 +41,37 @@ object PathUtils {
         }
         Try(Files.deleteIfExists(Paths.get(zipPath)))
     }
+
+    // scalastyle:off println
+    /**
+     * Explicit deletion of PAM (aux.xml) files, if found.
+     * - Can pass a directory or a file path
+     * - Subdataset file paths as well.
+     * @param path
+     *   will list directories recursively, will get a subdataset path or a clean path otherwise.
+     */
+    def cleanUpPAMFiles(path: String): Unit = {
+        if (isSubdataset(path)) {
+            // println(s"... subdataset path detected '$path'")
+            Try(Files.deleteIfExists(Paths.get(s"${fromSubdatasetPath(path)}.aux.xml")))
+        } else {
+            val cleanPathObj = Paths.get(getCleanPath(path))
+            if (Files.isDirectory(cleanPathObj)) {
+                // println(s"... directory path detected '$cleanPathObj'")
+                cleanPathObj.toFile.listFiles()
+                    .filter(f => f.isDirectory || f.toString.endsWith(".aux.xml"))
+                    .foreach(f => cleanUpPAMFiles(f.toString))
+            } else {
+                // println(s"... path detected '$cleanPathObj'")
+                if (cleanPathObj.toString.endsWith(".aux.xml")) {
+                    Try(Files.deleteIfExists(cleanPathObj))
+                } else {
+                    Try(Files.deleteIfExists(Paths.get(s"${cleanPathObj.toString}.aux.xml")))
+                }
+            }
+        }
+    }
+    // scalastyle:on println
 
     /**
       * Copy provided path to tmp.

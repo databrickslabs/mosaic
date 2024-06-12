@@ -4,7 +4,6 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
@@ -36,15 +35,15 @@ case class RST_FromFile(
 
     GDAL.enable(expressionConfig)
 
-    override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, BinaryType, expressionConfig.isRasterUseCheckpoint)
-    }
-
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
 
     protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
 
     protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
+
+    override def dataType: DataType = {
+        RasterTileType(cellIdDataType, BinaryType, expressionConfig.isRasterUseCheckpoint)
+    }
 
     override def position: Boolean = false
 
@@ -64,23 +63,20 @@ case class RST_FromFile(
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
-        val resultType = getRasterType(
-            RasterTileType(expressionConfig.getCellIdType, BinaryType, expressionConfig.isRasterUseCheckpoint))
+        val resultType = getRasterType(dataType)
 
         val path = rasterPathExpr.eval(input).asInstanceOf[UTF8String].toString
         val readPath = PathUtils.getCleanPath(path)
-        val driver = MosaicRasterGDAL.identifyDriver(path)
+        val driverShortName = MosaicRasterGDAL.identifyDriver(path)
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         val currentSize = Files.size(Paths.get(PathUtils.replaceDBFSTokens(readPath)))
 
         if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
-            val createInfo = Map("path" -> readPath, "parentPath" -> path)
+            val createInfo = Map("path" -> readPath, "parentPath" -> path, "driver" -> driverShortName)
 
             var raster = MosaicRasterGDAL.readRaster(createInfo)
             var result = MosaicRasterTile(null, raster, resultType).formatCellId(indexSystem)
             val row = result.serialize(resultType, doDestroy = true)
-
-            destroy(result)
 
             raster = null
             result = null
@@ -90,14 +86,12 @@ case class RST_FromFile(
         } else {
             // If target size is <0 and we are here that means the file is too big to fit in memory
             // We split to tiles of size 64MB
-            val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
+            val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driverShortName))
             Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
             val size = if (targetSize <= 0) 64 else targetSize
 
             var results = ReTileOnRead.localSubdivide(tmpPath, path, size).map(_.formatCellId(indexSystem))
             val rows = results.map(_.serialize(resultType, doDestroy = true))
-
-            results.foreach(destroy)
 
             results = null
 

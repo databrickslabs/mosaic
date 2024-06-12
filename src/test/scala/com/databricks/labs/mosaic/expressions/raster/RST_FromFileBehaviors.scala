@@ -19,7 +19,9 @@ trait RST_FromFileBehaviors extends QueryTest {
 
         val rastersInMemory = spark.read
             .format("binaryFile")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
+            .drop("content")
 
         val gridTiles = rastersInMemory
             .withColumn("tile", rst_fromfile($"path"))
