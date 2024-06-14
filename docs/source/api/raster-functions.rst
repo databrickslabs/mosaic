@@ -205,7 +205,7 @@ rst_clip
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
 
     The :code:`geometry` parameter:
       - Expected to be in the same coordinate reference system as the raster.
@@ -271,8 +271,7 @@ rst_combineavg
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes
+  **Notes**
     - Each tile in :code:`tiles` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
     - The output raster will have the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input tiles.
 
@@ -327,7 +326,7 @@ rst_convolve
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
     - The :code:`kernel` can be Array of Array of either Double, Integer, or Decimal but will be cast to Double.
     - This method assumes the kernel is square and has an odd number of rows and columns.
     - Kernel uses the configured GDAL :code:`blockSize` with a stride being :code:`kernelSize/2`.
@@ -420,7 +419,7 @@ rst_derivedband
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
     - Input raster tiles in :code:`tiles` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
     - The output raster will have the same the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input raster tiles.
 
@@ -549,8 +548,7 @@ rst_frombands
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes
+  **Notes**
     - All raster tiles must have the same extent.
     - The tiles must have the same pixel coordinate reference system.
     - The output tile will have the same extent as the input tiles.
@@ -610,8 +608,7 @@ rst_fromcontent
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes
+  **Notes**
     - The input raster must be a byte array in a BinaryType column.
     - The driver required to read the raster must be one supplied with GDAL.
     - If the size_in_MB parameter is specified, the raster will be split into tiles of the specified size.
@@ -674,8 +671,7 @@ rst_fromfile
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes
+  **Notes**
     - The file path must be a string.
     - The file path must be a valid path to a raster file.
     - The file path must be a path to a file that GDAL can read.
@@ -830,7 +826,7 @@ rst_getsubdataset
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
     - :code:`name` should be the last identifier in the standard GDAL subdataset path: :code:`DRIVER:PATH:NAME`.
     - :code:`name` must be a valid subdataset name for the raster, i.e. it must exist within the raster.
 ..
@@ -921,8 +917,7 @@ rst_initnodata
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes
+  **Notes**
     - The nodata value will be set to a default sentinel values according to the pixel data type of the raster bands.
     - The output raster will have the same extent as the input raster.
 
@@ -1049,8 +1044,7 @@ rst_maketiles
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes:
+  **Notes**
 
   :code:`input`
     - If the raster is stored on disk, :code:`input` should be the path to the raster, similar to :ref:`rst_fromfile`.
@@ -1071,10 +1065,6 @@ rst_maketiles
     - Optional: default is false.
     - If :code:`with_checkpoint` set to true, the tiles are written to the checkpoint directory.
     - If set to false, the tiles are returned as in-memory byte arrays.
-
-  Once enabled, checkpointing will remain enabled for tiles originating from this function,
-  meaning follow-on calls will also use checkpointing. To switch away from checkpointing down the line,
-  you could call :ref:`rst_fromfile` using the checkpointed locations as the :code:`path` input.
 ..
 
     :example:
@@ -1111,8 +1101,6 @@ rst_maketiles
      | {"index_id":null,"raster":"SUkqAMAAA (truncated)","metadata":{         |
      | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
      +------------------------------------------------------------------------+
-
-
 
 rst_mapalgebra
 **************
@@ -1324,7 +1312,7 @@ rst_merge
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
 
   Input tiles supplied in :code:`tiles`:
     - are not required to have the same extent.
@@ -1502,6 +1490,8 @@ rst_ndvi
     :rtype: Column: RasterTileType
 
 .. note::
+  **Notes**
+
   NDVI is calculated using the formula: (NIR - RED) / (NIR + RED).
 
   The output raster tiles will have:
@@ -1601,8 +1591,7 @@ rst_pixelcount
     :rtype: Column: ArrayType(LongType)
 
 .. note::
-
-  Notes:
+  **Notes**
 
   If pixel value is noData or mask value is 0.0, the pixel is not counted by default.
 
@@ -1751,7 +1740,7 @@ rst_rastertogridavg
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
 .. note::
-  Notes
+  **Notes**
     - To obtain cellID->value pairs, use the Spark SQL explode() function twice.
     - CellID can be LongType or StringType depending on the configuration of MosaicContext.
     - The value/measure for each cell is the average of the pixel values in the cell.
@@ -1826,7 +1815,7 @@ rst_rastertogridcount
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
 .. note::
-  Notes
+  **Notes**
     - To obtain cellID->value pairs, use the Spark SQL explode() function twice.
     - CellID can be LongType or StringType depending on the configuration of MosaicContext.
     - The value/measure for each cell is the count of the pixel values in the cell.
@@ -1901,7 +1890,7 @@ rst_rastertogridmax
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
 .. note::
-  Notes
+  **Notes**
     - To obtain cellID->value pairs, use the Spark SQL explode() function twice.
     - CellID can be LongType or StringType depending on the configuration of MosaicContext.
     - The value/measure for each cell is the maximum of the pixel values in the cell.
@@ -1976,7 +1965,7 @@ rst_rastertogridmedian
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
 .. note::
-  Notes
+  **Notes**
     - To obtain cellID->value pairs, use the Spark SQL explode() function twice.
     - CellID can be LongType or StringType depending on the configuration of MosaicContext.
     - The value/measure for each cell is the median of the pixel values in the cell.
@@ -2051,7 +2040,7 @@ rst_rastertogridmin
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
 .. note::
-  Notes
+  **Notes**
     - To obtain cellID->value pairs, use the Spark SQL explode() function twice.
     - CellID can be LongType or StringType depending on the configuration of MosaicContext.
     - The value/measure for each cell is the minimum of the pixel values in the cell.
@@ -2126,7 +2115,7 @@ rst_rastertoworldcoord
     :rtype: Column: StringType
 
 .. note::
-  Notes
+  **Notes**
     - The result is a WKT point geometry.
     - The coordinates are computed using the GeoTransform of the raster to respect the projection.
 ..
@@ -2498,7 +2487,7 @@ rst_setnodata
     :rtype: Column: (RasterTileType)
 
 .. note::
-  Notes
+  **Notes**
     - If a single :code:`nodata` value is passed, the same nodata value is set for all bands of :code:`tile`.
     - If an array of values is passed, the respective :code:`nodata` value is set for each band of :code:`tile`.
 ..
@@ -2770,7 +2759,7 @@ rst_subdivide
     :type size_in_MB: Column (IntegerType)
 
 .. note::
-  Notes
+  **Notes**
     - Each :code:`tile` will be recursively split along two orthogonal axes until the expected size of the last child tile is < :code:`size_in_MB`.
     - The aspect ratio of the tiles is preserved.
     - The result set is automatically exploded.
@@ -2884,7 +2873,7 @@ rst_tessellate
     :type resolution: Column (IntegerType)
 
 .. note::
-  Notes
+  **Notes**
     - The result set is automatically exploded into a row-per-index-cell.
     - If :ref:`rst_merge` is called on output tile set, the original raster will be reconstructed.
     - Each output tile chip will have the same number of bands as its parent :code:`tile`.
@@ -2944,7 +2933,7 @@ rst_tooverlappingtiles
     :type overlap: Column (IntegerType)
 
 .. note::
-  Notes
+  **Notes**
     - If :ref:`rst_merge` is called on the tile set the original raster will be reconstructed.
     - Each output tile chip will have the same number of bands as its parent :code:`tile`.
 ..
@@ -3336,3 +3325,60 @@ rst_worldtorastercoordy
     +------------------------------------------------------------------------------------------------------------------+
     | 997                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
+
+rst_write
+*********
+
+.. function:: rst_write(input, dir)
+
+    Writes raster tiles from the input column to a specified directory.
+
+    :param input: A column containing the raster tile.
+    :type input: Column
+    :param dir: The directory, e.g. fuse, to write the tile's raster.
+    :type dir: Column(StringType)
+    :rtype: Column: RasterTileType
+
+.. note::
+  **Notes**
+    - Use :code:`RST_Write` to save a 'tile' column to a specified directory (e.g. fuse) location using its
+      already populated GDAL driver and raster information.
+    - Useful for formalizing the tile 'path' when writing a Lakehouse table. An example might be to turn on checkpointing
+      for internal data pipeline phase operations in which multiple interim tiles are populated, but at the end of the phase
+      use this function to set the final path to be used in the phase's persisted table. Then, you are free to delete
+      the internal tiles that accumulated in the configured checkpointing directory.
+..
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.select(rst_write("tile", <write_dir>).alias("tile")).limit(1).display()
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.select(rst_write(col("tile", <write_dir>)).as("tile)).limit(1).show
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_write(tile, <write_dir>) as tile FROM table LIMIT 1
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+

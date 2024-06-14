@@ -334,6 +334,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_WorldToRasterCoord](expressionConfig)
         mosaicRegistry.registerExpression[RST_WorldToRasterCoordX](expressionConfig)
         mosaicRegistry.registerExpression[RST_WorldToRasterCoordY](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Write](expressionConfig)
 
         /** Aggregators */
         registry.registerFunction(
@@ -821,6 +822,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_WorldToRasterCoordY(raster.expr, x.expr, y.expr, expressionConfig))
         def rst_worldtorastercoordy(raster: Column, x: Double, y: Double): Column =
             ColumnAdapter(RST_WorldToRasterCoordY(raster.expr, lit(x).expr, lit(y).expr, expressionConfig))
+        def rst_write(input: Column, dir: Column): Column =
+            ColumnAdapter(RST_Write(input.expr, dir.expr, expressionConfig))
+        def rst_write(input: Column, dir: String): Column =
+            ColumnAdapter(RST_Write(input.expr, lit(dir).expr, expressionConfig))
 
         /** Aggregators */
 

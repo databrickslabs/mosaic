@@ -72,6 +72,7 @@ __all__ = [
     "rst_worldtorastercoord",
     "rst_worldtorastercoordx",
     "rst_worldtorastercoordy",
+    "rst_write"
 ]
 
 
@@ -1496,4 +1497,21 @@ def rst_worldtorastercoordy(
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(x),
         pyspark_to_java_column(y),
+    )
+
+
+def rst_write(tile: ColumnOrName, dir: Any) -> Column:
+    """
+    Writes the provided tiles' raster to the specified directory.
+    :param tile: The tile with the raster to write.
+    :param dir: The directory, e.g. fuse location, to write the raster.
+    :return: tile with the new raster path.
+    """
+    if type(dir) == str:
+        dir = lit(dir)
+
+    return config.mosaic_context.invoke_function(
+        "rst_write",
+        pyspark_to_java_column(input),
+        pyspark_to_java_column(dir)
     )

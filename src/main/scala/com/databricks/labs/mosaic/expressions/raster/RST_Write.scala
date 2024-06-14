@@ -11,6 +11,7 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, NullIntolerant}
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 
 import scala.util.Try
 
@@ -19,9 +20,7 @@ import scala.util.Try
   *   - expects the driver to already have been set on the inputExpr ("tile"
   *     column).
   * @param inputExpr
-  *   The expression for the raster. If the raster is stored on disc, the path
-  *   to the raster is provided. If the raster is stored in memory, the bytes of
-  *   the raster are provided.
+  *   The expression for the tile with the raster to write.
   * @param dirExpr
   *   Write to directory.
   * @param expressionConfig
@@ -72,8 +71,8 @@ case class RST_Write(
         val outPath = GDAL.writeRasters(
                 Seq(inRaster),
                 StringType,
-                doDestroy = true,
-                overrideDir = Some(arg1.asInstanceOf[String])
+                doDestroy = false, // parent class destroys
+                overrideDir = Some(arg1.asInstanceOf[UTF8String].toString)
             )
             .head
             .toString
