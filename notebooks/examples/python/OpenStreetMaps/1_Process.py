@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install databricks-mosaic
+# %pip install databricks-mosaic
 
 # COMMAND ----------
 
@@ -72,7 +72,6 @@ relations = spark.read.format("delta").load(f"{raw_path}/bronze/relations")
 
 ways = spark.read.format("delta").load(f"{raw_path}/bronze/ways")
 
-
 # COMMAND ----------
 
 # MAGIC %md
@@ -81,76 +80,78 @@ ways = spark.read.format("delta").load(f"{raw_path}/bronze/ways")
 # COMMAND ----------
 
 nodes = (
-    nodes
-    .withColumnRenamed("_id", "ref")
+    nodes.withColumnRenamed("_id", "ref")
     .withColumnRenamed("_lat", "lat")
     .withColumnRenamed("_lon", "lon")
     .select("ref", "lat", "lon")
-  )
-    
+)
+
 lines = (
     ways
-      # Join ways with nodes to get lat and lon for each node
-      .select(
+    # Join ways with nodes to get lat and lon for each node
+    .select(
         f.col("_id").alias("id"),
         f.col("_timestamp").alias("ts"),
-        f.posexplode_outer("nd")
-      )
-      .select("id", "ts", "pos", f.col("col._ref").alias("ref"))
-      .join(nodes, "ref")
-    
-      # Collect an ordered list of points by way ID
-      .withColumn("point", mos.st_point("lon", "lat"))
-      .groupBy("id")
-      .agg(f.collect_list(f.struct("pos", "point")).alias("points"))
-      .withColumn("points", f.expr("transform(sort_array(points), x -> x.point)"))
-      
-      # Make and validate line
-      .withColumn("line", mos.st_makeline("points"))
-      .withColumn("is_valid", mos.st_isvalid("line"))
-      .drop("points")
+        f.posexplode_outer("nd"),
     )
+    .select("id", "ts", "pos", f.col("col._ref").alias("ref"))
+    .join(nodes, "ref")
+    # Collect an ordered list of points by way ID
+    .withColumn("point", mos.st_point("lon", "lat"))
+    .groupBy("id")
+    .agg(f.collect_list(f.struct("pos", "point")).alias("points"))
+    .withColumn("points", f.expr("transform(sort_array(points), x -> x.point)"))
+    # Make and validate line
+    .withColumn("line", mos.st_makeline("points"))
+    .withColumn("is_valid", mos.st_isvalid("line"))
+    .drop("points")
+)
 
-  
+
 line_roles = ["inner", "outer"]
-  
-polygons =(
-    dlt.read("relations")
 
-      .withColumnRenamed("_id", "id")
-      .select("id", f.posexplode_outer("member"))
-      .withColumn("ref", f.col("col._ref"))
-      .withColumn("role", f.col("col._role"))
-      .withColumn("member_type", f.col("col._type"))
-      .drop("col")
-      
-       # Only inner and outer roles from ways.
-      .filter(f.col("role").isin(line_roles))
-      .filter(f.col("member_type") == "way")
-    
-      # Join with lines to get the lines
-      .join(dlt.read("lines").select(f.col("id").alias("ref"), "line"), "ref")
-      .drop("ref")
-    
-      # A valid polygon needs at least 3 vertices + a closing point
-      .filter(f.size(f.col("line.boundary")[0]) >= 4)
+polygons = (
+    relations.withColumnRenamed("_id", "id")
+    .select("id", f.posexplode_outer("member"))
+    .withColumn("ref", f.col("col._ref"))
+    .withColumn("role", f.col("col._role"))
+    .withColumn("member_type", f.col("col._type"))
+    .drop("col")
+    # Only inner and outer roles from ways.
+    .filter(f.col("role").isin(line_roles))
+    .filter(f.col("member_type") == "way")
+    # Join with lines to get the lines
+    .join(lines.select(f.col("id").alias("ref"), "line"), "ref")
+    .drop("ref")
+    # A valid polygon needs at least 3 vertices + a closing point
+    .filter(f.size(f.col("line.boundary")[0]) >= 4)
+    # Divide inner and outer lines
+    .groupBy("id")
+    .pivot("role", line_roles)
+    .agg(f.collect_list("line"))
+    # There should be exactly one outer line
+    .filter(f.size("outer") == 1)
+    .withColumn("outer", f.col("outer")[0])
+    # Build the polygon
+    .withColumn("polygon", mos.st_makepolygon("outer", "inner"))
+    # check polygon validity
+    .withColumn("is_valid", mos.st_isvalid("polygon"))
+    # Drop extra columns
+    .drop("inner", "outer")
+)
 
-      # Divide inner and outer lines
-      .groupBy("id")
-      .pivot("role", line_roles)
-      .agg(f.collect_list("line"))
+# COMMAND ----------
 
-      # There should be exactly one outer line
-      .filter(f.size("outer") == 1)
-      .withColumn("outer", f.col("outer")[0])
+nodes.write.saveAsTable("daniel_sparing.osm_nl_zh.nodes")
 
-      # Build the polygon
-      .withColumn("polygon", mos.st_makepolygon("outer", "inner"))
+# COMMAND ----------
 
-      # check polygon validity
-      .withColumn("is_valid", mos.st_isvalid("polygon"))
-      
-      # Drop extra columns
-      .drop("inner", "outer")
-  )
-  
+lines.write.saveAsTable("daniel_sparing.osm_nl_zh.lines")
+
+# COMMAND ----------
+
+polygons.write.saveAsTable("daniel_sparing.osm_nl_zh.polygons")
+
+# COMMAND ----------
+
+
