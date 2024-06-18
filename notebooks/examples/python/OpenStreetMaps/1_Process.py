@@ -5,35 +5,35 @@
 
 # MAGIC %md
 # MAGIC # Process Open Street Maps data
-# MAGIC 
+# MAGIC
 # MAGIC This notebook creates a [Delta Live Table](https://databricks.com/product/delta-live-tables) data pipeline that processes the OSM data ingested by the [0_Download](./0_Download) notebook.
-# MAGIC 
+# MAGIC
 # MAGIC ![Process pipeline](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/1_Process.png)
-# MAGIC 
+# MAGIC
 # MAGIC ## Setup
-# MAGIC 
+# MAGIC
 # MAGIC Go to `Workflows` -> `Delta Live Tables` -> `Create pipeline`
-# MAGIC 
+# MAGIC
 # MAGIC ![create pipeline](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/1_CreatePipelineDLT.png)
-# MAGIC 
+# MAGIC
 # MAGIC * Select this notebook in the Notebook libraries
 # MAGIC * Set the Target database name to `open_street_maps`
 # MAGIC * Set the Pipeline mode to Triggered
 # MAGIC * Set your desired cluster settings 
 # MAGIC * Create the pipeline
 # MAGIC * Run the pipeline
-# MAGIC 
+# MAGIC
 # MAGIC Delta live tables will run the data transformations defined in this notebook and populate the tables in the target database.
-# MAGIC 
+# MAGIC
 # MAGIC ![Pipeline](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/1_Pipeline.png)
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Mosaic
-# MAGIC 
+# MAGIC
 # MAGIC This workflow is using [Mosaic](https://github.com/databrickslabs/mosaic) to process the geospatial data.
-# MAGIC 
+# MAGIC
 # MAGIC You can check out the documentation [here](https://databrickslabs.github.io/mosaic/).
 
 # COMMAND ----------
@@ -49,7 +49,7 @@ mos.enable_mosaic(spark, dbutils)
 
 # COMMAND ----------
 
-raw_path = f"dbfs:/tmp/mosaic/open_street_maps/"
+raw_path = "dbfs:/tmp/mosaic/spd_osm_nl/"
 
 # COMMAND ----------
 
@@ -63,23 +63,14 @@ raw_path = f"dbfs:/tmp/mosaic/open_street_maps/"
 
 # COMMAND ----------
 
-import dlt
 import pyspark.sql.functions as f
 from pyspark.sql.types import *
 
-@dlt.table(comment="OpenStreetMaps nodes")
-def nodes():
-  return spark.read.format("delta").load(f"{raw_path}/bronze/nodes")
+nodes = spark.read.format("delta").load(f"{raw_path}/bronze/nodes")
 
+relations = spark.read.format("delta").load(f"{raw_path}/bronze/relations")
 
-@dlt.table(comment="OpenStreetMaps relations")
-def relations():
-  return spark.read.format("delta").load(f"{raw_path}/bronze/relations")
-
-
-@dlt.table(comment="OpenStreetMaps ways")
-def ways():
-  return spark.read.format("delta").load(f"{raw_path}/bronze/ways")
+ways = spark.read.format("delta").load(f"{raw_path}/bronze/ways")
 
 
 # COMMAND ----------
@@ -89,21 +80,16 @@ def ways():
 
 # COMMAND ----------
 
-@dlt.table()
-@dlt.expect("is_valid", "is_valid")
-def lines():
-  
-  # Pre-select node columns
-  nodes = (
-    dlt.read("nodes")
+nodes = (
+    nodes
     .withColumnRenamed("_id", "ref")
     .withColumnRenamed("_lat", "lat")
     .withColumnRenamed("_lon", "lon")
     .select("ref", "lat", "lon")
   )
     
-  return (
-    dlt.read("ways")
+lines = (
+    ways
       # Join ways with nodes to get lat and lon for each node
       .select(
         f.col("_id").alias("id"),
@@ -126,12 +112,9 @@ def lines():
     )
 
   
-@dlt.table()
-@dlt.expect_or_drop("is_valid", "is_valid")
-def polygons():
-  line_roles = ["inner", "outer"]
+line_roles = ["inner", "outer"]
   
-  return (
+polygons =(
     dlt.read("relations")
 
       .withColumnRenamed("_id", "id")
@@ -171,115 +154,3 @@ def polygons():
       .drop("inner", "outer")
   )
   
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Buildings
-
-# COMMAND ----------
-
-def get_simple_buildings():
-  
-  building_tags = (dlt.read("ways")
-      .select(
-        f.col("_id").alias("id"),
-        f.explode_outer("tag")
-       )
-       .select(f.col("id"), f.col("col._k").alias("key"), f.col("col._v").alias("value"))
-       .filter(f.col("key") == "building")
-  )
-      
-  return (
-    dlt.read("lines")
-      .join(building_tags, "id")
-      .withColumnRenamed("value", "building")
-
-      # A valid polygon needs at least 3 vertices + a closing point
-      .filter(f.size(f.col("line.boundary")[0]) >= 4)
-
-      # Build the polygon
-      .withColumn("polygon", mos.st_makepolygon("line"))
-
-      .withColumn("is_valid", mos.st_isvalid("polygon"))
-      .drop("line", "key")
-     )
-
-def get_complex_buildings():
-  keys_of_interes = ["type", "building"]
-  
-  relation_tags = (dlt.read("relations")
-      .withColumnRenamed("_id", "id")
-      .select("id", f.explode_outer("tag"))
-      .withColumn("key", f.col("col._k"))
-      .withColumn("val", f.col("col._v"))
-      .groupBy("id")
-      .pivot("key", keys_of_interes)
-      .agg(f.first("val"))
-  )
-  
-  return (
-    dlt.read("polygons")
-      .join(relation_tags, "id")
-      
-      # Only get polygons
-      .filter(f.col("type") == "multipolygon")
-    
-      # Only get buildings
-      .filter(f.col("building").isNotNull())
-  )
-
-@dlt.table()
-def buildings():
-  fields = ["id", "building", "polygon"]
-  complex_buildings = get_complex_buildings().select(fields)
-  simple_buildings = get_simple_buildings().select(fields)
-  
-  return complex_buildings.union(simple_buildings)
-  
-  
-@dlt.table()
-def buildings_indexed():
-  return (
-    dlt.read("buildings")
-      .withColumn("centroid", mos.st_centroid("polygon"))
-      .withColumn("centroid_index_res_5", mos.grid_pointascellid("centroid", f.lit(5)))
-      .withColumn("centroid_index_res_6", mos.grid_pointascellid("centroid", f.lit(6)))
-      .withColumn("centroid_index_res_7", mos.grid_pointascellid("centroid", f.lit(7)))
-      .withColumn("centroid_index_res_8", mos.grid_pointascellid("centroid", f.lit(8)))
-  )
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ### Building types
-
-# COMMAND ----------
-
-@dlt.table()
-def residential_buildings():
-  return (
-    dlt.read("buildings_indexed")
-      .filter(f.col("building").isin(["yes", "residential", "house", "apartments"]))
-  )
-  
-@dlt.table()
-def hospital_buildings():
-  return (
-    dlt.read("buildings_indexed")
-      .filter(f.col("building").isin(["hospital"]))
-  )
-  
-@dlt.table()
-def university_buildings():
-  return (
-    dlt.read("buildings_indexed")
-      .filter(f.col("building").isin(["university"]))
-  )
-
-@dlt.table()
-def train_station_buildings():
-  return (
-    dlt.read("buildings_indexed")
-      .filter(f.col("building").isin(["train_station"]))
-  )

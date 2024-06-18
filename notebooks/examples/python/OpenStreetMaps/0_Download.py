@@ -1,44 +1,44 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC # Download Open Street Maps data
-# MAGIC 
+# MAGIC
 # MAGIC This notebook will download the latest OSM data from the [official source](https://download.geofabrik.de/) and convert it to Delta tables.
-# MAGIC 
+# MAGIC
 # MAGIC This example uses the [OSM XML](https://wiki.openstreetmap.org/wiki/OSM_XML) data format as input, but you can also use other tools like [osm-parquetizer](https://github.com/adrianulbona/osm-parquetizer) or [spark-osm-datasource](https://github.com/woltapp/spark-osm-datasource) to read the protobuf (pbf) format.
-# MAGIC 
+# MAGIC
 # MAGIC The [OSM is structured](https://wiki.openstreetmap.org/wiki/Elements) in three main element types:
-# MAGIC 
+# MAGIC
 # MAGIC * nodes (defining points in space)
 # MAGIC * ways (defining linear features and area boundaries)
 # MAGIC * relations (defining complex multipolygon relations or used to explain how other elements work together)
-# MAGIC 
+# MAGIC
 # MAGIC This notebook will create one delta table for each of this element types.
-# MAGIC 
+# MAGIC
 # MAGIC ![Diagram](https://raw.githubusercontent.com/databrickslabs/mosaic/main/notebooks/examples/python/OpenStreetMaps/Images/0_Download.png)
-# MAGIC 
+# MAGIC
 # MAGIC ## Note: INSTALL XML libraries before running this notebook!
-# MAGIC 
+# MAGIC
 # MAGIC From your cluster settings, install from Maven the xml reader library `com.databricks:spark-xml_2.12:0.14.0`
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Settings
-# MAGIC 
+# MAGIC
 # MAGIC Define where to store the raw data and which region to download
 
 # COMMAND ----------
 
 # Define where the data will be stored
-raw_path = f"dbfs:/tmp/mosaic/open_street_maps/"
+raw_path = f"dbfs:/tmp/mosaic/spd_osm_nl/"
 mirror_index_url = "https://download.geofabrik.de/index-v1-nogeom.json"
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Setup
-# MAGIC 
+# MAGIC
 # MAGIC Creating the empty folder if it does not exist already
 
 # COMMAND ----------
@@ -70,7 +70,7 @@ available_regions
 
 # Define which regions to download
 regions = [
-  'italy',
+  'zuid-holland',
 #   'africa', 
 #   'antarctica', 
 #   'asia', 
@@ -91,9 +91,9 @@ print(f"The raw Open Street Maps data for {regions} will be stored in {raw_path}
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC 
+# MAGIC
 # MAGIC ## Download
-# MAGIC 
+# MAGIC
 # MAGIC Download the region files concurrently
 
 # COMMAND ----------
@@ -123,7 +123,7 @@ display(dbutils.fs.ls(raw_path + "raw"))
 
 # MAGIC %md
 # MAGIC ## Define schema
-# MAGIC 
+# MAGIC
 # MAGIC We are explicitly defining the schemas, because auto-inference
 # MAGIC would read an extra time the XML files.
 
