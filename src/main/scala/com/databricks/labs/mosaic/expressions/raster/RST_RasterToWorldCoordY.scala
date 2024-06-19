@@ -29,7 +29,9 @@ case class RST_RasterToWorldCoordY(
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
         val x = arg1.asInstanceOf[Int]
         val y = arg2.asInstanceOf[Int]
-        val gt = tile.getRaster.getDataset.GetGeoTransform()
+        val raster = tile.getRaster.withHydratedDataset()
+        val gt = raster.getDataset.GetGeoTransform()
+        raster.destroy()
 
         val (_, yGeo) = GDAL.toWorldCoord(gt, x, y)
         yGeo

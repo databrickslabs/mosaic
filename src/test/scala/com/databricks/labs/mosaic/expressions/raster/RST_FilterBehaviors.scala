@@ -20,7 +20,6 @@ trait RST_FilterBehaviors extends QueryTest {
 
         val rastersInMemory = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/geotiff-small/chicago_sp27.tif")
 
         val gridTiles = rastersInMemory

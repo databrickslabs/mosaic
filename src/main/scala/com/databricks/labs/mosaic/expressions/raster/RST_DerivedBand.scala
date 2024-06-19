@@ -43,7 +43,8 @@ case class RST_DerivedBand(
         val resultType = getRasterType(dataType)
         MosaicRasterTile(
             index,
-            PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName),
+            PixelCombineRasters.combine(tiles.map(_.getRaster.withHydratedDataset()), pythonFunc, funcName)
+                .withDatasetRefreshFromPath(),
             resultType
         )
     }

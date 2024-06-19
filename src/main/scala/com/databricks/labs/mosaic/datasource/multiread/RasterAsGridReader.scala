@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.datasource.multiread
 
 import com.databricks.labs.mosaic.MOSAIC_RASTER_READ_STRATEGY
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
@@ -20,80 +21,84 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     private val mc = MosaicContext.context()
     import mc.functions._
 
-    def getNPartitions(config: Map[String, String]): Int = {
-        val shufflePartitions = sparkSession.conf.get("spark.sql.shuffle.partitions")
-        val nPartitions = config.getOrElse("nPartitions", shufflePartitions).toInt
-        nPartitions
-    }
-
-    private def workerNCores = {
-        sparkSession.sparkContext.range(0, 1).map(_ => java.lang.Runtime.getRuntime.availableProcessors).collect.head
-    }
-
-    private def nWorkers = sparkSession.sparkContext.getExecutorMemoryStatus.size
+    private var nPartitions = -1 // may change throughout the phases
 
     override def load(path: String): DataFrame = load(Seq(path): _*)
 
     override def load(paths: String*): DataFrame = {
 
+        // scalastyle:off println
+
+        // config
+        // - turn off aqe coalesce partitions for this op
+        sparkSession.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
         val config = getConfig
+
+        nPartitions = config("nPartitions").toInt
         val resolution = config("resolution").toInt
-        val nPartitions = getNPartitions(config)
-        val readStrategy = config("retile") match {
-            case "true" => "retile_on_read"
-            case _      => "in_memory"
-        }
-        val tileSize = config("sizeInMB").toInt
+        val isRetile = config("retile").toBoolean
 
-        val nCores = nWorkers * workerNCores
-        val stageCoefficient = math.ceil(math.log(nCores) / math.log(4))
+        //println(
+        //    s"raster_to_grid - nPartitions? $nPartitions | isRetile? $isRetile (tileSize? ${config("tileSize")}) ..."
+        //)
 
-        val firstStageSize = (tileSize * math.pow(4, stageCoefficient)).toInt
-
+        // (1) gdal reader load
         val pathsDf = sparkSession.read
             .format("gdal")
             .option("extensions", config("extensions"))
-            .option(MOSAIC_RASTER_READ_STRATEGY, readStrategy)
+            .option(MOSAIC_RASTER_READ_STRATEGY, "as_path")
             .option("vsizip", config("vsizip"))
-            .option("sizeInMB", firstStageSize)
             .load(paths: _*)
             .repartition(nPartitions)
 
+        // (2) increase nPartitions for retile and tessellate
+        nPartitions = Math.min(10000, pathsDf.count() * 10).toInt
+        //println(s"raster_to_grid - adjusted nPartitions to $nPartitions ...")
+
+        // (3) combiner columnar function
         val rasterToGridCombiner = getRasterToGridFunc(config("combiner"))
 
+        // (4) resolve subdataset
+        // - writes resolved df to checkpoint dir
         val rasterDf = resolveRaster(pathsDf, config)
 
+        // (5) retile with 'tileSize'
         val retiledDf = retileRaster(rasterDf, config)
 
+        // (6) tessellate w/ combiner
+        // - tessellate is checkpoint dir
+        // - combiner is based on configured checkpointing
         val loadedDf = retiledDf
             .withColumn(
-              "tile",
-              rst_tessellate(col("tile"), lit(resolution))
+                "tile",
+                rst_tessellate(col("tile"), lit(resolution))
             )
             .repartition(nPartitions)
             .groupBy("tile.index_id")
             .agg(rst_combineavg_agg(col("tile")).alias("tile"))
             .withColumn(
-              "grid_measures",
-              rasterToGridCombiner(col("tile"))
+                "grid_measures",
+                rasterToGridCombiner(col("tile"))
             )
             .select(
-              "grid_measures",
-              "tile"
+                "grid_measures",
+                "tile"
             )
             .select(
-              posexplode(col("grid_measures")).as(Seq("band_id", "measure")),
-              col("tile").getField("index_id").alias("cell_id")
+                posexplode(col("grid_measures")).as(Seq("band_id", "measure")),
+                col("tile").getField("index_id").alias("cell_id")
             )
             .repartition(nPartitions)
             .select(
-              col("band_id"),
-              col("cell_id"),
-              col("measure")
+                col("band_id"),
+                col("cell_id"),
+                col("measure")
             )
 
+        // (7) handle k-ring resample
         kRingResample(loadedDf, config)
 
+        // scalastyle:on println
     }
 
     /**
@@ -108,23 +113,14 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       *   The raster to grid function.
       */
     private def retileRaster(rasterDf: DataFrame, config: Map[String, String]) = {
-        val retile = config("retile").toBoolean
+        val isRetile = config.getOrElse("retile", "false").toBoolean
         val tileSize = config.getOrElse("tileSize", "-1").toInt
-        val memSize = config.getOrElse("sizeInMB", "-1").toInt
-        val nPartitions = getNPartitions(config)
 
-        if (retile) {
-            if (memSize > 0) {
-                rasterDf
-                    .withColumn("tile", rst_subdivide(col("tile"), lit(memSize)))
-                    .repartition(nPartitions)
-            } else if (tileSize > 0) {
-                rasterDf
-                    .withColumn("tile", rst_retile(col("tile"), lit(tileSize), lit(tileSize)))
-                    .repartition(nPartitions)
-            } else {
-                rasterDf
-            }
+        if (isRetile && tileSize > 0) {
+            // always uses the configured checkpoint path
+            rasterDf
+                .withColumn("tile", rst_retile(col("tile"), lit(tileSize), lit(tileSize)))
+                .repartition(nPartitions)
         } else {
             rasterDf
         }
@@ -172,8 +168,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       *   The DataFrame containing the interpolated grid.
       */
     private def kRingResample(rasterDf: DataFrame, config: Map[String, String]) = {
-        val k = config("kRingInterpolate").toInt
-        val nPartitions = getNPartitions(config)
+        val k = config.getOrElse("kRingInterpolate", "0").toInt
 
         def weighted_sum(measureCol: String, weightCol: String) = {
             sum(col(measureCol) * col(weightCol)) / sum(col(weightCol))
@@ -219,17 +214,17 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       */
     private def getConfig: Map[String, String] = {
         Map(
-          "extensions" -> this.extraOptions.getOrElse("extensions", "*"),
-          "readSubdataset" -> this.extraOptions.getOrElse("readSubdataset", "false"),
-          "vsizip" -> this.extraOptions.getOrElse("vsizip", "false"),
-          "subdatasetNumber" -> this.extraOptions.getOrElse("subdatasetNumber", "0"),
-          "subdatasetName" -> this.extraOptions.getOrElse("subdatasetName", ""),
-          "resolution" -> this.extraOptions.getOrElse("resolution", "0"),
-          "combiner" -> this.extraOptions.getOrElse("combiner", "mean"),
-          "retile" -> this.extraOptions.getOrElse("retile", "false"),
-          "tileSize" -> this.extraOptions.getOrElse("tileSize", "-1"),
-          "sizeInMB" -> this.extraOptions.getOrElse("sizeInMB", "-1"),
-          "kRingInterpolate" -> this.extraOptions.getOrElse("kRingInterpolate", "0")
+            "extensions" -> this.extraOptions.getOrElse("extensions", "*"),
+            "vsizip" -> this.extraOptions.getOrElse("vsizip", "false"),
+            "resolution" -> this.extraOptions.getOrElse("resolution", "0"),
+            "combiner" -> this.extraOptions.getOrElse("combiner", "mean"),
+            "kRingInterpolate" -> this.extraOptions.getOrElse("kRingInterpolate", "0"),
+            "nPartitions" -> this.extraOptions.getOrElse("nPartitions", sparkSession.conf.get("spark.sql.shuffle.partitions")),
+            "retile" -> this.extraOptions.getOrElse("retile", "true"),
+            "tileSize" -> this.extraOptions.getOrElse("tileSize", "256"),
+            "readSubdataset" -> this.extraOptions.getOrElse("readSubdataset", "false"),
+            "subdatasetNumber" -> this.extraOptions.getOrElse("subdatasetNumber", "0"),
+            "subdatasetName" -> this.extraOptions.getOrElse("subdatasetName", "")
         )
     }
 

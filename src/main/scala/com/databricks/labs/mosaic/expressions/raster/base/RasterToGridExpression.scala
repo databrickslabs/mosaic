@@ -65,8 +65,10 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         GDAL.enable(expressionConfig)
         val resolution = arg1.asInstanceOf[Int]
-        val transformed = griddedPixels(tile.getRaster, indexSystem, resolution)
+        val raster = tile.getRaster.withHydratedDataset()
+        val transformed = griddedPixels(raster, indexSystem, resolution)
         val results = transformed.map(_.mapValues(valuesCombiner))
+        raster.destroy()
 
         serialize(results)
     }

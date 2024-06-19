@@ -22,10 +22,13 @@ case class RST_SRID(raster: Expression, expressionConfig: MosaicExpressionConfig
 
     /** Returns the SRID of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
+        val raster = tile.getRaster.withHydratedDataset()
         // Reference: https://gis.stackexchange.com/questions/267321/extracting-epsg-from-a-raster-using-gdal-bindings-in-python
-        val proj = new SpatialReference(tile.getRaster.getDataset.GetProjection())
+        val proj = new SpatialReference(raster.getDataset.GetProjection())
         Try(proj.AutoIdentifyEPSG())
-        Try(proj.GetAttrValue("AUTHORITY", 1).toInt).getOrElse(0)
+        val result = Try(proj.GetAttrValue("AUTHORITY", 1).toInt).getOrElse(0)
+        raster.destroy()
+        result
     }
 
 }

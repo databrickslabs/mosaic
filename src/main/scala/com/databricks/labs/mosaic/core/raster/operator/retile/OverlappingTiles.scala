@@ -1,10 +1,11 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.utils.PathUtils
-import org.apache.spark.sql.types.{BinaryType, DataType}
+import org.apache.spark.sql.types.{DataType, StringType}
 
 import scala.collection.immutable
 
@@ -12,7 +13,7 @@ import scala.collection.immutable
 object OverlappingTiles {
 
     //serialize data type
-    val tileDataType: DataType = BinaryType
+    val tileDataType: DataType = StringType // always use checkpoint
 
     /**
       * Retiles a raster into overlapping tiles.
@@ -36,7 +37,7 @@ object OverlappingTiles {
         tileHeight: Int,
         overlapPercentage: Int
     ): immutable.Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster
+        val raster = tile.getRaster.withHydratedDataset()
         val (xSize, ySize) = raster.getDimensions
 
         val overlapWidth = Math.ceil(tileWidth * overlapPercentage / 100.0).toInt
@@ -60,17 +61,22 @@ object OverlappingTiles {
                   outOptions
                 )
 
-                val isEmpty = result.isEmpty
-
-                (isEmpty, result)
+                if (!result.isEmpty) {
+                    // copy to checkpoint dir
+                    val checkpointPath = result.writeToCheckpointDir(doDestroy = true)
+                    val newParentPath = result.createInfo("path")
+                    (true, MosaicRasterGDAL(null, result.createInfo + ("path" -> checkpointPath, "parentPath" -> newParentPath), -1))
+                } else {
+                    result.destroy() // destroy inline for performance
+                    (false, result) // empty result
+                }
             }
         }
 
-        // TODO: The rasters should not be passed by objects.
-
-        val (_, valid) = tiles.flatten.partition(_._1)
-
-        valid.map(t => MosaicRasterTile(null, t._2, tileDataType))
+        raster.destroy() // destroy the hydrated raster
+        val (result, invalid) = tiles.flatten.partition(_._1) // true goes to result
+        //        invalid.flatMap(t => Option(t._2)).foreach(_.destroy()) // destroy invalids
+        result.map(t => MosaicRasterTile(null, t._2, tileDataType)) // return valid tiles
 
     }
 

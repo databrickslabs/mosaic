@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.datasource
 
-import com.databricks.labs.mosaic.MOSAIC_RASTER_READ_STRATEGY
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_AS_PATH, MOSAIC_RASTER_READ_STRATEGY}
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.test.SharedSparkSessionGDAL

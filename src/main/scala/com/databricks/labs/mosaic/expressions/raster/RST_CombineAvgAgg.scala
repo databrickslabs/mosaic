@@ -92,14 +92,14 @@ case class RST_CombineAvgAgg(
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-            var combined = CombineAVG.compute(tiles.map(_.getRaster)).withDatasetRefreshFromPath()
+            var combined = CombineAVG.compute(tiles.map(_.getRaster.withHydratedDataset()))
+                .withDatasetRefreshFromPath()
 
             val resultType = getRasterType(dataType)
             var result = MosaicRasterTile(idx, combined, resultType).formatCellId(indexSystem)
             val serialized = result.serialize(resultType, doDestroy = true)
 
             tiles.foreach(destroy)
-
             destroy(result)
 
             tiles = null

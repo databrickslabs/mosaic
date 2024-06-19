@@ -33,7 +33,7 @@
        :target: https://github.com/psf/black
        :alt: Code style: black
 
-| Mosaic is an extension to the `Apache Spark <https://spark.apache.org/>`_ framework for fast + easy processing
+| Mosaic is an extension to the `Apache Spark <https://spark.apache.org/>`__ framework for fast + easy processing
   of very large geospatial datasets. It provides:
 |
 |  [1] The choice of a Scala, SQL and Python language bindings (written in Scala).
@@ -44,7 +44,7 @@
 |      aggregating and joining spatial datasets.
 |  [6] High performance through implementation of Spark code generation within the core Mosaic functions.
 |  [7] Performing point-in-polygon joins using an approach we co-developed with Ordnance Survey
-       (`blog post <https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html>`_).
+       (`blog post <https://databricks.com/blog/2021/10/11/efficient-point-in-polygon-joins-via-pyspark-and-bng-geospatial-indexing.html>`__).
 
 .. note::
    We recommend using Databricks Runtime with Photon enabled to leverage the Databricks H3 expressions.
@@ -63,30 +63,30 @@ Mosaic 0.4.x series only supports DBR 13.x DBRs. If running on a different DBR i
    DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13.
    You can specify :code:`%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.
 
-Mosaic 0.4.x series issues an ERROR on standard, non-Photon clusters `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ |
-`AWS <https://docs.databricks.com/runtime/index.html/>`_ |
-`GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_:
+Mosaic 0.4.x series issues an ERROR on standard, non-Photon clusters `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`__ |
+`AWS <https://docs.databricks.com/runtime/index.html/>`__ |
+`GCP <https://docs.gcp.databricks.com/runtime/index.html/>`__:
 
    DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for
    spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.
 
 As of Mosaic 0.4.0 / DBR 13.3 LTS (subject to change in follow-on releases):
 
-* `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_
+* `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`__
    * Mosaic Python, SQL, R, and Scala APIs.
-* `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_
-   * Mosaic Scala API (JVM) with Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_.
+* `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`__
+   * Mosaic Scala API (JVM) with Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`__.
    * Mosaic Python bindings (to Mosaic Scala APIs) are blocked by Py4J Security on Shared Access Clusters.
-   * Mosaic SQL expressions cannot yet be registered due to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_.
-     API changes, more `here <https://docs.databricks.com/en/udf/index.html>`_.
+   * Mosaic SQL expressions cannot yet be registered due to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`__.
+     API changes, more `here <https://docs.databricks.com/en/udf/index.html>`__.
 
 .. note::
    Mosaic is a custom JVM library that extends spark, which has the following implications in DBR 13.3 LTS:
 
-   * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ enforces process isolation which is difficult
+   * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`__ enforces process isolation which is difficult
      to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from
      other supported languages in Shared Access Clusters.
-   * Clusters can read `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`_ via relevant
+   * Clusters can read `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`__ via relevant
      built-in (aka platform provided) readers and writers or via custom python calls which do not involve any custom JVM code.
 
 
@@ -94,12 +94,12 @@ Version 0.3.x Series
 ====================
 
 We recommend using Databricks Runtime versions 12.2 LTS with Photon enabled.
-For Mosaic versions < 0.4.0 please use the `0.3.x docs <https://databrickslabs.github.io/mosaic/v0.3.x/index.html>`_.
+For Mosaic versions < 0.4.0 please use the `0.3.x docs <https://databrickslabs.github.io/mosaic/v0.3.x/index.html>`__.
 
 As of the 0.3.11 release, Mosaic issues the following WARNING when initialized on a cluster that is neither Photon Runtime
-nor Databricks Runtime ML `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ |
-`AWS <https://docs.databricks.com/runtime/index.html/>`_ |
-`GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_:
+nor Databricks Runtime ML `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`__ |
+`AWS <https://docs.databricks.com/runtime/index.html/>`__ |
+`GCP <https://docs.gcp.databricks.com/runtime/index.html/>`__:
 
     DEPRECATION WARNING: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for spatial
     AI benefits; Mosaic will stop working on this cluster after v0.3.x.
@@ -110,7 +110,7 @@ powered by Photon. Along this direction of change, Mosaic has standardized to JT
 Geometry Provider.
 
 .. note::
-   For Mosaic versions < 0.4 please use the `0.3 docs <https://databrickslabs.github.io/mosaic/v0.3.x/index.html>`_.
+   For Mosaic versions < 0.4 please use the `0.3 docs <https://databrickslabs.github.io/mosaic/v0.3.x/index.html>`__.
 
 
 Documentation

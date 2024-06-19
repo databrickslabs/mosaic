@@ -19,7 +19,6 @@ trait RST_GetNoDataBehaviors extends QueryTest {
 
         val rastersInMemory = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .load("src/test/resources/modis/")
 
         val noDataVals = rastersInMemory

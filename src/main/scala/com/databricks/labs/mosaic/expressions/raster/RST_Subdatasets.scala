@@ -22,7 +22,12 @@ case class RST_Subdatasets(raster: Expression, expressionConfig: MosaicExpressio
     override def dataType: DataType = MapType(StringType, StringType)
 
     /** Returns the subdatasets of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = buildMapString(tile.getRaster.subdatasets)
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        val raster = tile.getRaster.withHydratedDataset()
+        val result = buildMapString(raster.subdatasets)
+        raster.destroy()
+        result
+    }
 
 }
 

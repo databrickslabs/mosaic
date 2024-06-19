@@ -3,15 +3,17 @@ package com.databricks.labs.mosaic.core.raster.operator.retile
 import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.proj.RasterProject
+import com.databricks.labs.mosaic.core.raster.operator.retile.ReTile.tileDataType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import org.apache.spark.sql.types.{BinaryType, DataType}
+import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 
 /** RasterTessellate is a helper object for tessellating rasters. */
 object RasterTessellate {
 
-    val tileDataType: DataType = BinaryType
+    val tileDataType: DataType = StringType // tessellate always uses checkpoint
 
     /**
       * Tessellates a raster into tiles. The raster is projected into the index
@@ -40,23 +42,40 @@ object RasterTessellate {
                 val cellID = cell.cellIdAsLong(indexSystem)
                 val isValidCell = indexSystem.isValid(cellID)
                 if (!isValidCell) {
-                    (false, MosaicRasterTile(cell.index, null, tileDataType))
+                    (false, MosaicRasterTile(cell.index, null, tileDataType)) // invalid cellid
                 } else {
                     val cellRaster = tmpRaster.getRasterForCell(cellID, indexSystem, geometryAPI)
-                    val isValidRaster = !cellRaster.isEmpty
-                    (
-                      isValidRaster,
-                      MosaicRasterTile(cell.index, cellRaster, tileDataType)
-                    )
+                    if (!cellRaster.isEmpty) {
+                        // copy to checkpoint dir (destroy cellRaster)
+                        val checkpointPath = cellRaster.writeToCheckpointDir(doDestroy = true)
+                        val newParentPath = cellRaster.createInfo("path")
+                        (
+                            true, // valid result
+                            MosaicRasterTile(
+                                cell.index,
+                                MosaicRasterGDAL(
+                                    null,
+                                    cellRaster.createInfo + ("path" -> checkpointPath, "parentPath" -> newParentPath),
+                                    -1),
+                                tileDataType
+                            )
+                        )
+                    } else {
+                        (
+                            false,
+                            MosaicRasterTile(cell.index, cellRaster, tileDataType) // empty result
+                        )
+                    }
                 }
             })
 
-        val (result, invalid) = chips.partition(_._1)
-        invalid.flatMap(t => Option(t._2.getRaster)).foreach(_.destroy())
+        val (result, invalid) = chips.partition(_._1) // true goes to result
+        invalid.flatMap(t => Option(t._2.getRaster)).foreach(_.destroy()) // destroy invalids
 
+        raster.destroy()
         tmpRaster.destroy()
 
-        result.map(_._2)
+        result.map(_._2) // return valid tiles
     }
 
 }

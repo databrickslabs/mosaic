@@ -19,7 +19,10 @@ case class RST_ScaleX(raster: Expression, expressionConfig: MosaicExpressionConf
 
     /** Returns the scale x of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        tile.getRaster.getDataset.GetGeoTransform()(1)
+        val raster = tile.getRaster.withHydratedDataset()
+        val result = raster.getDataset.GetGeoTransform()(1)
+        raster.destroy()
+        result
     }
 
 }

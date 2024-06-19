@@ -94,20 +94,23 @@ object ReTileOnRead extends ReadStrategy {
         val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
 
         val rows = tiles.map(tile => {
+            val raster = tile.getRaster.withHydratedDataset()
             val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
             val fields = trimmedSchema.fieldNames.map {
+
                 case PATH              => status.getPath.toString
                 case MODIFICATION_TIME => status.getModificationTime
                 case UUID              => uuid
-                case X_SIZE            => tile.getRaster.xSize
-                case Y_SIZE            => tile.getRaster.ySize
-                case BAND_COUNT        => tile.getRaster.numBands
-                case METADATA          => tile.getRaster.metadata
-                case SUBDATASETS       => tile.getRaster.subdatasets
-                case SRID              => tile.getRaster.SRID
-                case LENGTH            => tile.getRaster.getMemSize
+                case X_SIZE            => raster.xSize
+                case Y_SIZE            => raster.ySize
+                case BAND_COUNT        => raster.numBands
+                case METADATA          => raster.metadata
+                case SUBDATASETS       => raster.subdatasets
+                case SRID              => raster.SRID
+                case LENGTH            => raster.getMemSize
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
+            raster.destroy()
             // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
             val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(
                 tileDataType, doDestroy = true)))

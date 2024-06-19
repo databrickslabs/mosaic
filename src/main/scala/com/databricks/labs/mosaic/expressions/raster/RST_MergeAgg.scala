@@ -88,7 +88,8 @@ case class RST_MergeAgg(
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-            var merged = MergeRasters.merge(tiles.map(_.getRaster)).withDatasetRefreshFromPath()
+            var merged = MergeRasters.merge(tiles.map(_.getRaster.withHydratedDataset()))
+                .withDatasetRefreshFromPath()
 
             val resultType = getRasterType(dataType)
             var result = MosaicRasterTile(idx, merged, resultType).formatCellId(

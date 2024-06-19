@@ -9,11 +9,12 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
-import org.apache.spark.sql.types.DataType
+import org.apache.spark.sql.types.{DataType, StringType}
 
 /**
   * Returns a set of new rasters with the specified tile size (tileWidth x
   * tileHeight).
+  * - always uses the checkpoint location.
   */
 case class RST_ReTile(
     rasterExpr: Expression,
@@ -27,7 +28,7 @@ case class RST_ReTile(
     /** @return provided raster data type (assumes that was handled for checkpointing.)*/
     override def dataType: DataType = {
         // 0.4.3 changed from `rasterExpr.rasterType`
-        RasterTileType(expressionConfig.getCellIdType, rasterExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(expressionConfig.getCellIdType, rasterExpr, useCheckpoint = true) // always use checkpoint
     }
 
     /**

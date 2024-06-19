@@ -235,7 +235,7 @@ Next we will define a function that will write a given raster file to disk. A "g
 not want to have a file context manager open when you go to write out its context as the context manager will not yet
 have been flushed. Another "gotcha" might be that the raster dataset does not have CRS included; if this arises, we
 recommend adjusting the function to specify the CRS and set it on the dst variable, more at
-`rasterio.crs <https://rasterio.readthedocs.io/en/stable/api/rasterio.crs.html>`_. We would also point out that notional
+`rasterio.crs <https://rasterio.readthedocs.io/en/stable/api/rasterio.crs.html>`__. We would also point out that notional
 "file_id" param can be constructed as a repeatable name from other field(s) in your dataframe / table or be random,
 depending on your needs.
 
@@ -359,16 +359,15 @@ UDF example for generating Google Maps compatible tiles
 
 Delta Tables can be used as the basis for serving pre-generated tiles as an option. Here is an example UDF that applies
 a few gdal operations on each band, to write to Google Maps Compatible tiles transformed into 3857 (Web Mercator). Note:
-the 'quadbin' column shown in this example was generated separately using CARTO's `quadbin <https://pypi.org/project/quadbin/>`_
+the 'quadbin' column shown in this example was generated separately using CARTO's `quadbin <https://pypi.org/project/quadbin/>`__
 package. You can replace the calls with whatever you need to do. The output structure looks something like the following:
 
 .. figure:: ../images/rasterio/quadbin.png
    :figclass: doc-figure
 
-The UDF sets raster extent, block size, and interpolation. Again, you would modify this to suit your needs. It makes an
-assumption of source SRID (4326 in this example), but could be adapted further for more flexible SRID handling. Additionally,
-output type and nodata values are specified, which could be further adapted. In this example, COG overviews are not generated
-nor is an ALPHA band, but they could be.
+The UDF example sets raster extent, block size, and interpolation. It specifies source SRID as 4326;
+additionally, output type and nodata values are specified. COG overviews are not generated
+nor is an ALPHA band, but they could be. Again, you would modify this example to suit your needs.
 
 .. code-block:: python
 

@@ -21,8 +21,10 @@ case class RST_Min(raster: Expression, expressionConfig: MosaicExpressionConfig)
 
     /** Returns the min value per band of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val nBands = tile.raster.getDataset.GetRasterCount()
-        val minValues = (1 to nBands).map(tile.raster.getBand(_).minPixelValue)
+        val raster = tile.getRaster.withHydratedDataset()
+        val nBands = raster.getDataset.GetRasterCount()
+        val minValues = (1 to nBands).map(raster.getBand(_).minPixelValue)
+        raster.destroy()
         ArrayData.toArrayData(minValues.toArray)
     }
 

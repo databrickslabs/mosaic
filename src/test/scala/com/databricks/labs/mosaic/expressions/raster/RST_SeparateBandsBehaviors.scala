@@ -18,7 +18,6 @@ trait RST_SeparateBandsBehaviors extends QueryTest {
 
         val rastersInMemory = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc")
 
         val df = rastersInMemory

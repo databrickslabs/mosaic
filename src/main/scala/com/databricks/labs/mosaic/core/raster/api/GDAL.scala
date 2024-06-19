@@ -57,8 +57,8 @@ object GDAL {
     /** @return Returns whether using checkpoint (assumes `enable` called) */
     def isUseCheckpoint: Boolean = MosaicGDAL.isUseCheckpoint
 
-    /** @return Returns checkpoint path (assumes `enable` called) */
-    def getCheckpointPath: String = MosaicGDAL.getCheckpointPath
+    /** @return Returns checkpoint dir (assumes `enable` called) */
+    def getCheckpointDir: String = MosaicGDAL.getCheckpointDir
 
     /**
       * Enables GDAL on the worker nodes. GDAL requires drivers to be registered
@@ -215,7 +215,7 @@ object GDAL {
         val ext = GDAL.getExtension(raster.getDriversShortName)
         val writePath = overrideDir match {
             case Some(d) => s"$d/$uuid.$ext"
-            case _ => s"${getCheckpointPath}/$uuid.$ext"
+            case _ => s"${getCheckpointDir}/$uuid.$ext"
         }
         val outPath = raster.writeToPath(writePath, doDestroy)
         UTF8String.fromString(outPath)

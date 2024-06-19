@@ -20,7 +20,6 @@ trait RST_TessellateBehaviors extends QueryTest {
 
         val rastersInMemory = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
@@ -47,7 +46,6 @@ trait RST_TessellateBehaviors extends QueryTest {
 
         val netcdf = spark.read
             .format("gdal")
-            .option("raster.read.strategy", "in-memory")
             .load("src/test/resources/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc")
             .withColumn("tile", rst_separatebands($"tile"))
             .withColumn("tile", rst_setsrid($"tile", lit(4326)))

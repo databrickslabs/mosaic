@@ -23,7 +23,7 @@ case class RST_Median(rasterExpr: Expression, expressionConfig: MosaicExpression
 
     /** Returns the median value per band of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.raster
+        val raster = tile.getRaster.withHydratedDataset()
         val width = raster.xSize * raster.pixelXSize
         val height = raster.ySize * raster.pixelYSize
         val outShortName = raster.getDriversShortName
@@ -33,6 +33,8 @@ case class RST_Median(rasterExpr: Expression, expressionConfig: MosaicExpression
           Seq(raster),
           command = s"gdalwarp -r med -tr $width $height -of $outShortName"
         )
+        raster.destroy()
+
         // Max pixel is a hack since we get a 1x1 raster back
         val maxValues = (1 to medRaster.getDataset.GetRasterCount()).map(medRaster.getBand(_).maxPixelValue)
         ArrayData.toArrayData(maxValues.toArray)

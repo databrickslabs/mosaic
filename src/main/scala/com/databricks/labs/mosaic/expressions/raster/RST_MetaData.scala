@@ -18,7 +18,12 @@ case class RST_MetaData(raster: Expression, expressionConfig: MosaicExpressionCo
     override def dataType: DataType = MapType(StringType, StringType)
 
     /** Returns the metadata of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = buildMapString(tile.getRaster.metadata)
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        val raster = tile.getRaster.withHydratedDataset()
+        val result = buildMapString(raster.metadata)
+        raster.destroy()
+        result
+    }
 
 }
 

@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.datasource.multiread
 
-import com.databricks.labs.mosaic.JTS
+import com.databricks.labs.mosaic.{JTS, MOSAIC_RASTER_USE_CHECKPOINT}
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
@@ -13,6 +13,7 @@ import java.nio.file.{Files, Paths}
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
 
     test("Read netcdf with Raster As Grid Reader") {
+
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 
@@ -21,8 +22,9 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
-            .option("retile", "true")
-            .option("tileSize", "10")
+            .option("nPartitions", "10")
+            .option("extensions", "nc")
+            .option("resolution", "5")
             .option("readSubdataset", "true")
             .option("subdataset", "1")
             .option("kRingInterpolate", "3")
@@ -37,15 +39,16 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 
+        spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "true")
+
         val grib = "/binary/grib-cams/"
         val filePath = getClass.getResource(grib).getPath
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
-            .option("extensions", "grib")
+            .option("nPartitions", "10")
+            .option("extensions", "grb")
             .option("combiner", "min")
-            .option("retile", "true")
-            .option("tileSize", "10")
             .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")
@@ -57,13 +60,17 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 
+        spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "true")
+
         val tif = "/modis/"
         val filePath = getClass.getResource(tif).getPath
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("nPartitions", "10")
+            .option("extensions", "TIF")
             .option("combiner", "max")
-            .option("tileSize", "10")
+            .option("resolution", "4")
             .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")
@@ -80,11 +87,11 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("nPartitions", "10")
             .option("readSubdataset", "true")
             .option("subdatasetName", "/group_with_attrs/F_order_array")
             .option("combiner", "median")
             .option("vsizip", "true")
-            .option("tileSize", "10")
             .load(filePath)
             .select("measure")
             .take(1)
@@ -92,6 +99,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("nPartitions", "10")
             .option("readSubdataset", "true")
             .option("subdatasetName", "/group_with_attrs/F_order_array")
             .option("combiner", "count")
@@ -103,6 +111,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("nPartitions", "10")
             .option("readSubdataset", "true")
             .option("subdatasetName", "/group_with_attrs/F_order_array")
             .option("combiner", "average")
@@ -114,6 +123,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("nPartitions", "10")
             .option("readSubdataset", "true")
             .option("subdatasetName", "/group_with_attrs/F_order_array")
             .option("combiner", "avg")
@@ -127,6 +137,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         an[Error] should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("nPartitions", "10")
             .option("combiner", "count_+")
             .option("vsizip", "true")
             .load(paths: _*)
@@ -146,6 +157,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("nPartitions", "10")
             .option("readSubdataset", "true")
             .option("subdatasetName", "/group_with_attrs/F_order_array")
             .option("kRingInterpolate", "3")

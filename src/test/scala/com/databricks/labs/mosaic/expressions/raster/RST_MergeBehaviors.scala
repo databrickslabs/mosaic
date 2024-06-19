@@ -20,7 +20,6 @@ trait RST_MergeBehaviors extends QueryTest {
 
         val rastersInMemory = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .option("pathGlobFilter", "*_B01.TIF") // B01
             .load("src/test/resources/modis")
 

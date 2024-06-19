@@ -33,7 +33,12 @@ case class RST_CombineAvg(
     override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
         val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
         val resultType = getRasterType(dataType)
-        MosaicRasterTile(index, CombineAVG.compute(tiles.map(_.getRaster)), resultType)
+        MosaicRasterTile(
+            index,
+            CombineAVG.compute(tiles.map(_.getRaster.withHydratedDataset()))
+                .withDatasetRefreshFromPath(),
+            resultType
+        )
     }
 
 }

@@ -53,9 +53,12 @@ case class RST_Convolve(
               case _ => throw new IllegalArgumentException(s"Unsupported kernel type: ${kernelExpr.dataType}")
           }
         ))
-        tile.copy(
-          raster = tile.getRaster.convolve(kernel)
+        val raster = tile.getRaster.withHydratedDataset()
+        val result = tile.copy(
+          raster = raster.convolve(kernel)
         )
+        raster.destroy()
+        result
     }
 
 }

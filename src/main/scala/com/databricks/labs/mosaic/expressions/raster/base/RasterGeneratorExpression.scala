@@ -42,7 +42,7 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
     GDAL.enable(expressionConfig)
 
     override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, rasterExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(expressionConfig.getCellIdType, rasterExpr, useCheckpoint = true) // always checkpoint
     }
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")

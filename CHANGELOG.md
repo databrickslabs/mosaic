@@ -4,18 +4,20 @@
 - iPython dependency limited to "<8.11,>=7.4.2" for both DBR and keplergl-jupyter
 - Expanded support for fuse-based checkpointing (persisted raster storage), managed through:
   - spark config `spark.databricks.labs.mosaic.raster.use.checkpoint` in addition to `spark.databricks.labs.mosaic.raster.checkpoint`
-  - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`  - additional functions include: 
-    `gdal.update_checkpoint_path`, `gdal.set_checkpoint_on`, `gdal.set_checkpoint_off`, and `gdal.reset_checkpoint`
-  - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)` (similar bindings to python as well)
+  - python: `mos.enable_gdal(spark, with_checkpoint_dir=dir)`  - additional functions include: 
+    `gdal.update_checkpoint_dir`, `gdal.set_checkpoint_on`, `gdal.set_checkpoint_off`, and `gdal.reset_checkpoint`
+  - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, dir)` (similar bindings to python as well)
 - Local files are no longer immediately deleted (disposed) but are controlled through `spark.databricks.labs.mosaic.manual.cleanup.mode`
-  and `spark.databricks.labs.mosaic.raster.local.age.limit.minutes` along with existing ability to specify the session 
+  and `spark.databricks.labs.mosaic.cleanup.age.limit.minutes` along with existing ability to specify the session 
   local storage root dir with `spark.databricks.labs.mosaic.raster.tmp.prefix`
 - `RST_PixelCount` now supports optional 'countNoData' and 'countMask' (defaults are `false`, can now be `true`) to optionally get full 
    pixel counts where mask is 0.0 and noData is what is configured in the raster
 - Added `RST_Write` to save a generated 'tile' to a specified directory (e.g. fuse) location using its GDAL driver and 
   raster data / path; useful for formalizing the path when writing a Lakehouse table (allowing removal of interim
   checkpointed data)
-- Improved raster_to_grid reader performance
+- Improved `raster_to_grid` reader performance by using checkpointing for interim steps and adjusting repartitioning;
+  default read strategy for this reader and its underlying `.format("gdal")` reader is "as_path" instead of "in_memory"
+- `RST_ReTile`, `RST_ToOverlappingTiles`, `RST_Tessellate`, `RST_SeparateBands` now use checkpoint dir
 - `RST_Clip` GDAL Warp option `CUTLINE_ALL_TOUCHED` configurable (default is `true`, can now be `false`); also, setting 
   SpatialReferenceSystem in the generated Shapefile Feature Layer (along with the WKB 'geometry' field as before)
 - `RST_MemSize` now returns sum of pixels * datatype bytes as a fallback if size cannot be gotten from a raster file 
@@ -23,8 +25,11 @@
 - Python bindings added for `RST_Avg`, `RST_Max`, `RST_Median`, `RST_Min`, and `RST_PixelCount`; also added missing 'driver' 
   param documented for `RST_FromContent`, missing docs added for `RST_SetSRID`, and standardized `RST_ToOverlappingTiles` 
   (`RST_To_Overlapping_Tiles` deprecated)
-- Doc examples added:
-  - Arbitrary GDAL Warp and Transform ops in UDF
+- Doc UDF example added for arbitrary GDAL Warp and Transform ops
+- Quickstart Notebook updated to use MosaicAnalyzer [
+  [Python](https://github.com/databrickslabs/mosaic/blob/main/python/mosaic/models/analyzer/analyzer.py) |
+  [Scala](https://github.com/databrickslabs/mosaic/blob/main/src/main/scala/com/databricks/labs/mosaic/sql/MosaicAnalyzer.scala) ]
+  (was MosaicFrame in 0.3 series)
 
 ## v0.4.2 [DBR 13.3 LTS]
 - Geopandas now fixed to "<0.14.4,>=0.14" due to conflict with minimum numpy version in geopandas 0.14.4.

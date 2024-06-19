@@ -57,12 +57,13 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * Generators expressions require an abstraction for element type. Always
       * needs to be wrapped in a StructType. The actually type is that of the
       * structs element.
+      * - we want to use checkpointing always for tessellate generator.
       */
     override def elementSchema: StructType = {
         StructType(
             Array(StructField(
                 "element",
-                RasterTileType(expressionConfig.getCellIdType, rasterExpr, expressionConfig.isRasterUseCheckpoint))
+                RasterTileType(expressionConfig.getCellIdType, rasterExpr, useCheckpoint = true)) // always use checkpoint
             )
         )
     }
@@ -71,6 +72,7 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * The function to be overridden by the extending class. It is called when
       * the expression is evaluated. It provides the raster band to the
       * expression. It abstracts spark serialization from the caller.
+      * - always uses checkpoint dir.
       * @param raster
       *   The raster to be used.
       * @return
@@ -86,7 +88,7 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
             )
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
         var genTiles = rasterGenerator(tile, inResolution).map(_.formatCellId(indexSystem))
-        val resultType = getRasterType(RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint))
+        val resultType = getRasterType(RasterTileType(rasterExpr, useCheckpoint = true)) // always use checkpoint
         val rows = genTiles.map(t => InternalRow.fromSeq(Seq(t.formatCellId(indexSystem).serialize(
             resultType, doDestroy = true))))
 

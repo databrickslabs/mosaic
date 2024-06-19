@@ -29,7 +29,9 @@ case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionCon
         // https://gdal.org/programs/gdalinfo.html
         vector.add("-json")
         val infoOptions = new InfoOptions(vector)
-        val gdalInfo = GDALInfo(tile.getRaster.getDataset, infoOptions)
+        val raster = tile.getRaster.withHydratedDataset()
+        val gdalInfo = GDALInfo(raster.getDataset, infoOptions)
+        raster.destroy()
         UTF8String.fromString(gdalInfo)
     }
 

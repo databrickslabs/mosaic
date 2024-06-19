@@ -72,7 +72,7 @@ object ReadStrategy {
             case MOSAIC_RASTER_READ_IN_MEMORY  => ReadInMemory
             case MOSAIC_RASTER_RE_TILE_ON_READ => ReTileOnRead
             case MOSAIC_RASTER_READ_AS_PATH    => ReadAsPath
-            case _                             => ReadInMemory
+            case _                             => ReadAsPath
         }
 
     }

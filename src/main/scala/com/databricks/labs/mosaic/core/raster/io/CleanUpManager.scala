@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.core.raster.io
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL.cleanUpManualDir
 import com.databricks.labs.mosaic.core.raster.io.CleanUpManager.{delayMinutesAtomic, interruptAtomic}
-import com.databricks.labs.mosaic.gdal.MosaicGDAL.{getLocalAgeLimitMinutesThreadSafe, getLocalRasterDirThreadSafe, isManualModeThreadSafe}
+import com.databricks.labs.mosaic.gdal.MosaicGDAL.{getCleanUpAgeLimitMinutesThreadSafe, getLocalRasterDirThreadSafe, isManualModeThreadSafe}
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 import scala.concurrent.duration.DurationInt
@@ -34,7 +34,7 @@ private class CleanUpManager extends Thread {
     // scalastyle:on println
 
     /**
-     * Cleans up LOCAL rasters that are older than [[MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES]],
+     * Cleans up LOCAL rasters that are older than [[MOSAIC_CLEANUP_AGE_LIMIT_MINUTES]],
      * e.g. 30 minutes from the configured local temp directory, e.g. "/tmp/mosaic_tmp";
      * config uses [[MOSAIC_RASTER_TMP_PREFIX]] for the "/tmp" portion of the path.
      * - Cleaning up is destructive and should only be done when the raster is no longer needed,
@@ -49,7 +49,7 @@ private class CleanUpManager extends Thread {
     private def doCleanUp(): Option[String] = {
         // scalastyle:off println
         if (!isManualModeThreadSafe) {
-            val ageLimit = getLocalAgeLimitMinutesThreadSafe
+            val ageLimit = getCleanUpAgeLimitMinutesThreadSafe
             val localDir = getLocalRasterDirThreadSafe
             println(s"\n... Thread ${Thread.currentThread().getName} initiating cleanup " +
                 s"- age limit? $ageLimit, dir? '$localDir'\n")

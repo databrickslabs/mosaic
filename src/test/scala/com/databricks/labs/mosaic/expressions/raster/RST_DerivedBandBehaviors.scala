@@ -20,7 +20,6 @@ trait RST_DerivedBandBehaviors extends QueryTest {
 
         val rastersInMemory = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .option("pathGlobFilter", "*_B01.TIF")
             .load("src/test/resources/modis")
 

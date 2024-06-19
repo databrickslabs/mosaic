@@ -38,7 +38,7 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
             .setGDALConf(spark.conf)
             .setTestMode(spark.conf.get(MOSAIC_TEST_MODE, "false"))
             .setManualCleanupMode(spark.conf.get(MOSAIC_MANUAL_CLEANUP_MODE, "false"))
-            .setLocalAgeLimitMinutes(spark.conf.get(MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES, MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT))
+            .setCleanUpAgeLimitMinutes(spark.conf.get(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT))
     }
 
     def getTestMode: String = {
@@ -87,7 +87,7 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
     
     def getTmpPrefix: String = configs.getOrElse(MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
 
-    def getLocalAgeLimitMinutes = configs.getOrElse(MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES, MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT).toInt
+    def getCleanUpAgeLimitMinutes: Int = configs.getOrElse(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT).toInt
 
     def setGDALConf(conf: RuntimeConfig): MosaicExpressionConfig = {
         val toAdd = conf.getAll.filter(_._1.startsWith(MOSAIC_GDAL_PREFIX))
@@ -118,12 +118,12 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
         MosaicExpressionConfig(configs + (MOSAIC_RASTER_TMP_PREFIX -> prefix))
     }
 
-    def setLocalAgeLimitMinutes(limit: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES -> limit))
+    def setCleanUpAgeLimitMinutes(limit: String): MosaicExpressionConfig = {
+        MosaicExpressionConfig(configs + (MOSAIC_CLEANUP_AGE_LIMIT_MINUTES -> limit))
     }
 
-    def setLocalAgeLimitMinutes(limit: Int): MosaicExpressionConfig = {
-        setLocalAgeLimitMinutes(limit.toString)
+    def setCleanUpAgeLimitMinutes(limit: Int): MosaicExpressionConfig = {
+        setCleanUpAgeLimitMinutes(limit.toString)
     }
 
     def setConfig(key: String, value: String): MosaicExpressionConfig = {
@@ -149,7 +149,7 @@ object MosaicExpressionConfig {
             .setGDALConf(spark.conf)
             .setTestMode(spark.conf.get(MOSAIC_TEST_MODE, "false"))
             .setManualCleanupMode(spark.conf.get(MOSAIC_MANUAL_CLEANUP_MODE, "false"))
-            .setLocalAgeLimitMinutes(spark.conf.get(MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES, MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT))
+            .setCleanUpAgeLimitMinutes(spark.conf.get(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT))
     }
 
 }

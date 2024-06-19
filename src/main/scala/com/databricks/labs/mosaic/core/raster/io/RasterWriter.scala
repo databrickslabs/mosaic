@@ -33,4 +33,16 @@ trait RasterWriter {
      */
     def writeToPath(newPath: String, doDestroy: Boolean): String
 
+    /**
+     * Writes a raster to the configured checkpoint directory.
+     *
+     * @param doDestroy
+     *   A boolean indicating if the raster object should be destroyed after writing.
+     *   - file paths handled separately.
+     *   Skip deletion of interim file writes, if any.
+     * @return
+     *   The path where written (may differ, e.g. due to subdatasets).
+     */
+    def writeToCheckpointDir(doDestroy: Boolean): String
+
 }

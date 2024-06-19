@@ -1,6 +1,8 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.{MOSAIC_MANUAL_CLEANUP_MODE, MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT, MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.{MOSAIC_MANUAL_CLEANUP_MODE, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT,
+    MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT,
+    MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
@@ -36,7 +38,7 @@ trait RST_ClipBehaviors extends QueryTest {
 
         info(s"test on? ${sc.conf.get(MOSAIC_TEST_MODE, "false")}")
         info(s"manual cleanup on? ${sc.conf.get(MOSAIC_MANUAL_CLEANUP_MODE, "false")}")
-        info(s"cleanup minutes (config)? ${sc.conf.get(MOSAIC_RASTER_LOCAL_AGE_LIMIT_MINUTES, MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT)}")
+        info(s"cleanup minutes (config)? ${sc.conf.get(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT)}")
 
 //        val checkDir = MosaicGDAL.getCheckpointPath
 //        info(s"configured checkpoint dir? $checkDir")

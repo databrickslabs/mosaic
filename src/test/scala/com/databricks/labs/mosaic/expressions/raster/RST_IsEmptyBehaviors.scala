@@ -19,7 +19,6 @@ trait RST_IsEmptyBehaviors extends QueryTest {
 
         val rastersInMemory = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 
         val df = rastersInMemory

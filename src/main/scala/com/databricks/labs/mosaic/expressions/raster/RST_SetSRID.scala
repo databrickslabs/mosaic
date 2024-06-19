@@ -44,8 +44,11 @@ case class RST_SetSRID(
       *   The updated raster tile.
       */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-        val referenced = tile.getRaster.setSRID(arg1.asInstanceOf[Int])
-        tile.copy(raster = referenced)
+        val raster = tile.getRaster.withHydratedDataset()
+        val referenced = raster.setSRID(arg1.asInstanceOf[Int])
+        val result = tile.copy(raster = referenced)
+        raster.destroy()
+        result
     }
 
 }

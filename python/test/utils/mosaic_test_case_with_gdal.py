@@ -20,7 +20,7 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
         # manual cleanup "true" is needed (0.4.3)
         cls.spark.conf.set("spark.databricks.labs.mosaic.test.mode", "true")
         cls.spark.conf.set("spark.databricks.labs.mosaic.manual.cleanup.mode", "false")
-        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.local.age.limit.minutes", "10") # "30" default
+        cls.spark.conf.set("spark.databricks.labs.mosaic.cleanup.age.limit.minutes", "10") # "30" default
         # cls.spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "true") # "false" default
 
         pwd_dir = os.getcwd()

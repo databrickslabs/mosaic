@@ -36,8 +36,10 @@ case class RST_Transform(
         val sReff = new SpatialReference()
         sReff.ImportFromEPSG(srid)
         sReff.SetAxisMappingStrategy(org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
-        val result = RasterProject.project(tile.raster, sReff)
-        tile.copy(raster = result)
+        val raster = tile.getRaster.withHydratedDataset()
+        val result = tile.copy(raster = RasterProject.project(raster, sReff))
+        raster.destroy()
+        result
     }
 
 }

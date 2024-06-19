@@ -3,7 +3,9 @@ package com.databricks.labs.mosaic.gdal
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT, MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT, MOSAIC_RASTER_TMP_PREFIX_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT,
+    MOSAIC_RASTER_CHECKPOINT_DEFAULT, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT, MOSAIC_RASTER_TMP_PREFIX_DEFAULT,
+    MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.internal.Logging
@@ -35,10 +37,10 @@ object MosaicGDAL extends Logging {
     // noinspection ScalaWeakerAccess
     private val GDAL_ENABLED = "spark.mosaic.gdal.native.enabled"
     private var enabled = false
-    private var checkpointPath: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
+    private var checkpointDir: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
     private var useCheckpoint: Boolean = MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT.toBoolean
     private var localRasterDir: String = s"$MOSAIC_RASTER_TMP_PREFIX_DEFAULT/mosaic_tmp"
-    private var localAgeLimitMinutes: Int = MOSAIC_RASTER_LOCAL_AGE_LIMIT_DEFAULT.toInt
+    private var cleanUpAgeLimitMinutes: Int = MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT.toInt
     private var manualMode: Boolean = true
 
     // Only use this with GDAL rasters
@@ -73,13 +75,13 @@ object MosaicGDAL extends Logging {
     }
 
     def configureCheckpoint(mosaicConfig: MosaicExpressionConfig): Unit = {
-        this.checkpointPath = mosaicConfig.getRasterCheckpoint
+        this.checkpointDir = mosaicConfig.getRasterCheckpoint
         this.useCheckpoint = mosaicConfig.isRasterUseCheckpoint
     }
 
     def configureLocalRasterDir(mosaicConfig: MosaicExpressionConfig): Unit = {
         this.manualMode = mosaicConfig.isManualCleanupMode
-        this.localAgeLimitMinutes = mosaicConfig.getLocalAgeLimitMinutes
+        this.cleanUpAgeLimitMinutes = mosaicConfig.getCleanUpAgeLimitMinutes
 
         // don't allow a fuse path
         if (PathUtils.isFuseLocation(mosaicConfig.getTmpPrefix)) {
@@ -147,28 +149,28 @@ object MosaicGDAL extends Logging {
       * - alternative to setting spark configs prior to init.
       * - can be called multiple times in a session as you want to change
       *   checkpoint location.
-      * - sets [[checkpointPath]] to provided path.
+      * - sets [[checkpointDir]] to provided directory.
       * - sets [[useCheckpoint]] to "true".
       * - see mosaic_context.py as well for use.
       * @param spark
       *   spark session to use.
-      * @param withCheckpointPath
+      * @param withCheckpointDir
       *   path to set.
       */
-    def enableGDALWithCheckpoint(spark: SparkSession, withCheckpointPath: String): Unit = {
+    def enableGDALWithCheckpoint(spark: SparkSession, withCheckpointDir: String): Unit = {
         // - set spark config to enable checkpointing
-        // - initial checks + update path
+        // - initial checks + update directory
         // - also inits MosaicContext
         // - also enables GDAL and refreshes accessors
         spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "true")
-        updateCheckpointPath(spark, withCheckpointPath)
-        logInfo(s"Checkpoint enabled for this session under $checkpointPath (overrides existing spark confs).")
+        updateCheckpointDir(spark, withCheckpointDir)
+        logInfo(s"Checkpoint enabled for this session under $checkpointDir (overrides existing spark confs).")
     }
 
     /**
       * Go back to defaults.
       * - spark conf unset for use checkpoint (off).
-      * - spark conf unset for checkpoint path.
+      * - spark conf unset for checkpoint directory.
       * - see mosaic_context.py as well for use.
       *
       * @param spark
@@ -188,30 +190,30 @@ object MosaicGDAL extends Logging {
       *
       * @param spark
       *   spark session to use.
-      * @param path
-      *   supported cloud object path to use.
+      * @param dir
+      *   supported cloud object directory to use.
       */
-    def updateCheckpointPath(spark: SparkSession, path: String): Unit = {
+    def updateCheckpointDir(spark: SparkSession, dir: String): Unit = {
         val isTestMode = spark.conf.get(MOSAIC_TEST_MODE, "false").toBoolean
-        if (path == null) {
+        if (dir == null) {
             val msg = "Null checkpoint path provided."
             logError(msg)
             throw new NullPointerException(msg)
-        } else if (!isTestMode && !PathUtils.isFuseLocation(path)) {
+        } else if (!isTestMode && !PathUtils.isFuseLocation(dir)) {
             val msg = "Checkpoint path must be a (non-local) fuse location."
             logError(msg)
-            throw new InvalidPathException(path, msg)
-        } else if (!Files.exists(Paths.get(path))) {
-            if (path.startsWith("/Volumes/")) {
-                val msg = "Volume checkpoint path doesn't exist and must be created through Databricks catalog."
+            throw new InvalidPathException(dir, msg)
+        } else if (!Files.exists(Paths.get(dir))) {
+            if (dir.startsWith("/Volumes/")) {
+                val msg = "Volume checkpoint directory doesn't exist and must be created through Databricks catalog."
                 logError(msg)
                 throw new FileNotFoundException(msg)
             } else {
-                val dir = new File(path)
-                dir.mkdirs
+                val d = new File(dir)
+                d.mkdirs
             }
         }
-        spark.conf.set(MOSAIC_RASTER_CHECKPOINT, path)
+        spark.conf.set(MOSAIC_RASTER_CHECKPOINT, dir)
         updateMosaicContext(spark)
     }
 
@@ -290,17 +292,17 @@ object MosaicGDAL extends Logging {
     /** @return if using checkpoint (configured). */
     def isUseCheckpoint: Boolean = this.useCheckpoint
 
-    /** @return value of checkpoint path (configured). */
-    def getCheckpointPath: String = this.checkpointPath
+    /** @return value of checkpoint directory (configured). */
+    def getCheckpointDir: String = this.checkpointDir
 
-    /** @return default value of checkpoint path. */
-    def getCheckpointPathDefault: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
+    /** @return default value of checkpoint directory. */
+    def getCheckpointDirDefault: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
 
-    /** @return value of local dir (configured).  */
+    /** @return value of local directory (configured).  */
     def getLocalRasterDir: String = this.localRasterDir
 
     /** @return file age limit for cleanup (configured). */
-    def getLocalAgeLimitMinutes: Int = this.localAgeLimitMinutes
+    def getCleanUpAgeLimitMinutes: Int = this.cleanUpAgeLimitMinutes
 
     ////////////////////////////////////////////////
     // Thread-safe Accessors
@@ -315,12 +317,12 @@ object MosaicGDAL extends Logging {
     /** @return if using checkpoint (configured). */
     def isUseCheckpointThreadSafe: Boolean = synchronized(this.useCheckpoint)
 
-    /** @return value of checkpoint path (configured). */
-    def getCheckpointPathThreadSafe: String = synchronized(this.checkpointPath)
+    /** @return value of checkpoint directory (configured). */
+    def getCheckpointDirThreadSafe: String = synchronized(this.checkpointDir)
 
-    /** @return value of local dir (configured).  */
+    /** @return value of local directory (configured).  */
     def getLocalRasterDirThreadSafe: String = synchronized(this.localRasterDir)
 
     /** @return file age limit for cleanup (configured). */
-    def getLocalAgeLimitMinutesThreadSafe: Int = synchronized(this.localAgeLimitMinutes)
+    def getCleanUpAgeLimitMinutesThreadSafe: Int = synchronized(this.cleanUpAgeLimitMinutes)
 }

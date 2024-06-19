@@ -18,7 +18,12 @@ case class RST_Height(raster: Expression, expressionConfig: MosaicExpressionConf
     override def dataType: DataType = IntegerType
 
     /** Returns the width of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.ySize
+    override def rasterTransform(tile: MosaicRasterTile): Any = {
+        val raster = tile.getRaster.withHydratedDataset()
+        val result = raster.ySize
+        raster.destroy()
+        result
+    }
 
 }
 

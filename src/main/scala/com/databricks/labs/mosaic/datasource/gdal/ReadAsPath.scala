@@ -91,7 +91,10 @@ object ReadAsPath extends ReadStrategy {
 
         val tmpPath = PathUtils.copyToTmp(inPath)
         val createInfo = Map("path" -> tmpPath, "parentPath" -> inPath)
-        val raster = MosaicRasterGDAL.readRaster(createInfo)
+        var raster = MosaicRasterGDAL.readRaster(createInfo)
+        // write raster to checkpoint dir
+        val checkPath = raster.writeToCheckpointDir(doDestroy = true)
+        raster = MosaicRasterGDAL.readRaster(createInfo + ("path" -> checkPath))
         val tile = MosaicRasterTile(null, raster, tileDataType)
         
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))

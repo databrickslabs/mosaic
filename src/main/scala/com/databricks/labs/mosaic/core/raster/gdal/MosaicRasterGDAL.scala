@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.api.GDAL.getCheckpointDir
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL.readRaster
 import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterHydrator, RasterReader, RasterWriter}
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
@@ -17,7 +18,7 @@ import org.gdal.osr.SpatialReference
 import org.locationtech.proj4j.CRSFactory
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
-import java.util.{Locale, Vector => JVector}
+import java.util.{Locale, UUID, Vector => JVector}
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util.{Failure, Success, Try}
 
@@ -626,6 +627,52 @@ case class MosaicRasterGDAL(
             PathUtils.wildcardCopy(fromDir.toString, toDir.toString, stemRegex)
             if (doDestroy) this.destroy()
             s"$toDir/${thisPath.getFileName}"
+        }
+    }
+
+    def isCheckpointPath: Boolean = {
+        val cleanPath = PathUtils.getCleanPath(path)
+        cleanPath.startsWith(getCheckpointDir)
+    }
+
+    /**
+     * Writes a raster to the configured checkpoint directory.
+     *
+     * @param doDestroy
+     *   A boolean indicating if the raster object should be destroyed after writing.
+     *   - file paths handled separately.
+     *   Skip deletion of interim file writes, if any.
+     * @return
+     *   The path where written (may differ, e.g. due to subdatasets).
+     */
+    override def writeToCheckpointDir(doDestroy: Boolean): String = {
+        if (isCheckpointPath) {
+            path
+        } else {
+            if (isSubDataset) {
+                val uuid = UUID.randomUUID().toString
+                val ext = GDAL.getExtension(getDriversShortName)
+                val writePath = s"${getCheckpointDir}/$uuid.$ext"
+
+                val driver = this.dataset.GetDriver()
+                val ds = driver.CreateCopy(writePath, this.withDatasetRefreshFromPath().getDataset, 1)
+                if (ds == null) {
+                    val error = gdal.GetLastErrorMsg()
+                    throw new Exception(s"Error writing raster to path: $error")
+                }
+                ds.FlushCache()
+                ds.delete()
+                if (doDestroy) this.destroy()
+                writePath
+            } else {
+                val thisPath = Paths.get(this.path)
+                val fromDir = thisPath.getParent
+                val toDir = getCheckpointDir
+                val stemRegex = PathUtils.getStemRegex(this.path)
+                PathUtils.wildcardCopy(fromDir.toString, toDir, stemRegex)
+                if (doDestroy) this.destroy()
+                s"$toDir/${thisPath.getFileName}"
+            }
         }
     }
 
