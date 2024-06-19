@@ -44,7 +44,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         sc.conf.set(MOSAIC_GDAL_NATIVE, "true")
         sc.conf.set(MOSAIC_TEST_MODE, "true")
         sc.conf.set(MOSAIC_MANUAL_CLEANUP_MODE, "false")
-        sc.conf.set(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, "10") // default "30"
+        sc.conf.set(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, "30") // default "30"
         sc.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT)
         sc.conf.set(MOSAIC_RASTER_CHECKPOINT, mosaicCheckpointRootDir)
         sc.conf.set(MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
@@ -63,9 +63,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
     override def afterEach(): Unit = {
         super.afterEach()
 
-        // clean up 5+ minute old checkpoint files (for testing)
+        // clean up 30+ minute old checkpoint files (for testing)
         // - this specifies to remove fuse mount files which are mocked for development
-        GDAL.cleanUpManualDir(ageMinutes = 5, getCheckpointRootDir, keepRoot = true, allowFuseDelete = true) match {
+        GDAL.cleanUpManualDir(ageMinutes = 30, getCheckpointRootDir, keepRoot = true, allowFuseDelete = true) match {
             case Some(msg) => info(s"cleanup mosaic tmp dir msg -> '$msg'")
             case _ => ()
         }
