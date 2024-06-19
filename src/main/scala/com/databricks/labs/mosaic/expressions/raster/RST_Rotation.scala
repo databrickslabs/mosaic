@@ -19,12 +19,9 @@ case class RST_Rotation(raster: Expression, expressionConfig: MosaicExpressionCo
 
     /** Returns the rotation angle of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster.withHydratedDataset()
-        val gt = raster.getDataset.GetGeoTransform()
+        val gt = tile.getRaster.getGeoTransform
         // arctan of y_skew and x_scale
-        val result = math.atan(gt(4) / gt(1))
-        raster.destroy()
-        result
+        math.atan(gt(4) / gt(1))
     }
 
 }

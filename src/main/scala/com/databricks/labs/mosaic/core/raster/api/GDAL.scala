@@ -133,9 +133,9 @@ object GDAL {
                     val bytes = inputRaster.asInstanceOf[Array[Byte]]
                     try {
                         val rasterObj = MosaicRasterGDAL.readRaster(bytes, createInfo)
-                        if (rasterObj.getDataset == null) {
+                        if (rasterObj.getDatasetHydrated == null) {
                             val rasterZipObj = readParentZipBinary(bytes, createInfo)
-                            if (rasterZipObj.getDataset == null) {
+                            if (rasterZipObj.getDatasetHydrated == null) {
                                 rasterObj // <- return initial
                             } else {
                                 rasterZipObj

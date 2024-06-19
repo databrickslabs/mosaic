@@ -18,12 +18,7 @@ case class RST_UpperLeftY(raster: Expression, expressionConfig: MosaicExpression
     override def dataType: DataType = DoubleType
 
     /** Returns the upper left y of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster.withHydratedDataset()
-        val result = raster.getDataset.GetGeoTransform()(3)
-        raster.destroy()
-        result
-    }
+    override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.getGeoTransform(3)
 
 }
 

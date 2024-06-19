@@ -35,7 +35,7 @@ object GDALCalc {
         val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
         val commandRes = SysUtils.runCommand(s"python3 $toRun")
         val errorMsg = gdal.GetLastErrorMsg
-        val result = GDAL.raster(resultPath, resultPath)
+        val calcResult = GDAL.raster(resultPath, resultPath)
         val createInfo = Map(
           "path" -> resultPath,
           "parentPath" -> resultPath,
@@ -53,7 +53,9 @@ object GDALCalc {
                              |${commandRes._3}
                              |""".stripMargin
         )
-        result.copy(createInfo = createInfo)
+        val result = calcResult.copy(createInfo = createInfo)
+        //result.reHydrate() // flush cache not needed here
+        result
     }
 
 }

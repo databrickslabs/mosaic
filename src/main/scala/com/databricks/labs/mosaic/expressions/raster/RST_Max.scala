@@ -21,10 +21,9 @@ case class RST_Max(raster: Expression, expressionConfig: MosaicExpressionConfig)
 
     /** Returns the max value per band of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster.withHydratedDataset()
-        val nBands = raster.getDataset.GetRasterCount()
+        val raster = tile.getRaster
+        val nBands = raster.getDatasetHydrated.GetRasterCount()
         val maxValues = (1 to nBands).map(raster.getBand(_).maxPixelValue)
-        raster.destroy()
         ArrayData.toArrayData(maxValues.toArray)
     }
 

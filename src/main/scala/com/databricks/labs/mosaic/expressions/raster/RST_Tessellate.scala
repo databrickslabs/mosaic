@@ -27,7 +27,7 @@ case class RST_Tessellate(
       */
     override def rasterGenerator(tile: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile] = {
         RasterTessellate.tessellate(
-            tile.getRaster.withHydratedDataset(),
+            tile.getRaster,
             resolution,
             indexSystem,
             geometryAPI

@@ -31,7 +31,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         val testValues = testBand.values(1000, 1000, 100, 50)
         testValues.length shouldBe 5000
 
-        testRaster.getDataset.delete()
+        testRaster.destroy()
     }
 
     test("Read band metadata and pixel data from a GRIdded Binary file.") {
@@ -51,7 +51,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         val testValues = testBand.values(1, 1, 4, 5)
         testValues.length shouldBe 20
 
-        testRaster.getDataset.delete()
+        testRaster.destroy()
     }
 
     test("Read band metadata and pixel data from a NetCDF file.") {
@@ -78,8 +78,8 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         noException should be thrownBy testBand.values
         testValues.length shouldBe 1000
 
-        testRaster.getDataset.delete()
-        superRaster.getDataset.delete()
+        testRaster.destroy()
+        superRaster.destroy()
     }
 
 }

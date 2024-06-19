@@ -23,7 +23,7 @@ object GDALBuildVRT {
         val effectiveCommand = OperatorOptions.appendOptions(command, MosaicRasterWriteOptions.VRT)
         val vrtOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val vrtOptions = new BuildVRTOptions(vrtOptionsVec)
-        val result = gdal.BuildVRT(outputPath, rasters.map(_.getDataset).toArray, vrtOptions)
+        val vrtResult = gdal.BuildVRT(outputPath, rasters.map(_.getDatasetHydrated).toArray, vrtOptions)
         val errorMsg = gdal.GetLastErrorMsg
         val createInfo = Map(
           "path" -> outputPath,
@@ -34,8 +34,9 @@ object GDALBuildVRT {
           "all_parents" -> rasters.map(_.getParentPath).mkString(";")
         )
         // VRT files are just meta files, mem size doesnt make much sense so we keep -1
-        MosaicRasterGDAL(result, createInfo, -1)
-            .withDatasetRefreshFromPath()
+        val result = MosaicRasterGDAL(vrtResult, createInfo, -1)
+        result.reHydrate() // flush cache
+        result
     }
 
 }

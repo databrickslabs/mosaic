@@ -26,7 +26,7 @@ object SeparateBands {
     def separate(
         tile: => MosaicRasterTile
     ): Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster.withHydratedDataset()
+        val raster = tile.getRaster
         val tiles = for (i <- 0 until raster.numBands) yield {
             val fileExtension = raster.getRasterFileExtension
             val rasterPath = PathUtils.createTmpFilePath(fileExtension)
@@ -63,8 +63,6 @@ object SeparateBands {
                 (false, result) // empty result
             }
         }
-
-        raster.destroy()
 
         val (result, _) = tiles.partition(_._1)
         result.map(t => new MosaicRasterTile(null, t._2, tileDataType))

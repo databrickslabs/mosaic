@@ -48,12 +48,9 @@ case class RST_Filter(
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
         val n = arg1.asInstanceOf[Int]
         val operation = arg2.asInstanceOf[UTF8String].toString
-        val raster = tile.getRaster.withHydratedDataset()
-        val result = tile.copy(
-          raster = raster.filter(n, operation)
+        tile.copy(
+          raster = tile.getRaster.filter(n, operation)
         )
-        raster.destroy()
-        result
     }
 
 }

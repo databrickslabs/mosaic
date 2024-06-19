@@ -18,12 +18,7 @@ case class RST_TryOpen(raster: Expression, expressionConfig: MosaicExpressionCon
     override def dataType: DataType = BooleanType
 
     /** Returns true if the raster can be opened. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster.withHydratedDataset()
-        val result = Option(raster.getDataset).isDefined
-        raster.destroy()
-        result
-    }
+    override def rasterTransform(tile: MosaicRasterTile): Any = Option(tile.getRaster.getDatasetHydrated).isDefined
 
 }
 

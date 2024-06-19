@@ -36,13 +36,13 @@ object PixelCombineRasters {
           rasters,
           command = s"gdalbuildvrt -resolution highest"
         )
-        vrtRaster.destroy() // post vrt
 
         addPixelFunction(vrtPath, pythonFunc, pythonFuncName)
+        vrtRaster.reHydrate() // after pixel func
 
         val result = GDALTranslate.executeTranslate(
           rasterPath,
-          vrtRaster.withDatasetRefreshFromPath(),
+          vrtRaster,
           command = s"gdal_translate",
           outOptions
         )

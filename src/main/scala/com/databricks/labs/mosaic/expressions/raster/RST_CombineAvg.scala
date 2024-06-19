@@ -35,8 +35,7 @@ case class RST_CombineAvg(
         val resultType = getRasterType(dataType)
         MosaicRasterTile(
             index,
-            CombineAVG.compute(tiles.map(_.getRaster.withHydratedDataset()))
-                .withDatasetRefreshFromPath(),
+            CombineAVG.compute(tiles.map(_.getRaster)),
             resultType
         )
     }

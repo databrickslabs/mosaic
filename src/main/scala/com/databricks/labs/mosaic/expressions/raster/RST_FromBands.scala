@@ -42,7 +42,7 @@ case class RST_FromBands(
       *   The stacked and resampled raster.
       */
     override def rasterTransform(rasters: Seq[MosaicRasterTile]): Any = {
-        rasters.head.copy(raster = MergeBands.merge(rasters.map(_.getRaster.withHydratedDataset()), "bilinear"))
+        rasters.head.copy(raster = MergeBands.merge(rasters.map(_.getRaster), "bilinear"))
     }
 
 }

@@ -37,7 +37,7 @@ object OverlappingTiles {
         tileHeight: Int,
         overlapPercentage: Int
     ): immutable.Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster.withHydratedDataset()
+        val raster = tile.getRaster
         val (xSize, ySize) = raster.getDimensions
 
         val overlapWidth = Math.ceil(tileWidth * overlapPercentage / 100.0).toInt
@@ -73,7 +73,6 @@ object OverlappingTiles {
             }
         }
 
-        raster.destroy() // destroy the hydrated raster
         val (result, invalid) = tiles.flatten.partition(_._1) // true goes to result
         //        invalid.flatMap(t => Option(t._2)).foreach(_.destroy()) // destroy invalids
         result.map(t => MosaicRasterTile(null, t._2, tileDataType)) // return valid tiles

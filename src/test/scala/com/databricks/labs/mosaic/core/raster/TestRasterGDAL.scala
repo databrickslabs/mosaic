@@ -44,7 +44,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         val np_content = spark.read.format("binaryFile")
             .load("src/test/resources/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
             .select("content").first.get(0).asInstanceOf[Array[Byte]]
-        val np_ds = MosaicRasterGDAL.readRaster(np_content, createInfo).getDataset
+        val np_ds = MosaicRasterGDAL.readRaster(np_content, createInfo).getDatasetHydrated
         val np_raster = MosaicRasterGDAL(np_ds, createInfo, -1)
         np_raster.getMemSize > 0 should be(true)
         info(s"np_content length? ${np_content.length}")
@@ -76,12 +76,12 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
-        testRaster.getDataset.GetProjection()
+        testRaster.getDatasetHydrated.GetProjection()
         noException should be thrownBy testRaster.getSpatialReference
         an[Exception] should be thrownBy testRaster.getBand(-1)
         an[Exception] should be thrownBy testRaster.getBand(Int.MaxValue)
 
-        testRaster.getDataset.delete()
+        testRaster.destroy()
     }
 
     test("Read raster metadata from a GRIdded Binary file.") {
@@ -99,7 +99,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-0.375, -0.375, 10.125, 10.125)
 
-        testRaster.getDataset.delete()
+        testRaster.destroy()
     }
 
     test("Read raster metadata from a NetCDF file.") {
@@ -125,8 +125,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-180.00000610436345, -89.99999847369712, 180.00000610436345, 89.99999847369712)
 
-        testRaster.getDataset.delete()
-        superRaster.getDataset.delete()
+        testRaster.destroy()
+        superRaster.destroy()
     }
 
     test("Raster pixel and extent sizes are correct.") {
@@ -150,7 +150,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.xMin - -8895604.157333 < 0.0000001 shouldBe true
         testRaster.yMin - 2223901.039333 < 0.0000001 shouldBe true
 
-        testRaster.getDataset.delete()
+        testRaster.destroy()
     }
 
     test("Raster filter operations are correct.") {
@@ -171,7 +171,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           "parentPath" -> "",
           "driver" -> "GTiff"
         )
-        var result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "avg").withDatasetRefreshFromPath()
+        var result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "avg")
+        result.reHydrate() // flush cache
 
         var resultValues = result.getBand(1).values
 
@@ -198,7 +199,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // mode
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "mode").withDatasetRefreshFromPath()
+        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "mode")
+        result.reHydrate() // flush cache
 
         resultValues = result.getBand(1).values
 
@@ -251,7 +253,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // median
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "median").withDatasetRefreshFromPath()
+        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "median")
+        result.reHydrate() // flush cache
 
         resultValues = result.getBand(1).values
 
@@ -290,7 +293,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // min filter
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "min").withDatasetRefreshFromPath()
+        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "min")
+        result.reHydrate() // flush cache
 
         resultValues = result.getBand(1).values
 
@@ -329,7 +333,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // max filter
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "max").withDatasetRefreshFromPath()
+        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "max")
+        result.reHydrate() // flush cache
 
         resultValues = result.getBand(1).values
 

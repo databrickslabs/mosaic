@@ -43,7 +43,7 @@ case class RST_SetNoData(
       *   The raster with the specified no data values.
       */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-        val raster = tile.getRaster.withHydratedDataset()
+        val raster = tile.getRaster
         val noDataValues = raster.getBands.map(_.noDataValue).mkString(" ")
         val dstNoDataValues = (arg1 match {
             case d: Double            => Array.fill[Double](raster.numBands)(d)
@@ -54,15 +54,13 @@ case class RST_SetNoData(
         }).mkString(" ")
         val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(raster.getDriversShortName))
         val cmd = s"""gdalwarp -of ${raster.getDriversShortName} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
-        val result = tile.copy(
+        tile.copy(
           raster = GDALWarp.executeWarp(
             resultPath,
             Seq(raster),
             command = cmd
           )
         )
-        raster.destroy()
-        result
     }
 
 }

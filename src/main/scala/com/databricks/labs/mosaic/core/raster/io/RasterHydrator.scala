@@ -1,49 +1,39 @@
 package com.databricks.labs.mosaic.core.raster.io
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import java.util.{Vector => JVector}
+import org.gdal.gdal.{Dataset, gdal}
+import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
 
 trait RasterHydrator {
 
-    /**
-     * Allows for recreation from file system or from content bytes.
-     * - hydrate the underlying GDAL dataset, required call after destroy.
-     * - recommend to always use this call when obtaining a raster for use in operation.
-     * @param forceHydrate
-     *   if true, rehydrate even if the dataset object exists; default is false.
-     * @return
-     *   Returns a hydrated (ready) [[MosaicRasterGDAL]] object.
-     */
-    def withHydratedDataset(forceHydrate: Boolean = false): MosaicRasterGDAL
+    /** @return Underlying GDAL raster dataset object, hydrated if possible. */
+    def getDatasetHydrated: Dataset
 
-    /**
-     * Refreshes the raster dataset object. This is needed after writing to a file
-     * system path. GDAL only properly writes to a file system path if the
-     * raster object is destroyed. After refresh operation the raster object is
-     * usable again.
-     * - if already existing, flushes the cache of the raster and destroys. This is needed to ensure that the
-     *   raster is written to disk. This is needed for operations like RasterProject.
-     *
-     * @return
-     *   Returns [[MosaicRasterGDAL]].
-     */
-    def withDatasetRefreshFromPath(): MosaicRasterGDAL
-
+    /** rehydrate the underlying GDAL raster dataset object. This is for forcing a refresh. */
+    def reHydrate(): Unit
 }
 
 /** singleton */
 object RasterHydrator {
 
     /**
-     * Hydrate the tile's raster.
-     *
-     * @param tile
-     *   The [[MosaicRasterTile]] with the raster to hydrate.
-     * @param forceHydrate
-     *   if true, rehydrate even if the dataset object exists; default is false.
+     * Opens a raster from a file system path with a given driver.
+     * @param path
+     *   The path to the raster file.
+     * @param driverShortNameOpt
+     *   The driver short name to use. If None, then GDAL will try to identify
+     *   the driver from the file extension
+     * @return
+     *   A GDAL [[Dataset]] object.
      */
-    def withHydratedDataset(tile: MosaicRasterTile, forceHydrate: Boolean = false): MosaicRasterGDAL = {
-        tile.raster.withHydratedDataset(forceHydrate = forceHydrate)
+    def pathAsDataset(path: String, driverShortNameOpt: Option[String]): Dataset = {
+        driverShortNameOpt match {
+            case Some(driverShortName) =>
+                val drivers = new JVector[String]()
+                drivers.add(driverShortName)
+                gdal.OpenEx(path, GA_ReadOnly, drivers)
+            case None                  => gdal.Open(path, GA_ReadOnly)
+        }
     }
 
 }

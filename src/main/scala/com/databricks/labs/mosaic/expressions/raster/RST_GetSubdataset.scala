@@ -32,10 +32,7 @@ case class RST_GetSubdataset(
     /** Returns the subdatasets of the raster. */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
         val subsetName = arg1.asInstanceOf[UTF8String].toString
-        val raster = tile.getRaster.withHydratedDataset()
-        val result = tile.copy(raster = raster.getSubdataset(subsetName))
-        raster.destroy()
-        result
+        tile.copy(raster = tile.getRaster.getSubdataset(subsetName))
     }
 
 }

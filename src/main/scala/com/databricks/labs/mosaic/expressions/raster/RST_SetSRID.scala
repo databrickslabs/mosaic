@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
@@ -44,11 +45,13 @@ case class RST_SetSRID(
       *   The updated raster tile.
       */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-        val raster = tile.getRaster.withHydratedDataset()
-        val referenced = raster.setSRID(arg1.asInstanceOf[Int])
-        val result = tile.copy(raster = referenced)
-        raster.destroy()
-        result
+
+        // set srid on the raster
+        // - this is an in-place operation as of 0.4.3+
+        val raster = tile.getRaster
+        raster.setSRID(arg1.asInstanceOf[Int])
+        // create a new object for the return
+        tile.copy(raster = MosaicRasterGDAL(null, raster.getCreateInfo, raster.getMemSize))
     }
 
 }

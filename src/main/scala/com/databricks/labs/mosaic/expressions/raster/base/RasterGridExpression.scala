@@ -59,7 +59,7 @@ trait RasterGridExpression {
         indexSystem: IndexSystem,
         resolution: Int
     ): Seq[Map[Long, Seq[Double]]] = {
-        val gt = raster.getDataset.GetGeoTransform()
+        val gt = raster.getDatasetHydrated.GetGeoTransform()
         val bandTransform = (band: MosaicRasterBandGDAL) => {
             val results = band.transformValues[(Long, Double)](pixelTransformer(gt, indexSystem, resolution), (0L, -1.0))
             results

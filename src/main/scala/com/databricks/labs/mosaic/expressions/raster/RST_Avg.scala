@@ -27,14 +27,12 @@ case class RST_Avg(tileExpr: Expression, expressionConfig: MosaicExpressionConfi
         implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
 
         val command = s"gdalinfo -stats -json -mm -nogcp -nomd -norat -noct"
-        val raster = tile.getRaster.withHydratedDataset()
-        val gdalInfo = GDALInfo.executeInfo(raster, command)
+        val gdalInfo = GDALInfo.executeInfo(tile.getRaster, command)
         // parse json from gdalinfo
         val json = parse(gdalInfo).extract[Map[String, Any]]
         val meanValues = json("bands").asInstanceOf[List[Map[String, Any]]].map { band =>
             band("mean").asInstanceOf[Double]
         }
-        raster.destroy()
         ArrayData.toArrayData(meanValues.toArray)
     }
 

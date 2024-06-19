@@ -65,9 +65,9 @@ case class RST_Write(
     private def copyToArg1Dir(inTile: MosaicRasterTile, arg1: Any): MosaicRasterGDAL = {
         require(dirExpr.isInstanceOf[Literal])
 
-        val inRaster = inTile.getRaster.withHydratedDataset()
-        val inPath = inRaster.createInfo("path")
-        val inDriver = inRaster.createInfo("driver")
+        val inRaster = inTile.getRaster
+        val inPath = inRaster.getPath
+        val inDriver = inRaster.getDriversShortName
         val outPath = GDAL.writeRasters(
                 Seq(inRaster),
                 StringType,
@@ -76,7 +76,6 @@ case class RST_Write(
             )
             .head
             .toString
-        inRaster.destroy()
 
         MosaicRasterGDAL.readRaster(
           Map("path" -> outPath, "driver" -> inDriver, "parentPath" -> inPath)

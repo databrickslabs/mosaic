@@ -18,12 +18,7 @@ case class RST_ScaleY(raster: Expression, expressionConfig: MosaicExpressionConf
     override def dataType: DataType = DoubleType
 
     /** Returns the scale y of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster.withHydratedDataset()
-        val result = raster.getDataset.GetGeoTransform()(5)
-        raster.destroy()
-        result
-    }
+    override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.getGeoTransform(5)
 
 }
 

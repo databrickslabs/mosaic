@@ -22,7 +22,7 @@ object GDALInfo {
 
         val infoOptionsVec = OperatorOptions.parseOptions(command)
         val infoOptions = new InfoOptions(infoOptionsVec)
-        val gdalInfo = gdal.GDALInfo(raster.getDataset, infoOptions)
+        val gdalInfo = gdal.GDALInfo(raster.getDatasetHydrated, infoOptions)
 
         if (gdalInfo == null) {
             s"""

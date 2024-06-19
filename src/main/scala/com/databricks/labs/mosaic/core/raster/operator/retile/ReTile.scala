@@ -30,7 +30,7 @@ object ReTile {
         tileWidth: Int,
         tileHeight: Int
     ): Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster.withHydratedDataset()
+        val raster = tile.getRaster
         val (xR, yR) = raster.getDimensions
         val xTiles = Math.ceil(xR / tileWidth).toInt
         val yTiles = Math.ceil(yR / tileHeight).toInt
@@ -62,7 +62,6 @@ object ReTile {
                 (false, result) // empty result
             }
         }
-        raster.destroy()
 
         val (result, invalid) = tiles.partition(_._1) // true goes to result
 //        invalid.flatMap(t => Option(t._2)).foreach(_.destroy()) // destroy invalids

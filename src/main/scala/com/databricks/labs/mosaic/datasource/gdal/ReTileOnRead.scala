@@ -94,7 +94,7 @@ object ReTileOnRead extends ReadStrategy {
         val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
 
         val rows = tiles.map(tile => {
-            val raster = tile.getRaster.withHydratedDataset()
+            val raster = tile.getRaster
             val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
             val fields = trimmedSchema.fieldNames.map {
 

@@ -23,7 +23,10 @@ object BalancedSubdivision {
       *   The number of splits.
       */
     def getNumSplits(raster: MosaicRasterGDAL, destSize: Int): Int = {
-        val testSize: Long  = raster.withHydratedDataset().getMemSize
+        val testSize: Long  = raster.getMemSize match {
+            case m if m > 0 => m
+            case _          => raster.calcMemSize()
+        }
         val size: Long = {
             if (testSize > -1) testSize
             else 0L
@@ -92,12 +95,11 @@ object BalancedSubdivision {
         tile: MosaicRasterTile,
         sizeInMb: Int
     ): Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster.withHydratedDataset()
+        val raster = tile.getRaster
         val numSplits = getNumSplits(raster, sizeInMb)
         val (x, y) = raster.getDimensions
         val (tileX, tileY) = getTileSize(x, y, numSplits)
 
-        raster.destroy()
         ReTile.reTile(tile, tileX, tileY)
     }
 

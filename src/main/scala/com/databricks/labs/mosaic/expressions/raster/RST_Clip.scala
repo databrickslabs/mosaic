@@ -54,15 +54,12 @@ case class RST_Clip(
         val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
         val geomCRS = geometry.getSpatialReferenceOSR
         val cutline = arg2.asInstanceOf[Boolean]
-        val raster = tile.getRaster.withHydratedDataset()
-        val result = tile.copy(
+        tile.copy(
           raster = RasterClipByVector.clip(
-              raster, geometry, geomCRS, geometryAPI,
+              tile.getRaster, geometry, geomCRS, geometryAPI,
               cutlineAllTouched = cutline, mosaicConfig = expressionConfig
           )
         )
-        raster.destroy()
-        result
     }
 
 }

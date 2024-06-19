@@ -151,7 +151,7 @@ case class MosaicRasterTile(
     }
 
     def getSequenceNumber: Int =
-        Try(raster.getDataset.GetMetadataItem("BAND_INDEX", "DATABRICKS_MOSAIC")) match {
+        Try(this.raster.getDatasetHydrated.GetMetadataItem("BAND_INDEX", "DATABRICKS_MOSAIC")) match {
             case Success(value) => value.toInt
             case Failure(_)     => -1
         }
