@@ -112,7 +112,8 @@ The interpolation method used is Inverse Distance Weighting (IDW) where the dist
 distance of the grid.
 The reader supports the following options:
 
-    * :code:`extensions` (default "*") - raster file extensions, optionally separated by ";", e.g. "grib;grb" (StringType)
+    * :code:`extensions` (default "*") - raster file extensions, optionally separated by ";" (StringType),
+      e.g. "grib;grb" or "*" or ".tif" or  "tif" (what the file ends with will be tested), case insensitive
     * :code:`'vsizip` (default false) - if the rasters are zipped files, set this to true (BooleanType)
     * :code:`resolution` (default 0) - resolution of the output grid (IntegerType)
     * :code:`combiner` (default "mean") - combiner operation to use when converting raster to grid (StringType), options:
@@ -123,8 +124,6 @@ The reader supports the following options:
       starting number of partitions, will grow (x10 up to 10K) for retile and/or tessellate (IntegerType)
     * :code:`retile` (default true) - recommended to re-tile to smaller tiles (BooleanType)
     * :code:`tileSize` (default 256) - size of the re-tiled tiles, tiles are always squares of tileSize x tileSize (IntegerType)
-    * :code:`readSubdatasets` (default false) - if the raster has subdatasets set this to true (BooleanType)
-    * :code:`subdatasetNumber` (default "0") - if the raster has subdatasets, select a specific subdataset by index (IntegerType)
     * :code:`subdatasetName` (default "")- if the raster has subdatasets, select a specific subdataset by name (StringType)
 
 .. function:: format("raster_to_grid")

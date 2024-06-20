@@ -3,7 +3,6 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterBandGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
-import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
@@ -82,7 +81,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
         )
         val bandIndex = inputBand.asInstanceOf[Int]
 
-        val band = tile.getRaster.getBand(bandIndex)
+        val band = tile.raster.getBand(bandIndex)
         var result = bandTransform(tile, band)
         val resultType = {
             if (returnsRaster) getRasterType(dataType)

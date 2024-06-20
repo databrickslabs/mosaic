@@ -42,20 +42,23 @@ object RasterTessellate {
                 val cellID = cell.cellIdAsLong(indexSystem)
                 val isValidCell = indexSystem.isValid(cellID)
                 if (!isValidCell) {
-                    (false, MosaicRasterTile(cell.index, null, tileDataType)) // invalid cellid
+                    (
+                        false,
+                        MosaicRasterTile(cell.index, MosaicRasterGDAL.empty, tileDataType)
+                    ) // invalid cellid
                 } else {
                     val cellRaster = tmpRaster.getRasterForCell(cellID, indexSystem, geometryAPI)
                     if (!cellRaster.isEmpty) {
                         // copy to checkpoint dir (destroy cellRaster)
                         val checkpointPath = cellRaster.writeToCheckpointDir(doDestroy = true)
-                        val newParentPath = cellRaster.createInfo("path")
+                        val newParentPath = cellRaster.getPath
                         (
                             true, // valid result
                             MosaicRasterTile(
                                 cell.index,
                                 MosaicRasterGDAL(
                                     null,
-                                    cellRaster.createInfo + ("path" -> checkpointPath, "parentPath" -> newParentPath),
+                                    cellRaster.getCreateInfo + ("path" -> checkpointPath, "parentPath" -> newParentPath),
                                     -1),
                                 tileDataType
                             )
@@ -70,7 +73,7 @@ object RasterTessellate {
             })
 
         val (result, invalid) = chips.partition(_._1) // true goes to result
-        invalid.flatMap(t => Option(t._2.getRaster)).foreach(_.destroy()) // destroy invalids
+        invalid.flatMap(t => Option(t._2.raster)).foreach(_.destroy()) // destroy invalids
 
         raster.destroy()
         tmpRaster.destroy()

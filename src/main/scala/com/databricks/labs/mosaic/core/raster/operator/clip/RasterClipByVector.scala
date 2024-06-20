@@ -43,7 +43,7 @@ object RasterClipByVector {
                 geometryAPI: GeometryAPI, cutlineAllTouched: Boolean = true, mosaicConfig: MosaicExpressionConfig = null
             ): MosaicRasterGDAL = {
         val rasterCRS = raster.getSpatialReference
-        val outDriverShortName = raster.getDriversShortName
+        val outDriverShortName = raster.getDriverShortName
         val geomSrcCRS = if (geomCRS == null) rasterCRS else geomCRS
 
         val resultFileName = PathUtils.createTmpFilePath(

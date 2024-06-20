@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.datasource.multiread
 
 import com.databricks.labs.mosaic.MOSAIC_RASTER_READ_STRATEGY
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
@@ -36,10 +35,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         nPartitions = config("nPartitions").toInt
         val resolution = config("resolution").toInt
-        val isRetile = config("retile").toBoolean
 
         //println(
-        //    s"raster_to_grid - nPartitions? $nPartitions | isRetile? $isRetile (tileSize? ${config("tileSize")}) ..."
+        //    s"raster_to_grid - nPartitions? $nPartitions | isRetile? ${config("retile").toBoolean} (tileSize? ${config("tileSize")}) ..."
         //)
 
         // (1) gdal reader load
@@ -128,10 +126,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
     /**
       * Resolve the subdatasets if configured to do so. Resolving subdatasets
-      * requires "readSubdataset" to be set to true in the configuration map. It
-      * also requires "subdatasetNumber" to be set to the desired subdataset
-      * number. If "subdatasetName" is set, it will be used instead of
-      * "subdatasetNumber".
+      * requires "subdatasetName" to be set to the desired subdataset to retrieve.
+      *
       * @param pathsDf
       *   The DataFrame containing the paths.
       * @param config
@@ -141,12 +137,10 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       *   if not configured to resolve subdatasets.
       */
     private def resolveRaster(pathsDf: DataFrame, config: Map[String, String]) = {
-        val readSubdataset = config("readSubdataset").toBoolean
         val subdatasetName = config("subdatasetName")
 
-        if (readSubdataset) {
+        if (subdatasetName.nonEmpty) {
             pathsDf
-                .withColumn("subdatasets", rst_subdatasets(col("tile")))
                 .withColumn("tile", rst_getsubdataset(col("tile"), lit(subdatasetName)))
         } else {
             pathsDf.select(col("tile"))
@@ -222,8 +216,6 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             "nPartitions" -> this.extraOptions.getOrElse("nPartitions", sparkSession.conf.get("spark.sql.shuffle.partitions")),
             "retile" -> this.extraOptions.getOrElse("retile", "true"),
             "tileSize" -> this.extraOptions.getOrElse("tileSize", "256"),
-            "readSubdataset" -> this.extraOptions.getOrElse("readSubdataset", "false"),
-            "subdatasetNumber" -> this.extraOptions.getOrElse("subdatasetNumber", "0"),
             "subdatasetName" -> this.extraOptions.getOrElse("subdatasetName", "")
         )
     }

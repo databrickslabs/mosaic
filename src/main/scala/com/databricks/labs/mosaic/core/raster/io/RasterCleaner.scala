@@ -85,7 +85,7 @@ object RasterCleaner {
             !PathUtils.isFuseLocation(aPath) && !isSameAsRasterParentPath(aPath, raster)
                 && (!isSameAsRasterPath(aPath, raster) || allowThisPathDelete)
         ) {
-            Try(gdal.GetDriverByName(raster.getDriversShortName).Delete(aPath))
+            Try(gdal.GetDriverByName(raster.getDriverShortName).Delete(aPath))
             PathUtils.cleanUpPath(aPath)
         }
     }

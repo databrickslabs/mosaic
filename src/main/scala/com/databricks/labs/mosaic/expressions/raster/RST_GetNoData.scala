@@ -33,7 +33,7 @@ case class RST_GetNoData(
       *   The no data value of the raster.
       */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster
+        val raster = tile.raster
         ArrayData.toArrayData(raster.getBands.map(_.noDataValue))
     }
 

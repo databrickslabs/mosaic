@@ -47,7 +47,7 @@ case class RST_NDVI(
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
         val redInd = arg1.asInstanceOf[Int]
         val nirInd = arg2.asInstanceOf[Int]
-        tile.copy(raster = NDVI.compute(tile.getRaster, redInd, nirInd))
+        tile.copy(raster = NDVI.compute(tile.raster, redInd, nirInd))
     }
 
 }

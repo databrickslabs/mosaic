@@ -53,7 +53,7 @@ object GDALCalc {
                              |${commandRes._3}
                              |""".stripMargin
         )
-        val result = calcResult.copy(createInfo = createInfo)
+        val result = calcResult.copy(createInfoInit = createInfo)
         //result.reHydrate() // flush cache not needed here
         result
     }

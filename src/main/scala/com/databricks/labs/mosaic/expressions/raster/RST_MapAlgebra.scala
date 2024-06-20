@@ -45,10 +45,10 @@ case class RST_MapAlgebra(
       */
     override def rasterTransform(tiles: Seq[MosaicRasterTile], arg1: Any): Any = {
         val jsonSpec = arg1.asInstanceOf[UTF8String].toString
-        val extension = GDAL.getExtension(tiles.head.getDriver)
+        val extension = GDAL.getExtension(tiles.head.raster.getDriverShortName)
         val resultPath = PathUtils.createTmpFilePath(extension)
         val command = parseSpec(jsonSpec, resultPath, tiles)
-        val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
+        val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
         val result = GDALCalc.executeCalc(command, resultPath)
         val resultType = getRasterType(dataType)
         MosaicRasterTile(index, result, resultType)
@@ -67,10 +67,10 @@ case class RST_MapAlgebra(
             .map(raster => (raster, (json \ raster).toOption))
             .filter(_._2.isDefined)
             .map(raster => (raster._1, raster._2.get.extract[Int]))
-            .map { case (raster, index) => (raster, tiles(index).getRaster.getPath) }
+            .map { case (raster, index) => (raster, tiles(index).raster.getPath) }
 
         val paramRasters = (if (namedRasters.isEmpty) {
-                                tiles.zipWithIndex.map { case (tile, index) => (s"${('A' + index).toChar}", tile.getRaster.getPath) }
+                                tiles.zipWithIndex.map { case (tile, index) => (s"${('A' + index).toChar}", tile.raster.getPath) }
                             } else {
                                 namedRasters
                             })

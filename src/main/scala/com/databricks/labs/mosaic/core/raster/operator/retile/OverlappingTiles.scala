@@ -37,7 +37,7 @@ object OverlappingTiles {
         tileHeight: Int,
         overlapPercentage: Int
     ): immutable.Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster
+        val raster = tile.raster
         val (xSize, ySize) = raster.getDimensions
 
         val overlapWidth = Math.ceil(tileWidth * overlapPercentage / 100.0).toInt
@@ -50,7 +50,7 @@ object OverlappingTiles {
                 val width = Math.min(tileWidth, xSize - i)
                 val height = Math.min(tileHeight, ySize - j)
 
-                val fileExtension = GDAL.getExtension(tile.getDriver)
+                val fileExtension = GDAL.getExtension(raster.getDriverShortName)
                 val rasterPath = PathUtils.createTmpFilePath(fileExtension)
                 val outOptions = raster.getWriteOptions
 
@@ -64,8 +64,15 @@ object OverlappingTiles {
                 if (!result.isEmpty) {
                     // copy to checkpoint dir
                     val checkpointPath = result.writeToCheckpointDir(doDestroy = true)
-                    val newParentPath = result.createInfo("path")
-                    (true, MosaicRasterGDAL(null, result.createInfo + ("path" -> checkpointPath, "parentPath" -> newParentPath), -1))
+                    val newParentPath = result.getPath
+                    (
+                        true,
+                        MosaicRasterGDAL(
+                            null,
+                            result.getCreateInfo + ("path" -> checkpointPath, "parentPath" -> newParentPath),
+                            -1
+                        )
+                    )
                 } else {
                     result.destroy() // destroy inline for performance
                     (false, result) // empty result

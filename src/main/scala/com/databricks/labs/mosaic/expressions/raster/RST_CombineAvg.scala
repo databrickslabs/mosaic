@@ -31,11 +31,11 @@ case class RST_CombineAvg(
 
     /** Combines the rasters using average of pixels. */
     override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
-        val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
+        val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
         val resultType = getRasterType(dataType)
         MosaicRasterTile(
             index,
-            CombineAVG.compute(tiles.map(_.getRaster)),
+            CombineAVG.compute(tiles.map(_.raster)),
             resultType
         )
     }

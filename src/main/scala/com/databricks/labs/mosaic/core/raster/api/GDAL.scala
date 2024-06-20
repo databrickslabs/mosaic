@@ -212,7 +212,7 @@ object GDAL {
                                      overrideDir: Option[String] = None
                                  ): UTF8String = {
         val uuid = UUID.randomUUID().toString
-        val ext = GDAL.getExtension(raster.getDriversShortName)
+        val ext = GDAL.getExtension(raster.getDriverShortName)
         val writePath = overrideDir match {
             case Some(d) => s"$d/$uuid.$ext"
             case _ => s"${getCheckpointDir}/$uuid.$ext"

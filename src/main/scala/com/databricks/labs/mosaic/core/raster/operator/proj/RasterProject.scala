@@ -25,16 +25,16 @@ object RasterProject {
       *   A projected raster.
       */
     def project(raster: MosaicRasterGDAL, destCRS: SpatialReference): MosaicRasterGDAL = {
-        val outShortName = raster.getDriversShortName
+        val outShortName = raster.getDriverShortName
 
-        val resultFileName = PathUtils.createTmpFilePath(GDAL.getExtension(outShortName))
+        val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(outShortName))
 
         // Note that Null is the right value here
         val authName = destCRS.GetAuthorityName(null)
         val authCode = destCRS.GetAuthorityCode(null)
         
         val result = GDALWarp.executeWarp(
-          resultFileName,
+          tmpPath,
           Seq(raster),
           command = s"gdalwarp -t_srs $authName:$authCode"
         )

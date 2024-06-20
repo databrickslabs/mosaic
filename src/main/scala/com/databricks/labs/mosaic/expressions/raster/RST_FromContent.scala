@@ -68,14 +68,14 @@ case class RST_FromContent(
         val resultType = getRasterType(
             RasterTileType(expressionConfig.getCellIdType, BinaryType, expressionConfig.isRasterUseCheckpoint))
 
-        val driver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
-        val ext = GDAL.getExtension(driver)
+        val driverShortName = driverExpr.eval(input).asInstanceOf[UTF8String].toString
+        val ext = GDAL.getExtension(driverShortName)
         var rasterArr = contentExpr.eval(input).asInstanceOf[Array[Byte]]
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
 
         if (targetSize <= 0 || rasterArr.length <= targetSize) {
             // - no split required
-            val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver)
+            val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driverShortName)
 
             var raster = MosaicRasterGDAL.readRaster(rasterArr, createInfo)
             var result = MosaicRasterTile(null, raster, resultType).formatCellId(indexSystem)
@@ -98,8 +98,9 @@ case class RST_FromContent(
             Files.write(Paths.get(tmpPath), rasterArr)
 
             // split to tiles up to specified threshold
-            var results = ReTileOnRead.localSubdivide(
-                tmpPath, PathUtils.NO_PATH_STRING, targetSize).map(_.formatCellId(indexSystem))
+            var results = ReTileOnRead
+                .localSubdivide(tmpPath, PathUtils.NO_PATH_STRING, targetSize)
+                .map(_.formatCellId(indexSystem))
             val rows = results.map(_.serialize(resultType, doDestroy = true))
 
             results.foreach(destroy)

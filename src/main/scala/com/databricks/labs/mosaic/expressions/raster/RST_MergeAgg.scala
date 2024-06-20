@@ -84,11 +84,11 @@ case class RST_MergeAgg(
                       expressionConfig.getCellIdType  //, rasterType // <- 0.4.3 infer type
                     )
                 )
-                .sortBy(_.getParentPath)
+                .sortBy(_.raster.getParentPath)
 
             // If merging multiple index rasters, the index value is dropped
-            val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-            var merged = MergeRasters.merge(tiles.map(_.getRaster))
+            val idx = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
+            var merged = MergeRasters.merge(tiles.map(_.raster))
             merged.reHydrate() // flushCache
 
             val resultType = getRasterType(dataType)

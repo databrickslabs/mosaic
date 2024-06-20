@@ -39,8 +39,8 @@ case class RST_Merge(
       *   The merged raster.
       */
     override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
-        val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-        val mergeRaster = MergeRasters.merge(tiles.map(_.getRaster))
+        val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
+        val mergeRaster = MergeRasters.merge(tiles.map(_.raster))
         mergeRaster.reHydrate() // flush cache
         tiles.head.copy(
           raster = mergeRaster,

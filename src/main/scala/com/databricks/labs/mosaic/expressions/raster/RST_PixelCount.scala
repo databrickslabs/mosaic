@@ -30,7 +30,7 @@ case class RST_PixelCount(
       *   countNodData
       */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
-        val raster = tile.getRaster
+        val raster = tile.raster
         val bandCount = raster.getDatasetHydrated.GetRasterCount()
         val countNoData = arg1.asInstanceOf[Boolean]
         val countAll = arg2.asInstanceOf[Boolean]

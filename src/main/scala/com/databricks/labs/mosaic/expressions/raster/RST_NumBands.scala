@@ -18,7 +18,7 @@ case class RST_NumBands(raster: Expression, expressionConfig: MosaicExpressionCo
     override def dataType: DataType = IntegerType
 
     /** Returns the number of bands in the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.numBands
+    override def rasterTransform(tile: MosaicRasterTile): Any = tile.raster.numBands
 
 }
 

@@ -26,11 +26,11 @@ object SeparateBands {
     def separate(
         tile: => MosaicRasterTile
     ): Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster
+        val raster = tile.raster
         val tiles = for (i <- 0 until raster.numBands) yield {
             val fileExtension = raster.getRasterFileExtension
             val rasterPath = PathUtils.createTmpFilePath(fileExtension)
-            val shortDriver = raster.getDriversShortName
+            val shortDriver = raster.getDriverShortName
             val outOptions = raster.getWriteOptions
 
             val result = GDALTranslate.executeTranslate(
@@ -43,7 +43,7 @@ object SeparateBands {
             if (!result.isEmpty) {
                 // copy to checkpoint dir
                 val checkpointPath = result.writeToCheckpointDir(doDestroy = true)
-                val newParentPath = result.createInfo("path")
+                val newParentPath = result.getPath
                 val bandVal = (i + 1).toString
 
                 result.destroy()
@@ -52,8 +52,11 @@ object SeparateBands {
                     true,
                     MosaicRasterGDAL(
                         null,
-                        result.createInfo + (
-                            "path" -> checkpointPath, "parentPath" -> newParentPath, "bandIndex" -> bandVal),
+                        result.getCreateInfo + (
+                            "path" -> checkpointPath,
+                            "parentPath" -> newParentPath,
+                            "bandIndex" -> bandVal
+                        ),
                         -1
                     )
                 )

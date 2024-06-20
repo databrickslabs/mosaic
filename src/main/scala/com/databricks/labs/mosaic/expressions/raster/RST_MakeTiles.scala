@@ -128,14 +128,14 @@ case class RST_MakeTiles(
 
         val rawDriver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val rawInput = inputExpr.eval(input)
-        val driver = getDriver(rawInput, rawDriver)
+        val driverShortName = getDriver(rawInput, rawDriver)
         val targetSize = sizeInMBExpr.eval(input).asInstanceOf[Int]
         val inputSize = getInputSize(rawInput)
         val path = if (inputExpr.dataType == StringType) rawInput.asInstanceOf[UTF8String].toString else PathUtils.NO_PATH_STRING
 
         if (targetSize <= 0 && inputSize <= Integer.MAX_VALUE) {
             // - no split required
-            val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver, "path" -> path)
+            val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driverShortName, "path" -> path)
             var raster = GDAL.readRaster(rawInput, createInfo, inputExpr.dataType)
             var result = MosaicRasterTile(null, raster, inputExpr.dataType).formatCellId(indexSystem)
             val row = result.serialize(resultType, doDestroy = true)
@@ -155,13 +155,15 @@ case class RST_MakeTiles(
                 if (inputExpr.dataType == StringType) {
                     PathUtils.copyToTmpWithRetry(path, 5)
                 } else {
-                    val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
+                    val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driverShortName))
                     Files.createDirectories(Paths.get(tmpPath).getParent)
                     Files.write(Paths.get(tmpPath), rawInput.asInstanceOf[Array[Byte]])
                     tmpPath
                 }
             val size = if (targetSize <= 0) 64 else targetSize
-            var results = ReTileOnRead.localSubdivide(readPath, PathUtils.NO_PATH_STRING, size).map(_.formatCellId(indexSystem))
+            var results = ReTileOnRead
+                .localSubdivide(readPath, PathUtils.NO_PATH_STRING, size)
+                .map(_.formatCellId(indexSystem))
             val rows = results.map(_.serialize(resultType, doDestroy = true))
 
             results.foreach(destroy)

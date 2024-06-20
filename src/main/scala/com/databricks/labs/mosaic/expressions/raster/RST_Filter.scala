@@ -49,7 +49,7 @@ case class RST_Filter(
         val n = arg1.asInstanceOf[Int]
         val operation = arg2.asInstanceOf[UTF8String].toString
         tile.copy(
-          raster = tile.getRaster.filter(n, operation)
+          raster = tile.raster.filter(n, operation)
         )
     }
 

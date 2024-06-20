@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
@@ -30,7 +29,7 @@ object ReTile {
         tileWidth: Int,
         tileHeight: Int
     ): Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster
+        val raster = tile.raster
         val (xR, yR) = raster.getDimensions
         val xTiles = Math.ceil(xR / tileWidth).toInt
         val yTiles = Math.ceil(yR / tileHeight).toInt
@@ -55,8 +54,15 @@ object ReTile {
             if (!result.isEmpty) {
                 // copy to checkpoint dir
                 val checkpointPath = result.writeToCheckpointDir(doDestroy = true)
-                val newParentPath = result.createInfo("path")
-                (true, MosaicRasterGDAL(null, result.createInfo + ("path" -> checkpointPath, "parentPath" -> newParentPath), -1))
+                val newParentPath = result.getPath
+                (
+                    true,
+                    MosaicRasterGDAL(
+                        null,
+                        result.getCreateInfo + ("path" -> checkpointPath, "parentPath" -> newParentPath),
+                        -1
+                    )
+                )
             } else {
                 result.destroy() // destroy inline for performance
                 (false, result) // empty result

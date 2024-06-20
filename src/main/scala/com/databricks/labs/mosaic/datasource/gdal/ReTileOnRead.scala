@@ -94,7 +94,7 @@ object ReTileOnRead extends ReadStrategy {
         val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
 
         val rows = tiles.map(tile => {
-            val raster = tile.getRaster
+            val raster = tile.raster
             val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
             val fields = trimmedSchema.fieldNames.map {
 
@@ -133,7 +133,15 @@ object ReTileOnRead extends ReadStrategy {
       */
     def localSubdivide(inPath: String, parentPath: String, sizeInMB: Int): Seq[MosaicRasterTile] = {
         val cleanPath = PathUtils.getCleanPath(inPath)
-        val createInfo = Map("path" -> cleanPath, "parentPath" -> parentPath)
+        val driverShortName = Option(parentPath) match {
+            case Some(p) if p != PathUtils.NO_PATH_STRING => MosaicRasterGDAL.identifyDriver(parentPath)
+            case _                                        => MosaicRasterGDAL.identifyDriver(inPath)
+        }
+        val createInfo = Map(
+            "path" -> cleanPath,
+            "parentPath" -> parentPath,
+            "driver" -> driverShortName
+        )
         val raster = MosaicRasterGDAL.readRaster(createInfo)
         val inTile = new MosaicRasterTile(null, raster, tileDataType)
         val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)

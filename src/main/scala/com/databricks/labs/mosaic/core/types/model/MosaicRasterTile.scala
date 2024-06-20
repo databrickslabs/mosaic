@@ -27,19 +27,6 @@ case class MosaicRasterTile(
     raster: MosaicRasterGDAL,
     rasterType: DataType
 ) {
-    def getRasterType: DataType = rasterType
-
-    def getIndex: Either[Long, String] = index
-
-    def getParentPath: String = parentPath
-
-    def parentPath: String = raster.createInfo("parentPath")
-
-    def getDriver: String = driver
-
-    def driver: String = raster.createInfo("driver")
-
-    def getRaster: MosaicRasterGDAL = raster
 
     /**
       * Indicates whether the raster is present.
@@ -99,7 +86,7 @@ case class MosaicRasterTile(
     /**
       * Serialize to spark internal representation.
       *
-      * @param rasterDataType
+      * @param rasterDT
       *    How to encode the raster.
       *    - Options are [[StringType]] or [[BinaryType]]
       *    - If checkpointing is used, [[StringType]] will be forced
@@ -108,17 +95,17 @@ case class MosaicRasterTile(
       * @return
       *   An instance of [[InternalRow]].
       */
-    def serialize(rasterDataType: DataType, doDestroy: Boolean): InternalRow = {
-        val encodedRaster = encodeRaster(rasterDataType, doDestroy)
+    def serialize(rasterDT: DataType, doDestroy: Boolean): InternalRow = {
+        val encodedRaster = encodeRaster(rasterDT, doDestroy)
         val path = encodedRaster match {
                 case uStr: UTF8String => uStr.toString
-                case _ => raster.createInfo("path")
+                case _ => this.raster.getPath
         }
         val parentPath = {
-            if (raster.createInfo("parentPath").isEmpty) raster.createInfo("path")
-            else raster.createInfo("parentPath")
+            if (this.raster.getParentPath.isEmpty) this.raster.getPath
+            else this.raster.getParentPath
         }
-        val newCreateInfo = raster.createInfo + ("path" -> path, "parentPath" -> parentPath)
+        val newCreateInfo = raster.getCreateInfo + ("path" -> path, "parentPath" -> parentPath)
         val mapData = buildMapString(newCreateInfo)
         if (Option(index).isDefined) {
             if (index.isLeft) InternalRow.fromSeq(
@@ -144,10 +131,10 @@ case class MosaicRasterTile(
       *   According to the [[DataType]].
       */
     private def encodeRaster(
-        rasterDataType: DataType,
+        rasterDT: DataType,
         doDestroy: Boolean
     ): Any = {
-        GDAL.writeRasters(Seq(raster), rasterDataType, doDestroy).head
+        GDAL.writeRasters(Seq(raster), rasterDT, doDestroy).head
     }
 
     def getSequenceNumber: Int =
@@ -183,10 +170,6 @@ object MosaicRasterTile {
             case _ => BinaryType
         }
 
-/*        //scalastyle:off println
-        println(s"...rawRasterDataType -> $rawRasterDataType")
-        //scalastyle:on println*/
-
         val createInfo = extractMap(row.getMap(2))
         val raster = GDAL.readRaster(rawRaster, createInfo, rawRasterDataType)
 
@@ -202,8 +185,6 @@ object MosaicRasterTile {
         }
     }
 
-
-
     /** returns rasterType from a passed DataType, handling RasterTileType as well as string + binary. */
     def getRasterType(dataType: DataType): DataType = {
         dataType match {
@@ -211,30 +192,5 @@ object MosaicRasterTile {
             case _ => dataType
         }
     }
-
-    //    /** test if we have a path type [[StringType]] */
-    //    def isPathType(dataType: DataType): Boolean = {
-    //        getRasterType(dataType).isInstanceOf[StringType]
-    //    }
-    //
-    //    /** `isTypeDeleteSafe` tested for deleting files (wrapped in Try). */
-    //    def pathSafeDispose(tile: MosaicRasterTile, manualMode: Boolean): Unit = {
-    //        Try(pathSafeDispose(tile.getRaster, manualMode))
-    //    }
-    //
-    //    /** `isTypeDeleteSafe` tested for deleting files (wrapped in Try). */
-    //    def pathSafeDispose(raster: MosaicRasterGDAL, manualMode: Boolean): Unit = {
-    //        Try (RasterCleaner.destroy(raster))
-    //        doManagedCleanUp(manualMode)
-    //    }
-    //
-    //    /////////////////////////////////////////////////////////
-    //    // deserialize helpers
-    //    /////////////////////////////////////////////////////////
-    //
-    //    /** avoid checkpoint settings when deserializing, just want the actual type */
-    //    def getDeserializeRasterType(idType: DataType, rasterExpr: Expression): DataType = {
-    //        getRasterType(RasterTileType(idType, rasterExpr, useCheckpoint = false))
-    //    }
 
 }

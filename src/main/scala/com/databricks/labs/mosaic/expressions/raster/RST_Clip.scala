@@ -56,7 +56,7 @@ case class RST_Clip(
         val cutline = arg2.asInstanceOf[Boolean]
         tile.copy(
           raster = RasterClipByVector.clip(
-              tile.getRaster, geometry, geomCRS, geometryAPI,
+              tile.raster, geometry, geomCRS, geometryAPI,
               cutlineAllTouched = cutline, mosaicConfig = expressionConfig
           )
         )

@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster
 
-import com.databricks.labs.mosaic.{MOSAIC_NO_DRIVER, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
@@ -17,6 +17,8 @@ import scala.util.Try
 class TestRasterGDAL extends SharedSparkSessionGDAL {
 
     test("Verify that GDAL is enabled.") {
+        val sc = this.spark
+
         assume(System.getProperty("os.name") == "Linux")
 
         val checkCmd = "gdalinfo --version"
@@ -24,10 +26,9 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         resultDriver should not be ""
         resultDriver should include("GDAL")
 
-        val _sc = spark.sparkContext
-        val numExecutors = _sc.getExecutorMemoryStatus.size - 1
+        val numExecutors = sc.sparkContext.getExecutorMemoryStatus.size - 1
         val resultExecutors = Try(
-          _sc.parallelize(1 to numExecutors)
+          sc.sparkContext.parallelize(1 to numExecutors)
               .pipe(checkCmd)
               .collect
         ).getOrElse(Array[String]())
@@ -37,8 +38,11 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
     test("Verify memsize handling") {
         val createInfo = Map(
-            "path" -> MOSAIC_NO_DRIVER, "parentPath" -> MOSAIC_NO_DRIVER, "driver" -> "GTiff")
-        val null_raster = MosaicRasterGDAL(null, createInfo, memSize = -1)
+            "path" -> PathUtils.NO_PATH_STRING,
+            "parentPath" -> PathUtils.NO_PATH_STRING,
+            "driver" -> "GTiff"
+        )
+        val null_raster = MosaicRasterGDAL(null, createInfo, -1)
         null_raster.getMemSize should be(-1)
 
         val np_content = spark.read.format("binaryFile")

@@ -3,8 +3,6 @@ package com.databricks.labs.mosaic.core.raster.operator.retile
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 
-import scala.util.Try
-
 /* ReTile is a helper object for retiling rasters. */
 object BalancedSubdivision {
 
@@ -95,7 +93,7 @@ object BalancedSubdivision {
         tile: MosaicRasterTile,
         sizeInMb: Int
     ): Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster
+        val raster = tile.raster
         val numSplits = getNumSplits(raster, sizeInMb)
         val (x, y) = raster.getDimensions
         val (tileX, tileY) = getTileSize(x, y, numSplits)

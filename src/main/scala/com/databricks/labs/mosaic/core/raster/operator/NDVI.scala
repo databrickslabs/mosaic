@@ -21,7 +21,7 @@ object NDVI {
       *   MosaicRasterGDAL with NDVI computed.
       */
     def compute(raster: MosaicRasterGDAL, redIndex: Int, nirIndex: Int): MosaicRasterGDAL = {
-        val ndviPath = PathUtils.createTmpFilePath(GDAL.getExtension(raster.getDriversShortName))
+        val ndviPath = PathUtils.createTmpFilePath(GDAL.getExtension(raster.getDriverShortName))
         // noinspection ScalaStyle
         val gdalCalcCommand =
             s"""gdal_calc -A ${raster.getPath} --A_band=$redIndex -B ${raster.getPath} --B_band=$nirIndex --outfile=$ndviPath --calc="(B-A)/(B+A)""""

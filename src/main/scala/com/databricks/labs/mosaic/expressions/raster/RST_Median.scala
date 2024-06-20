@@ -23,10 +23,10 @@ case class RST_Median(rasterExpr: Expression, expressionConfig: MosaicExpression
 
     /** Returns the median value per band of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val raster = tile.getRaster
+        val raster = tile.raster
         val width = raster.xSize * raster.pixelXSize
         val height = raster.ySize * raster.pixelYSize
-        val outShortName = raster.getDriversShortName
+        val outShortName = raster.getDriverShortName
         val resultFileName = PathUtils.createTmpFilePath(GDAL.getExtension(outShortName))
         val medRaster = GDALWarp.executeWarp(
           resultFileName,

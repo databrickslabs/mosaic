@@ -48,7 +48,7 @@ case class RST_SetSRID(
 
         // set srid on the raster
         // - this is an in-place operation as of 0.4.3+
-        val raster = tile.getRaster
+        val raster = tile.raster
         raster.setSRID(arg1.asInstanceOf[Int])
         // create a new object for the return
         tile.copy(raster = MosaicRasterGDAL(null, raster.getCreateInfo, raster.getMemSize))

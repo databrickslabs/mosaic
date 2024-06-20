@@ -39,11 +39,11 @@ case class RST_DerivedBand(
     override def rasterTransform(tiles: Seq[MosaicRasterTile], arg1: Any, arg2: Any): Any = {
         val pythonFunc = arg1.asInstanceOf[UTF8String].toString
         val funcName = arg2.asInstanceOf[UTF8String].toString
-        val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
+        val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
         val resultType = getRasterType(dataType)
         MosaicRasterTile(
             index,
-            PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName),
+            PixelCombineRasters.combine(tiles.map(_.raster), pythonFunc, funcName),
             resultType
         )
     }

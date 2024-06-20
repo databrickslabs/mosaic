@@ -55,7 +55,7 @@ case class RST_Convolve(
         ))
 
         tile.copy(
-          raster = tile.getRaster.convolve(kernel)
+          raster = tile.raster.convolve(kernel)
         )
     }
 

@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.datasource.Utils
@@ -83,7 +84,8 @@ object ReadInMemory extends ReadStrategy {
         val contentBytes: Array[Byte] = readContent(fs, status)
         val createInfo = Map(
             "path" -> readPath,
-            "parentPath" -> inPath
+            "parentPath" -> inPath,
+            "driver" -> MosaicRasterGDAL.identifyDriver(inPath)
         )
         val raster = MosaicRasterGDAL.readRaster(createInfo)
         val uuid = getUUID(status)
@@ -101,7 +103,7 @@ object ReadInMemory extends ReadStrategy {
             case SRID              => raster.SRID
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
-        val mapData = buildMapString(raster.createInfo)
+        val mapData = buildMapString(raster.getCreateInfo)
         val rasterTileSer = InternalRow.fromSeq(Seq(null, contentBytes, mapData))
         val row = Utils.createRow(fields ++ Seq(rasterTileSer))
         val rows = Seq(row)

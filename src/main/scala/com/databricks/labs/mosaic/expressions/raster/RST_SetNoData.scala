@@ -43,7 +43,7 @@ case class RST_SetNoData(
       *   The raster with the specified no data values.
       */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-        val raster = tile.getRaster
+        val raster = tile.raster
         val noDataValues = raster.getBands.map(_.noDataValue).mkString(" ")
         val dstNoDataValues = (arg1 match {
             case d: Double            => Array.fill[Double](raster.numBands)(d)
@@ -52,8 +52,8 @@ case class RST_SetNoData(
             case arrayData: ArrayData => arrayData.array.map(_.toString.toDouble) // Trick to convert SQL decimal to double
             case _ => throw new IllegalArgumentException("No data values must be an array of numerical or a numerical value.")
         }).mkString(" ")
-        val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(raster.getDriversShortName))
-        val cmd = s"""gdalwarp -of ${raster.getDriversShortName} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
+        val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(raster.getDriverShortName))
+        val cmd = s"""gdalwarp -of ${raster.getDriverShortName} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
         tile.copy(
           raster = GDALWarp.executeWarp(
             resultPath,

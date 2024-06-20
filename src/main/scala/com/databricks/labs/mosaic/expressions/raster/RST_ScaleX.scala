@@ -18,7 +18,7 @@ case class RST_ScaleX(raster: Expression, expressionConfig: MosaicExpressionConf
     override def dataType: DataType = DoubleType
 
     /** Returns the scale x of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.getGeoTransform(1)
+    override def rasterTransform(tile: MosaicRasterTile): Any = tile.raster.getGeoTransform(1)
 
 }
 

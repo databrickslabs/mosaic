@@ -65,9 +65,9 @@ case class RST_Write(
     private def copyToArg1Dir(inTile: MosaicRasterTile, arg1: Any): MosaicRasterGDAL = {
         require(dirExpr.isInstanceOf[Literal])
 
-        val inRaster = inTile.getRaster
+        val inRaster = inTile.raster
         val inPath = inRaster.getPath
-        val inDriver = inRaster.getDriversShortName
+        val inDriver = inRaster.getDriverShortName
         val outPath = GDAL.writeRasters(
                 Seq(inRaster),
                 StringType,

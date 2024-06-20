@@ -18,7 +18,7 @@ case class RST_SkewY(raster: Expression, expressionConfig: MosaicExpressionConfi
     override def dataType: DataType = DoubleType
 
     /** Returns the skew y of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = tile.getRaster.getGeoTransform(4)
+    override def rasterTransform(tile: MosaicRasterTile): Any = tile.raster.getGeoTransform(4)
 
 }
 
