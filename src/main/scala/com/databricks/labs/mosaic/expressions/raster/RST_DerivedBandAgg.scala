@@ -95,7 +95,7 @@ case class RST_DerivedBandAgg(
 
             val result = MosaicRasterTile(idx, combined)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(BinaryType)
+                .serialize(rasterType)
 
             tiles.foreach(RasterCleaner.dispose(_))
             RasterCleaner.dispose(result)

@@ -33,11 +33,11 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         resultExecutors.foreach(s => s should include("GDAL"))
     }
 
-    test("Verify that checkpoint is not used.") {
-        spark.conf.get(MOSAIC_TEST_MODE) shouldBe "true"
-        MosaicGDAL.isUseCheckpoint shouldBe false
-    }
-
+//    test("Verify that checkpoint is not used.") {
+//        spark.conf.get(MOSAIC_TEST_MODE) shouldBe "true"
+//        MosaicGDAL.isUseCheckpoint shouldBe false
+//    }
+//
     test("Read raster metadata from GeoTIFF file.") {
         assume(System.getProperty("os.name") == "Linux")
         

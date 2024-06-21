@@ -210,6 +210,18 @@ object PathUtils {
     }
 
     /**
+      * Test for whether path is in the temp location.
+      * @param path
+      *   Provided path.
+      * @return
+      *   True if path is in a temp location.
+      */
+    def isTmpLocation(path: String, tmpDir: String): Boolean = {
+        val p = getCleanPath(path)
+        p.startsWith(tmpDir)
+    }
+
+    /**
       * Is the path a subdataset?
       * - Known by ":" after the filename.
       * @param path
