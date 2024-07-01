@@ -38,7 +38,7 @@ A base Spark SQL data source for reading GDAL raster data sources.
 It reads metadata of the raster and exposes the direct paths for the raster files.
 The output of the reader is a DataFrame with the following columns (provided in order):
 
-    * :code:`path` - path read (StringType)
+    * :code:`rawPath` - rawPath read (StringType)
     * :code:`modificationTime` - last modification of the raster (TimestampType)
     * :code:`length` -  size of the raster, e.g. memory size (LongType)
     * :code:`uuid` -  unique identifier for the raster (LongType)
@@ -58,8 +58,8 @@ The output of the reader is a DataFrame with the following columns (provided in 
     Loads a GDAL raster file and returns the result as a DataFrame.
     It uses the standard spark reader patthern of :code:`spark.read.format(*).option(*).load(*)`.
 
-    :param path: path to the raster file on dbfs
-    :type path: Column(StringType)
+    :param rawPath: rawPath to the raster file on dbfs
+    :type rawPath: Column(StringType)
     :rtype: DataFrame
 
     :example:
@@ -69,7 +69,7 @@ The output of the reader is a DataFrame with the following columns (provided in 
 
         df = spark.read.format("gdal")\
             .option("driverName", "GTiff")\
-            .load("dbfs:/path/to/raster.tif")
+            .load("dbfs:/rawPath/to/raster.tif")
         df.show()
         +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
         |                                                                                                           tile| ySize| xSize| bandCount|             metadata|         subdatasets| srid|              proj4Str|
@@ -81,7 +81,7 @@ The output of the reader is a DataFrame with the following columns (provided in 
 
         val df = spark.read.format("gdal")
             .option("driverName", "GTiff")
-            .load("dbfs:/path/to/raster.tif")
+            .load("dbfs:/rawPath/to/raster.tif")
         df.show()
         +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
         |                                                                                                           tile| ySize| xSize| bandCount|             metadata|         subdatasets| srid|              proj4Str|
@@ -131,8 +131,8 @@ The reader supports the following options:
     Loads a GDAL raster file and returns the result as a DataFrame.
     It uses the standard spark reader pattern of :code:`mos.read().format(*).option(*).load(*)`.
 
-    :param path: path to the raster file on dbfs
-    :type path: Column(StringType)
+    :param rawPath: rawPath to the raster file on dbfs
+    :type rawPath: Column(StringType)
     :rtype: DataFrame
 
     :example:
@@ -147,7 +147,7 @@ The reader supports the following options:
             .option("retile", "true")\
             .option("tileSize", "1000")\
             .option("kRingInterpolate", "2")\
-            .load("dbfs:/path/to/raster.tif")
+            .load("dbfs:/rawPath/to/raster.tif")
         df.show()
         +--------+--------+------------------+
         |band_id |cell_id |cell_value        |
@@ -167,7 +167,7 @@ The reader supports the following options:
             .option("retile", "true")
             .option("tileSize", "1000")
             .option("kRingInterpolate", "2")
-            .load("dbfs:/path/to/raster.tif")
+            .load("dbfs:/rawPath/to/raster.tif")
         df.show()
         +--------+--------+------------------+
         |band_id |cell_id |cell_value        |

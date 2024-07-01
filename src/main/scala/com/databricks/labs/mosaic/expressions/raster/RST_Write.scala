@@ -1,12 +1,13 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
 import com.databricks.labs.mosaic.expressions.raster.base.Raster1ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, NullIntolerant}
@@ -23,18 +24,18 @@ import scala.util.Try
   *   The expression for the tile with the raster to write.
   * @param dirExpr
   *   Write to directory.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   */
 case class RST_Write(
-    inputExpr: Expression,
-    dirExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                        inputExpr: Expression,
+                        dirExpr: Expression,
+                        exprConfig: ExprConfig
 ) extends Raster1ArgExpression[RST_Write](
       inputExpr,
       dirExpr,
       returnsRaster = true,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
@@ -43,7 +44,7 @@ case class RST_Write(
     // - don't use checkpoint because we are writing to a different location
     // - type is StringType
     override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, StringType, useCheckpoint = false)
+        RasterTileType(exprConfig.getCellIdType, StringType, useCheckpoint = false)
     }
 
     /**
@@ -56,29 +57,35 @@ case class RST_Write(
       * @return
       *   tile using the new path
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
+    override def rasterTransform(tile: RasterTile, arg1: Any): Any = {
         tile.copy(
           raster = copyToArg1Dir(tile, arg1)
         )
     }
 
-    private def copyToArg1Dir(inTile: MosaicRasterTile, arg1: Any): MosaicRasterGDAL = {
+    private def copyToArg1Dir(inTile: RasterTile, arg1: Any): RasterGDAL = {
         require(dirExpr.isInstanceOf[Literal])
 
         val inRaster = inTile.raster
-        val inPath = inRaster.getPath
-        val inDriver = inRaster.getDriverShortName
+        val inPseudoPath = inRaster.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING)
+        val inDriver = inRaster.getDriverName()
         val outPath = GDAL.writeRasters(
                 Seq(inRaster),
                 StringType,
                 doDestroy = false, // parent class destroys
-                overrideDir = Some(arg1.asInstanceOf[UTF8String].toString)
+                Option(exprConfig),
+                overrideDirOpt = Option(arg1.asInstanceOf[UTF8String].toString)
             )
             .head
             .toString
 
-        MosaicRasterGDAL.readRaster(
-          Map("path" -> outPath, "driver" -> inDriver, "parentPath" -> inPath)
+        RasterGDAL(
+            Map(
+              RASTER_PATH_KEY -> outPath,
+              RASTER_DRIVER_KEY -> inDriver,
+              RASTER_PARENT_PATH_KEY -> inPseudoPath
+            ),
+            Option(exprConfig)
         )
     }
 
@@ -102,14 +109,14 @@ object RST_Write extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = { (children: Seq[Expression]) =>
         {
             def checkDir(dir: Expression) = Try(dir.eval().asInstanceOf[String]).isSuccess
 
             children match {
                 // Note type checking only works for literals
-                case Seq(input, dir) if checkDir(dir) => RST_Write(input, dir, expressionConfig)
-                case _                                => RST_Write(children.head, children(1), expressionConfig)
+                case Seq(input, dir) if checkDir(dir) => RST_Write(input, dir, exprConfig)
+                case _                                => RST_Write(children.head, children(1), exprConfig)
             }
         }
     }

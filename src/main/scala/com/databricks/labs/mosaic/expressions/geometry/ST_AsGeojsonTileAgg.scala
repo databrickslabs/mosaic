@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.expressions.geometry.base.AsTileExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
@@ -16,16 +16,16 @@ import org.gdal.ogr._
 import scala.collection.mutable
 
 case class ST_AsGeojsonTileAgg(
-    geometryExpr: Expression,
-    attributesExpr: Expression,
-    expressionConfig: MosaicExpressionConfig,
-    mutableAggBufferOffset: Int,
-    inputAggBufferOffset: Int
+                                  geometryExpr: Expression,
+                                  attributesExpr: Expression,
+                                  exprConfig: ExprConfig,
+                                  mutableAggBufferOffset: Int,
+                                  inputAggBufferOffset: Int
 ) extends TypedImperativeAggregate[mutable.ArrayBuffer[Any]]
       with BinaryLike[Expression]
       with AsTileExpression {
-    
-    val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
+
+    val geometryAPI: GeometryAPI = GeometryAPI.apply(exprConfig.getGeometryAPI)
     override lazy val deterministic: Boolean = true
     override val left: Expression = geometryExpr
     override val right: Expression = attributesExpr
@@ -59,7 +59,7 @@ case class ST_AsGeojsonTileAgg(
     override def eval(buffer: mutable.ArrayBuffer[Any]): Any = {
         ogr.RegisterAll()
         val driver = ogr.GetDriverByName("GeoJSON")
-        val tmpName = PathUtils.createTmpFilePath("geojson")
+        val tmpName = PathUtils.createTmpFilePath("geojson", Option(exprConfig))
         val ds: DataSource = driver.CreateDataSource(tmpName)
 
         val srs = getSRS(buffer.head, geometryExpr, geometryAPI)

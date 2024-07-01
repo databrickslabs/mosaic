@@ -111,7 +111,7 @@ trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val stSRID = ST_SRID(lit("POINT (1 1)").expr, mc.expressionConfig)
+        val stSRID = ST_SRID(lit("POINT (1 1)").expr, mc.exprConfig)
 
         stSRID.child shouldEqual lit("POINT (1 1)").expr
         stSRID.dataType shouldEqual IntegerType

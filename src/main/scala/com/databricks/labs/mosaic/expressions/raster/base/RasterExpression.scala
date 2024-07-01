@@ -2,12 +2,10 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
-import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.flushAndDestroy
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.types.DataType
@@ -24,21 +22,21 @@ import scala.reflect.ClassTag
   *   the raster are provided.
   * @param returnsRaster
   *   for serialization handling.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
   *   The type of the extending class.
   */
 abstract class RasterExpression[T <: Expression: ClassTag](
-    rasterExpr: Expression,
-    returnsRaster: Boolean,
-    expressionConfig: MosaicExpressionConfig
+                                                              rasterExpr: Expression,
+                                                              returnsRaster: Boolean,
+                                                              exprConfig: ExprConfig
 ) extends UnaryExpression
       with NullIntolerant
       with Serializable
       with RasterExpressionSerialization {
 
-    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
 
     protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
 
@@ -53,7 +51,7 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       * @return
       *   The result of the expression.
       */
-    def rasterTransform(raster: MosaicRasterTile): Any
+    def rasterTransform(raster: RasterTile): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -66,26 +64,27 @@ abstract class RasterExpression[T <: Expression: ClassTag](
       *   The result of the expression.
       */
     override def nullSafeEval(input: Any): Any = {
-        GDAL.enable(expressionConfig)
-        var tile = MosaicRasterTile.deserialize(
+        GDAL.enable(exprConfig)
+        var tile = RasterTile.deserialize(
             input.asInstanceOf[InternalRow],
-            cellIdDataType
+            cellIdDataType,
+            Option(exprConfig)
         )
         var result = rasterTransform(tile)
         val resultType = {
-            if (returnsRaster) getRasterType(dataType)
+            if (returnsRaster) RasterTile.getRasterType(dataType)
             else dataType
         }
-        val serialized = serialize(result, returnsRaster, resultType, doDestroy = true, expressionConfig)
+        val serialized = serialize(result, returnsRaster, resultType, doDestroy = true, exprConfig)
 
-        destroy(tile)
+        tile.flushAndDestroy()
         tile = null
         result = null
 
         serialized
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 1, expressionConfig)
+    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 1, exprConfig)
 
     override def withNewChildInternal(newFirst: Expression): Expression = makeCopy(Array(newFirst))
 

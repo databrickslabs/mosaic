@@ -16,7 +16,7 @@ import scala.util.Try
   * @param configs
   *   The configuration map for the Mosaic Expression.
   */
-case class MosaicExpressionConfig(configs: Map[String, String]) {
+case class ExprConfig(configs: Map[String, String]) {
 
     def updateSparkConf(): Unit = {
         // populate initial set configs
@@ -45,8 +45,8 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
         configs.getOrElse(MOSAIC_TEST_MODE, "false")
     }
 
-    def setTestMode(testMode: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_TEST_MODE -> testMode))
+    def setTestMode(testMode: String): ExprConfig = {
+        ExprConfig(configs + (MOSAIC_TEST_MODE -> testMode))
     }
 
     def isTestMode: Boolean = {
@@ -57,8 +57,8 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
         configs.getOrElse(MOSAIC_MANUAL_CLEANUP_MODE, "false")
     }
 
-    def setManualCleanupMode(mode: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_MANUAL_CLEANUP_MODE -> mode))
+    def setManualCleanupMode(mode: String): ExprConfig = {
+        ExprConfig(configs + (MOSAIC_MANUAL_CLEANUP_MODE -> mode))
     }
 
     def isManualCleanupMode: Boolean = {
@@ -89,45 +89,45 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
 
     def getCleanUpAgeLimitMinutes: Int = configs.getOrElse(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT).toInt
 
-    def setGDALConf(conf: RuntimeConfig): MosaicExpressionConfig = {
+    def setGDALConf(conf: RuntimeConfig): ExprConfig = {
         val toAdd = conf.getAll.filter(_._1.startsWith(MOSAIC_GDAL_PREFIX))
-        MosaicExpressionConfig(configs ++ toAdd)
+        ExprConfig(configs ++ toAdd)
     }
 
-    def setGeometryAPI(api: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_GEOMETRY_API -> api))
+    def setGeometryAPI(api: String): ExprConfig = {
+        ExprConfig(configs + (MOSAIC_GEOMETRY_API -> api))
     }
 
-    def setIndexSystem(system: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_INDEX_SYSTEM -> system))
+    def setIndexSystem(system: String): ExprConfig = {
+        ExprConfig(configs + (MOSAIC_INDEX_SYSTEM -> system))
     }
 
-    def setRasterAPI(api: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_RASTER_API -> api))
+    def setRasterAPI(api: String): ExprConfig = {
+        ExprConfig(configs + (MOSAIC_RASTER_API -> api))
     }
 
-    def setRasterCheckpoint(checkpoint: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_RASTER_CHECKPOINT -> checkpoint))
+    def setRasterCheckpoint(checkpoint: String): ExprConfig = {
+        ExprConfig(configs + (MOSAIC_RASTER_CHECKPOINT -> checkpoint))
     }
 
-    def setRasterUseCheckpoint(checkpoint: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_RASTER_USE_CHECKPOINT -> checkpoint))
+    def setRasterUseCheckpoint(checkpoint: String): ExprConfig = {
+        ExprConfig(configs + (MOSAIC_RASTER_USE_CHECKPOINT -> checkpoint))
     }
     
-    def setTmpPrefix(prefix: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_RASTER_TMP_PREFIX -> prefix))
+    def setTmpPrefix(prefix: String): ExprConfig = {
+        ExprConfig(configs + (MOSAIC_RASTER_TMP_PREFIX -> prefix))
     }
 
-    def setCleanUpAgeLimitMinutes(limit: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_CLEANUP_AGE_LIMIT_MINUTES -> limit))
+    def setCleanUpAgeLimitMinutes(limit: String): ExprConfig = {
+        ExprConfig(configs + (MOSAIC_CLEANUP_AGE_LIMIT_MINUTES -> limit))
     }
 
-    def setCleanUpAgeLimitMinutes(limit: Int): MosaicExpressionConfig = {
+    def setCleanUpAgeLimitMinutes(limit: Int): ExprConfig = {
         setCleanUpAgeLimitMinutes(limit.toString)
     }
 
-    def setConfig(key: String, value: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (key -> value))
+    def setConfig(key: String, value: String): ExprConfig = {
+        ExprConfig(configs + (key -> value))
     }
 
 }
@@ -136,11 +136,11 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
   * Companion object for the Mosaic Expression Config. Provides constructors
   * from spark session configuration.
   */
-object MosaicExpressionConfig {
+object ExprConfig {
 
-    def apply(spark: SparkSession): MosaicExpressionConfig = {
-        val expressionConfig = new MosaicExpressionConfig(Map.empty[String, String])
-        expressionConfig
+    def apply(spark: SparkSession): ExprConfig = {
+        val exprConfig = new ExprConfig(Map.empty[String, String])
+        exprConfig
             .setGeometryAPI(spark.conf.get(MOSAIC_GEOMETRY_API, JTS.name))
             .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))
             .setRasterCheckpoint(spark.conf.get(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT))

@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -12,19 +12,23 @@ import org.apache.spark.sql.types._
 
 
 /** Returns the min value per band of the raster. */
-case class RST_Min(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Min](raster, returnsRaster = false, expressionConfig)
+case class RST_Min(raster: Expression, exprConfig: ExprConfig)
+    extends RasterExpression[RST_Min](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = ArrayType(DoubleType)
 
     /** Returns the min value per band of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
+    override def rasterTransform(tile: RasterTile): Any = {
         val raster = tile.raster
-        val nBands = raster.getDatasetHydrated.GetRasterCount()
-        val minValues = (1 to nBands).map(raster.getBand(_).minPixelValue)
-        ArrayData.toArrayData(minValues.toArray)
+        raster.withDatasetHydratedOpt() match {
+            case Some(dataset) =>
+                val nBands = dataset.GetRasterCount()
+                val minValues = (1 to nBands).map(raster.getBand (_).minPixelValue)
+                ArrayData.toArrayData(minValues.toArray)
+            case _ => ArrayData.toArrayData(Array.empty[Double])
+        }
     }
 
 }
@@ -43,8 +47,8 @@ object RST_Min extends WithExpressionInfo {
           |       [1.123, 2.123, 3.123]
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Min](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Min](1, exprConfig)
     }
 
 }

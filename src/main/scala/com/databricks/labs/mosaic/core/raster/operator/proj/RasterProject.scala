@@ -1,9 +1,8 @@
 package com.databricks.labs.mosaic.core.raster.operator.proj
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALWarp
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.gdal.osr.SpatialReference
 
 /**
@@ -21,22 +20,23 @@ object RasterProject {
       *   The raster to project.
       * @param destCRS
       *   The destination CRS.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   A projected raster.
       */
-    def project(raster: MosaicRasterGDAL, destCRS: SpatialReference): MosaicRasterGDAL = {
-        val outShortName = raster.getDriverShortName
-
-        val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(outShortName))
+    def project(raster: RasterGDAL, destCRS: SpatialReference, exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
+        val tmpPath = raster.createTmpFileFromDriver(exprConfigOpt)
 
         // Note that Null is the right value here
         val authName = destCRS.GetAuthorityName(null)
         val authCode = destCRS.GetAuthorityCode(null)
-        
+
         val result = GDALWarp.executeWarp(
-          tmpPath,
-          Seq(raster),
-          command = s"gdalwarp -t_srs $authName:$authCode"
+            tmpPath,
+            Seq(raster),
+            command = s"gdalwarp -t_srs $authName:$authCode",
+            exprConfigOpt
         )
 
         result

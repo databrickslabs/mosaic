@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
@@ -13,14 +13,14 @@ import org.apache.spark.sql.types._
   * SQL expression that returns the centroid of the input geometry.
   * @param inputGeom
   *   Expression containing the geometry.
-  * @param expressionConfig
+  * @param exprConfig
   *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
   *   arguments for the expression (expressionConfigs).
   */
 case class ST_Centroid(
-    inputGeom: Expression,
-    expressionConfig: MosaicExpressionConfig
-) extends UnaryVectorExpression[ST_Centroid](inputGeom, returnsGeometry = true, expressionConfig) {
+                          inputGeom: Expression,
+                          exprConfig: ExprConfig
+) extends UnaryVectorExpression[ST_Centroid](inputGeom, returnsGeometry = true, exprConfig) {
 
     override def dataType: DataType = inputGeom.dataType
 
@@ -48,8 +48,8 @@ object ST_Centroid extends WithExpressionInfo {
           |        POINT(1.1, 2.2)
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_Centroid](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Centroid](1, exprConfig)
     }
 
     def legacyInfo(database: Option[String], name: String): ExpressionInfo =

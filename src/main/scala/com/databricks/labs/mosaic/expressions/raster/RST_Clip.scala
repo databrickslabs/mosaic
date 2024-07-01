@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, NullIntolerant}
@@ -17,26 +16,26 @@ import scala.util.Try
 
 /** The expression for clipping a raster by a vector. */
 case class RST_Clip(
-    rastersExpr: Expression,
-    geometryExpr: Expression,
-    cutlineAllTouchedExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                       rastersExpr: Expression,
+                       geometryExpr: Expression,
+                       cutlineAllTouchedExpr: Expression,
+                       exprConfig: ExprConfig
 ) extends Raster2ArgExpression[RST_Clip](
       rastersExpr,
       geometryExpr,
       cutlineAllTouchedExpr,
       returnsRaster = true,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
     // serialize data type
     override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, rastersExpr, exprConfig.isRasterUseCheckpoint)
     }
 
-    val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
+    val geometryAPI: GeometryAPI = GeometryAPI(exprConfig.getGeometryAPI)
 
     /**
       * Clips a raster by a vector.
@@ -50,14 +49,14 @@ case class RST_Clip(
       * @return
       *   The clipped raster.
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(tile: RasterTile, arg1: Any, arg2: Any): Any = {
         val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
         val geomCRS = geometry.getSpatialReferenceOSR
         val cutline = arg2.asInstanceOf[Boolean]
         tile.copy(
           raster = RasterClipByVector.clip(
               tile.raster, geometry, geomCRS, geometryAPI,
-              cutlineAllTouched = cutline, mosaicConfig = expressionConfig
+              Option(exprConfig), cutlineAllTouched = cutline
           )
         )
     }
@@ -83,7 +82,7 @@ object RST_Clip extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = { (children: Seq[Expression]) =>
     {
         def checkCutline(cutline: Expression): Boolean = Try(cutline.eval().asInstanceOf[Boolean]).isSuccess
         val noCutlineArg = new Literal(true, BooleanType) // default is true for tessellation needs
@@ -91,10 +90,10 @@ object RST_Clip extends WithExpressionInfo {
         children match {
             // Note type checking only works for literals
             case Seq(input, vector)                                   =>
-                RST_Clip(input, vector, noCutlineArg, expressionConfig)
+                RST_Clip(input, vector, noCutlineArg, exprConfig)
             case Seq(input, vector, cutline) if checkCutline(cutline) =>
-                RST_Clip(input, vector, cutline, expressionConfig)
-            case _ => RST_Clip(children.head, children(1), children(2), expressionConfig)
+                RST_Clip(input, vector, cutline, exprConfig)
+            case _ => RST_Clip(children.head, children(1), children(2), exprConfig)
         }
     }
     }

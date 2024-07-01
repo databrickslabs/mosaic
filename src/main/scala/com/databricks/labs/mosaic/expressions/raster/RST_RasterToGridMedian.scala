@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterToGridExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -10,14 +10,14 @@ import org.apache.spark.sql.types.DoubleType
 
 /** Returns the median value of the raster. */
 case class RST_RasterToGridMedian(
-    raster: Expression,
-    resolution: Expression,
-    expressionConfig: MosaicExpressionConfig
+                                     raster: Expression,
+                                     resolution: Expression,
+                                     exprConfig: ExprConfig
 ) extends RasterToGridExpression[RST_RasterToGridMedian, Double](
       raster,
       resolution,
       DoubleType,
-      expressionConfig
+      exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
@@ -48,8 +48,8 @@ object RST_RasterToGridMedian extends WithExpressionInfo {
           |        [[(11223344, 123.4), (11223345, 125.4), ...], [(11223344, 123.1), (11223344, 123.6) ...], ...]
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridMedian](2, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridMedian](2, exprConfig)
     }
 
 }

@@ -174,7 +174,7 @@
                 <configuration>
                     <!-- Tests will be run with scalatest-maven-plugin instead -->
                     <skipTests>true</skipTests>
-                    <argLine>@{argLine} -Djava.library.path=/usr/local/lib;/usr/java/packages/lib;/usr/lib64;/lib64;/lib;/usr/lib</argLine>
+                    <argLine>@{argLine} -Djava.library.rawPath=/usr/local/lib;/usr/java/packages/lib;/usr/lib64;/lib64;/lib;/usr/lib</argLine>
                 </configuration>
             </plugin>
             <plugin>

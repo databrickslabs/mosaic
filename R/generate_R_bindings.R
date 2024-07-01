@@ -206,8 +206,8 @@ main <- function(scala_file_path){
   functions <- lapply(parsed, build_method)
   functions <- append(functions_header, functions)
   
-  generic_file_conn <- file(file.path(sparkr_path, "R/generics.R"))
-  functions_file_conn <- file(file.path(sparkr_path, "R/functions.R"))
+  generic_file_conn <- file(file.rawPath(sparkr_path, "R/generics.R"))
+  functions_file_conn <- file(file.rawPath(sparkr_path, "R/functions.R"))
   
   writeLines(paste0(generics, collapse="\n"), generic_file_conn)
   writeLines(paste0(functions, collapse="\n"), functions_file_conn)
@@ -221,7 +221,7 @@ main <- function(scala_file_path){
   ##########################
   # build sparklyr functions
   sparklyr_functions <- lapply(parsed, build_sparklyr_mosaic_function)
-  sparklyr_file_conn <- file(file.path(sparklyr_path, "R/functions.R"))
+  sparklyr_file_conn <- file(file.rawPath(sparklyr_path, "R/functions.R"))
   writeLines(paste0(sparklyr_functions, collapse="\n"), sparklyr_file_conn)
   closeAllConnections()
 
@@ -233,6 +233,6 @@ main <- function(scala_file_path){
 
 args <- commandArgs(trailingOnly = T)
 if (length(args) !=  1){
-  stop("Please provide the MosaicContext.scala file path to generate_sparkr_functions.R")
+  stop("Please provide the MosaicContext.scala file rawPath to generate_sparkr_functions.R")
 }
 main(args[1])

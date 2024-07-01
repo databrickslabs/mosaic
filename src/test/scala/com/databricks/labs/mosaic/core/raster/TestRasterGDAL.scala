@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
 import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.PathUtils.NO_PATH_STRING
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.should.Matchers._
 import org.gdal.gdal.{gdal => gdalJNI}
@@ -17,10 +18,10 @@ import scala.util.Try
 class TestRasterGDAL extends SharedSparkSessionGDAL {
 
     test("Verify that GDAL is enabled.") {
-        val sc = this.spark
-
+        info("...at start of TestRasterGDAL [do not remove].")
         assume(System.getProperty("os.name") == "Linux")
 
+        val sc = this.spark
         val checkCmd = "gdalinfo --version"
         val resultDriver = Try(checkCmd.!!).getOrElse("")
         resultDriver should not be ""
@@ -38,8 +39,8 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
     test("Verify memsize handling") {
         val createInfo = Map(
-            "path" -> PathUtils.NO_PATH_STRING,
-            "parentPath" -> PathUtils.NO_PATH_STRING,
+            "path" -> NO_PATH_STRING,
+            "parentPath" -> NO_PATH_STRING,
             "driver" -> "GTiff"
         )
         val null_raster = MosaicRasterGDAL(null, createInfo, -1)
@@ -48,7 +49,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         val np_content = spark.read.format("binaryFile")
             .load("src/test/resources/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
             .select("content").first.get(0).asInstanceOf[Array[Byte]]
-        val np_ds = MosaicRasterGDAL.readRaster(np_content, createInfo).getDatasetHydrated
+        val np_ds = MosaicRasterGDAL.readRaster(np_content, createInfo).getDatasetHydratedOpt().get
         val np_raster = MosaicRasterGDAL(np_ds, createInfo, -1)
         np_raster.getMemSize > 0 should be(true)
         info(s"np_content length? ${np_content.length}")
@@ -80,7 +81,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
-        testRaster.getDatasetHydrated.GetProjection()
+        testRaster.getDatasetHydratedOpt().get.GetProjection()
         noException should be thrownBy testRaster.getSpatialReference
         an[Exception] should be thrownBy testRaster.getBand(-1)
         an[Exception] should be thrownBy testRaster.getBand(Int.MaxValue)
@@ -176,7 +177,6 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           "driver" -> "GTiff"
         )
         var result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "avg")
-        result.reHydrate() // flush cache
 
         var resultValues = result.getBand(1).values
 
@@ -204,7 +204,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         // mode
 
         result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "mode")
-        result.reHydrate() // flush cache
+
 
         resultValues = result.getBand(1).values
 
@@ -258,7 +258,6 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         // median
 
         result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "median")
-        result.reHydrate() // flush cache
 
         resultValues = result.getBand(1).values
 
@@ -298,7 +297,6 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         // min filter
 
         result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "min")
-        result.reHydrate() // flush cache
 
         resultValues = result.getBand(1).values
 
@@ -338,7 +336,6 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         // max filter
 
         result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "max")
-        result.reHydrate() // flush cache
 
         resultValues = result.getBand(1).values
 

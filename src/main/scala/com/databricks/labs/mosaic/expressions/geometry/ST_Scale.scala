@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
@@ -17,21 +17,21 @@ import org.apache.spark.sql.types.DataType
   *   The x distance to scale the geometry.
   * @param yd
   *   The y distance to scale the geometry.
-  * @param expressionConfig
+  * @param exprConfig
   *   Mosaic execution context, e.g. the geometry API, index system, etc.
   *   Additional arguments for the expression (expressionConfigs).
   */
 case class ST_Scale(
-    inputGeom: Expression,
-    xd: Expression,
-    yd: Expression,
-    expressionConfig: MosaicExpressionConfig
+                       inputGeom: Expression,
+                       xd: Expression,
+                       yd: Expression,
+                       exprConfig: ExprConfig
 ) extends UnaryVector2ArgExpression[ST_Scale](
       inputGeom,
       xd,
       yd,
       returnsGeometry = true,
-      expressionConfig
+      exprConfig
     ) {
 
     override def dataType: DataType = inputGeom.dataType
@@ -64,8 +64,8 @@ object ST_Scale extends WithExpressionInfo {
           |        POLYGON ((...))
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_Scale](3, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Scale](3, exprConfig)
     }
 
 }

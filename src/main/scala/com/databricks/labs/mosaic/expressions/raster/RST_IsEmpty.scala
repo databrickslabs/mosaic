@@ -1,24 +1,24 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /** Returns true if the raster is empty. */
-case class RST_IsEmpty(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_IsEmpty](raster, returnsRaster = false, expressionConfig)
+case class RST_IsEmpty(raster: Expression, exprConfig: ExprConfig)
+    extends RasterExpression[RST_IsEmpty](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = BooleanType
 
     /** Returns true if the raster is empty. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
+    override def rasterTransform(tile: RasterTile): Any = {
         val raster = tile.raster
         (raster.ySize == 0 && raster.xSize == 0) || raster.isEmpty
     }
@@ -39,8 +39,8 @@ object RST_IsEmpty extends WithExpressionInfo {
           |        false
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_IsEmpty](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_IsEmpty](1, exprConfig)
     }
 
 }

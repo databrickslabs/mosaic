@@ -41,7 +41,7 @@ trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
         val (_, code) = codeGenStage.doCodeGen()
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stUnaryUnion = ST_UnaryUnion(lit(1).expr, mc.expressionConfig)
+        val stUnaryUnion = ST_UnaryUnion(lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stUnaryUnion.genCode(ctx)
     }
@@ -54,7 +54,7 @@ trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
 
         val input = "MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))"
 
-        val stUnaryUnion = ST_UnaryUnion(lit(input).expr, mc.expressionConfig)
+        val stUnaryUnion = ST_UnaryUnion(lit(input).expr, mc.exprConfig)
         stUnaryUnion.child shouldEqual lit(input).expr
         stUnaryUnion.dataType shouldEqual lit(input).expr.dataType
         noException should be thrownBy stUnaryUnion.makeCopy(Array(stUnaryUnion.child))

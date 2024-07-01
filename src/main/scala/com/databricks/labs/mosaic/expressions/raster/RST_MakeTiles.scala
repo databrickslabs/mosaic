@@ -1,17 +1,15 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.MOSAIC_NO_DRIVER
+import com.databricks.labs.mosaic.{NO_DRIVER, NO_PATH_STRING, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.{createTmpFileFromDriver, identifyDriverNameFromRawPath}
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -48,37 +46,37 @@ import scala.util.Try
   * @param withCheckpointExpr
   *   If set to true, the tiles are written to the checkpoint directory. If set
   *   to false, the tiles are returned as a in-memory byte arrays.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   */
 case class RST_MakeTiles(
-    inputExpr: Expression,
-    driverExpr: Expression,
-    sizeInMBExpr: Expression,
-    withCheckpointExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                            inputExpr: Expression,
+                            driverExpr: Expression,
+                            sizeInMBExpr: Expression,
+                            withCheckpointExpr: Expression,
+                            exprConfig: ExprConfig
 ) extends CollectionGenerator
       with Serializable
       with NullIntolerant
       with CodegenFallback {
 
-    GDAL.enable(expressionConfig)
+    GDAL.enable(exprConfig)
 
     // serialize data type
     override def dataType: DataType = {
         require(withCheckpointExpr.isInstanceOf[Literal])
-        if (withCheckpointExpr.eval().asInstanceOf[Boolean] || expressionConfig.isRasterUseCheckpoint) {
+        if (withCheckpointExpr.eval().asInstanceOf[Boolean] || exprConfig.isRasterUseCheckpoint) {
             // Raster will be serialized as a path
-            RasterTileType(expressionConfig.getCellIdType, StringType, useCheckpoint = true)
+            RasterTileType(exprConfig.getCellIdType, StringType, useCheckpoint = true)
         } else {
             // Raster will be serialized as a byte array
-            RasterTileType(expressionConfig.getCellIdType, BinaryType, useCheckpoint = false)
+            RasterTileType(exprConfig.getCellIdType, BinaryType, useCheckpoint = false)
         }
     }
 
-    protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
+    protected val geometryAPI: GeometryAPI = GeometryAPI.apply(exprConfig.getGeometryAPI)
 
-    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
 
     protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
 
@@ -91,10 +89,10 @@ case class RST_MakeTiles(
     override def elementSchema: StructType = StructType(Array(StructField("tile", dataType)))
 
     private def getDriver(rawInput: Any, rawDriver: String): String = {
-        if (rawDriver == MOSAIC_NO_DRIVER) {
+        if (rawDriver == NO_DRIVER) {
             if (inputExpr.dataType == StringType) {
                 val path = rawInput.asInstanceOf[UTF8String].toString
-                MosaicRasterGDAL.identifyDriver(path)
+                identifyDriverNameFromRawPath(path)
             } else {
                 throw new IllegalArgumentException("Driver has to be specified for byte array input")
             }
@@ -106,7 +104,7 @@ case class RST_MakeTiles(
     private def getInputSize(rawInput: Any): Long = {
         if (inputExpr.dataType == StringType) {
             val path = rawInput.asInstanceOf[UTF8String].toString
-            val cleanPath = PathUtils.replaceDBFSTokens(path)
+            val cleanPath = PathUtils.asFileSystemPath(path)
             Files.size(Paths.get(cleanPath))
         } else {
             val bytes = rawInput.asInstanceOf[Array[Byte]]
@@ -123,25 +121,33 @@ case class RST_MakeTiles(
       *   The tiles.
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        GDAL.enable(expressionConfig)
-        val resultType = getRasterType(dataType)
+        GDAL.enable(exprConfig)
+        val resultType = RasterTile.getRasterType(dataType)
 
         val rawDriver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val rawInput = inputExpr.eval(input)
         val driverShortName = getDriver(rawInput, rawDriver)
         val targetSize = sizeInMBExpr.eval(input).asInstanceOf[Int]
         val inputSize = getInputSize(rawInput)
-        val path = if (inputExpr.dataType == StringType) rawInput.asInstanceOf[UTF8String].toString else PathUtils.NO_PATH_STRING
+        val path = if (inputExpr.dataType == StringType) rawInput.asInstanceOf[UTF8String].toString else NO_PATH_STRING
 
         if (targetSize <= 0 && inputSize <= Integer.MAX_VALUE) {
             // - no split required
-            val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driverShortName, "path" -> path)
-            var raster = GDAL.readRaster(rawInput, createInfo, inputExpr.dataType)
-            var result = MosaicRasterTile(null, raster, inputExpr.dataType).formatCellId(indexSystem)
-            val row = result.serialize(resultType, doDestroy = true)
+            val createInfo = Map(
+                RASTER_PATH_KEY -> path,
+                RASTER_DRIVER_KEY -> driverShortName,
+                RASTER_PARENT_PATH_KEY -> NO_PATH_STRING
+            )
+            var raster = GDAL.readRasterExpr(
+                rawInput,
+                createInfo,
+                inputExpr.dataType,
+                Option(exprConfig)
+            )
+            var result = RasterTile(null, raster, inputExpr.dataType).formatCellId(indexSystem)
+            val row = result.serialize(resultType, doDestroy = true, Option(exprConfig))
 
-            destroy(result)
-
+            result.flushAndDestroy()
             raster = null
             result = null
 
@@ -153,20 +159,20 @@ case class RST_MakeTiles(
             // - createDirectories in case of context isolation
             val readPath =
                 if (inputExpr.dataType == StringType) {
-                    PathUtils.copyToTmpWithRetry(path, 5)
+                    PathUtils.copyCleanPathToTmpWithRetry(path, Option(exprConfig), retries = 5)
                 } else {
-                    val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driverShortName))
+                    val tmpPath = createTmpFileFromDriver(driverShortName, Option(exprConfig))
                     Files.createDirectories(Paths.get(tmpPath).getParent)
                     Files.write(Paths.get(tmpPath), rawInput.asInstanceOf[Array[Byte]])
                     tmpPath
                 }
             val size = if (targetSize <= 0) 64 else targetSize
             var results = ReTileOnRead
-                .localSubdivide(readPath, PathUtils.NO_PATH_STRING, size)
+                .localSubdivide(readPath, NO_PATH_STRING, size, exprConfig)
                 .map(_.formatCellId(indexSystem))
-            val rows = results.map(_.serialize(resultType, doDestroy = true))
+            val rows = results.map(_.serialize(resultType, doDestroy = true, Option(exprConfig)))
 
-            results.foreach(destroy)
+            results.foreach(_.flushAndDestroy())
 
             results = null
 
@@ -176,7 +182,7 @@ case class RST_MakeTiles(
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =
-        GenericExpressionFactory.makeCopyImpl[RST_MakeTiles](this, newArgs, children.length, expressionConfig)
+        GenericExpressionFactory.makeCopyImpl[RST_MakeTiles](this, newArgs, children.length, exprConfig)
 
     override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = makeCopy(newChildren.toArray)
 
@@ -200,31 +206,31 @@ object RST_MakeTiles extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = { (children: Seq[Expression]) =>
         {
             def checkSize(size: Expression) = Try(size.eval().asInstanceOf[Int]).isSuccess
             def checkChkpnt(chkpnt: Expression) = Try(chkpnt.eval().asInstanceOf[Boolean]).isSuccess
             def checkDriver(driver: Expression) = Try(driver.eval().asInstanceOf[UTF8String].toString).isSuccess
             val noSize = new Literal(-1, IntegerType)
-            val noDriver = new Literal(UTF8String.fromString(MOSAIC_NO_DRIVER), StringType)
+            val noDriver = new Literal(UTF8String.fromString(NO_DRIVER), StringType)
             val noCheckpoint = new Literal(false, BooleanType)
 
             children match {
                 // Note type checking only works for literals
-                case Seq(input)                                => RST_MakeTiles(input, noDriver, noSize, noCheckpoint, expressionConfig)
-                case Seq(input, driver) if checkDriver(driver) => RST_MakeTiles(input, driver, noSize, noCheckpoint, expressionConfig)
-                case Seq(input, size) if checkSize(size)       => RST_MakeTiles(input, noDriver, size, noCheckpoint, expressionConfig)
+                case Seq(input)                                => RST_MakeTiles(input, noDriver, noSize, noCheckpoint, exprConfig)
+                case Seq(input, driver) if checkDriver(driver) => RST_MakeTiles(input, driver, noSize, noCheckpoint, exprConfig)
+                case Seq(input, size) if checkSize(size)       => RST_MakeTiles(input, noDriver, size, noCheckpoint, exprConfig)
                 case Seq(input, checkpoint) if checkChkpnt(checkpoint)                                                         =>
-                    RST_MakeTiles(input, noDriver, noSize, checkpoint, expressionConfig)
+                    RST_MakeTiles(input, noDriver, noSize, checkpoint, exprConfig)
                 case Seq(input, size, checkpoint) if checkSize(size) && checkChkpnt(checkpoint)                                =>
-                    RST_MakeTiles(input, noDriver, size, checkpoint, expressionConfig)
+                    RST_MakeTiles(input, noDriver, size, checkpoint, exprConfig)
                 case Seq(input, driver, size) if checkDriver(driver) && checkSize(size)                                        =>
-                    RST_MakeTiles(input, driver, size, noCheckpoint, expressionConfig)
+                    RST_MakeTiles(input, driver, size, noCheckpoint, exprConfig)
                 case Seq(input, driver, checkpoint) if checkDriver(driver) && checkChkpnt(checkpoint)                          =>
-                    RST_MakeTiles(input, driver, noSize, checkpoint, expressionConfig)
+                    RST_MakeTiles(input, driver, noSize, checkpoint, exprConfig)
                 case Seq(input, driver, size, checkpoint) if checkDriver(driver) && checkSize(size) && checkChkpnt(checkpoint) =>
-                    RST_MakeTiles(input, driver, size, checkpoint, expressionConfig)
-                case _ => RST_MakeTiles(children.head, children(1), children(2), children(3), expressionConfig)
+                    RST_MakeTiles(input, driver, size, checkpoint, exprConfig)
+                case _ => RST_MakeTiles(children.head, children(1), children(2), children(3), exprConfig)
             }
         }
     }

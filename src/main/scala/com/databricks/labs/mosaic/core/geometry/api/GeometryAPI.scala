@@ -18,6 +18,13 @@ abstract class GeometryAPI(
     reader: GeometryReader
 ) extends Serializable {
 
+    val WKT = "WKT"
+    val HEX = "HEX"
+    val WKB = "WKB"
+    val GEOJSON = "GEOJSON"
+    val COORDS = "COORDS"
+    val JSONOBJECT = "JSONOBJECT"
+
     def createBbox(xMin: Double, yMin: Double, xMax: Double, yMax: Double): MosaicGeometry = {
         val p1 = fromGeoCoord(Coordinates(yMin, xMin))
         val p2 = fromGeoCoord(Coordinates(yMax, xMin))
@@ -36,11 +43,10 @@ abstract class GeometryAPI(
 
     def geometry(input: Any, typeName: String): MosaicGeometry = {
         typeName match {
-            case "WKT"     => reader.fromWKT(input.asInstanceOf[String])
-            case "HEX"     => reader.fromHEX(input.asInstanceOf[String])
-            case "WKB"     => reader.fromWKB(input.asInstanceOf[Array[Byte]])
-            case "GEOJSON" => reader.fromJSON(input.asInstanceOf[String])
-            case "COORDS"  => throw new Error(s"$typeName not supported.")
+            case WKT     => reader.fromWKT(input.asInstanceOf[String])
+            case HEX     => reader.fromHEX(input.asInstanceOf[String])
+            case WKB     => reader.fromWKB(input.asInstanceOf[Array[Byte]])
+            case GEOJSON => reader.fromJSON(input.asInstanceOf[String])
             case _         => throw new Error(s"$typeName not supported.")
         }
     }
@@ -94,12 +100,12 @@ abstract class GeometryAPI(
 
     def serialize(geometry: MosaicGeometry, dataFormatName: String): Any = {
         dataFormatName.toUpperCase(Locale.ROOT) match {
-            case "WKB"        => geometry.toWKB
-            case "WKT"        => UTF8String.fromString(geometry.toWKT)
-            case "HEX"        => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
-            case "JSONOBJECT" => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
-            case "GEOJSON"    => UTF8String.fromString(geometry.toJSON)
-            case "COORDS"     => geometry.toInternal.serialize
+            case WKB        => geometry.toWKB
+            case WKT        => UTF8String.fromString(geometry.toWKT)
+            case HEX        => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toHEX)))
+            case JSONOBJECT => InternalRow.fromSeq(Seq(UTF8String.fromString(geometry.toJSON)))
+            case GEOJSON    => UTF8String.fromString(geometry.toJSON)
+            case COORDS     => geometry.toInternal.serialize
             case _            => throw new Error(s"$dataFormatName not supported.")
         }
     }

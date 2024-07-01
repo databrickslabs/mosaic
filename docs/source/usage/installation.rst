@@ -140,7 +140,7 @@ confs as well as through extra params in Mosaic 0.4.x series :code:`enable_mosai
     :type dbutils: dbruntime.dbutils.DBUtils
     :param log_info: True will try to setLogLevel to "info", False will not (Optional, default is False).
     :type log_info: bool
-    :param jar_path: If provided, sets :code:`"spark.databricks.labs.mosaic.jar.path"` (Optional, default is None).
+    :param jar_path: If provided, sets :code:`"spark.databricks.labs.mosaic.jar.rawPath"` (Optional, default is None).
     :type jar_path: str
     :param jar_autoattach: False will not registers the JAR; sets :code:`"spark.databricks.labs.mosaic.jar.autoattach"` to False, True will register the JAR (Optional, default is True).
     :type jar_autoattach: bool
@@ -158,7 +158,7 @@ Users can control various aspects of Mosaic's operation with the following optio
    * - spark.databricks.labs.mosaic.jar.autoattach
      - "true"
      - Automatically attach the Mosaic JAR to the Databricks cluster?
-   * - spark.databricks.labs.mosaic.jar.path
+   * - spark.databricks.labs.mosaic.jar.rawPath
      - "<jar_path>"
      - Path to the Mosaic JAR, not required in standard installs
    * - spark.databricks.labs.mosaic.geometry.api

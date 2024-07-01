@@ -1,21 +1,24 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.POLYGON_EMPTY_WKT
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, MosaicRasterTile}
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, RasterTile}
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
+import scala.util.Try
+
 /** The expression for extracting the bounding box of a raster. */
 case class RST_BoundingBox(
-    raster: Expression,
-    expressionConfig: MosaicExpressionConfig
-) extends RasterExpression[RST_BoundingBox](raster, returnsRaster = false, expressionConfig = expressionConfig)
+                              raster: Expression,
+                              exprConfig: ExprConfig
+) extends RasterExpression[RST_BoundingBox](raster, returnsRaster = false, exprConfig = exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -30,12 +33,12 @@ case class RST_BoundingBox(
       * @return
       *   The bounding box of the raster as a WKB polygon.
       */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
+    override def rasterTransform(tile: RasterTile): Any = Try {
         val raster = tile.raster
-        val gt = raster.getGeoTransform
+        val gt = raster.getGeoTransformOpt.get
         val (originX, originY) = GDAL.toWorldCoord(gt, 0, 0)
         val (endX, endY) = GDAL.toWorldCoord(gt, raster.xSize, raster.ySize)
-        val geometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
+        val geometryAPI = GeometryAPI(exprConfig.getGeometryAPI)
         val bboxPolygon = geometryAPI.geometry(
           Seq(
             Seq(originX, originY),
@@ -48,7 +51,7 @@ case class RST_BoundingBox(
         )
 
         bboxPolygon.toWKB
-    }
+    }.getOrElse(GeometryAPI(exprConfig.getGeometryAPI).geometry(POLYGON_EMPTY_WKT, "WKT").toWKB)
 
 }
 
@@ -69,8 +72,8 @@ object RST_BoundingBox extends WithExpressionInfo {
           |        POLYGON ((-180 -90, -180 90, 180 90, 180 -90, -180 -90))
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_BoundingBox](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_BoundingBox](1, exprConfig)
     }
 
 }

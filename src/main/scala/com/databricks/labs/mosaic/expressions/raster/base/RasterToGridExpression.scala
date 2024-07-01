@@ -3,9 +3,9 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -28,29 +28,29 @@ import scala.reflect.ClassTag
   *    The resolution of the index system to use.
   * @param measureType
   *   The output type of the result.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
   *   The type of the extending class.
   */
 abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
-    rasterExpr: Expression,
-    resolutionExpr: Expression,
-    measureType: DataType,
-    expressionConfig: MosaicExpressionConfig
-) extends Raster1ArgExpression[T](rasterExpr, resolutionExpr, returnsRaster = false, expressionConfig)
+                                                                       rasterExpr: Expression,
+                                                                       resolutionExpr: Expression,
+                                                                       measureType: DataType,
+                                                                       exprConfig: ExprConfig
+) extends Raster1ArgExpression[T](rasterExpr, resolutionExpr, returnsRaster = false, exprConfig)
     with RasterGridExpression
     with NullIntolerant
     with Serializable {
 
-    GDAL.enable(expressionConfig)
+    GDAL.enable(exprConfig)
 
-    override def dataType: DataType = RasterToGridType(expressionConfig.getCellIdType, measureType)
+    override def dataType: DataType = RasterToGridType(exprConfig.getCellIdType, measureType)
 
     /** The index system to be used. */
-    val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+    val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
 
-    val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
+    val geometryAPI: GeometryAPI = GeometryAPI(exprConfig.getGeometryAPI)
 
     /**
       * It projects the pixels to the grid and groups by the results so that the
@@ -62,8 +62,8 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
       * @return
       *   Sequence of (cellId, measure) of each band of the raster.
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-        GDAL.enable(expressionConfig)
+    override def rasterTransform(tile: RasterTile, arg1: Any): Any = {
+        GDAL.enable(exprConfig)
         val resolution = arg1.asInstanceOf[Int]
         val transformed = griddedPixels(tile.raster, indexSystem, resolution)
         val results = transformed.map(_.mapValues(valuesCombiner))

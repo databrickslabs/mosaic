@@ -25,7 +25,7 @@ e.g. :code:`spark.read.format("gdal")`
     * The Mosaic raster tile schema changed in v0.4.1 to the following:
       :code:`<tile:struct<index_id:bigint, tile:binary, metadata:map<string, string>>`. All APIs that use tiles now follow
       this schema.
-    * The function :ref:`rst_maketiles` allows for the raster tile schema to hold either a path pointer (string)
+    * The function :ref:`rst_maketiles` allows for the raster tile schema to hold either a rawPath pointer (string)
       or a byte array representation of the source raster. It also supports optional checkpointing for increased
       performance during chains of raster operations.
 
@@ -348,7 +348,7 @@ rst_convolve
      | rst_convolve(tile,convolve_arr)                                           |
      +---------------------------------------------------------------------------+
      | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                      |
-     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
+     |  "metadata":{"rawPath":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
      +---------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -364,7 +364,7 @@ rst_convolve
      | rst_convolve(tile,convolve_arr)                                           |
      +---------------------------------------------------------------------------+
      | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                      |
-     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
+     |  "metadata":{"rawPath":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
      +---------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -374,7 +374,7 @@ rst_convolve
      | rst_convolve(tile,convolve_arr)                                           |
      +---------------------------------------------------------------------------+
      | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                      |
-     |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
+     |  "metadata":{"rawPath":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
      +---------------------------------------------------------------------------+
 
 For clarity, this is ultimately the execution of the kernel.
@@ -514,7 +514,7 @@ rst_filter
      +-----------------------------------------------------------------------------------------------------------------------------+
      | rst_filter(tile,3,mode)                                                                                                     |
      +-----------------------------------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"rawPath":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
      +-----------------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -523,7 +523,7 @@ rst_filter
      +-----------------------------------------------------------------------------------------------------------------------------+
      | rst_filter(tile,3,mode)                                                                                                     |
      +-----------------------------------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"rawPath":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
      +-----------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -533,7 +533,7 @@ rst_filter
      +-----------------------------------------------------------------------------------------------------------------------------+
      | rst_filter(tile,3,mode)                                                                                                     |
      +-----------------------------------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"rawPath":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
      +-----------------------------------------------------------------------------------------------------------------------------+
 
 rst_frombands
@@ -649,7 +649,7 @@ rst_fromcontent
 
      CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
           USING binaryFile
-          OPTIONS (path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+          OPTIONS (rawPath "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
      SELECT rst_fromcontent(content) FROM coral_netcdf LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
      | rst_fromcontent(content)                                                                                       |
@@ -660,21 +660,21 @@ rst_fromcontent
 rst_fromfile
 ************
 
-.. function:: rst_fromfile(path, <size_in_MB>)
+.. function:: rst_fromfile(rawPath, <size_in_MB>)
 
-    Returns a raster tile from a file path.
+    Returns a raster tile from a file rawPath.
 
-    :param path: A column containing the path to a raster file.
-    :type path: Column (StringType)
+    :param rawPath: A column containing the rawPath to a raster file.
+    :type rawPath: Column (StringType)
     :param size_in_MB: Optional parameter to specify the size of the raster tile in MB. Default is not to split the input.
     :type size_in_MB: Column (IntegerType)
     :rtype: Column: RasterTileType
 
 .. note::
   **Notes**
-    - The file path must be a string.
-    - The file path must be a valid path to a raster file.
-    - The file path must be a path to a file that GDAL can read.
+    - The file rawPath must be a string.
+    - The file rawPath must be a valid rawPath to a raster file.
+    - The file rawPath must be a rawPath to a file that GDAL can read.
     - If the size_in_MB parameter is specified, the raster will be split into tiles of the specified size.
     - If the size_in_MB parameter is not specified or if the size_in_Mb < 0, the raster will only be split if it exceeds Integer.MAX_VALUE. The split will be at a threshold of 64MB in this case.
 ..
@@ -688,9 +688,9 @@ rst_fromfile
      df = spark.read.format("binaryFile")\
                 .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")\
                 .drop("content")
-     df.select(mos.rst_fromfile("path")).limit(1).display()
+     df.select(mos.rst_fromfile("rawPath")).limit(1).display()
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_fromfile(path)                                                                                             |
+     | rst_fromfile(rawPath)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -701,9 +701,9 @@ rst_fromfile
           .format("binaryFile")
           .load("dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
           .drop("content")
-     df.select(rst_fromfile(col("path"))).limit(1).show(false)
+     df.select(rst_fromfile(col("rawPath"))).limit(1).show(false)
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_fromfile(path)                                                                                             |
+     | rst_fromfile(rawPath)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -712,10 +712,10 @@ rst_fromfile
 
      CREATE TABLE IF NOT EXISTS TABLE coral_netcdf
           USING binaryFile
-          OPTIONS (path "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
-     SELECT rst_fromfile(path) FROM coral_netcdf LIMIT 1
+          OPTIONS (rawPath "dbfs:/FileStore/geospatial/mosaic/sample_raster_data/binary/netcdf-coral")
+     SELECT rst_fromfile(rawPath) FROM coral_netcdf LIMIT 1
      +----------------------------------------------------------------------------------------------------------------+
-     | rst_fromfile(path)                                                                                             |
+     | rst_fromfile(rawPath)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
@@ -827,7 +827,7 @@ rst_getsubdataset
 
 .. note::
   **Notes**
-    - :code:`name` should be the last identifier in the standard GDAL subdataset path: :code:`DRIVER:PATH:NAME`.
+    - :code:`name` should be the last identifier in the standard GDAL subdataset rawPath: :code:`DRIVER:PATH:NAME`.
     - :code:`name` must be a valid subdataset name for the raster, i.e. it must exist within the raster.
 ..
 
@@ -1033,7 +1033,7 @@ rst_maketiles
 
     Tiles the raster into tiles of the given size, optionally writing them to disk in the process.
 
-    :param input: path (StringType) or content (BinaryType)
+    :param input: rawPath (StringType) or content (BinaryType)
     :type input: Column
     :param driver: The driver to use for reading the raster. 
     :type driver: Column(StringType)
@@ -1047,7 +1047,7 @@ rst_maketiles
   **Notes**
 
   :code:`input`
-    - If the raster is stored on disk, :code:`input` should be the path to the raster, similar to :ref:`rst_fromfile`.
+    - If the raster is stored on disk, :code:`input` should be the rawPath to the raster, similar to :ref:`rst_fromfile`.
     - If the raster is stored in memory, :code:`input` should be the byte array representation of the raster, similar to :ref:`rst_fromcontent`.
 
   :code:`driver`
@@ -1073,33 +1073,33 @@ rst_maketiles
     .. code-tab:: py
 
      spark.read.format("binaryFile").load(dbfs_dir)\
-     .select(rst_maketiles("path")).limit(1).display()
+     .select(rst_maketiles("rawPath")).limit(1).display()
      +------------------------------------------------------------------------+
      | tile                                                                   |
      +------------------------------------------------------------------------+
      | {"index_id":null,"raster":"SUkqAMAAA (truncated)","metadata":{         |
-     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     | "parentPath":"no_path","driver":"GTiff","rawPath":"...","last_error":""}} |
      +------------------------------------------------------------------------+
 
     .. code-tab:: scala
 
      spark.read.format("binaryFile").load(dbfs_dir)
-     .select(rst_maketiles(col("path"))).limit(1).show
+     .select(rst_maketiles(col("rawPath"))).limit(1).show
      +------------------------------------------------------------------------+
      | tile                                                                   |
      +------------------------------------------------------------------------+
      | {"index_id":null,"raster":"SUkqAMAAA (truncated)","metadata":{         |
-     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     | "parentPath":"no_path","driver":"GTiff","rawPath":"...","last_error":""}} |
      +------------------------------------------------------------------------+
 
     .. code-tab:: sql
 
-     SELECT rst_maketiles(path) FROM table LIMIT 1
+     SELECT rst_maketiles(rawPath) FROM table LIMIT 1
      +------------------------------------------------------------------------+
      | tile                                                                   |
      +------------------------------------------------------------------------+
      | {"index_id":null,"raster":"SUkqAMAAA (truncated)","metadata":{         |
-     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     | "parentPath":"no_path","driver":"GTiff","rawPath":"...","last_error":""}} |
      +------------------------------------------------------------------------+
 
 rst_mapalgebra
@@ -2397,7 +2397,7 @@ rst_scaley
 
     df.select(mos.rst_scaley('tile')).display()
     +------------------------------------------------------------------------------------------------------------------+
-    | rst_scaley(path)                                                                                                 |
+    | rst_scaley(rawPath)                                                                                                 |
     +------------------------------------------------------------------------------------------------------------------+
     | 1.2                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
@@ -2447,7 +2447,7 @@ rst_separatebands
     | tile                                                                                                                           |
     +--------------------------------------------------------------------------------------------------------------------------------+
     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                                                                           |
-    |  "metadata":{"path":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
+    |  "metadata":{"rawPath":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
     |              "last_command":"gdal_translate -of GTiff -b 1 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}                     |
     +--------------------------------------------------------------------------------------------------------------------------------+
 
@@ -2458,7 +2458,7 @@ rst_separatebands
     | tile                                                                                                                           |
     +--------------------------------------------------------------------------------------------------------------------------------+
     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                                                                           |
-    |  "metadata":{"path":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
+    |  "metadata":{"rawPath":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
     |              "last_command":"gdal_translate -of GTiff -b 1 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}                     |
     +--------------------------------------------------------------------------------------------------------------------------------+
 
@@ -2469,7 +2469,7 @@ rst_separatebands
     | tile                                                                                                                           |
     +--------------------------------------------------------------------------------------------------------------------------------+
     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                                                                           |
-    |  "metadata":{"path":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
+    |  "metadata":{"rawPath":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
     |              "last_command":"gdal_translate -of GTiff -b 1 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}                     |
     +--------------------------------------------------------------------------------------------------------------------------------+
 
@@ -2701,7 +2701,7 @@ rst_subdatasets
 
     Returns the subdatasets of the raster tile as a set of paths in the standard GDAL format.
 
-    The result is a map of the subdataset path to the subdatasets and the description of the subdatasets.
+    The result is a map of the subdataset rawPath to the subdatasets and the description of the subdatasets.
 
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
@@ -2993,7 +2993,7 @@ rst_transform
      +----------------------------------------------------------------------------------------------------+
      | rst_transform(tile,4326)                                                                           |
      +----------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"rawPath":"... .tif","last_error":"", |
      |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
      |  "last_command":"gdalwarp -t_srs EPSG:4326 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
      +----------------------------------------------------------------------------------------------------+
@@ -3004,7 +3004,7 @@ rst_transform
      +----------------------------------------------------------------------------------------------------+
      | rst_transform(tile,4326)                                                                           |
      +----------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"rawPath":"... .tif","last_error":"", |
      |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
      |  "last_command":"gdalwarp -t_srs EPSG:4326 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
      +----------------------------------------------------------------------------------------------------+
@@ -3015,7 +3015,7 @@ rst_transform
      +----------------------------------------------------------------------------------------------------+
      | rst_transform(tile,4326)                                                                           |
      +----------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"rawPath":"... .tif","last_error":"", |
      |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
      |  "last_command":"gdalwarp -t_srs EPSG:4326 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
      +----------------------------------------------------------------------------------------------------+
@@ -3343,9 +3343,9 @@ rst_write
   **Notes**
     - Use :code:`RST_Write` to save a 'tile' column to a specified directory (e.g. fuse) location using its
       already populated GDAL driver and raster information.
-    - Useful for formalizing the tile 'path' when writing a Lakehouse table. An example might be to turn on checkpointing
+    - Useful for formalizing the tile 'rawPath' when writing a Lakehouse table. An example might be to turn on checkpointing
       for internal data pipeline phase operations in which multiple interim tiles are populated, but at the end of the phase
-      use this function to set the final path to be used in the phase's persisted table. Then, you are free to delete
+      use this function to set the final rawPath to be used in the phase's persisted table. Then, you are free to delete
       the internal tiles that accumulated in the configured checkpointing directory.
 ..
 
@@ -3359,7 +3359,7 @@ rst_write
      | tile                                                                   |
      +------------------------------------------------------------------------+
      | {"index_id":null,"raster":"<write_path>","metadata":{                  |
-     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     | "parentPath":"no_path","driver":"GTiff","rawPath":"...","last_error":""}} |
      +------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -3369,7 +3369,7 @@ rst_write
      | tile                                                                   |
      +------------------------------------------------------------------------+
      | {"index_id":null,"raster":"<write_path>","metadata":{                  |
-     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     | "parentPath":"no_path","driver":"GTiff","rawPath":"...","last_error":""}} |
      +------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -3379,6 +3379,6 @@ rst_write
      | tile                                                                   |
      +------------------------------------------------------------------------+
      | {"index_id":null,"raster":"<write_path>","metadata":{                  |
-     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     | "parentPath":"no_path","driver":"GTiff","rawPath":"...","last_error":""}} |
      +------------------------------------------------------------------------+
 

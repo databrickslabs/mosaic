@@ -1,10 +1,10 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.operator.retile.RasterTessellate
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterTessellateGeneratorExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -14,10 +14,10 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
   * input raster.
   */
 case class RST_Tessellate(
-    rasterExpr: Expression,
-    resolutionExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
-) extends RasterTessellateGeneratorExpression[RST_Tessellate](rasterExpr, resolutionExpr, expressionConfig)
+                             rasterExpr: Expression,
+                             resolutionExpr: Expression,
+                             exprConfig: ExprConfig
+) extends RasterTessellateGeneratorExpression[RST_Tessellate](rasterExpr, resolutionExpr, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -25,12 +25,13 @@ case class RST_Tessellate(
       * Returns a set of new rasters which are the result of the tessellation of
       * the input raster.
       */
-    override def rasterGenerator(tile: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile] = {
+    override def rasterGenerator(tile: RasterTile, resolution: Int): Seq[RasterTile] = {
         RasterTessellate.tessellate(
             tile.raster,
             resolution,
             indexSystem,
-            geometryAPI
+            geometryAPI,
+            Option(exprConfig)
         )
     }
 
@@ -57,8 +58,8 @@ object RST_Tessellate extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Tessellate](2, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Tessellate](2, exprConfig)
     }
 
 }

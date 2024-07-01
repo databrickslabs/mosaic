@@ -144,7 +144,7 @@ FUSE Checkpointing
 
 Mosaic supports checkpointing rasters to a specified `POSIX-style <https://docs.databricks.com/en/files/index.html>`__
 FUSE directory (local mount to Cloud Object Storage). For DBR 13.3 LTS, we focus primarly on DBFS, but this will expand
-with future versions. This is to allow lightweight rows, where the :code:`tile` column stores the path instead of the
+with future versions. This is to allow lightweight rows, where the :code:`tile` column stores the rawPath instead of the
 binary payload itself; available in 0.4.3+:
 
   POSIX-style paths provide data access relative to the driver root (/). POSIX-style paths never require a scheme.
@@ -157,7 +157,7 @@ binary payload itself; available in 0.4.3+:
 This is different than `Spark DataFrame Checkpointing <https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.checkpoint.html>`__;
 we use the word "checkpoint" to convey interim or temporary storage of rasters within the bounds of a pipeline. Below are
 the spark configs available to manage checkpointing. In addition there are python and scala functions to update
-the checkpoint path, turn checkpointing on/off, and reset checkpointing back to defaults:
+the checkpoint rawPath, turn checkpointing on/off, and reset checkpointing back to defaults:
 
   - python - :code:`mos.enable_gdal`, :code:`gdal.update_checkpoint_dir`, :code:`gdal.set_checkpoint_on`, :code:`gdal.set_checkpoint_off`, and :code:`gdal.reset_checkpoint`
   - scala - :code:`MosaicGDAL.enableGDALWithCheckpoint`, :code:`MosaicGDAL.updateCheckpointDir`, :code:`MosaicGDAL.setCheckpointOn`, :code:`MosaicGDAL.setCheckpointOff`, and :code:`MosaicGDAL.resetCheckpoint`

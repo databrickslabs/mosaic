@@ -43,6 +43,7 @@ trait RST_TessellateBehaviors extends QueryTest {
         val result = gridTiles.select(explode(col("avg")).alias("a")).groupBy("a").count().collect()
 
         result.length should be(441)
+        info(s"tif example -> ${result.head}")
 
         val netcdf = spark.read
             .format("gdal")
@@ -57,7 +58,7 @@ trait RST_TessellateBehaviors extends QueryTest {
         val netcdfResult = netcdfGridTiles.collect()
 
         netcdfResult.length should be(491)
-
+        info(s"netcd example -> ${netcdfResult.head}")
     }
 
 }

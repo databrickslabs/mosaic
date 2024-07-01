@@ -1,7 +1,8 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
+import com.databricks.labs.mosaic.core.types.model.RasterTile
+import com.databricks.labs.mosaic.functions.ExprConfig
 
 /* ReTile is a helper object for retiling rasters. */
 object BalancedSubdivision {
@@ -20,7 +21,7 @@ object BalancedSubdivision {
       * @return
       *   The number of splits.
       */
-    def getNumSplits(raster: MosaicRasterGDAL, destSize: Int): Int = {
+    def getNumSplits(raster: RasterGDAL, destSize: Int): Int = {
         val testSize: Long  = raster.getMemSize match {
             case m if m > 0 => m
             case _          => raster.calcMemSize()
@@ -86,19 +87,22 @@ object BalancedSubdivision {
       *   The raster to split.
       * @param sizeInMb
       *   The desired size of the split rasters in MB.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   A sequence of MosaicRaster objects.
       */
     def splitRaster(
-        tile: MosaicRasterTile,
-        sizeInMb: Int
-    ): Seq[MosaicRasterTile] = {
+        tile: RasterTile,
+        sizeInMb: Int,
+        exprConfigOpt: Option[ExprConfig]
+    ): Seq[RasterTile] = {
         val raster = tile.raster
         val numSplits = getNumSplits(raster, sizeInMb)
         val (x, y) = raster.getDimensions
         val (tileX, tileY) = getTileSize(x, y, numSplits)
 
-        ReTile.reTile(tile, tileX, tileY)
+        ReTile.reTile(tile, tileX, tileY, exprConfigOpt)
     }
 
 }

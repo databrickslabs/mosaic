@@ -2,10 +2,10 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -14,26 +14,26 @@ import org.apache.spark.unsafe.types.UTF8String
 
 /** The expression for applying NxN filter on a raster. */
 case class RST_Filter(
-    rastersExpr: Expression,
-    kernelSizeExpr: Expression,
-    operationExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                         rastersExpr: Expression,
+                         kernelSizeExpr: Expression,
+                         operationExpr: Expression,
+                         exprConfig: ExprConfig
 ) extends Raster2ArgExpression[RST_Filter](
       rastersExpr,
       kernelSizeExpr,
       operationExpr,
       returnsRaster = true,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
     // serialize data type
     override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, rastersExpr, exprConfig.isRasterUseCheckpoint)
     }
 
-    val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
+    val geometryAPI: GeometryAPI = GeometryAPI(exprConfig.getGeometryAPI)
 
     /**
       * Clips a raster by a vector.
@@ -45,7 +45,7 @@ case class RST_Filter(
       * @return
       *   The clipped raster.
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(tile: RasterTile, arg1: Any, arg2: Any): Any = {
         val n = arg1.asInstanceOf[Int]
         val operation = arg2.asInstanceOf[UTF8String].toString
         tile.copy(
@@ -74,8 +74,8 @@ object RST_Filter extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Filter](3, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Filter](3, exprConfig)
     }
 
 }

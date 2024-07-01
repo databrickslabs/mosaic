@@ -2,11 +2,9 @@ package com.databricks.labs.mosaic.core.raster.operator.clip
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALWarp
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.gdal.osr.SpatialReference
 
 /**
@@ -32,25 +30,22 @@ object RasterClipByVector {
       *   The geometry CRS.
       * @param geometryAPI
       *   The geometry API.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @param cutlineAllTouched
-      *  whether pixels touching cutline included (true)
-      *  or only half-in (false), default: true.
+      *   Whether pixels touching cutline included (true)
+      *   or only half-in (false), default: true.
       * @return
       *   A clipped raster.
       */
     def clip(
-                raster: MosaicRasterGDAL, geometry: MosaicGeometry, geomCRS: SpatialReference,
-                geometryAPI: GeometryAPI, cutlineAllTouched: Boolean = true, mosaicConfig: MosaicExpressionConfig = null
-            ): MosaicRasterGDAL = {
+                raster: RasterGDAL, geometry: MosaicGeometry, geomCRS: SpatialReference,
+                geometryAPI: GeometryAPI, exprConfigOpt: Option[ExprConfig], cutlineAllTouched: Boolean = true
+            ): RasterGDAL = {
         val rasterCRS = raster.getSpatialReference
-        val outDriverShortName = raster.getDriverShortName
         val geomSrcCRS = if (geomCRS == null) rasterCRS else geomCRS
-
-        val resultFileName = PathUtils.createTmpFilePath(
-            GDAL.getExtension(outDriverShortName),
-            mosaicConfig = mosaicConfig
-        )
-        val shapeFileName = VectorClipper.generateClipper(geometry, geomSrcCRS, rasterCRS, geometryAPI)
+        val resultFileName = raster.createTmpFileFromDriver(exprConfigOpt)
+        val shapePath = VectorClipper.generateClipper(geometry, geomSrcCRS, rasterCRS, geometryAPI, exprConfigOpt)
 
         // Reference https://gdal.org/programs/gdalwarp.html for cmd line usage
         // For more on -wo consult https://gdal.org/doxygen/structGDALWarpOptions.html
@@ -61,7 +56,7 @@ object RasterClipByVector {
         } else {
             ""
         }
-        val cmd = s"gdalwarp$cutlineToken -cutline $shapeFileName -crop_to_cutline"
+        val cmd = s"gdalwarp$cutlineToken -cutline $shapePath -crop_to_cutline"
 
         /*
          * //scalastyle:off println
@@ -70,12 +65,13 @@ object RasterClipByVector {
         */
 
         val result = GDALWarp.executeWarp(
-          resultFileName,
-          Seq(raster),
-          command = cmd
+            resultFileName,
+            Seq(raster),
+            command = cmd,
+            exprConfigOpt
         )
 
-        VectorClipper.cleanUpClipper(shapeFileName)
+        VectorClipper.cleanUpClipper(shapePath)
 
         result
     }

@@ -7,8 +7,8 @@ import org.gdal.gdalconst.gdalconstConstants
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util._
 
-/** GDAL implementation of the MosaicRasterBand trait. */
-case class MosaicRasterBandGDAL(band: Band, id: Int) {
+/** GDAL implementation of the RasterBand trait. */
+case class RasterBandGDAL(band: Band, id: Int) {
 
     def getBand: Band = band
 

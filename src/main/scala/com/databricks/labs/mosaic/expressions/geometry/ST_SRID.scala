@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.{RequiresCRS, UnaryVectorExpression}
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
@@ -13,13 +13,13 @@ import org.apache.spark.sql.types._
   * Returns spatial reference ID of the geometry.
   * @param inputGeom
   *   The geometry to get the spatial reference ID from.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   */
 case class ST_SRID(
-    inputGeom: Expression,
-    expressionConfig: MosaicExpressionConfig
-) extends UnaryVectorExpression[ST_SRID](inputGeom, returnsGeometry = false, expressionConfig)
+                      inputGeom: Expression,
+                      exprConfig: ExprConfig
+) extends UnaryVectorExpression[ST_SRID](inputGeom, returnsGeometry = false, exprConfig)
       with RequiresCRS {
 
     override def dataType: DataType = IntegerType
@@ -48,8 +48,8 @@ object ST_SRID extends WithExpressionInfo {
           |        27700
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_SRID](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_SRID](1, exprConfig)
     }
 
 }

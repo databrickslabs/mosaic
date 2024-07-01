@@ -1,10 +1,10 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterBandGDAL
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.raster.gdal.RasterBandGDAL
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterBandExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -18,15 +18,15 @@ import org.apache.spark.sql.types._
   *   the raster are provided.
   * @param band
   *   The band index.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   */
-case class RST_BandMetaData(raster: Expression, band: Expression, expressionConfig: MosaicExpressionConfig)
+case class RST_BandMetaData(raster: Expression, band: Expression, exprConfig: ExprConfig)
     extends RasterBandExpression[RST_BandMetaData](
       raster,
       band,
       returnsRaster = false,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
@@ -41,7 +41,7 @@ case class RST_BandMetaData(raster: Expression, band: Expression, expressionConf
       * @return
       *   The band metadata of the band as a map type result.
       */
-    override def bandTransform(raster: MosaicRasterTile, band: MosaicRasterBandGDAL): Any = {
+    override def bandTransform(raster: RasterTile, band: RasterBandGDAL): Any = {
         buildMapString(band.metadata)
     }
 }
@@ -60,8 +60,8 @@ object RST_BandMetaData extends WithExpressionInfo {
           |        {"NC_GLOBAL#acknowledgement":"NOAA Coral Reef Watch Program","NC_GLOBAL#cdm_data_type":"Grid"}
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_BandMetaData](2, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_BandMetaData](2, exprConfig)
     }
 
 }

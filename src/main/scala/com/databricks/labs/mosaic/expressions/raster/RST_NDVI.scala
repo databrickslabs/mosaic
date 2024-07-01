@@ -1,12 +1,11 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.NDVI
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -14,23 +13,23 @@ import org.apache.spark.sql.types.DataType
 
 /** The expression for computing NDVI index. */
 case class RST_NDVI(
-    tileExpr: Expression,
-    redIndex: Expression,
-    nirIndex: Expression,
-    expressionConfig: MosaicExpressionConfig
+                       tileExpr: Expression,
+                       redIndex: Expression,
+                       nirIndex: Expression,
+                       exprConfig: ExprConfig
 ) extends Raster2ArgExpression[RST_NDVI](
       tileExpr,
       redIndex,
       nirIndex,
       returnsRaster = true,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
     // serialize data type
     override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, tileExpr, exprConfig.isRasterUseCheckpoint)
     }
 
     /**
@@ -44,10 +43,10 @@ case class RST_NDVI(
       * @return
       *   The raster contains NDVI index.
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(tile: RasterTile, arg1: Any, arg2: Any): Any = {
         val redInd = arg1.asInstanceOf[Int]
         val nirInd = arg2.asInstanceOf[Int]
-        tile.copy(raster = NDVI.compute(tile.raster, redInd, nirInd))
+        tile.copy(raster = NDVI.compute(tile.raster, redInd, nirInd, Option(exprConfig)))
     }
 
 }
@@ -70,8 +69,8 @@ object RST_NDVI extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_NDVI](3, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_NDVI](3, exprConfig)
     }
 
 }

@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
 import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT,
     MOSAIC_RASTER_CHECKPOINT_DEFAULT, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT, MOSAIC_RASTER_TMP_PREFIX_DEFAULT,
     MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
-import com.databricks.labs.mosaic.functions.{MosaicContext, MosaicExpressionConfig}
+import com.databricks.labs.mosaic.functions.{MosaicContext, ExprConfig}
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
@@ -56,9 +56,9 @@ object MosaicGDAL extends Logging {
         spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
 
     /** Configures the GDAL environment. */
-    def configureGDAL(mosaicConfig: MosaicExpressionConfig): Unit = {
-        val CPL_TMPDIR = MosaicContext.tmpDir(mosaicConfig)
-        val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir(mosaicConfig)
+    def configureGDAL(exprConfig: ExprConfig): Unit = {
+        val CPL_TMPDIR = MosaicContext.tmpDir(Option(exprConfig))
+        val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir(Option(exprConfig))
         gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
         gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
         gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)
@@ -68,28 +68,28 @@ object MosaicGDAL extends Logging {
         gdal.SetConfigOption("CPL_LOG", s"$CPL_TMPDIR/gdal.log")
         gdal.SetConfigOption("GDAL_CACHEMAX", "512")
         gdal.SetConfigOption("GDAL_NUM_THREADS", "ALL_CPUS")
-        mosaicConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
-        setBlockSize(mosaicConfig)
-        configureCheckpoint(mosaicConfig)
-        configureLocalRasterDir(mosaicConfig)
+        exprConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
+        setBlockSize(exprConfig)
+        configureCheckpoint(exprConfig)
+        configureLocalRasterDir(exprConfig)
     }
 
-    def configureCheckpoint(mosaicConfig: MosaicExpressionConfig): Unit = {
-        this.checkpointDir = mosaicConfig.getRasterCheckpoint
-        this.useCheckpoint = mosaicConfig.isRasterUseCheckpoint
+    def configureCheckpoint(exprConfig: ExprConfig): Unit = {
+        this.checkpointDir = exprConfig.getRasterCheckpoint
+        this.useCheckpoint = exprConfig.isRasterUseCheckpoint
     }
 
-    def configureLocalRasterDir(mosaicConfig: MosaicExpressionConfig): Unit = {
-        this.manualMode = mosaicConfig.isManualCleanupMode
-        this.cleanUpAgeLimitMinutes = mosaicConfig.getCleanUpAgeLimitMinutes
+    def configureLocalRasterDir(exprConfig: ExprConfig): Unit = {
+        this.manualMode = exprConfig.isManualCleanupMode
+        this.cleanUpAgeLimitMinutes = exprConfig.getCleanUpAgeLimitMinutes
 
         // don't allow a fuse path
-        if (PathUtils.isFuseLocation(mosaicConfig.getTmpPrefix)) {
+        if (PathUtils.isFusePathOrDir(exprConfig.getTmpPrefix)) {
             throw new Error(
-                s"configured tmp prefix '${mosaicConfig.getTmpPrefix}' must be local, " +
+                s"configured tmp prefix '${exprConfig.getTmpPrefix}' must be local, " +
                     s"not fuse mounts ('/dbfs/', '/Volumes/', or '/Workspace/')")
         } else {
-            this.localRasterDir = s"${mosaicConfig.getTmpPrefix}/mosaic_tmp"
+            this.localRasterDir = s"${exprConfig.getTmpPrefix}/mosaic_tmp"
         }
 
         // make sure cleanup manager thread is running
@@ -97,8 +97,8 @@ object MosaicGDAL extends Logging {
     }
 
 
-    def setBlockSize(mosaicConfig: MosaicExpressionConfig): Unit = {
-        val blockSize = mosaicConfig.getRasterBlockSize
+    def setBlockSize(exprConfig: ExprConfig): Unit = {
+        val blockSize = exprConfig.getRasterBlockSize
         if (blockSize > 0) {
             this.blockSize = blockSize
         }
@@ -119,13 +119,13 @@ object MosaicGDAL extends Logging {
       */
     def enableGDAL(spark: SparkSession): Unit = {
         // refresh configs in case spark had changes
-        val mosaicConfig = MosaicExpressionConfig(spark)
+        val exprConfig = ExprConfig(spark)
 
         if (!wasEnabled(spark) && !enabled) {
             Try {
                 enabled = true
                 loadSharedObjects()
-                configureGDAL(mosaicConfig)
+                configureGDAL(exprConfig)
                 gdal.AllRegister()
                 spark.conf.set(GDAL_ENABLED, "true")
             } match {
@@ -139,8 +139,8 @@ object MosaicGDAL extends Logging {
                     throw exception
             }
         } else {
-            configureCheckpoint(mosaicConfig)
-            configureLocalRasterDir(mosaicConfig)
+            configureCheckpoint(exprConfig)
+            configureLocalRasterDir(exprConfig)
         }
     }
 
@@ -199,7 +199,7 @@ object MosaicGDAL extends Logging {
             val msg = "Null checkpoint path provided."
             logError(msg)
             throw new NullPointerException(msg)
-        } else if (!isTestMode && !PathUtils.isFuseLocation(dir)) {
+        } else if (!isTestMode && !PathUtils.isFusePathOrDir(dir)) {
             val msg = "Checkpoint path must be a (non-local) fuse location."
             logError(msg)
             throw new InvalidPathException(dir, msg)
@@ -248,9 +248,9 @@ object MosaicGDAL extends Logging {
         // - registers spark expressions with the new config
         // - will make sure the session is consistent with these settings
         if (!MosaicContext.checkContext) {
-            val mosaicConfig = MosaicExpressionConfig(spark)
-            val indexSystem = IndexSystemFactory.getIndexSystem(mosaicConfig.getIndexSystem)
-            val geometryAPI =  GeometryAPI.apply(mosaicConfig.getGeometryAPI)
+            val exprConfig = ExprConfig(spark)
+            val indexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
+            val geometryAPI =  GeometryAPI.apply(exprConfig.getGeometryAPI)
             MosaicContext.build(indexSystem, geometryAPI)
         }
         val mc = MosaicContext.context()

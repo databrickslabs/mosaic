@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
@@ -13,16 +13,16 @@ import org.apache.spark.sql.types.DataType
   * Returns the convex hull for a given geometry.
   * @param inputGeom
   *   The input geometry.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   */
 case class ST_ConvexHull(
-    inputGeom: Expression,
-    expressionConfig: MosaicExpressionConfig
+                            inputGeom: Expression,
+                            exprConfig: ExprConfig
 ) extends UnaryVectorExpression[ST_ConvexHull](
       inputGeom,
       returnsGeometry = true,
-      expressionConfig
+      exprConfig
     ) {
 
     override def dataType: DataType = inputGeom.dataType
@@ -53,8 +53,8 @@ object ST_ConvexHull extends WithExpressionInfo {
           |        {"POLYGON (( 0 0, 1 0, 1 1, 0 1 ))"}
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_ConvexHull](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_ConvexHull](1, exprConfig)
     }
 
 }

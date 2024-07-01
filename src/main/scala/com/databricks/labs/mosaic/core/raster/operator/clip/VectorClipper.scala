@@ -2,6 +2,8 @@ package com.databricks.labs.mosaic.core.raster.operator.clip
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.flushAndDestroy
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.gdal.gdal.gdal
 import org.gdal.ogr.ogrConstants.OFTInteger
@@ -18,11 +20,13 @@ object VectorClipper {
 
     /**
       * Generates an in memory shapefile that is used to clip a raster.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   The shapefile name.
       */
-    private def getShapefileName: String = {
-        val shapeFileName = PathUtils.createTmpFilePath("shp")
+    private def getShapefilePath(exprConfigOpt: Option[ExprConfig]): String = {
+        val shapeFileName = PathUtils.createTmpFilePath("shp", exprConfigOpt)
         shapeFileName
     }
 
@@ -43,10 +47,10 @@ object VectorClipper {
       * Generates a clipper shapefile that is used to clip a raster. The
       * shapefile is flushed to disk and then the data source is deleted. The
       * shapefile is accessed by gdalwarp by file name.
-      * @note
+     *
+     * @note
       *   The shapefile is generated in memory.
-      *
-      * @param geometry
+     * @param geometry
       *   The geometry to clip by.
       * @param srcCrs
       *   The geometry CRS.
@@ -54,15 +58,21 @@ object VectorClipper {
       *   The raster CRS.
       * @param geometryAPI
       *   The geometry API.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   The shapefile name.
       */
-    def generateClipper(geometry: MosaicGeometry, srcCrs: SpatialReference, dstCrs: SpatialReference, geometryAPI: GeometryAPI): String = {
-        val shapeFileName = getShapefileName
-        var shpDataSource = getShapefile(shapeFileName)
-
+    def generateClipper(
+                           geometry: MosaicGeometry,
+                           srcCrs: SpatialReference,
+                           dstCrs: SpatialReference,
+                           geometryAPI: GeometryAPI,
+                           exprConfigOpt: Option[ExprConfig]
+                       ): String = {
+        val shapePath = getShapefilePath(exprConfigOpt)
+        val shpDataSource: DataSource = getShapefile(shapePath) // note: not a Dataset
         val projectedGeom = geometry.osrTransformCRS(srcCrs, dstCrs, geometryAPI)
-
         val geom = ogr.CreateGeometryFromWkb(projectedGeom.toWKB)
 
         // 0.4.3 added SRS
@@ -76,22 +86,20 @@ object VectorClipper {
         feature.SetField("id", 1)
         geomLayer.CreateFeature(feature)
 
-        shpDataSource.FlushCache()
-        shpDataSource.delete()
-        shpDataSource = null
+        flushAndDestroy(shpDataSource) // flush cache
 
-        shapeFileName
+        shapePath
     }
 
     /**
       * Cleans up the clipper shapefile.
       *
-      * @param shapeFileName
+      * @param shapePath
       *   The shapefile to clean up.
       */
-    def cleanUpClipper(shapeFileName: String): Unit = {
-        Try(ogr.GetDriverByName("ESRI Shapefile").DeleteDataSource(shapeFileName))
-//        Try(gdal.Unlink(shapeFileName)) // 0.4.3 let cleanup manager unlink
+    def cleanUpClipper(shapePath: String): Unit = {
+        Try(ogr.GetDriverByName("ESRI Shapefile").DeleteDataSource(shapePath))
+        Try(gdal.Unlink(shapePath))
     }
 
 }

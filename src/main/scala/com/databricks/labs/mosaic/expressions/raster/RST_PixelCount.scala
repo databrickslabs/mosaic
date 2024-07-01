@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -15,8 +15,8 @@ case class RST_PixelCount(
                              rasterExpr: Expression,
                              noDataExpr: Expression,
                              allExpr: Expression,
-                             expressionConfig: MosaicExpressionConfig)
-    extends Raster2ArgExpression[RST_PixelCount](rasterExpr, noDataExpr, allExpr, returnsRaster = false, expressionConfig)
+                             exprConfig: ExprConfig)
+    extends Raster2ArgExpression[RST_PixelCount](rasterExpr, noDataExpr, allExpr, returnsRaster = false, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -29,15 +29,19 @@ case class RST_PixelCount(
       * - if countAll specified as true, simply return bandX * bandY in the count (default is false). countAll ignores
       *   countNodData
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
-        val raster = tile.raster
-        val bandCount = raster.getDatasetHydrated.GetRasterCount()
+    override def rasterTransform(tile: RasterTile, arg1: Any, arg2: Any): Any = {
         val countNoData = arg1.asInstanceOf[Boolean]
         val countAll = arg2.asInstanceOf[Boolean]
-        val pixelCount = (1 to bandCount).map(
-            raster.getBand(_).pixelCount(countNoData, countAll)
-        )
-        ArrayData.toArrayData(pixelCount.toArray)
+        val raster = tile.raster
+        raster.withDatasetHydratedOpt() match {
+            case Some(dataset) =>
+                val bandCount = dataset.GetRasterCount()
+                val pixelCount = (1 to bandCount).map (
+                    raster.getBand (_).pixelCount (countNoData, countAll)
+                )
+                ArrayData.toArrayData(pixelCount.toArray)
+            case _ => ArrayData.toArrayData(Array.empty[Int])
+        }
     }
 
 }
@@ -56,8 +60,8 @@ object RST_PixelCount extends WithExpressionInfo {
           |       [12, 212, 313]
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_PixelCount](3, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_PixelCount](3, exprConfig)
     }
 
 }

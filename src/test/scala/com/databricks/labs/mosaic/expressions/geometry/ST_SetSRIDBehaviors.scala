@@ -67,7 +67,7 @@ trait ST_SetSRIDBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stSetSRID = ST_SetSRID(lit("POINT (1 1)").expr, lit(4326).expr, mc.expressionConfig)
+        val stSetSRID = ST_SetSRID(lit("POINT (1 1)").expr, lit(4326).expr, mc.exprConfig)
 
         stSetSRID.left shouldEqual lit("POINT (1 1)").expr
         stSetSRID.right shouldEqual lit(4326).expr

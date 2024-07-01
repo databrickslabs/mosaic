@@ -1,43 +1,46 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.createTmpFileFromDriver
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALWarp
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
+import scala.util.Try
+
 /** Returns the median value per band of the raster. */
-case class RST_Median(rasterExpr: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Median](rasterExpr, returnsRaster = false, expressionConfig)
+case class RST_Median(rasterExpr: Expression, exprConfig: ExprConfig)
+    extends RasterExpression[RST_Median](rasterExpr, returnsRaster = false, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = ArrayType(DoubleType)
 
     /** Returns the median value per band of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
+    override def rasterTransform(tile: RasterTile): Any = Try {
         val raster = tile.raster
         val width = raster.xSize * raster.pixelXSize
         val height = raster.ySize * raster.pixelYSize
-        val outShortName = raster.getDriverShortName
-        val resultFileName = PathUtils.createTmpFilePath(GDAL.getExtension(outShortName))
+        val driverShortName = raster.getDriverName()
+        val resultFileName = createTmpFileFromDriver(driverShortName, Option(exprConfig))
         val medRaster = GDALWarp.executeWarp(
-          resultFileName,
-          Seq(raster),
-          command = s"gdalwarp -r med -tr $width $height -of $outShortName"
+            resultFileName,
+            Seq(raster),
+            command = s"gdalwarp -r med -tr $width $height -of $driverShortName",
+            Option(exprConfig)
         )
 
         // Max pixel is a hack since we get a 1x1 raster back
-        val maxValues = (1 to medRaster.getDatasetHydrated.GetRasterCount()).map(medRaster.getBand(_).maxPixelValue)
+        val nBands = raster.withDatasetHydratedOpt().get.GetRasterCount()
+        val maxValues = (1 to nBands).map(medRaster.getBand(_).maxPixelValue)
         ArrayData.toArrayData(maxValues.toArray)
-    }
+    }.getOrElse(ArrayData.toArrayData(Array.empty[Double]))
 
 }
 
@@ -55,8 +58,8 @@ object RST_Median extends WithExpressionInfo {
           |       [1.123, 2.123, 3.123]
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Median](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Median](1, exprConfig)
     }
 
 }

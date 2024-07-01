@@ -1,7 +1,8 @@
 package com.databricks.labs.mosaic.core.raster.operator.pixel
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.types.{BinaryType, DataType}
 
@@ -22,34 +23,44 @@ object PixelCombineRasters {
       *   Provided function.
       * @param pythonFuncName
       *   Function name.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
-      *   A MosaicRaster object.
+      *   A Raster object.
       */
-    def combine(rasters: Seq[MosaicRasterGDAL], pythonFunc: String, pythonFuncName: String): MosaicRasterGDAL = {
+    def combine(
+                   rasters: Seq[RasterGDAL],
+                   pythonFunc: String,
+                   pythonFuncName: String,
+                   exprConfigOpt: Option[ExprConfig]
+               ): RasterGDAL = {
         val outOptions = rasters.head.getWriteOptions
 
-        val vrtPath = PathUtils.createTmpFilePath("vrt")
-        val rasterPath = PathUtils.createTmpFilePath(outOptions.extension)
+        val vrtPath = PathUtils.createTmpFilePath("vrt", exprConfigOpt)
+        val rasterPath = PathUtils.createTmpFilePath(outOptions.extension, exprConfigOpt)
 
         val vrtRaster = GDALBuildVRT.executeVRT(
-          vrtPath,
-          rasters,
-          command = s"gdalbuildvrt -resolution highest"
+            vrtPath,
+            rasters,
+            command = s"gdalbuildvrt -resolution highest",
+            exprConfigOpt
         )
 
         addPixelFunction(vrtPath, pythonFunc, pythonFuncName)
-        vrtRaster.reHydrate() // after pixel func
+        val vrtModRaster = RasterGDAL(vrtRaster.getCreateInfo, exprConfigOpt)
 
         val result = GDALTranslate.executeTranslate(
-          rasterPath,
-          vrtRaster,
-          command = s"gdal_translate",
-          outOptions
+            rasterPath,
+            vrtModRaster,
+            command = s"gdal_translate",
+            outOptions,
+            exprConfigOpt
         )
 
-        vrtRaster.destroy() // post translate
+        { vrtRaster.flushAndDestroy(); vrtModRaster.flushAndDestroy() }
 
         result
+
     }
 
     /**

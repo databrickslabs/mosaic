@@ -1,27 +1,30 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /** Returns the rotation angle of the raster. */
-case class RST_Rotation(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Rotation](raster, returnsRaster = false, expressionConfig)
+case class RST_Rotation(raster: Expression, exprConfig: ExprConfig)
+    extends RasterExpression[RST_Rotation](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = DoubleType
 
     /** Returns the rotation angle of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val gt = tile.raster.getGeoTransform
-        // arctan of y_skew and x_scale
-        math.atan(gt(4) / gt(1))
+    override def rasterTransform(tile: RasterTile): Any = {
+        tile.raster.getGeoTransformOpt match {
+            case Some(gt) =>
+                // arctan of y_skew and x_scale
+                math.atan (gt (4) / gt (1) )
+            case _ => 0d // double
+        }
     }
 
 }
@@ -43,8 +46,8 @@ object RST_Rotation extends WithExpressionInfo {
           |        11.2
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Rotation](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Rotation](1, exprConfig)
     }
 
 }

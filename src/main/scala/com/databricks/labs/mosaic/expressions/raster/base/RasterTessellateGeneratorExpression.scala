@@ -3,12 +3,11 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.flushAndDestroy
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
 import org.apache.spark.sql.types._
@@ -30,24 +29,24 @@ import scala.reflect.ClassTag
   *   the raster are provided.
   * @param resolutionExpr
   *   The resolution of the index system to use for tessellation.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
   *   The type of the extending class.
   */
 abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
-    rasterExpr: Expression,
-    resolutionExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                                                                                 rasterExpr: Expression,
+                                                                                 resolutionExpr: Expression,
+                                                                                 exprConfig: ExprConfig
 ) extends CollectionGenerator
       with NullIntolerant
       with Serializable {
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
-    val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+    val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
 
-    protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
+    protected val geometryAPI: GeometryAPI = GeometryAPI.apply(exprConfig.getGeometryAPI)
 
     override def position: Boolean = false
 
@@ -63,7 +62,7 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
         StructType(
             Array(StructField(
                 "element",
-                RasterTileType(expressionConfig.getCellIdType, rasterExpr, useCheckpoint = true)) // always use checkpoint
+                RasterTileType(exprConfig.getCellIdType, rasterExpr, useCheckpoint = true)) // always use checkpoint
             )
         )
     }
@@ -78,21 +77,22 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * @return
       *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile]
+    def rasterGenerator(raster: RasterTile, resolution: Int): Seq[RasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        GDAL.enable(expressionConfig)
-        var tile = MosaicRasterTile.deserialize(
-                rasterExpr.eval(input).asInstanceOf[InternalRow],
-                indexSystem.getCellIdDataType
-            )
+        GDAL.enable(exprConfig)
+        var tile = RasterTile.deserialize(
+            rasterExpr.eval(input).asInstanceOf[InternalRow],
+            indexSystem.getCellIdDataType,
+            Option(exprConfig)
+        )
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
         var genTiles = rasterGenerator(tile, inResolution).map(_.formatCellId(indexSystem))
-        val resultType = getRasterType(RasterTileType(rasterExpr, useCheckpoint = true)) // always use checkpoint
-        val rows = genTiles.map(t => InternalRow.fromSeq(Seq(t.formatCellId(indexSystem).serialize(
-            resultType, doDestroy = true))))
+        val resultType = RasterTile.getRasterType(RasterTileType(rasterExpr, useCheckpoint = true)) // always use checkpoint
+        val rows = genTiles.map(t => InternalRow.fromSeq(Seq(t.formatCellId(indexSystem)
+            .serialize(resultType, doDestroy = true, Option(exprConfig)))))
 
-        destroy(tile)
+        tile.flushAndDestroy()
         tile = null
         genTiles = null
 
@@ -100,7 +100,7 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =
-        GenericExpressionFactory.makeCopyImpl[T](this, newArgs, children.length, expressionConfig)
+        GenericExpressionFactory.makeCopyImpl[T](this, newArgs, children.length, exprConfig)
 
     override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = makeCopy(newChildren.toArray)
 

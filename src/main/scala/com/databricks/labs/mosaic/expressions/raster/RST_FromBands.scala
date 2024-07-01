@@ -1,12 +1,11 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.merge.MergeBands
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterArrayExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -15,12 +14,12 @@ import org.apache.spark.sql.types.DataType
 
 /** The expression for stacking and resampling input bands. */
 case class RST_FromBands(
-    bandsExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                            bandsExpr: Expression,
+                            exprConfig: ExprConfig
 ) extends RasterArrayExpression[RST_FromBands](
       bandsExpr,
       returnsRaster = true,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
@@ -28,9 +27,9 @@ case class RST_FromBands(
     // serialize data type
     override def dataType: DataType = {
         RasterTileType(
-            expressionConfig.getCellIdType,
-            RasterTileType(bandsExpr, expressionConfig.isRasterUseCheckpoint).rasterType,
-            expressionConfig.isRasterUseCheckpoint
+            exprConfig.getCellIdType,
+            RasterTileType(bandsExpr, exprConfig.isRasterUseCheckpoint).rasterType,
+            exprConfig.isRasterUseCheckpoint
         )
     }
 
@@ -41,8 +40,8 @@ case class RST_FromBands(
       * @return
       *   The stacked and resampled raster.
       */
-    override def rasterTransform(rasters: Seq[MosaicRasterTile]): Any = {
-        rasters.head.copy(raster = MergeBands.merge(rasters.map(_.raster), "bilinear"))
+    override def rasterTransform(rasters: Seq[RasterTile]): Any = {
+        rasters.head.copy(raster = MergeBands.merge(rasters.map(_.raster), "bilinear", Option(exprConfig)))
     }
 
 }
@@ -66,8 +65,8 @@ object RST_FromBands extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_FromBands](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_FromBands](1, exprConfig)
     }
 
 }

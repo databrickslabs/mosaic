@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
@@ -31,6 +32,7 @@ trait ReadStrategy extends Serializable {
 
     /**
       * Reads the content of the file.
+ *
       * @param status
       *   File status.
       * @param fs
@@ -38,18 +40,21 @@ trait ReadStrategy extends Serializable {
       * @param requiredSchema
       *   Required schema.
       * @param options
-      *   Options passed to the reader.
+      * Options passed to the reader.
       * @param indexSystem
-      *   Index system.
+      * Index system.
+      * @param exprConfig
+      * [[ExprConfig]]
       * @return
       *   Iterator of internal rows.
       */
     def read(
-        status: FileStatus,
-        fs: FileSystem,
-        requiredSchema: StructType,
-        options: Map[String, String],
-        indexSystem: IndexSystem
+                status: FileStatus,
+                fs: FileSystem,
+                requiredSchema: StructType,
+                options: Map[String, String],
+                indexSystem: IndexSystem,
+                exprConfig: ExprConfig
     ): Iterator[InternalRow]
 
 }

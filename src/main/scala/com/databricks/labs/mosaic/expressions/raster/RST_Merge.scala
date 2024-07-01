@@ -3,10 +3,10 @@ package com.databricks.labs.mosaic.expressions.raster
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.merge.MergeRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterArrayExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -14,21 +14,21 @@ import org.apache.spark.sql.types.DataType
 
 /** Returns a raster that is a result of merging an array of rasters. */
 case class RST_Merge(
-    rastersExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                        rastersExpr: Expression,
+                        exprConfig: ExprConfig
 ) extends RasterArrayExpression[RST_Merge](
       rastersExpr,
       returnsRaster = true,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
-    GDAL.enable(expressionConfig)
+    GDAL.enable(exprConfig)
 
     // serialize data type
     override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, rastersExpr, exprConfig.isRasterUseCheckpoint)
     }
 
     /**
@@ -38,10 +38,10 @@ case class RST_Merge(
       * @return
       *   The merged raster.
       */
-    override def rasterTransform(tiles: Seq[MosaicRasterTile]): Any = {
+    override def rasterTransform(tiles: Seq[RasterTile]): Any = {
         val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
-        val mergeRaster = MergeRasters.merge(tiles.map(_.raster))
-        mergeRaster.reHydrate() // flush cache
+        val mergeRaster = MergeRasters.merge(tiles.map(_.raster), Option(exprConfig))
+
         tiles.head.copy(
           raster = mergeRaster,
           index = index
@@ -69,8 +69,8 @@ object RST_Merge extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Merge](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Merge](1, exprConfig)
     }
 
 }

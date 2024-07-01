@@ -1,10 +1,10 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -12,11 +12,11 @@ import org.apache.spark.sql.types.IntegerType
 
 /** Returns the x coordinate of the raster. */
 case class RST_WorldToRasterCoordX(
-    raster: Expression,
-    x: Expression,
-    y: Expression,
-    expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_WorldToRasterCoordX](raster, x, y, returnsRaster = false, expressionConfig)
+                                      raster: Expression,
+                                      x: Expression,
+                                      y: Expression,
+                                      exprConfig: ExprConfig
+) extends Raster2ArgExpression[RST_WorldToRasterCoordX](raster, x, y, returnsRaster = false, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
@@ -26,10 +26,13 @@ case class RST_WorldToRasterCoordX(
       * Returns the x coordinate of the raster by applying GeoTransform. This
       * will ensure projection of the raster is respected.
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(tile: RasterTile, arg1: Any, arg2: Any): Any = {
         val xGeo = arg1.asInstanceOf[Double]
-        val gt = tile.raster.getGeoTransform
-        GDAL.fromWorldCoord(gt, xGeo, 0)._1
+        val yGeo = arg2.asInstanceOf[Double]
+        tile.raster.getGeoTransformOpt match {
+            case Some(gt) => GDAL.fromWorldCoord(gt, xGeo, yGeo)._1
+            case _ => 0
+        }
     }
 
 }
@@ -48,8 +51,8 @@ object RST_WorldToRasterCoordX extends WithExpressionInfo {
           |       11
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_WorldToRasterCoordX](3, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_WorldToRasterCoordX](3, exprConfig)
     }
 
 }

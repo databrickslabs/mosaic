@@ -30,7 +30,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         val conf = sparkConf
         val session = new MosaicTestSparkSession(conf)
         session.sparkContext.setLogLevel("ERROR")
-        mosaicCheckpointRootDir = FileUtils.createMosaicTempDir(prefix = getCheckpointRootDir)
+        mosaicCheckpointRootDir = FileUtils.createMosaicTmpDir(prefix = getCheckpointRootDir)
         Try(MosaicGDAL.enableGDAL(session))
         session
     }
@@ -44,7 +44,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         sc.conf.set(MOSAIC_GDAL_NATIVE, "true")
         sc.conf.set(MOSAIC_TEST_MODE, "true")
         sc.conf.set(MOSAIC_MANUAL_CLEANUP_MODE, "false")
-        sc.conf.set(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, "30") // default "30"
+        sc.conf.set(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, "30")
         sc.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT)
         sc.conf.set(MOSAIC_RASTER_CHECKPOINT, mosaicCheckpointRootDir)
         sc.conf.set(MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT)

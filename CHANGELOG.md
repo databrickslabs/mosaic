@@ -1,19 +1,28 @@
 ## v0.4.3 [DBR 13.3 LTS]
+- In preparation for upcoming transition to dblabs spatial-utils (follow-on to dblabs mosaic but for DBR 14.3+, adjusted for 
+  various enhancements relating to our productized geospatial APIs):
+  - Significant streamlining of internal GDAL `Dataset` handling to include "hydrating" (loading the object) more lazily
+  - Dropped "Mosaic" from the serialized internal objects: `MosaicRasterTile`, `MosaicRasterGDAL`, and `MosaicRasterBandGDAL`
+  - All newly generated `RasterTile` objects store the raster payload (`BinaryType` | `StringType` | GDAL `Dataset`) to
+    the configured fuse checkpoint dir (see below); RasterTiles generated in 0.4.1 and 0.4.2 can be loaded as-is 
+    (structure was different prior to that)
+- Due to release of numpy 2.0 which has breaking changes with GDAL, numpy now limited to "<2.0,>=1.21.5" to match DBR minimum
 - Pyspark requirement removed from python setup.cfg as it is supplied by DBR
 - Python version limited to "<3.11,>=3.10" for DBR
 - iPython dependency limited to "<8.11,>=7.4.2" for both DBR and keplergl-jupyter
 - Expanded support for fuse-based checkpointing (persisted raster storage), managed through:
-  - spark config `spark.databricks.labs.mosaic.raster.use.checkpoint` in addition to `spark.databricks.labs.mosaic.raster.checkpoint`
-  - python: `mos.enable_gdal(spark, with_checkpoint_dir=dir)`  - additional functions include: 
-    `gdal.update_checkpoint_dir`, `gdal.set_checkpoint_on`, `gdal.set_checkpoint_off`, and `gdal.reset_checkpoint`
+  - spark config `spark.databricks.labs.mosaic.raster.checkpoint`
+  - python: `mos.enable_gdal(spark, with_checkpoint_dir=dir)` - additional functions include 
+    `gdal.update_checkpoint_dir`, and `gdal.reset_checkpoint`
   - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, dir)` (similar bindings to python as well)
-- Local files are no longer immediately deleted (disposed) but are controlled through `spark.databricks.labs.mosaic.manual.cleanup.mode`
+- Local files generally are no longer eagerly deleted (disposed) but are controlled through 
+  `spark.databricks.labs.mosaic.manual.cleanup.mode`
   and `spark.databricks.labs.mosaic.cleanup.age.limit.minutes` along with existing ability to specify the session 
   local storage root dir with `spark.databricks.labs.mosaic.raster.tmp.prefix`
 - `RST_PixelCount` now supports optional 'countNoData' and 'countMask' (defaults are `false`, can now be `true`) to optionally get full 
    pixel counts where mask is 0.0 and noData is what is configured in the raster
 - Added `RST_Write` to save a generated 'tile' to a specified directory (e.g. fuse) location using its GDAL driver and 
-  raster data / path; useful for formalizing the path when writing a Lakehouse table (allowing removal of interim
+  raster data / rawPath; useful for formalizing the rawPath when writing a Lakehouse table (allowing removal of interim
   checkpointed data)
 - Improved `raster_to_grid` reader performance by using checkpointing for interim steps and adjusting repartitioning;
   default read strategy for this reader and its underlying `.format("gdal")` reader is "as_path" instead of "in_memory"
@@ -25,6 +34,7 @@
 - Python bindings added for `RST_Avg`, `RST_Max`, `RST_Median`, `RST_Min`, and `RST_PixelCount`; also added missing 'driver' 
   param documented for `RST_FromContent`, missing docs added for `RST_SetSRID`, and standardized `RST_ToOverlappingTiles` 
   (`RST_To_Overlapping_Tiles` deprecated)
+- `RST_WorldToRasterCoordY` now returns `y` value (was returning `x` value)
 - Doc UDF example added for arbitrary GDAL Warp and Transform ops
 - Quickstart Notebook updated to use MosaicAnalyzer [
   [Python](https://github.com/databrickslabs/mosaic/blob/main/python/mosaic/models/analyzer/analyzer.py) |
@@ -46,7 +56,7 @@
 - Added tiller functions, ST_AsGeoJSONTile and ST_AsMVTTile, for creating GeoJSON and MVT tiles as aggregations of geometries.
 - Added filter and convolve functions for raster data.
 - Raster tile schema changed to be <tile:struct<index_id:bigint, tile:binary, metadata:map<string, string>>.
-- Raster tile metadata will contain driver, parentPath and path.
+- Raster tile metadata will contain driver, parentPath and rawPath.
 - Raster tile metadata will contain warnings and errors in case of failures.
 - All raster functions ensure rasters are TILED and not STRIPED when appropriate.
 - GDAL cache memory has been decreased to 512MB to reduce memory usage and competition with Spark.
@@ -95,7 +105,7 @@
 - Fixed photon check for DBR warnings.
 - Bump maven-surefire-plugin from 3.0.0 to 3.1.0.
 - Fix the bug described in issue 360: incomplete coverage from grid_geometrykring and grid_tessellate.
-- Add default value for script location path to init script.
+- Add default value for script location rawPath to init script.
 
 ## v0.3.10
 - Fixed k-ring logic for BNG grid close to the edge of the grid
@@ -107,7 +117,7 @@
 - Fix intersection operations with ESRI geometry APIs
 - Fixed custom grid issues for grids not multiple of the root size resolution
 - Fixed python binding for rst_georeference
-- Fixed ESRI create polygon with correct path order with ESRI APIs
+- Fixed ESRI create polygon with correct rawPath order with ESRI APIs
 - Fixed automatic SQL registration with GDAL
 
 ## v0.3.9

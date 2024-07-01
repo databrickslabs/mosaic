@@ -15,7 +15,7 @@
 # [4] get shell with `docker exec -it mosaic-dev /bin/bash -c "unset JAVA_TOOL_OPTIONS && cd /root/mosaic && /bin/bash"`,
 # - can have multiple shells going; call `sh scripts/docker/exec-shell.sh` also
 # [5] `docker stop mosaic-dev` whenever done to terminate the container
-# NOTE: Ignore 'ERRO[0000] error waiting for container: context canceled'; also had to rebuild image
+# NOTE: Ignore 'ERRO[0000] error waiting for container: context canceled'; also had to update Docker Desktop to 4.32
 #       to address an issue that came up with update to MacOS Sonoma 14.5
 docker run -q --privileged --platform linux/amd64 --name mosaic-dev -p 5005:5005 -p 8888:8888 \
 -v $PWD:/root/mosaic -e JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n" \

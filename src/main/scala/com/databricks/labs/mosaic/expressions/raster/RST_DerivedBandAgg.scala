@@ -2,13 +2,11 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
 import com.databricks.labs.mosaic.core.raster.operator.pixel.PixelCombineRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpressionSerialization
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnsafeProjection, UnsafeRow}
@@ -25,24 +23,24 @@ import scala.collection.mutable.ArrayBuffer
   */
 //noinspection DuplicatedCode
 case class RST_DerivedBandAgg(
-    rastersExpr: Expression,
-    pythonFuncExpr: Expression,
-    funcNameExpr: Expression,
-    expressionConfig: MosaicExpressionConfig,
-    mutableAggBufferOffset: Int = 0,
-    inputAggBufferOffset: Int = 0
+                                 rastersExpr: Expression,
+                                 pythonFuncExpr: Expression,
+                                 funcNameExpr: Expression,
+                                 exprConfig: ExprConfig,
+                                 mutableAggBufferOffset: Int = 0,
+                                 inputAggBufferOffset: Int = 0
 ) extends TypedImperativeAggregate[ArrayBuffer[Any]]
       with TernaryLike[Expression]
       with RasterExpressionSerialization {
 
-    GDAL.enable(expressionConfig)
+    GDAL.enable(exprConfig)
 
     override lazy val deterministic: Boolean = true
 
     override val nullable: Boolean = false
 
     override lazy val dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, rastersExpr, exprConfig.isRasterUseCheckpoint)
     }
 
     private lazy val projection = UnsafeProjection.create(Array[DataType](ArrayType(elementType = dataType, containsNull = false)))
@@ -76,7 +74,7 @@ case class RST_DerivedBandAgg(
         copy(mutableAggBufferOffset = newMutableAggBufferOffset)
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
-        GDAL.enable(expressionConfig)
+        GDAL.enable(exprConfig)
         if (buffer.isEmpty) {
             null
         } else {
@@ -87,23 +85,24 @@ case class RST_DerivedBandAgg(
 
             // Do do move the expression
             var tiles = buffer.map(row =>
-                MosaicRasterTile.deserialize(
-                  row.asInstanceOf[InternalRow],
-                  expressionConfig.getCellIdType
+                RasterTile.deserialize(
+                    row.asInstanceOf[InternalRow],
+                    exprConfig.getCellIdType,
+                    Option(exprConfig)
                 )
             )
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
-            var combined = PixelCombineRasters.combine(tiles.map(_.raster), pythonFunc, funcName)
-            val resultType = getRasterType(dataType)
-            var result = MosaicRasterTile(idx, combined, resultType)
-                .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
+            var combined = PixelCombineRasters.combine(tiles.map(_.raster), pythonFunc, funcName, Option(exprConfig))
+            val resultType = RasterTile.getRasterType(dataType)
+            var result = RasterTile(idx, combined, resultType)
+                .formatCellId(IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem))
 
             // using serialize on the object vs from RasterExpressionSerialization
-            val serialized = result.serialize(resultType, doDestroy = true)
+            val serialized = result.serialize(resultType, doDestroy = true, Option(exprConfig))
 
-            tiles.foreach(destroy)
+            tiles.foreach(_.flushAndDestroy())
             tiles = null
             combined = null
             result = null

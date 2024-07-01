@@ -36,9 +36,28 @@ package object mosaic {
     val MOSAIC_RASTER_READ_AS_PATH = "as_path"
     val MOSAIC_RASTER_RE_TILE_ON_READ = "retile_on_read"
 
-    val MOSAIC_NO_DRIVER = "no_driver"
+    val NO_PATH_STRING = "no_path"
+    val NO_EXT = "ukn"
+    val NO_DRIVER = "no_driver"
     val MOSAIC_TEST_MODE = "spark.databricks.labs.mosaic.test.mode"
     val MOSAIC_MANUAL_CLEANUP_MODE = "spark.databricks.labs.mosaic.manual.cleanup.mode"
+
+    // processing keys
+    val RASTER_BAND_INDEX_KEY      = "bandIndex"
+    val RASTER_DRIVER_KEY          = "driver"
+    val RASTER_PARENT_PATH_KEY     = "parentPath"
+    val RASTER_PATH_KEY            = "path"
+    val RASTER_SUBDATASET_NAME_KEY = "subdatasetName"
+
+    // informational keys
+    val RASTER_ALL_PARENTS_KEY     = "all_parents"
+    val RASTER_FULL_ERR_KEY        = "full_error"
+    val RASTER_LAST_CMD_KEY        = "last_command"
+    val RASTER_LAST_ERR_KEY        = "last_error"
+    val RASTER_MEM_SIZE_KEY        = "mem_size"
+
+    val POLYGON_EMPTY_WKT = "POLYGON(EMPTY)"
+    val POINT_0_WKT = "POINT(0 0)" // no support for POINT(EMPTY) in WKB
 
     def read: MosaicDataFrameReader = new MosaicDataFrameReader(SparkSession.builder().getOrCreate())
 

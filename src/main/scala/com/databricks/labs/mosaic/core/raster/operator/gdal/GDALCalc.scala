@@ -1,7 +1,8 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRasterWriteOptions}
+import com.databricks.labs.mosaic.{RASTER_ALL_PARENTS_KEY, RASTER_DRIVER_KEY, RASTER_FULL_ERR_KEY, RASTER_LAST_CMD_KEY, RASTER_LAST_ERR_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.core.raster.gdal.{RasterGDAL, RasterWriteOptions}
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.SysUtils
 import org.gdal.gdal.gdal
 
@@ -26,24 +27,32 @@ object GDALCalc {
       *   The GDAL Calc command to execute.
       * @param resultPath
       *   The path to the result.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
-      *   Returns the result as a [[MosaicRasterGDAL]].
+      *   Returns the result as a [[RasterGDAL]].
       */
-    def executeCalc(gdalCalcCommand: String, resultPath: String): MosaicRasterGDAL = {
+    def executeCalc(gdalCalcCommand: String, resultPath: String, exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
         require(gdalCalcCommand.startsWith("gdal_calc"), "Not a valid GDAL Calc command.")
-        val effectiveCommand = OperatorOptions.appendOptions(gdalCalcCommand, MosaicRasterWriteOptions.GTiff)
+        val effectiveCommand = OperatorOptions.appendOptions(gdalCalcCommand, RasterWriteOptions.GTiff)
         val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
         val commandRes = SysUtils.runCommand(s"python3 $toRun")
         val errorMsg = gdal.GetLastErrorMsg
-        val calcResult = GDAL.raster(resultPath, resultPath)
+
+//        if (errorMsg.nonEmpty) {
+//            // scalastyle:off println
+//            println(s"... GDALCalc (last_error) - '$errorMsg' for '$resultPath'")
+//            // scalastyle:on println
+//        }
+
         val createInfo = Map(
-          "path" -> resultPath,
-          "parentPath" -> resultPath,
-          "driver" -> "GTiff",
-          "last_command" -> effectiveCommand,
-          "last_error" -> errorMsg,
-          "all_parents" -> resultPath,
-          "full_error" -> s"""
+          RASTER_PATH_KEY -> resultPath,
+          RASTER_PARENT_PATH_KEY -> resultPath,
+          RASTER_DRIVER_KEY -> "GTiff",
+          RASTER_LAST_CMD_KEY -> effectiveCommand,
+          RASTER_LAST_ERR_KEY -> errorMsg,
+          RASTER_ALL_PARENTS_KEY -> resultPath,
+          RASTER_FULL_ERR_KEY -> s"""
                              |GDAL Calc command failed:
                              |GDAL err:
                              |$errorMsg
@@ -53,9 +62,7 @@ object GDALCalc {
                              |${commandRes._3}
                              |""".stripMargin
         )
-        val result = calcResult.copy(createInfoInit = createInfo)
-        //result.reHydrate() // flush cache not needed here
-        result
+        RasterGDAL(createInfo, exprConfigOpt)
     }
 
 }

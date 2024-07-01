@@ -27,5 +27,4 @@ echo "\n::: [4] ... build python :::\n"
 cd /root/mosaic/python && pip install .
 
 # [5] extras (if any)
-echo "\n::: [5] ... extras :::\n"
-#apt-get update && apt-get install -y zip
+#echo "\n::: [5] ... extras :::\n"

@@ -1,9 +1,11 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRasterWriteOptions}
+import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_ALL_PARENTS_KEY, RASTER_DRIVER_KEY, RASTER_LAST_CMD_KEY, RASTER_LAST_ERR_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.core.raster.gdal.{RasterGDAL, RasterWriteOptions}
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.flushAndDestroy
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.gdal.gdal.{TranslateOptions, gdal}
 
-import java.nio.file.{Files, Paths}
 
 /** GDALTranslate is a wrapper for the GDAL Translate command. */
 object GDALTranslate {
@@ -17,33 +19,46 @@ object GDALTranslate {
       *   The raster to translate.
       * @param command
       *   The GDAL Translate command.
+      * @writeOptions
+      *    [[RasterWriteOptions]]
+      * @exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   A MosaicRaster object.
       */
     def executeTranslate(
         outputPath: String,
-        raster: MosaicRasterGDAL,
+        raster: RasterGDAL,
         command: String,
-        writeOptions: MosaicRasterWriteOptions
-    ): MosaicRasterGDAL = {
+        writeOptions: RasterWriteOptions,
+        exprConfigOpt: Option[ExprConfig]
+    ): RasterGDAL = {
         require(command.startsWith("gdal_translate"), "Not a valid GDAL Translate command.")
         val effectiveCommand = OperatorOptions.appendOptions(command, writeOptions)
         val translateOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val translateOptions = new TranslateOptions(translateOptionsVec)
-        val transResult = gdal.Translate(outputPath, raster.getDatasetHydrated, translateOptions)
+        val transResult = gdal.Translate(outputPath, raster.withDatasetHydratedOpt().get, translateOptions)
         val errorMsg = gdal.GetLastErrorMsg
-        val size = Files.size(Paths.get(outputPath))
-        val createInfo = Map(
-          "path" -> outputPath,
-          "parentPath" -> raster.getParentPath,
-          "driver" -> writeOptions.format,
-          "last_command" -> effectiveCommand,
-          "last_error" -> errorMsg,
-          "all_parents" -> raster.getParentPath
+
+//        if (errorMsg.nonEmpty) {
+//            // scalastyle:off println
+//            println(s"... GDALTranslate (last_error) - '$errorMsg' for '$outputPath'")
+//            // scalastyle:on println
+//        }
+
+        flushAndDestroy(transResult)
+
+        RasterGDAL(
+            Map(
+                RASTER_PATH_KEY -> outputPath,
+                RASTER_PARENT_PATH_KEY -> raster.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING),
+                RASTER_DRIVER_KEY -> writeOptions.format,
+                RASTER_LAST_CMD_KEY -> effectiveCommand,
+                RASTER_LAST_ERR_KEY -> errorMsg,
+                RASTER_ALL_PARENTS_KEY -> raster.getRawParentPath
+            ),
+            exprConfigOpt
         )
-        val result = raster.copy(transResult, createInfo, size)
-        result.reHydrate() // flush cache
-        result
     }
 
 }

@@ -73,7 +73,7 @@ trait ST_WithinBehaviors extends MosaicSpatialQueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stWithin = ST_Within(lit(rows.head._1).expr, lit(1).expr, mc.expressionConfig)
+        val stWithin = ST_Within(lit(rows.head._1).expr, lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stWithin.genCode(ctx)
     }
@@ -92,7 +92,7 @@ trait ST_WithinBehaviors extends MosaicSpatialQueryTest {
           ("POINT (25 25)", false)
         )
 
-        val stWithin = ST_Within(lit(rows.head._1).expr, lit(poly).expr, mc.expressionConfig)
+        val stWithin = ST_Within(lit(rows.head._1).expr, lit(poly).expr, mc.exprConfig)
 
         stWithin.left shouldEqual lit(rows.head._1).expr
         stWithin.right shouldEqual lit(poly).expr

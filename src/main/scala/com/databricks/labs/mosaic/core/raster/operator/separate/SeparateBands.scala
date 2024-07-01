@@ -1,9 +1,11 @@
 package com.databricks.labs.mosaic.core.raster.operator.separate
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_BAND_INDEX_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.createTmpFileFromDriver
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.core.types.model.RasterTile
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.types.{DataType, StringType}
 
 /**
@@ -20,55 +22,42 @@ object SeparateBands {
       *
       * @param tile
       *   The raster to retile.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   A sequence of MosaicRasterTile objects.
       */
     def separate(
-        tile: => MosaicRasterTile
-    ): Seq[MosaicRasterTile] = {
+                    tile: => RasterTile,
+                    exprConfigOpt: Option[ExprConfig]
+    ): Seq[RasterTile] = {
         val raster = tile.raster
         val tiles = for (i <- 0 until raster.numBands) yield {
-            val fileExtension = raster.getRasterFileExtension
-            val rasterPath = PathUtils.createTmpFilePath(fileExtension)
-            val shortDriver = raster.getDriverShortName
+            val driverShortName = raster.getDriverName()
+            val rasterPath = createTmpFileFromDriver(driverShortName, exprConfigOpt)
             val outOptions = raster.getWriteOptions
 
             val result = GDALTranslate.executeTranslate(
-              rasterPath,
-              raster,
-              command = s"gdal_translate -of $shortDriver -b ${i + 1}",
-              writeOptions = outOptions
+                rasterPath,
+                raster,
+                command = s"gdal_translate -of $driverShortName -b ${i + 1}",
+                writeOptions = outOptions,
+                exprConfigOpt
             )
 
             if (!result.isEmpty) {
-                // copy to checkpoint dir
-                val checkpointPath = result.writeToCheckpointDir(doDestroy = true)
-                val newParentPath = result.getPath
-                val bandVal = (i + 1).toString
-
-                result.destroy()
-
-                (
-                    true,
-                    MosaicRasterGDAL(
-                        null,
-                        result.getCreateInfo + (
-                            "path" -> checkpointPath,
-                            "parentPath" -> newParentPath,
-                            "bandIndex" -> bandVal
-                        ),
-                        -1
-                    )
-                )
+                val bandVal = (i + 1)
+                result.updateCreateInfoBandIndex(bandVal)
+                (true, result)
 
             } else {
-                result.destroy() // destroy inline for performance
+                result.flushAndDestroy() // destroy inline for performance
                 (false, result) // empty result
             }
         }
 
         val (result, _) = tiles.partition(_._1)
-        result.map(t => new MosaicRasterTile(null, t._2, tileDataType))
+        result.map(t => new RasterTile(null, t._2, tileDataType))
     }
 
 }

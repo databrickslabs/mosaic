@@ -1,17 +1,16 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_DRIVER_KEY}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.{createTmpFileFromDriver, rasterHydratedFromContent}
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -26,24 +25,24 @@ import java.nio.file.{Files, Paths}
   * expression in the expression tree for a raster tile.
   */
 case class RST_FromContent(
-    contentExpr: Expression,
-    driverExpr: Expression,
-    sizeInMB: Expression,
-    expressionConfig: MosaicExpressionConfig
+                              contentExpr: Expression,
+                              driverExpr: Expression,
+                              sizeInMB: Expression,
+                              exprConfig: ExprConfig
 ) extends CollectionGenerator
       with Serializable
       with NullIntolerant
       with CodegenFallback {
 
-    GDAL.enable(expressionConfig)
+    GDAL.enable(exprConfig)
 
     override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, BinaryType, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, BinaryType, exprConfig.isRasterUseCheckpoint)
     }
 
-    protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
+    protected val geometryAPI: GeometryAPI = GeometryAPI.apply(exprConfig.getGeometryAPI)
 
-    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
 
     protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
 
@@ -64,24 +63,26 @@ case class RST_FromContent(
       *   The tiles.
       */
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        GDAL.enable(expressionConfig)
-        val resultType = getRasterType(
-            RasterTileType(expressionConfig.getCellIdType, BinaryType, expressionConfig.isRasterUseCheckpoint))
+        GDAL.enable(exprConfig)
+        val resultType = RasterTile.getRasterType(
+            RasterTileType(exprConfig.getCellIdType, BinaryType, exprConfig.isRasterUseCheckpoint))
 
         val driverShortName = driverExpr.eval(input).asInstanceOf[UTF8String].toString
-        val ext = GDAL.getExtension(driverShortName)
         var rasterArr = contentExpr.eval(input).asInstanceOf[Array[Byte]]
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
 
         if (targetSize <= 0 || rasterArr.length <= targetSize) {
             // - no split required
-            val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driverShortName)
+            var raster = rasterHydratedFromContent(
+                rasterArr,
+                Map(RASTER_DRIVER_KEY -> driverShortName),
+                Option(exprConfig)
+            )
 
-            var raster = MosaicRasterGDAL.readRaster(rasterArr, createInfo)
-            var result = MosaicRasterTile(null, raster, resultType).formatCellId(indexSystem)
-            val row = result.serialize(resultType, doDestroy = true)
+            var result = RasterTile(null, raster, resultType).formatCellId(indexSystem)
+            val row = result.serialize(resultType, doDestroy = true, Option(exprConfig))
 
-            destroy(result)
+            raster.flushAndDestroy()
 
             rasterArr = null
             raster = null
@@ -93,17 +94,17 @@ case class RST_FromContent(
             // target size is > 0 and raster size > target size
             // - write the initial raster to file (unsplit)
             // - createDirectories in case of context isolation
-            val tmpPath = PathUtils.createTmpFilePath(ext)
+            val tmpPath = createTmpFileFromDriver(driverShortName, Option(exprConfig))
             Files.createDirectories(Paths.get(tmpPath).getParent)
             Files.write(Paths.get(tmpPath), rasterArr)
 
             // split to tiles up to specified threshold
             var results = ReTileOnRead
-                .localSubdivide(tmpPath, PathUtils.NO_PATH_STRING, targetSize)
+                .localSubdivide(tmpPath, NO_PATH_STRING, targetSize, exprConfig)
                 .map(_.formatCellId(indexSystem))
-            val rows = results.map(_.serialize(resultType, doDestroy = true))
+            val rows = results.map(_.serialize(resultType, doDestroy = true, Option(exprConfig)))
 
-            results.foreach(destroy)
+            results.foreach(_.flushAndDestroy())
 
             rasterArr = null
             results = null
@@ -114,7 +115,7 @@ case class RST_FromContent(
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =
-        GenericExpressionFactory.makeCopyImpl[RST_FromContent](this, newArgs, children.length, expressionConfig)
+        GenericExpressionFactory.makeCopyImpl[RST_FromContent](this, newArgs, children.length, exprConfig)
 
     override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = makeCopy(newChildren.toArray)
 
@@ -138,10 +139,10 @@ object RST_FromContent extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = { (children: Seq[Expression]) =>
         {
             val sizeExpr = if (children.length < 3) new Literal(-1, IntegerType) else children(2)
-            RST_FromContent(children.head, children(1), sizeExpr, expressionConfig)
+            RST_FromContent(children.head, children(1), sizeExpr, exprConfig)
         }
     }
 

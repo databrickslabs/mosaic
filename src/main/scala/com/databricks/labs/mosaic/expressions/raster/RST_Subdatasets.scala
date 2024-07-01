@@ -1,20 +1,20 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /** Returns the subdatasets of the raster. */
-case class RST_Subdatasets(raster: Expression, expressionConfig: MosaicExpressionConfig)
+case class RST_Subdatasets(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_Subdatasets](
       raster,
       returnsRaster = false,
-      expressionConfig
+      exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
@@ -22,7 +22,7 @@ case class RST_Subdatasets(raster: Expression, expressionConfig: MosaicExpressio
     override def dataType: DataType = MapType(StringType, StringType)
 
     /** Returns the subdatasets of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = buildMapString(tile.raster.subdatasets)
+    override def rasterTransform(tile: RasterTile): Any = buildMapString(tile.raster.subdatasets)
 
 }
 
@@ -41,8 +41,8 @@ object RST_Subdatasets extends WithExpressionInfo {
           |        "NETCDF:"ct5km_baa-max-7d_v3.1_20220101.nc":mask":"[1x3600x7200] mask (8-bit unsigned integer)"}
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Subdatasets](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Subdatasets](1, exprConfig)
     }
 
 }

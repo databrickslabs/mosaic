@@ -1,7 +1,8 @@
 package com.databricks.labs.mosaic.core.raster.operator.merge
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.types.{BinaryType, DataType}
 
@@ -17,29 +18,33 @@ object MergeBands extends {
       *   The rasters to merge.
       * @param resampling
       *   The resampling method to use.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   A MosaicRaster object.
       */
-    def merge(rasters: Seq[MosaicRasterGDAL], resampling: String): MosaicRasterGDAL = {
+    def merge(rasters: Seq[RasterGDAL], resampling: String, exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
         val outOptions = rasters.head.getWriteOptions
 
-        val vrtPath = PathUtils.createTmpFilePath("vrt")
-        val rasterPath = PathUtils.createTmpFilePath(outOptions.extension)
+        val vrtPath = PathUtils.createTmpFilePath("vrt", exprConfigOpt)
+        val rasterPath = PathUtils.createTmpFilePath(outOptions.extension, exprConfigOpt)
 
         val vrtRaster = GDALBuildVRT.executeVRT(
-          vrtPath,
-          rasters,
-          command = s"gdalbuildvrt -separate -resolution highest"
+            vrtPath,
+            rasters,
+            command = s"gdalbuildvrt -separate -resolution highest",
+            exprConfigOpt
         )
 
         val result = GDALTranslate.executeTranslate(
-          rasterPath,
-          vrtRaster,
-          command = s"gdal_translate -r $resampling",
-          outOptions
+            rasterPath,
+            vrtRaster,
+            command = s"gdal_translate -r $resampling",
+            outOptions,
+            exprConfigOpt
         )
 
-        vrtRaster.destroy()
+        vrtRaster.flushAndDestroy()
 
         result
     }
@@ -54,29 +59,33 @@ object MergeBands extends {
       *   The pixel size to use.
       * @param resampling
       *   The resampling method to use.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   A MosaicRaster object.
       */
-    def merge(rasters: Seq[MosaicRasterGDAL], pixel: (Double, Double), resampling: String): MosaicRasterGDAL = {
+    def merge(rasters: Seq[RasterGDAL], pixel: (Double, Double), resampling: String, exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
         val outOptions = rasters.head.getWriteOptions
 
-        val vrtPath = PathUtils.createTmpFilePath("vrt")
-        val rasterPath = PathUtils.createTmpFilePath(outOptions.extension)
+        val vrtPath = PathUtils.createTmpFilePath("vrt", exprConfigOpt)
+        val rasterPath = PathUtils.createTmpFilePath(outOptions.extension, exprConfigOpt)
 
         val vrtRaster = GDALBuildVRT.executeVRT(
-          vrtPath,
-          rasters,
-          command = s"gdalbuildvrt -separate -resolution user -tr ${pixel._1} ${pixel._2}"
+            vrtPath,
+            rasters,
+            command = s"gdalbuildvrt -separate -resolution user -tr ${pixel._1} ${pixel._2}",
+            exprConfigOpt
         )
 
         val result = GDALTranslate.executeTranslate(
-          rasterPath,
-          vrtRaster,
-          command = s"gdalwarp -r $resampling",
-          outOptions
+            rasterPath,
+            vrtRaster,
+            command = s"gdalwarp -r $resampling",
+            outOptions,
+            exprConfigOpt
         )
 
-        vrtRaster.destroy()
+        vrtRaster.flushAndDestroy()
 
         result
     }

@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.base
 
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo}
 
@@ -25,10 +25,12 @@ trait WithExpressionInfo {
 
     /**
       * Returns the expression builder (parser for spark SQL).
+      * @param exprConfig
+      *   [[ExprConfig]]
       * @return
       *   An expression builder.
       */
-    def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder
+    def builder(exprConfig: ExprConfig): FunctionBuilder
 
     /**
       * Returns the expression info for the expression based on the expression's

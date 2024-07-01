@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -21,20 +21,20 @@ import org.apache.spark.sql.types.DataType
   * holes. (For PostGIS, the default is false.)
   * @param inputGeom
   *   The input geometry.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   */
 case class ST_ConcaveHull(
-    inputGeom: Expression,
-    lengthRatio: Expression,
-    allowHoles: Expression,
-    expressionConfig: MosaicExpressionConfig
+                             inputGeom: Expression,
+                             lengthRatio: Expression,
+                             allowHoles: Expression,
+                             exprConfig: ExprConfig
 ) extends UnaryVector2ArgExpression[ST_ConcaveHull](
       inputGeom,
       lengthRatio,
       allowHoles,
       returnsGeometry = true,
-      expressionConfig
+      exprConfig
     ) {
 
     override def dataType: DataType = inputGeom.dataType
@@ -67,10 +67,10 @@ object ST_ConcaveHull extends WithExpressionInfo {
           |        {"POLYGON (( 0 0, 1 0, 1 1, 0 1 ))"}
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = { (children: Seq[Expression]) =>
         GenericExpressionFactory.construct[ST_ConcaveHull](
           Array(children.head, Column(children(1)).cast("double").expr, children(2)),
-          expressionConfig
+          exprConfig
         )
     }
 

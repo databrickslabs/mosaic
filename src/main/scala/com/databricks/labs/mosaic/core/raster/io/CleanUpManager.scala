@@ -64,7 +64,7 @@ private class CleanUpManager extends Thread {
 object CleanUpManager {
 
     private val THREAD_NAME = "Mosaic-CleanUp-Manager"
-    private val delayMinutesAtomic = new AtomicInteger(1)
+    private val delayMinutesAtomic = new AtomicInteger(5)
     private val interruptAtomic = new AtomicBoolean(false)
 
     /** initialize clean thread. */

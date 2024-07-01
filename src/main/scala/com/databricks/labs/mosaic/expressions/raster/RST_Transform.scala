@@ -1,12 +1,11 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.proj.RasterProject
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster1ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -14,29 +13,29 @@ import org.apache.spark.sql.types._
 import org.gdal.osr.SpatialReference
 
 case class RST_Transform(
-    tileExpr: Expression,
-    srid: Expression,
-    expressionConfig: MosaicExpressionConfig
+                            tileExpr: Expression,
+                            srid: Expression,
+                            exprConfig: ExprConfig
 ) extends Raster1ArgExpression[RST_Transform](
       tileExpr,
       srid,
       returnsRaster = true,
-      expressionConfig
+      exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
     // serialized data type
     override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, tileExpr, exprConfig.isRasterUseCheckpoint)
     }
 
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
+    override def rasterTransform(tile: RasterTile, arg1: Any): Any = {
         val srid = arg1.asInstanceOf[Int]
         val sReff = new SpatialReference()
         sReff.ImportFromEPSG(srid)
         sReff.SetAxisMappingStrategy(org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
-        tile.copy(raster = RasterProject.project(tile.raster, sReff))
+        tile.copy(raster = RasterProject.project(tile.raster, sReff, Option(exprConfig)))
     }
 
 }
@@ -55,8 +54,8 @@ object RST_Transform extends WithExpressionInfo {
           |       [1.123, 2.123, 3.123]
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Avg](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Avg](1, exprConfig)
     }
 
 }

@@ -1,12 +1,14 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
+import com.databricks.labs.mosaic.{RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
@@ -65,6 +67,7 @@ object ReTileOnRead extends ReadStrategy {
 
     /**
       * Reads the content of the file.
+ *
       * @param status
       *   File status.
       * @param fs
@@ -72,26 +75,28 @@ object ReTileOnRead extends ReadStrategy {
       * @param requiredSchema
       *   Required schema.
       * @param options
-      *   Options passed to the reader.
+      * Options passed to the reader.
       * @param indexSystem
-      *   Index system.
-      *
+      * Index system.
+      * @param exprConfig
+      * [[ExprConfig]]
       * @return
       *   Iterator of internal rows.
       */
     override def read(
-        status: FileStatus,
-        fs: FileSystem,
-        requiredSchema: StructType,
-        options: Map[String, String],
-        indexSystem: IndexSystem
+                         status: FileStatus,
+                         fs: FileSystem,
+                         requiredSchema: StructType,
+                         options: Map[String, String],
+                         indexSystem: IndexSystem,
+                         exprConfig: ExprConfig
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
 
-        var tmpPath = PathUtils.copyToTmpWithRetry(inPath, 5)
-        val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
+        val tmpPath = PathUtils.copyCleanPathToTmpWithRetry(inPath, Option(exprConfig), retries = 5)
+        val tiles = localSubdivide(tmpPath, inPath, sizeInMB, exprConfig)
 
         val rows = tiles.map(tile => {
             val raster = tile.raster
@@ -110,10 +115,10 @@ object ReTileOnRead extends ReadStrategy {
                 case LENGTH            => raster.getMemSize
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
-            raster.destroy()
+            raster.flushAndDestroy()
             // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(
-                tileDataType, doDestroy = true)))
+            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem)
+                .serialize(tileDataType, doDestroy = true, Option(exprConfig))))
 
             row
         })
@@ -123,30 +128,37 @@ object ReTileOnRead extends ReadStrategy {
 
     /**
       * Subdivides a raster into tiles of a given size.
+      *
       * @param inPath
       *   Path to the raster.
+      * @param parentPath
+      *   Parent path to the raster.
       * @param sizeInMB
       *   Size of the tiles in MB.
-      *
+      * @param exprConfig
+      *   [[ExprConfig]]
       * @return
-      *   A tuple of the raster and the tiles.
+      *  A tuple of the raster and the tiles.
       */
-    def localSubdivide(inPath: String, parentPath: String, sizeInMB: Int): Seq[MosaicRasterTile] = {
-        val cleanPath = PathUtils.getCleanPath(inPath)
-        val driverShortName = Option(parentPath) match {
-            case Some(p) if p != PathUtils.NO_PATH_STRING => MosaicRasterGDAL.identifyDriver(parentPath)
-            case _                                        => MosaicRasterGDAL.identifyDriver(inPath)
-        }
-        val createInfo = Map(
-            "path" -> cleanPath,
-            "parentPath" -> parentPath,
-            "driver" -> driverShortName
+    def localSubdivide(
+                          inPath: String,
+                          parentPath: String,
+                          sizeInMB: Int,
+                          exprConfig: ExprConfig
+                      ): Seq[RasterTile] = {
+        var raster = RasterGDAL(
+            Map(
+                RASTER_PATH_KEY -> inPath,
+                RASTER_PARENT_PATH_KEY -> parentPath
+            ),
+            Option(exprConfig)
         )
-        val raster = MosaicRasterGDAL.readRaster(createInfo)
-        val inTile = new MosaicRasterTile(null, raster, tileDataType)
-        val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)
+        var inTile = new RasterTile(null, raster, tileDataType)
+        val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB, Option(exprConfig))
 
-        raster.destroy()
+        inTile.flushAndDestroy()
+        inTile = null
+        raster = null
 
         tiles
     }

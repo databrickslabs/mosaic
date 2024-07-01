@@ -367,10 +367,15 @@ object OGRFileFormat extends Serializable {
       *   the data source
       */
     def getDataSource(driverName: String, path: String): org.gdal.ogr.DataSource = {
-        val cleanPath = PathUtils.getCleanPath(path)
+        val cleanPath = PathUtils.asFileSystemPath(path)
         // 0 is for no update driver
         if (driverName.nonEmpty) {
-            ogr.GetDriverByName(driverName).Open(cleanPath, 0)
+            val driver = ogr.GetDriverByName(driverName)
+            try {
+                driver.Open(cleanPath, 0)
+            } finally {
+                driver.delete()
+            }
         } else {
             ogr.Open(cleanPath, 0)
         }

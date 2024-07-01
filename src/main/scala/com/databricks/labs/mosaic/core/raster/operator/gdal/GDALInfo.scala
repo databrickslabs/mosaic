@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import org.gdal.gdal.{InfoOptions, gdal}
 
 /** GDALBuildVRT is a wrapper for the GDAL BuildVRT command. */
@@ -17,12 +17,12 @@ object GDALInfo {
       * @return
       *   A result json string.
       */
-    def executeInfo(raster: MosaicRasterGDAL, command: String): String = {
+    def executeInfo(raster: RasterGDAL, command: String): String = {
         require(command.startsWith("gdalinfo"), "Not a valid GDAL Info command.")
 
         val infoOptionsVec = OperatorOptions.parseOptions(command)
         val infoOptions = new InfoOptions(infoOptionsVec)
-        val gdalInfo = gdal.GDALInfo(raster.getDatasetHydrated, infoOptions)
+        val gdalInfo = gdal.GDALInfo(raster.withDatasetHydratedOpt().get, infoOptions)
 
         if (gdalInfo == null) {
             s"""

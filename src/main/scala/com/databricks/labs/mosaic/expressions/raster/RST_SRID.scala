@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -13,19 +13,23 @@ import org.gdal.osr.SpatialReference
 import scala.util.Try
 
 /** Returns the SRID of the raster. */
-case class RST_SRID(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_SRID](raster, returnsRaster = false, expressionConfig)
+case class RST_SRID(raster: Expression, exprConfig: ExprConfig)
+    extends RasterExpression[RST_SRID](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = IntegerType
 
     /** Returns the SRID of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        // Reference: https://gis.stackexchange.com/questions/267321/extracting-epsg-from-a-raster-using-gdal-bindings-in-python
-        val proj = new SpatialReference(tile.raster.getDatasetHydrated.GetProjection())
-        Try(proj.AutoIdentifyEPSG())
-        Try(proj.GetAttrValue("AUTHORITY", 1).toInt).getOrElse(0)
+    override def rasterTransform(tile: RasterTile): Any = {
+        tile.raster.withDatasetHydratedOpt() match {
+            case Some(dataset) =>
+                // Reference: https://gis.stackexchange.com/questions/267321/extracting-epsg-from-a-raster-using-gdal-bindings-in-python
+                val proj = new SpatialReference (dataset.GetProjection())
+                Try (proj.AutoIdentifyEPSG () )
+                Try (proj.GetAttrValue ("AUTHORITY", 1).toInt).getOrElse (0)
+            case _ => 0
+        }
     }
 
 }
@@ -47,8 +51,8 @@ object RST_SRID extends WithExpressionInfo {
           |        4326
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_SRID](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_SRID](1, exprConfig)
     }
 
 }

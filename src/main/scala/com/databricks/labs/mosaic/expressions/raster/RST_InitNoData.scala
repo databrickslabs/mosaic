@@ -1,13 +1,13 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.createTmpFileFromDriver
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALWarp
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -15,18 +15,18 @@ import org.apache.spark.sql.types.DataType
 
 /** The expression that initializes no data values of a raster. */
 case class RST_InitNoData(
-    tileExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                             tileExpr: Expression,
+                             exprConfig: ExprConfig
 ) extends RasterExpression[RST_InitNoData](
       tileExpr,
       returnsRaster = true,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, tileExpr, exprConfig.isRasterUseCheckpoint)
     }
 
     /**
@@ -37,21 +37,23 @@ case class RST_InitNoData(
       * @return
       *   The raster with initialized no data values.
       */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
+    override def rasterTransform(tile: RasterTile): Any = {
         val raster = tile.raster
         val noDataValues = raster.getBands.map(_.noDataValue).mkString(" ")
         val dstNoDataValues = raster.getBands
             .map(_.getBand.getDataType)
             .map(GDAL.getNoDataConstant)
             .mkString(" ")
-        val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(raster.getDriverShortName))
-        val cmd = s"""gdalwarp -of ${raster.getDriverShortName} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
+        val driverShortName = raster.getDriverName()
+        val resultPath = createTmpFileFromDriver(driverShortName, Option(exprConfig))
+        val cmd = s"""gdalwarp -of ${driverShortName} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
         tile.copy(
-          raster = GDALWarp.executeWarp(
-            resultPath,
-            Seq(raster),
-            command = cmd
-          )
+            raster = GDALWarp.executeWarp(
+                resultPath,
+                Seq(raster),
+                command = cmd,
+                Option(exprConfig)
+            )
         )
     }
 
@@ -76,8 +78,8 @@ object RST_InitNoData extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_InitNoData](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_InitNoData](1, exprConfig)
     }
 
 }

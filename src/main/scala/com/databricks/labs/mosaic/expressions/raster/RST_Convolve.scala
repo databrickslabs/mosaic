@@ -1,12 +1,11 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster1ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -15,24 +14,24 @@ import org.apache.spark.sql.types._
 
 /** The expression for applying kernel filter on a raster. */
 case class RST_Convolve(
-    rastersExpr: Expression,
-    kernelExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                           rastersExpr: Expression,
+                           kernelExpr: Expression,
+                           exprConfig: ExprConfig
 ) extends Raster1ArgExpression[RST_Convolve](
       rastersExpr,
       kernelExpr,
       returnsRaster = true,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
     //serialize data type
     override def dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, rastersExpr, exprConfig.isRasterUseCheckpoint)
     }
 
-    val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
+    val geometryAPI: GeometryAPI = GeometryAPI(exprConfig.getGeometryAPI)
 
     /**
       * Clips a raster by a vector.
@@ -44,7 +43,7 @@ case class RST_Convolve(
       * @return
       *   The clipped raster.
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
+    override def rasterTransform(tile: RasterTile, arg1: Any): Any = {
         val kernel = arg1.asInstanceOf[ArrayData].array.map(_.asInstanceOf[ArrayData].array.map(
           el => kernelExpr.dataType match {
               case ArrayType(ArrayType(DoubleType, false), false) => el.asInstanceOf[Double]
@@ -80,8 +79,8 @@ object RST_Convolve extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Convolve](2, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Convolve](2, exprConfig)
     }
 
 }

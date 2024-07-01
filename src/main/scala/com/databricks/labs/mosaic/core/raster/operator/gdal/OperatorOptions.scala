@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterWriteOptions
+import com.databricks.labs.mosaic.core.raster.gdal.RasterWriteOptions
 
 /** OperatorOptions is a helper object for parsing GDAL command options. */
 object OperatorOptions {
@@ -33,7 +33,7 @@ object OperatorOptions {
       *   decide what is supported and for which format.
       * @return
       */
-    def appendOptions(command: String, writeOptions: MosaicRasterWriteOptions): String = {
+    def appendOptions(command: String, writeOptions: RasterWriteOptions): String = {
         val compression = writeOptions.compression
         if (command.startsWith("gdal_calc")) {
             writeOptions.format match {

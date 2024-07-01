@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterBandGDAL, MosaicRasterGDAL}
+import com.databricks.labs.mosaic.core.raster.gdal.{RasterBandGDAL, RasterGDAL}
 
 /**
   * Base trait for raster grid expressions. It provides the boilerplate code
@@ -51,27 +51,30 @@ trait RasterGridExpression {
       * @param resolution
       *   The resolution of the index system.
       * @return
-      *   A sequence of maps. Each map contains cell IDs and values for a given
+      *   A sequence of maps. Each map contains cell IDs and values for a given, default is empty.
       *   band.
       */
     def griddedPixels(
-        raster: MosaicRasterGDAL,
-        indexSystem: IndexSystem,
-        resolution: Int
-    ): Seq[Map[Long, Seq[Double]]] = {
-        val gt = raster.getDatasetHydrated.GetGeoTransform()
-        val bandTransform = (band: MosaicRasterBandGDAL) => {
-            val results = band.transformValues[(Long, Double)](pixelTransformer(gt, indexSystem, resolution), (0L, -1.0))
-            results
-                // Filter out default cells. We don't want to return them since they are masked in original raster.
-                // We use 0L as a dummy cell ID for default cells.
-                .map(row => row.filter(_._1 != 0L))
-                .filterNot(_.isEmpty)
-                .flatten
-                .groupBy(_._1) // Group by cell ID.
+                         raster: RasterGDAL,
+                         indexSystem: IndexSystem,
+                         resolution: Int
+                     ): Seq[Map[Long, Seq[Double]]] = {
+        raster.getGeoTransformOpt match {
+            case Some(gt) =>
+                val bandTransform = (band: RasterBandGDAL) => {
+                    val results = band.transformValues[(Long, Double)] (pixelTransformer (gt, indexSystem, resolution), (0L, - 1.0) )
+                    results
+                        // Filter out default cells. We don't want to return them since they are masked in original raster.
+                        // We use 0L as a dummy cell ID for default cells.
+                        .map (row => row.filter (_._1 != 0L) )
+                        .filterNot (_.isEmpty)
+                        .flatten
+                        .groupBy (_._1) // Group by cell ID.
+                }
+                val transformed = raster.transformBands (bandTransform)
+                transformed.map (band => band.mapValues (values => values.map (_._2) ) )
+            case _ => Seq.empty[Map[Long, Seq[Double]]]
         }
-        val transformed = raster.transformBands(bandTransform)
-        transformed.map(band => band.mapValues(values => values.map(_._2)))
     }
 
 }

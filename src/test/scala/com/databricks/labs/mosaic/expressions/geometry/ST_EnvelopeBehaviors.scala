@@ -41,7 +41,7 @@ trait ST_EnvelopeBehaviors extends MosaicSpatialQueryTest {
         val (_, code) = codeGenStage.doCodeGen()
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stEnvelope = ST_Envelope(lit(1).expr, mc.expressionConfig)
+        val stEnvelope = ST_Envelope(lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stEnvelope.genCode(ctx)
     }
@@ -54,7 +54,7 @@ trait ST_EnvelopeBehaviors extends MosaicSpatialQueryTest {
 
         val input = "POLYGON (10 10, 20 10, 15 20, 10 10)"
 
-        val stEnvelope = ST_Envelope(lit(input).expr, mc.expressionConfig)
+        val stEnvelope = ST_Envelope(lit(input).expr, mc.exprConfig)
         stEnvelope.child shouldEqual lit(input).expr
         stEnvelope.dataType shouldEqual lit(input).expr.dataType
         noException should be thrownBy stEnvelope.makeCopy(Array(stEnvelope.child))

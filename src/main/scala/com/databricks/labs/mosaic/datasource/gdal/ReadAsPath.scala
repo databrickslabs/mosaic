@@ -1,11 +1,13 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
@@ -65,6 +67,7 @@ object ReadAsPath extends ReadStrategy {
 
     /**
       * Reads the content of the file.
+ *
       * @param status
       *   File status.
       * @param fs
@@ -72,34 +75,33 @@ object ReadAsPath extends ReadStrategy {
       * @param requiredSchema
       *   Required schema.
       * @param options
-      *   Options passed to the reader.
+      * Options passed to the reader.
       * @param indexSystem
-      *   Index system.
-      *
+      * Index system.
+      * @param exprConfig
+      * [[ExprConfig]]
       * @return
       *   Iterator of internal rows.
       */
     override def read(
-        status: FileStatus,
-        fs: FileSystem,
-        requiredSchema: StructType,
-        options: Map[String, String],
-        indexSystem: IndexSystem
+                         status: FileStatus,
+                         fs: FileSystem,
+                         requiredSchema: StructType,
+                         options: Map[String, String],
+                         indexSystem: IndexSystem,
+                         exprConfig: ExprConfig
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
 
-        val tmpPath = PathUtils.copyToTmp(inPath)
+        val tmpPath = PathUtils.copyToTmp(inPath, Option(exprConfig))
         val createInfo = Map(
             "path" -> tmpPath,
             "parentPath" -> inPath,
-            "driver" -> MosaicRasterGDAL.identifyDriver(inPath)
+            "driver" -> identifyDriverNameFromRawPath(inPath)
         )
-        var raster = MosaicRasterGDAL.readRaster(createInfo)
-        // write raster to checkpoint dir
-        val checkPath = raster.writeToCheckpointDir(doDestroy = true)
-        raster = MosaicRasterGDAL.readRaster(createInfo + ("path" -> checkPath))
-        val tile = MosaicRasterTile(null, raster, tileDataType)
+        val raster = RasterGDAL(createInfo, Option(exprConfig)) // unhydrated
+        val tile = RasterTile(null, raster, tileDataType)
         
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
@@ -117,7 +119,7 @@ object ReadAsPath extends ReadStrategy {
         }
         // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
         val row = Utils.createRow(fields ++ Seq(
-            tile.formatCellId(indexSystem).serialize(tileDataType, doDestroy = true)))
+            tile.formatCellId(indexSystem).serialize(tileDataType, doDestroy = true, Option(exprConfig))))
 
         val rows = Seq(row)
         rows.iterator

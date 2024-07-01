@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.operator.transform
 
-object RasterTransform {
+trait RasterTransform {
 
     /**
       * Take a geo transform matrix and x and y coordinates of a pixel and

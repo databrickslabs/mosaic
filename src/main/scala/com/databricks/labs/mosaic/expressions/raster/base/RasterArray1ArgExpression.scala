@@ -1,12 +1,9 @@
 package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
-import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, NullIntolerant}
 
 import scala.reflect.ClassTag
@@ -23,16 +20,16 @@ import scala.reflect.ClassTag
   *   The expression for the first argument.
   * @param returnsRaster
   *   for serialization handling.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
   *   The type of the extending class.
   */
 abstract class RasterArray1ArgExpression[T <: Expression: ClassTag](
-    rastersExpr: Expression,
-    arg1Expr: Expression,
-    returnsRaster: Boolean,
-    expressionConfig: MosaicExpressionConfig
+                                                                       rastersExpr: Expression,
+                                                                       arg1Expr: Expression,
+                                                                       returnsRaster: Boolean,
+                                                                       exprConfig: ExprConfig
 ) extends BinaryExpression
       with NullIntolerant
       with Serializable
@@ -53,7 +50,7 @@ abstract class RasterArray1ArgExpression[T <: Expression: ClassTag](
       * @return
       *   A result of the expression.
       */
-    def rasterTransform(rasters: Seq[MosaicRasterTile], arg1: Any): Any
+    def rasterTransform(rasters: Seq[RasterTile], arg1: Any): Any
 
     /**
       * Evaluation of the expression. It evaluates the raster path and the loads
@@ -68,23 +65,23 @@ abstract class RasterArray1ArgExpression[T <: Expression: ClassTag](
       *   The result of the expression.
       */
     override def nullSafeEval(input: Any, arg1: Any): Any = {
-        GDAL.enable(expressionConfig)
-        var tiles = RasterArrayUtils.getTiles(input, rastersExpr, expressionConfig)
+        GDAL.enable(exprConfig)
+        var tiles = RasterArrayUtils.getTiles(input, rastersExpr, exprConfig)
         var result = rasterTransform(tiles, arg1)
         val resultType = {
-            if (returnsRaster) getRasterType(dataType)
+            if (returnsRaster) RasterTile.getRasterType(dataType)
             else dataType
         }
-        val serialized = serialize(result, returnsRaster, resultType, doDestroy = true, expressionConfig)
+        val serialized = serialize(result, returnsRaster, resultType, doDestroy = true, exprConfig)
 
-        tiles.foreach(destroy)
+        tiles.foreach(_.raster.flushAndDestroy())
         tiles = null
         result = null
 
         serialized
     }
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 2, expressionConfig)
+    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 2, exprConfig)
 
     override def withNewChildrenInternal(
         newFirst: Expression,

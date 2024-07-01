@@ -1,12 +1,13 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
 import com.databricks.labs.mosaic.expressions.raster.buildMapString
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
@@ -33,7 +34,6 @@ object ReadInMemory extends ReadStrategy {
       *   Parent schema.
       * @param sparkSession
       *   Spark session.
-      *
       * @return
       *   Schema of the GDAL file format.
       */
@@ -59,6 +59,7 @@ object ReadInMemory extends ReadStrategy {
 
     /**
       * Reads the content of the file.
+ *
       * @param status
       *   File status.
       * @param fs
@@ -66,28 +67,31 @@ object ReadInMemory extends ReadStrategy {
       * @param requiredSchema
       *   Required schema.
       * @param options
-      *   Options passed to the reader.
+      * Options passed to the reader.
       * @param indexSystem
-      *   Index system.
+      * Index system.
+      * @param exprConfig
+      * [[ExprConfig]]
       * @return
       *   Iterator of internal rows.
       */
     override def read(
-        status: FileStatus,
-        fs: FileSystem,
-        requiredSchema: StructType,
-        options: Map[String, String],
-        indexSystem: IndexSystem
+                         status: FileStatus,
+                         fs: FileSystem,
+                         requiredSchema: StructType,
+                         options: Map[String, String],
+                         indexSystem: IndexSystem,
+                         exprConfig: ExprConfig
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
-        val readPath = PathUtils.getCleanPath(inPath)
+        val readPath = PathUtils.asFileSystemPath(inPath)
         val contentBytes: Array[Byte] = readContent(fs, status)
         val createInfo = Map(
             "path" -> readPath,
             "parentPath" -> inPath,
-            "driver" -> MosaicRasterGDAL.identifyDriver(inPath)
+            "driver" -> identifyDriverNameFromRawPath(inPath)
         )
-        val raster = MosaicRasterGDAL.readRaster(createInfo)
+        val raster = RasterGDAL(createInfo, Option(exprConfig))
         val uuid = getUUID(status)
 
         val fields = requiredSchema.fieldNames.filter(_ != TILE).map {
@@ -108,7 +112,7 @@ object ReadInMemory extends ReadStrategy {
         val row = Utils.createRow(fields ++ Seq(rasterTileSer))
         val rows = Seq(row)
 
-        raster.destroy()
+        raster.flushAndDestroy()
 
         rows.iterator
     }

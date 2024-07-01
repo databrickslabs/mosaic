@@ -1,6 +1,9 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRasterWriteOptions}
+import com.databricks.labs.mosaic.{RASTER_ALL_PARENTS_KEY, RASTER_DRIVER_KEY, RASTER_LAST_CMD_KEY, RASTER_LAST_ERR_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.core.raster.gdal.{RasterGDAL, RasterWriteOptions}
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.flushAndDestroy
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.gdal.gdal.{BuildVRTOptions, gdal}
 
 /** GDALBuildVRT is a wrapper for the GDAL BuildVRT command. */
@@ -15,28 +18,37 @@ object GDALBuildVRT {
       *   The rasters to build the VRT from.
       * @param command
       *   The GDAL BuildVRT command.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   A MosaicRaster object.
       */
-    def executeVRT(outputPath: String, rasters: Seq[MosaicRasterGDAL], command: String): MosaicRasterGDAL = {
+    def executeVRT(outputPath: String, rasters: Seq[RasterGDAL], command: String, exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
         require(command.startsWith("gdalbuildvrt"), "Not a valid GDAL Build VRT command.")
-        val effectiveCommand = OperatorOptions.appendOptions(command, MosaicRasterWriteOptions.VRT)
+        val effectiveCommand = OperatorOptions.appendOptions(command, RasterWriteOptions.VRT)
         val vrtOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val vrtOptions = new BuildVRTOptions(vrtOptionsVec)
-        val vrtResult = gdal.BuildVRT(outputPath, rasters.map(_.getDatasetHydrated).toArray, vrtOptions)
+        val vrtResult = gdal.BuildVRT(outputPath, rasters.map(_.withDatasetHydratedOpt().get).toArray, vrtOptions)
         val errorMsg = gdal.GetLastErrorMsg
+
+//        if (errorMsg.nonEmpty) {
+//            // scalastyle:off println
+//            println(s"... GDALBuildVRT (last_error) - '$errorMsg' for '$outputPath'")
+//            // scalastyle:on println
+//        }
+
+        flushAndDestroy(vrtResult)
+
         val createInfo = Map(
-          "path" -> outputPath,
-          "parentPath" -> rasters.head.getParentPath,
-          "driver" -> "VRT",
-          "last_command" -> effectiveCommand,
-          "last_error" -> errorMsg,
-          "all_parents" -> rasters.map(_.getParentPath).mkString(";")
+          RASTER_PATH_KEY -> outputPath,
+          RASTER_PARENT_PATH_KEY -> rasters.head.getRawParentPath,
+          RASTER_DRIVER_KEY -> "VRT",
+          RASTER_LAST_CMD_KEY -> effectiveCommand,
+          RASTER_LAST_ERR_KEY -> errorMsg,
+          RASTER_ALL_PARENTS_KEY -> rasters.map(_.getRawParentPath).mkString(";")
         )
-        // VRT files are just meta files, mem size doesnt make much sense so we keep -1
-        val result = MosaicRasterGDAL(vrtResult, createInfo, -1)
-        result.reHydrate() // flush cache
-        result
+
+        RasterGDAL(createInfo, exprConfigOpt)
     }
 
 }

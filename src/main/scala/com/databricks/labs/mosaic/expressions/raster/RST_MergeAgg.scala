@@ -2,13 +2,11 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.destroy
 import com.databricks.labs.mosaic.core.raster.operator.merge.MergeRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.getRasterType
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpressionSerialization
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnsafeProjection, UnsafeRow}
@@ -21,15 +19,15 @@ import scala.collection.mutable.ArrayBuffer
 /** Merges rasters into a single raster. */
 //noinspection DuplicatedCode
 case class RST_MergeAgg(
-    rastersExpr: Expression,
-    expressionConfig: MosaicExpressionConfig,
-    mutableAggBufferOffset: Int = 0,
-    inputAggBufferOffset: Int = 0
+                           rastersExpr: Expression,
+                           exprConfig: ExprConfig,
+                           mutableAggBufferOffset: Int = 0,
+                           inputAggBufferOffset: Int = 0
 ) extends TypedImperativeAggregate[ArrayBuffer[Any]]
       with UnaryLike[Expression]
       with RasterExpressionSerialization {
 
-    GDAL.enable(expressionConfig)
+    GDAL.enable(exprConfig)
 
     override lazy val deterministic: Boolean = true
 
@@ -39,7 +37,7 @@ case class RST_MergeAgg(
 
     // serialize data type
     override lazy val dataType: DataType = {
-        RasterTileType(expressionConfig.getCellIdType, rastersExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, rastersExpr, exprConfig.isRasterUseCheckpoint)
     }
 
     private lazy val projection = UnsafeProjection.create(Array[DataType](ArrayType(elementType = dataType, containsNull = false)))
@@ -67,7 +65,7 @@ case class RST_MergeAgg(
         copy(mutableAggBufferOffset = newMutableAggBufferOffset)
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
-        GDAL.enable(expressionConfig)
+        GDAL.enable(exprConfig)
 
         if (buffer.isEmpty) {
             null
@@ -79,24 +77,24 @@ case class RST_MergeAgg(
             // when merging rasters with large overlaps
             var tiles = buffer
                 .map(row =>
-                    MosaicRasterTile.deserialize(
-                      row.asInstanceOf[InternalRow],
-                      expressionConfig.getCellIdType  //, rasterType // <- 0.4.3 infer type
+                    RasterTile.deserialize(
+                        row.asInstanceOf[InternalRow],
+                        exprConfig.getCellIdType,
+                        Option(exprConfig)  // <- 0.4.3 infer type
                     )
                 )
-                .sortBy(_.raster.getParentPath)
+                .sortBy(_.raster.getRawParentPath)
 
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
-            var merged = MergeRasters.merge(tiles.map(_.raster))
-            merged.reHydrate() // flushCache
+            var merged = MergeRasters.merge(tiles.map(_.raster), Option(exprConfig))
 
-            val resultType = getRasterType(dataType)
-            var result = MosaicRasterTile(idx, merged, resultType).formatCellId(
-                IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-            val serialized = result.serialize(resultType, doDestroy = true)
+            val resultType = RasterTile.getRasterType(dataType)
+            var result = RasterTile(idx, merged, resultType).formatCellId(
+                IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem))
+            val serialized = result.serialize(resultType, doDestroy = true, Option(exprConfig))
 
-            tiles.foreach(destroy)
+            tiles.foreach(_.flushAndDestroy())
             tiles = null
             merged = null
             result = null

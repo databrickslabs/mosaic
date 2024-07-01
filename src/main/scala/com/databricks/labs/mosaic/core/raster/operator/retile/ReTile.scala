@@ -1,9 +1,8 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.core.types.model.RasterTile
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.types.{DataType, StringType}
 
 /** ReTile is a helper object for retiling rasters. */
@@ -25,10 +24,11 @@ object ReTile {
       *   A sequence of MosaicRasterTile objects.
       */
     def reTile(
-        tile: MosaicRasterTile,
+        tile: RasterTile,
         tileWidth: Int,
-        tileHeight: Int
-    ): Seq[MosaicRasterTile] = {
+        tileHeight: Int,
+        exprConfigOpt: Option[ExprConfig]
+    ): Seq[RasterTile] = {
         val raster = tile.raster
         val (xR, yR) = raster.getDimensions
         val xTiles = Math.ceil(xR / tileWidth).toInt
@@ -40,38 +40,28 @@ object ReTile {
             val xOffset = if (xMin + tileWidth > xR) xR - xMin else tileWidth
             val yOffset = if (yMin + tileHeight > yR) yR - yMin else tileHeight
 
-            val fileExtension = raster.getRasterFileExtension
-            val rasterPath = PathUtils.createTmpFilePath(fileExtension)
+            val rasterPath = raster.createTmpFileFromDriver(exprConfigOpt) // <- no mosaic config
             val outOptions = raster.getWriteOptions
 
             val result = GDALTranslate.executeTranslate(
-              rasterPath,
-              raster,
-              command = s"gdal_translate -srcwin $xMin $yMin $xOffset $yOffset",
-                outOptions
+                rasterPath,
+                raster,
+                command = s"gdal_translate -srcwin $xMin $yMin $xOffset $yOffset",
+                outOptions,
+                exprConfigOpt
             )
 
             if (!result.isEmpty) {
-                // copy to checkpoint dir
-                val checkpointPath = result.writeToCheckpointDir(doDestroy = true)
-                val newParentPath = result.getPath
-                (
-                    true,
-                    MosaicRasterGDAL(
-                        null,
-                        result.getCreateInfo + ("path" -> checkpointPath, "parentPath" -> newParentPath),
-                        -1
-                    )
-                )
+                (true, result)
             } else {
-                result.destroy() // destroy inline for performance
+                result.flushAndDestroy() // destroy inline for performance
                 (false, result) // empty result
             }
         }
 
         val (result, invalid) = tiles.partition(_._1) // true goes to result
 //        invalid.flatMap(t => Option(t._2)).foreach(_.destroy()) // destroy invalids
-        result.map(t => MosaicRasterTile(null, t._2, tileDataType)) // return valid tiles
+        result.map(t => RasterTile(null, t._2, tileDataType)) // return valid tiles
     }
 
 }

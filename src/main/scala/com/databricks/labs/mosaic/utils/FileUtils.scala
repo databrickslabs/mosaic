@@ -13,7 +13,7 @@ object FileUtils {
 
     def readBytes(path: String): Array[Byte] = {
         val bufferSize = 1024 * 1024 // 1MB
-        val cleanPath = PathUtils.replaceDBFSTokens(path)
+        val cleanPath = PathUtils.asFileSystemPath(path)
         val inputStream = new BufferedInputStream(new FileInputStream(cleanPath))
         val buffer = new Array[Byte](bufferSize)
 
@@ -29,7 +29,7 @@ object FileUtils {
         bytes
     }
 
-    def createMosaicTempDir(prefix: String = MOSAIC_RASTER_TMP_PREFIX_DEFAULT): String = {
+    def createMosaicTmpDir(prefix: String = MOSAIC_RASTER_TMP_PREFIX_DEFAULT): String = {
         val tempRoot = Paths.get(s"$prefix/mosaic_tmp/")
         if (!Files.exists(tempRoot)) {
             Files.createDirectories(tempRoot)
