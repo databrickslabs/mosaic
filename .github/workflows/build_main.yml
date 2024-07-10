@@ -22,10 +22,10 @@ jobs:
         spark: [ 3.4.1 ]
         R: [ 4.2.2 ]
     steps:
-      - name: setup cleanup tmp files
-        uses: ./.github/actions/build_cleanup
       - name: checkout code
         uses: actions/checkout@v2
+      - name: setup cleanup tmp files
+        uses: ./.github/actions/build_cleanup
 # ::: SCALA :::
       - name: build scala
         uses: ./.github/actions/scala_build

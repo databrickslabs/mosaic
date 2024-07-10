@@ -6,6 +6,7 @@ runs:
     - name: Remove tmp files
       shell: bash
       run : |
-        # - update apt
+        # - remove local tmp files
         sudo rm -rf /tmp/mosaic_tmp *
+        # - remove pseudo fuse files
         sudo rm -rf /dbfs/checkpoint/mosaic_tmp *
